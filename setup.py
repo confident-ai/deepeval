@@ -2,7 +2,7 @@ from evals import __version__
 from setuptools import setup, find_packages
 
 setup(
-    name="Evals",
+    name="llmevals",
     version=__version__,
     url="https://github.com/mr-gpt/evals",
     author="Twilix",
