@@ -5,6 +5,7 @@ from .pipeline import Pipeline
 from .api import Api
 from .metric import Metric
 from datetime import datetime
+from tqdm.auto import tqdm
 
 # GET localhost:3000/api/v1/pipeline/eval
 # curl --location --request GET 'localhost:3000/api/v1/pipeline/eval' \
@@ -39,8 +40,6 @@ class Evaluator(Api):
     def _post_evaluation_result(
         self, evaluation_score: float, pipeline_id: str, test_id: str = None
     ):
-        if test_id is None:
-            test_id = str(datetime.now())
         return self.post_request(
             endpoint="v1/pipeline/eval/run",
             body={
@@ -61,13 +60,13 @@ class Evaluator(Api):
         #     "EvalRuns": []
         # },
         truths = self._get_ground_truths()
-        for t in truths["runs"]:
+        for t in tqdm(truths["runs"]):
             result = pipeline.result_function(t["query"])
             expected_result = t["expected_response"]
             score = metric.measure(result, expected_result)
             result = self._post_evaluation_result(
                 evaluation_score=score,
                 pipeline_id=pipeline.pipeilne_id,
-                test_id=test_id,
+                test_id=t["id"],
             )
             print(result)
