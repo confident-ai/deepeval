@@ -33,7 +33,7 @@ class Evaluator(Api):
 
     def _get_ground_truths(self, take: int = 50, skip: int = 0):
         return self.get_request(
-            endpoint="pipeline/eval", params={"take": take, "skip": skip}
+            endpoint="v1/pipeline/eval", params={"take": take, "skip": skip}
         )
 
     def _post_evaluation_result(
@@ -61,11 +61,9 @@ class Evaluator(Api):
         #     "EvalRuns": []
         # },
         truths = self._get_ground_truths()
-        print("looping throuth truths...")
-        for t in truths:
+        for t in truths["runs"]:
             result = pipeline.result_function(t["query"])
             expected_result = t["expected_response"]
-            result = pipeline.result_function(result, expected_result)
             score = metric.measure(result, expected_result)
             result = self._post_evaluation_result(
                 evaluation_score=score,
