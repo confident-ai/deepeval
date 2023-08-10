@@ -7,16 +7,6 @@ from .metric import Metric
 from datetime import datetime
 from tqdm.auto import tqdm
 
-# GET localhost:3000/api/v1/pipeline/eval
-# curl --location --request GET 'localhost:3000/api/v1/pipeline/eval' \
-# --header 'Authorization: Bearer ysmtQIeNVDATpGlxoLWpWvb6+U4cOEG6PKUZOcBTBBw=' \
-# --header 'Content-Type: application/json' \
-# --data '{
-#   "query": "What is the meaning of life?",
-#   "expected_resposne": "42",
-#   "tags": ["misc"]
-# }'
-
 
 class Evaluator(Api):
     def __init__(self, api_key: str = None, **kwargs):
