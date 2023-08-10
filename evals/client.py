@@ -24,8 +24,8 @@ class Evaluator(Api):
     def add_ground_truth(self, query: str, expected_response: str, tags: list = None):
         """Add ground truth"""
         return self.post_request(
-            endpoint="/v1/pipeline/eval",
-            data={"query": query, "expected_response": expected_response, "tags": tags},
+            endpoint="v1/pipeline/eval",
+            body={"query": query, "expected_response": expected_response, "tags": tags},
         )
 
     def build_ground_truth(self):

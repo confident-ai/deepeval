@@ -5,7 +5,7 @@ import requests
 from typing import Dict
 from requests.adapters import HTTPAdapter, Response, Retry
 
-API_BASE_URL = "https://twilix.io/api"
+API_BASE_URL = "https://app.twilix.io/api"
 
 # Parameters for HTTP retry
 HTTP_TOTAL_RETRIES = 3  # Number of total retries
@@ -85,7 +85,7 @@ class Api:
                 method=method,
                 url=url,
                 headers=headers,
-                auth=auth,
+                # auth=auth,
                 params=params,
                 json=body,
                 files=files,
@@ -102,7 +102,6 @@ class Api:
             message = res.json().get("error", res.text)
         except ValueError:
             message = res.text
-
         raise Exception(message)
 
     def _api_request(
@@ -119,7 +118,6 @@ class Api:
         """Generic HTTP request method with error handling."""
 
         url = f"{self.base_api_url}/{endpoint}"
-
         res = self._http_request(
             method,
             url,
