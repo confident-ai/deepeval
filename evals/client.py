@@ -65,7 +65,8 @@ class Evaluator(Api):
         for t in truths:
             result = pipeline.result_function(t["query"])
             expected_result = t["expected_response"]
-            score = pipeline.result_function(result, expected_result)
+            result = pipeline.result_function(result, expected_result)
+            score = metric.measure(result, expected_result)
             result = self._post_evaluation_result(
                 evaluation_score=score,
                 pipeline_id=pipeline.pipeilne_id,
