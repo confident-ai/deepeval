@@ -19,7 +19,7 @@ class Api:
 
     def __init__(
         self,
-        api_key,
+        api_key: str,
         user_agent_extension=None,
         api_instance_url=None,
         verify=None,
@@ -35,6 +35,7 @@ class Api:
         self._headers = {
             "Content-Type": "application/json",
             "User-Agent": self._generate_useragent(user_agent_extension),
+            "Authorization": "Bearer " + api_key,
         }
         self._headers_multipart_form_data = {
             "User-Agent": self._generate_useragent(user_agent_extension),
