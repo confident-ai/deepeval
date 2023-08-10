@@ -16,3 +16,9 @@ eval.add_ground_truth(
     tags=["Customer success"]
 )
 ```
+
+# Dashboard
+
+Once you have added a ground truth, you should be able to see a dashboard that contains information about the pipeline and the run.
+
+![assets/app.png](assets/app.png)
