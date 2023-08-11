@@ -4,6 +4,12 @@ LLMEvals provides a Pythonic way to run offline evaluations on your LLM pipeline
 
 You can get started with adding an a ground truth like so:
 
+# Installation
+
+```
+pip install llmevals
+```
+
 # QuickStart
 
 ```python
