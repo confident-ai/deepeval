@@ -30,7 +30,8 @@ Once you have added an example of what kind of ground truth you would like, you 
 ## Setting up metric
 
 ```python
-metric = ConstantMetric()
+from evals.metric import CohereRerankerMetric
+metric = CohereRerankerMetric(api_key="XYZ")
 ```
 
 ## Setting up a LangChain pipeline
