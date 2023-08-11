@@ -4,6 +4,12 @@ LLMEvals provides a Pythonic way to run offline evaluations on your LLM pipeline
 
 You can get started with adding an a ground truth like so:
 
+# Installation
+
+```
+pip install llmevals
+```
+
 # QuickStart
 
 ```python
@@ -24,7 +30,8 @@ Once you have added an example of what kind of ground truth you would like, you 
 ## Setting up metric
 
 ```python
-metric = ConstantMetric()
+from evals.metric import CohereRerankerMetric
+metric = CohereRerankerMetric(api_key="XYZ")
 ```
 
 ## Setting up a LangChain pipeline
