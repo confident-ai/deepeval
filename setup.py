@@ -9,5 +9,5 @@ setup(
     author_email="jacky@twilix.io",
     description="Eval",
     packages=find_packages(),
-    install_requires=["requests", "tqdm"],
+    install_requires=["requests", "tqdm", "transformers"],
 )
