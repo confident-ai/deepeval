@@ -2,10 +2,17 @@
 """
 from typing import List
 from tqdm.auto import tqdm
+from abc import abstractmethod, ABC
 
 
-class QueryGenerator:
-    """Module for the query generator"""
+class QueryGenerator(ABC):
+    @abstractmethod
+    def generate_queries(self, texts: List, tags: List = None, num_queries: int = 3):
+        pass
+
+
+class BEIRQueryGenerator:
+    """BEIR Query Generator"""
 
     def generate_queries(self, texts: List, tags: List = None, num_queries: int = 3):
         """Generates a number of queries"""
@@ -13,7 +20,7 @@ class QueryGenerator:
 
         self._load_model()
         queries = []
-        for t in texts:
+        for t in tqdm(texts):
             input_ids = self.tokenizer.encode(t, return_tensors="pt")
             with torch.no_grad():
                 outputs = self.model.generate(
