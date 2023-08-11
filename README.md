@@ -53,9 +53,24 @@ from evals.metric import SimilarityMetric
 pipeline = Pipeline(
     "langchain-example", result_fn=qa.run
 )
-evaluator.evalute(
+evaluator.evaluate(
     pipeline=pipeline, 
     metric=metric
+)
+```
+
+# Synthetic Query Generation 
+
+Generating synthetic queries allows you to quickly evaluate the queries related to your prompts.
+We help developers get up and running with a lot of example queries.
+
+```python
+# Loads the synthetic query model to generate them based on data you get.
+# These automatically create synthetic queries and adds them as ground truth 
+# for users
+evaluator.generate_queries(
+    texts=["Our customer success phone line is 1200-231-231"],
+    tags=["customer success"]
 )
 ```
 
