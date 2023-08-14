@@ -24,14 +24,12 @@ class ConstantMetric(Metric):
     def measure(self, a, b):
         return 0.5
 
-
-class RandomMetric(Metric):
-    def measure(self, a, b):
-        return random.random()
+    def is_successful(self):
+        return True
 
 
 class CohereRerankerMetric(Metric):
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, minimum_score: float = 0.5):
         try:
             import cohere
 
@@ -39,6 +37,7 @@ class CohereRerankerMetric(Metric):
         except Exception as e:
             print(e)
             print("Run `pip install cohere`.")
+        self.minimum_score = minimum_score
 
     def measure(self, a, b):
         reranked_results = self.cohere_client.rerank(
@@ -48,7 +47,11 @@ class CohereRerankerMetric(Metric):
             model="rerank-english-v2.0",
         )
         score = reranked_results[0].relevance_score
+        self.success = score > self.minimum_score
         return score
+
+    def is_successful(self) -> bool:
+        return self.success
 
 
 class EntailmentScore(Metric):

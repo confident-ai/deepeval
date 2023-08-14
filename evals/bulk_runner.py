@@ -18,4 +18,5 @@ class BulkTestRunner:
             output = callable_fn(case.input)
             for metric in case.metrics:
                 output = metric(case.input, case.expected_output)
+            assert metric.is_successful()
         assert output
