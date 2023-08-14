@@ -1,8 +1,8 @@
 from typing import List, Callable
 from abc import abstractmethod
+from tabulate import tabulate
 from .metrics.metric import Metric
 from .test_case import TestCase
-from tabulate import tabulate
 
 
 class BulkTestRunner:
