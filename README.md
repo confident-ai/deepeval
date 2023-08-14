@@ -59,7 +59,7 @@ class BulkTester(BulkTestRunner):
         ]
 
 tester = BulkTester()
-tester.run()
+tester.run(callable_fn=generate_llm_output)
 ```
 
 ## Setting up metrics
