@@ -64,12 +64,9 @@ tester.run()
 
 ## Setting up metrics
 
-You can set up the metric as follows:
+### Setting up custom metrics
 
-```python
-from evals.metric import CohereRerankerMetric
-metric = CohereRerankerMetric(api_key="XYZ")
-```
+TODO
 
 ## Setting up a LangChain pipeline
 
