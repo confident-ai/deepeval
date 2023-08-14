@@ -2,6 +2,7 @@ import functools
 import time
 from .metrics.randomscore import RandomMetric
 from .metrics.metric import Metric
+from .metrics.bertscore import BertScore
 from typing import Any
 
 
@@ -10,7 +11,10 @@ def assert_match(input: Any, output: Any, metric: Any = "exact"):
         assert_exact_match(input, output)
     elif metric == "random":
         metric = RandomMetric()
-        metric.measure(input, output)
+        return metric.measure(input, output)
+    elif metric == "bertscore":
+        metric = BertScore()
+        return metric.measure(input, output)
     elif isinstance(metric, Metric):
         metric_instance = metric()
         return metric_instance.measure(input, output)

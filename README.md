@@ -12,22 +12,55 @@ pip install llmevals
 
 # QuickStart
 
+## Individual Test Cases
+
 ```python
-import os
-from evals import Evaluator
-# Grab API key from app.twilix.io
-os.environ['TWILIX_API_KEY'] = "..."
-evaluator = Evaluator()
-evaluator.add_ground_truth(
-    query="How do you contact them?",
-    expected_response="You can contact our help center at 1800-000-000",
-    tags=["Customer success"]
-)
+# test_example.py
+from evals.test_utils import assert_match, TestEvalCase, tags
+
+def generate_llm_output(input: str):
+    expected_output = "Our customer success phone line is 1200-231-231."
+    return expected_output
+
+class TestLLM(TestEvalCase):
+    @tags(tags=["customer success"])
+    def test_llm_output(self):
+        input = "What is the customer success phone line?"
+        expected_output = "Our customer success phone line is 1200-231-231."
+        output = generate_llm_output(input)
+        assert_match(output, expected_output, metric="exact")
+
+Running tests ... ✅
 ```
 
-Once you have added an example of what kind of ground truth you would like, you can then start defining your pipelines and then comparing it ot the results that you are getting.
+Once you have set that up, you can simply call pytest
+
+```bash
+python -m pytest test_example.py
+```
+
+## Bulk Test Cases
+
+You can run a number of test cases which you can define either through CSV
+or through our hosted option.
+
+```python
+from evals import BulkTestRunner
+class BulkTester(BulkTestRunner):
+    @property
+    def bulk_test_cases(self):
+        return [
+            ("input", "expected_output"),
+            ("input", "expected_output_2"),
+        ]
+
+tester = BulkTester()
+tester.run()
+```
 
 ## Setting up metric
+
+You can set up the metric as follows:
 
 ```python
 from evals.metric import CohereRerankerMetric
