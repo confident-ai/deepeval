@@ -3,10 +3,11 @@ import time
 from .metrics.randomscore import RandomMetric
 from .metrics.metric import Metric
 from .metrics.bertscore import BertScore
+from .metrics.entailment_metric import EntailmentScore
 from typing import Any
 
 
-def assert_llm_output(input: Any, output: Any, metric: Any = "exact"):
+def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
     if metric == "exact":
         assert_exact_match(input, output)
     elif metric == "random":
@@ -14,6 +15,9 @@ def assert_llm_output(input: Any, output: Any, metric: Any = "exact"):
         return metric.measure(input, output)
     elif metric == "bertscore":
         metric = BertScore()
+        return metric.measure(input, output)
+    elif metric == "entailment":
+        metric = EntailmentScore()
         return metric.measure(input, output)
     elif isinstance(metric, Metric):
         metric_instance = metric()
