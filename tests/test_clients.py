@@ -3,7 +3,7 @@
 import unittest
 from evals import Evaluator
 from evals.pipeline import Pipeline
-from evals.metric import RandomMetric
+from evals.metrics.metric import RandomMetric
 
 
 class TestEvaluator(unittest.TestCase):
