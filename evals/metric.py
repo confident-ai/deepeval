@@ -44,7 +44,7 @@ class CohereRerankerMetric(Metric):
         return score
 
 
-class EntailmentMetric(Metric):
+class EntailmentScore(Metric):
     def __init__(self, model_name: str = "cross-encoder/nli-deberta-base"):
         # We use a smple cross encoder model
         from sentence_transformers import CrossEncoder
@@ -56,3 +56,10 @@ class EntailmentMetric(Metric):
         # https://huggingface.co/cross-encoder/nli-deberta-base
         # label_mapping = ["contradiction", "entailment", "neutral"]
         return softmax(scores)[0][1]
+
+
+class BertScore(Metric):
+    """basic implementation of BertScore"""
+
+    def measure(self, a: str, b: str):
+        raise NotImplementedError
