@@ -17,7 +17,7 @@ class Metric:
 
     @abstractmethod
     def is_successful(self) -> bool:
-        return True
+        return False
 
 
 class ConstantMetric(Metric):

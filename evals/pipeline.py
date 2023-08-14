@@ -1,6 +1,6 @@
 """Pipeline
 """
-from .metric import Metric
+from .metrics.metric import Metric
 from typing import Callable
 
 

@@ -14,6 +14,8 @@ class TestCase:
     ):
         if metrics is None:
             self.metrics = [RandomMetric()]
+        else:
+            self.metrics = metrics
         self.input = input
         self.expected_output = expected_output
         if id is None:
