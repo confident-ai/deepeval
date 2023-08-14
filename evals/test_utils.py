@@ -6,7 +6,7 @@ from .metrics.bertscore import BertScore
 from typing import Any
 
 
-def assert_match(input: Any, output: Any, metric: Any = "exact"):
+def assert_llm_output(input: Any, output: Any, metric: Any = "exact"):
     if metric == "exact":
         assert_exact_match(input, output)
     elif metric == "random":
