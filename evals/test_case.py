@@ -55,3 +55,4 @@ class TestCases(UserList):
                     id=ids[i],
                 )
             )
+        return self

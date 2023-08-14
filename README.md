@@ -75,7 +75,17 @@ You can import test cases from CSV.
 ```python
 import pandas as pd
 df = pd.read_csv('sample.csv')
+from evals import TestCases
 # Assuming you have the column names `input`, `expected_output`
+class BulkTester(BulkTestRunner):
+    @property
+    def bulk_test_cases(self):
+        return TestCases.from_csv(
+            "sample.csv",
+            input_column="input",
+            expected_output_column="output",
+            id_column="id"
+        )
 
 ```
 
