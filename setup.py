@@ -1,5 +1,5 @@
-from evals import __version__
 from setuptools import setup, find_packages
+from evals._version import __version__
 
 setup(
     name="llmevals",
