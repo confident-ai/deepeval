@@ -1,5 +1,11 @@
 import functools
 import time
+from typing import Any
+
+
+def assert_match(input: Any, output: Any, metric: Any = "exact"):
+    if metric == "exact":
+        assert_exact_match(input, output)
 
 
 def assert_exact_match(text_input, text_output):
