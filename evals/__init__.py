@@ -4,4 +4,4 @@ from .test_utils import assert_exact_match, TestEvalCase
 from .bulk_runner import TestCase, BulkTestRunner
 
 
-__version__: str = "0.1.0"
+__version__: str = "0.2.0"
