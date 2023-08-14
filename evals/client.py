@@ -3,7 +3,6 @@
 import os
 import asyncio
 import getpass
-import pandas as pd
 from tqdm.auto import tqdm
 from .pipeline import Pipeline
 from .api import Api
