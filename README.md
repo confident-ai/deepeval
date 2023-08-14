@@ -54,6 +54,12 @@ class BulkTester(BulkTestRunner):
             TestCase(
                 input="What is the customer success number",
                 expected_output="1800-213-123",
+                tags=["Customer success"]
+            ),
+            Testcase(
+                input="What do you think about the models?",
+                expected_output="Not much - they are underperforming.",
+                tags=["Machine learning"]
             )
         ]
 

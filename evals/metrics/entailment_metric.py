@@ -1,23 +1,5 @@
-"""Available metrics. The best metric that
-you want is Cohere's reranker metric.
-"""
-import random
-
-from abc import abstractmethod
+from .metric import Metric
 from ..utils import softmax
-
-
-class Metric:
-    def __call__(self, *args, **kwargs):
-        return self.measure(*args, **kwargs)
-
-    @abstractmethod
-    def measure(self, a, b):
-        pass
-
-    @abstractmethod
-    def is_successful(self) -> bool:
-        return False
 
 
 class EntailmentScore(Metric):
