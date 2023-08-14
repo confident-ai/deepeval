@@ -2,8 +2,9 @@
 you want is Cohere's reranker metric.
 """
 import random
-import os
+
 from abc import abstractmethod
+from .utils import softmax
 
 
 class Metric:
@@ -30,7 +31,7 @@ class CohereRerankerMetric(Metric):
             self.cohere_client = cohere.Client(api_key)
         except Exception as e:
             print(e)
-            print("Make sure to install Cohere.")
+            print("Run `pip install cohere`.")
 
     def measure(self, a, b):
         reranked_results = self.cohere_client.rerank(
@@ -41,3 +42,16 @@ class CohereRerankerMetric(Metric):
         )
         score = reranked_results[0].relevance_score
         return score
+
+
+class EntailmentMetric(Metric):
+    def __init__(self, model_name: str = "cross-encoder/nli-deberta-base"):
+        from sentence_transformers import CrossEncoder
+
+        self.model = CrossEncoder(model_name)
+
+    def measure(self, a, b):
+        scores = self.model.predict([(a, b)])
+        # https://huggingface.co/cross-encoder/nli-deberta-base
+        # label_mapping = ["contradiction", "entailment", "neutral"]
+        return softmax(scores)[0][1]
