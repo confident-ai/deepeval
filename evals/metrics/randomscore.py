@@ -7,8 +7,9 @@ class RandomMetric(Metric):
         self.minimum_score = minimum_score
 
     def measure(self, a, b):
-        self.success = random.random() >= self.minimum_score
-        return self.success
+        score = random.random()
+        self.success = score >= self.minimum_score
+        return score
 
     def is_successful(self):
         return self.success

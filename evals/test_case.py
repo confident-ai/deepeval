@@ -2,6 +2,7 @@ import hashlib
 from typing import Any, List
 from .metrics.metric import Metric
 from .metrics.randomscore import RandomMetric
+from .metrics.entailment_metric import EntailmentScore
 
 
 class TestCase:
@@ -13,7 +14,7 @@ class TestCase:
         id: str = None,
     ):
         if metrics is None:
-            self.metrics = [RandomMetric()]
+            self.metrics = [EntailmentScore()]
         else:
             self.metrics = metrics
         self.input = input
