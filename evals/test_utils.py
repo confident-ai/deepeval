@@ -1,11 +1,21 @@
 import functools
 import time
+from .metrics.randomscore import RandomMetric
+from .metrics.metric import Metric
 from typing import Any
 
 
 def assert_match(input: Any, output: Any, metric: Any = "exact"):
     if metric == "exact":
         assert_exact_match(input, output)
+    elif metric == "random":
+        metric = RandomMetric()
+        metric.measure(input, output)
+    elif isinstance(metric, Metric):
+        metric_instance = metric()
+        return metric_instance.measure(input, output)
+    else:
+        raise ValueError("Inappropriate metric")
 
 
 def assert_exact_match(text_input, text_output):
