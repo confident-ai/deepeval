@@ -10,5 +10,12 @@ setup(
     description="Eval",
     packages=find_packages(),
     # TODO - make pandas an 'extra' requirement in the future
-    install_requires=["requests", "tqdm", "transformers", "pandas", "pytest"],
+    install_requires=[
+        "requests",
+        "tqdm",
+        "transformers",
+        "pandas",
+        "pytest",
+        "tabulate",
+    ],
 )
