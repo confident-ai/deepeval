@@ -29,14 +29,15 @@ class TestLLM(TestEvalCase):
         expected_output = "Our customer success phone line is 1200-231-231."
         output = generate_llm_output(input)
         assert_match(output, expected_output, metric="exact")
-
-Running tests ... ✅
 ```
 
 Once you have set that up, you can simply call pytest
 
 ```bash
 python -m pytest test_example.py
+
+# Output
+Running tests ... ✅
 ```
 
 ## Bulk Test Cases
