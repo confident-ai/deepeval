@@ -45,20 +45,24 @@ You can run a number of test cases which you can define either through CSV
 or through our hosted option.
 
 ```python
-from evals import BulkTestRunner
+from evals import BulkTestRunner, TestCase
+
 class BulkTester(BulkTestRunner):
     @property
     def bulk_test_cases(self):
         return [
-            ("input", "expected_output"),
-            ("input", "expected_output_2"),
+            TestCase(
+                input="What is the customer success number",
+                expected_output="1800-213-123",
+                metrics=["default"]
+            )
         ]
 
 tester = BulkTester()
 tester.run()
 ```
 
-## Setting up metric
+## Setting up metrics
 
 You can set up the metric as follows:
 
