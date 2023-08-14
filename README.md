@@ -71,7 +71,18 @@ tester.run(callable_fn=generate_llm_output)
 
 ### Setting up custom metrics
 
-TODO
+To define a custom metric, you simply need to define the `measure` and `is_successful` property.
+
+```python
+from evals.metric import Metric
+class CustomMetric(Metric):
+    def measure(self, a, b):
+        return a > b
+    def is_successful(self):
+        return True
+
+metric = CustomMetric()
+```
 
 ## Setting up a LangChain pipeline
 
