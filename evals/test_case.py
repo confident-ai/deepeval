@@ -14,7 +14,7 @@ class TestCase:
         id: str = None,
     ):
         if metrics is None:
-            self.metrics = [EntailmentScore()]
+            self.metrics = [EntailmentScore(minimum_score=0.0000)]
         else:
             self.metrics = metrics
         self.input = input

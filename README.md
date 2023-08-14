@@ -1,6 +1,6 @@
-# LLMEvals
+# Evals
 
-LLMEvals provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production.
+Evals provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production.
 
 You can get started with adding an a ground truth like so:
 
