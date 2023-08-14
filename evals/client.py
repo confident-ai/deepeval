@@ -7,7 +7,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 from .pipeline import Pipeline
 from .api import Api
-from .metric import Metric
+from .metrics.metric import Metric
 from .query_generator import BEIRQueryGenerator, QueryGenerator
 from typing import Optional, List
 
