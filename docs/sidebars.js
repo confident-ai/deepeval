@@ -22,7 +22,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'QuickStart',
-      items: ['completion/input', 'completion/supported', 'completion/output'],
+      items: ['quickstart/quickstart', 'quickstart/synthetic-data-creation'],
     },
     'troubleshoot',
     'contributing',
