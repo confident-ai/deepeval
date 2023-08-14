@@ -3,6 +3,7 @@
 import os
 import asyncio
 import getpass
+import pandas as pd
 from tqdm.auto import tqdm
 from .pipeline import Pipeline
 from .api import Api
@@ -12,7 +13,7 @@ from typing import Optional, List
 
 
 class Evaluator(Api):
-    def __init__(self, api_key: str = None, **kwargs):
+    def __init__(self, api_key: str = None, local_mode: bool = False, **kwargs):
         if api_key is None:
             if "TWILIX_API_KEY" not in os.environ:
                 api_key = getpass.getpass(
@@ -21,10 +22,17 @@ class Evaluator(Api):
             else:
                 api_key = os.environ["TWILIX_API_KEY"]
         self.api_key = api_key
+        self.local_mode = local_mode
+        if self.local_mode:
+            self.data = []
         super().__init__(api_key=api_key, **kwargs)
 
     def add_ground_truth(self, query: str, expected_response: str, tags: list = None):
         """Add ground truth"""
+        if self.local_mode:
+            self.data.append(
+                {"query": query, "expected_response": expected_response, "tags": tags}
+            )
         return self.post_request(
             endpoint="v1/pipeline/eval",
             body={"query": query, "expected_response": expected_response, "tags": tags},
