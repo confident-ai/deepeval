@@ -10,5 +10,5 @@ class RandomMetric(Metric):
         self.success = random.random() >= self.minimum_score
         return self.success
 
-    def is_sucessful(self):
+    def is_successful(self):
         return self.success

@@ -54,7 +54,6 @@ class BulkTester(BulkTestRunner):
             TestCase(
                 input="What is the customer success number",
                 expected_output="1800-213-123",
-                metrics=["default"]
             )
         ]
 
