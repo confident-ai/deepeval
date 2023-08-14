@@ -14,7 +14,6 @@ setup(
         "requests",
         "tqdm",
         "transformers",
-        "pandas",
         "pytest",
         "tabulate",
     ],
