@@ -119,6 +119,8 @@ evaluator.evaluate(
 
 # Synthetic Query Generation 
 
+![Synthetic Queries](assets/synthetic-query-generation.png)
+
 Generating synthetic queries allows you to quickly evaluate the queries related to your prompts.
 We help developers get up and running with a lot of example queries.
 
