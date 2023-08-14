@@ -68,6 +68,17 @@ tester = BulkTester()
 tester.run(callable_fn=generate_llm_output)
 ```
 
+### From CSV
+
+You can import test cases from CSV.
+
+```python
+import pandas as pd
+df = pd.read_csv('sample.csv')
+# Assuming you have the column names `input`, `expected_output`
+
+```
+
 ## Setting up metrics
 
 ### Setting up custom metrics
