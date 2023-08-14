@@ -33,6 +33,7 @@ def tags(tags: list):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
+            # TODO - add logging for tags
             print(f"Tags are: {tags}")
             return result
 
