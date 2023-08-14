@@ -1,0 +1,51 @@
+from typing import List, Callable
+from abc import abstractmethod
+from .metrics.metric import Metric
+from .test_case import TestCase
+from tabulate import tabulate
+
+
+class BulkTestRunner:
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def bulk_test_cases(self) -> List[TestCase]:
+        return []
+
+    def run(self, callable_fn: Callable):
+        table = []
+
+        headers = [
+            "Test Passed",
+            "Metric Name",
+            "Score",
+            "Output",
+            "Expected output",
+            "Message",
+        ]
+        for case in self.bulk_test_cases:
+            case: TestCase
+            output = callable_fn(case.input)
+            for metric in case.metrics:
+                score = metric(output, case.expected_output)
+                is_successful = metric.is_successful()
+                message = f"""{metric.__class__.__name__} was unsuccessful for 
+{case.input} 
+which should have matched 
+{case.expected_output}
+"""
+                table.append(
+                    [
+                        is_successful,
+                        metric.__class__.__name__,
+                        score,
+                        output,
+                        case.expected_output,
+                        message,
+                    ]
+                )
+        print(tabulate(table, headers=headers))
+        for t in table:
+            assert t[0] == True, t[-1]
+        return table
