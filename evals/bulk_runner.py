@@ -17,8 +17,8 @@ class BulkTestRunner:
             case: TestCase
             output = callable_fn(case.input)
             for metric in case.metrics:
-                output = metric(case.input, case.expected_output)
-            assert metric.is_successful(), f"""{metric.__class__.__name__} was unsuccessful for 
+                score = metric(output, case.expected_output)
+                assert metric.is_successful(), f"""{metric.__class__.__name__} was unsuccessful for 
 {case.input} 
 which should have matched 
 {case.expected_output}
