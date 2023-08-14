@@ -2,6 +2,7 @@
 """
 import os
 import asyncio
+import getpass
 from tqdm.auto import tqdm
 from .pipeline import Pipeline
 from .api import Api
@@ -13,7 +14,12 @@ from typing import Optional, List
 class Evaluator(Api):
     def __init__(self, api_key: str = None, **kwargs):
         if api_key is None:
-            api_key = os.environ["TWILIX_API_KEY"]
+            if "TWILIX_API_KEY" not in os.environ:
+                api_key = getpass.getpass(
+                    "Grab your API key from https://app.twilix.io"
+                )
+            else:
+                api_key = os.environ["TWILIX_API_KEY"]
         self.api_key = api_key
         super().__init__(api_key=api_key, **kwargs)
 
