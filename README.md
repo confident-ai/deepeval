@@ -173,7 +173,7 @@ evaluator.generate_queries(
 )
 ```
 
-# Dashboard
+# Dashboard (Coming soon)
 
 Once you have added a ground truth, you should be able to see a dashboard that contains information about the pipeline and the run.
 
