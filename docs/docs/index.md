@@ -5,4 +5,4 @@ DeepEval provides a Pythonic way to run offline evaluations on your LLM pipeline
 
 ## Why we wrote this library
 
-While the growth of LLMs, LangChain, LlamaIndex became prominent- we found that the hardest part for the engineers as they were iterating on these pipelines was ensuring that they didn't notice regressions.
+While the growth of LLMs, LangChain, LlamaIndex became prominent- we found that once these pipelines were built, it became really hard to continue iterating on these pipelines. Many engineers wanted to use LangChain as a quick start and then start adding guardrails, switch LLMs to Llama2. 
