@@ -7,7 +7,7 @@ setup(
     url="https://github.com/mr-gpt/evals",
     author="Twilix",
     author_email="jacky@twilix.io",
-    description="Eval",
+    description="Deep eval provides evaluation platform to accelerate development of LLMs and Agents",
     packages=find_packages(),
     # TODO - make pandas an 'extra' requirement in the future
     install_requires=[
