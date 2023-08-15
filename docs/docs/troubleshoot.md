@@ -1,5 +1,4 @@
 # Troubleshooting 
-
 ## Stable Version
 
 If you're running into problems with installation / Usage 
