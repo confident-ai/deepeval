@@ -49,6 +49,7 @@ const config = {
     ({
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
+      favicon: 'static/img/favicon.ico',
       navbar: {
         title: '🚅 Eval',
         items: [
