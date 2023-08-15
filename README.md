@@ -4,6 +4,10 @@ Evals provides a Pythonic way to run offline evaluations on your LLM pipelines s
 
 You can get started with adding an a ground truth like so:
 
+# Documentation
+
+You can read our documentation here: https://docs.confident-ai.com/docs/
+
 # Installation
 
 ```
