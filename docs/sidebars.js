@@ -26,7 +26,6 @@ const sidebars = {
       items: ['quickstart/quickstart', 'quickstart/synthetic-data-creation',
         'quickstart/bulk-runner', 'quickstart/custom-metrics'],
     },
-    'contributing',
     'contact'
   ],
 };

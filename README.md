@@ -7,7 +7,7 @@ You can get started with adding an a ground truth like so:
 # Installation
 
 ```
-pip install llmevals
+pip install deepeval
 ```
 
 # QuickStart
