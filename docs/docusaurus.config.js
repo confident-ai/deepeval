@@ -60,8 +60,8 @@ const config = {
             label: 'Docs',
           },
           {
-            href: 'https://github.com/mr-gpt/deepeval',
-            label: 'View GitHub',
+            href: 'https://discord.gg/a3K9c8GRGt',
+            label: 'Join our discord',
             position: 'right',
           },
           {
@@ -93,7 +93,7 @@ const config = {
             items: [
               {
                 label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
+                href: 'https://discord.gg/a3K9c8GRGt',
               },
               {
                 label: 'Twitter',
