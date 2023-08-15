@@ -60,8 +60,13 @@ const config = {
             label: 'Docs',
           },
           {
-            href: 'https://github.com/mrgpt/evals',
-            label: 'GitHub',
+            href: 'https://github.com/mr-gpt/deepeval',
+            label: 'View GitHub',
+            position: 'right',
+          },
+          {
+            href: 'https://github.com/mr-gpt/deepeval',
+            label: 'View GitHub',
             position: 'right',
           },
         ],
@@ -100,12 +105,8 @@ const config = {
             title: 'More',
             items: [
               {
-                label: 'Blog',
-                to: '/blog',
-              },
-              {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: 'https://github.com/mr-gpt/deepeval',
               },
             ],
           },
