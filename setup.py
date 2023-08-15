@@ -16,5 +16,6 @@ setup(
         "transformers",
         "pytest",
         "tabulate",
+        "sentence-transformers"
     ],
 )
