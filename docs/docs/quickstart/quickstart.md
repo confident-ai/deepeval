@@ -31,4 +31,3 @@ python -m pytest test_sample.py
 
 - `entailment` - Natural language inference score based on a given model (using NLI Deberta Base by default) with a minimum score for `entailment`
 - `exact` - An exact text string match
-- `bertscore` - Uses similarity based on a given model
