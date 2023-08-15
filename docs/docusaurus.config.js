@@ -8,6 +8,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 const config = {
   title: 'DeepEval',
   tagline: 'PyTest for LLMs',
+  favicon: 'static/img/favicon.ico',
 
   // Set the production url of your site here
   url: 'https://litellm.vercel.app/',
@@ -49,7 +50,6 @@ const config = {
     ({
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
-      favicon: 'static/img/favicon.ico',
       navbar: {
         title: '👩‍⚖️ DeepEval',
         items: [
