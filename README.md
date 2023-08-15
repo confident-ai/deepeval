@@ -1,4 +1,4 @@
-# Evals
+# 👩‍⚖️ DeepEval
 
 Evals provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production.
 
