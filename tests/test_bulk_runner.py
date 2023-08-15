@@ -1,4 +1,4 @@
-from evals import BulkTestRunner, TestCase
+from deepeval import BulkTestRunner, TestCase
 
 
 def generate_llm_output(input: str):

@@ -1,6 +1,6 @@
 """This is the ideal user flow
 """
-from evals.test_utils import assert_llm_output, TestEvalCase, tags
+from deepeval.test_utils import assert_llm_output, TestEvalCase, tags
 
 
 def generate_llm_output(text_input: str):

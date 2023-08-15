@@ -14,7 +14,7 @@ pip install llmevals
 
 ```python
 # test_example.py
-from evals.test_utils import assert_llm_output, TestEvalCase, tags
+from deepeval.test_utils import assert_llm_output, TestEvalCase, tags
 
 def generate_llm_output(input: str):
     expected_output = "Our customer success phone line is 1200-231-231."
@@ -44,7 +44,7 @@ You can run a number of test cases which you can define either through CSV
 or through our hosted option.
 
 ```python
-from evals import BulkTestRunner, TestCase
+from deepeval import BulkTestRunner, TestCase
 
 class BulkTester(BulkTestRunner):
     @property
@@ -73,7 +73,7 @@ You can import test cases from CSV.
 ```python
 import pandas as pd
 df = pd.read_csv('sample.csv')
-from evals import TestCases
+from deepeval import TestCases
 # Assuming you have the column names `input`, `expected_output`
 class BulkTester(BulkTestRunner):
     @property
@@ -94,7 +94,7 @@ class BulkTester(BulkTestRunner):
 To define a custom metric, you simply need to define the `measure` and `is_successful` property.
 
 ```python
-from evals.metric import Metric
+from deepeval.metric import Metric
 class CustomMetric(Metric):
     def measure(self, a, b):
         return a > b
@@ -126,7 +126,7 @@ docsearch = Chroma.from_documents(texts, embeddings)
 
 qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=docsearch.as_retriever())
 
-from evals.metric import SimilarityMetric
+from deepeval.metric import SimilarityMetric
 pipeline = Pipeline(
     "langchain-example", result_fn=qa.run
 )

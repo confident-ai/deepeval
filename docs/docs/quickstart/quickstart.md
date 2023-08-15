@@ -5,7 +5,7 @@ You can write a simple test case as simply as:
 ```python
 # test_sample.py
 # test files must start 
-from evals.test_utils import assert_llm_output
+from deepeval.test_utils import assert_llm_output
 
 def generate_llm_output(input: str):
     expected_output = "Our customer success phone line is 1200-231-231."
@@ -23,5 +23,3 @@ You can then run it in CLI using this:
 ```bash
 python -m pytest test_sample.py
 ```
-
-
