@@ -6,8 +6,8 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'TwilixEval',
-  tagline: 'Evaluation platform for LLMs',
+  title: 'DeepEval',
+  tagline: 'PyTest for LLMs',
 
   // Set the production url of your site here
   url: 'https://litellm.vercel.app/',
