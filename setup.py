@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
-from evals._version import __version__
+from deepeval._version import __version__
 
 setup(
-    name="llmevals",
+    name="deepeval",
     version=__version__,
     url="https://github.com/mr-gpt/evals",
     author="Twilix",
