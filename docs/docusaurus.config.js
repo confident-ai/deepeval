@@ -51,7 +51,7 @@ const config = {
       image: 'img/docusaurus-social-card.jpg',
       favicon: 'static/img/favicon.ico',
       navbar: {
-        title: '🚅 Eval',
+        title: '👩‍⚖️ DeepEval',
         items: [
           {
             type: 'docSidebar',
