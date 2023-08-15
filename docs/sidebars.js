@@ -23,7 +23,8 @@ const sidebars = {
     {
       type: 'category',
       label: 'QuickStart',
-      items: ['quickstart/quickstart', 'quickstart/synthetic-data-creation'],
+      items: ['quickstart/quickstart', 'quickstart/synthetic-data-creation',
+        'quickstart/bulk-runner', 'quickstart/custom-metrics'],
     },
     'troubleshoot',
     'contributing',
