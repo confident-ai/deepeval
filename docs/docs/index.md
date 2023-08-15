@@ -9,7 +9,7 @@ For any Python developer building production-grade apps, it is common to set up 
 
 While common for Python software engineers to use PyTest, it is often uncommon for many machine learning engineers as their feedback is often in the form of an evaluation loss.
 
-It is therefore important then to build a new type of testing framework for LLMs to ensure they can keep iterating on their prompts, agents and LLMs.
+It is therefore important then to build a new type of testing framework for LLMs to ensure engineers can keep iterating on their prompts, agents and LLMs.
 
 
 ## Why we wrote this library
