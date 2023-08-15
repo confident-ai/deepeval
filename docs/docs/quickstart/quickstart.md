@@ -4,6 +4,7 @@ You can write a simple test case as simply as:
 
 ```python
 # test_sample.py
+
 # test files must start 
 from deepeval.test_utils import assert_llm_output
 
@@ -24,4 +25,9 @@ You can then run it in CLI using this:
 python -m pytest test_sample.py
 ```
 
+## Diving into `assert_llm_output`
 
+`assert_llm_output` is the same as an `assert` statement in Python and will raise an error if it if does not match the specific metric. The metrics provided by default are:
+
+- `entailment` - Natural language inference score based on a given model (using NLI Deberta Base by default) with a minimum score for `entailment`
+- `exact` - An exact text string match

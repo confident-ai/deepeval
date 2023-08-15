@@ -6,8 +6,8 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'TwilixEval',
-  tagline: 'Evaluation platform for LLMs',
+  title: 'DeepEval',
+  tagline: 'PyTest for LLMs',
 
   // Set the production url of your site here
   url: 'https://litellm.vercel.app/',
@@ -51,7 +51,7 @@ const config = {
       image: 'img/docusaurus-social-card.jpg',
       favicon: 'static/img/favicon.ico',
       navbar: {
-        title: '🚅 Eval',
+        title: '👩‍⚖️ DeepEval',
         items: [
           {
             type: 'docSidebar',
@@ -60,8 +60,13 @@ const config = {
             label: 'Docs',
           },
           {
-            href: 'https://github.com/mrgpt/evals',
-            label: 'GitHub',
+            href: 'https://discord.gg/a3K9c8GRGt',
+            label: 'Join our discord',
+            position: 'right',
+          },
+          {
+            href: 'https://github.com/mr-gpt/deepeval',
+            label: 'View GitHub',
             position: 'right',
           },
         ],
@@ -88,7 +93,7 @@ const config = {
             items: [
               {
                 label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
+                href: 'https://discord.gg/a3K9c8GRGt',
               },
               {
                 label: 'Twitter',
@@ -100,12 +105,8 @@ const config = {
             title: 'More',
             items: [
               {
-                label: 'Blog',
-                to: '/blog',
-              },
-              {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: 'https://github.com/mr-gpt/deepeval',
               },
             ],
           },

@@ -19,12 +19,13 @@ const sidebars = {
   // But you can create a sidebar manually
   tutorialSidebar: [
     'index',
+    'install',
     {
       type: 'category',
       label: 'QuickStart',
-      items: ['quickstart/quickstart', 'quickstart/synthetic-data-creation'],
+      items: ['quickstart/quickstart', 'quickstart/synthetic-data-creation',
+        'quickstart/bulk-runner', 'quickstart/custom-metrics'],
     },
-    'troubleshoot',
     'contributing',
     'contact'
   ],
