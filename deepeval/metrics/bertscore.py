@@ -2,6 +2,7 @@ from .metric import Metric
 from typing import Optional
 import numpy as np
 
+
 def cosine_similarity(vector_a, vector_b):
     dot_product = np.dot(vector_a, vector_b)
     norm_a = np.linalg.norm(vector_a)
@@ -9,14 +10,17 @@ def cosine_similarity(vector_a, vector_b):
     similarity = dot_product / (norm_a * norm_b)
     return similarity
 
+
 class BertScore(Metric):
     """basic implementation of BertScore"""
+
     def __init__(
-            self, 
-            model_name: Optional[str]="sentence-transformers/all-mpnet-base-v2",
-            minimum_score: float=0.7
-        ):
+        self,
+        model_name: Optional[str] = "sentence-transformers/all-mpnet-base-v2",
+        minimum_score: float = 0.7,
+    ):
         from sentence_transformers import SentenceTransformer
+
         self.model_name = model_name
         self.model = SentenceTransformer(self.model_name).eval()
         self.minimum_score = minimum_score
