@@ -184,8 +184,6 @@ def create_evaluation_dataset_from_raw_text(text: str, output_fn: str = "output.
     """Utility function to create an evaluation dataset from raw text."""
     print(f"Outputting to {output_fn}")
 
-    from deepeval.query_generator import BEIRQueryGenerator
-
     # NOTE: loading this may take a while as the model used is quite big
     gen = BEIRQueryGenerator()
     text = "Synthetic queries are useful for scenraios where there is no data."
