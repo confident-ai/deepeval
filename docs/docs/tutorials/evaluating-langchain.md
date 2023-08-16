@@ -23,4 +23,5 @@ text_file_url = "https://raw.githubusercontent.com/hwchase17/chat-your-data/mast
 with open("state_of_the_union.txt", "w") as f:
   response = requests.get(text_file_url)
   f.write(response.text)
+
 ```
