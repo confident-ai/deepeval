@@ -1,4 +1,4 @@
-# Custom Metrics
+# Define Your Own Metric
 
 By default, we support the following metrics: 
 
@@ -9,7 +9,6 @@ By default, we support the following metrics:
 You can define a custom metric by defining the `measure` and `is_successful` functions and inheriting the base `Metric` class. An example is provided below.
 
 ```python
-
 from deepeval.metric import Metric
 
 class CustomMetric(Metric):
@@ -20,5 +19,4 @@ class CustomMetric(Metric):
         return True
 
 metric = CustomMetric()
-
 ```

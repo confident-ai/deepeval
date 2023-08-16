@@ -1,33 +1,37 @@
-# Bulk Running Test Cases
+# Create An Evaluation Dataset
 
-You can run a number of test cases which you can define either through CSV or through our hosted option.
+## Defining A Dataset
+
+An evaluation dataset is a list of test cases designed to make testing a number of evaluations very easy.
+
+### Example
 
 ```python
+from deepeval.dataset import EvaluationDataset
 
-from deepeval import BulkTestRunner, TestCase
-
-class BulkTester(BulkTestRunner):
-    @property
-    def bulk_test_cases(self):
-        return [
-            TestCase(
-                input="What is the customer success number",
-                expected_output="1800-213-123",
-                tags=["Customer success"]
-            ),
-            Testcase(
-                input="What do you think about the models?",
-                expected_output="Not much - they are underperforming.",
-                tags=["Machine learning"]
-            )
-        ]
-
-tester = BulkTester()
-tester.run(callable_fn=generate_llm_output)
-
+# from a csv
+# sample.csv
+# input,expected_output,id
+# sample_input,sample_output,312
+ds = EvaluationDataset.from_csv(
+    csv_filename="sample.csv",
+    input_column="input",
+    expected_output_column="expected_output",
+    id_column="312"
+)
 ```
 
-Once you run these tests, you will then be given a table that looks like this.
+#### Running The Evaluation
+
+```python
+ds.run_evaluation(
+    callable_fn=generate_llm_output,
+)
+# Returns the evaluation
+```
+
+Once you run these tests, you will then be given a table that looks like this and is saved to a text file.
+
 ```
 Test Passed  Metric Name                  Score    Output                                            Expected output    Message
 -------------  ---------------------  -----------  ------------------------------------------------  -----------------  -------------------------------------------
