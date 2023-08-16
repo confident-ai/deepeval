@@ -1,6 +1,7 @@
 """Test clients
 """
 import pytest
+import unittest
 from deepeval.client import Evaluator
 from deepeval.pipeline import Pipeline
 from deepeval.metrics.randomscore import RandomMetric
