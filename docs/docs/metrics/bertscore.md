@@ -1,6 +1,10 @@
 # BertScore
 
-BertScore is a common metric for measuring the similarity between 2 texts 
+BertScore is a common metric for measuring the similarity between 2 texts. Under the hood, it uses embedding models to measure the similarity between an input and output text. There are, however, a few known issues with this approach: 
+- BertScore fails to know when 2 texts are similar but contradicting (for example - there is a high similarity between "This is awesome!" and "This is not awesome!").
+- BertScore also fails to provide high similarity when 2 texts are of varying length. New research into asymmetric embedding models have attempted to resolve this issue but continues to remain a tough problem to solve.
+
+These issues, however, are largely solved by coupling similarity comparisons with entailment scores.
 
 ## Usage
 
