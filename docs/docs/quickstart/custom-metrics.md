@@ -1,4 +1,4 @@
-# Custom Metrics
+# Define Your Own Metric
 
 By default, we support the following metrics: 
 
