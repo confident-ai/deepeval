@@ -2,7 +2,7 @@ import functools
 import time
 from .metrics.randomscore import RandomMetric
 from .metrics.metric import Metric
-from .metrics.bertscore import BertScoreMetric
+from .metrics.bertscore_metric import BertScoreMetric
 from .metrics.entailment_metric import EntailmentScoreMetric
 from typing import Any
 
