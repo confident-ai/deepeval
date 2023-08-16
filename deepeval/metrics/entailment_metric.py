@@ -2,7 +2,7 @@ from .metric import Metric
 from ..utils import softmax
 
 
-class EntailmentScore(Metric):
+class EntailmentScoreMetric(Metric):
     def __init__(
         self,
         minimum_score: float = 0.6,

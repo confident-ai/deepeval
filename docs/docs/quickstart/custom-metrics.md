@@ -2,7 +2,7 @@
 
 By default, we support the following metrics: 
 
-- BertScore (simply set `metric="bertscore"`)
+- BertScoreMetric (simply set `metric="BertScoreMetric"`)
 - Entailment Score (simply set `metric="entailment"`)
 - Exact string match (simply set `metric="exact"`)
 

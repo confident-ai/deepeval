@@ -2,8 +2,8 @@ import functools
 import time
 from .metrics.randomscore import RandomMetric
 from .metrics.metric import Metric
-from .metrics.bertscore import BertScore
-from .metrics.entailment_metric import EntailmentScore
+from .metrics.BertScoreMetric import BertScoreMetric
+from .metrics.entailment_metric import EntailmentScoreMetric
 from typing import Any
 
 
@@ -13,11 +13,11 @@ def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
     elif metric == "random":
         metric: RandomMetric = RandomMetric()
         return metric.measure(input, output)
-    elif metric == "bertscore":
-        metric: BertScore = BertScore()
+    elif metric == "BertScoreMetric":
+        metric: BertScoreMetric = BertScoreMetric()
         return metric.measure(input, output)
     elif metric == "entailment":
-        metric: EntailmentScore = EntailmentScore()
+        metric: EntailmentScoreMetric = EntailmentScoreMetric()
         return metric.measure(input, output)
     elif isinstance(metric, Metric):
         metric_instance: Metric = metric()

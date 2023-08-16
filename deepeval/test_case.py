@@ -3,7 +3,7 @@ from typing import Any, List
 from collections import UserList
 from .metrics.metric import Metric
 from .metrics.randomscore import RandomMetric
-from .metrics.entailment_metric import EntailmentScore
+from .metrics.entailment_metric import EntailmentScoreMetric
 
 
 class TestCase:
@@ -15,7 +15,7 @@ class TestCase:
         id: str = None,
     ):
         if metrics is None:
-            self.metrics = [EntailmentScore(minimum_score=0.0000)]
+            self.metrics = [EntailmentScoreMetric(minimum_score=0.0000)]
         else:
             self.metrics = metrics
         self.input = input
