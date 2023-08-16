@@ -1,4 +1,5 @@
 from deepeval.test_utils import assert_llm_output
+from deepeval.metrics.entailment_metric import EntailmentScoreMetric
 
 
 def generate_llm_output(input: str):

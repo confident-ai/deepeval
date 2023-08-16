@@ -20,7 +20,7 @@ class Metric:
         return False
 
 
-class EntailmentScore(Metric):
+class EntailmentScoreMetric(Metric):
     def __init__(self, model_name: str = "cross-encoder/nli-deberta-base"):
         # We use a smple cross encoder model
         from sentence_transformers import CrossEncoder
