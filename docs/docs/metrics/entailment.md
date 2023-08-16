@@ -8,7 +8,11 @@ Entailment models are traditionally trained off NLI (Natural Language Inference)
 - Contradiction
 - Neutral
 
-It can therefore be useful to know how a particular text is an entailment of another text.
+It can therefore be useful to know how a particular text is an entailment of another text as it indicates how much a text can be inferred from a previous text (in this case whether the second text is true based on the first text).
+
+For example:
+- "James has 3 apples" and "James has fruit" would be considered an entailment.
+- "James only owns a car." and "James owns a bike." would be considered a contradiction.
 
 ## Usage
 
@@ -16,10 +20,8 @@ It can therefore be useful to know how a particular text is an entailment of ano
 from deepeval.test_utils import assert_llm_output
 from deepeval.metrics.entailment_metric import EntailmentScoreMetric
 
-
 def generate_llm_output(text_input: str):
     return text_input
-
 
 def test_llm_output(self):
     input = "What is the customer success phone line?"

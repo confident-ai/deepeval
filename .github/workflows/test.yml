@@ -32,4 +32,4 @@ jobs:
           python-version: ${{ matrix.python-version }}
         run: |
           python -c "import sys; print(sys.version)"
-          python -m pytest --reruns 3 tests
+          python -m pytest tests/*
