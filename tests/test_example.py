@@ -13,6 +13,7 @@ def test_llm_output(self):
     output = generate_llm_output(input)
     assert_llm_output(output, expected_output, metric="entailment")
 
+
 class TestLLM(TestEvalCase):
     @tags(tags=["customer success"])
     def test_llm_output(self):
