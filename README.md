@@ -8,15 +8,16 @@ We highly recommend getting started through our documentation here: https://docs
 
 Join our discord: https://discord.gg/a3K9c8GRGt
 
-## Introducing PyTest for LLMs
+## Why DeepEval?
 
-Pytest for LLMs aims to make writing tests for LLM applications (such as RAG) as easy as writing Python unit tests.
+Deepeval aims to make writing tests for LLM applications (such as RAG) as easy as writing Python unit tests.
 
 For any Python developer building production-grade apps, it is common to set up PyTest as the default testing suite as it provides a clean interface to quickly write tests.
 
 However, it is often uncommon for many machine learning engineers as their feedback is often in the form of an evaluation loss.
 
-With the advant of agents, LLMs and AI, there is yet to be a tool that can provide software-like tooling and abstractions for machine learning engineers where the feedback loop of these iterations can be significantly reduced.
+With the advent of agents, LLMs and AI, there is yet to be a tool that can provide software-like tooling and abstractions for machine learning engineers where the feedback loop of these iterations can be significantly reduced.
+
 It is therefore important then to build a new type of testing framework for LLMs to ensure engineers can keep iterating on their prompts, agents and LLMs while being able to continuously add to their test suite. 
 
 Introducing DeepEval.
@@ -34,19 +35,18 @@ pip install deepeval
 
 ```python
 # test_example.py
-from deepeval.test_utils import assert_llm_output, TestEvalCase, tags
+from deepeval.test_utils import assert_llm_output
 
 def generate_llm_output(input: str):
     expected_output = "Our customer success phone line is 1200-231-231."
     return expected_output
 
-class TestLLM(TestEvalCase):
-    @tags(tags=["customer success"])
-    def test_llm_output(self):
-        input = "What is the customer success phone line?"
-        expected_output = "Our customer success phone line is 1200-231-231."
-        output = generate_llm_output(input)
-        assert_llm_output(output, expected_output, metric="exact")
+def test_llm_output(self):
+    input = "What is the customer success phone line?"
+    expected_output = "Our customer success phone line is 1200-231-231."
+    output = generate_llm_output(input)
+    assert_llm_output(output, expected_output, metric="entailment")
+    assert_llm_output(output, expected_output, metric="exact")
 ```
 
 Once you have set that up, you can simply call pytest
