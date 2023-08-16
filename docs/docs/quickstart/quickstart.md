@@ -31,3 +31,17 @@ python -m pytest test_sample.py
 
 - `entailment` - Natural language inference score based on a given model (using NLI Deberta Base by default) with a minimum score for `entailment`
 - `exact` - An exact text string match
+- `BertScoreMetric` - A cosine similarity metric using embeddings to calculate if two texts are similar.
+
+## Writing a custom metric on top
+
+With `deepeval`, you can easily set custom metrics or customize existing metrics. We recommend reading the Custom Metrics quickstart if you are. 
+
+```python
+from deepeval.metrics.BertScoreMetric import BertScoreMetric
+
+# Changing the minimum score for similarity for this model.
+metric = BertScoreMetric(minimum_score=0.3)
+
+assert_llm_output(output, expected_output, metric=metric)
+```

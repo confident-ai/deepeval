@@ -1,4 +1,4 @@
-from .bertscore import *
+from .BertScoreMetric import *
 from .metric import *
 from .randomscore import *
 from .cohere_reranker_metric import *
