@@ -2,17 +2,14 @@
 """
 import json
 import random
+from tabulate import tabulate
 from datetime import datetime
 from typing import List, Callable
 from collections import UserList
 from .test_case import TestCase
 from .metrics.metric import Metric
-from tabulate import tabulate
+from .query_generator import BEIRQueryGenerator
 
-def create_evaluation_dataset_from_raw_text(text: str):
-    """Utility function to create an evaluation dataset
-from raw text."""
-    raise NotImplemented
 
 class EvaluationDataset(UserList):
     """Class for Evaluation Datasets -  which are a list of test cases"""
@@ -181,3 +178,25 @@ which should have matched
         for t in table:
             assert t[0] == True, t[-1]
         return test_filename
+
+
+def create_evaluation_dataset_from_raw_text(text: str, output_fn: str = "output.csv"):
+    """Utility function to create an evaluation dataset from raw text."""
+    print(f"Outputting to {output_fn}")
+
+    from deepeval.query_generator import BEIRQueryGenerator
+
+    # NOTE: loading this may take a while as the model used is quite big
+    gen = BEIRQueryGenerator()
+    text = "Synthetic queries are useful for scenraios where there is no data."
+    queries = gen.generate_queries(texts=[text], num_queries=2)
+    test_cases = []
+    with open(output_fn, "w") as f:
+        f.write("input,expected_output\n")
+        for query in queries:
+            f.write(f"{query}, {text}\n")
+        test_case = TestCase(input=text, expected_output=text)
+        test_cases.append(test_case)
+
+    dataset = EvaluationDataset(test_cases=test_cases)
+    return dataset
