@@ -26,6 +26,11 @@ const sidebars = {
       items: ['quickstart/quickstart', 'quickstart/synthetic-data-creation',
         'quickstart/bulk-runner', 'quickstart/custom-metrics'],
     },
+    {
+      type: 'category',
+      label: 'Metrics',
+      items: ['metrics/entailment']
+    },
     'contact'
   ],
 };
