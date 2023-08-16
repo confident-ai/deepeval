@@ -6,7 +6,7 @@ from .test_case import TestCase
 
 
 class BulkTestRunner:
-    def __init__(self, test_filename: str=None):
+    def __init__(self, test_filename: str = None):
         self.test_filename = test_filename
 
     @abstractmethod
@@ -45,7 +45,7 @@ which should have matched
                         message,
                     ]
                 )
-        with open(self.test_filename, 'w') as f:
+        with open(self.test_filename, "w") as f:
             f.write(tabulate(table, headers=headers))
         for t in table:
             assert t[0] == True, t[-1]
