@@ -142,8 +142,14 @@ Once you have added a ground truth, you should be able to see a dashboard that c
 
 ![assets/app.png](assets/app.png)
 
+# RoadMap
+
+- [ ] Web UI
+- [ ] Support for more metrics 
+- [ ] Integrations with LangChain
+- [ ] Integration with LlamaIndex
+
 # Authors
 
 Built by the Confident AI Team
-
 
