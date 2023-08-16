@@ -5,6 +5,8 @@
 - When there isn't much data or any data to start with for evaluating langchain pipelines
 - When getting an eyeball check of current performance is done very quickly
 
+![Synthetic Queries](../../assets/synthetic-query-generation.png)
+
 Generating synthetic queries allows you to quickly evaluate the queries related to your prompts.
 We help developers get up and running with example queries from just raw text.
 
