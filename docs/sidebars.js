@@ -23,10 +23,11 @@ const sidebars = {
     {
       type: 'category',
       label: 'QuickStart',
-      items: ['quickstart/quickstart',
+      items: [
+        'quickstart/quickstart',
+        'quickstart/dataset',
         'quickstart/custom-metrics',
-        'quickstart/synthetic-data-creation',
-        'quickstart/dataset'
+        'quickstart/synthetic-data-creation'
       ],
     },
     {
