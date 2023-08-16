@@ -29,7 +29,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'Metrics',
-      items: ['metrics/entailment']
+      items: ['metrics/entailment', 'metrics/bertscore']
     },
     'contact'
   ],
