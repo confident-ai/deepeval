@@ -23,13 +23,20 @@ const sidebars = {
     {
       type: 'category',
       label: 'QuickStart',
-      items: ['quickstart/quickstart', 'quickstart/synthetic-data-creation',
-        'quickstart/bulk-runner', 'quickstart/custom-metrics'],
+      items: ['quickstart/quickstart',
+        'quickstart/bulk-runner', 'quickstart/custom-metrics',
+        'quickstart/synthetic-data-creation',
+      ],
     },
     {
       type: 'category',
       label: 'Metrics',
       items: ['metrics/entailment', 'metrics/bertscore']
+    },
+    {
+      type: "category",
+      label: "Tutorials",
+      items: ["tutorials/evaluating-langchain"]
     },
     'contact'
   ],
