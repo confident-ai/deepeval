@@ -20,10 +20,8 @@ For example:
 from deepeval.test_utils import assert_llm_output
 from deepeval.metrics.entailment_metric import EntailmentScoreMetric
 
-
 def generate_llm_output(text_input: str):
     return text_input
-
 
 def test_llm_output(self):
     input = "What is the customer success phone line?"
