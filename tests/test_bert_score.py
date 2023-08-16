@@ -1,7 +1,7 @@
 """Test BERT score
 """
 
-from deepeval.metrics.BertScoreMetric import BertScoreMetric
+from deepeval.metrics.bertscore_metric import BertScoreMetric
 
 
 def test_bert_score():
