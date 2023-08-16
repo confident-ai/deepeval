@@ -1,9 +1,9 @@
 """Test clients
 """
 import unittest
-from deepeval import Evaluator
+from deepeval.client import Evaluator
 from deepeval.pipeline import Pipeline
-from deepeval.metrics.metric import RandomMetric
+from deepeval.metrics.randomscore import RandomMetric
 
 
 class TestEvaluator(unittest.TestCase):
