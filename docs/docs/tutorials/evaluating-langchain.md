@@ -44,6 +44,19 @@ result = qa.run(query)
 
 ```
 
+Now that we have defined the LangChain QA pipeline, let us start getting an evaluation dataset.
 
+In most cases, users won't have an evaluation dataset and need a synthetic dataset to start. You can achieve this easily by a Python function for this. 
 
+:::note
 
+This model is quite big and may consume a lot of memory. In order to run this code quickly and not consume a lot of memory - we recommend using a solution like Modal to run this in the cloud.
+
+::;
+
+```
+from deepeval.dataset import create_evaluation_dataset_from_raw_text
+
+ds = create_evaluation_dataset_from_raw_text(response.text)
+ds.run_evaluation(callable_fn=qa.run)
+```
