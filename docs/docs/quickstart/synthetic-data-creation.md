@@ -1,4 +1,4 @@
-# Synthetic Data Creation
+# Create Synthetic Data
 
 ## Problem synthetic data creation solves
 
