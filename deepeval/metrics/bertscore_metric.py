@@ -11,8 +11,8 @@ def cosine_similarity(vector_a, vector_b):
     return similarity
 
 
-class BertScore(Metric):
-    """basic implementation of BertScore"""
+class BertScoreMetric(Metric):
+    """basic implementation of BertScoreMetric"""
 
     def __init__(
         self,
