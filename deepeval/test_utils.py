@@ -11,16 +11,16 @@ def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
     if metric == "exact":
         assert_exact_match(input, output)
     elif metric == "random":
-        metric = RandomMetric()
+        metric: RandomMetric = RandomMetric()
         return metric.measure(input, output)
     elif metric == "bertscore":
-        metric = BertScore()
+        metric: BertScore = BertScore()
         return metric.measure(input, output)
     elif metric == "entailment":
-        metric = EntailmentScore()
+        metric: EntailmentScore = EntailmentScore()
         return metric.measure(input, output)
     elif isinstance(metric, Metric):
-        metric_instance = metric()
+        metric_instance: Metric = metric()
         return metric_instance.measure(input, output)
     else:
         raise ValueError("Inappropriate metric")
