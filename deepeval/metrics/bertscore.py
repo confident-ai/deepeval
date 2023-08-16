@@ -18,7 +18,7 @@ class BertScore(Metric):
         ):
         from sentence_transformers import SentenceTransformer
         self.model_name = model_name
-        self.model = SentenceTransformer(self.model_name)
+        self.model = SentenceTransformer(self.model_name).eval()
         self.minimum_score = minimum_score
 
     def _vectorize(self, text_a: str, text_b: str):
