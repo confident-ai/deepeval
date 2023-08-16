@@ -52,7 +52,7 @@ In most cases, users won't have an evaluation dataset and need a synthetic datas
 
 This model is quite big and may consume a lot of memory. In order to run this code quickly and not consume a lot of memory - we recommend using a solution like Modal to run this in the cloud.
 
-::;
+:::
 
 ```
 from deepeval.dataset import create_evaluation_dataset_from_raw_text
