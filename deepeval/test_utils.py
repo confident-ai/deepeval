@@ -12,18 +12,19 @@ def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
         assert_exact_match(input, output)
     elif metric == "random":
         metric: RandomMetric = RandomMetric()
-        return metric.measure(input, output)
-    elif metric == "BertScoreMetric":
+        metric.measure(input, output)
+    elif metric == "bertscore":
         metric: BertScoreMetric = BertScoreMetric()
-        return metric.measure(input, output)
+        metric.measure(input, output)
     elif metric == "entailment":
         metric: EntailmentScoreMetric = EntailmentScoreMetric()
-        return metric.measure(input, output)
+        metric.measure(input, output)
     elif isinstance(metric, Metric):
-        metric_instance: Metric = metric()
-        return metric_instance.measure(input, output)
+        metric_instance: Metric = metric
+        metric_instance.measure(input, output)
     else:
         raise ValueError("Inappropriate metric")
+    assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
 
 
 def assert_exact_match(text_input, text_output):
