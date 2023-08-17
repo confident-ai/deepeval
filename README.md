@@ -58,55 +58,6 @@ python -m pytest test_example.py
 Running tests ... ✅
 ```
 
-## Bulk Test Cases
-
-You can run a number of test cases which you can define either through CSV
-or through our hosted option.
-
-```python
-from deepeval import BulkTestRunner, TestCase
-
-class BulkTester(BulkTestRunner):
-    @property
-    def bulk_test_cases(self):
-        return [
-            TestCase(
-                input="What is the customer success number",
-                expected_output="1800-213-123",
-                tags=["Customer success"]
-            ),
-            Testcase(
-                input="What do you think about the models?",
-                expected_output="Not much - they are underperforming.",
-                tags=["Machine learning"]
-            )
-        ]
-
-tester = BulkTester()
-tester.run(callable_fn=generate_llm_output)
-```
-
-### From CSV
-
-You can import test cases from CSV.
-
-```python
-import pandas as pd
-df = pd.read_csv('sample.csv')
-from deepeval import TestCases
-# Assuming you have the column names `input`, `expected_output`
-class BulkTester(BulkTestRunner):
-    @property
-    def bulk_test_cases(self):
-        return TestCases.from_csv(
-            "sample.csv",
-            input_column="input",
-            expected_output_column="output",
-            id_column="id"
-        )
-
-```
-
 ## Setting up metrics
 
 ### Setting up custom metrics
@@ -117,9 +68,11 @@ To define a custom metric, you simply need to define the `measure` and `is_succe
 from deepeval.metric import Metric
 class CustomMetric(Metric):
     def measure(self, a, b):
-        return a > b
+        self.success = a > b
+        return 0.1
+
     def is_successful(self):
-        return True
+        return self.success
 
 metric = CustomMetric()
 ```
