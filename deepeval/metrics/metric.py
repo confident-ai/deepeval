@@ -12,7 +12,10 @@ from ..utils import softmax
 
 class Metric:
     def __call__(self, *args, **kwargs):
-        return self.measure(*args, **kwargs)
+        result = self.measure(*args, **kwargs)
+        if self._is_send_okay():
+            self._send_to_server(**kwargs)
+        return result
 
     @abstractmethod
     def measure(self, a, b):
@@ -35,11 +38,8 @@ class Metric:
         return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) == "Y"
 
     async def _send_to_server(self, **kwargs):
-        if self._is_send_okay():
-            client = Api(
-                api_key=os.getenv(API_KEY_ENV),
-            )
-            return client.add_test_case(**kwargs)
+        client = Api(api_key=os.getenv(API_KEY_ENV))
+        return client.add_test_case(**kwargs)
 
 
 class EntailmentScoreMetric(Metric):

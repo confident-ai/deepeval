@@ -20,8 +20,7 @@ def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
         metric: EntailmentScoreMetric = EntailmentScoreMetric()
         metric.measure(input, output)
     elif isinstance(metric, Metric):
-        metric_instance: Metric = metric
-        metric_instance.measure(input, output)
+        metric.measure(input, output)
     else:
         raise ValueError("Inappropriate metric")
     assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
