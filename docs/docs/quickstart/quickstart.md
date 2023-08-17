@@ -35,7 +35,7 @@ python -m pytest test_sample.py
 
 ## Writing a custom metric on top
 
-With `deepeval`, you can easily set custom metrics or customize existing metrics. We recommend reading the Custom Metrics quickstart if you are. 
+With `deepeval`, you can easily set custom metrics or customize existing metrics. We recommend reading the `Define Your Own Metric` if you are.
 
 ```python
 from deepeval.metrics.BertScoreMetric import BertScoreMetric
