@@ -26,6 +26,14 @@ def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
     assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
 
 
+def assert_factual_consistency(output: str, context: str, metric="entailment"):
+    """Assert that the output is factually consistent with the context."""
+    metric = EntailmentScoreMetric()
+    score = metric(context, output)
+    print(score)
+    assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
+
+
 def assert_exact_match(text_input, text_output):
     assert text_input == text_output, f"{text_output} != {text_input}"
 
