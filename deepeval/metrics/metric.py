@@ -20,6 +20,11 @@ class Metric:
     def measure(self, output, expected_output, query: Optional[str] = None):
         pass
 
+    def _get_init_values(self):
+        # We use this method for sending useful metadata
+        init_values = {param: getattr(self, param) for param in vars(self)}
+        return init_values
+
     @abstractmethod
     def is_successful(self) -> bool:
         return False
@@ -46,7 +51,9 @@ class Metric:
             )
         return score
 
-    async def _send_to_server(self, entailment_score: float, query: str, output: str, **kwargs):
+    def _send_to_server(
+        self, entailment_score: float, query: str, output: str, **kwargs
+    ):
         client = Api(api_key=os.getenv(API_KEY_ENV))
         datapoint_id = client.add_golden(
             query=query,
@@ -54,10 +61,10 @@ class Metric:
         )
         return client.add_test_case(
             entailment_score=entailment_score,
-            output=output,
-            input=query,
-            metric=self.__class__.__name__,
-            is_successful=self.is_successful(),
+            actual_output=output,
+            query=query,
+            metrics_metadata=self._get_init_values(),
+            success=self.is_successful(),
             datapoint_id=datapoint_id,
         )
 
