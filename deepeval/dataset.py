@@ -171,7 +171,7 @@ which should have matched
                     ]
                 )
         if test_filename is None:
-            test_filename = f"test-result-{datetime.now().__str__()}.txt"
+            test_filename = f"test-result-{datetime.now().__str__().replace(' ', '-')}.txt"
         with open(test_filename, "w") as f:
             f.write(tabulate(table, headers=headers))
         print(f"Saved to {test_filename}")
