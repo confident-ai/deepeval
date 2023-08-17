@@ -35,7 +35,7 @@ class Metric:
         client = Api(
             api_key=os.getenv(API_KEY_ENV),
         )
-        return client.test_case(**kwargs)
+        return client.add_test_case(**kwargs)
 
 
 class EntailmentScoreMetric(Metric):
