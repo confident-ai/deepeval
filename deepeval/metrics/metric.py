@@ -4,7 +4,7 @@ you want is Cohere's reranker metric.
 import random
 import os
 import warnings
-from ..constants import API_KEY_ENV
+from ..constants import API_KEY_ENV, LOG_TO_SERVER_ENV
 from abc import abstractmethod
 from ..api import Api
 from ..utils import softmax
@@ -12,7 +12,10 @@ from ..utils import softmax
 
 class Metric:
     def __call__(self, *args, **kwargs):
-        return self.measure(*args, **kwargs)
+        result = self.measure(*args, **kwargs)
+        if self._is_send_okay():
+            self._send_to_server(**kwargs)
+        return result
 
     @abstractmethod
     def measure(self, a, b):
@@ -21,21 +24,22 @@ class Metric:
     @abstractmethod
     def is_successful(self) -> bool:
         return False
-    
+
     def _is_api_key_set(self):
         result = os.getenv(API_KEY_ENV) is not None
         if result is False:
             warnings.warn(
-"""API key is not set. Please set it by visiting https://app.confident-ai.com
+                """API key is not set. Please set it by visiting https://app.confident-ai.com
 """
             )
         return result
 
+    def _is_send_okay(self):
+        return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) == "Y"
+
     async def _send_to_server(self, **kwargs):
-        client = Api(
-            api_key=os.getenv(API_KEY_ENV),
-        )
-        return client.test_case(**kwargs)
+        client = Api(api_key=os.getenv(API_KEY_ENV))
+        return client.add_test_case(**kwargs)
 
 
 class EntailmentScoreMetric(Metric):

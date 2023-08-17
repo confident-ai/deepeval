@@ -2,7 +2,7 @@ import platform
 import urllib.parse
 
 import requests
-from typing import Dict
+from typing import Any
 from requests.adapters import HTTPAdapter, Response, Retry
 
 API_BASE_URL = "https://app.twilix.io/api"
@@ -247,9 +247,15 @@ class Api:
             str: Quoted text in return
         """
         return urllib.parse.quote(text, safe="")
-    
 
-    def test_case(self, query: str, actual_output: str, entailment_score: float, threshold_entailment_score: float):
+    def add_test_case(
+        self,
+        query: str,
+        actual_output: str,
+        entailment_score: float,
+        success: bool,
+        metrics_metadata: Any,
+    ):
         """send test case data to the prod-data endpoint"""
         return self.post_request(
             endpoint="/prod-data",
@@ -257,6 +263,7 @@ class Api:
                 "query": query,
                 "actualoutput": actual_output,
                 "entailmentscore": entailment_score,
-                "thresholdentailmentscore": threshold_entailment_score
-            }
+                "success": success,
+                "metricsMetadata": metrics_metadata,
+            },
         )

@@ -1,0 +1,6 @@
+requests
+tqdm
+transformers
+pytest
+tabulate
+sentence-transformers
