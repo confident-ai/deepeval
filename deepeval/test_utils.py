@@ -1,10 +1,10 @@
 import functools
 import time
+from typing import Any
 from .metrics.randomscore import RandomMetric
 from .metrics.metric import Metric
 from .metrics.bertscore_metric import BertScoreMetric
 from .metrics.entailment_metric import EntailmentScoreMetric
-from typing import Any
 
 
 def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
@@ -20,8 +20,7 @@ def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
         metric: EntailmentScoreMetric = EntailmentScoreMetric()
         metric.measure(input, output)
     elif isinstance(metric, Metric):
-        metric_instance: Metric = metric
-        metric_instance.measure(input, output)
+        metric.measure(input, output)
     else:
         raise ValueError("Inappropriate metric")
     assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
