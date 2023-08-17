@@ -22,7 +22,11 @@ class Metric:
 
     def _get_init_values(self):
         # We use this method for sending useful metadata
-        init_values = {param: getattr(self, param) for param in vars(self)}
+        init_values = {
+            param: getattr(self, param)
+            for param in vars(self)
+            if isinstance(getattr(self, param), (str, int, float))
+        }
         return init_values
 
     @abstractmethod
@@ -60,12 +64,12 @@ class Metric:
             expected_output=output,
         )
         return client.add_test_case(
-            entailment_score=entailment_score,
+            entailment_score=float(entailment_score),
             actual_output=output,
             query=query,
             metrics_metadata=self._get_init_values(),
-            success=self.is_successful(),
-            datapoint_id=datapoint_id,
+            success=bool(self.is_successful()),
+            datapoint_id=datapoint_id["id"],
         )
 
 

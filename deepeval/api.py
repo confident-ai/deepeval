@@ -262,8 +262,8 @@ class Api:
             endpoint="/v1/prod-data",
             body={
                 "query": query,
-                "actualoutput": actual_output,
-                "entailmentscore": entailment_score,
+                "actualOutput": actual_output,
+                "entailmentScore": entailment_score,
                 "success": success,
                 "metricsMetadata": metrics_metadata,
                 "goldenId": datapoint_id,
