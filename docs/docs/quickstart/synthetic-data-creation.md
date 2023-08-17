@@ -18,7 +18,7 @@ from deepeval.dataset import create_evaluation_dataset_from_raw_text
 dataset = create_evaluation_dataset_from_raw_text("Python is a great language for mathematical expression and machine learning.")
 ```
 
-## Running test cases in bulk
+## Running test cases.
 
 Once you have defined a number of test cases, you can easily run it in bulk if required.
 
@@ -27,14 +27,3 @@ Once you have defined a number of test cases, you can easily run it in bulk if r
 # Run an evaluation as you would any normal evaluation.
 dataset.run_evaluation(callable_fn=generate_llm_output)
 ```
-
-Once you have written these tests, you can then simply call `pytest` via CLI again to trigger these tests.
-
-```bash
-python -m pytest test_bulk_runner.py
-
-# Output
-Running tests ... ✅✅✅
-```
-
-
