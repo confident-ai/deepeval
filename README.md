@@ -4,9 +4,9 @@
 
 [![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
 
-"Only fools repeat the same things over and over, expecting to obtain different results." - someone who has never used an LLM.
+> "Only fools repeat the same things over and over, expecting to obtain different results." - someone who has never used an LLM.
 
-Evals provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production. The guiding philosophy is a "Pytest for LLM" that aims to make productionizing and evaluating LLMs as easy as ensuring all tests pass.
+DeepEval provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production. The guiding philosophy is a "Pytest for LLM" that aims to make productionizing and evaluating LLMs as easy as ensuring all tests pass.
 
 # Documentation
 

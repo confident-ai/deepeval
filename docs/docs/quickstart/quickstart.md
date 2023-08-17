@@ -33,7 +33,7 @@ python -m pytest test_sample.py
 - `exact` - An exact text string match
 - `bertscore` - A cosine similarity metric using embeddings to calculate if two texts are similar.
 
-## Writing a custom metric on top
+## Writing a custom metric
 
 With `deepeval`, you can easily set custom metrics or customize existing metrics. We recommend reading the `Define Your Own Metric` if you are.
 
