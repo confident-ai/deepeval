@@ -1,7 +1,5 @@
 # 👩‍⚖️ DeepEval
 
-![GitHub Repo Stars](https://img.shields.io/github/stars/mr-gpt/deepeval)
-
 [![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
 
 > "Only fools repeat the same things over and over, expecting to obtain different results." - someone who has never used an LLM.
@@ -24,10 +22,9 @@ However, it is often uncommon for many machine learning engineers as their feedb
 
 With the advent of agents, LLMs and AI, there is yet to be a tool that can provide software-like tooling and abstractions for machine learning engineers where the feedback loop of these iterations can be significantly reduced.
 
-It is therefore important then to build a new type of testing framework for LLMs to ensure engineers can keep iterating on their prompts, agents and LLMs while being able to continuously add to their test suite. 
+It is therefore important then to build a new type of testing framework for LLMs to ensure engineers can keep iterating on their prompts, agents and LLMs while being able to continuously add to their test suite.
 
 Introducing DeepEval.
-
 
 # Installation
 
@@ -87,13 +84,12 @@ metric = CustomMetric()
 
 We integrate DeepEval tightly with common frameworks such as Langchain and lLamaIndex.
 
-# Synthetic Query Generation 
+# Synthetic Query Generation
 
 ![Synthetic Queries](assets/synthetic-query-generation.png)
 
 Generating synthetic queries allows you to quickly evaluate the queries related to your prompts.
 We help developers get up and running with a lot of example queries.
-
 
 # Dashboard (Coming soon)
 
@@ -104,11 +100,10 @@ Once you have added a ground truth, you should be able to see a dashboard that c
 # RoadMap
 
 - [ ] Web UI
-- [ ] Support for more metrics 
+- [ ] Support for more metrics
 - [ ] Integrations with LangChain
 - [ ] Integration with LlamaIndex
 
 # Authors
 
 Built by the Confident AI Team. For any questions/business enquiries - please contact jacky@twilix.io.
-
