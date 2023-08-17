@@ -41,21 +41,21 @@ class Metric:
         if self._is_send_okay():
             self._send_to_server(
                 entailment_score=score,
-                input=input,
+                query=query,
                 output=output,
             )
         return score
 
-    async def _send_to_server(self, entailment_score, input, output, **kwargs):
+    async def _send_to_server(self, entailment_score: float, query: str, output: str, **kwargs):
         client = Api(api_key=os.getenv(API_KEY_ENV))
         datapoint_id = client.add_golden(
-            input=input,
+            query=query,
             expected_output=output,
         )
         return client.add_test_case(
             entailment_score=entailment_score,
             output=output,
-            input=input,
+            input=query,
             metric=self.__class__.__name__,
             is_successful=self.is_successful(),
             datapoint_id=datapoint_id,
