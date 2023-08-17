@@ -104,5 +104,5 @@ Once you have added a ground truth, you should be able to see a dashboard that c
 
 # Authors
 
-Built by the Confident AI Team
+Built by the Confident AI Team. For any questions/business enquiries - please contact jacky@twilix.io.
 

@@ -1,10 +1,10 @@
 import functools
 import time
+from typing import Any
 from .metrics.randomscore import RandomMetric
 from .metrics.metric import Metric
 from .metrics.bertscore_metric import BertScoreMetric
 from .metrics.entailment_metric import EntailmentScoreMetric
-from typing import Any
 
 
 def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
