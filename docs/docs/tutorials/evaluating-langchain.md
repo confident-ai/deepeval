@@ -31,7 +31,7 @@ documents = loader.load()
 text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 texts = text_splitter.split_documents(documents)
 
-embeddings = OpenAIEmbeddings(openai_api_key="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")
+embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
 docsearch = Chroma.from_documents(texts, embeddings)
 
 qa = RetrievalQA.from_chain_type(
