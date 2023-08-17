@@ -126,7 +126,7 @@ class EvaluationDataset(UserList):
     def __repr__(self):
         return f"{self.__class__.__name__}({self.data})"
 
-    def sample(self, n: int):
+    def sample(self, n: int=5):
         return random.sample(self.data, n)
 
     def __getitem__(self, index):
