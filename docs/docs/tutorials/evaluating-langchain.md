@@ -11,6 +11,7 @@ pip install openai chromadb langchain tiktoken
 ```
 
 ```python
+import requests
 from langchain.chains import RetrievalQA
 from langchain.document_loaders import TextLoader
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -35,7 +36,7 @@ embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
 docsearch = Chroma.from_documents(texts, embeddings)
 
 qa = RetrievalQA.from_chain_type(
-  llm=OpenAI(openai_api_key=openai_api_key), chain_type="stuff"
+  llm=OpenAI(openai_api_key=openai_api_key), chain_type="stuff",
   retriever=docsearch.as_retriever()
 )
 
@@ -45,7 +46,11 @@ result = qa.run(query)
 
 ```
 
+##  Creating an Evaluation Dataset 
+
 Now that we have defined the LangChain QA pipeline, let us start getting an evaluation dataset.
+
+### Creating A Synthetic Dataset
 
 In most cases, users won't have an evaluation dataset and need a synthetic dataset to start. You can achieve this easily by a Python function for this. 
 
@@ -61,3 +66,15 @@ from deepeval.dataset import create_evaluation_dataset_from_raw_text
 ds = create_evaluation_dataset_from_raw_text(response.text)
 ds.run_evaluation(callable_fn=qa.run)
 ```
+
+This will output a text file with the following contents:
+
+```
+Test Passed    Metric Name                 Score  Output                                                                                                                                                                               Expected output                                                     Message
+-------------  ---------------------  ----------  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  ------------------------------------------------------------------  -------------------------------------------------------------------
+False          EntailmentScoreMetric  0.00545002  No, synthetic queries are not useful for scenarios where there is no data. Synthetic queries are used to generate test data to evaluate the performance of a system or application.  Synthetic queries are useful for scenraios where there is no data.  EntailmentScoreMetric was unsuccessful for
+                                                                                                                                                                                                                                                                                                           Synthetic queries are useful for scenraios where there is no data.
+                                                                                                                                                                                                                                                                                                           which should have matched
+                                                                                                                                                                                                                                                                                                           Synthetic queries are useful for scenraios where there is no data.
+```
+
