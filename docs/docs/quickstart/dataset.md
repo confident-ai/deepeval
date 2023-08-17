@@ -47,7 +47,7 @@ Test Passed    Metric Name                  Score    Output                     
 
 To view a sample of data, simply run:
 
-```
+```python
 ds.sample(5)
 ```
 
@@ -55,7 +55,7 @@ ds.sample(5)
 
 You can set up an evaluation dataset from the CSV the `from_csv` method
 
-```
+```python
 dataset = EvaluationDataset.from_csv(
     csv_filename="input.csv",
     input_column="input",
