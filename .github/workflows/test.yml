@@ -29,8 +29,8 @@ jobs:
 
       - name: Run Unit Tests (pytest)
         env:
-          TEST_TOKEN: ${{ secrets.TEST_TOKEN }}
           python-version: ${{ matrix.python-version }}
+          API_KEY_ENV: ${{ secrets.API_KEY_ENV }}
         run: |
           python -c "import sys; print(sys.version)"
           python -m pytest tests/*
