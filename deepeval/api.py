@@ -247,3 +247,16 @@ class Api:
             str: Quoted text in return
         """
         return urllib.parse.quote(text, safe="")
+    
+
+    def prod_data(self, query: str, actual_output: str, entailment_score: float, threshold_entailment_score: float):
+        """Send ground truth data to the prod-data endpoint"""
+        return self.post_request(
+            endpoint="/prod-data",
+            body={
+                "query": query,
+                "actualOutput": actual_output,
+                "entailmentScore": entailment_score,
+                "thresholdEntailmentScore": threshold_entailment_score
+            }
+        )
