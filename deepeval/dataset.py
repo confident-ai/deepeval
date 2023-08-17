@@ -126,7 +126,7 @@ class EvaluationDataset(UserList):
     def __repr__(self):
         return f"{self.__class__.__name__}({self.data})"
 
-    def sample(self, n: int=5):
+    def sample(self, n: int = 5):
         return random.sample(self.data, n)
 
     def __getitem__(self, index):
@@ -171,7 +171,9 @@ which should have matched
                     ]
                 )
         if test_filename is None:
-            test_filename = f"test-result-{datetime.now().__str__().replace(' ', '-')}.txt"
+            test_filename = (
+                f"test-result-{datetime.now().__str__().replace(' ', '-')}.txt"
+            )
         with open(test_filename, "w") as f:
             f.write(tabulate(table, headers=headers))
         print(f"Saved to {test_filename}")
