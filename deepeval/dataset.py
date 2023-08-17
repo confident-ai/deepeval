@@ -162,7 +162,7 @@ which should have matched
 """
                 table.append(
                     [
-                        is_successful,
+                        bool(is_successful),
                         metric.__class__.__name__,
                         score,
                         output,
@@ -171,7 +171,7 @@ which should have matched
                     ]
                 )
         if test_filename is None:
-            test_filename = f"test-result-{datetime.now().__str__()}"
+            test_filename = f"test-result-{datetime.now().__str__()}.txt"
         with open(test_filename, "w") as f:
             f.write(tabulate(table, headers=headers))
         print(f"Saved to {test_filename}")
