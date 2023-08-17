@@ -40,6 +40,7 @@ qa = RetrievalQA.from_chain_type(
 )
 
 # Providing a new question-answering pipeline
+query = "Who is the president?
 result = qa.run(query)
 
 ```
