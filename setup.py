@@ -1,6 +1,10 @@
 from setuptools import setup, find_packages
 from deepeval._version import __version__
 
+with open("requirements.txt", "r") as f:
+    requirements = f.read().splitlines()
+
+
 setup(
     name="deepeval",
     version=__version__,
