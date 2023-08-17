@@ -12,15 +12,15 @@ def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
         assert_exact_match(input, output)
     elif metric == "random":
         metric: RandomMetric = RandomMetric()
-        metric.measure(input, output)
+        metric(input, output)
     elif metric == "bertscore":
         metric: BertScoreMetric = BertScoreMetric()
-        metric.measure(input, output)
+        metric(input, output)
     elif metric == "entailment":
         metric: EntailmentScoreMetric = EntailmentScoreMetric()
-        metric.measure(input, output)
+        metric(input, output)
     elif isinstance(metric, Metric):
-        metric.measure(input, output)
+        metric(input, output)
     else:
         raise ValueError("Inappropriate metric")
     assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
