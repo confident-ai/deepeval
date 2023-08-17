@@ -37,9 +37,15 @@ class Metric:
     def _is_send_okay(self):
         return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) == "Y"
 
-    async def _send_to_server(self, **kwargs):
+    async def _send_to_server(self, entailment_score, input, output, **kwargs):
         client = Api(api_key=os.getenv(API_KEY_ENV))
-        return client.add_test_case(**kwargs)
+        return client.add_test_case(
+            entailment_score=entailment_score,
+            output=output,
+            input=input,
+            metric=self.__class__.__name__,
+            is_successful=self.is_successful(),
+        )
 
 
 class EntailmentScoreMetric(Metric):
