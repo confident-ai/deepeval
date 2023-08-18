@@ -10,6 +10,7 @@ def generate_llm_output(input: str):
     return expected_output
 
 
+@pytest.mark.asyncio
 def test_llm_output():
     input = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
@@ -18,6 +19,7 @@ def test_llm_output():
     assert_llm_output(output, expected_output, metric="bertscore")
 
 
+@pytest.mark.asyncio
 def test_llm_output_custom():
     input = "What is the customer success phone line?"
     expected_output = "Dogs and cats love to walk around the beach."

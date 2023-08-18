@@ -2,6 +2,7 @@ import pytest
 from deepeval.test_utils import assert_factual_consistency
 
 
+@pytest.mark.asyncio
 def test_factual_consistency():
     with pytest.raises(AssertionError):
         assert_factual_consistency(
