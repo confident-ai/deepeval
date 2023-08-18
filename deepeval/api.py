@@ -5,7 +5,7 @@ import requests
 from typing import Any
 from requests.adapters import HTTPAdapter, Response, Retry
 
-API_BASE_URL = "https://app.twilix.io/api"
+API_BASE_URL = "https://app.confident-ai.com/api"
 
 # Parameters for HTTP retry
 HTTP_TOTAL_RETRIES = 3  # Number of total retries
@@ -255,15 +255,27 @@ class Api:
         entailment_score: float,
         success: bool,
         metrics_metadata: Any,
+        datapoint_id: str,
     ):
         """send test case data to the prod-data endpoint"""
         return self.post_request(
-            endpoint="/prod-data",
+            endpoint="/v1/prod-data",
             body={
                 "query": query,
-                "actualoutput": actual_output,
-                "entailmentscore": entailment_score,
+                "actualOutput": actual_output,
+                "entailmentScore": entailment_score,
                 "success": success,
                 "metricsMetadata": metrics_metadata,
+                "goldenId": datapoint_id,
+            },
+        )
+
+    def add_golden(self, query: str, expected_output: str, is_synthetic: bool = False):
+        return self.post_request(
+            endpoint="/v1/golden",
+            body={
+                "query": query,
+                "expectedOutput": expected_output,
+                "isSynthetic": is_synthetic,
             },
         )

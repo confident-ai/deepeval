@@ -4,7 +4,6 @@ on: [pull_request]
 
 jobs:
   examples:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -25,12 +24,12 @@ jobs:
           python -c "import sys; print(sys.version)"
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          python -m pip install . pytest-rerunfailures
+          python -m pip install . pytest-rerunfailures pytest-asyncio
 
       - name: Run Unit Tests (pytest)
         env:
-          TEST_TOKEN: ${{ secrets.TEST_TOKEN }}
           python-version: ${{ matrix.python-version }}
+          CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
         run: |
           python -c "import sys; print(sys.version)"
           python -m pytest tests/*
