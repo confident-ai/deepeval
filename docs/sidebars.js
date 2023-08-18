@@ -36,6 +36,13 @@ const sidebars = {
       items: ['metrics/entailment', 'metrics/bertscore']
     },
     {
+      type: 'category',
+      label: 'Evaluating LLMs',
+      items: [
+        'measuring_llm_performance/factual_consistency'
+      ]
+    },
+    {
       type: "category",
       label: "Tutorials",
       items: ["tutorials/evaluating-langchain"]
