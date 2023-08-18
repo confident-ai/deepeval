@@ -24,7 +24,7 @@ jobs:
           python -c "import sys; print(sys.version)"
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          python -m pip install . pytest-rerunfailures
+          python -m pip install . pytest-rerunfailures pytest-asyncio
 
       - name: Run Unit Tests (pytest)
         env:
