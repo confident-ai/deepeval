@@ -7,22 +7,36 @@ from .metrics.bertscore_metric import BertScoreMetric
 from .metrics.entailment_metric import EntailmentScoreMetric
 
 
-def assert_llm_output(input: Any, output: Any, metric: Any = "entailment"):
+def assert_llm_output(
+    output: Any, expected_output: Any, metric: Any = "entailment", query: str = "-"
+):
     if metric == "exact":
-        assert_exact_match(input, output)
+        assert_exact_match(output, expected_output)
     elif metric == "random":
         metric: RandomMetric = RandomMetric()
-        metric.measure(input, output)
+        metric(output, expected_output, query=query)
     elif metric == "bertscore":
         metric: BertScoreMetric = BertScoreMetric()
-        metric.measure(input, output)
+        metric(output, expected_output, query=query)
     elif metric == "entailment":
         metric: EntailmentScoreMetric = EntailmentScoreMetric()
-        metric.measure(input, output)
+        metric(output, expected_output, query=query)
     elif isinstance(metric, Metric):
-        metric.measure(input, output)
+        metric(output, expected_output, query=query)
     else:
         raise ValueError("Inappropriate metric")
+    assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
+
+
+def assert_factual_consistency(output: str, context: str):
+    """Assert that the output is factually consistent with the context."""
+
+    class FactualConsistency(EntailmentScoreMetric):
+        def __name__(self):
+            return "Factual Consistency"
+
+    metric = FactualConsistency()
+    score = metric(context, output)
     assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
 
 
