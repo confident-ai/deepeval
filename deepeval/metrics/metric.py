@@ -45,17 +45,19 @@ class Metric:
     def _is_send_okay(self):
         return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
 
-    def __call__(self, output, expected_output, query: Optional[str] = None):
+    def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
         if self._is_send_okay():
-            self._send_to_server(
-                entailment_score=score,
-                query=query,
-                output=output,
+            asyncio.create_task(
+                self._send_to_server(
+                    entailment_score=score,
+                    query=query,
+                    output=output,
+                )
             )
         return score
 
-    def _send_to_server(
+    async def _send_to_server(
         self, entailment_score: float, query: str, output: str, **kwargs
     ):
         client = Api(api_key=os.getenv(API_KEY_ENV))
