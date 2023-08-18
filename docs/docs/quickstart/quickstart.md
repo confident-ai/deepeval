@@ -5,7 +5,7 @@ You can write a simple test case as simply as:
 ```python
 # test_sample.py
 
-# test files must start 
+# test files must start
 from deepeval.test_utils import assert_llm_output
 
 def generate_llm_output(input: str):
@@ -17,9 +17,16 @@ def test_llm_output():
     expected_output = "Our customer success phone line is 1200-231-231."
     output = generate_llm_output(input)
     assert_llm_output(output, expected_output, metric="entailment")
+    # You can also track queries to enable visualizing on frontend as below:
+    assert_llm_output(
+        output,
+        expected_output,
+        metric="entailment",
+        query=input
+    )
 ```
 
-You can then run it in CLI using this: 
+You can then run it in CLI using this:
 
 ```bash
 python -m pytest test_sample.py
