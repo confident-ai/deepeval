@@ -34,4 +34,3 @@ async def test_query_answer_relevancy_dict():
     scorer = RankingSimilarity(success_threshold=0.5)
     result = scorer.measure(list_1=list_dict_1, list_2=list_dict_2)
     assert scorer.is_successful(), "Ranking dicts not working."
-    
