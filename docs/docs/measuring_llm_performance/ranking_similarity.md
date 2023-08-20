@@ -1,6 +1,8 @@
 # Ranking Similarity
 
-Top-K rankings are usually evaluated with several criteria:
+If you are building retrieval-augmented generation applications, you may be constantly iterating on the embeddings andv ector search index.
+
+Top-K rankings are evaluated with the following criteria:
 
 - Top results are more important than bottom-ranked results.
   A drop from 2nd to 3rd is more significant than a drop from 5th to 6th and so on.
@@ -13,15 +15,16 @@ A specific result not appearing in another list is more indicative of difference
 
 In order to provide a suggestion on how to use ranking similarity, we are looking to build:
 
-```
+```python
 from deepeval.test_utils import assert_ranking_similarity
 
 result_list_1 = ["Sentence-1", "Sentence-2"]
 result_list_2 = ["Sentence-2", "Sentence-3"]
 
 assert_ranking_similarity(
-    result=result_list_1,
-    expected_result=result_list_2
+    list1=result_list_1,
+    list2=result_list_2,
+    success_threshold=0.3
 )
 ```
 
@@ -32,6 +35,12 @@ assert_ranking_similarity(
 ## Ranking Similarity As A Metric
 
 You can measure ranking similarity as a metric.
+
+```python
+from deepeval.metrics.ranking_similarity import RankingSimilarity
+scorer = RankingSimilarity(success_threshold=0.5)
+result = scorer.measure(list_1=list1, list_2=list2)
+```
 
 ### Parameters
 
