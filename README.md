@@ -91,18 +91,16 @@ We integrate DeepEval tightly with common frameworks such as Langchain and lLama
 Generating synthetic queries allows you to quickly evaluate the queries related to your prompts.
 We help developers get up and running with a lot of example queries.
 
-# Dashboard (Coming soon)
+# Dashboard
 
-Once you have added a ground truth, you should be able to see a dashboard that contains information about the pipeline and the run.
+Set up a simple dashboard in just 1 line of code. You can read more about how to do this [here in our documentation](https://docs.confident-ai.com/docs/quickstart/dashboard-app).
 
-![assets/app.png](assets/app.png)
+![docs/assets/dashboard-app.png](docs/assets/dashboard-app.png)
 
 # RoadMap
 
-- [ ] Web UI
-- [ ] Support for more metrics
-- [ ] Integrations with LangChain
 - [ ] Integration with LlamaIndex
+- [ ] Project View To Web UI
 
 # Authors
 
