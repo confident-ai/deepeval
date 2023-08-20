@@ -12,10 +12,6 @@ from ..utils import softmax
 
 
 class Metric:
-    def __call__(self, *args, **kwargs):
-        result = self.measure(*args, **kwargs)
-        return result
-
     @abstractmethod
     def measure(self, output, expected_output, query: Optional[str] = None):
         pass

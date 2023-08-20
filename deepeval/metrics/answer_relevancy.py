@@ -1,3 +1,4 @@
+import asyncio
 from .metric import Metric
 
 
@@ -7,6 +8,18 @@ class AnswerRelevancy(Metric):
         from sentence_transformers import CrossEncoder
 
         self.encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L-2-v2")
+
+    def __call__(self, query: str, answer: str):
+        score = self.measure(query, answer)
+        if self._is_send_okay():
+            asyncio.create_task(
+                self._send_to_server(
+                    entailment_score=score,
+                    query=query,
+                    output=answer,
+                )
+            )
+        return score
 
     def measure(self, query, answer: str) -> float:
         score = self.encoder.predict([query, answer])
