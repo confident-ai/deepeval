@@ -41,6 +41,7 @@ Grab your API key from [https://app.confident-ai.com](https://app.confident-ai.c
 import os
 from deepeval.test_utils import assert_
 
+# Optional - if you want an amazing dashboard!
 os.environ["CONFIDENT_AI_API_KEY"] = "XXX"
 
 def generate_llm_output(input: str):
