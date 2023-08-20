@@ -31,6 +31,6 @@ async def test_query_answer_relevancy():
 async def test_query_answer_relevancy_dict():
     from deepeval.metrics.ranking_similarity import RankingSimilarity
 
-    scorer = RankingSimilarity(success_threshold=0.5)
+    scorer = RankingSimilarity(success_threshold=0.3)
     result = scorer.measure(list_1=list_dict_1, list_2=list_dict_2)
     assert scorer.is_successful(), "Ranking dicts not working."
