@@ -44,10 +44,14 @@ def assert_factual_consistency(output: str, context: str):
 def assert_exact_match(text_input: str, text_output: str):
     assert text_input == text_output, f"{text_output} != {text_input}"
 
-def assert_answer_relevancy(query: str, answer: str, success_threshold: float=0.5):
+
+def assert_answer_relevancy(query: str, answer: str, success_threshold: float = 0.5):
     metric = AnswerRelevancy(success_threshold=success_threshold)
     score = metric(query=query, answer=answer)
-    assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful - " + str(score)
+    assert metric.is_successful(), (
+        metric.__class__.__name__ + " was unsuccessful - " + str(score)
+    )
+
 
 class TestEvalCase:
     pass
