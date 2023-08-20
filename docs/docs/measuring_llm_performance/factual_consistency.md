@@ -32,6 +32,6 @@ scorer.measure(query=query, answer=answer)
 # Returns a floating point number between 0 and 1
 ```
 
-### How it is measured
+### How It Is Measured
 
 Factual consistency is measured using natural language inference models based on the output score of the entailment class that compare the ground truth and the context from which the ground truth is done.
