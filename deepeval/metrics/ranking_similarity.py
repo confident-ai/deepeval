@@ -176,7 +176,9 @@ class RankingSimilarity(Metric):
             )
         return score
 
-    def measure(self, list_1, list_2):
+    def measure(self, list_1: List, list_2: List):
+        list_1 = [str(x) for x in list_1]
+        list_2 = [str(x) for x in list_2]
         scorer = RBO(list_1, list_2)
         result = scorer.rbo(p=0.9, ext=True)
         self.success = result > self.success_threshold
