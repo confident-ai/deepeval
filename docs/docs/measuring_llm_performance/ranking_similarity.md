@@ -22,8 +22,9 @@ result_list_1 = ["Sentence-1", "Sentence-2"]
 result_list_2 = ["Sentence-2", "Sentence-3"]
 
 assert_ranking_similarity(
-    result=result_list_1,
-    expected_result=result_list_2
+    list1=result_list_1,
+    list2=result_list_2,
+    success_threshold=0.3
 )
 ```
 
@@ -34,6 +35,12 @@ assert_ranking_similarity(
 ## Ranking Similarity As A Metric
 
 You can measure ranking similarity as a metric.
+
+```python
+from deepeval.metrics.ranking_similarity import RankingSimilarity
+scorer = RankingSimilarity(success_threshold=0.5)
+result = scorer.measure(list_1=list1, list_2=list2)
+```
 
 ### Parameters
 
