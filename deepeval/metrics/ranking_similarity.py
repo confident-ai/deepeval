@@ -178,7 +178,7 @@ class RankingSimilarity(Metric):
 
     def measure(self, list_1, list_2):
         scorer = RBO(list_1, list_2)
-        result = scorer.rbo(list_1, list_2, p=0.9, ext=True)
+        result = scorer.rbo(p=0.9, ext=True)
         self.success = result > self.success_threshold
         return result
 
