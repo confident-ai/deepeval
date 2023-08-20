@@ -32,17 +32,17 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'Metrics',
-      items: ['metrics/entailment', 'metrics/bertscore']
-    },
-    {
-      type: 'category',
       label: 'Evaluating LLMs',
       items: [
         'measuring_llm_performance/factual_consistency',
         'measuring_llm_performance/answer_relevancy',
         "measuring_llm_performance/ranking_similarity",
       ]
+    },
+    {
+      type: 'category',
+      label: 'Metrics',
+      items: ['metrics/entailment', 'metrics/bertscore']
     },
     {
       type: "category",
