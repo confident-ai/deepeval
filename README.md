@@ -2,8 +2,6 @@
 
 [![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
 
-If you are interested in early beta access for DeepEval's dashboard - please sign up here: https://www.confident-ai.com/
-
 DeepEval provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production. The guiding philosophy is a "Pytest for LLM" that aims to make productionizing and evaluating LLMs as easy as ensuring all tests pass.
 
 # Documentation
@@ -36,9 +34,14 @@ pip install deepeval
 
 ## Individual Test Cases
 
+Grab your API key from [https://app.confident-ai.com](https://app.confident-ai.com) to start logging!
+
 ```python
 # test_example.py
-from deepeval.test_utils import assert_llm_output
+import os
+from deepeval.test_utils import assert_
+
+os.environ["CONFIDENT_AI_API_KEY"] = "XXX"
 
 def generate_llm_output(input: str):
     expected_output = "Our customer success phone line is 1200-231-231."
@@ -60,6 +63,8 @@ python -m pytest test_example.py
 # Output
 Running tests ... ✅
 ```
+
+Once you have ran tests, you should be able to see your dashboard on [https://app.confident-ai.com](https://app.confident-ai.com)
 
 ## Setting up metrics
 
