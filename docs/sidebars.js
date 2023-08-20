@@ -27,7 +27,8 @@ const sidebars = {
         'quickstart/quickstart',
         'quickstart/dataset',
         'quickstart/custom-metrics',
-        'quickstart/synthetic-data-creation'
+        'quickstart/synthetic-data-creation',
+        'quickstart/dashboard-app'
       ],
     },
     {
