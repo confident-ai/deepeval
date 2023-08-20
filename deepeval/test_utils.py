@@ -1,11 +1,12 @@
 import functools
 import time
-from typing import Any
+from typing import Any, List
 from .metrics.randomscore import RandomMetric
 from .metrics.metric import Metric
 from .metrics.bertscore_metric import BertScoreMetric
 from .metrics.entailment_metric import EntailmentScoreMetric
 from .metrics.answer_relevancy import AnswerRelevancy
+from .metrics.ranking_similarity import RankingSimilarity
 
 
 def assert_llm_output(
@@ -52,6 +53,16 @@ def assert_answer_relevancy(query: str, answer: str, success_threshold: float = 
     score = metric(query=query, answer=answer)
     assert metric.is_successful(), (
         metric.__class__.__name__ + " was unsuccessful - " + str(score)
+    )
+
+
+def assert_ranking_similarity(
+    list_1: List[Any], list_2: List[Any], success_threshold: float = 0.1
+):
+    metric = RankingSimilarity(success_threshold=success_threshold)
+    result = metric(list_1, list_2)
+    assert metric.is_successful(), (
+        metric.__class__.__name__ + " was unsuccessful - " + str(result)
     )
 
 
