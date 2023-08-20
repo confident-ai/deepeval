@@ -1,4 +1,4 @@
-# Evaluating LangChain
+# Evaluating LangChain Retrieval QA
 
 Most developers are currently building their retrieval pipelines using popular frameworks such as LangChain. This tutorial shows how you can evaluate LangChain pipelines using DeepEval.
 
@@ -46,13 +46,13 @@ result = qa.run(query)
 
 ```
 
-##  Creating an Evaluation Dataset 
+## Creating an Evaluation Dataset
 
 Now that we have defined the LangChain QA pipeline, let us start getting an evaluation dataset.
 
 ### Creating A Synthetic Dataset
 
-In most cases, users won't have an evaluation dataset and need a synthetic dataset to start. You can achieve this easily by a Python function for this. 
+In most cases, users won't have an evaluation dataset and need a synthetic dataset to start. You can achieve this easily by a Python function for this.
 
 :::note
 
@@ -77,4 +77,3 @@ False          EntailmentScoreMetric  0.00545002  No, synthetic queries are not 
                                                                                                                                                                                                                                                                                                            which should have matched
                                                                                                                                                                                                                                                                                                            Synthetic queries are useful for scenraios where there is no data.
 ```
-
