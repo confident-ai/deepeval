@@ -1,12 +1,44 @@
 # Ranking Similarity
 
-Top-K rankings are usually evaluated with several common criteria:
+Top-K rankings are usually evaluated with several criteria:
 
 - Top results are more important than bottom-ranked results.
   A drop from 2nd to 3rd is more significant than a drop from 5th to 6th and so on.
+- A drop from 2nd to 3rd is more important than from 5th to 6th and so on.
+- A specific result not appearing in another list is more indicative of difference than a result dropping in another list as it suggests the ranking itself is greater than K.
 
 A specific result not appearing in another list is more indicative of difference than a result dropping in another list as it suggests the ranking itself is greater than K.
 
-For ensuring top-k ranking similarity, we recommend reading the following literature:
+## Assert Ranking Similarity
+
+In order to provide a suggestion on how to use ranking similarity, we are looking to build:
+
+```
+from deepeval.test_utils import assert_ranking_similarity
+
+result_list_1 = ["Sentence-1", "Sentence-2"]
+result_list_2 = ["Sentence-2", "Sentence-3"]
+
+assert_ranking_similarity(
+    result=result_list_1,
+    expected_result=result_list_2
+)
+```
+
+### Parameters
+
+- `success_threshold` refers to the minimum score for this to be considered simiar ranking
+
+## Ranking Similarity As A Metric
+
+You can measure ranking similarity as a metric.
+
+### Parameters
+
+- `success_threshold` refers to the minimum score for this to be considered simiar ranking
+
+### How it is measured
+
+For ensuring top-k ranking similarity, we recommend the gentle introduction into the technique that is being used here.
 
 https://medium.com/ai-in-plain-english/comparing-top-k-rankings-statistically-9adfc9cfc98b
