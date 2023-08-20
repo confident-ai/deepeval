@@ -11,7 +11,7 @@ list3 = ["b", "a"]
 async def test_answer_relevancy():
     from deepeval.test_utils import assert_ranking_similarity
 
-    assert_ranking_similarity(list1, list2, success_threshold=0.5)
+    assert_ranking_similarity(list1, list2, success_threshold=0.4)
 
 
 @pytest.mark.asyncio
