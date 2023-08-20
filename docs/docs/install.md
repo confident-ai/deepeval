@@ -17,5 +17,3 @@ We recommend running these evaluation frameworks inside of a Docker container or
 # Get your API Key
 
 If you want to view your dashboard, you can get an API key from [https://app.confident-ai.com](https://app.confident-ai.com).
-
-Once you have gotten your API key.
