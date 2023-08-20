@@ -95,7 +95,7 @@ We help developers get up and running with a lot of example queries.
 
 Set up a simple dashboard in just 1 line of code. You can read more about how to do this [here in our documentation](https://docs.confident-ai.com/docs/quickstart/dashboard-app).
 
-![docs/assets/dashboard-app.png](docs/assets/dashboard-app.png)
+![docs/assets/dashboard-app.png](docs/assets/dashboard-screenshot.png)
 
 # RoadMap
 
