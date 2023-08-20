@@ -10,9 +10,9 @@ Our dashboard allows you to quickly compare the output and expected output of re
 
 Access the dashboard by simply setting your API key as an environment variable as below.
 
-[Get your API key here](https://app.confident-ai.com)
-
 ## Get started
+
+[Get your API key here](https://app.confident-ai.com)
 
 ```python
 os.environ["CONFIDENT_AI_API_KEY"] = "xxx"
