@@ -2,6 +2,8 @@
 
 [![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
 
+If you are interested in early beta access for DeepEval's dashboard - please sign up here: https://www.confident-ai.com/
+
 DeepEval provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production. The guiding philosophy is a "Pytest for LLM" that aims to make productionizing and evaluating LLMs as easy as ensuring all tests pass.
 
 # Documentation
