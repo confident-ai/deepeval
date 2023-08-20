@@ -40,7 +40,8 @@ const sidebars = {
       label: 'Evaluating LLMs',
       items: [
         'measuring_llm_performance/factual_consistency',
-        'measuring_llm_performance/answer_relevancy'
+        'measuring_llm_performance/answer_relevancy',
+        "measuring_llm_performance/ranking_similarity",
       ]
     },
     {
