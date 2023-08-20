@@ -6,6 +6,7 @@ list1 = ["a", "b"]
 list2 = ["b", "c"]
 list3 = ["b", "a"]
 
+
 @pytest.mark.asyncio
 async def test_answer_relevancy():
     from deepeval.test_utils import assert_ranking_similarity
