@@ -5,6 +5,7 @@ from .metrics.randomscore import RandomMetric
 from .metrics.metric import Metric
 from .metrics.bertscore_metric import BertScoreMetric
 from .metrics.entailment_metric import EntailmentScoreMetric
+from .metrics.answer_relevancy import AnswerRelevancy
 
 
 def assert_llm_output(
@@ -28,20 +29,30 @@ def assert_llm_output(
     assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
 
 
-def assert_factual_consistency(output: str, context: str):
+def assert_factual_consistency(
+    output: str, context: str, success_threshold: float = 0.3
+):
     """Assert that the output is factually consistent with the context."""
 
     class FactualConsistency(EntailmentScoreMetric):
         def __name__(self):
             return "Factual Consistency"
 
-    metric = FactualConsistency()
+    metric = FactualConsistency(minimum_score=success_threshold)
     score = metric(context, output)
     assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
 
 
-def assert_exact_match(text_input, text_output):
+def assert_exact_match(text_input: str, text_output: str):
     assert text_input == text_output, f"{text_output} != {text_input}"
+
+
+def assert_answer_relevancy(query: str, answer: str, success_threshold: float = 0.5):
+    metric = AnswerRelevancy(success_threshold=success_threshold)
+    score = metric(query=query, answer=answer)
+    assert metric.is_successful(), (
+        metric.__class__.__name__ + " was unsuccessful - " + str(score)
+    )
 
 
 class TestEvalCase:

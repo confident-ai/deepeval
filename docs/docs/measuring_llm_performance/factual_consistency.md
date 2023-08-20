@@ -2,7 +2,7 @@
 
 Factual consistency refers to the accuracy and reliability of information presented in a piece of text, conversation, or any form of communication. It means that the information being conveyed is true, accurate, and aligns with established facts or reality. Factual consistency is crucial because it ensures that the information being shared is reliable and trustworthy. Inaccurate or inconsistent information can lead to misunderstandings, misinformation, and loss of credibility.
 
-## How to use
+## Assert Factual Consistency
 
 DeepEval offers an opinionated method for factual consistency based on entailment score.
 
@@ -14,10 +14,23 @@ assert_factual_consistency(
 )
 ```
 
+### Parameters
+
 Diving into the arguments for `assert_factual_consistency`:
 
 - `output` - the LLM generated text
 - `context` - the text from which the LLM is supposed to reason and derive conclusions from
+
+## Factual Consistency As A Metric
+
+If you would instead like a score of how relevant an answer is to a query, simply call the metric class.
+
+```python
+from deepeval.metrics.answer_relevancy import AnswerRelevancy
+scorer = AnswerRelevancy(success_threshold=0.5)
+scorer.measure(query=query, answer=answer)
+# Returns a floating point number between 0 and 1
+```
 
 ### How it is measured
 
