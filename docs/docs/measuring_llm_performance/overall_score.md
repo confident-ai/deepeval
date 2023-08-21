@@ -6,7 +6,7 @@ Alert score checks if a generated output is good or bad. It automatically checks
 - Answer relevancy
 - Toxicness
 
-It then takes the minimum of those scores to alert.
+It then takes the mean of these scores.
 
 ## Assert Alert Score
 
