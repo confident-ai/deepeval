@@ -11,19 +11,17 @@ class AlertScore(Metric):
         self.entailment_metric = EntailmentScoreMetric()
         self.answer_relevancy = AnswerRelevancy()
 
-    def __call__(self, generated_output: str, expected_output: str, context: str):
-        score = self.measure(generated_output, expected_output, context)
+    def __call__(self, gemerated_text: str, expected_output: str, context: str):
+        score = self.measure(gemerated_text, expected_output, context)
         return score
 
-    def measure(
-        self, generated_output: str, expected_output: str, context: str
-    ) -> float:
+    def measure(self, gemerated_text: str, expected_output: str, context: str) -> float:
         entailment_score = self.entailment_metric.measure(
-            generated_output,
+            gemerated_text,
             context,
         )
         answer_relevancy_score = self.answer_relevancy.measure(
-            generated_output, expected_output
+            gemerated_text, expected_output
         )
         alert_score = min(entailment_score, answer_relevancy_score)
         self.success = alert_score > self.success_threshold
@@ -37,10 +35,10 @@ class AlertScore(Metric):
 
 
 def assert_alert_score(
-    generated_output: str, expected_output: str, success_threshold: float = 0.5
+    gemerated_text: str, expected_output: str, success_threshold: float = 0.5
 ):
     metric = AlertScore(success_threshold=success_threshold)
     score = metric.measure(
-        generated_output=generated_output, expected_output=expected_output
+        gemerated_text=gemerated_text, expected_output=expected_output
     )
     assert metric.is_successful(), f"Metric is not conceptually similar - got {score}"
