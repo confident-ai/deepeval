@@ -46,7 +46,7 @@ class Metric:
         if self._is_send_okay():
             asyncio.create_task(
                 self._send_to_server(
-                    entailment_score=score,
+                    metric_score=score,
                     query=query,
                     output=output,
                 )
@@ -54,7 +54,13 @@ class Metric:
         return score
 
     async def _send_to_server(
-        self, entailment_score: float, query: str, output: str, **kwargs
+        self,
+        metric_score: float,
+        metric_name: str,
+        query: str,
+        output: str,
+        implementation_id: str,
+        **kwargs
     ):
         client = Api(api_key=os.getenv(API_KEY_ENV))
         datapoint_id = client.add_golden(
@@ -62,9 +68,11 @@ class Metric:
             expected_output=output,
         )
         return client.add_test_case(
-            entailment_score=float(entailment_score),
+            metric_score=float(metric_score),
+            metric_name=metric_name,
             actual_output=output,
             query=query,
+            implementation_id=implementation_id,
             metrics_metadata=self._get_init_values(),
             success=bool(self.is_successful()),
             datapoint_id=datapoint_id["id"],
