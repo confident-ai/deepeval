@@ -2,6 +2,13 @@
 
 For question-answering applications, we provide a simple interface for ensuring question-answering relevancy.
 
+:::warning
+
+For answer-relevancy, it is important to note that it requires the answer to re-gurgitate the question. We are currently training more models to improve in answer relevancy.
+If you would like beta access to our models, please feel free to reach out to jacky@twilix.io and we will get back to you soon.
+
+:::
+
 ## Assert Answer Relevancy
 
 ```python
