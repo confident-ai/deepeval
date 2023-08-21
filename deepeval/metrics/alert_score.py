@@ -35,10 +35,13 @@ class AlertScore(Metric):
 
 
 def assert_alert_score(
-    generated_text: str, expected_output: str, success_threshold: float = 0.5
+    generated_text: str,
+    expected_output: str,
+    context: str,
+    success_threshold: float = 0.5,
 ):
     metric = AlertScore(success_threshold=success_threshold)
     score = metric.measure(
-        generated_text=generated_text, expected_output=expected_output
+        generated_text=generated_text, expected_output=expected_output, context=context
     )
     assert metric.is_successful(), f"Metric is not conceptually similar - got {score}"
