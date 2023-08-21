@@ -38,8 +38,14 @@ const sidebars = {
         "measuring_llm_performance/alert_score",
         'measuring_llm_performance/factual_consistency',
         'measuring_llm_performance/answer_relevancy',
-        "measuring_llm_performance/ranking_similarity",
         "measuring_llm_performance/conceptual_similarity",
+      ]
+    },
+    {
+      type: 'category',
+      label: 'Evaluating RAG Systems',
+      items: [
+        "measuring_llm_performance/ranking_similarity",
       ]
     },
     {
