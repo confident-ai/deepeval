@@ -1,5 +1,10 @@
 import asyncio
 from .metric import Metric
+import numpy as np
+
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
 
 
 class AnswerRelevancy(Metric):
@@ -23,6 +28,7 @@ class AnswerRelevancy(Metric):
 
     def measure(self, query, answer: str) -> float:
         score = self.encoder.predict([query, answer])
+        score = sigmoid(score)
         self.success = score > self.success_threshold
         return score
 
