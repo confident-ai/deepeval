@@ -4,6 +4,7 @@
 import pytest
 from deepeval.metrics.alert_score import assert_alert_score
 
+
 @pytest.mark.asyncio
 async def test_factual_consistency():
     assert_alert_score(
