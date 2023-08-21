@@ -4,3 +4,4 @@ transformers
 pytest
 tabulate
 sentence-transformers
+detoxify
