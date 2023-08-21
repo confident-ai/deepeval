@@ -1,6 +1,6 @@
 import asyncio
-from .metric import Metric
 import numpy as np
+from .metric import Metric
 
 
 def sigmoid(x):
