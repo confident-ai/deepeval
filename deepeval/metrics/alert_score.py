@@ -15,15 +15,23 @@ class AlertScore(Metric):
         score = self.measure(generated_text, expected_output, context)
         return score
 
-    def measure(self, generated_text: str, expected_output: str, context: str) -> float:
+    def measure(
+        self, query: str, generated_text: str, expected_output: str, context: str
+    ) -> float:
         entailment_score = self.entailment_metric.measure(
             context,
             generated_text,
         )
-        answer_relevancy_score = self.answer_relevancy.measure(
-            generated_text, expected_output
+        answer_expected_score = self.entailment_metric.measure(
+            expected_output,
+            generated_text,
         )
-        alert_score = min(entailment_score, answer_relevancy_score)
+        answer_relevancy_score = self.answer_relevancy.measure(
+            query=query, answer=generated_text
+        )
+        alert_score = min(
+            entailment_score, answer_relevancy_score, answer_expected_score
+        )
         self.success = alert_score > self.success_threshold
         return alert_score
 
@@ -36,6 +44,7 @@ class AlertScore(Metric):
 
 
 def assert_alert_score(
+    query: str,
     generated_text: str,
     expected_output: str,
     context: str,
@@ -44,6 +53,9 @@ def assert_alert_score(
     """Create alert score."""
     metric = AlertScore(success_threshold=success_threshold)
     score = metric.measure(
-        generated_text=generated_text, expected_output=expected_output, context=context
+        query=query,
+        generated_text=generated_text,
+        expected_output=expected_output,
+        context=context,
     )
     assert metric.is_successful(), f"Found issue - Alert score: {score}"
