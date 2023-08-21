@@ -11,7 +11,7 @@ Asserting for conceptual similarity allows developers to ensure that the expecte
 ## Assert Conceptual Similarity
 
 ```python
-from deepeval.test_utils import assert_conceptual_similarity
+from deepeval.metrics.conceptual_similarity import assert_conceptual_similarity
 
 assert_conceptual_similarity(
     output="python is a programming language",
