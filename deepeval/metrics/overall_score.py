@@ -6,7 +6,7 @@ from .entailment_metric import EntailmentScoreMetric
 # from .answer_relevancy import AnswerRelevancy
 
 
-class OverallScore(Metric):
+class OverallScoreMetric(Metric):
     def __init__(self, success_threshold: float = 0.5):
         self.success_threshold = success_threshold
         self.entailment_metric = EntailmentScoreMetric()
@@ -40,7 +40,7 @@ class OverallScore(Metric):
 def assert_overall_score(
     generated_output: str, expected_output: str, success_threshold: float = 0.5
 ):
-    metric = OverallScore(success_threshold=success_threshold)
+    metric = OverallScoreMetric(success_threshold=success_threshold)
     score = metric.measure(
         generated_output=generated_output, expected_output=expected_output
     )
