@@ -17,8 +17,8 @@ class AlertScore(Metric):
 
     def measure(self, generated_text: str, expected_output: str, context: str) -> float:
         entailment_score = self.entailment_metric.measure(
-            generated_text,
             context,
+            generated_text,
         )
         answer_relevancy_score = self.answer_relevancy.measure(
             generated_text, expected_output
@@ -41,8 +41,9 @@ def assert_alert_score(
     context: str,
     success_threshold: float = 0.5,
 ):
+    """Create alert score."""
     metric = AlertScore(success_threshold=success_threshold)
     score = metric.measure(
         generated_text=generated_text, expected_output=expected_output, context=context
     )
-    assert metric.is_successful(), f"Metric is not conceptually similar - got {score}"
+    assert metric.is_successful(), f"Found issue - Alert score: {score}"
