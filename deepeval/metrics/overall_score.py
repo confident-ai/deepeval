@@ -36,7 +36,7 @@ class OverallScore(Metric):
         return "Alert Score"
 
 
-def assert_alert_score(
+def assert_overall_score(
     generated_output: str, expected_output: str, success_threshold: float = 0.5
 ):
     metric = OverallScore(success_threshold=success_threshold)
