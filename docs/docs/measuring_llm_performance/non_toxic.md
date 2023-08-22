@@ -19,10 +19,13 @@ from deepeval.metrics.toxic_classifier import NonToxicMetric
 
 metric = NonToxicMetric()
 score = metric.measure(text=generated_text)
-
+score
+# Prints out a dictionary of values showing the scores for each trait
 
 ```
 
 ### How it is measured
 
 This is measured by using machine learning models trained on the toxicness and were hand-picked based on internal tests run at Confident AI.
+
+Under the hood, DeepEval uses `detoxify` package to measure toxicness.
