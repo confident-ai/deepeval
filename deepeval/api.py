@@ -260,6 +260,8 @@ class Api:
         metrics_metadata: Any,
     ):
         """send test case data to the prod-data endpoint"""
+        if not metrics_metadata:
+            metrics_metadata = {}
         return self.post_request(
             endpoint="/v1/prod-data",
             body={

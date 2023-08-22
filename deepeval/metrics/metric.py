@@ -48,6 +48,7 @@ class Metric:
             asyncio.create_task(
                 self._send_to_server(
                     metric_score=score,
+                    metric_name=self.__name__,
                     query=query,
                     output=output,
                 )
