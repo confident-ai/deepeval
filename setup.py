@@ -28,5 +28,5 @@ setup(
             "tensorflow==2.10",  # for bias
             "Dbias",  # for bias
         ]
-    }
+    },
 )
