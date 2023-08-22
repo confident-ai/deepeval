@@ -8,8 +8,11 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 from .metric import Metric
 from Dbias.bias_classification import *
 
+
 class UnBiasedMetric(Metric):
-    def __init__(self, model_name: str = "original", minimum_score: float = 0.5): # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
+    def __init__(
+        self, model_name: str = "original", minimum_score: float = 0.5
+    ):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
         self.model_name = model_name
         self.model = classifier(model_name)
         self.minimum_score = minimum_score
@@ -19,7 +22,7 @@ class UnBiasedMetric(Metric):
         # sample output
         # [{'label': 'Biased', 'score': 0.9938021898269653}]
         self.success = True
-        v = score_value = results[0]['score']
+        v = score_value = results[0]["score"]
         if v > 1 - self.minimum_score:
             self.success = False
         return results
@@ -32,7 +35,9 @@ class UnBiasedMetric(Metric):
         return "Biased'"
 
 
-def assert_unbiased(text: str, minimum_score: float = 0.5): # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
+def assert_unbiased(
+    text: str, minimum_score: float = 0.5
+):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
     metric = UnBiasedMetric(minimum_score=minimum_score)
     score = metric.measure(text)
     assert metric.is_successful(), f"Text is biased - got {score}"
