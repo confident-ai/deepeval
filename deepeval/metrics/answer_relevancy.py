@@ -37,5 +37,6 @@ class AnswerRelevancy(Metric):
     def is_successful(self) -> bool:
         return self.success
 
+    @property
     def __name__(self):
         return "Answer Relevancy"
