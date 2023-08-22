@@ -8,10 +8,10 @@ from detoxify import Detoxify
 
 
 class NonToxicMetric(Metric):
-    def __init__(self, model_name: str = "original", success_threshold: float = 0.5):
+    def __init__(self, model_name: str = "original", minimum_score: float = 0.5):
         self.model_name = model_name
         self.model = Detoxify(model_name)
-        self.success_threshold = success_threshold
+        self.minimum_score = minimum_score
 
     def measure(self, text: str):
         results = self.model.predict(text)
@@ -24,7 +24,7 @@ class NonToxicMetric(Metric):
         # 'identity_attack': 0.86643445}
         self.success = True
         for k, v in results.items():
-            if v > 1 - self.success_threshold:
+            if v > 1 - self.minimum_score:
                 self.success = False
                 break
         return results
