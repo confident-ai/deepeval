@@ -28,3 +28,7 @@ class BertScoreMetric(Metric):
 
     def is_successful(self) -> bool:
         return self.score >= self.minimum_score
+
+    @property
+    def __name__(self):
+        return "BertScore"

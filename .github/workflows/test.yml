@@ -30,6 +30,7 @@ jobs:
         env:
           python-version: ${{ matrix.python-version }}
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
+          CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
           python -c "import sys; print(sys.version)"
           python -m pytest -x tests/*
