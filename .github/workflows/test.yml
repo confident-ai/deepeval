@@ -32,4 +32,4 @@ jobs:
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
         run: |
           python -c "import sys; print(sys.version)"
-          python -m pytest tests/*
+          python -m pytest -x tests/*
