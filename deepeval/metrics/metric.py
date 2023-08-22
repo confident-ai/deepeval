@@ -5,7 +5,7 @@ import asyncio
 import os
 import warnings
 from typing import Optional
-from ..constants import API_KEY_ENV, LOG_TO_SERVER_ENV
+from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_ENV
 from abc import abstractmethod
 from ..api import Api
 from ..utils import softmax
@@ -61,10 +61,12 @@ class Metric:
         metric_name: str,
         query: str,
         output: str,
-        implementation_id: str,
+        implementation_id: str = None,
         **kwargs
     ):
         client = Api(api_key=os.getenv(API_KEY_ENV))
+        if implementation_id is None:
+            implementation_id = os.getenv(IMPLEMENTATION_ID_ENV)
         datapoint_id = client.add_golden(
             query=query,
             expected_output=output,
