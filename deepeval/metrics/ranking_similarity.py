@@ -169,7 +169,8 @@ class RankingSimilarity(Metric):
         if self._is_send_okay():
             asyncio.create_task(
                 self._send_to_server(
-                    entailment_score=score,
+                    metric_score=score,
+                    metric_name=self.__name__,
                     query=str(list_1),
                     output=str(list_2),
                 )
@@ -186,3 +187,7 @@ class RankingSimilarity(Metric):
 
     def is_successful(self):
         return self.success
+
+    @property
+    def __name__(self):
+        return "Ranking Similarity"

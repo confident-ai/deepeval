@@ -260,6 +260,8 @@ class Api:
         metrics_metadata: Any,
     ):
         """send test case data to the prod-data endpoint"""
+        if not metrics_metadata:
+            metrics_metadata = {}
         return self.post_request(
             endpoint="/v1/prod-data",
             body={
@@ -282,4 +284,9 @@ class Api:
                 "expectedOutput": expected_output,
                 "isSynthetic": is_synthetic,
             },
+        )
+
+    def list_prod_data(self, implementation_id: str):
+        return self.get_request(
+            endpoint="/v1/prod-data?implementationId=" + implementation_id
         )
