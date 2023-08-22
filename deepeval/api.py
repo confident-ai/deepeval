@@ -285,3 +285,8 @@ class Api:
                 "isSynthetic": is_synthetic,
             },
         )
+
+    def list_prod_data(self, implementation_id: str):
+        return self.get_request(
+            endpoint="/v1/prod-data?implementationId=" + implementation_id
+        )
