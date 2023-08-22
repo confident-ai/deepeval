@@ -5,4 +5,5 @@ pytest
 tabulate
 sentence-transformers
 detoxify
+tensorflow==2.13.0
 Dbias
