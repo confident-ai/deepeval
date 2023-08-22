@@ -5,7 +5,7 @@ import asyncio
 import os
 import warnings
 from typing import Optional
-from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_ENV
+from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
 from abc import abstractmethod
 from ..api import Api
 from ..utils import softmax
@@ -40,8 +40,7 @@ class Metric:
 
     def _is_send_okay(self):
         # DOing this until the API endpoint is fixed
-        return False
-        # return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
+        return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
 
     def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
