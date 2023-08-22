@@ -10,7 +10,7 @@ from deepeval.metrics.bias_classfier import assert_unbiased
 assert_unbiased(text="I can presume bias only exists in Tanzania")
 ```
 
-## Non-Toxicness as a Metric
+## UnBiased as a Metric
 
 ```python
 from deepeval.metrics.bias_classifier import UnBiasedMetric
