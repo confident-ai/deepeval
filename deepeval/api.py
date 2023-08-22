@@ -252,10 +252,12 @@ class Api:
         self,
         query: str,
         actual_output: str,
-        entailment_score: float,
+        metric_score: float,
+        metric_name: str,
         success: bool,
-        metrics_metadata: Any,
         datapoint_id: str,
+        implementation_id: str,
+        metrics_metadata: Any,
     ):
         """send test case data to the prod-data endpoint"""
         return self.post_request(
@@ -263,7 +265,9 @@ class Api:
             body={
                 "query": query,
                 "actualOutput": actual_output,
-                "entailmentScore": entailment_score,
+                "defaultMetricScore": metric_score,
+                "defaultMetricName": metric_name,
+                "implementationId": implementation_id,
                 "success": success,
                 "metricsMetadata": metrics_metadata,
                 "goldenId": datapoint_id,

@@ -1,33 +1,34 @@
-"""Alert Score
+"""Overall Score
 """
 from .metric import Metric
 from .entailment_metric import EntailmentScoreMetric
-from .answer_relevancy import AnswerRelevancy
+
+# from .answer_relevancy import AnswerRelevancy
 
 
-class OverallScore(Metric):
+class OverallScoreMetric(Metric):
     def __init__(self, success_threshold: float = 0.5):
         self.success_threshold = success_threshold
         self.entailment_metric = EntailmentScoreMetric()
-        self.answer_relevancy = AnswerRelevancy()
 
-    def __call__(self, generated_output: str, expected_output: str, context: str):
-        score = self.measure(generated_output, expected_output, context)
+    def __call__(self, generated_text: str, expected_output: str, context: str):
+        score = self.measure(generated_text, expected_output, context)
         return score
 
-    def measure(
-        self, generated_output: str, expected_output: str, context: str
-    ) -> float:
+    def measure(self, generated_text: str, expected_output: str, context: str) -> float:
         entailment_score = self.entailment_metric.measure(
-            generated_output,
             context,
+            generated_text,
         )
-        answer_relevancy_score = self.answer_relevancy.measure(
-            generated_output, expected_output
+
+        answer_expected_score = self.entailment_metric.measure(
+            generated_text,
+            expected_output,
         )
-        alert_score = 0.5 * entailment_score + 0.5 * answer_relevancy_score
-        self.success = alert_score > self.success_threshold
-        return alert_score
+
+        overall_score = 0.5 * entailment_score + 0.5 * answer_expected_score
+        self.success = overall_score > self.success_threshold
+        return overall_score
 
     def is_successful(self) -> bool:
         return self.success
@@ -37,10 +38,15 @@ class OverallScore(Metric):
 
 
 def assert_overall_score(
-    generated_output: str, expected_output: str, success_threshold: float = 0.5
+    generated_text: str,
+    expected_output: str,
+    context: str,
+    success_threshold: float = 0.5,
 ):
-    metric = OverallScore(success_threshold=success_threshold)
+    metric = OverallScoreMetric(success_threshold=success_threshold)
     score = metric.measure(
-        generated_output=generated_output, expected_output=expected_output
+        generated_text=generated_text,
+        expected_output=expected_output,
+        context=context,
     )
     assert metric.is_successful(), f"Metric is not conceptually similar - got {score}"

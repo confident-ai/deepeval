@@ -19,9 +19,11 @@ class AnswerRelevancy(Metric):
         if self._is_send_okay():
             asyncio.create_task(
                 self._send_to_server(
-                    entailment_score=score,
+                    metric_score=score,
                     query=query,
                     output=answer,
+                    metric_name=self.__name__,
+                    implementation_id="",
                 )
             )
         return score
