@@ -20,8 +20,9 @@ setup(
         "transformers",
         "pytest",
         "tabulate",
-        "sentence-transformers",
-        "detoxify",
-        "Dbias",
+        "sentence-transformers",  # for similarity
+        "detoxify",  # for toxic classifier
+        "tensorflow==2.10",  # for bias
+        "Dbias",  # for bias
     ],
 )
