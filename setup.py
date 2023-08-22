@@ -25,7 +25,7 @@ setup(
     ],
     extras_require={
         "bias": [
-            "tensorflow==2.13.0",  # for bias
+            "tensorflow",  # for bias
             "Dbias",  # for bias
         ]
     },
