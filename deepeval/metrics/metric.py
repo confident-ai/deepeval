@@ -39,7 +39,9 @@ class Metric:
         return result
 
     def _is_send_okay(self):
-        return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
+        # DOing this until the API endpoint is fixed
+        return False
+        # return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
 
     def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
