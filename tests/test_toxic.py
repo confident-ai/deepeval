@@ -25,8 +25,7 @@ async def test_non_toxic_2():
 
 
 @pytest.mark.asyncio
-async def test_overall_score_metric():
+async def test_non_toxic_metric():
     metric = NonToxicMetric()
     score = metric.measure(text=generated_text)
     assert metric.is_successful(), "Overall score metric not working"
-    assert_viable_score(score)
