@@ -5,7 +5,7 @@ import asyncio
 import os
 import warnings
 from typing import Optional
-from ..constants import API_KEY_ENV, LOG_TO_SERVER_ENV
+from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
 from abc import abstractmethod
 from ..api import Api
 from ..utils import softmax
@@ -40,8 +40,7 @@ class Metric:
 
     def _is_send_okay(self):
         # DOing this until the API endpoint is fixed
-        return False
-        # return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
+        return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
 
     def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
@@ -49,6 +48,7 @@ class Metric:
             asyncio.create_task(
                 self._send_to_server(
                     metric_score=score,
+                    metric_name=self.__name__,
                     query=query,
                     output=output,
                 )
@@ -61,10 +61,12 @@ class Metric:
         metric_name: str,
         query: str,
         output: str,
-        implementation_id: str,
+        implementation_id: str = None,
         **kwargs
     ):
         client = Api(api_key=os.getenv(API_KEY_ENV))
+        if implementation_id is None:
+            implementation_id = os.getenv(IMPLEMENTATION_ID_ENV)
         datapoint_id = client.add_golden(
             query=query,
             expected_output=output,
