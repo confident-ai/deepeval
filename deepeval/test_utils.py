@@ -36,6 +36,7 @@ def assert_factual_consistency(
     """Assert that the output is factually consistent with the context."""
 
     class FactualConsistency(EntailmentScoreMetric):
+        @property
         def __name__(self):
             return "Factual Consistency"
 
