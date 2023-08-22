@@ -41,6 +41,7 @@ const sidebars = {
         'measuring_llm_performance/answer_relevancy',
         "measuring_llm_performance/conceptual_similarity",
         "measuring_llm_performance/non_toxic",
+        "measuring_llm_performance/debias",
       ]
     },
     {
