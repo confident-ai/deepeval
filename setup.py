@@ -22,6 +22,6 @@ setup(
         "tabulate",
         "sentence-transformers",
         "detoxify",
-        "dbias",
+        "Dbias",
     ],
 )
