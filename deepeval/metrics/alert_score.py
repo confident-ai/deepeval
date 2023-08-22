@@ -6,7 +6,7 @@ from .entailment_metric import EntailmentScoreMetric
 # from .answer_relevancy import AnswerRelevancy
 
 
-class AlertScore(Metric):
+class AlertScoreMetric(Metric):
     def __init__(self, success_threshold: float = 0.5):
         self.success_threshold = success_threshold
         self.entailment_metric = EntailmentScoreMetric()
@@ -55,7 +55,7 @@ def assert_alert_score(
     success_threshold: float = 0.5,
 ):
     """Create alert score."""
-    metric = AlertScore(success_threshold=success_threshold)
+    metric = AlertScoreMetric(success_threshold=success_threshold)
     score = metric.measure(
         query=query,
         generated_text=generated_text,
