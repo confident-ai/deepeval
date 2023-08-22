@@ -1,8 +1,6 @@
 # Toxicness
 
-A large number of LLMs can become toxic after finetuning.
-
-You can check if it is toxic if you
+A large number of LLMs can become toxic after finetuning - test if they are toxic (and find out in what way) using `assert_non_toxic` tests below!
 
 ## Assert Non-Toxic
 
