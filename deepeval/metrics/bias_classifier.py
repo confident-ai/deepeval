@@ -20,15 +20,16 @@ class UnBiasedMetric(Metric):
         results = classifier(text)
         # sample output
         # [{'label': 'Biased', 'score': 0.9938021898269653}]
-        self.success = True
         if results[0]["label"] == "Biased":
             v = 0.5 - (results[0]["score"] / 2)
         else:
             # if it's unbiased - use normal score
             v = 0.5 + (results[0]["score"] / 2)
 
+        self.success = False
         if v > self.minimum_score:
-            self.success = False
+            self.success = True
+
         return v
 
     def is_successful(self):
