@@ -1,5 +1,5 @@
 import pytest
-from deepeval.test_utils import assert_factual_consistency
+from deepeval.metrics.factual_consistency import assert_factual_consistency
 
 
 @pytest.mark.asyncio

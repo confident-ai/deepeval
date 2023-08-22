@@ -22,7 +22,11 @@ setup(
         "tabulate",
         "sentence-transformers",  # for similarity
         "detoxify",  # for toxic classifier
-        "tensorflow==2.10",  # for bias
-        "Dbias",  # for bias
     ],
+    extras_require={
+        "bias": [
+            "tensorflow==2.10",  # for bias
+            "Dbias",  # for bias
+        ]
+    }
 )

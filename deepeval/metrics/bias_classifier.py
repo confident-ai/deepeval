@@ -6,7 +6,6 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 
 
 from .metric import Metric
-from Dbias.bias_classification import *
 
 
 class UnBiasedMetric(Metric):
@@ -17,6 +16,11 @@ class UnBiasedMetric(Metric):
         self.minimum_score = minimum_score
 
     def measure(self, text: str):
+        try:
+            from Dbias.bias_classification import classifier
+        except Exception as e:
+            raise ModuleNotFoundError("Run `pip install deepeval[bias]`")
+
         results = classifier(text)
         # sample output
         # [{'label': 'Biased', 'score': 0.9938021898269653}]
