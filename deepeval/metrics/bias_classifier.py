@@ -21,17 +21,18 @@ class UnBiasedMetric(Metric):
         # sample output
         # [{'label': 'Biased', 'score': 0.9938021898269653}]
         self.success = True
-        v = score_value = results[0]["score"]
-        if v > 1 - self.minimum_score:
+        # measure how unbiased it is
+        v = score_value = 1 - results[0]["score"]
+        if v > self.minimum_score:
             self.success = False
-        return results
+        return v
 
     def is_successful(self):
         return self.success
 
     @property
     def __name__(self):
-        return "Biased'"
+        return "Bias Score"
 
 
 def assert_unbiased(
