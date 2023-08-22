@@ -21,6 +21,6 @@ setup(
         "pytest",
         "tabulate",
         "sentence-transformers",
-        "detoxify"
+        "detoxify",
     ],
 )
