@@ -4,7 +4,7 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 0 - Bias
 """
 
-
+import traceback
 from .metric import Metric
 
 
@@ -19,6 +19,7 @@ class UnBiasedMetric(Metric):
         try:
             from Dbias.bias_classification import classifier
         except Exception as e:
+            traceback.print_exc()
             raise ModuleNotFoundError("Run `pip install deepeval[bias]`")
 
         results = classifier(text)
