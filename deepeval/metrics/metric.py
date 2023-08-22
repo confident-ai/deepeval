@@ -44,43 +44,44 @@ class Metric:
 
     def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
-        if self._is_send_okay():
-            asyncio.create_task(
-                self._send_to_server(
-                    metric_score=score,
-                    metric_name=self.__name__,
-                    query=query,
-                    output=output,
-                )
+        asyncio.create_task(
+            self._send_to_server(
+                metric_score=score,
+                metric_name=self.__name__,
+                query=query,
+                output=output,
             )
+        )
         return score
 
     async def _send_to_server(
         self,
         metric_score: float,
         metric_name: str,
-        query: str,
-        output: str,
+        query: str="-",
+        output: str="-",
+        expected_output: str="-",
         implementation_id: str = None,
         **kwargs
     ):
-        client = Api(api_key=os.getenv(API_KEY_ENV))
-        if implementation_id is None:
-            implementation_id = os.getenv(IMPLEMENTATION_ID_ENV)
-        datapoint_id = client.add_golden(
-            query=query,
-            expected_output=output,
-        )
-        return client.add_test_case(
-            metric_score=float(metric_score),
-            metric_name=metric_name,
-            actual_output=output,
-            query=query,
-            implementation_id=implementation_id,
-            metrics_metadata=self._get_init_values(),
-            success=bool(self.is_successful()),
-            datapoint_id=datapoint_id["id"],
-        )
+        if self._is_send_okay():
+            client = Api(api_key=os.getenv(API_KEY_ENV))
+            if implementation_id is None:
+                implementation_id = os.getenv(IMPLEMENTATION_ID_ENV)
+            datapoint_id = client.add_golden(
+                query=query,
+                expected_output=expected_output,
+            )
+            return client.add_test_case(
+                metric_score=float(metric_score),
+                metric_name=metric_name,
+                actual_output=output,
+                query=query,
+                implementation_id=implementation_id,
+                metrics_metadata=self._get_init_values(),
+                success=bool(self.is_successful()),
+                datapoint_id=datapoint_id["id"],
+            )
 
 
 class EntailmentScoreMetric(Metric):
