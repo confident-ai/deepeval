@@ -1,11 +1,13 @@
-"""Metric for toxic classifier
+"""Metric for toxic classifier. 
+1 - Healthy
+0 - Toxic
 """
 
 from .metric import Metric
 from detoxify import Detoxify
 
 
-class ToxicMetric(Metric):
+class NonToxicMetric(Metric):
     def __init__(self, model_name: str = "original", success_threshold: float = 0.5):
         self.model_name = model_name
         self.model = Detoxify(model_name)
@@ -22,7 +24,7 @@ class ToxicMetric(Metric):
         # 'identity_attack': 0.86643445}
         self.success = True
         for k, v in results.items():
-            if v > self.success_threshold:
+            if v > 1 - self.success_threshold:
                 self.success = False
                 break
         return results
@@ -36,6 +38,6 @@ class ToxicMetric(Metric):
 
 
 def assert_non_toxic(text: str, minimum_score: float = 0.5):
-    metric = ToxicMetric(minimum_score=minimum_score)
+    metric = NonToxicMetric(minimum_score=minimum_score)
     score = metric.measure(text)
     assert metric.is_successful(), f"Text is toxic - got {score}"
