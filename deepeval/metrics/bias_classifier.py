@@ -22,7 +22,13 @@ class UnBiasedMetric(Metric):
         # [{'label': 'Biased', 'score': 0.9938021898269653}]
         self.success = True
         # measure how unbiased it is
-        v = score_value = 1 - results[0]["score"]
+        if results[[0]["label"] == "Biased"]:
+            v = 0.5 - (results[0]["score"] / 2)
+        else:
+            # if it's unbiased - use normal score
+            v = 0.5 + (results[0]["score"] / 2)
+        v = 1 - results[0]["score"]
+
         if v > self.minimum_score:
             self.success = False
         return v
