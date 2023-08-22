@@ -2,7 +2,7 @@
 1 - Healthy
 0 - Toxic
 """
-
+import asyncio
 from .metric import Metric
 from detoxify import Detoxify
 
@@ -12,6 +12,19 @@ class NonToxicMetric(Metric):
         self.model_name = model_name
         self.model = Detoxify(model_name)
         self.minimum_score = minimum_score
+
+    def __call__(self, text: str):
+        score = self.measure(text)
+        score = score["min_score"]
+        if self._is_send_okay():
+            asyncio.create_task(
+                self._send_to_server(
+                    metric_score=score,
+                    metric_name=self.__name__,
+                    query=text,
+                    output="-",
+                )
+            )
 
     def measure(self, text: str):
         results = self.model.predict(text)
@@ -23,10 +36,13 @@ class NonToxicMetric(Metric):
         # 'insult': 0.7514423,
         # 'identity_attack': 0.86643445}
         self.success = True
-        for k, v in results.items():
+        for i, (k, v) in enumerate(results.items()):
+            if i == 0:
+                min_score = 1 - v
             if v > 1 - self.minimum_score:
                 self.success = False
-                break
+                min_score = 1 - v
+        results["min_score"] = min_score
         return results
 
     def is_successful(self):
@@ -34,7 +50,7 @@ class NonToxicMetric(Metric):
 
     @property
     def __name__(self):
-        return "Toxic'"
+        return "Toxicness'"
 
 
 def assert_non_toxic(text: str, minimum_score: float = 0.5):
