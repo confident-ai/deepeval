@@ -58,9 +58,9 @@ class Metric:
         self,
         metric_score: float,
         metric_name: str,
-        query: str="-",
-        output: str="-",
-        expected_output: str="-",
+        query: str = "-",
+        output: str = "-",
+        expected_output: str = "-",
         implementation_id: str = None,
         **kwargs
     ):
