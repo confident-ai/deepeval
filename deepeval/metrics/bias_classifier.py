@@ -4,7 +4,7 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 0 - Bias
 """
 
-import traceback
+import warnings
 from .metric import Metric
 
 
@@ -16,11 +16,11 @@ class UnBiasedMetric(Metric):
         self.minimum_score = minimum_score
 
     def measure(self, text: str):
-        try:
-            from Dbias.bias_classification import classifier
-        except Exception as e:
-            traceback.print_exc()
-            raise ModuleNotFoundError("Run `pip install deepeval[bias]`")
+        from Dbias.bias_classification import classifier
+
+        warnings.warn(
+            "Run `pip install deepeval[bias]`. If you have, please ignore this warning."
+        )
 
         results = classifier(text)
         # sample output
