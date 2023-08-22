@@ -5,3 +5,4 @@ pytest
 tabulate
 sentence-transformers
 detoxify
+dbias
