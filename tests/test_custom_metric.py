@@ -1,20 +1,15 @@
-# Define Your Own Metric
+"""Test for custom metrics in Python
+"""
 
-By default, we support the following metrics:
-
-- BertScoreMetric (simply set `metric="BertScoreMetric"`)
-- Entailment Score (simply set `metric="entailment"`)
-- Exact string match (simply set `metric="exact"`)
-
-You can define a custom metric by defining the `measure` and `is_successful` functions and inheriting the base `Metric` class. An example is provided below.
-
-```python
+import pytest
 import asyncio
 from deepeval.metrics.metric import Metric
 
+
 class LengthMetric(Metric):
     """This metric checks if the output is more than 3 letters"""
-    def __init__(self, minimum_length: int=3):
+
+    def __init__(self, minimum_length: int = 3):
         self.minimum_length = minimum_length
 
     def __call__(self, text: str):
@@ -26,14 +21,15 @@ class LengthMetric(Metric):
                 metric_score=score,
                 metric_name=self.__name__,
                 query=text,
-                success = self.success
+                success=self.success,
             )
         )
         return self.measure(text)
 
     def measure(self, text: str):
-        self.success = len(x) > self.minimum_length
-        return a > b
+        score = len(text)
+        self.success = score > self.minimum_length
+        return score
 
     def is_successful(self):
         return self.success
@@ -42,5 +38,9 @@ class LengthMetric(Metric):
     def __name__(self):
         return "Length"
 
-metric = LengthMetric()
-```
+
+@pytest.mark.asyncio
+async def test_length_metric():
+    metric = LengthMetric()
+    metric.measure("fehusihfe wuifheuiwh")
+    assert metric.is_successful()
