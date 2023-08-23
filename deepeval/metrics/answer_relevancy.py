@@ -8,8 +8,8 @@ def sigmoid(x):
 
 
 class AnswerRelevancy(Metric):
-    def __init__(self, success_threshold: bool = 0.5):
-        self.success_threshold = success_threshold
+    def __init__(self, minimum_score: bool = 0.5):
+        self.minimum_score = minimum_score
         from sentence_transformers import CrossEncoder
 
         self.encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L-2-v2")
@@ -31,7 +31,7 @@ class AnswerRelevancy(Metric):
     def measure(self, query, answer: str) -> float:
         score = self.encoder.predict([query, answer])
         score = sigmoid(score)
-        self.success = score > self.success_threshold
+        self.success = score > self.minimum_score
         return score
 
     def is_successful(self) -> bool:
