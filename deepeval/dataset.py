@@ -16,7 +16,7 @@ class EvaluationDataset(UserList):
     """Class for Evaluation Datasets -  which are a list of test cases"""
 
     def __init__(self, test_cases: List[TestCase]):
-        self.data = test_cases
+        self.data: List[TestCase] = test_cases
 
     @classmethod
     def from_csv(
@@ -124,6 +124,9 @@ class EvaluationDataset(UserList):
     ):
         pass
 
+    def to_dict(self):
+        return [x.dict() for x in self.data]
+
     def to_csv(self, csv_filename: str):
         import pandas as pd
 
@@ -144,7 +147,8 @@ class EvaluationDataset(UserList):
         return f"{self.__class__.__name__}({self.data})"
 
     def sample(self, n: int = 5):
-        return random.sample(self.data, n)
+        result = random.sample(self.data, n)
+        return [r.dict() for r in result]
 
     def __getitem__(self, index):
         return self.data[index]
