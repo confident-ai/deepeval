@@ -2,10 +2,6 @@
 """
 import time
 
-"""Simple Retry class
-"""
-import time
-
 
 class Retry:
     def __init__(self, max_retries=3, delay=1, min_success=1):
