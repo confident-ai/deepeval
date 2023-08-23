@@ -2,8 +2,6 @@ name: Run pytest in matrix
 
 on:
   pull_request:
-    paths:
-      - "tests/**" # Adjust the path to match your test files' location
 
 jobs:
   examples:
