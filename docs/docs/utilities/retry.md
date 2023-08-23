@@ -5,11 +5,13 @@ With LLMs, they can sometimes output different things especially if they have a 
 While it's fairly easy to write a simple re-try loop, DeepEval does offer a built-in re-try loop already due to the amount of time it can take to actually re-try them.
 
 ```python
-from deepeval.retry import Retry
+from deepeval.retry import retry
 
-with Retry(max_retries=3, min_success=2, delay=2):
-    test_llm_output()
+@retry(max_retries=5, min_success=2)
+def retry_function():
+    test_factual_consistency()
 
+retry_function()
 ```
 
 ## Parameters
