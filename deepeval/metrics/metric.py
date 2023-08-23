@@ -56,6 +56,7 @@ class Metric:
                 metric_name=self.__name__,
                 query=query,
                 output=output,
+                expected_output=expected_output,
             )
         )
         return score
