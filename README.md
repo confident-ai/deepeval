@@ -41,22 +41,37 @@ Grab your API key from [https://app.confident-ai.com](https://app.confident-ai.c
 ```python
 # test_example.py
 import os
+import openai
 from deepeval.metrics.factual_consistency import assert_factual_consistency
 
 # Optional - if you want an amazing dashboard!
 os.environ["CONFIDENT_AI_API_KEY"] = "XXX"
+# Name your implementation - e.g. "LangChain Implementation"
+os.environ["CONFIDENT_AI_IMP_NAME"] = "QuickStart"
 
-def generate_llm_output(input: str):
-    expected_output = "Our customer success phone line is 1200-231-231."
+import openai
+openai.api_key = "sk-XXX"
+
+# Write a sample ChatGPT function
+def generate_chatgpt_output(query: str):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "assistant", "content": "The customer success phone line is 1200-231-231 and the customer success state is in Austin."},
+            {"role": "user", "content": query}
+        ]
+    )
+    expected_output = response.choices[0].message.content
     return expected_output
 
-def test_llm_output(self):
-    input = "What is the customer success phone line?"
+def test_llm_output():
+    query = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
-    output = generate_llm_output(input)
+    output = generate_chatgpt_output(query)
+    assert_factual_consistency(output, expected_output)
 
-    assert_factual_consistency(output, expected_output, metric="entailment")
-    assert_factual_consistency(output, expected_output, metric="exact")
+test_llm_output()
 ```
 
 Once you have set that up, you can simply call pytest

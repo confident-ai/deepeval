@@ -8,7 +8,7 @@ from . import query_generator
 from . import test_case
 from . import test_utils
 from . import bulk_runner
-from . import client
+from . import evaluator
 from . import utils
 from . import _version
 from ._version import __version__
