@@ -16,7 +16,7 @@ from deepeval.metrics.conceptual_similarity import assert_conceptual_similarity
 assert_conceptual_similarity(
     output="python is a programming language",
     expected_output="Python is a snake.",
-    success_threshold=0.3
+    minimum_score=0.3
 )
 ```
 
@@ -25,11 +25,11 @@ assert_conceptual_similarity(
 ```python
 from deepeval.metrics.conceptual_similarity import ConceptualSimilarityMetric
 
-metric = ConceptualSimilarityMetric(success_threshold=0.3)
+metric = ConceptualSimilarityMetric(minimum_score=0.3)
 score = metric.measure(text_1="Python is a programming language.", text_2="Python is a snake.")
 metric.is_successful()
 ```
 
 ### Parameters
 
-- `success_threshold` - the minimum score required a metric to be successful
+- `minimum_score` - the minimum score required a metric to be successful

@@ -7,11 +7,9 @@ class FactualConsistencyMetric(EntailmentScoreMetric):
         return "Factual Consistency"
 
 
-def assert_factual_consistency(
-    output: str, context: str, success_threshold: float = 0.3
-):
+def assert_factual_consistency(output: str, context: str, minimum_score: float = 0.3):
     """Assert that the output is factually consistent with the context."""
 
-    metric = FactualConsistencyMetric(minimum_score=success_threshold)
+    metric = FactualConsistencyMetric(minimum_score=minimum_score)
     score = metric(context, output)
     assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."

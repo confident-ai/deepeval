@@ -161,8 +161,8 @@ class RBO:
 
 
 class RankingSimilarity(Metric):
-    def __init__(self, success_threshold: float = 0.1):
-        self.success_threshold = success_threshold
+    def __init__(self, minimum_score: float = 0.1):
+        self.minimum_score = minimum_score
 
     def __call__(self, list_1: List[Any], list_2: List[Any]):
         score = self.measure(list_1, list_2)
@@ -182,7 +182,7 @@ class RankingSimilarity(Metric):
         list_2 = [str(x) for x in list_2]
         scorer = RBO(list_1, list_2)
         result = scorer.rbo(p=0.9, ext=True)
-        self.success = result > self.success_threshold
+        self.success = result > self.minimum_score
         return result
 
     def is_successful(self):
