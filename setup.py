@@ -22,6 +22,8 @@ setup(
         "tabulate",
         "sentence-transformers",  # for similarity
         "detoxify",  # for toxic classifier
+        "pytest",
+        "pytest-asyncio",  # To be able to run tests
     ],
     extras_require={
         "bias": [
