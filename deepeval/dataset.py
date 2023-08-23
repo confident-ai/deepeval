@@ -181,24 +181,25 @@ class EvaluationDataset(UserList):
                 def assert_metric():
                     score = metric(output, case.expected_output)
                     is_successful = metric.is_successful()
-                    assert is_successful(), metric.__name__ + " wasn't successful"
 
-                assert_metric()
-                message = f"""{metric.__class__.__name__} was unsuccessful for 
+                    message = f"""{metric.__class__.__name__} was unsuccessful for 
 {case.input} 
 which should have matched 
 {case.expected_output}
 """
-                table.append(
-                    [
-                        bool(is_successful),
-                        metric.__class__.__name__,
-                        score,
-                        output,
-                        case.expected_output,
-                        message,
-                    ]
-                )
+                    table.append(
+                        [
+                            bool(metric.is_successful()),
+                            metric.__class__.__name__,
+                            score,
+                            output,
+                            case.expected_output,
+                            message,
+                        ]
+                    )
+                    assert is_successful(), metric.__name__ + " wasn't successful"
+
+                assert_metric()
         if test_filename is None:
             test_filename = (
                 f"test-result-{datetime.now().__str__().replace(' ', '-')}.txt"
