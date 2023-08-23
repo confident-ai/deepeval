@@ -25,8 +25,8 @@ def generate_chatgpt_output(query: str):
             {"role": "user", "content": query}
         ]
     )
-    expected_output = response.choices[0].message.content
-    return expected_output
+    llm_output = response.choices[0].message.content
+    return llm_output
 
 def test_factual_consistency():
     query = "What is the customer success phone line?"
