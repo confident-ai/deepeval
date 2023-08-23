@@ -18,4 +18,4 @@
 #             ]
 
 #     tester = BulkTester()
-#     tester.run(callable_fn=generate_llm_output)
+#     tester.run(completion_fn=generate_llm_output)
