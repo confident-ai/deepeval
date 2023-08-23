@@ -34,12 +34,13 @@ async def test_llm_output_custom():
     with pytest.raises(AssertionError):
         assert_factual_consistency(output, expected_output, metric=metric)
 
+
 def test_implementation_inside_quickstart():
     api_key = os.environ[API_KEY_ENV]
     client = Api(api_key=api_key)
     imps = client.list_implementations()
     FOUND = False
     for imp in imps:
-        if imp['name'] == IMPLEMENTATION_NAME:
+        if imp["name"] == IMPLEMENTATION_NAME:
             FOUND = True
     assert FOUND, f"Not found in {imps}"

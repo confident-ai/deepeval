@@ -41,7 +41,7 @@ Grab your API key from [https://app.confident-ai.com](https://app.confident-ai.c
 ```python
 # test_example.py
 import os
-from deepeval.test_utils import assert_
+from deepeval.metrics.factual_consistency import assert_factual_consistency
 
 # Optional - if you want an amazing dashboard!
 os.environ["CONFIDENT_AI_API_KEY"] = "XXX"
@@ -54,8 +54,9 @@ def test_llm_output(self):
     input = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
     output = generate_llm_output(input)
-    assert_llm_output(output, expected_output, metric="entailment")
-    assert_llm_output(output, expected_output, metric="exact")
+
+    assert_factual_consistency(output, expected_output, metric="entailment")
+    assert_factual_consistency(output, expected_output, metric="exact")
 ```
 
 Once you have set that up, you can simply call pytest
