@@ -39,8 +39,7 @@ jobs:
       - name: Discover test files
         id: discover-tests
         run: |
-          TEST_FILES=$(find tests/ -name "test_*.py")
-          echo "::set-output name=test_files::$TEST_FILES"
+          echo "::set-output name=test_files::$(find tests/ -name "test_*.py" | xargs)"
 
       - name: Run Unit Tests (pytest)
         env:
@@ -49,6 +48,7 @@ jobs:
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
           python -c "import sys; print(sys.version)"
-          for TEST_FILE in ${{ steps.discover-tests.outputs.test_files }}; do
+          IFS=" " read -r -a TEST_FILES <<< "${{ steps.discover-tests.outputs.test_files }}"
+          for TEST_FILE in "${TEST_FILES[@]}"; do
             python -m pytest -x $TEST_FILE
           done
