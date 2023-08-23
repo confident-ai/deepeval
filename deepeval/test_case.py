@@ -26,6 +26,14 @@ class TestCase:
         else:
             self.id = id
 
+    def dict(self):
+        return {
+            "input": self.input,
+            "expected_output": self.expected_output,
+            "metrics": [metric.dict() for metric in self.metrics],
+            "id": self.id,
+        }
+
 
 class TestCases(UserList):
     """A list of test cases for easy access"""

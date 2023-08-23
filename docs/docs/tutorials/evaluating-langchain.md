@@ -64,7 +64,7 @@ This model is quite big and may consume a lot of memory. In order to run this co
 from deepeval.dataset import create_evaluation_dataset_from_raw_text
 
 ds = create_evaluation_dataset_from_raw_text(response.text)
-ds.run_evaluation(callable_fn=qa.run)
+ds.run_evaluation(completion_fn=qa.run)
 ```
 
 This will output a text file with the following contents:

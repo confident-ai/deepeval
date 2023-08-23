@@ -9,13 +9,14 @@ from collections import UserList
 from .test_case import TestCase
 from .metrics.metric import Metric
 from .query_generator import BEIRQueryGenerator
+from .retry import retry
 
 
 class EvaluationDataset(UserList):
     """Class for Evaluation Datasets -  which are a list of test cases"""
 
     def __init__(self, test_cases: List[TestCase]):
-        self.data = test_cases
+        self.data: List[TestCase] = test_cases
 
     @classmethod
     def from_csv(
@@ -123,6 +124,9 @@ class EvaluationDataset(UserList):
     ):
         pass
 
+    def to_dict(self):
+        return [x.dict() for x in self.data]
+
     def to_csv(self, csv_filename: str):
         import pandas as pd
 
@@ -143,7 +147,10 @@ class EvaluationDataset(UserList):
         return f"{self.__class__.__name__}({self.data})"
 
     def sample(self, n: int = 5):
-        return random.sample(self.data, n)
+        if len(self.data) <= n:
+            n = len(self.data)
+        result = random.sample(self.data, n)
+        return [r.dict() for r in result]
 
     def __getitem__(self, index):
         return self.data[index]
@@ -154,7 +161,13 @@ class EvaluationDataset(UserList):
     def __delitem__(self, index):
         del self.data[index]
 
-    def run_evaluation(self, callable_fn: Callable, test_filename: str = None):
+    def run_evaluation(
+        self,
+        completion_fn: Callable,
+        test_filename: str = None,
+        max_retries: int = 3,
+        min_success: int = 1,
+    ):
         table = []
 
         headers = [
@@ -167,25 +180,32 @@ class EvaluationDataset(UserList):
         ]
         for case in self.data:
             case: TestCase
-            output = callable_fn(case.input)
+            output = completion_fn(case.input)
             for metric in case.metrics:
-                score = metric(output, case.expected_output)
-                is_successful = metric.is_successful()
-                message = f"""{metric.__class__.__name__} was unsuccessful for 
+
+                @retry(max_retries=max_retries, min_success=min_success)
+                def assert_metric():
+                    score = metric(output, case.expected_output)
+                    is_successful = metric.is_successful()
+
+                    message = f"""{metric.__class__.__name__} was unsuccessful for 
 {case.input} 
 which should have matched 
 {case.expected_output}
 """
-                table.append(
-                    [
-                        bool(is_successful),
-                        metric.__class__.__name__,
-                        score,
-                        output,
-                        case.expected_output,
-                        message,
-                    ]
-                )
+                    table.append(
+                        [
+                            bool(metric.is_successful()),
+                            metric.__class__.__name__,
+                            score,
+                            output,
+                            case.expected_output,
+                            message,
+                        ]
+                    )
+                    assert is_successful(), metric.__name__ + " wasn't successful"
+
+                assert_metric()
         if test_filename is None:
             test_filename = (
                 f"test-result-{datetime.now().__str__().replace(' ', '-')}.txt"
