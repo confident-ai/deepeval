@@ -147,6 +147,8 @@ class EvaluationDataset(UserList):
         return f"{self.__class__.__name__}({self.data})"
 
     def sample(self, n: int = 5):
+        if len(self.data) <= n:
+            n = len(self.data)
         result = random.sample(self.data, n)
         return [r.dict() for r in result]
 
