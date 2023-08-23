@@ -8,7 +8,7 @@ from .pipeline import Pipeline
 from .api import Api
 from .metrics.metric import Metric
 from .query_generator import BEIRQueryGenerator, QueryGenerator
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 
 class Evaluator(Api):
@@ -129,3 +129,17 @@ class Evaluator(Api):
                 max_workers=max_workers,
             )
         )
+
+    def get_implementation_id_by_name(
+        self, name: str, description: Optional[str] = None
+    ):
+        """Gets implementation. If none exists, it creates one."""
+        implementations: List[Dict] = self.list_implementations()
+        imp_id = None
+        for imp in implementations:
+            if imp["name"] == name:
+                imp_id = imp["id"]
+        if imp_id is None:
+            created_imp = self.create_implementation(name=name, description=description)
+            imp_id = created_imp["id"]
+        return imp_id
