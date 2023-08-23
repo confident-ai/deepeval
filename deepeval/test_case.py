@@ -30,7 +30,7 @@ class TestCase:
         return {
             "input": self.input,
             "expected_output": self.expected_output,
-            "metrics": [metric.dict() for metric in self.metrics],
+            "metrics": self.metrics,
             "id": self.id,
         }
 
