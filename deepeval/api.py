@@ -1,8 +1,9 @@
 import platform
 import urllib.parse
-
+import os
 import requests
-from typing import Any
+from .constants import API_KEY_ENV
+from typing import Any, Optional
 from requests.adapters import HTTPAdapter, Response, Retry
 
 API_BASE_URL = "https://app.confident-ai.com/api"
@@ -19,7 +20,7 @@ class Api:
 
     def __init__(
         self,
-        api_key: str,
+        api_key: str = os.getenv(API_KEY_ENV),
         user_agent_extension=None,
         api_instance_url=None,
         verify=None,
@@ -290,3 +291,16 @@ class Api:
         return self.get_request(
             endpoint="/v1/prod-data?implementationId=" + implementation_id
         )
+
+    def create_implementation(self, name: str, description: Optional[str] = None):
+
+        body = {"name": name}
+        if description:
+            body["description"] = description
+        return self.post_request(endpoint="/v1/implementation", body=body)
+
+    def list_implementations(self):
+        """
+        Returns a list of implementations
+        """
+        return self.get_request(endpoint="/v1/implementation")
