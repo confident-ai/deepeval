@@ -42,7 +42,7 @@ jobs:
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
-          python -m pytest -x
+          python -m pytest -x tests
 
       # - name: Discover test files
       #   id: discover-tests
