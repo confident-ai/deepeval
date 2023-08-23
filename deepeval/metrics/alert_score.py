@@ -7,8 +7,8 @@ from .entailment_metric import EntailmentScoreMetric
 
 
 class AlertScoreMetric(Metric):
-    def __init__(self, success_threshold: float = 0.5):
-        self.success_threshold = success_threshold
+    def __init__(self, minimum_score: float = 0.5):
+        self.minimum_score = minimum_score
         self.entailment_metric = EntailmentScoreMetric()
         # self.answer_relevancy = AnswerRelevancy()
 
@@ -36,7 +36,7 @@ class AlertScoreMetric(Metric):
         #     query=query, answer=generated_text
         # )
         alert_score = min(entailment_score, answer_expected_score)
-        self.success = alert_score > self.success_threshold
+        self.success = alert_score > self.minimum_score
         return alert_score
 
     def is_successful(self) -> bool:
@@ -52,10 +52,10 @@ def assert_alert_score(
     generated_text: str,
     expected_output: str,
     context: str,
-    success_threshold: float = 0.5,
+    minimum_score: float = 0.5,
 ):
     """Create alert score."""
-    metric = AlertScoreMetric(success_threshold=success_threshold)
+    metric = AlertScoreMetric(minimum_score=minimum_score)
     score = metric.measure(
         query=query,
         generated_text=generated_text,
