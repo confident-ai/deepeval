@@ -13,7 +13,7 @@ class BulkTestRunner:
     def bulk_test_cases(self) -> List[TestCase]:
         return []
 
-    def run(self, callable_fn: Callable):
+    def run(self, completion_fn: Callable):
         table = []
 
         headers = [
@@ -26,7 +26,7 @@ class BulkTestRunner:
         ]
         for case in self.bulk_test_cases:
             case: TestCase
-            output = callable_fn(case.input)
+            output = completion_fn(case.input)
             for metric in case.metrics:
                 score = metric(output, case.expected_output)
                 is_successful = metric.is_successful()

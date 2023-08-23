@@ -23,11 +23,12 @@ class BulkTester(BulkTestRunner):
         ]
 
 tester = BulkTester()
-tester.run(callable_fn=generate_llm_output)
+tester.run(completion_fn=generate_llm_output)
 
 ```
 
 Once you run these tests, you will then be given a table that looks like this.
+
 ```
 Test Passed  Metric Name                  Score    Output                                            Expected output    Message
 -------------  ---------------------  -----------  ------------------------------------------------  -----------------  -------------------------------------------

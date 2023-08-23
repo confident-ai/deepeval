@@ -25,5 +25,5 @@ Once you have defined a number of test cases, you can easily run it in bulk if r
 ```python
 # test_bulk_runner.py
 # Run an evaluation as you would any normal evaluation.
-dataset.run_evaluation(callable_fn=generate_llm_output)
+dataset.run_evaluation(completion_fn=generate_llm_output)
 ```

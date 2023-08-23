@@ -33,7 +33,7 @@ Running the tests is easy with the `run_evaluation` method. When you call `run_e
 
 ```python
 ds.run_evaluation(
-    callable_fn=generate_llm_output,
+    completion_fn=generate_llm_output,
 )
 # Returns the evaluation
 ```
