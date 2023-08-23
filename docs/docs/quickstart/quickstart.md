@@ -12,7 +12,6 @@ os.environ["CONFIDENT_AI_API_KEY"] = "XXX"
 # Name your implementation - e.g. "LangChain Implementation"
 os.environ["CONFIDENT_AI_IMP_NAME"] = "QuickStart"
 
-import openai
 openai.api_key = "sk-XXX"
 
 # Write a sample ChatGPT function
