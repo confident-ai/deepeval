@@ -28,13 +28,13 @@ def generate_chatgpt_output(query: str):
     expected_output = response.choices[0].message.content
     return expected_output
 
-def test_llm_output():
+def test_factual_consistency():
     query = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
     output = generate_chatgpt_output(query)
     assert_factual_consistency(output, expected_output)
 
-test_llm_output()
+test_factual_consistency()
 ```
 
 You can then run it in CLI using this:
