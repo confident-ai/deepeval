@@ -12,7 +12,7 @@ from ..constants import (
     IMPLEMENTATION_ID_NAME,
 )
 from abc import abstractmethod
-from ..client import Evaluator
+from ..client import Client
 from ..api import Api
 from ..utils import softmax
 
@@ -70,7 +70,7 @@ class Metric:
         **kwargs
     ):
         if self._is_send_okay():
-            client = Evaluator(api_key=os.getenv(API_KEY_ENV))
+            client = Client(api_key=os.getenv(API_KEY_ENV))
             implementation_name = os.getenv(IMPLEMENTATION_ID_NAME)
             implementation_id = os.getenv(IMPLEMENTATION_ID_ENV, "")
             if implementation_id != "":
