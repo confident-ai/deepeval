@@ -24,13 +24,13 @@ result_list_2 = ["Sentence-2", "Sentence-3"]
 assert_ranking_similarity(
     list1=result_list_1,
     list2=result_list_2,
-    success_threshold=0.3
+    minimum_score=0.3
 )
 ```
 
 ### Parameters
 
-- `success_threshold` refers to the minimum score for this to be considered simiar ranking
+- `minimum_score` refers to the minimum score for this to be considered simiar ranking
 
 ## Ranking Similarity As A Metric
 
@@ -38,13 +38,13 @@ You can measure ranking similarity as a metric.
 
 ```python
 from deepeval.metrics.ranking_similarity import RankingSimilarity
-scorer = RankingSimilarity(success_threshold=0.5)
+scorer = RankingSimilarity(minimum_score=0.5)
 result = scorer.measure(list_1=list1, list_2=list2)
 ```
 
 ### Parameters
 
-- `success_threshold` refers to the minimum score for this to be considered simiar ranking
+- `minimum_score` refers to the minimum score for this to be considered simiar ranking
 
 ### How it is measured
 

@@ -20,8 +20,13 @@ setup(
         "transformers",
         "pytest",
         "tabulate",
-        "sentence-transformers",
-        "detoxify",
-        "Dbias",
+        "sentence-transformers",  # for similarity
+        "detoxify",  # for toxic classifier
     ],
+    extras_require={
+        "bias": [
+            "tensorflow",  # for bias
+            "Dbias",  # for bias
+        ]
+    },
 )
