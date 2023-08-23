@@ -60,7 +60,7 @@ This model is quite big and may consume a lot of memory. In order to run this co
 
 :::
 
-```
+```python
 from deepeval.dataset import create_evaluation_dataset_from_raw_text
 
 ds = create_evaluation_dataset_from_raw_text(response.text)
@@ -69,7 +69,7 @@ ds.run_evaluation(callable_fn=qa.run)
 
 This will output a text file with the following contents:
 
-```
+```bash
 Test Passed    Metric Name                 Score  Output                                                                                                                                                                               Expected output                                                     Message
 -------------  ---------------------  ----------  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  ------------------------------------------------------------------  -------------------------------------------------------------------
 False          EntailmentScoreMetric  0.00545002  No, synthetic queries are not useful for scenarios where there is no data. Synthetic queries are used to generate test data to evaluate the performance of a system or application.  Synthetic queries are useful for scenraios where there is no data.  EntailmentScoreMetric was unsuccessful for
