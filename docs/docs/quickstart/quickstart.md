@@ -3,27 +3,38 @@
 You can write a simple test case as simply as:
 
 ```python
-# test_sample.py
+import os
+import openai
+from deepeval.metrics.factual_consistency import assert_factual_consistency
 
-# test files must start
-from deepeval.test_utils import assert_llm_output
+# Optional - if you want an amazing dashboard!
+os.environ["CONFIDENT_AI_API_KEY"] = "XXX"
+# Name your implementation - e.g. "LangChain Implementation"
+os.environ["CONFIDENT_AI_IMP_NAME"] = "QuickStart"
 
-def generate_llm_output(input: str):
-    expected_output = "Our customer success phone line is 1200-231-231."
+import openai
+openai.api_key = "sk-XXX"
+
+# Write a sample ChatGPT function
+def generate_chatgpt_output(query: str):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "assistant", "content": "The customer success phone line is 1200-231-231 and the customer success state is in Austin."},
+            {"role": "user", "content": query}
+        ]
+    )
+    expected_output = response.choices[0].message.content
     return expected_output
 
-def test_llm_output():
-    input = "What is the customer success phone line?"
+def test_factual_consistency():
+    query = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
-    output = generate_llm_output(input)
-    assert_llm_output(output, expected_output, metric="entailment")
-    # You can also track queries to enable visualizing on frontend as below:
-    assert_llm_output(
-        output,
-        expected_output,
-        metric="entailment",
-        query=input
-    )
+    output = generate_chatgpt_output(query)
+    assert_factual_consistency(output, expected_output)
+
+test_factual_consistency()
 ```
 
 You can then run it in CLI using this:

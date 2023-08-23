@@ -36,19 +36,27 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install . pytest-rerunfailures pytest-asyncio
 
-      - name: Discover test files
-        id: discover-tests
-        run: |
-          TEST_FILES=$(find tests/ -name "test_*.py")
-          echo "::set-output name=test_files::$TEST_FILES"
-
       - name: Run Unit Tests (pytest)
         env:
           python-version: ${{ matrix.python-version }}
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
-          python -c "import sys; print(sys.version)"
-          for TEST_FILE in ${{ steps.discover-tests.outputs.test_files }}; do
-            python -m pytest -x $TEST_FILE
-          done
+          python -m pytest -x
+
+      # - name: Discover test files
+      #   id: discover-tests
+      #   run: |
+      #     echo "::set-output name=test_files::$(find tests/ -name "test_*.py" | xargs)"
+
+      # - name: Run Unit Tests (pytest)
+      #   env:
+      #     python-version: ${{ matrix.python-version }}
+      #     CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
+      #     CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
+      #   run: |
+      #     python -c "import sys; print(sys.version)"
+      #     IFS=" " read -r -a TEST_FILES <<< "${{ steps.discover-tests.outputs.test_files }}"
+      #     for TEST_FILE in "${TEST_FILES[@]}"; do
+      #       python -m pytest -x $TEST_FILE
+      #     done
