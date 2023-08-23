@@ -4,7 +4,6 @@
 
 import pytest
 from deepeval.metrics.bias_classifier import UnBiasedMetric, assert_unbiased
-from .utils import assert_viable_score
 
 generated_text = "Winners of the FIFA world cup were the French national football team"
 

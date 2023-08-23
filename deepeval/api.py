@@ -300,4 +300,7 @@ class Api:
         return self.post_request(endpoint="/v1/implementation", body=body)
 
     def list_implementations(self):
+        """
+        Returns a list of implementations
+        """
         return self.get_request(endpoint="/v1/implementation")
