@@ -154,7 +154,7 @@ class EvaluationDataset(UserList):
     def __delitem__(self, index):
         del self.data[index]
 
-    def run_evaluation(self, callable_fn: Callable, test_filename: str = None):
+    def run_evaluation(self, completion_fn: Callable, test_filename: str = None):
         table = []
 
         headers = [
@@ -167,7 +167,7 @@ class EvaluationDataset(UserList):
         ]
         for case in self.data:
             case: TestCase
-            output = callable_fn(case.input)
+            output = completion_fn(case.input)
             for metric in case.metrics:
                 score = metric(output, case.expected_output)
                 is_successful = metric.is_successful()
