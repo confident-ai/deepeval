@@ -1,5 +1,7 @@
+import asyncio
 from .metric import Metric
 from ..utils import softmax
+from typing import Optional
 
 
 class EntailmentScoreMetric(Metric):
@@ -28,3 +30,16 @@ class EntailmentScoreMetric(Metric):
     @property
     def __name__(self):
         return "Entailment"
+
+    def __call__(self, output, expected_output, query: Optional[str] = "-"):
+        score = self.measure(output, expected_output)
+        asyncio.create_task(
+            self._send_to_server(
+                metric_score=score,
+                metric_name=self.__name__,
+                query=query,
+                output=output,
+                expected_output=expected_output,
+            )
+        )
+        return score
