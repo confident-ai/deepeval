@@ -16,6 +16,8 @@ Access the dashboard by simply setting your API key as an environment variable a
 
 ```python
 os.environ["CONFIDENT_AI_API_KEY"] = "xxx"
+# Name your implementation - e.g. "LangChain Implementation"
+os.environ["CONFIDENT_AI_IMP_NAME"] = "QuickStart"
 ```
 
 Once you set the API key - we automatically log metrics to our server.
