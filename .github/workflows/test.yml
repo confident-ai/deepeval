@@ -1,6 +1,7 @@
-name: tests
+name: Run pytest in matrix
 
-on: [pull_request]
+on:
+  pull_request:
 
 jobs:
   examples:
@@ -8,14 +9,23 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9"]
-
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Cache dependencies
+        id: cache-dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: dependencies-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            dependencies-${{ matrix.python-version }}-
+            dependencies-
 
       - name: Install dependencies
         env:
@@ -26,6 +36,12 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install . pytest-rerunfailures pytest-asyncio
 
+      - name: Discover test files
+        id: discover-tests
+        run: |
+          TEST_FILES=$(find tests/ -name "test_*.py")
+          echo "::set-output name=test_files::$TEST_FILES"
+
       - name: Run Unit Tests (pytest)
         env:
           python-version: ${{ matrix.python-version }}
@@ -33,4 +49,6 @@ jobs:
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
           python -c "import sys; print(sys.version)"
-          python -m pytest -x tests/*
+          for TEST_FILE in ${{ steps.discover-tests.outputs.test_files }}; do
+            python -m pytest -x $TEST_FILE
+          done
