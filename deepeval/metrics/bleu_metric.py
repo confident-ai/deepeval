@@ -6,8 +6,8 @@ from .metric import Metric
 
 
 class BLEUMetric(Metric):
-    def __init__(self, success_threshold: float = 0.5):
-        self.success_threshold = success_threshold
+    def __init__(self, minimum_score: float = 0.5):
+        self.minimum_score = minimum_score
 
     def compute_bleu(
         self, candidate: str, reference: str, weights=(0.25, 0.25, 0.25, 0.25)

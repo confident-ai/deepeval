@@ -4,6 +4,8 @@
 
 DeepEval provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production. The guiding philosophy is a "Pytest for LLM" that aims to make productionizing and evaluating LLMs as easy as ensuring all tests pass.
 
+Looking for DeepEval API? Please join the waitlist here: https://forms.gle/y3uqNBkmfxVYLXGq6
+
 # Documentation
 
 We highly recommend getting started through our documentation here: https://docs.confident-ai.com/docs/
