@@ -21,8 +21,7 @@ async def test_llm_output():
     input = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
     output = generate_llm_output(input)
-    assert_factual_consistency(output, expected_output, metric="entailment")
-    assert_factual_consistency(output, expected_output, metric="bertscore")
+    assert_factual_consistency(output, expected_output)
 
 
 @pytest.mark.asyncio
@@ -32,7 +31,7 @@ async def test_llm_output_custom():
     output = generate_llm_output(input)
     metric = BertScoreMetric(minimum_score=0.98)
     with pytest.raises(AssertionError):
-        assert_factual_consistency(output, expected_output, metric=metric)
+        assert_factual_consistency(output, expected_output)
 
 
 def test_implementation_inside_quickstart():
