@@ -7,8 +7,8 @@ from .entailment_metric import EntailmentScoreMetric
 
 
 class OverallScoreMetric(Metric):
-    def __init__(self, success_threshold: float = 0.5):
-        self.success_threshold = success_threshold
+    def __init__(self, minimum_score: float = 0.5):
+        self.minimum_score = minimum_score
         self.entailment_metric = EntailmentScoreMetric()
 
     def __call__(self, generated_text: str, expected_output: str, context: str):
@@ -27,7 +27,7 @@ class OverallScoreMetric(Metric):
         )
 
         overall_score = 0.5 * entailment_score + 0.5 * answer_expected_score
-        self.success = overall_score > self.success_threshold
+        self.success = overall_score > self.minimum_score
         return overall_score
 
     def is_successful(self) -> bool:
@@ -42,9 +42,9 @@ def assert_overall_score(
     generated_text: str,
     expected_output: str,
     context: str,
-    success_threshold: float = 0.5,
+    minimum_score: float = 0.5,
 ):
-    metric = OverallScoreMetric(success_threshold=success_threshold)
+    metric = OverallScoreMetric(minimum_score=minimum_score)
     score = metric.measure(
         generated_text=generated_text,
         expected_output=expected_output,
