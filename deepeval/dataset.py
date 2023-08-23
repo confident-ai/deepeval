@@ -19,7 +19,7 @@ class EvaluationDataset(UserList):
 
     @classmethod
     def from_csv(
-        self,
+        cls,  # Use 'cls' instead of 'self' for class methods
         csv_filename: str,
         input_column: str,
         expected_output_column: str,
@@ -33,16 +33,20 @@ class EvaluationDataset(UserList):
         expected_outputs = df[expected_output_column].values
         if id_column is not None:
             ids = df[id_column].values
-        for i, input in enumerate(inputs):
-            self.data.append(
+
+        # Initialize the 'data' attribute as an empty list
+        cls.data = []
+
+        for i, input_data in enumerate(inputs):
+            cls.data.append(
                 TestCase(
-                    input=input,
+                    input=input_data,
                     expected_output=expected_outputs[i],
                     metrics=metrics,
-                    id=ids[i],
+                    id=ids[i] if id_column else None,
                 )
             )
-        return self
+        return cls(cls.data)
 
     def from_test_cases(self, test_cases: list):
         self.data = test_cases
@@ -67,6 +71,7 @@ class EvaluationDataset(UserList):
         with open(json_filename, "r") as f:
             data = json.load(f)
         test_cases = []
+
         for i, input in enumerate(data[input_column]):
             test_cases.append(
                 TestCase(
@@ -106,6 +111,17 @@ class EvaluationDataset(UserList):
                 )
             )
         return cls(data)
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: List[dict],
+        input_key: str,
+        expected_output_key: str,
+        id_key: str = None,
+        metrics: List[Metric] = None,
+    ):
+        pass
 
     def to_csv(self, csv_filename: str):
         import pandas as pd

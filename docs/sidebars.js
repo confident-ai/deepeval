@@ -61,7 +61,11 @@ const sidebars = {
       label: "Tutorials",
       items: ["tutorials/evaluating-langchain"]
     },
-    'contact'
+    {
+      type: "category",
+      label: "Utilities",
+      items: ["utilities/retry"]
+    }
   ],
 };
 
