@@ -1,5 +1,11 @@
 # Create An Evaluation Dataset
 
+An evaluation dataset is a way to load in:
+
+- CSV files
+- JSON files
+- Custom data sources (to be supported soon)
+
 ## Defining A Dataset
 
 An evaluation dataset is a list of test cases designed to make testing a large number of test cases very easily. Testing a large number of test cases is important for enterprise production use cases. We support a number of ways to quickly get started.
@@ -51,7 +57,7 @@ To view a sample of data, simply run:
 ds.sample(5)
 ```
 
-###  From CSV
+### From CSV
 
 You can set up an evaluation dataset from the CSV the `from_csv` method
 
