@@ -9,6 +9,7 @@ from collections import UserList
 from .test_case import TestCase
 from .metrics.metric import Metric
 from .query_generator import BEIRQueryGenerator
+from .retry import retry
 
 
 class EvaluationDataset(UserList):
@@ -154,7 +155,13 @@ class EvaluationDataset(UserList):
     def __delitem__(self, index):
         del self.data[index]
 
-    def run_evaluation(self, completion_fn: Callable, test_filename: str = None):
+    def run_evaluation(
+        self,
+        completion_fn: Callable,
+        test_filename: str = None,
+        max_retries: int = 3,
+        min_success: int = 1,
+    ):
         table = []
 
         headers = [
@@ -169,8 +176,14 @@ class EvaluationDataset(UserList):
             case: TestCase
             output = completion_fn(case.input)
             for metric in case.metrics:
-                score = metric(output, case.expected_output)
-                is_successful = metric.is_successful()
+
+                @retry(max_retries=max_retries, min_success=min_success)
+                def assert_metric():
+                    score = metric(output, case.expected_output)
+                    is_successful = metric.is_successful()
+                    assert is_successful(), metric.__name__ + " wasn't successful"
+
+                assert_metric()
                 message = f"""{metric.__class__.__name__} was unsuccessful for 
 {case.input} 
 which should have matched 
