@@ -13,6 +13,15 @@ class Retry:
         while self.retry_count < self.max_retries:
             try:
                 return self  # Return the context manager instance.
+            except AssertionError as e:
+                print(f"Attempt {self.retry_count + 1} failed: {str(e)}")
+                self.retry_count += 1
+                if self.retry_count < self.max_retries:
+                    print(f"Retrying in {self.delay} seconds...")
+                    time.sleep(self.delay)
+                else:
+                    print(f"Max retries ({self.max_retries}) exceeded.")
+                    raise e
             except Exception as e:
                 print(f"Attempt {self.retry_count + 1} failed: {str(e)}")
                 self.retry_count += 1
