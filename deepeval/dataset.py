@@ -203,7 +203,7 @@ which should have matched
                             message,
                         ]
                     )
-                    assert is_successful(), metric.__name__ + " wasn't successful"
+                    assert is_successful, metric.__name__ + " wasn't successful"
 
                 assert_metric()
         if test_filename is None:
