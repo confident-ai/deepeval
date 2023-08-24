@@ -20,13 +20,14 @@ const sidebars = {
   tutorialSidebar: [
     'index',
     'install',
+    'framework',
     {
       type: 'category',
       label: 'QuickStart',
       items: [
         'quickstart/quickstart',
         'quickstart/dataset',
-        // 'quickstart/custom-metrics',
+        'quickstart/custom-metrics',
         'quickstart/synthetic-data-creation',
         'quickstart/dashboard-app'
       ],
