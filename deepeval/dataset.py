@@ -22,7 +22,7 @@ class EvaluationDataset(UserList):
     def from_csv(
         cls,  # Use 'cls' instead of 'self' for class methods
         csv_filename: str,
-        input_column: str,
+        query_column: str,
         expected_output_column: str,
         id_column: str = None,
         metrics: List[Metric] = None,
@@ -30,7 +30,7 @@ class EvaluationDataset(UserList):
         import pandas as pd
 
         df = pd.read_csv(csv_filename)
-        inputs = df[input_column].values
+        querys = df[query_column].values
         expected_outputs = df[expected_output_column].values
         if id_column is not None:
             ids = df[id_column].values
@@ -38,10 +38,10 @@ class EvaluationDataset(UserList):
         # Initialize the 'data' attribute as an empty list
         cls.data = []
 
-        for i, input_data in enumerate(inputs):
+        for i, query_data in enumerate(querys):
             cls.data.append(
                 TestCase(
-                    input=input_data,
+                    query=query_data,
                     expected_output=expected_outputs[i],
                     metrics=metrics,
                     id=ids[i] if id_column else None,
@@ -56,7 +56,7 @@ class EvaluationDataset(UserList):
     def from_json(
         cls,
         json_filename: str,
-        input_column: str,
+        query_column: str,
         expected_output_column: str,
         id_column: str = None,
         metrics: List[Metric] = None,
@@ -64,7 +64,7 @@ class EvaluationDataset(UserList):
         """
         This is for JSON data in the format of key-value array pairs.
         {
-            "input": ["What is the customer success number", "What is the customer success number"],
+            "query": ["What is the customer success number", "What is the customer success number"],
         }
 
         if the JSON data is in a list of dicionaries, use from_json_list
@@ -73,10 +73,10 @@ class EvaluationDataset(UserList):
             data = json.load(f)
         test_cases = []
 
-        for i, input in enumerate(data[input_column]):
+        for i, query in enumerate(data[query_column]):
             test_cases.append(
                 TestCase(
-                    input=data[input_column][i],
+                    query=data[query_column][i],
                     expected_output=data[expected_output_column][i],
                     metrics=metrics,
                     id=data[id_column][i],
@@ -88,7 +88,7 @@ class EvaluationDataset(UserList):
     def from_json_list(
         cls,
         json_filename: str,
-        input_column: str,
+        query_column: str,
         expected_output_column: str,
         id_column: str = None,
         metrics: List[Metric] = None,
@@ -96,16 +96,16 @@ class EvaluationDataset(UserList):
         """
         This is for JSON data in the format of a list of dictionaries.
         [
-            {"input": "What is the customer success number", "expected_output": "What is the customer success number"},
+            {"query": "What is the customer success number", "expected_output": "What is the customer success number"},
         ]
         """
         with open(json_filename, "r") as f:
             data = json.load(f)
         test_cases = []
-        for i, input in enumerate(data):
+        for i, query in enumerate(data):
             test_cases.append(
                 TestCase(
-                    input=data[i][input_column],
+                    query=data[i][query_column],
                     expected_output=data[i][expected_output_column],
                     metrics=metrics,
                     id=data[i][id_column],
@@ -117,7 +117,7 @@ class EvaluationDataset(UserList):
     def from_dict(
         cls,
         data: List[dict],
-        input_key: str,
+        query_key: str,
         expected_output_key: str,
         id_key: str = None,
         metrics: List[Metric] = None,
@@ -183,7 +183,7 @@ class EvaluationDataset(UserList):
         ]
         for case in self.data:
             case: TestCase
-            output = completion_fn(case.input)
+            output = completion_fn(case.query)
             if metrics is None:
                 metrics = case.metrics
             for metric in metrics:
@@ -194,7 +194,7 @@ class EvaluationDataset(UserList):
                     is_successful: bool = metric.is_successful()
                     is_successful: bool = bool(is_successful)
                     message = f"""{metric.__class__.__name__} was unsuccessful for 
-{case.input} 
+{case.query} 
 which should have matched 
 {case.expected_output}
 """
@@ -241,10 +241,10 @@ def create_evaluation_dataset_from_raw_text(text: str, output_fn: str = "output.
     queries = gen.generate_queries(texts=[text], num_queries=2)
     test_cases = []
     with open(output_fn, "w") as f:
-        f.write("input,expected_output\n")
+        f.write("query,expected_output\n")
         for query in queries:
             f.write(f"{query}, {text}\n")
-        test_case = TestCase(input=text, expected_output=text)
+        test_case = TestCase(query=text, expected_output=text)
         test_cases.append(test_case)
 
     dataset = EvaluationDataset(test_cases=test_cases)
