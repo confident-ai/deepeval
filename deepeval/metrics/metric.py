@@ -18,6 +18,8 @@ from ..utils import softmax
 
 
 class Metric:
+    _success: bool = False
+
     @abstractmethod
     def measure(self, output, expected_output, query: Optional[str] = None):
         pass
@@ -30,6 +32,14 @@ class Metric:
             if isinstance(getattr(self, param), (str, int, float))
         }
         return init_values
+
+    @property
+    def success(self):
+        return self._success
+
+    @success.setter
+    def success(self, value):
+        self._success = value
 
     @abstractmethod
     def is_successful(self) -> bool:

@@ -168,6 +168,7 @@ class EvaluationDataset(UserList):
         max_retries: int = 3,
         min_success: int = 1,
         raise_error: bool = False,
+        metrics: List[TestCase] = None,
     ):
         table = []
 
@@ -211,6 +212,8 @@ which should have matched
                 else:
                     try:
                         assert_metric()
+                    except AssertionError as e:
+                        print(e)
                     except Exception as e:
                         print(e)
         if test_filename is None:
