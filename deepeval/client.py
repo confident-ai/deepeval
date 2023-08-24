@@ -64,6 +64,8 @@ class Client(Api):
         self, name: str, description: Optional[str] = None
     ):
         """Gets implementation. If none exists, it creates one."""
+        if hasattr(self, "_implementation_id"):
+            return self._implementation_id
         implementations: List[Dict] = self.list_implementations()
         imp_id = None
         for imp in implementations:
@@ -72,4 +74,6 @@ class Client(Api):
         if imp_id is None:
             created_imp = self.create_implementation(name=name, description=description)
             imp_id = created_imp["id"]
+        # to avoid hammering the server
+        self._implementation_id = imp_id
         return imp_id
