@@ -20,6 +20,7 @@ const sidebars = {
   tutorialSidebar: [
     'index',
     'install',
+    'framework',
     {
       type: 'category',
       label: 'QuickStart',

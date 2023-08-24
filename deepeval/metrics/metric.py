@@ -13,11 +13,11 @@ from ..constants import (
 )
 from abc import abstractmethod
 from ..client import Client
-from ..api import Api
 from ..utils import softmax
+from ..singleton import Singleton
 
 
-class Metric:
+class Metric(metaclass=Singleton):
     # set an arbitrary minimum score that will get over-ridden later
     minimum_score: float = 0
 
