@@ -1,18 +1,17 @@
 import asyncio
 import numpy as np
 from .metric import Metric
-
-
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+from sentence_transformers import SentenceTransformer, util
 
 
 class AnswerRelevancy(Metric):
     def __init__(self, minimum_score: bool = 0.5):
         self.minimum_score = minimum_score
-        from sentence_transformers import CrossEncoder
 
-        self.encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L-2-v2")
+        # Load the model
+        self.model = SentenceTransformer(
+            "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
+        )
 
     def __call__(self, query: str, answer: str):
         score = self.measure(query, answer)
@@ -24,16 +23,21 @@ class AnswerRelevancy(Metric):
                     query=query,
                     output=answer,
                     metric_name=self.__name__,
-                    implementation_id="",
                     success=success,
                 )
             )
         return score
 
     def measure(self, query, answer: str) -> float:
-        score = self.encoder.predict([query, answer])
-        score = sigmoid(score)
-        self.success = score > self.minimum_score
+        docs = [answer]
+
+        # Encode query and documents
+        query_emb = self.model.encode(query)
+        doc_emb = self.model.encode(docs)
+
+        # Compute dot score between query and all document embeddings
+        scores = util.dot_score(query_emb, doc_emb)[0].cpu().tolist()
+        score = scores[0]
         return score
 
     def is_successful(self) -> bool:
