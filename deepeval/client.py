@@ -9,6 +9,8 @@ from typing import Optional, List, Dict
 class Client(Api):
     """API with convenience functions"""
 
+    _implementation_id: Dict[str, str] = {}
+
     def __init__(self, api_key: str = None, local_mode: bool = False, **kwargs):
         if api_key is None:
             if "TWILIX_API_KEY" not in os.environ:
@@ -64,6 +66,8 @@ class Client(Api):
         self, name: str, description: Optional[str] = None
     ):
         """Gets implementation. If none exists, it creates one."""
+        if name in self._implementation_id:
+            return self._implementation_id[name]
         implementations: List[Dict] = self.list_implementations()
         imp_id = None
         for imp in implementations:
@@ -72,4 +76,6 @@ class Client(Api):
         if imp_id is None:
             created_imp = self.create_implementation(name=name, description=description)
             imp_id = created_imp["id"]
+        # to avoid hammering the server
+        self._implementation_id[name] = imp_id
         return imp_id

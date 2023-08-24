@@ -73,12 +73,12 @@ class Metric:
         if self._is_send_okay():
             client = Client(api_key=os.getenv(API_KEY_ENV))
             implementation_name = os.getenv(IMPLEMENTATION_ID_NAME)
-            implementation_id = os.getenv(IMPLEMENTATION_ID_ENV, "")
-            if implementation_id != "":
-                implementation_id = client.get_implementation_id_by_name(
-                    implementation_name
-                )
-                os.environ[IMPLEMENTATION_ID_ENV] = implementation_id
+            # implementation_id = os.getenv(IMPLEMENTATION_ID_ENV, "")
+            # if implementation_id != "":
+            implementation_id = client.get_implementation_id_by_name(
+                implementation_name
+            )
+            os.environ[IMPLEMENTATION_ID_ENV] = implementation_id
             datapoint_id = client.add_golden(
                 query=query,
                 expected_output=expected_output,
