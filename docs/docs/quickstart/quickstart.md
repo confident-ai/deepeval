@@ -29,19 +29,36 @@ def generate_chatgpt_output(query: str):
 
 def test_factual_consistency():
     query = "What is the customer success phone line?"
-    expected_output = "Our customer success phone line is 1200-231-231."
+    context = "Our customer success phone line is 1200-231-231."
     output = generate_chatgpt_output(query)
-    assert_factual_consistency(output, expected_output)
+    assert_factual_consistency(output, context)
 
+# Just run the following code in Python if required
 test_factual_consistency()
 ```
 
-You can then run it in CLI using this:
+### Running it in Pytest
+
+To run this in Pytest, you will need the asyncio framework
+
+```bash
+pip install pytest-asyncio
+```
+
+```python
+# sample.py
+import pytest
+
+@pytest.mark.asyncio
+async def test_factual_consistency():
+    query = "What is the customer success phone line?"
+    context = "Our customer success phone line is 1200-231-231."
+    output = generate_chatgpt_output(query)
+    assert_factual_consistency(output, context)
+```
+
+You can then run it in CLI using:
 
 ```bash
 python -m pytest test_sample.py
 ```
-
-## Writing a custom metric
-
-With `deepeval`, you can easily set custom metrics or customize existing metrics. We recommend reading the `Define Your Own Metric` if you are.
