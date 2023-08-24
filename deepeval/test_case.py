@@ -15,7 +15,8 @@ class TestCase:
         id: str = None,
     ):
         if metrics is None:
-            self.metrics = [FactualConsistencyMetric(minimum_score=0.3)]
+            fact_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+            self.metrics = [fact_consistency_metric]
         else:
             self.metrics = metrics
         self.input = input

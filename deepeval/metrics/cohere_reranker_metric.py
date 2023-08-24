@@ -1,3 +1,5 @@
+import asyncio
+from typing import Optional
 from .metric import Metric
 
 
@@ -11,6 +13,23 @@ class CohereRerankerMetric(Metric):
             print(e)
             print("Run `pip install cohere`.")
         self.minimum_score = minimum_score
+
+    def __call__(self, output, expected_output, query: Optional[str] = "-"):
+        score = self.measure(output, expected_output)
+        success = False
+        if score > self.minimum_score:
+            success = True
+        asyncio.create_task(
+            self._send_to_server(
+                metric_score=score,
+                metric_name=self.__name__,
+                query=query,
+                output=output,
+                expected_output=expected_output,
+                success=success,
+            )
+        )
+        return score
 
     def measure(self, a, b):
         reranked_results = self.cohere_client.rerank(
