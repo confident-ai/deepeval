@@ -1,7 +1,8 @@
 from .entailment_metric import EntailmentScoreMetric
+from ..singleton import Singleton
 
 
-class FactualConsistencyMetric(EntailmentScoreMetric):
+class FactualConsistencyMetric(EntailmentScoreMetric, metaclass=Singleton):
     @property
     def __name__(self):
         return "Factual Consistency"
