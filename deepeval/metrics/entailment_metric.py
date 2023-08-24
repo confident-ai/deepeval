@@ -1,4 +1,5 @@
 import asyncio
+from sentence_transformers import CrossEncoder
 from typing import Optional
 from ..utils import softmax
 from ..singleton import Singleton
@@ -12,8 +13,6 @@ class EntailmentScoreMetric(Metric, metaclass=Singleton):
         model_name: str = "cross-encoder/nli-deberta-base",
     ):
         # We use a smple cross encoder model
-        from sentence_transformers import CrossEncoder
-
         self.model = CrossEncoder(model_name)
         self.minimum_score = minimum_score
 
@@ -34,6 +33,9 @@ class EntailmentScoreMetric(Metric, metaclass=Singleton):
 
     def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
+        success = False
+        if score > self.minimum_score:
+            success = True
         asyncio.create_task(
             self._send_to_server(
                 metric_score=score,
@@ -41,6 +43,7 @@ class EntailmentScoreMetric(Metric, metaclass=Singleton):
                 query=query,
                 output=output,
                 expected_output=expected_output,
+                success=success,
             )
         )
         return score

@@ -1,10 +1,9 @@
 """Overall Score
 """
+import asyncio
 from .metric import Metric
 from .entailment_metric import EntailmentScoreMetric
 from ..singleton import Singleton
-
-# from .answer_relevancy import AnswerRelevancy
 
 
 class OverallScoreMetric(Metric, metaclass=Singleton):
@@ -14,6 +13,17 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
 
     def __call__(self, generated_text: str, expected_output: str, context: str):
         score = self.measure(generated_text, expected_output, context)
+        success = score > self.minimum_score
+        asyncio.create_task(
+            self._send_to_server(
+                metric_score=score,
+                metric_name=self.__name__,
+                query=context,
+                output=generated_text,
+                expected_output=expected_output,
+                success=success,
+            )
+        )
         return score
 
     def measure(self, generated_text: str, expected_output: str, context: str) -> float:
