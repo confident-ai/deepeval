@@ -1,36 +1,43 @@
 import asyncio
 import numpy as np
 from .metric import Metric
-
-
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+from sentence_transformers import SentenceTransformer, util
 
 
 class AnswerRelevancy(Metric):
     def __init__(self, minimum_score: bool = 0.5):
         self.minimum_score = minimum_score
-        from sentence_transformers import CrossEncoder
 
-        self.encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L-2-v2")
+        # Load the model
+        self.model = SentenceTransformer(
+            "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
+        )
 
-    def __call__(self, query: str, answer: str):
-        score = self.measure(query, answer)
+    def __call__(self, query: str, output: str):
+        score = self.measure(query, output)
+        success = score > self.minimum_score
         if self._is_send_okay():
             asyncio.create_task(
                 self._send_to_server(
                     metric_score=score,
                     query=query,
-                    output=answer,
+                    output=output,
                     metric_name=self.__name__,
-                    implementation_id="",
+                    success=success,
                 )
             )
         return score
 
-    def measure(self, query, answer: str) -> float:
-        score = self.encoder.predict([query, answer])
-        score = sigmoid(score)
+    def measure(self, query, output: str) -> float:
+        docs = [output]
+
+        # Encode query and documents
+        query_emb = self.model.encode(query)
+        doc_emb = self.model.encode(docs)
+
+        # Compute dot score between query and all document embeddings
+        scores = util.dot_score(query_emb, doc_emb)[0].cpu().tolist()
+        score = scores[0]
         self.success = score > self.minimum_score
         return score
 
@@ -40,3 +47,11 @@ class AnswerRelevancy(Metric):
     @property
     def __name__(self):
         return "Answer Relevancy"
+
+
+def assert_answer_relevancy(query: str, output: str, minimum_score: float = 0.5):
+    metric = AnswerRelevancy(minimum_score=minimum_score)
+    score = metric(query=query, output=output)
+    assert metric.is_successful(), (
+        metric.__class__.__name__ + " was unsuccessful - " + str(score)
+    )

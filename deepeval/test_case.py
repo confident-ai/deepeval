@@ -9,7 +9,7 @@ from .metrics.factual_consistency import FactualConsistencyMetric
 class TestCase:
     def __init__(
         self,
-        input: Any,
+        query: Any,
         expected_output: Any,
         metrics: List[Metric] = None,
         id: str = None,
@@ -19,17 +19,17 @@ class TestCase:
             self.metrics = [fact_consistency_metric]
         else:
             self.metrics = metrics
-        self.input = input
+        self.query = query
         self.expected_output = expected_output
         if id is None:
-            id_string = str(self.input) + str(self.expected_output)
+            id_string = str(self.query) + str(self.expected_output)
             self.id = hashlib.md5(id_string.encode()).hexdigest()
         else:
             self.id = id
 
     def dict(self):
         return {
-            "input": self.input,
+            "query": self.query,
             "expected_output": self.expected_output,
             "metrics": self.metrics,
             "id": self.id,
@@ -43,7 +43,7 @@ class TestCases(UserList):
     def from_csv(
         self,
         csv_filename: str,
-        input_column: str,
+        query_column: str,
         expected_output_column: str,
         id_column: str = None,
         metrics: List[Metric] = None,
@@ -51,14 +51,14 @@ class TestCases(UserList):
         import pandas as pd
 
         df = pd.read_csv(csv_filename)
-        inputs = df[input_column].values
+        querys = df[query_column].values
         expected_outputs = df[expected_output_column].values
         if id_column is not None:
             ids = df[id_column].values
-        for i, input in enumerate(inputs):
+        for i, query in enumerate(querys):
             self.data.append(
                 TestCase(
-                    input=input,
+                    query=query,
                     expected_output=expected_outputs[i],
                     metrics=metrics,
                     id=ids[i],

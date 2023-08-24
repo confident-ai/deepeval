@@ -26,12 +26,12 @@ class BulkTestRunner:
         ]
         for case in self.bulk_test_cases:
             case: TestCase
-            output = completion_fn(case.input)
+            output = completion_fn(case.query)
             for metric in case.metrics:
                 score = metric(output, case.expected_output)
                 is_successful = metric.is_successful()
                 message = f"""{metric.__class__.__name__} was unsuccessful for 
-{case.input} 
+{case.query}
 which should have matched 
 {case.expected_output}
 """

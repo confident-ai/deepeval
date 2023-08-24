@@ -17,11 +17,11 @@ from deepeval.dataset import EvaluationDataset
 
 # from a csv
 # sample.csv
-# input,expected_output,id
-# sample_input,sample_output,312
+# query,expected_output,id
+# sample_query,sample_output,312
 ds = EvaluationDataset.from_csv(
     csv_filename="sample.csv",
-    input_column="input",
+    query_column="query",
     expected_output_column="expected_output",
     id_column="312"
 )
@@ -63,8 +63,8 @@ You can set up an evaluation dataset from the CSV the `from_csv` method
 
 ```python
 dataset = EvaluationDataset.from_csv(
-    csv_filename="input.csv",
-    input_column="input",
+    csv_filename="query.csv",
+    query_column="query",
     expected_output_column="expected_output",
 )
 ```
@@ -72,7 +72,7 @@ dataset = EvaluationDataset.from_csv(
 ##### Parameters
 
 - `csv_filename` - the name of the CSV file
-- `input_column` - the input column name
+- `query_column` - the query column name
 - `expected_output_column`- the expected output column
 - `id_column` - the ID column
 - `metrics` - The list of metrics you want to supply to run this test.
