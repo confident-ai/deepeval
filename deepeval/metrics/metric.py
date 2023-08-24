@@ -18,11 +18,14 @@ from ..utils import softmax
 
 
 class Metric:
-    _success: bool = False
+    # set an arbitrary minimum score that will get over-ridden later
+    minimum_score: float = 0
 
+    # Measure function signature is subject to be different - not sure
+    # how applicable this is - might need a better abstraction
     @abstractmethod
     def measure(self, output, expected_output, query: Optional[str] = None):
-        pass
+        raise NotImplementedError
 
     def _get_init_values(self):
         # We use this method for sending useful metadata
@@ -33,17 +36,9 @@ class Metric:
         }
         return init_values
 
-    @property
-    def success(self):
-        return self._success
-
-    @success.setter
-    def success(self, value):
-        self._success = value
-
     @abstractmethod
     def is_successful(self) -> bool:
-        return False
+        raise NotImplementedError
 
     def _is_api_key_set(self):
         result = os.getenv(API_KEY_ENV) is not None
@@ -60,6 +55,7 @@ class Metric:
 
     def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
+        success = score >= self.minimum_score
         asyncio.create_task(
             self._send_to_server(
                 metric_score=score,
@@ -67,6 +63,7 @@ class Metric:
                 query=query,
                 output=output,
                 expected_output=expected_output,
+                success=success,
             )
         )
         return score
@@ -78,6 +75,7 @@ class Metric:
         query: str = "-",
         output: str = "-",
         expected_output: str = "-",
+        success: Optional[bool] = None,
         **kwargs
     ):
         if self._is_send_okay():
@@ -93,6 +91,9 @@ class Metric:
                 query=query,
                 expected_output=expected_output,
             )
+            if success is None:
+                success = bool(self.is_successful())
+                print({"success": success, "og": self.is_successful()})
             return client.add_test_case(
                 metric_score=float(metric_score),
                 metric_name=metric_name,
@@ -100,7 +101,7 @@ class Metric:
                 query=query,
                 implementation_id=implementation_id,
                 metrics_metadata=self._get_init_values(),
-                success=bool(self.is_successful()),
+                success=success,
                 datapoint_id=datapoint_id["id"],
             )
 
