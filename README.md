@@ -2,6 +2,10 @@
 
 [![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
 
+<a target="_blank" href="https://colab.research.google.com/github/https://colab.research.google.com/drive/1Lfq5geYsvfVoquDqv84UkWS57SdAHm30?usp=sharing">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
+
 DeepEval provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production. The guiding philosophy is a "Pytest for LLM" that aims to make productionizing and evaluating LLMs as easy as ensuring all tests pass.
 
 Looking for DeepEval API? Please join the waitlist here: https://forms.gle/y3uqNBkmfxVYLXGq6
