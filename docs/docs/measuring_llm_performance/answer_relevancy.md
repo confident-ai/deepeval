@@ -12,10 +12,10 @@ If you would like beta access to our models, please feel free to reach out to ja
 ## Assert Answer Relevancy
 
 ```python
-from deepeval.test_utils import assert_answer_relevancy
+from deepeval.metrics.answer_relevancy import assert_answer_relevancy
 query = "What is Python?"
 answer = "Python is a programming language?"
-assert_answer_relevancy(query, answer, minimum_score=0.5)
+assert_answer_relevancy(query, output=answer, minimum_score=0.5)
 ```
 
 ### Parameters
@@ -29,7 +29,7 @@ If you would instead like a score of how relevant an answer is to a query, simpl
 ```python
 from deepeval.metrics.answer_relevancy import AnswerRelevancy
 scorer = AnswerRelevancy(minimum_score=0.5)
-scorer.measure(query=query, answer=answer)
+scorer.measure(query=query, output=answer)
 # Returns a floating point number between 0 and 1
 ```
 

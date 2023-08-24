@@ -28,8 +28,8 @@ class AnswerRelevancy(Metric):
             )
         return score
 
-    def measure(self, query, answer: str) -> float:
-        docs = [answer]
+    def measure(self, query, output: str) -> float:
+        docs = [output]
 
         # Encode query and documents
         query_emb = self.model.encode(query)
@@ -38,6 +38,7 @@ class AnswerRelevancy(Metric):
         # Compute dot score between query and all document embeddings
         scores = util.dot_score(query_emb, doc_emb)[0].cpu().tolist()
         score = scores[0]
+        self.success = score > self.minimum_score
         return score
 
     def is_successful(self) -> bool:
@@ -46,3 +47,11 @@ class AnswerRelevancy(Metric):
     @property
     def __name__(self):
         return "Answer Relevancy"
+
+
+def assert_answer_relevancy(query: str, output: str, minimum_score: float = 0.5):
+    metric = AnswerRelevancy(minimum_score=minimum_score)
+    score = metric(query=query, output=output)
+    assert metric.is_successful(), (
+        metric.__class__.__name__ + " was unsuccessful - " + str(score)
+    )
