@@ -13,15 +13,15 @@ class AnswerRelevancy(Metric):
             "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
         )
 
-    def __call__(self, query: str, answer: str):
-        score = self.measure(query, answer)
+    def __call__(self, query: str, output: str):
+        score = self.measure(query, output)
         success = score > self.minimum_score
         if self._is_send_okay():
             asyncio.create_task(
                 self._send_to_server(
                     metric_score=score,
                     query=query,
-                    output=answer,
+                    output=output,
                     metric_name=self.__name__,
                     success=success,
                 )
