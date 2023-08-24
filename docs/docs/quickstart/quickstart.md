@@ -1,5 +1,7 @@
 # Write a simple test case
 
+If you are interested in running a quick Colab example, you can [click here](https://colab.research.google.com/drive/1Lfq5geYsvfVoquDqv84UkWS57SdAHm30?usp=sharing).
+
 You can write a simple test case as simply as:
 
 ```python
