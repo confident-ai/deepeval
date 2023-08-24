@@ -167,6 +167,7 @@ class EvaluationDataset(UserList):
         test_filename: str = None,
         max_retries: int = 3,
         min_success: int = 1,
+        raise_error: bool = False,
     ):
         table = []
 
@@ -205,7 +206,13 @@ which should have matched
                     )
                     assert is_successful, metric.__name__ + " wasn't successful"
 
-                assert_metric()
+                if raise_error:
+                    assert_metric()
+                else:
+                    try:
+                        assert_metric()
+                    except Exception as e:
+                        print(e)
         if test_filename is None:
             test_filename = (
                 f"test-result-{datetime.now().__str__().replace(' ', '-')}.txt"
