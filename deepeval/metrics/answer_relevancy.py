@@ -16,6 +16,7 @@ class AnswerRelevancy(Metric):
 
     def __call__(self, query: str, answer: str):
         score = self.measure(query, answer)
+        success = score > self.minimum_score
         if self._is_send_okay():
             asyncio.create_task(
                 self._send_to_server(
@@ -24,6 +25,7 @@ class AnswerRelevancy(Metric):
                     output=answer,
                     metric_name=self.__name__,
                     implementation_id="",
+                    success=success,
                 )
             )
         return score
