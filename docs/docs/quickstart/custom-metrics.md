@@ -1,12 +1,12 @@
 # Define Your Own Metric
 
-By default, we support the following metrics:
-
-- BertScoreMetric (simply set `metric="BertScoreMetric"`)
-- Entailment Score (simply set `metric="entailment"`)
-- Exact string match (simply set `metric="exact"`)
-
 You can define a custom metric by defining the `measure` and `is_successful` functions and inheriting the base `Metric` class. An example is provided below.
+
+:::note
+
+As of right now, we do not currently support custom metrics for our dashboard but this will be supported in an upcoming version - we apologise for the wait! For any requests of additional metrics, please feel free to e-mail jacky@confident-ai.com
+
+:::
 
 ```python
 import asyncio
@@ -21,15 +21,7 @@ class LengthMetric(Metric):
         # sends to server
         score = self.measure(text)
         # Optional: Logs it to the server
-        asyncio.create_task(
-            self._send_to_server(
-                metric_score=score,
-                metric_name=self.__name__,
-                query=text,
-                success = self.success
-            )
-        )
-        return self.measure(text)
+        return score
 
     def measure(self, text: str):
         self.success = len(x) > self.minimum_length
