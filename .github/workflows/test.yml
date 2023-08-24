@@ -43,20 +43,3 @@ jobs:
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
           python -m pytest -x tests
-
-      # - name: Discover test files
-      #   id: discover-tests
-      #   run: |
-      #     echo "::set-output name=test_files::$(find tests/ -name "test_*.py" | xargs)"
-
-      # - name: Run Unit Tests (pytest)
-      #   env:
-      #     python-version: ${{ matrix.python-version }}
-      #     CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
-      #     CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
-      #   run: |
-      #     python -c "import sys; print(sys.version)"
-      #     IFS=" " read -r -a TEST_FILES <<< "${{ steps.discover-tests.outputs.test_files }}"
-      #     for TEST_FILE in "${TEST_FILES[@]}"; do
-      #       python -m pytest -x $TEST_FILE
-      #     done
