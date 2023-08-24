@@ -35,8 +35,7 @@ async def test_llm_output_custom():
 
 
 def test_implementation_inside_quickstart():
-    api_key = os.environ[API_KEY_ENV]
-    client = Api(api_key=api_key)
+    client = Api()
     imps = client.list_implementations()
     FOUND = False
     for imp in imps:
