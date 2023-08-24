@@ -4,12 +4,13 @@
 """
 import asyncio
 from .metric import Metric
-from detoxify import Detoxify
 from ..singleton import Singleton
 
 
 class NonToxicMetric(Metric, metaclass=Singleton):
     def __init__(self, model_name: str = "original", minimum_score: float = 0.5):
+        from detoxify import Detoxify
+
         self.model_name = model_name
         self.model = Detoxify(model_name)
         self.minimum_score = minimum_score
