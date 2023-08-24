@@ -1,9 +1,10 @@
-from .metric import Metric
 from typing import Optional
+from .metric import Metric
+from ..singleton import Singleton
 from ..utils import cosine_similarity
 
 
-class BertScoreMetric(Metric):
+class BertScoreMetric(Metric, metaclass=Singleton):
     """basic implementation of BertScoreMetric"""
 
     def __init__(
