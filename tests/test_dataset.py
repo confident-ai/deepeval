@@ -3,7 +3,7 @@ def test_evaluation_dataset():
 
     csv_filename = "sample.csv"
 
-    csv_file = """id,input,expected_output
+    csv_file = """id,query,expected_output
     1,"Hello, world!","This is a greeting."
     2,"OpenAI GPT-3","A powerful language model."
     3,"CSV Example","Working with CSV data."
@@ -16,7 +16,7 @@ def test_evaluation_dataset():
 
     dataset = EvaluationDataset.from_csv(
         csv_filename,
-        input_column="input",
+        query_column="query",
         expected_output_column="expected_output",
         id_column="id",
     )

@@ -11,24 +11,24 @@ IMPLEMENTATION_NAME = "Quickstart Example"
 os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
 
 
-def generate_llm_output(input: str):
+def generate_llm_output(query: str):
     expected_output = "Our customer success phone line is 1200-231-231."
     return expected_output
 
 
 @pytest.mark.asyncio
 async def test_llm_output():
-    input = "What is the customer success phone line?"
+    query = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
-    output = generate_llm_output(input)
+    output = generate_llm_output(query)
     assert_factual_consistency(output, expected_output)
 
 
 @pytest.mark.asyncio
 async def test_llm_output_custom():
-    input = "What is the customer success phone line?"
+    query = "What is the customer success phone line?"
     expected_output = "Dogs and cats love to walk around the beach."
-    output = generate_llm_output(input)
+    output = generate_llm_output(query)
     metric = BertScoreMetric(minimum_score=0.98)
     with pytest.raises(AssertionError):
         assert_factual_consistency(output, expected_output)
