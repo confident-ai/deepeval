@@ -2,11 +2,12 @@
 """
 from .metric import Metric
 from .entailment_metric import EntailmentScoreMetric
+from ..singleton import Singleton
 
 # from .answer_relevancy import AnswerRelevancy
 
 
-class OverallScoreMetric(Metric):
+class OverallScoreMetric(Metric, metaclass=Singleton):
     def __init__(self, minimum_score: float = 0.5):
         self.minimum_score = minimum_score
         self.entailment_metric = EntailmentScoreMetric()

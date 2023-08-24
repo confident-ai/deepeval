@@ -3,9 +3,10 @@
 from typing import Optional
 from .metric import Metric
 from ..utils import cosine_similarity
+from ..singleton import Singleton
 
 
-class ConceptualSimilarityMetric(Metric):
+class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
     """basic implementation of BertScoreMetric"""
 
     def __init__(

@@ -6,9 +6,10 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 
 import warnings
 from .metric import Metric
+from ..singleton import Singleton
 
 
-class UnBiasedMetric(Metric):
+class UnBiasedMetric(Metric, metaclass=Singleton):
     def __init__(
         self, model_name: str = "original", minimum_score: float = 0.5
     ):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf

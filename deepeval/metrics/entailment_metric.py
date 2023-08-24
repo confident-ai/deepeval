@@ -1,10 +1,11 @@
 import asyncio
-from .metric import Metric
-from ..utils import softmax
 from typing import Optional
+from ..utils import softmax
+from ..singleton import Singleton
+from .metric import Metric
 
 
-class EntailmentScoreMetric(Metric):
+class EntailmentScoreMetric(Metric, metaclass=Singleton):
     def __init__(
         self,
         minimum_score: float = 0.6,
