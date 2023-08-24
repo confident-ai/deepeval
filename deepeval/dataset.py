@@ -167,8 +167,10 @@ class EvaluationDataset(UserList):
         test_filename: str = None,
         max_retries: int = 3,
         min_success: int = 1,
-        raise_error: bool = False,
+        raise_error_on_run: bool = False,
+        metrics: List[TestCase] = None,
     ):
+        """Run evaluation with given metrics"""
         table = []
 
         headers = [
@@ -182,13 +184,15 @@ class EvaluationDataset(UserList):
         for case in self.data:
             case: TestCase
             output = completion_fn(case.input)
-            for metric in case.metrics:
+            if metrics is None:
+                metrics = case.metrics
+            for metric in metrics:
 
                 @retry(max_retries=max_retries, min_success=min_success)
                 def assert_metric():
                     score = metric(output, case.expected_output)
-                    is_successful = metric.is_successful()
-
+                    is_successful: bool = metric.is_successful()
+                    is_successful: bool = bool(is_successful)
                     message = f"""{metric.__class__.__name__} was unsuccessful for 
 {case.input} 
 which should have matched 
@@ -196,7 +200,7 @@ which should have matched
 """
                     table.append(
                         [
-                            bool(metric.is_successful()),
+                            is_successful,
                             metric.__class__.__name__,
                             score,
                             output,
@@ -206,11 +210,13 @@ which should have matched
                     )
                     assert is_successful, metric.__name__ + " wasn't successful"
 
-                if raise_error:
+                if raise_error_on_run:
                     assert_metric()
                 else:
                     try:
                         assert_metric()
+                    except AssertionError as e:
+                        print(e)
                     except Exception as e:
                         print(e)
         if test_filename is None:

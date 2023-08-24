@@ -3,7 +3,7 @@ from typing import Any, List
 from collections import UserList
 from .metrics.metric import Metric
 from .metrics.randomscore import RandomMetric
-from .metrics.entailment_metric import EntailmentScoreMetric
+from .metrics.factual_consistency import FactualConsistencyMetric
 
 
 class TestCase:
@@ -15,7 +15,8 @@ class TestCase:
         id: str = None,
     ):
         if metrics is None:
-            self.metrics = [EntailmentScoreMetric(minimum_score=0.3)]
+            fact_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+            self.metrics = [fact_consistency_metric]
         else:
             self.metrics = metrics
         self.input = input
