@@ -5,7 +5,6 @@ from .metrics.randomscore import RandomMetric
 from .metrics.metric import Metric
 from .metrics.bertscore_metric import BertScoreMetric
 from .metrics.entailment_metric import EntailmentScoreMetric
-from .metrics.answer_relevancy import AnswerRelevancy
 from .metrics.ranking_similarity import RankingSimilarity
 
 
@@ -32,14 +31,6 @@ def assert_llm_output(
 
 def assert_exact_match(text_input: str, text_output: str):
     assert text_input == text_output, f"{text_output} != {text_input}"
-
-
-def assert_answer_relevancy(query: str, answer: str, minimum_score: float = 0.5):
-    metric = AnswerRelevancy(minimum_score=minimum_score)
-    score = metric(query=query, answer=answer)
-    assert metric.is_successful(), (
-        metric.__class__.__name__ + " was unsuccessful - " + str(score)
-    )
 
 
 def assert_ranking_similarity(
