@@ -2,8 +2,8 @@ import pytest
 from deepeval.metrics.factual_consistency import assert_factual_consistency
 
 
-# @pytest.mark.asyncio
-def test_factual_consistency():
+@pytest.mark.asyncio
+async def test_factual_consistency():
     with pytest.raises(AssertionError):
         assert_factual_consistency(
             "Sarah spent the evening at the library, engrossed in a book.",
