@@ -7,7 +7,9 @@ from deepeval.client import Client
 from .utils import assert_viable_score
 
 IMPLEMENTATION_NAME = "Alert"
+TEST_API_KEY = "u1s5aFlB6kRyVz/16CZuc7JOQ7e7sCw00N7nfeMZOrk="
 os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
+os.environ["CONFIDENT_AI_API_KEY"] = TEST_API_KEY
 
 query = "Who won the FIFA World Cup in 2018?"
 generated_text = "Winners of the FIFA world cup were the French national football team"
