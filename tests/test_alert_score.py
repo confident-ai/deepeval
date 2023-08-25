@@ -3,6 +3,7 @@
 import os
 from deepeval.metrics.alert_score import assert_alert_score
 from deepeval.metrics.alert_score import AlertScoreMetric
+from deepeval.client import Client
 from .utils import assert_viable_score
 
 IMPLEMENTATION_NAME = "Alert"
@@ -33,3 +34,14 @@ def test_alert_score_metric():
     )
     assert metric.is_successful(), "Overall score metric not working"
     assert_viable_score(score)
+
+
+def test_implementation_inside_overall():
+    client = Client()
+    imps = client.list_implementations()
+    FOUND = False
+    for imp in imps:
+        if imp["name"] == IMPLEMENTATION_NAME:
+            FOUND = True
+    assert FOUND, f"{IMPLEMENTATION_NAME} not found in {[x['name'] for x in imps]}"
+
