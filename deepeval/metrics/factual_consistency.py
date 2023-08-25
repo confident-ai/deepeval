@@ -25,7 +25,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
             score=score,
             metric_name=self.__name__,
             output=output,
-            context=context,
+            expected_output=context,
         )
         return score
 
