@@ -133,7 +133,7 @@ class Metric(metaclass=Singleton):
                 query=query,
                 implementation_id=implementation_id,
                 metrics_metadata=metric_metadata,
-                success=success,
+                success=bool(success),
                 datapoint_id=datapoint_id["id"],
             )
 
