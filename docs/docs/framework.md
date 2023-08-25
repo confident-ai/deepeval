@@ -26,14 +26,14 @@ Below, we share our framework for large language models.
 
 ![Evaluation Framework](../assets/llm-evaluation-framework.png)
 
-## Why not use GPT?
+## Why not just use GPT?
 
 GPT itself is an auto-regressive model that can provide evaluation of the model. GPT aims to predict the next best token and can provide a score based on that. However, imagine the following situation:
 
 GPT predicts 0.2.  
-It then needs to predict the next number based on the given output.
+It then needs to predict the next number based on the given output.  
 GPT then predicts 0.23
-It then needs to predict the next number based on the given output.
+It then needs to predict the next number based on the given output.  
 GPT then predicts 0.235
 
-The task of predicting the next number does not seem to provide a strong enough reason to get this working.
+The task of predicting the next best token or number does not match the original machine-learning task of evaluation and lends itself to falling victim of just using the best distribution of letters/numbers.

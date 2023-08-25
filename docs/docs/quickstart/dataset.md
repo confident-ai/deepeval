@@ -34,6 +34,8 @@ Running the tests is easy with the `run_evaluation` method. When you call `run_e
 ```python
 ds.run_evaluation(
     completion_fn=generate_llm_output,
+    max_retries=3,
+    min_success=3
 )
 # Returns the evaluation
 ```
@@ -48,6 +50,12 @@ Test Passed    Metric Name                  Score    Output                     
                                                                                                                         which should have matched
                                                                                                                         1800-213-123
 ```
+
+##### Parameters
+
+- `max_retries` - refers to the maximum number of times you may be interested in re-trying us.
+- `min_success` - refers to the minimum number of successes you will need for evaluating LLMs.
+- `delay` - The amount of time before each retry
 
 ### View a sample of data inside the Evaluation Dataset
 
