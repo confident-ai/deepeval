@@ -1,6 +1,6 @@
 """Test alert score
 """
-
+import pytest
 from deepeval.api import Api
 from deepeval.metrics.overall_score import assert_overall_score
 from deepeval.metrics.overall_score import OverallScoreMetric
@@ -20,6 +20,7 @@ client = Api()
 metric = OverallScoreMetric()
 
 
+@pytest.fixture
 def score_1():
     return metric.measure(
         query=query,
@@ -29,6 +30,7 @@ def score_1():
     )
 
 
+@pytest.fixture
 def score_2():
     return metric.measure(
         query=query,
@@ -38,6 +40,7 @@ def score_2():
     )
 
 
+@pytest.fixture
 def score_3():
     return metric.measure(
         query=query,
@@ -47,6 +50,7 @@ def score_3():
     )
 
 
+@pytest.fixture
 def score_4():
     return metric.measure(
         query=query,
