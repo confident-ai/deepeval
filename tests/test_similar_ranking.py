@@ -10,15 +10,13 @@ list_dict_1 = [{"text": "a"}, {"text": "b"}]
 list_dict_2 = [{"text": "b"}, {"text": "c"}]
 
 
-@pytest.mark.asyncio
-async def test_answer_relevancy():
+def test_answer_relevancy():
     from deepeval.test_utils import assert_ranking_similarity
 
     assert_ranking_similarity(list1, list2, minimum_score=0.4)
 
 
-@pytest.mark.asyncio
-async def test_query_answer_relevancy():
+def test_query_answer_relevancy():
     from deepeval.metrics.ranking_similarity import RankingSimilarity
 
     scorer = RankingSimilarity(minimum_score=0.5)
@@ -27,8 +25,7 @@ async def test_query_answer_relevancy():
     assert result_2 > result, "Ranking not working."
 
 
-@pytest.mark.asyncio
-async def test_query_answer_relevancy_dict():
+def test_query_answer_relevancy_dict():
     from deepeval.metrics.ranking_similarity import RankingSimilarity
 
     scorer = RankingSimilarity(minimum_score=0.3)

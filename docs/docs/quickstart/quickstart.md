@@ -41,18 +41,13 @@ test_factual_consistency()
 
 ### Running it in Pytest
 
-To run this in Pytest, you will need the asyncio framework
-
-```bash
-pip install pytest-asyncio
-```
+To run this in Pytest, just run:
 
 ```python
 # sample.py
 import pytest
 
-@pytest.mark.asyncio
-async def test_factual_consistency():
+def test_factual_consistency():
     query = "What is the customer success phone line?"
     context = "Our customer success phone line is 1200-231-231."
     output = generate_chatgpt_output(query)

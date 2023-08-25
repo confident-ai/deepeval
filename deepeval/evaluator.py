@@ -1,7 +1,7 @@
 """Client for Twilix Evals
 """
-import os
 import asyncio
+import os
 import getpass
 from tqdm.auto import tqdm
 from .pipeline import Pipeline
