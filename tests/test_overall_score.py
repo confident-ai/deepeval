@@ -63,6 +63,7 @@ def score_4():
 
 
 def test_overall_score():
+    os.environ["CONFIDENT_AI_API_KEY"] = TEST_API_KEY
     assert_overall_score(
         query=query,
         output=output,
