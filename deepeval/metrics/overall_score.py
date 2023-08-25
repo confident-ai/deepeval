@@ -21,15 +21,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
             expected_output=expected_output,
             context=context,
         )
-        success = score > self.minimum_score
-        self.log(
-            metric_score=score,
-            metric_name=self.__name__,
-            query=context,
-            output=output,
-            expected_output=expected_output,
-            success=success,
-        )
+        self.success = score > self.minimum_score
         return score
 
     def measure(

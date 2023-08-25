@@ -7,7 +7,7 @@ from deepeval.metrics.overall_score import OverallScoreMetric
 from .utils import assert_viable_score
 import os
 
-IMPLEMENTATION_NAME = "Fifar2"
+IMPLEMENTATION_NAME = "Overall"
 TEST_API_KEY = "u1s5aFlB6kRyVz/16CZuc7JOQ7e7sCw00N7nfeMZOrk="
 os.environ["CONFIDENT_AI_API_KEY"] = TEST_API_KEY
 os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
