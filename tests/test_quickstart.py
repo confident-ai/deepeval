@@ -7,7 +7,7 @@ from deepeval.metrics.factual_consistency import assert_factual_consistency
 from deepeval.metrics.bertscore_metric import BertScoreMetric
 from deepeval.constants import API_KEY_ENV
 
-IMPLEMENTATION_NAME = "Quickstart Example"
+IMPLEMENTATION_NAME = "Quickstart Example 2"
 os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
 
 

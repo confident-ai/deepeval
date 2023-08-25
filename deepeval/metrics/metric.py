@@ -1,6 +1,3 @@
-"""Available metrics. The best metric that
-you want is Cohere's reranker metric.
-"""
 import asyncio
 import os
 import warnings
@@ -44,8 +41,7 @@ class Metric(metaclass=Singleton):
         result = os.getenv(API_KEY_ENV) is not None
         if result is False:
             warnings.warn(
-                """API key is not set. Please set it by visiting https://app.confident-ai.com
-"""
+                """API key is not set. Please set it by visiting https://app.confident-ai.com"""
             )
         return result
 
@@ -53,20 +49,50 @@ class Metric(metaclass=Singleton):
         # DOing this until the API endpoint is fixed
         return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
 
-    def __call__(self, output, expected_output, query: Optional[str] = "-"):
-        score = self.measure(output, expected_output)
+    def __call__(self, *args, **kwargs):
+        score = self.measure(*args, **kwargs)
         success = score >= self.minimum_score
         asyncio.create_task(
             self._send_to_server(
                 metric_score=score,
                 metric_name=self.__name__,
-                query=query,
-                output=output,
-                expected_output=expected_output,
+                query=kwargs.get("query", "-"),
+                output=kwargs.get("output", "-"),
+                expected_output=kwargs.get("expected_output", "-"),
                 success=success,
             )
         )
         return score
+
+    def log(
+        self,
+        success: bool = True,
+        score: float = 1e-10,
+        metric_name: str = "-",
+        query: str = "-",
+        output: str = "-",
+        expected_output: str = "-",
+        metadata: Optional[dict] = None,
+    ):
+        """Log to the server.
+
+        Parameters
+        - query: What was asked to the model. This can also be context.
+        - output: The LLM output.
+        - expected_output: The output that's expected.
+        """
+        if self._is_send_okay():
+            asyncio.create_task(
+                self._send_to_server(
+                    metric_score=score,
+                    metric_name=metric_name,
+                    query=query,
+                    output=output,
+                    expected_output=expected_output,
+                    success=success,
+                    metadata=metadata,
+                )
+            )
 
     async def _send_to_server(
         self,
@@ -76,6 +102,7 @@ class Metric(metaclass=Singleton):
         output: str = "-",
         expected_output: str = "-",
         success: Optional[bool] = None,
+        metadata: Optional[dict] = None,
         **kwargs
     ):
         if self._is_send_okay():
@@ -94,14 +121,19 @@ class Metric(metaclass=Singleton):
             if success is None:
                 success = bool(self.is_successful())
                 print({"success": success, "og": self.is_successful()})
+
+            metric_metadata: dict = self._get_init_values()
+            if metadata:
+                metric_metadata.update(metadata)
+
             return client.add_test_case(
                 metric_score=float(metric_score),
                 metric_name=metric_name,
                 actual_output=output,
                 query=query,
                 implementation_id=implementation_id,
-                metrics_metadata=self._get_init_values(),
-                success=success,
+                metrics_metadata=metric_metadata,
+                success=bool(success),
                 datapoint_id=datapoint_id["id"],
             )
 
