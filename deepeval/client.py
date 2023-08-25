@@ -13,12 +13,12 @@ class Client(Api):
 
     def __init__(self, api_key: str = None, local_mode: bool = False, **kwargs):
         if api_key is None:
-            if "TWILIX_API_KEY" not in os.environ:
+            if "CONFIDENT_AI_API_KEY" not in os.environ:
                 api_key = getpass.getpass(
-                    "Grab your API key from https://app.twilix.io"
+                    "Grab your API key from https://app.confident-ai.com"
                 )
             else:
-                api_key = os.environ["TWILIX_API_KEY"]
+                api_key = os.environ["CONFIDENT_AI_API_KEY"]
         self.api_key = api_key
         self.local_mode = local_mode
         if self.local_mode:
