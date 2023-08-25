@@ -13,10 +13,10 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
         self.entailment_metric = EntailmentScoreMetric()
         self.answer_relevancy = AnswerRelevancy()
 
-    def __call__(self, query, generated_text: str, expected_output: str, context: str):
+    def __call__(self, query, output: str, expected_output: str, context: str):
         score = self.measure(
             query=query,
-            generated_text=generated_text,
+            output=output,
             expected_output=expected_output,
             context=context,
         )
@@ -26,7 +26,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
                 metric_score=score,
                 metric_name=self.__name__,
                 query=context,
-                output=generated_text,
+                output=output,
                 expected_output=expected_output,
                 success=success,
             )
@@ -34,28 +34,41 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
         return score
 
     def measure(
-        self, query: str, generated_text: str, expected_output: str, context: str
+        self, query: str, output: str, expected_output: str, context: str
     ) -> float:
-        entailment_score = self.entailment_metric.measure(
+        factual_consistency_score = self.entailment_metric.measure(
             context,
-            generated_text,
-        )
-
-        answer_expected_score = self.entailment_metric.measure(
-            generated_text,
-            expected_output,
+            output,
         )
 
         answer_relevancy_score = self.answer_relevancy.measure(
-            query=query, output=generated_text
+            query=query, output=output
+        )
+
+        answer_similarity_score = self.entailment_metric.measure(
+            expected_output, output
         )
 
         overall_score = (
-            0.33 * entailment_score
-            + 0.33 * answer_expected_score
+            +0.33 * factual_consistency_score
             + 0.33 * answer_relevancy_score
+            + 0.33 * answer_similarity_score
         )
         self.success = overall_score > self.minimum_score
+        metadata = {
+            "factual_consistency": factual_consistency_score,
+            "answer_relevancy": answer_relevancy_score,
+            "answer_similarity_score": answer_similarity_score,
+        }
+        self.log(
+            success=self.success,
+            score=overall_score,
+            metric_name=self.__name__,
+            query=query,
+            outpuy=output,
+            expected_output=output,
+            metadata=metadata,
+        )
         return overall_score
 
     def is_successful(self) -> bool:
@@ -68,7 +81,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
 
 def assert_overall_score(
     query: str,
-    generated_text: str,
+    output: str,
     expected_output: str,
     context: str,
     minimum_score: float = 0.5,
@@ -76,7 +89,7 @@ def assert_overall_score(
     metric = OverallScoreMetric(minimum_score=minimum_score)
     score = metric.measure(
         query=query,
-        generated_text=generated_text,
+        output=output,
         expected_output=expected_output,
         context=context,
     )

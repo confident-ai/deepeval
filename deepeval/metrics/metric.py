@@ -72,6 +72,7 @@ class Metric(metaclass=Singleton):
         query: str = "-",
         output: str = "-",
         expected_output: str = "-",
+        metadata: Optional[dict] = None,
     ):
         """Log to the server.
 
@@ -80,16 +81,18 @@ class Metric(metaclass=Singleton):
         - output: The LLM output.
         - expected_output: The output that's expected.
         """
-        asyncio.create_task(
-            self._send_to_server(
-                metric_score=score,
-                metric_name=metric_name,
-                query=query,
-                output=output,
-                expected_output=expected_output,
-                success=success,
+        if self._is_send_okay():
+            asyncio.create_task(
+                self._send_to_server(
+                    metric_score=score,
+                    metric_name=metric_name,
+                    query=query,
+                    output=output,
+                    expected_output=expected_output,
+                    success=success,
+                    metadata=metadata,
+                )
             )
-        )
 
     async def _send_to_server(
         self,
@@ -99,6 +102,7 @@ class Metric(metaclass=Singleton):
         output: str = "-",
         expected_output: str = "-",
         success: Optional[bool] = None,
+        metadata: Optional[dict] = None,
         **kwargs
     ):
         if self._is_send_okay():
@@ -117,13 +121,18 @@ class Metric(metaclass=Singleton):
             if success is None:
                 success = bool(self.is_successful())
                 print({"success": success, "og": self.is_successful()})
+
+            metric_metadata: dict = self._get_init_values()
+            if metadata:
+                metric_metadata.update(metadata)
+
             return client.add_test_case(
                 metric_score=float(metric_score),
                 metric_name=metric_name,
                 actual_output=output,
                 query=query,
                 implementation_id=implementation_id,
-                metrics_metadata=self._get_init_values(),
+                metrics_metadata=metric_metadata,
                 success=success,
                 datapoint_id=datapoint_id["id"],
             )
