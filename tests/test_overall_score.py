@@ -9,7 +9,7 @@ from deepeval.metrics.overall_score import OverallScoreMetric
 from .utils import assert_viable_score
 import os
 
-IMPLEMENTATION_NAME = "Fifa"
+IMPLEMENTATION_NAME = "Fifar2"
 os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
 
 query = "Who won the FIFA World Cup in 2018?"
