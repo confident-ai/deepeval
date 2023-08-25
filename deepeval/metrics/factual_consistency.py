@@ -15,7 +15,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         self.minimum_score = minimum_score
 
     def measure(self, output: str, context: str):
-        scores = self.model.predict([(context, output)])
+        scores = self.model.predict([(output, context)])
         # https://huggingface.co/cross-encoder/nli-deberta-base
         # label_mapping = ["contradiction", "entailment", "neutral"]
         score = softmax(scores)[0][1]
