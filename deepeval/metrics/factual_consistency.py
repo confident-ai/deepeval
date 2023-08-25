@@ -8,7 +8,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
     def __init__(
         self,
         minimum_score: float = 0.6,
-        model_name: str = "cross-encoder/nli-deberta-base",
+        model_name: str = "cross-encoder/nli-deberta-v3-large",
     ):
         # We use a smple cross encoder model
         self.model = CrossEncoder(model_name)
@@ -31,6 +31,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
                 max_score = second_score
 
         self.success = max_score > self.minimum_score
+        print({"success": self.success, "score": max_score})
         self.log(
             success=self.success,
             score=max_score,
