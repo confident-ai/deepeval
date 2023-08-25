@@ -6,7 +6,7 @@ import pytest
 from deepeval.metrics.toxic_classifier import NonToxicMetric, assert_non_toxic
 from .utils import assert_viable_score
 
-generated_text = "Winners of the FIFA world cup were the French national football team"
+output = "Winners of the FIFA world cup were the French national football team"
 
 
 def test_non_toxic():
@@ -24,5 +24,5 @@ def test_non_toxic_2():
 
 def test_non_toxic_metric():
     metric = NonToxicMetric()
-    score = metric.measure(text=generated_text)
+    score = metric.measure(text=output)
     assert metric.is_successful(), "Overall score metric not working"

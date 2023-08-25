@@ -12,31 +12,40 @@ class AlertScoreMetric(Metric):
         self.entailment_metric = EntailmentScoreMetric()
         # self.answer_relevancy = AnswerRelevancy()
 
-    def __call__(self, generated_text: str, expected_output: str, context: str):
-        score = self.measure(generated_text, expected_output, context)
+    def __call__(self, output: str, expected_output: str, context: str):
+        score = self.measure(output, expected_output, context)
         return score
 
     def measure(
-        self, query: str, generated_text: str, expected_output: str, context: str
+        self, query: str, output: str, expected_output: str, context: str
     ) -> float:
 
         entailment_score = self.entailment_metric.measure(
             context,
-            generated_text,
+            output,
         )
 
         answer_expected_score = self.entailment_metric.measure(
-            generated_text,
+            output,
             expected_output,
         )
 
         # This metric is very very bad right now as it requires the answer
         # to re-gurgitate the question.
         # answer_relevancy_score = self.answer_relevancy.measure(
-        #     query=query, answer=generated_text
+        #     query=query, answer=output
         # )
         alert_score = min(entailment_score, answer_expected_score)
         self.success = alert_score > self.minimum_score
+        self.log(
+            success=self.success,
+            score=alert_score,
+            metric_name=self.__name__,
+            query=query,
+            output=output,
+            expected_output=expected_output,
+            # context=context
+        )
         return alert_score
 
     def is_successful(self) -> bool:
@@ -49,7 +58,7 @@ class AlertScoreMetric(Metric):
 
 def assert_alert_score(
     query: str,
-    generated_text: str,
+    output: str,
     expected_output: str,
     context: str,
     minimum_score: float = 0.5,
@@ -58,7 +67,7 @@ def assert_alert_score(
     metric = AlertScoreMetric(minimum_score=minimum_score)
     score = metric.measure(
         query=query,
-        generated_text=generated_text,
+        output=output,
         expected_output=expected_output,
         context=context,
     )
