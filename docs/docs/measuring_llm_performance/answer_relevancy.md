@@ -2,13 +2,6 @@
 
 For question-answering applications, we provide a simple interface for ensuring question-answering relevancy.
 
-:::warning
-
-For answer-relevancy, it is important to note that it requires the answer to re-gurgitate the question. We are currently training more models to improve in answer relevancy.
-If you would like beta access to our models, please feel free to reach out to jacky@twilix.io and we will get back to you soon.
-
-:::
-
 ## Assert Answer Relevancy
 
 ```python
@@ -39,4 +32,4 @@ scorer.measure(query=query, output=answer)
 
 ## How It is Measured
 
-Answer relevancy is measured using DL models that are trained off MS-Marco dataset (which is a search engine dataset).
+Answer relevancy is measured using DL models that are trained off MS-Marco dataset (which is a search engine dataset). The method to measure relevancy is that it encodes a query and an answer and then measures the cosine similarity. The vector space has been trained off query-answer MSMarco datasets to ensure high similarity between query and answer.
