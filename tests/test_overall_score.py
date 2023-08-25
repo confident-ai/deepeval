@@ -8,6 +8,8 @@ from .utils import assert_viable_score
 import os
 
 IMPLEMENTATION_NAME = "Fifar2"
+TEST_API_KEY = "u1s5aFlB6kRyVz/16CZuc7JOQ7e7sCw00N7nfeMZOrk="
+os.environ["CONFIDENT_AI_API_KEY"] = TEST_API_KEY
 os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
 
 query = "Who won the FIFA World Cup in 2018?"
@@ -15,7 +17,7 @@ output = "Winners of the FIFA world cup were the French national football team"
 expected_output = "French national football team"
 context = "The FIFA World Cup in 2018 was won by the French national football team. They defeated Croatia 4-2 in the final match to claim the championship."
 
-client = Api()
+client = Api(api_key=TEST_API_KEY)
 
 metric = OverallScoreMetric()
 
