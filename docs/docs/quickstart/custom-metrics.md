@@ -28,10 +28,6 @@ class LengthMetric(Metric):
         )
         return score
 
-    def measure(self, text: str):
-        self.success = len(x) > self.minimum_length
-        return a > b
-
     def is_successful(self):
         return self.success
 
