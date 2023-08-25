@@ -2,7 +2,6 @@
 """
 
 import pytest
-import asyncio
 from deepeval.metrics.metric import Metric
 
 
@@ -33,8 +32,7 @@ class LengthMetric(Metric):
         return "Length"
 
 
-@pytest.mark.asyncio
-async def test_length_metric():
+def test_length_metric():
     metric = LengthMetric()
     metric.measure("fehusihfe wuifheuiwh")
     assert metric.is_successful()

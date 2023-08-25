@@ -1,4 +1,3 @@
-import asyncio
 import os
 import warnings
 from typing import Optional
@@ -52,15 +51,13 @@ class Metric(metaclass=Singleton):
     def __call__(self, *args, **kwargs):
         score = self.measure(*args, **kwargs)
         success = score >= self.minimum_score
-        asyncio.create_task(
-            self._send_to_server(
-                metric_score=score,
-                metric_name=self.__name__,
-                query=kwargs.get("query", "-"),
-                output=kwargs.get("output", "-"),
-                expected_output=kwargs.get("expected_output", "-"),
-                success=success,
-            )
+        self._send_to_server(
+            metric_score=score,
+            metric_name=self.__name__,
+            query=kwargs.get("query", "-"),
+            output=kwargs.get("output", "-"),
+            expected_output=kwargs.get("expected_output", "-"),
+            success=success,
         )
         return score
 
@@ -82,21 +79,17 @@ class Metric(metaclass=Singleton):
         - expected_output: The output that's expected.
         """
         if self._is_send_okay():
-            result = asyncio.create_task(
-                self._send_to_server(
-                    metric_score=score,
-                    metric_name=metric_name,
-                    query=query,
-                    output=output,
-                    expected_output=expected_output,
-                    success=success,
-                    metadata=metadata,
-                )
+            self._send_to_server(
+                metric_score=score,
+                metric_name=metric_name,
+                query=query,
+                output=output,
+                expected_output=expected_output,
+                success=success,
+                metadata=metadata,
             )
-            gathered_result = asyncio.gather(result)
-            print(gathered_result)
 
-    async def _send_to_server(
+    def _send_to_server(
         self,
         metric_score: float,
         metric_name: str,

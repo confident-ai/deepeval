@@ -1,6 +1,5 @@
 """Overall Score
 """
-import asyncio
 from .metric import Metric
 from .factual_consistency import FactualConsistencyMetric
 from .answer_relevancy import AnswerRelevancy
