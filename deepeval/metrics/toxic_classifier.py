@@ -2,7 +2,6 @@
 1 - Healthy
 0 - Toxic
 """
-import asyncio
 from .metric import Metric
 from ..singleton import Singleton
 
@@ -19,13 +18,11 @@ class NonToxicMetric(Metric, metaclass=Singleton):
         score = self.measure(text)
         score = score["min_score"]
         if self._is_send_okay():
-            asyncio.create_task(
-                self._send_to_server(
-                    metric_score=score,
-                    metric_name=self.__name__,
-                    query=text,
-                    output="-",
-                )
+            self._send_to_server(
+                metric_score=score,
+                metric_name=self.__name__,
+                query=text,
+                output="-",
             )
 
     def measure(self, text: str):

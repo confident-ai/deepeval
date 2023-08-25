@@ -5,7 +5,6 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 """
 
 import warnings
-import asyncio
 from typing import Optional
 from .metric import Metric
 from ..singleton import Singleton
@@ -21,15 +20,13 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
     def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
         success = score >= self.minimum_score
-        asyncio.create_task(
-            self._send_to_server(
-                metric_score=score,
-                metric_name=self.__name__,
-                query=query,
-                output=output,
-                expected_output=expected_output,
-                success=success,
-            )
+        self._send_to_server(
+            metric_score=score,
+            metric_name=self.__name__,
+            query=query,
+            output=output,
+            expected_output=expected_output,
+            success=success,
         )
         return score
 

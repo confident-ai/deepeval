@@ -1,6 +1,5 @@
 # Testing for ranking similarity
 import numpy as np
-import asyncio
 from typing import List, Optional, Union, Any
 from tqdm import tqdm
 from .metric import Metric
@@ -167,13 +166,11 @@ class RankingSimilarity(Metric):
     def __call__(self, list_1: List[Any], list_2: List[Any]):
         score = self.measure(list_1, list_2)
         if self._is_send_okay():
-            asyncio.create_task(
-                self._send_to_server(
-                    metric_score=score,
-                    metric_name=self.__name__,
-                    query=str(list_1),
-                    output=str(list_2),
-                )
+            self._send_to_server(
+                metric_score=score,
+                metric_name=self.__name__,
+                query=str(list_1),
+                output=str(list_2),
             )
         return score
 

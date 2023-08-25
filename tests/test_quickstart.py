@@ -1,7 +1,7 @@
 """This is the ideal user flow
 """
-import pytest
 import os
+import pytest
 from deepeval.api import Api
 from deepeval.metrics.factual_consistency import assert_factual_consistency
 from deepeval.metrics.bertscore_metric import BertScoreMetric
@@ -16,16 +16,14 @@ def generate_llm_output(query: str):
     return expected_output
 
 
-@pytest.mark.asyncio
-async def test_llm_output():
+def test_llm_output():
     query = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
     output = generate_llm_output(query)
     assert_factual_consistency(output, expected_output)
 
 
-@pytest.mark.asyncio
-async def test_llm_output_custom():
+def test_llm_output_custom():
     query = "What is the customer success phone line?"
     expected_output = "Dogs and cats love to walk around the beach."
     output = generate_llm_output(query)

@@ -4,8 +4,7 @@ import pytest
 from deepeval.metrics.bertscore_metric import BertScoreMetric
 
 
-@pytest.mark.asyncio
-async def test_bert_score():
+def test_bert_score():
     scorer = BertScoreMetric()
     score = scorer.measure("Why are you weird", "Why are you strange?")
     assert scorer.is_successful()

@@ -1,4 +1,3 @@
-import asyncio
 import numpy as np
 from .metric import Metric
 from sentence_transformers import SentenceTransformer, util
@@ -17,14 +16,12 @@ class AnswerRelevancy(Metric):
         score = self.measure(query, output)
         success = score > self.minimum_score
         if self._is_send_okay():
-            asyncio.create_task(
-                self._send_to_server(
-                    metric_score=float(score),
-                    query=query,
-                    output=output,
-                    metric_name=self.__name__,
-                    success=bool(success),
-                )
+            self._send_to_server(
+                metric_score=float(score),
+                query=query,
+                output=output,
+                metric_name=self.__name__,
+                success=bool(success),
             )
         return score
 
