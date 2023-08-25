@@ -65,7 +65,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
             score=overall_score,
             metric_name=self.__name__,
             query=query,
-            outpuy=output,
+            output=output,
             expected_output=output,
             metadata=metadata,
         )
