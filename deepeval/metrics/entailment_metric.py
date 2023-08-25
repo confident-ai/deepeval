@@ -1,6 +1,4 @@
-import asyncio
 from sentence_transformers import CrossEncoder
-from typing import Optional
 from ..utils import softmax
 from ..singleton import Singleton
 from .metric import Metric
@@ -30,20 +28,3 @@ class EntailmentScoreMetric(Metric, metaclass=Singleton):
     @property
     def __name__(self):
         return "Entailment"
-
-    def __call__(self, output, expected_output, query: Optional[str] = "-"):
-        score = self.measure(output, expected_output)
-        success = False
-        if score > self.minimum_score:
-            success = True
-        asyncio.create_task(
-            self._send_to_server(
-                metric_score=score,
-                metric_name=self.__name__,
-                query=query,
-                output=output,
-                expected_output=expected_output,
-                success=success,
-            )
-        )
-        return score
