@@ -78,7 +78,8 @@ class Metric(metaclass=Singleton):
         Parameters
         - query: What was asked to the model. This can also be context.
         - output: The LLM output.
-        - expected_output: The output that's expected."""
+        - expected_output: The output that's expected.
+        """
         asyncio.create_task(
             self._send_to_server(
                 metric_score=score,
