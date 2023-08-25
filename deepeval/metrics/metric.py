@@ -82,7 +82,7 @@ class Metric(metaclass=Singleton):
         - expected_output: The output that's expected.
         """
         if self._is_send_okay():
-            asyncio.create_task(
+            result = asyncio.create_task(
                 self._send_to_server(
                     metric_score=score,
                     metric_name=metric_name,
@@ -93,6 +93,8 @@ class Metric(metaclass=Singleton):
                     metadata=metadata,
                 )
             )
+            gathered_result = asyncio.gather(result)
+            print(gathered_result)
 
     async def _send_to_server(
         self,
