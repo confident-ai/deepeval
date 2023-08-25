@@ -39,7 +39,7 @@ def test_alert_score_metric():
 
 
 def test_implementation_inside_overall():
-    client = Client()
+    client = Client(TEST_API_KEY)
     imps = client.list_implementations()
     FOUND = False
     for imp in imps:
