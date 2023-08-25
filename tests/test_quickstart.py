@@ -26,10 +26,8 @@ def test_llm_output():
 def test_llm_output_custom():
     query = "What is the customer success phone line?"
     expected_output = "Dogs and cats love to walk around the beach."
-    output = generate_llm_output(query)
-    metric = BertScoreMetric(minimum_score=0.98)
     with pytest.raises(AssertionError):
-        assert_factual_consistency(output, expected_output)
+        assert_factual_consistency(query, expected_output)
 
 
 def test_implementation_inside_quickstart():
