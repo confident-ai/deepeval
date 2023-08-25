@@ -47,3 +47,14 @@ async def test_factual_consistency_metric_2():
         context="Python is NOT a programming language.",
     )
     assert not metric.is_successful()
+
+@pytest.mark.asyncio
+async def test_factual_consistency_metric_3():
+
+    metric = FactualConsistencyMetric(minimum_score=0.6)
+    result = metric.measure(
+        output="Python is a programming language.",
+        context="Python is a snake.",
+    )
+    assert metric.is_successful()
+    assert result > 0.8, f"Failed {result}"
