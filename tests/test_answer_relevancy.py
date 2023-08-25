@@ -29,8 +29,17 @@ async def test_query_answer_relevancy():
 
 
 @pytest.mark.asyncio
+async def test_compare_answer_relevancy_2():
+    scorer = AnswerRelevancy(minimum_score=0.5)
+    result = scorer.measure(query=query, output="Programming lang")
+    result_2 = scorer.measure(query=query, output="Python is a programming lang")
+    assert result_2 > result
+
+
+@pytest.mark.asyncio
 async def test_compare_answer_relevancy():
     scorer = AnswerRelevancy(minimum_score=0.5)
+    query = "what is python"
     result = scorer.measure(query=query, output="Programming lang")
     result_2 = scorer.measure(query=query, output="Python is a programming lang")
     assert result_2 > result
