@@ -39,4 +39,4 @@ scorer.measure(query=query, output=answer)
 
 ## How It is Measured
 
-Answer relevancy is measured using DL models that are trained off MS-Marco dataset (which is a search engine dataset).
+Answer relevancy is measured using DL models that are trained off MS-Marco dataset (which is a search engine dataset). The method to measure relevancy is that it encodes a query and an answer and then gets the cosine similarity between the 2. The vector space has been trained off query-answer datasets that is trained off relevant questions and answers.
