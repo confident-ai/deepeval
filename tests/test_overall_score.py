@@ -94,6 +94,7 @@ def test_overall_score_metric():
 
 
 def test_implementation_inside_overall():
+    client = Api()
     imps = client.list_implementations()
     FOUND = False
     for imp in imps:
