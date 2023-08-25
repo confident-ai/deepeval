@@ -1,6 +1,4 @@
-import asyncio
 from sentence_transformers import CrossEncoder
-from typing import Optional
 from ..utils import softmax
 from ..singleton import Singleton
 from .metric import Metric

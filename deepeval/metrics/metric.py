@@ -64,6 +64,32 @@ class Metric(metaclass=Singleton):
         )
         return score
 
+    def log(
+        self,
+        success: bool = True,
+        score: float = 1e-10,
+        metric_name: str = "-",
+        query: str = "-",
+        output: str = "-",
+        expected_output: str = "-",
+    ):
+        """Log to the server.
+
+        Parameters
+        - query: What was asked to the model. This can also be context.
+        - output: The LLM output.
+        - expected_output: The output that's expected."""
+        asyncio.create_task(
+            self._send_to_server(
+                metric_score=score,
+                metric_name=metric_name,
+                query=query,
+                output=output,
+                expected_output=expected_output,
+                success=success,
+            )
+        )
+
     async def _send_to_server(
         self,
         metric_score: float,
