@@ -13,3 +13,9 @@ def cosine_similarity(vector_a, vector_b):
     norm_b = np.linalg.norm(vector_b)
     similarity = dot_product / (norm_a * norm_b)
     return similarity
+
+
+def chunk_text(text, chunk_size=20):
+    words = text.split()
+    chunks = [words[i : i + chunk_size] for i in range(0, len(words), chunk_size)]
+    return chunks
