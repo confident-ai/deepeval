@@ -18,6 +18,7 @@ context = "The FIFA World Cup in 2018 was won by the French national football te
 
 client = Api()
 
+
 @pytest.mark.asyncio
 async def test_overall_score():
     assert_overall_score(
