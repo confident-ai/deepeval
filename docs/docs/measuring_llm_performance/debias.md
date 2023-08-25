@@ -27,7 +27,7 @@ assert_unbiased(text="I can presume bias only exists in Tanzania")
 from deepeval.metrics.bias_classifier import UnBiasedMetric
 
 metric = UnBiasedMetric()
-score = metric.measure(text=generated_text)
+score = metric.measure(text=output)
 score
 # Prints out score for bias measure, 1 being highly biased 0 being unbiased
 

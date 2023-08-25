@@ -16,7 +16,7 @@ assert_non_toxic(text="Who is that?")
 from deepeval.metrics.toxic_classifier import NonToxicMetric
 
 metric = NonToxicMetric()
-score = metric.measure(text=generated_text)
+score = metric.measure(text=output)
 score
 # Prints out a dictionary of values showing the scores for each trait
 
