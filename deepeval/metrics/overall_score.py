@@ -2,16 +2,18 @@
 """
 import asyncio
 from .metric import Metric
-from .entailment_metric import EntailmentScoreMetric
+from .factual_consistency import FactualConsistencyMetric
 from .answer_relevancy import AnswerRelevancy
+from .conceptual_similarity import ConceptualSimilarityMetric
 from ..singleton import Singleton
 
 
 class OverallScoreMetric(Metric, metaclass=Singleton):
     def __init__(self, minimum_score: float = 0.5):
         self.minimum_score = minimum_score
-        self.entailment_metric = EntailmentScoreMetric()
         self.answer_relevancy = AnswerRelevancy()
+        self.factual_consistency_metric = FactualConsistencyMetric()
+        self.conceptual_similarity_metric = ConceptualSimilarityMetric()
 
     def __call__(self, query, output: str, expected_output: str, context: str):
         score = self.measure(
@@ -36,29 +38,29 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
     def measure(
         self, query: str, output: str, expected_output: str, context: str
     ) -> float:
-        factual_consistency_score = self.entailment_metric.measure(
-            context,
-            output,
+        factual_consistency_score = self.factual_consistency_metric.measure(
+            context=context,
+            output=output,
         )
 
         answer_relevancy_score = self.answer_relevancy.measure(
             query=query, output=output
         )
 
-        answer_similarity_score = self.entailment_metric.measure(
+        conceptual_similarity_score = self.conceptual_similarity_metric.measure(
             expected_output, output
         )
 
         overall_score = (
             +0.33 * factual_consistency_score
             + 0.33 * answer_relevancy_score
-            + 0.33 * answer_similarity_score
+            + 0.33 * conceptual_similarity_score
         )
         self.success = bool(overall_score > self.minimum_score)
         metadata = {
             "factual_consistency": float(factual_consistency_score),
             "answer_relevancy": float(answer_relevancy_score),
-            "answer_similarity_score": float(answer_similarity_score),
+            "conceptual_similarity_score": float(conceptual_similarity_score),
         }
         self.log(
             success=self.success,
