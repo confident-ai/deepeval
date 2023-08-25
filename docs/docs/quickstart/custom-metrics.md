@@ -9,7 +9,6 @@ As of right now, we do not currently support custom metrics for our dashboard bu
 :::
 
 ```python
-import asyncio
 from deepeval.metrics.metric import Metric
 
 class LengthMetric(Metric):
@@ -20,17 +19,14 @@ class LengthMetric(Metric):
     def measure(self, text: str):
         # sends to server
         score = len(text)
-        self.success = score > minimum_length
+        self.success = score > self.minimum_length
         # Optional: Logs it to the server
         self.log(
             query=text,
-            success=success
+            score=score/100, # just to have something here - should be between 0 and 1
+            success=self.success
         )
         return score
-
-    def measure(self, text: str):
-        self.success = len(x) > self.minimum_length
-        return a > b
 
     def is_successful(self):
         return self.success
@@ -40,4 +36,5 @@ class LengthMetric(Metric):
         return "Length"
 
 metric = LengthMetric()
+
 ```

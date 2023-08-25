@@ -12,23 +12,17 @@ class LengthMetric(Metric):
     def __init__(self, minimum_length: int = 3):
         self.minimum_length = minimum_length
 
-    def __call__(self, text: str):
-        # sends to server
-        score = self.measure(text)
-        # Optional: Logs it to the server
-        asyncio.create_task(
-            self._send_to_server(
-                metric_score=score,
-                metric_name=self.__name__,
-                query=text,
-                success=self.success,
-            )
-        )
-        return self.measure(text)
-
     def measure(self, text: str):
+        # sends to server
         score = len(text)
         self.success = score > self.minimum_length
+        # Optional: Logs it to the server
+        self.log(
+            query=text,
+            score=score
+            / 100,  # just to have something here - should be between 0 and 1
+            success=self.success,
+        )
         return score
 
     def is_successful(self):
