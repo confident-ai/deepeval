@@ -1,7 +1,6 @@
 name: Run pytest in matrix
 
-on:
-  pull_request:
+on: push
 
 jobs:
   examples:
