@@ -54,11 +54,11 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
             + 0.33 * answer_relevancy_score
             + 0.33 * answer_similarity_score
         )
-        self.success = overall_score > self.minimum_score
+        self.success = bool(overall_score > self.minimum_score)
         metadata = {
-            "factual_consistency": factual_consistency_score,
-            "answer_relevancy": answer_relevancy_score,
-            "answer_similarity_score": answer_similarity_score,
+            "factual_consistency": float(factual_consistency_score),
+            "answer_relevancy": float(answer_relevancy_score),
+            "answer_similarity_score": float(answer_similarity_score),
         }
         self.log(
             success=self.success,
