@@ -24,10 +24,10 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
         vectors = self.model.encode([text_a, text_b])
         return vectors
 
-    def measure(self, a: str, b: str):
-        vectors = self._vectorize(a, b)
+    def measure(self, output: str, expected_output: str):
+        vectors = self._vectorize(output, expected_output)
         self.score = cosine_similarity(vectors[0], vectors[1])
-        return self.score
+        return float(self.score)
 
     def is_successful(self) -> bool:
         return self.score >= self.minimum_score
