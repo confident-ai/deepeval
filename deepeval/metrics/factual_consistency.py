@@ -15,11 +15,18 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         self.minimum_score = minimum_score
 
     def measure(self, output: str, context: str):
-        scores = self.model.predict([(a, b)])
+        scores = self.model.predict([(output, context)])
         # https://huggingface.co/cross-encoder/nli-deberta-base
         # label_mapping = ["contradiction", "entailment", "neutral"]
         score = softmax(scores)[0][1]
         self.success = score > self.minimum_score
+        self.log(
+            success=self.success,
+            score=score,
+            metric_name=self.__name__,
+            output=output,
+            context=context,
+        )
         return score
 
     def is_successful(self) -> bool:
