@@ -17,10 +17,15 @@ class LengthMetric(Metric):
     def __init__(self, minimum_length: int=3):
         self.minimum_length = minimum_length
 
-    def __call__(self, text: str):
+    def measure(self, text: str):
         # sends to server
-        score = self.measure(text)
+        score = len(text)
+        self.success = score > minimum_length
         # Optional: Logs it to the server
+        self.log(
+            query=text,
+            success=success
+        )
         return score
 
     def measure(self, text: str):
