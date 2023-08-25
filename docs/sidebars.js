@@ -27,7 +27,6 @@ const sidebars = {
       items: [
         'quickstart/quickstart',
         'quickstart/dataset',
-        'quickstart/custom-metrics',
         'quickstart/synthetic-data-creation',
         'quickstart/dashboard-app'
       ],
@@ -55,7 +54,9 @@ const sidebars = {
     {
       type: 'category',
       label: 'Metrics',
-      items: ['metrics/entailment', 'metrics/bertscore']
+      items: [
+        'quickstart/custom-metrics',
+        'metrics/entailment', 'metrics/bertscore']
     },
     {
       type: "category",
