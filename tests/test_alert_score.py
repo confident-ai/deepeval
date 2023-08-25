@@ -44,4 +44,3 @@ def test_implementation_inside_overall():
         if imp["name"] == IMPLEMENTATION_NAME:
             FOUND = True
     assert FOUND, f"{IMPLEMENTATION_NAME} not found in {[x['name'] for x in imps]}"
-
