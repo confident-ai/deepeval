@@ -15,6 +15,7 @@ context = "The FIFA World Cup in 2018 was won by the French national football te
 @pytest.mark.asyncio
 async def test_overall_score():
     assert_overall_score(
+        query=query,
         generated_text=generated_text,
         expected_output=expected_output,
         context=context,
@@ -25,7 +26,10 @@ async def test_overall_score():
 async def test_overall_score_metric():
     metric = OverallScoreMetric()
     score = metric.measure(
-        generated_text=generated_text, expected_output=expected_output, context=context
+        query=query,
+        generated_text=generated_text,
+        expected_output=expected_output,
+        context=context,
     )
     assert metric.is_successful(), "Overall score metric not working"
     assert_viable_score(score)
