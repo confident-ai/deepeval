@@ -67,6 +67,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
 
 
 def assert_overall_score(
+    query: str,
     generated_text: str,
     expected_output: str,
     context: str,
@@ -74,6 +75,7 @@ def assert_overall_score(
 ):
     metric = OverallScoreMetric(minimum_score=minimum_score)
     score = metric.measure(
+        query=query,
         generated_text=generated_text,
         expected_output=expected_output,
         context=context,
