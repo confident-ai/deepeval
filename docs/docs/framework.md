@@ -24,9 +24,9 @@ DeepEval provides an opinionated way to test these LLM outputs using ML models c
 
 Below, we share our framework for large language models.
 
-![Evaluation Framework](../assets/llm-evaluation-framework.png)
+![Evaluation Framework](../assets/llm-evaluation-framework-example.png)
 
-## Why not just use GPT?
+## Why not just use GPT to evaluate?
 
 GPT itself is an auto-regressive model that can provide evaluation of the model. GPT aims to predict the next best token and can provide a score based on that. However, imagine the following situation:
 
