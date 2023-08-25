@@ -1,9 +1,12 @@
 """Test alert score
 """
-
+import os
 from deepeval.metrics.alert_score import assert_alert_score
 from deepeval.metrics.alert_score import AlertScoreMetric
 from .utils import assert_viable_score
+
+IMPLEMENTATION_NAME = "Alert"
+os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
 
 query = "Who won the FIFA World Cup in 2018?"
 generated_text = "Winners of the FIFA world cup were the French national football team"
