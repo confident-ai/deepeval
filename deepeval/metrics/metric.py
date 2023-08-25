@@ -1,6 +1,3 @@
-"""Available metrics. The best metric that
-you want is Cohere's reranker metric.
-"""
 import asyncio
 import os
 import warnings
@@ -44,8 +41,7 @@ class Metric(metaclass=Singleton):
         result = os.getenv(API_KEY_ENV) is not None
         if result is False:
             warnings.warn(
-                """API key is not set. Please set it by visiting https://app.confident-ai.com
-"""
+                """API key is not set. Please set it by visiting https://app.confident-ai.com"""
             )
         return result
 
@@ -53,16 +49,16 @@ class Metric(metaclass=Singleton):
         # DOing this until the API endpoint is fixed
         return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
 
-    def __call__(self, output, expected_output, query: Optional[str] = "-"):
-        score = self.measure(output, expected_output)
+    def __call__(self, *args, **kwargs):
+        score = self.measure(*args, **kwargs)
         success = score >= self.minimum_score
         asyncio.create_task(
             self._send_to_server(
                 metric_score=score,
                 metric_name=self.__name__,
-                query=query,
-                output=output,
-                expected_output=expected_output,
+                query=kwargs.get("query", "-"),
+                output=kwargs.get("output", "-"),
+                expected_output=kwargs.get("expected_output", "-"),
                 success=success,
             )
         )

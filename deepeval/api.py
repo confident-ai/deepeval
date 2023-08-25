@@ -36,7 +36,9 @@ class Api:
         self._headers = {
             "Content-Type": "application/json",
             "User-Agent": self._generate_useragent(user_agent_extension),
-            "Authorization": "Bearer " + api_key,
+            # "Authorization": "Bearer " + api_key,
+            # This is what gets sent now - auth gets sent to firebase instead
+            "CONFIDENT_API_KEY": api_key,
         }
         self._headers_multipart_form_data = {
             "User-Agent": self._generate_useragent(user_agent_extension),
