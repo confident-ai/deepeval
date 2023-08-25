@@ -23,15 +23,13 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
             context=context,
         )
         success = score > self.minimum_score
-        asyncio.create_task(
-            self._send_to_server(
-                metric_score=score,
-                metric_name=self.__name__,
-                query=context,
-                output=output,
-                expected_output=expected_output,
-                success=success,
-            )
+        self.log(
+            metric_score=score,
+            metric_name=self.__name__,
+            query=context,
+            output=output,
+            expected_output=expected_output,
+            success=success,
         )
         return score
 
