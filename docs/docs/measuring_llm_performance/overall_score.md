@@ -13,9 +13,9 @@ It then takes the mean of these scores.
 ```python
 from deepeval.metrics.overall_score import assert_overall_score
 assert_overall_score(
-    generated_text="Who won the FIFA World Cup in 2018?",
-    expected_output="French national football team",
-    assert_viable_score(score),
+    query="Who won the FIFA World Cup in 2018?",
+    output="French national football team",
+    expected_output="The FIFA World Cup in 2018 was won by the French national football team.",
     context="The FIFA World Cup in 2018 was won by the French national football team. They defeated Croatia 4-2 in the final match to claim the championship.",
     minimum_score=0.3
 )
