@@ -2,6 +2,7 @@
 """
 
 import pytest
+import pytest_asyncio
 from deepeval.api import Api
 from deepeval.metrics.overall_score import assert_overall_score
 from deepeval.metrics.overall_score import OverallScoreMetric
@@ -18,6 +19,48 @@ context = "The FIFA World Cup in 2018 was won by the French national football te
 
 client = Api()
 
+metric = OverallScoreMetric()
+
+
+@pytest_asyncio.fixture
+async def score_1():
+    return metric.measure(
+        query=query,
+        output=output,
+        expected_output=expected_output,
+        context=context,
+    )
+
+
+@pytest_asyncio.fixture
+async def score_2():
+    return metric.measure(
+        query=query,
+        output=output,
+        expected_output=expected_output,
+        context="He doesn't know how to code",
+    )
+
+
+@pytest_asyncio.fixture
+async def score_3():
+    return metric.measure(
+        query=query,
+        output="Not relevant",
+        expected_output=expected_output,
+        context="He doesn't know how to code",
+    )
+
+
+@pytest_asyncio.fixture
+async def score_4():
+    return metric.measure(
+        query=query,
+        output="Not relevant",
+        expected_output="STranger things",
+        context="He doesn't know how to code",
+    )
+
 
 @pytest.mark.asyncio
 async def test_overall_score():
@@ -27,6 +70,21 @@ async def test_overall_score():
         expected_output=expected_output,
         context=context,
     )
+
+
+@pytest.mark.asyncio
+async def test_overall_score_worst_context(score_2, score_1):
+    assert score_2 < score_1, "Worst context."
+
+
+@pytest.mark.asyncio
+async def test_overall_score_worst_output(score_3, score_2):
+    assert score_3 < score_2, "Worst output and context."
+
+
+@pytest.mark.asyncio
+async def test_worst_expected_output(score_4, score_3):
+    assert score_4 < score_3, "Worst lol"
 
 
 @pytest.mark.asyncio
