@@ -1,6 +1,6 @@
 # About Our Framework
 
-We segmented LLMs into 4 components - where we are interested in testing the relationship between each component.
+We segmented evaluating LLMs into 4 components - where we are interested in testing the relationship between each component.
 
 - Query (what the user asks the LLM to do)
 - Output (What the LLM returns)
