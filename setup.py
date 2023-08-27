@@ -22,6 +22,8 @@ setup(
         "tabulate",
         "sentence-transformers",  # for similarity
         "pytest",
+        "typer",
+        "rich",
     ],
     extras_require={
         "bias": [

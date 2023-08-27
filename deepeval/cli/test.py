@@ -11,7 +11,6 @@ except Exception as e:
 app = typer.Typer(name="test")
 
 
-@app.command()
 def sample():
     set_env_vars()
     print("Sending sample test results...")
@@ -74,6 +73,9 @@ def sample():
 @app.command()
 def run(test_file_or_directory: str, exit_on_first_failure: bool = False):
     """Run a test"""
+    if test_file_or_directory == "sample":
+        sample()
+        return 0
     if exit_on_first_failure:
         retcode = pytest.main(["-x", "-k", test_file_or_directory])
     else:
