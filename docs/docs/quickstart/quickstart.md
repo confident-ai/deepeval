@@ -9,11 +9,6 @@ import os
 import openai
 from deepeval.metrics.factual_consistency import assert_factual_consistency
 
-# Optional - if you want an amazing dashboard!
-os.environ["CONFIDENT_AI_API_KEY"] = "XXX"
-# Name your implementation - e.g. "LangChain Implementation"
-os.environ["CONFIDENT_AI_IMP_NAME"] = "QuickStart"
-
 openai.api_key = "sk-XXX"
 
 # Write a sample ChatGPT function
