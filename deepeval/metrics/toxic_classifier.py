@@ -8,7 +8,10 @@ from ..singleton import Singleton
 
 class NonToxicMetric(Metric, metaclass=Singleton):
     def __init__(self, model_name: str = "original", minimum_score: float = 0.5):
-        from detoxify import Detoxify
+        try:
+            from detoxify import Detoxify
+        except ModuleNotFoundError:
+            raise ValueError("Run `pip install deepeval[toxic]")
 
         self.model_name = model_name
         self.model = Detoxify(model_name)
