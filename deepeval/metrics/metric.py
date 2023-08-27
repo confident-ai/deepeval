@@ -65,7 +65,7 @@ class Metric(metaclass=Singleton):
         self,
         success: bool = True,
         score: float = 1e-10,
-        metric_name: str = "-",
+        metric_name: Optional[str] = None,
         query: str = "-",
         output: str = "-",
         expected_output: str = "-",
@@ -78,6 +78,8 @@ class Metric(metaclass=Singleton):
         - output: The LLM output.
         - expected_output: The output that's expected.
         """
+        if metric_name is None:
+            metric_name = self.__name__
         if self._is_send_okay():
             self._send_to_server(
                 metric_score=score,
