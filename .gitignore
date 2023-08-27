@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 docs/.docusaurus
 node_modules
+.deepeval
