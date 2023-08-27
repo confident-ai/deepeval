@@ -70,14 +70,45 @@ def sample():
     print("✅ Tests finished! View results on https://app.confident-ai.com/")
 
 
+def check_if_legit_file(test_file: str):
+    if test_file.endswith(".py"):
+        if not test_file.startswith("test_"):
+            raise ValueError("Test will not run. Please ensure the `test_` prefix.")
+
+
 @app.command()
 def run(test_file_or_directory: str, exit_on_first_failure: bool = False):
     """Run a test"""
     if test_file_or_directory == "sample":
         sample()
+        print(
+            "You can generate a sample test using [bold]deepeval test generate[/bold]."
+        )
         return 0
     if exit_on_first_failure:
         retcode = pytest.main(["-x", "-k", test_file_or_directory])
     else:
-        retcode = pytest.main(["k", test_file_or_directory])
+        retcode = pytest.main(["-k", test_file_or_directory])
     return retcode
+
+
+@app.command()
+def generate(sample_file: str = "test_sample.py"):
+    with open(sample_file, "w") as f:
+        f.write(
+            """from deepeval.metrics.overall_score import assert_overall_score
+
+def test_example():
+    query = "Explain the theory of relativity."
+    output = "Einstein's theory of relativity is famous."
+    expected_output = "Einstein's theory of relativity revolutionized our understanding of space, time, and gravity."
+    context = "Physics"
+
+    assert_overall_score(query, output, expected_output, context)
+"""
+        )
+
+    print(f"✨ Done! Now run: [bold]deepeval test run {sample_file}[/bold]")
+    print(
+        "You can generate more tests in the future in our documentation at https://docs.confident-ai.com/docs"
+    )
