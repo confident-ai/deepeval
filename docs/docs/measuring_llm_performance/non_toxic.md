@@ -4,6 +4,10 @@ A large number of LLMs can become toxic after finetuning - test if they are toxi
 
 ## Assert Non-Toxic
 
+```bash
+pip install deepeval[toxic]
+```
+
 ```python
 from deepeval.metrics.toxic_classifier import assert_non_toxic
 

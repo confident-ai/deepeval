@@ -21,13 +21,22 @@ setup(
         "pytest",
         "tabulate",
         "sentence-transformers",  # for similarity
-        "detoxify",  # for toxic classifier
         "pytest",
+        "typer",
+        "rich",
     ],
     extras_require={
         "bias": [
             "tensorflow",  # for bias
             "Dbias",  # for bias
+        ],
+        "toxic": [
+            "detoxify",  # for toxic classifier
+        ],
+    },
+    entry_points={
+        "console_scripts": [
+            "deepeval = deepeval.cli.main:app",
         ]
     },
 )

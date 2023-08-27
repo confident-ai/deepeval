@@ -38,6 +38,19 @@ pip install deepeval
 
 # QuickStart
 
+## Running from a command-line interface
+
+```bash
+# Optional - if you want a web UI
+deepeval login
+# Run a sample test
+deepeval test sample
+```
+
+```python
+deepeval test run tests/test_sample.py
+```
+
 ## Individual Test Cases
 
 Grab your API key from [https://app.confident-ai.com](https://app.confident-ai.com) to start logging!
@@ -48,12 +61,6 @@ import os
 import openai
 from deepeval.metrics.factual_consistency import assert_factual_consistency
 
-# Optional - if you want an amazing dashboard!
-os.environ["CONFIDENT_AI_API_KEY"] = "XXX"
-# Name your implementation - e.g. "LangChain Implementation"
-os.environ["CONFIDENT_AI_IMP_NAME"] = "QuickStart"
-
-import openai
 openai.api_key = "sk-XXX"
 
 # Write a sample ChatGPT function
@@ -81,7 +88,7 @@ test_llm_output()
 Once you have set that up, you can simply call pytest
 
 ```bash
-python -m pytest test_example.py
+deepeval test run test_example.py
 
 # Output
 Running tests ... ✅
@@ -96,16 +103,33 @@ Once you have ran tests, you should be able to see your dashboard on [https://ap
 To define a custom metric, you simply need to define the `measure` and `is_successful` property.
 
 ```python
-from deepeval.metric import Metric
-class CustomMetric(Metric):
-    def measure(self, a, b):
-        self.success = a > b
-        return 0.1
+from deepeval.metrics.metric import Metric
+
+class LengthMetric(Metric):
+    """This metric checks if the output is more than 3 letters"""
+    def __init__(self, minimum_length: int=3):
+        self.minimum_length = minimum_length
+
+    def measure(self, text: str):
+        # sends to server
+        score = len(text)
+        self.success = score > self.minimum_length
+        # Optional: Logs it to the server
+        self.log(
+            query=text,
+            score=score/100, # just to have something here - should be between 0 and 1
+            success=self.success
+        )
+        return score
 
     def is_successful(self):
         return self.success
 
-metric = CustomMetric()
+    @property
+    def __name__(self):
+        return "Length"
+
+metric = LengthMetric()
 ```
 
 ## Integrate tightly with LangChain
@@ -127,8 +151,13 @@ Set up a simple dashboard in just 1 line of code. You can read more about how to
 
 # RoadMap
 
+Our up-coming roadmap:
+
 - [ ] Integration with LlamaIndex
 - [ ] Project View To Web UI
+- [ ] Integration with HumanEval
+- [ ] Integration with Microsoft Guidance
+- [ ] Integration
 
 # Authors
 
