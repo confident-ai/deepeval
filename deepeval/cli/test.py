@@ -1,3 +1,4 @@
+import pytest
 import typer
 from .cli_key_handler import set_env_vars
 from ..metrics.factual_consistency import assert_factual_consistency
@@ -37,3 +38,13 @@ def sample():
     except AssertionError as e:
         pass
     print("✅ Tests finished! View results on https://app.confident-ai.com/")
+
+
+@app.command()
+def run(test_file_or_directory: str, exit_on_first_failure: bool = True):
+    """Run a test"""
+    if exit_on_first_failure:
+        retcode = pytest.main(["-x", test_file_or_directory])
+    else:
+        retcode = pytest.main([test_file_or_directory])
+    return retcode
