@@ -47,8 +47,10 @@ def login(
         )
     KEY_FILE_HANDLER.write_data(IMPLEMENTATION_ID_NAME, project_name)
     print("Success! :raising_hands:")
-    print("Run a sample test: [bold]deepeval test run sample[/bold]")
-    print("Generate a sample test: [bold]deepeval test generate test_sample.py[/bold]")
+    print(
+        "Create and generate a sample test: [bold]deepeval test generate test_sample.py[/bold]"
+    )
+    print("Run a sample test: [bold]deepeval test run test_sample.py[/bold]")
 
 
 if __name__ == "__main__":
