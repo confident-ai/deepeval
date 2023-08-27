@@ -30,7 +30,7 @@ def login():
     project = input("Name:")
     handler.write_data(IMPLEMENTATION_ID_NAME, project)
     print("Success! :raising_hands:")
-    print("Run: [bold]deepeval test sample[/bold]")
+    print("Run: [bold]deepeval test run sample[/bold]")
 
 
 if __name__ == "__main__":
