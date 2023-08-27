@@ -41,10 +41,10 @@ def sample():
 
 
 @app.command()
-def run(test_file_or_directory: str, exit_on_first_failure: bool = True):
+def run(test_file_or_directory: str, exit_on_first_failure: bool = False):
     """Run a test"""
     if exit_on_first_failure:
-        retcode = pytest.main(["-x", test_file_or_directory])
+        retcode = pytest.main(["-x", "-k", test_file_or_directory])
     else:
-        retcode = pytest.main([test_file_or_directory])
+        retcode = pytest.main(["k", test_file_or_directory])
     return retcode

@@ -52,5 +52,6 @@ def test_factual_consistency():
 You can then run it in CLI using:
 
 ```bash
-python -m pytest test_sample.py
+deepeval test run sample.py
+# If you want to stay with pytest instead
 ```
