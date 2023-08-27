@@ -38,6 +38,8 @@ pip install deepeval
 
 # QuickStart
 
+![CLI Reveal](docs/assets/deepeval-cli-reveal.png)
+
 ## Running from a command-line interface
 
 ```bash
