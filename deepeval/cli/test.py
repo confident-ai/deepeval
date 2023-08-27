@@ -14,6 +14,7 @@ app = typer.Typer(name="test")
 def sample():
     set_env_vars()
     print("Sending sample test results...")
+    print("If this is your first time running these models, it may take a while.")
     try:
         assert_factual_consistency(
             output="Python is an interpreted high-level programming language.",
@@ -35,3 +36,4 @@ def sample():
         )
     except AssertionError as e:
         pass
+    print("✅ Tests finished! View results on https://app.confident-ai.com/")
