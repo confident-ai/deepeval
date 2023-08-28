@@ -3,6 +3,7 @@
 import os
 import getpass
 from .api import Api
+from .key_handler import KEY_FILE_HANDLER
 from typing import Optional, List, Dict
 
 
@@ -13,6 +14,7 @@ class Client(Api):
 
     def __init__(self, api_key: str = None, local_mode: bool = False, **kwargs):
         if api_key is None:
+            api_key = KEY_FILE_HANDLER.fetch_api_key()
             if "CONFIDENT_AI_API_KEY" not in os.environ:
                 api_key = getpass.getpass(
                     "Grab your API key from https://app.confident-ai.com"
