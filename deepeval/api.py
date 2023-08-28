@@ -5,6 +5,7 @@ import requests
 from .constants import API_KEY_ENV
 from typing import Any, Optional
 from requests.adapters import HTTPAdapter, Response, Retry
+from .key_handler import KEY_FILE_HANDLER
 
 API_BASE_URL = "https://app.confident-ai.com/api"
 
@@ -20,13 +21,17 @@ class Api:
 
     def __init__(
         self,
-        api_key: str = os.getenv(API_KEY_ENV),
+        api_key: str = os.getenv(API_KEY_ENV, ""),
         user_agent_extension=None,
         api_instance_url=None,
         verify=None,
         proxies=None,
         cert=None,
     ):
+        if api_key == "":
+            # get API key if none is supplied after you log in
+            api_key = KEY_FILE_HANDLER.fetch_api_key()
+
         if api_key == "" or api_key is None:
             raise ValueError("Please provide a valid API Key.")
 
@@ -295,7 +300,6 @@ class Api:
         )
 
     def create_implementation(self, name: str, description: Optional[str] = None):
-
         body = {"name": name}
         if description:
             body["description"] = description
