@@ -30,11 +30,11 @@ def login(
 ):
     """Login to the DeepEval platform."""
     print("Welcome to [bold]DeepEval[/bold]!")
-    print("Grab your API key here: https://app.confident-ai.com/organization")
+    print("Grab your API key here: https://app.confident-ai.com/")
     if api_key == "":
         api_key = KEY_FILE_HANDLER.fetch_api_key()
         api_key = typer.prompt(
-            text="Paste it here (Hit enter if default is right):", default=api_key
+            text="Paste it here (Hit enter if default is right) ", default=api_key
         )
     KEY_FILE_HANDLER.write_api_key(api_key)
     client = Api(api_key=api_key)
@@ -48,7 +48,7 @@ def login(
     KEY_FILE_HANDLER.write_data(IMPLEMENTATION_ID_NAME, project_name)
     print("Success! :raising_hands:")
     print(
-        "Create and generate a sample test: [bold]deepeval test generate test_sample.py[/bold]"
+        "If you are new to DeepEval, try generate a sample test: [bold]deepeval test generate test_sample.py[/bold]"
     )
     print("Run a sample test: [bold]deepeval test run test_sample.py[/bold]")
 
