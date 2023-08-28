@@ -34,7 +34,8 @@ def login(
     if api_key == "":
         api_key = KEY_FILE_HANDLER.fetch_api_key()
         api_key = typer.prompt(
-            text="Paste it here (Hit enter if default is right) ", default=api_key
+            text="Paste it here (Hit enter if default is right) ",
+            default=api_key,
         )
     KEY_FILE_HANDLER.write_api_key(api_key)
     client = Api(api_key=api_key)
