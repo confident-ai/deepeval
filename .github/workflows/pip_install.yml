@@ -1,0 +1,25 @@
+name: Pip install comment
+
+on:
+  pull_request:
+
+jobs:
+  create-pip-link-comment:
+    runs-on: ubuntu-latest
+    name: pip link
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Comment PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          hide_and_recreate: true
+          hide_classify: "OUTDATED"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          message: |
+            Thanks for the PR! Going to review and merge soon 😉
+            Just before that though can you please test the installation with the command below? 😎
+            ```
+            pip install git+https://github.com/RelevanceAI/relevance-workflows-core.git@${{ github.head_ref }}
+            ```
