@@ -43,7 +43,9 @@ class Metric(metaclass=Singleton):
         #     warnings.warn(
         #         """API key is not set - you won't be able to log to the DeepEval dashboard. Please set it by running `deepeval login`"""
         #     )
-        return result
+        if result == "" or result is None:
+            return False
+        return True
 
     def _is_send_okay(self):
         # DOing this until the API endpoint is fixed
