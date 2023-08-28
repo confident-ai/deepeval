@@ -16,8 +16,12 @@ class KeyFileHandler:
 
     def fetch_data(self, key):
         """Fetches the data from the hidden file"""
-        with open(KEY_FILE, "r") as f:
-            self.data = json.load(f)
+        try:
+            with open(KEY_FILE, "r") as f:
+                self.data = json.load(f)
+        except FileNotFoundError:
+            # Handle the case when the file doesn't exist
+            self.data = {}
         return self.data.get(key)
 
     def write_api_key(self, api_key):
