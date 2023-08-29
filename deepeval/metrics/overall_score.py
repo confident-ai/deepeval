@@ -51,6 +51,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
             "answer_relevancy": float(answer_relevancy_score),
             "conceptual_similarity_score": float(conceptual_similarity_score),
         }
+        print({"scores": metadata})
         self.log(
             success=self.success,
             score=overall_score,
