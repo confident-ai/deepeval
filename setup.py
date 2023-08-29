@@ -24,7 +24,7 @@ setup(
         "pytest",
         "typer",
         "rich",
-        "protobuf==3.20.1",
+        "protobuf<=3.20.5",
     ],
     extras_require={
         "bias": [
