@@ -49,7 +49,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
         metadata = {
             "factual_consistency": float(factual_consistency_score),
             "answer_relevancy": float(answer_relevancy_score),
-            "conceptual_similarity_score": float(conceptual_similarity_score),
+            "conceptual_similarity": float(conceptual_similarity_score),
         }
         print({"scores": metadata})
         self.log(
