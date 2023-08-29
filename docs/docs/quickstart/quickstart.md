@@ -4,6 +4,10 @@ If you are interested in running a quick Colab example, you can [click here](htt
 
 You can write a simple test case as simply as:
 
+```bash
+deepeval test generate test_sample.py
+```
+
 ```python
 import os
 import openai
@@ -40,7 +44,6 @@ To run this in Pytest, just run:
 
 ```python
 # sample.py
-import pytest
 
 def test_factual_consistency():
     query = "What is the customer success phone line?"
