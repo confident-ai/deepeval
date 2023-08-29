@@ -67,7 +67,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
 
     @property
     def __name__(self):
-        return "Alert Score"
+        return "Overall Score"
 
 
 def assert_overall_score(
