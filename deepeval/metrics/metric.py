@@ -1,7 +1,7 @@
 import os
 import warnings
 from typing import Optional
-from ..get_api_key import _get_api_key
+from ..get_api_key import _get_api_key, _get_implementation_name
 from ..constants import (
     API_KEY_ENV,
     IMPLEMENTATION_ID_ENV,
@@ -105,7 +105,7 @@ class Metric(metaclass=Singleton):
     ):
         if self._is_send_okay():
             client = Client(api_key=os.getenv(API_KEY_ENV))
-            implementation_name = os.getenv(IMPLEMENTATION_ID_NAME)
+            implementation_name = _get_implementation_name()
             # implementation_id = os.getenv(IMPLEMENTATION_ID_ENV, "")
             # if implementation_id != "":
             implementation_id = client.get_implementation_id_by_name(
