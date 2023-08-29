@@ -1,13 +1,7 @@
 import os
-import warnings
 from typing import Optional
 from ..get_api_key import _get_api_key, _get_implementation_name
-from ..constants import (
-    API_KEY_ENV,
-    IMPLEMENTATION_ID_ENV,
-    LOG_TO_SERVER_ENV,
-    IMPLEMENTATION_ID_NAME,
-)
+from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
 from abc import abstractmethod
 from ..client import Client
 from ..utils import softmax
