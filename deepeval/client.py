@@ -3,6 +3,7 @@
 import os
 import getpass
 from .api import Api
+from .get_api_key import _get_api_key
 from typing import Optional, List, Dict
 
 
@@ -12,13 +13,8 @@ class Client(Api):
     _implementation_id: Dict[str, str] = {}
 
     def __init__(self, api_key: str = None, local_mode: bool = False, **kwargs):
-        if api_key is None:
-            if "CONFIDENT_AI_API_KEY" not in os.environ:
-                api_key = getpass.getpass(
-                    "Grab your API key from https://app.confident-ai.com"
-                )
-            else:
-                api_key = os.environ["CONFIDENT_AI_API_KEY"]
+        if api_key is None or api_key == "":
+            api_key = _get_api_key()
         self.api_key = api_key
         self.local_mode = local_mode
         if self.local_mode:
