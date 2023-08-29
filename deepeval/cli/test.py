@@ -92,8 +92,8 @@ def run(test_file_or_directory: str, exit_on_first_failure: bool = False):
 
 
 @app.command()
-def generate(sample_file: str = "test_sample.py"):
-    with open(sample_file, "w") as f:
+def generate(output_file: str = "test_sample.py"):
+    with open(output_file, "w") as f:
         f.write(
             """from deepeval.metrics.overall_score import assert_overall_score
 
@@ -142,7 +142,7 @@ def test_4():
 """
         )
 
-    print(f"✨ Done! Now run: [bold]deepeval test run {sample_file}[/bold]")
+    print(f"✨ Done! Now run: [bold]deepeval test run {output_file}[/bold]")
     print(
         "You can generate more tests in the future in our documentation at https://docs.confident-ai.com/docs"
     )
