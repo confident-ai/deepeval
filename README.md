@@ -18,15 +18,17 @@ Join our discord: https://discord.gg/a3K9c8GRGt
 
 ## Why DeepEval?
 
-Deepeval aims to make writing tests for LLM applications (such as RAG) as easy as writing Python unit tests.
+Our motivation behind this is to streamline the testing process behind Language Learning Model (LLM) applications such as Retrieval Augmented Generation (RAG). We intend to accomplish this by making the process of writing tests as straightforward as authoring unit tests in Python.
 
-For any Python developer building production-grade apps, it is common to set up PyTest as the default testing suite as it provides a clean interface to quickly write tests.
+Any seasoned Python developer knows the importance of having something like PyTest, a default testing suite renown for its clean, user-friendly interface that makes test-writing an efficient and hassle-free task. Yet, when we transition from traditional software development to the realm of Machine Learning (ML), this streamlined process becomes, perhaps surprisingly, a rarity.
 
-However, it is often uncommon for many machine learning engineers as their feedback is often in the form of an evaluation loss.
+In the ML world, feedback often ends up being in the raw form of an evaluation loss, which deviates a bit from the structured way that feedback is usually consumed in software development.
 
-With the advent of agents, LLMs and AI, there is yet to be a tool that can provide software-like tooling and abstractions for machine learning engineers where the feedback loop of these iterations can be significantly reduced.
+As we see a rising tide in the deployment of agents, LLMs, and AI, an unfulfilled necessity emerges: a tool that can extend the same, familiar abstractions and tooling found in general software development to the ML engineers. The aim? Facilitate a more rapid feedback loop that expedite iterative improvements.
 
-It is therefore important then to build a new type of testing framework for LLMs to ensure engineers can keep iterating on their prompts, agents and LLMs while being able to continuously add to their test suite.
+A lacuna such as this in the ML landscape underscores the importance of establishing a novel type of testing framework specifically tailored for LLMs. This will ensure engineers can keep evolving their prompts, agents, and LLMs, all the while continually adding new items to their test suite.
+
+DeepEval – your tool for easy and efficient LLM testing. Time to revolutionize how we write, run, automate and manage our LLM tests!
 
 Introducing DeepEval.
 
