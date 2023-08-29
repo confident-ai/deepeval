@@ -36,6 +36,8 @@ Introducing DeepEval.
 pip install deepeval
 ```
 
+Watch a Youtube video on how to get started here: [Get started in under 1 minute](http://www.youtube.com/watch?v=05uoNgZpnzM)
+
 # QuickStart
 
 ![CLI Reveal](docs/assets/deepeval-cli-reveal.png)
