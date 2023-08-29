@@ -1,6 +1,4 @@
 # Sample Metric for BLEU
-import nltk
-from nltk.util import ngrams
 import numpy as np
 from .metric import Metric
 
@@ -20,6 +18,9 @@ class BLEUMetric(Metric):
         :param weights: Weights for the n-gram precisions, default is uniform (0.25 for each).
         :return: BLEU score.
         """
+        import nltk
+        from nltk.util import ngrams
+
         candidate = (
             candidate.split()
         )  # Convert the candidate string to a list of tokens
