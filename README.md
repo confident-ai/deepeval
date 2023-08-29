@@ -46,10 +46,14 @@ pip install deepeval
 # Optional - if you want a web UI
 deepeval login
 # Run a sample test
-deepeval test sample
+deepeval login
+# Generate a sample test file
+deepeval test generate --output-file test_sample.py
+# Run this test
+deepeval test run test_sample.py
 ```
 
-```python
+```bash
 deepeval test run tests/test_sample.py
 ```
 
@@ -132,6 +136,8 @@ class LengthMetric(Metric):
         return "Length"
 
 metric = LengthMetric()
+score = metric.measure("this is a test")
+assert metric.is_successful()
 ```
 
 ## Integrate tightly with LangChain
