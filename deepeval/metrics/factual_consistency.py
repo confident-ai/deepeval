@@ -1,4 +1,3 @@
-from sentence_transformers import CrossEncoder
 from ..singleton import Singleton
 from ..utils import softmax, chunk_text
 from .metric import Metric
@@ -11,6 +10,8 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         model_name: str = "cross-encoder/nli-deberta-v3-large",
     ):
         # We use a smple cross encoder model
+        from sentence_transformers import CrossEncoder
+
         self.model = CrossEncoder(model_name)
         self.minimum_score = minimum_score
 

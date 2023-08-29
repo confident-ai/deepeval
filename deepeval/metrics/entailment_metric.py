@@ -1,4 +1,3 @@
-from sentence_transformers import CrossEncoder
 from ..utils import softmax
 from ..singleton import Singleton
 from .metric import Metric
@@ -11,6 +10,8 @@ class EntailmentScoreMetric(Metric, metaclass=Singleton):
         model_name: str = "cross-encoder/nli-deberta-base",
     ):
         # We use a smple cross encoder model
+        from sentence_transformers import CrossEncoder
+
         self.model = CrossEncoder(model_name)
         self.minimum_score = minimum_score
 
