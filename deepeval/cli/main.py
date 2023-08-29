@@ -34,13 +34,15 @@ def login(
     if api_key == "":
         api_key = KEY_FILE_HANDLER.fetch_api_key()
         api_key = typer.prompt(
-            text="Paste it here (Hit enter if default is right) ",
+            text="Paste it here (Hit enter if default is right)",
             default=api_key,
         )
     KEY_FILE_HANDLER.write_api_key(api_key)
     client = Api(api_key=api_key)
     if project_name == "":
         project_name = KEY_FILE_HANDLER.fetch_implementation_name()
+        if project_name is None or project_name == "":
+            project_name = "example"
         print("What is the name of your project?")
         project_name = typer.prompt(
             text="Name (Hit enter if default is right):",

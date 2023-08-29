@@ -1,6 +1,7 @@
 import os
 import warnings
 from typing import Optional
+from ..get_api_key import _get_api_key
 from ..constants import (
     API_KEY_ENV,
     IMPLEMENTATION_ID_ENV,
@@ -37,12 +38,14 @@ class Metric(metaclass=Singleton):
         raise NotImplementedError
 
     def _is_api_key_set(self):
-        result = os.getenv(API_KEY_ENV) is not None
-        if result is False:
-            warnings.warn(
-                """API key is not set. Please set it by visiting https://app.confident-ai.com"""
-            )
-        return result
+        result = _get_api_key()
+        # if result == "" or result is None:
+        #     warnings.warn(
+        #         """API key is not set - you won't be able to log to the DeepEval dashboard. Please set it by running `deepeval login`"""
+        #     )
+        if result == "" or result is None:
+            return False
+        return True
 
     def _is_send_okay(self):
         # DOing this until the API endpoint is fixed
