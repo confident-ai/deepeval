@@ -51,7 +51,7 @@ def login(
     KEY_FILE_HANDLER.write_data(IMPLEMENTATION_ID_NAME, project_name)
     print("Success! :raising_hands:")
     print(
-        "If you are new to DeepEval, try generate a sample test: [bold]deepeval test generate --output_file test_sample.py[/bold]"
+        "If you are new to DeepEval, try generate a sample test: [bold]deepeval test generate --output-file test_sample.py[/bold]"
     )
     print("Run a sample test: [bold]deepeval test run test_sample.py[/bold]")
 
