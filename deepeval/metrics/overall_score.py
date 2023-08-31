@@ -27,26 +27,26 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
 
     def measure(
         self,
-        query: Optional[str] = None,
-        output: Optional[str] = None,
-        expected_output: Optional[str] = None,
-        context: Optional[str] = None,
+        query: str = "-",
+        output: str = "-",
+        expected_output: str = "-",
+        context: str = "-",
     ) -> float:
         metadata = {}
-        if context is not None:
+        if context != "-":
             factual_consistency_score = self.factual_consistency_metric.measure(
                 context=context,
                 output=output,
             )
             metadata["factual_consistency"] = float(factual_consistency_score)
 
-        if query is not None:
+        if query != "-":
             answer_relevancy_score = self.answer_relevancy.measure(
                 query=query, output=output
             )
             metadata["answer_relevancy"] = float(answer_relevancy_score)
 
-        if expected_output is not None:
+        if expected_output != "-":
             conceptual_similarity_score = self.conceptual_similarity_metric.measure(
                 expected_output, output
             )
