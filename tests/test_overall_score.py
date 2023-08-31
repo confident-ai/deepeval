@@ -96,6 +96,37 @@ def test_overall_score_metric():
     assert_viable_score(score)
 
 
+def test_overall_score_metric_no_query():
+    metric = OverallScoreMetric()
+    score = metric.measure(
+        output=output,
+        expected_output=expected_output,
+        context=context,
+    )
+    assert metric.is_successful(), "Overall score metric not working"
+    assert_viable_score(score)
+
+
+def test_overall_score_metric_no_query_no_context():
+    metric = OverallScoreMetric()
+    score = metric.measure(
+        output=output,
+        expected_output=expected_output,
+    )
+    assert metric.is_successful(), "Overall score metric not working"
+    assert_viable_score(score)
+
+
+def test_overall_score_metric_no_context_no_expected_output():
+    metric = OverallScoreMetric()
+    score = metric.measure(
+        query=query,
+        output=output,
+    )
+    assert metric.is_successful(), "Overall score metric not working"
+    assert_viable_score(score)
+
+
 def test_implementation_inside_overall():
     imps = client.list_implementations()
     FOUND = False
