@@ -6,6 +6,7 @@ on:
 jobs:
   create-pip-link-comment:
     runs-on: ubuntu-latest
+    permissions: write-all
     name: pip link
     steps:
       - name: Checkout code
@@ -21,5 +22,5 @@ jobs:
             Thanks for the PR! Going to review and merge soon 😉
             Just before that though can you please test the installation with the command below? 😎
             ```
-            pip install git+https://github.com/RelevanceAI/relevance-workflows-core.git@${{ github.head_ref }}
+            pip install git+https://github.com/confident-ai/deepeval.git@${{ github.head_ref }}
             ```

@@ -1,6 +1,14 @@
 # Answer Relevancy
 
-For question-answering applications, we provide a simple interface for ensuring question-answering relevancy.
+We provide a simple interface for ensuring question-answering relevancy powered by the cosine similarity between bi-encoder QA models. This is important when you have ground truths and LLM outputs and you want to make sure they have the same concepts. 
+
+For example - when asked:
+
+How big is this apple?
+- 12 square feet
+- The size of an orange
+
+While they are both relevant and may not be hallucinating - it's important to note that they are conceptually different ways of answering.
 
 ## Assert Answer Relevancy
 
