@@ -1,13 +1,15 @@
 # Auto-Evaluation
 
+## Introduction
+
 Auto-evaluation is useful:
 
 - When there isn't much data or any data to start with for evaluating langchain pipelines
-- When getting an eyeball check of current performance is done very quickly
+- When getting an eyeball check of current performance is required to be done very quickly
 
 Generating synthetic queries allows you to quickly evaluate the queries related to your prompts.
 
-We help developers get up and running with example queries from just raw text based on OpenAI's model. In this model, we generate query-answer pairs based on teh text.
+We help developers get up and running with example queries from just raw text based on OpenAI's model. In this model, we generate query-answer pairs based on the text.
 
 ```python
 # Loads the synthetic query model to generate them based on data you get.
