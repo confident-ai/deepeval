@@ -2,6 +2,7 @@
 """
 import json
 import random
+import time
 from tabulate import tabulate
 from datetime import datetime
 from typing import List, Callable
@@ -237,7 +238,6 @@ def create_evaluation_dataset_from_raw_text(text: str, output_fn: str = "output.
 
     # NOTE: loading this may take a while as the model used is quite big
     gen = BEIRQueryGenerator()
-    text = "Synthetic queries are useful for scenraios where there is no data."
     queries = gen.generate_queries(texts=[text], num_queries=2)
     test_cases = []
     with open(output_fn, "w") as f:
@@ -245,6 +245,69 @@ def create_evaluation_dataset_from_raw_text(text: str, output_fn: str = "output.
         for query in queries:
             f.write(f"{query}, {text}\n")
         test_case = TestCase(query=text, expected_output=text)
+        test_cases.append(test_case)
+
+    dataset = EvaluationDataset(test_cases=test_cases)
+    return dataset
+
+
+def make_chat_completion_request(prompt: str, openai_api_key: str):
+    import openai
+
+    openai.api_key = openai_api_key
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt},
+        ],
+    )
+    return response.choices[0].message.content
+
+
+def generate_chatgpt_output(prompt: str, openai_api_key: str) -> str:
+    max_retries = 3
+    retry_delay = 1
+    for attempt in range(max_retries):
+        try:
+            expected_output = make_chat_completion_request(
+                prompt=prompt, openai_api_key=openai_api_key
+            )
+            break
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            if attempt < max_retries - 1:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+            else:
+                raise
+
+    return expected_output
+
+
+def create_evaluation_query_output_pairs(
+    openai_api_key: str, context: str, n: int = 3, model: str = "openai/gpt-3.5-turbo"
+) -> EvaluationDataset:
+    """Utility function to create an evaluation dataset using GPT."""
+    prompt = f"""You are generating {n} sets of of query-answer pairs to create an evaluation dataset based on the below context.
+Context: {context}
+
+Respond in JSON format in 1 single line without white spaces an array of JSON with the keys `query` and `answer`.
+"""
+    for _ in range(3):
+        try:
+            responses = generate_chatgpt_output(prompt, openai_api_key=openai_api_key)
+            responses = json.loads(responses)
+            break
+        except Exception as e:
+            return EvaluationDataset(test_cases=[])
+
+    test_cases = []
+    for response in responses:
+        test_case = TestCase(
+            query=response["query"], expected_output=response["answer"]
+        )
         test_cases.append(test_case)
 
     dataset = EvaluationDataset(test_cases=test_cases)
