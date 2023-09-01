@@ -1,3 +1,7 @@
+import pytest
+import os
+
+
 def test_evaluation_dataset():
     from deepeval.dataset import EvaluationDataset
 
@@ -20,3 +24,18 @@ def test_evaluation_dataset():
         expected_output_column="expected_output",
         id_column="id",
     )
+
+
+@pytest.mark.skip(reason="OpenAI costs")
+def test_create_synthetic_dataset():
+    """
+    test for creating a synthetic dataset
+    """
+    from deepeval.dataset import create_evaluation_query_output_pairs
+
+    dataset = create_evaluation_query_output_pairs(
+        openai_api_key=os.environ["OPENAI_API_KEY"],
+        context="FastAPI is a modern, fast (high-performance), web framework for building APIs with Python 3.7+ based on standard Python type hints.",
+        n=1,
+    )
+    assert len(dataset) == 1
