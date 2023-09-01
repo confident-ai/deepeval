@@ -2,10 +2,7 @@
 
 ## Introduction
 
-Auto-evaluation is useful:
-
-- When there isn't much data or any data to start with for evaluating langchain pipelines
-- When getting an eyeball check of current performance is required to be done very quickly
+Auto-evaluation is useful when there isn't much data or any data to start with for evaluating langchain pipelines
 
 Generating synthetic queries allows you to quickly evaluate the queries related to your prompts.
 
