@@ -10,7 +10,6 @@ from .test_case import TestCase
 from .metrics.metric import Metric
 from .query_generator import BEIRQueryGenerator
 from .retry import retry
-import openai
 
 
 class EvaluationDataset(UserList):
@@ -250,28 +249,34 @@ def create_evaluation_dataset_from_raw_text(text: str, output_fn: str = "output.
     dataset = EvaluationDataset(test_cases=test_cases)
     return dataset
 
-def create_evaluation_query_output_pairs(text: str, n:int = 3):
+
+def create_evaluation_query_output_pairs(
+    openai_api_key: str,
+    text: str,
+    n: int = 3,
+    temperature: float = 0.2,
+):
     """Utility function to create an evaluation dataset using GPT."""
+    import openai
 
-    prompt = f"""
-        Please generate {n} queries that may lead to the following text as an output. Ensure diversity in the generated queries.
+    openai.api_key = openai_api_key
+    prompt = f"""Please generate {n} queries that may lead to the following text as an output. 
+Add diversity in the generated queries.
 
-        {text}        
-    """
+{text}"""
 
     queries = openai.Completion.create(
         engine="gpt-3.5-turbo",
         prompt=prompt,
-        temperature=0,
+        # Minimize creativity to avoid hallucination
+        temperature=temperature,
     )
 
     test_cases = []
     for query_choice in queries.choices:
-        generated_query = query_choice.message['content']
+        generated_query = query_choice.message["content"]
         test_case = TestCase(query=generated_query, expected_output=text)
         test_cases.append(test_case)
-    
+
     dataset = EvaluationDataset(test_cases=test_cases)
     return dataset
-
-        
