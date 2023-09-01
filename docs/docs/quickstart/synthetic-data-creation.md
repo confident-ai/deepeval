@@ -22,9 +22,11 @@ Once you have created your evaluation dataset, we recommend saving it.
 dataset.to_csv("sample.csv")
 ```
 
-## Running test cases.
+## Running tests/evaluation
 
-Once you have defined a number of test cases, you can easily run it in bulk if required.
+Once you have defined a number of test cases, you can easily run it in bulk if required. 
+
+If there are errors - this function will error.
 
 ```python
 # test_bulk_runner.py
