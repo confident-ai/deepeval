@@ -1,6 +1,6 @@
-# Create Synthetic Data
+# Auto-Evaluation
 
-## Problem synthetic data creation solves
+Auto-evaluation is useful:
 
 - When there isn't much data or any data to start with for evaluating langchain pipelines
 - When getting an eyeball check of current performance is done very quickly
