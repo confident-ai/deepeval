@@ -1,15 +1,17 @@
 # Overall Score
 
-Alert score checks if a generated output is good or bad. It automatically checks for:
+Overall score checks if a generated output is good or bad. It automatically checks for:
 
-- Factual consistency
-- Answer relevancy
+- Factual consistency (Test for factual consistency)
+- Answer relevancy (Ensure the answer is relevant)
+- Conceptual similarity (Know when queries are conceptually similar)
 
 It then takes the mean of these scores.
 
 ## Assert Alert Score
 
 ```python
+# You can test for overall score based on the following:
 from deepeval.metrics.overall_score import assert_overall_score
 assert_overall_score(
     query="Who won the FIFA World Cup in 2018?",
