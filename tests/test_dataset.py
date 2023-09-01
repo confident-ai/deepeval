@@ -24,6 +24,7 @@ def test_evaluation_dataset():
         expected_output_column="expected_output",
         id_column="id",
     )
+    assert len(dataset) == 5
 
 
 @pytest.mark.skip(reason="OpenAI costs")
