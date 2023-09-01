@@ -16,6 +16,12 @@ from deepeval.dataset import create_evaluation_query_output_pairs
 dataset = create_evaluation_query_output_pairs("Python is a great language for mathematical expression and machine learning.")
 ```
 
+Once you have created your evaluation dataset, we recommend saving it.
+
+```python
+dataset.to_csv("sample.csv")
+```
+
 ## Running test cases.
 
 Once you have defined a number of test cases, you can easily run it in bulk if required.
