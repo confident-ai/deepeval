@@ -8,7 +8,9 @@ Overall score checks if a generated output is good or bad. It automatically chec
 
 It then takes the mean of these scores.
 
-## Assert Alert Score
+## Assert Overall Score Is Above Threshold
+
+For the overall score, the only required argument is `output` and the overall score will be calculated on as many of the above metrics as possible based on what is provided.
 
 ```python
 # You can test for overall score based on the following:
