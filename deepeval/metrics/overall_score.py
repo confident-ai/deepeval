@@ -1,5 +1,6 @@
 """Overall Score
 """
+from typing import Optional
 from .metric import Metric
 from .factual_consistency import FactualConsistencyMetric
 from .answer_relevancy import AnswerRelevancy
@@ -25,32 +26,35 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
         return score
 
     def measure(
-        self, query: str, output: str, expected_output: str, context: str
+        self,
+        query: str = "-",
+        output: str = "-",
+        expected_output: str = "-",
+        context: str = "-",
     ) -> float:
-        factual_consistency_score = self.factual_consistency_metric.measure(
-            context=context,
-            output=output,
-        )
+        metadata = {}
+        if context != "-":
+            factual_consistency_score = self.factual_consistency_metric.measure(
+                context=context,
+                output=output,
+            )
+            metadata["factual_consistency"] = float(factual_consistency_score)
 
-        answer_relevancy_score = self.answer_relevancy.measure(
-            query=query, output=output
-        )
+        if query != "-":
+            answer_relevancy_score = self.answer_relevancy.measure(
+                query=query, output=output
+            )
+            metadata["answer_relevancy"] = float(answer_relevancy_score)
 
-        conceptual_similarity_score = self.conceptual_similarity_metric.measure(
-            expected_output, output
-        )
+        if expected_output != "-":
+            conceptual_similarity_score = self.conceptual_similarity_metric.measure(
+                expected_output, output
+            )
+            metadata["conceptual_similarity"] = float(conceptual_similarity_score)
 
-        overall_score = (
-            +0.33 * factual_consistency_score
-            + 0.33 * answer_relevancy_score
-            + 0.33 * conceptual_similarity_score
-        )
+        overall_score = sum(metadata.values()) / len(metadata)
+
         self.success = bool(overall_score > self.minimum_score)
-        metadata = {
-            "factual_consistency": float(factual_consistency_score),
-            "answer_relevancy": float(answer_relevancy_score),
-            "conceptual_similarity_score": float(conceptual_similarity_score),
-        }
         print({"scores": metadata})
         self.log(
             success=self.success,
@@ -58,7 +62,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
             metric_name=self.__name__,
             query=query,
             output=output,
-            expected_output=output,
+            expected_output=expected_output,
             metadata=metadata,
         )
         return overall_score
