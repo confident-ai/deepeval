@@ -1,10 +1,11 @@
 import numpy as np
 from .metric import Metric
-from sentence_transformers import SentenceTransformer, util
 
 
 class AnswerRelevancy(Metric):
     def __init__(self, minimum_score: bool = 0.5):
+        from sentence_transformers import SentenceTransformer, util
+
         self.minimum_score = minimum_score
 
         # Load the model
