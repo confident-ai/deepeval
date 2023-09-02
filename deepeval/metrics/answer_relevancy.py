@@ -39,6 +39,14 @@ class AnswerRelevancy(Metric):
         scores = util.dot_score(query_emb, doc_emb)[0].cpu().tolist()
         score = scores[0]
         self.success = score > self.minimum_score
+        # Log answer relevancy
+        self.log(
+            success=self.success,
+            score=score,
+            metric_name=self.__name__,
+            query=query,
+            output=output,
+        )
         return score
 
     def is_successful(self) -> bool:
