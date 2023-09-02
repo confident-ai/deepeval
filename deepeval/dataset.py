@@ -286,7 +286,7 @@ def generate_chatgpt_output(prompt: str, openai_api_key: str) -> str:
     return expected_output
 
 
-def create_evaluation_query_output_pairs(
+def create_evaluation_query_answer_pairs(
     openai_api_key: str, context: str, n: int = 3, model: str = "openai/gpt-3.5-turbo"
 ) -> EvaluationDataset:
     """Utility function to create an evaluation dataset using GPT."""
