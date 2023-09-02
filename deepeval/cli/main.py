@@ -30,7 +30,9 @@ def login(
 ):
     """Login to the DeepEval platform."""
     print("Welcome to [bold]DeepEval[/bold]!")
-    print("Grab your API key here: https://app.confident-ai.com/")
+    print(
+        "Grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
+    )
     if api_key == "":
         api_key = KEY_FILE_HANDLER.fetch_api_key()
         api_key = typer.prompt(
