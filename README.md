@@ -165,12 +165,21 @@ Set up a simple dashboard in just 1 line of code. You can read more about how to
 
 Our up-coming roadmap:
 
-- [ ] Integration with LlamaIndex
 - [ ] Project View To Web UI
 - [ ] Integration with HumanEval
 - [ ] Integration with Microsoft Guidance
-- [ ] Integration
 
 # Authors
 
-Built by the Confident AI Team. For any questions/business enquiries - please contact jacky@twilix.io.
+Built by the Confident AI Team. For any questions/business enquiries - please contact jacky@confident-ai.com
+
+# Citation
+
+@misc{embedchain,
+  author = {Jacky Wong},
+  title = {DeepEval: Framework to unit test LLMS},
+  year = {2023},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/confident-ai/deepeval}},
+}
