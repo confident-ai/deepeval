@@ -56,15 +56,17 @@ const sidebars = {
       label: 'Metrics',
       items: [
         'quickstart/custom-metrics',
-        'metrics/entailment', 'metrics/bertscore']
+        // 'metrics/entailment',
+        // 'metrics/bertscore'
+      ]
     },
     {
       type: "category",
       label: "Tutorials",
       items: [
-      "tutorials/evaluating-llamaindex",
+        "tutorials/evaluating-llamaindex",
         // "tutorials/evaluating-langchain",
-    ]
+      ]
     },
     {
       type: "category",
