@@ -27,6 +27,8 @@ class AnswerRelevancy(Metric):
         return score
 
     def measure(self, query, output: str) -> float:
+        from sentence_transformers import util
+
         docs = [output]
 
         # Encode query and documents
