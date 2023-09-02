@@ -9,8 +9,8 @@ We help developers get up and running with example queries from just raw text ba
 ```python
 # Loads the synthetic query model to generate them based on data you get.
 # These automatically create synthetic queries and adds them to our online database
-from deepeval.dataset import create_evaluation_query_output_pairs
-dataset = create_evaluation_query_output_pairs("Python is a great language for mathematical expression and machine learning.")
+from deepeval.dataset import create_evaluation_query_answer_pairs
+dataset = create_evaluation_query_answer_pairs("Python is a great language for mathematical expression and machine learning.")
 ```
 
 Once you have created your evaluation dataset, we recommend saving it.

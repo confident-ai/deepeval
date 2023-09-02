@@ -32,9 +32,9 @@ def test_create_synthetic_dataset():
     """
     test for creating a synthetic dataset
     """
-    from deepeval.dataset import create_evaluation_query_output_pairs
+    from deepeval.dataset import create_evaluation_query_answer_pairs
 
-    dataset = create_evaluation_query_output_pairs(
+    dataset = create_evaluation_query_answer_pairs(
         openai_api_key=os.environ["OPENAI_API_KEY"],
         context="FastAPI is a modern, fast (high-performance), web framework for building APIs with Python 3.7+ based on standard Python type hints.",
         n=1,
