@@ -2,11 +2,15 @@
 
 Asserting for conceptual similarity allows developers to ensure that the expected answer and the generated answer are similar in terms of what is mentioned (even if the overall message can vary quite a bit.)
 
-## What is it?
+## How This Differs From Answer Relevancy
 
-- Neural network embeddings are designed to represent the semantic meaning of words or concepts in a continuous vector space. These embeddings aim to capture the relationships and similarities between words or concepts based on their intrinsic properties.
-- Techniques like word2vec, GloVe, and BERT embeddings are trained to learn the meaning and relationships between words or concepts from large text corpora. They excel at capturing the underlying semantics and conceptual associations between words.
-- These embeddings are often used in various natural language processing (NLP) tasks like word similarity, text classification, and sentiment analysis, where understanding the meaning and similarity of words or concepts is crucial.
+For example - when asked:
+
+How big is this apple?
+- 12 square feet
+- The size of an orange
+
+While they are both relevant and may not be hallucinating - it's important to note that they are conceptually different ways of answering.
 
 ## Assert Conceptual Similarity
 
