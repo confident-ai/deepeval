@@ -95,6 +95,7 @@ class Metric(metaclass=Singleton):
         expected_output: str = "-",
         success: Optional[bool] = None,
         metadata: Optional[dict] = None,
+        context: str = "-",
         **kwargs
     ):
         if self._is_send_okay():
@@ -107,8 +108,7 @@ class Metric(metaclass=Singleton):
             )
             os.environ[IMPLEMENTATION_ID_ENV] = implementation_id
             datapoint_id = client.add_golden(
-                query=query,
-                expected_output=expected_output,
+                query=query, expected_output=expected_output, context=context
             )
             if success is None:
                 success = bool(self.is_successful())
