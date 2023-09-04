@@ -39,6 +39,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
             metric_name="Factual Consistency",
             output=output,
             expected_output=context,
+            context=context,
         )
         return max_score
 

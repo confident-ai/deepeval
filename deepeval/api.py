@@ -8,6 +8,7 @@ from requests.adapters import HTTPAdapter, Response, Retry
 from .key_handler import KEY_FILE_HANDLER
 
 API_BASE_URL = "https://app.confident-ai.com/api"
+# API_BASE_URL = "http://localhost:3000/api"
 
 # Parameters for HTTP retry
 HTTP_TOTAL_RETRIES = 3  # Number of total retries
@@ -284,12 +285,19 @@ class Api:
             },
         )
 
-    def add_golden(self, query: str, expected_output: str, is_synthetic: bool = False):
+    def add_golden(
+        self,
+        query: str = "-",
+        expected_output: str = "-",
+        context: str = "-",
+        is_synthetic: bool = False,
+    ):
         return self.post_request(
-            endpoint="/v1/golden",
+            endpoint="v1/golden",
             body={
                 "query": query,
                 "expectedOutput": expected_output,
+                "context": context,
                 "isSynthetic": is_synthetic,
             },
         )
