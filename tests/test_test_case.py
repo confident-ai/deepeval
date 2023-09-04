@@ -10,7 +10,7 @@ def api():
     return Api()
 
 
-@pytest.mark.skip(reason="Test for golden insertion")
+@pytest.mark.skip(reason="skip")
 def test_add_golden(api: Api):
     # Test case data
     query = "SELECT * FROM table"
