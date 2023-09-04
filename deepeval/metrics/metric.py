@@ -67,6 +67,7 @@ class Metric(metaclass=Singleton):
         output: str = "-",
         expected_output: str = "-",
         metadata: Optional[dict] = None,
+        context: str = "-",
     ):
         """Log to the server.
 
@@ -84,6 +85,7 @@ class Metric(metaclass=Singleton):
                 expected_output=expected_output,
                 success=success,
                 metadata=metadata,
+                context=context,
             )
 
     def _send_to_server(
@@ -99,7 +101,8 @@ class Metric(metaclass=Singleton):
         **kwargs
     ):
         if self._is_send_okay():
-            client = Client(api_key=os.getenv(API_KEY_ENV))
+            api_key = _get_api_key()
+            client = Client(api_key=api_key)
             implementation_name = _get_implementation_name()
             # implementation_id = os.getenv(IMPLEMENTATION_ID_ENV, "")
             # if implementation_id != "":

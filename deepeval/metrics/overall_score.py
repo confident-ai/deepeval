@@ -55,7 +55,6 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
         overall_score = sum(metadata.values()) / len(metadata)
 
         self.success = bool(overall_score > self.minimum_score)
-        print({"scores": metadata})
         self.log(
             success=self.success,
             score=overall_score,
@@ -64,6 +63,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
             output=output,
             expected_output=expected_output,
             metadata=metadata,
+            context=context,
         )
         return overall_score
 
