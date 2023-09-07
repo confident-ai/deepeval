@@ -60,5 +60,5 @@ def test_0():
 
 ## What next?
 
-We recommend diving into ![creating a dataset](../quickstart/dataset.md) or ![defining custom metrics](../quickstart/custom-metrics.md) next.
+We recommend diving into [creating a dataset](dataset) or [defining custom metrics](../quickstart/custom-metrics) next.
 
