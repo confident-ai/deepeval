@@ -1,60 +1,29 @@
-# Write a simple test case
+# QuickStart
 
-If you are interested in running a quick Colab example, you can [click here](https://colab.research.google.com/drive/1Lfq5geYsvfVoquDqv84UkWS57SdAHm30?usp=sharing).
+Once you have installed, run the login command. During this step, you will be asked to visit https://app.confident-ai.com to grab your API key.
 
-You can write a simple test case as simply as:
-
-```bash
-deepeval test generate test_sample.py
-```
-
-```python
-import os
-import openai
-from deepeval.metrics.factual_consistency import assert_factual_consistency
-
-openai.api_key = "sk-XXX"
-
-# Write a sample ChatGPT function
-def generate_chatgpt_output(query: str):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "assistant", "content": "The customer success phone line is 1200-231-231 and the customer success state is in Austin."},
-            {"role": "user", "content": query}
-        ]
-    )
-    llm_output = response.choices[0].message.content
-    return llm_output
-
-def test_factual_consistency():
-    query = "What is the customer success phone line?"
-    context = "Our customer success phone line is 1200-231-231."
-    output = generate_chatgpt_output(query)
-    assert_factual_consistency(output, context)
-
-# Just run the following code in Python if required
-test_factual_consistency()
-```
-
-### Running it in Pytest
-
-To run this in Pytest, just run:
-
-```python
-# sample.py
-
-def test_factual_consistency():
-    query = "What is the customer success phone line?"
-    context = "Our customer success phone line is 1200-231-231."
-    output = generate_chatgpt_output(query)
-    assert_factual_consistency(output, context)
-```
-
-You can then run it in CLI using:
+Note: this step is entirely optional if you do not wish to track your results but we highly recommend it so you can view how results differ over time.
 
 ```bash
-deepeval test run sample.py
-# If you want to stay with pytest instead
+deepeval login
+
+# If you already have an API key
+deepeval login --api-key $API_KEY
 ```
+
+Once you have logged in, you can generate a sample test file as shown below. This test file allows you to quickly get started modifying it with various tests. (More on this later)
+
+```bash
+deepeval test generate --output-file test_sample.py
+```
+
+Once you have generated the test file, you can then run tests as shown.
+
+```bash
+deepeval test run test_sample.py
+```
+
+## About the sample test file 
+
+The sample test file that you have generated is highly important.
+
