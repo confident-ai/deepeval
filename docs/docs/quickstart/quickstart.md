@@ -27,11 +27,23 @@ deepeval test run -x test_sample.py
 deepeval test run --pdb test_sample.py
 ```
 
+Under the hood, it triggers pytest and offers support for a number of pytest command line functionalities. Similarly, you may also trigger `pytest` natively for these tests such as 
+
+```bash
+pytest test_sample.py
+```
+
+Once you run the tests, you should be able to see a dashboard similar to the one below.
+
+![Dashboard Example](../../assets/dashboard-screenshot.png)
+
 ## Diving Into The Example
 
 Diving into the example, it shows what a sample test looks like. It uses `assert_overall_score` to ensure that the overall score exceeds a certain threshold. We recommend experimenting with different tests to ensure that the LLMs work as intended across domains such as Bias, Answer Relevancy and Factual Consistency.
 
 With overall score, if you leave out `query` or `expected_output`, DeepEval will automatically run the relevant tests.
+
+For these tests, you will need a `test_` prefix for this to be ran in Python.
 
 ```python
 from deepeval.metrics.overall_score import assert_overall_score
@@ -45,4 +57,8 @@ def test_0():
 
     assert_overall_score(query, output, expected_output, context)
 ```
+
+## What next?
+
+We recommend diving into ![creating a dataset](../quickstart/dataset.md) or ![defining custom metrics](../quickstart/custom-metrics.md) next.
 
