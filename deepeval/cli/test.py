@@ -75,7 +75,7 @@ def check_if_legit_file(test_file: str):
 
 
 @app.command()
-def run(test_file_or_directory: str, exit_on_first_failure: bool = False):
+def run(test_file_or_directory: str, exit_on_first_failure: bool = False, **kwargs):
     """Run a test"""
     if test_file_or_directory == "sample":
         sample()
@@ -84,9 +84,9 @@ def run(test_file_or_directory: str, exit_on_first_failure: bool = False):
         )
         retcode = 0
     if exit_on_first_failure:
-        retcode = pytest.main(["-x", "-k", test_file_or_directory])
+        retcode = pytest.main(["-x", "-k", test_file_or_directory], **kwargs)
     else:
-        retcode = pytest.main(["-k", test_file_or_directory])
+        retcode = pytest.main(["-k", test_file_or_directory], **kwargs)
     print("✅ Tests finished! View results on https://app.confident-ai.com/")
     return retcode
 
