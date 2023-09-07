@@ -9,6 +9,9 @@ deepeval login
 
 # If you already have an API key and want to feed it in through CLI
 deepeval login --api-key $API_KEY
+
+# If you have project name and api key 
+deepeval login --api-key $API_KEY --project-name "sample"
 ```
 
 Once you have logged in, you can generate a sample test file as shown below. This test file allows you to quickly get started modifying it with various tests. (More on this later)
