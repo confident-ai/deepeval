@@ -75,18 +75,29 @@ def check_if_legit_file(test_file: str):
 
 
 @app.command()
-def run(test_file_or_directory: str, exit_on_first_failure: bool = False):
+def run(
+    test_file_or_directory: str,
+    exit_on_first_failure: bool = False,
+    verbose: bool = False,
+    color: str = "yes",
+    durations: int = 10,
+    pdb: bool = False,
+):
     """Run a test"""
-    if test_file_or_directory == "sample":
-        sample()
-        print(
-            "You can generate a sample test using [bold]deepeval test generate[/bold]."
-        )
-        retcode = 0
+    pytest_args = ["-k", test_file_or_directory]
     if exit_on_first_failure:
-        retcode = pytest.main(["-x", "-k", test_file_or_directory])
-    else:
-        retcode = pytest.main(["-k", test_file_or_directory])
+        pytest_args.insert(0, "-x")
+    pytest_args.extend(
+        [
+            "--verbose" if verbose else "--quiet",
+            f"--color={color}",
+            f"--durations={durations}",
+            # f"--cov={cov}",
+            # f"--cov-report={cov_report}",
+            "--pdb" if pdb else "",
+        ]
+    )
+    retcode = pytest.main(pytest_args)
     print("✅ Tests finished! View results on https://app.confident-ai.com/")
     return retcode
 

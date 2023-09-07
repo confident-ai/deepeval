@@ -2,9 +2,9 @@ import platform
 import urllib.parse
 import os
 import requests
-from .constants import API_KEY_ENV
 from typing import Any, Optional
 from requests.adapters import HTTPAdapter, Response, Retry
+from .constants import API_KEY_ENV
 from .key_handler import KEY_FILE_HANDLER
 
 API_BASE_URL = "https://app.confident-ai.com/api"

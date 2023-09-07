@@ -26,6 +26,7 @@ const sidebars = {
       label: 'QuickStart',
       items: [
         'quickstart/quickstart',
+        'quickstart/write_test_case',
         'quickstart/dataset',
         'quickstart/synthetic-data-creation',
         'quickstart/dashboard-app'
