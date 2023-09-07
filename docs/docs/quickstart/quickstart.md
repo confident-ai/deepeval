@@ -21,11 +21,17 @@ Once you have generated the test file, you can then run tests as shown.
 
 ```bash
 deepeval test run test_sample.py
+# if you wish to fail first 
+deepeval test run -x test_sample.py
+# If you want to run an interactive debugger when a test fails
+deepeval test run --pdb test_sample.py
 ```
 
 ## Diving Into The Example
 
 Diving into the example, it shows what a sample test looks like. It uses `assert_overall_score` to ensure that the overall score exceeds a certain threshold. We recommend experimenting with different tests to ensure that the LLMs work as intended across domains such as Bias, Answer Relevancy and Factual Consistency.
+
+With overall score, if you leave out `query` or `expected_output`, DeepEval will automatically run the relevant tests.
 
 ```python
 from deepeval.metrics.overall_score import assert_overall_score
