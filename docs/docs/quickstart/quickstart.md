@@ -7,7 +7,7 @@ Note: this step is entirely optional if you do not wish to track your results bu
 ```bash
 deepeval login
 
-# If you already have an API key
+# If you already have an API key and want to feed it in through CLI
 deepeval login --api-key $API_KEY
 ```
 
@@ -23,7 +23,20 @@ Once you have generated the test file, you can then run tests as shown.
 deepeval test run test_sample.py
 ```
 
-## About the sample test file 
+## Diving Into The Example
 
-The sample test file that you have generated is highly important.
+Diving into the example, it shows what a sample test looks like. It uses `assert_overall_score` to ensure that the overall score exceeds a certain threshold. We recommend experimenting with different tests to ensure that the LLMs work as intended across domains such as Bias, Answer Relevancy and Factual Consistency.
+
+```python
+from deepeval.metrics.overall_score import assert_overall_score
+
+
+def test_0():
+    query = "How does photosynthesis work?"
+    output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with the help of chlorophyll pigment."
+    expected_output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize food with the help of chlorophyll pigment."
+    context = "Biology"
+
+    assert_overall_score(query, output, expected_output, context)
+```
 
