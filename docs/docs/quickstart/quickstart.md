@@ -60,5 +60,5 @@ def test_0():
 
 ## What next?
 
-We recommend diving into [creating a dataset](dataset) or [defining custom metrics](../quickstart/custom-metrics) next.
+We recommend diving into [creating a dataset](dataset) to learn how to run tests in bulk or [defining custom metrics](../quickstart/custom-metrics) so you can support writing custom tests and metrics for your own use cases.
 
