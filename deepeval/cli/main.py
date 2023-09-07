@@ -26,7 +26,9 @@ def login(
             help="API key to get from https://app.confident-ai.com. Required if you want to log events to the server."
         ),
     ] = "",
-    project_name: Annotated[str, typer.Option(help="The name of your project")] = "",
+    implementation_name: Annotated[
+        str, typer.Option(help="The name of your project")
+    ] = "",
 ):
     """Login to the DeepEval platform."""
     print("Welcome to [bold]DeepEval[/bold]!")
@@ -41,16 +43,16 @@ def login(
         )
     KEY_FILE_HANDLER.write_api_key(api_key)
     client = Api(api_key=api_key)
-    if project_name == "":
-        project_name = KEY_FILE_HANDLER.fetch_implementation_name()
-        if project_name is None or project_name == "":
-            project_name = "example"
+    if implementation_name == "":
+        implementation_name = KEY_FILE_HANDLER.fetch_implementation_name()
+        if implementation_name is None or implementation_name == "":
+            implementation_name = "example"
         print("What is the name of your project?")
-        project_name = typer.prompt(
+        implementation_name = typer.prompt(
             text="Name (Hit enter if default is right):",
-            default=project_name,
+            default=implementation_name,
         )
-    KEY_FILE_HANDLER.write_data(IMPLEMENTATION_ID_NAME, project_name)
+    KEY_FILE_HANDLER.write_data(IMPLEMENTATION_ID_NAME, implementation_name)
     print("Success! :raising_hands:")
     print(
         "If you are new to DeepEval, try generate a sample test: [bold]deepeval test generate --output-file test_sample.py[/bold]"
