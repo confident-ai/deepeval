@@ -27,10 +27,17 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
     def measure(self, output: str, expected_output: str):
         vectors = self._vectorize(output, expected_output)
         self.score = cosine_similarity(vectors[0], vectors[1])
+        self.log(
+            success=self.is_successful(),
+            score=self.score,
+            metric_name="Conceptual Similarity With Ground Truth",
+            output=output,
+            expected_output=expected_output,
+        )
         return float(self.score)
 
     def is_successful(self) -> bool:
-        return self.score >= self.minimum_score
+        return bool(self.score >= self.minimum_score)
 
 
 def assert_conceptual_similarity(text_1: str, text_2: str, minimum_score=0.3):
