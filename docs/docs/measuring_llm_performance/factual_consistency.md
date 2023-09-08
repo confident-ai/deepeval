@@ -35,3 +35,7 @@ metric.measure(output=output, context=context)
 ### How It Is Measured
 
 Factual consistency is measured using natural language inference models based on the output score of the entailment class that compare the ground truth and the context from which the ground truth is done.
+
+Firstly, text is chopped into smaller chunks/sentences. This text and the context is then fed into the NLI model. We then take the score of the entailment as the overall factual consistency score.
+
+For those interested in further readings about measuring factual consistency, please see https://arxiv.org/pdf/2111.09525.pdf which details an approach for SUmma C.
