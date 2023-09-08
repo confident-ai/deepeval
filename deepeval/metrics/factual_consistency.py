@@ -19,7 +19,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         context_list = chunk_text(context)
         max_score = 0
         for c in context_list:
-            scores = self.model.predict([(context, output), (output, context)])
+            scores = self.model.predict([(c, output), (output, c)])
             # https://huggingface.co/cross-encoder/nli-deberta-base
             # label_mapping = ["contradiction", "entailment", "neutral"]
             softmax_scores = softmax(scores)
