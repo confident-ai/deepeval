@@ -61,6 +61,24 @@ def test_0():
     assert_overall_score(query, output, expected_output, context)
 ```
 
+## Automatically Create Tests
+
+Now we often don't want to write our own tests or at least be given a variety of queries by which we can create these tests.
+
+You can create these automatically from scratch with DeepEval.
+
+```python
+from deepeval.dataset import create_evaluation_dataset
+dataset = create_evaluation_query_answer_pairs("Python is a great language for mathematical expression and machine learning.",
+n=3)
+```
+
+This will automatically load in 3 sample queries for you. The best part? You can review them easily. If you are in a Jupyter Notebook, it will spin up as a gradio cell.
+
+```python
+dataset.review()
+```
+
 ## What next?
 
 We recommend diving into [creating a dataset](dataset) to learn how to run tests in bulk or [defining custom metrics](../quickstart/custom-metrics) so you can support writing custom tests and metrics for your own use cases.
