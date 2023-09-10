@@ -8,6 +8,7 @@
 <br>
 
 <div align="center">
+
 [![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
 
 [![PyPI version](https://badge.fury.io/py/deepeval.svg)](https://badge.fury.io/py/deepeval)<a target="_blank" href="https://colab.research.google.com/drive/1jnRUg0GHS_dTN0heijUr_88NnWiNOIFA?usp=sharing">
