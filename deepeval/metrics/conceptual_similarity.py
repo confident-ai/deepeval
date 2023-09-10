@@ -1,9 +1,10 @@
 """Asserting conceptual similarity
 """
 from typing import Optional
-from .metric import Metric
-from ..utils import cosine_similarity
+
 from ..singleton import Singleton
+from ..utils import cosine_similarity
+from .metric import Metric
 
 
 class ConceptualSimilarityMetric(Metric, metaclass=Singleton):

@@ -1,10 +1,11 @@
 """Client for Twilix Evals
 """
-import os
 import getpass
+import os
+from typing import Dict, List, Optional
+
 from .api import Api
 from .get_api_key import _get_api_key
-from typing import Optional, List, Dict
 
 
 class Client(Api):

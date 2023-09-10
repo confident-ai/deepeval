@@ -1,7 +1,7 @@
 """Alert Score
 """
-from .metric import Metric
 from .entailment_metric import EntailmentScoreMetric
+from .metric import Metric
 
 # from .answer_relevancy import AnswerRelevancyMetric
 

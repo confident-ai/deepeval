@@ -1,11 +1,12 @@
 """Overall Score
 """
 from typing import Optional
-from .metric import Metric
-from .factual_consistency import FactualConsistencyMetric
+
+from ..singleton import Singleton
 from .answer_relevancy import AnswerRelevancyMetric
 from .conceptual_similarity import ConceptualSimilarityMetric
-from ..singleton import Singleton
+from .factual_consistency import FactualConsistencyMetric
+from .metric import Metric
 
 
 class OverallScoreMetric(Metric, metaclass=Singleton):

@@ -1,7 +1,9 @@
 # Testing for ranking similarity
+from typing import Any, List, Optional, Union
+
 import numpy as np
-from typing import List, Optional, Union, Any
 from tqdm import tqdm
+
 from .metric import Metric
 
 

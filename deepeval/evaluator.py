@@ -1,14 +1,16 @@
 """Client for Twilix Evals
 """
 import asyncio
-import os
 import getpass
+import os
+from typing import Dict, List, Optional
+
 from tqdm.auto import tqdm
-from .pipeline import Pipeline
+
 from .client import Client
 from .metrics.metric import Metric
+from .pipeline import Pipeline
 from .query_generator import BEIRQueryGenerator, QueryGenerator
-from typing import Optional, List, Dict
 
 
 class Evaluator(Client):
