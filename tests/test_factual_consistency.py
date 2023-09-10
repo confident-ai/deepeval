@@ -1,7 +1,7 @@
 import os
 
 import pytest
-
+from deepeval.test_case import LLMTestCase
 from deepeval.metrics.factual_consistency import (
     FactualConsistencyMetric,
     assert_factual_consistency,
@@ -27,31 +27,31 @@ def test_factual_consistency_2():
 
 
 def test_factual_consistency_metric():
-
     metric = FactualConsistencyMetric(minimum_score=0.6)
-    result = metric.measure(
+    test_case = LLMTestCase(
         output="Python is a programming language.",
         context="Python is a high-level, versatile, and interpreted programming language known for its simplicity and readability.",
     )
+    result = metric.measure(test_case)
     assert metric.is_successful()
     assert result > 0.8, f"Failed {result}"
 
 
 def test_factual_consistency_metric_2():
-
     metric = FactualConsistencyMetric(minimum_score=0.6)
-    result = metric.measure(
+    test_case = LLMTestCase(
         output="Python is a programming language.",
         context="Python is NOT a programming language.",
     )
+    result = metric.measure(test_case)
     assert not metric.is_successful()
 
 
 def test_factual_consistency_metric_3():
-
     metric = FactualConsistencyMetric(minimum_score=0.6)
-    result = metric.measure(
+    test_case = LLMTestCase(
         output="Python is a programming language.",
         context="Python is a snake.",
     )
+    result = metric.measure(test_case)
     assert not metric.is_successful()
