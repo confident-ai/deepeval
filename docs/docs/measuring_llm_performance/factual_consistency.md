@@ -27,8 +27,10 @@ If you would instead like a score of how factually consistent the output is rela
 
 ```python
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.test_case import LLMtestCase
 metric = FactualConsistencyMetric(minimum_score=0.5)
-metric.measure(output=output, context=context)
+test_case = LLMTestCase(output=output, context=context)
+metric.measure(test_case)
 # Returns a floating point number between 0 and 1
 ```
 

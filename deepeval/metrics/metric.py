@@ -17,7 +17,7 @@ class Metric(metaclass=Singleton):
     # Measure function signature is subject to be different - not sure
     # how applicable this is - might need a better abstraction
     @abstractmethod
-    def measure(self, output, expected_output, query: Optional[str] = None):
+    def measure(self, test_case: LLMTestCase):
         raise NotImplementedError
 
     def _get_init_values(self):

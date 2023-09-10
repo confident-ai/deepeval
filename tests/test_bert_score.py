@@ -1,11 +1,13 @@
 """Test BERT score
 """
-import pytest
-
 from deepeval.metrics.bertscore_metric import BertScoreMetric
+from deepeval.test_case import LLMTestCase
 
 
 def test_bert_score():
-    scorer = BertScoreMetric()
-    score = scorer.measure("Why are you weird", "Why are you strange?")
-    assert scorer.is_successful()
+    metric = BertScoreMetric()
+    test_case = LLMTestCase(
+        output="Why are you weird", expected_output="Why are you strange?"
+    )
+    score = metric.measure(test_case)
+    assert metric.is_successful(), f"failed - {score}"
