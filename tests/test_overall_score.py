@@ -5,8 +5,10 @@ import os
 import pytest
 
 from deepeval.api import Api
-from deepeval.metrics.overall_score import (OverallScoreMetric,
-                                            assert_overall_score)
+from deepeval.metrics.overall_score import (
+    OverallScoreMetric,
+    assert_overall_score,
+)
 
 from .utils import assert_viable_score
 
