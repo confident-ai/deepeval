@@ -1,8 +1,8 @@
 """Alert Score
 """
+from ..test_case import LLMTestCase
 from .entailment_metric import EntailmentScoreMetric
 from .metric import Metric
-from ..test_case import TestCase
 
 # from .answer_relevancy import AnswerRelevancyMetric
 
@@ -13,11 +13,11 @@ class AlertScoreMetric(Metric):
         self.entailment_metric = EntailmentScoreMetric()
         # self.answer_relevancy = AnswerRelevancyMetric()
 
-    def __call__(self, output: str, expected_output: str, context: str):
-        score = self.measure(output, expected_output, context)
+    def __call__(self, test_case: LLMTestCase):
+        score = self.measure(test_case)
         return score
 
-    def measure(self, test_case: TestCase) -> float:
+    def measure(self, test_case: LLMTestCase) -> float:
         entailment_score = self.entailment_metric.measure(
             test_case.context,
             test_case.output,
@@ -63,10 +63,11 @@ def assert_alert_score(
 ):
     """Create alert score."""
     metric = AlertScoreMetric(minimum_score=minimum_score)
-    score = metric.measure(
+    test_case = LLMTestCase(
         query=query,
-        output=output,
         expected_output=expected_output,
         context=context,
+        output=output,
     )
+    score = metric.measure(test_case)
     assert metric.is_successful(), f"Found issue - Alert score: {score}"

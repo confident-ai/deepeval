@@ -2,7 +2,7 @@
 """
 
 from ..singleton import Singleton
-from ..test_case import TestCase
+from ..test_case import LLMTestCase
 from .answer_relevancy import AnswerRelevancyMetric
 from .conceptual_similarity import ConceptualSimilarityMetric
 from .factual_consistency import FactualConsistencyMetric
@@ -16,14 +16,14 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
         self.factual_consistency_metric = FactualConsistencyMetric()
         self.conceptual_similarity_metric = ConceptualSimilarityMetric()
 
-    def __call__(self, test_case: TestCase):
+    def __call__(self, test_case: LLMTestCase):
         score = self.measure(test_case=test_case)
         self.success = score > self.minimum_score
         return score
 
     def measure(
         self,
-        test_case: TestCase,
+        test_case: LLMTestCase,
     ) -> float:
         metadata = {}
         if test_case.context is not None:
@@ -40,10 +40,14 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
             metadata["answer_relevancy"] = float(answer_relevancy_score)
 
         if test_case.expected_output is not None:
-            conceptual_similarity_score = self.conceptual_similarity_metric.measure(
-                test_case.expected_output, test_case.output
+            conceptual_similarity_score = (
+                self.conceptual_similarity_metric.measure(
+                    test_case.expected_output, test_case.output
+                )
             )
-            metadata["conceptual_similarity"] = float(conceptual_similarity_score)
+            metadata["conceptual_similarity"] = float(
+                conceptual_similarity_score
+            )
 
         overall_score = sum(metadata.values()) / len(metadata)
 
@@ -82,4 +86,6 @@ def assert_overall_score(
         expected_output=expected_output,
         context=context,
     )
-    assert metric.is_successful(), f"Metric is not conceptually similar - got {score}"
+    assert (
+        metric.is_successful()
+    ), f"Metric is not conceptually similar - got {score}"

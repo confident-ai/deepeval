@@ -3,6 +3,7 @@
 
 
 import pytest
+from deepeval.test_case import LLMTestCase
 from deepeval.metrics.bias_classifier import UnBiasedMetric, assert_unbiased
 
 output = "Winners of the FIFA world cup were the French national football team"
@@ -23,5 +24,6 @@ def test_non_toxic_2():
 
 def test_non_toxic_metric():
     metric = UnBiasedMetric()
-    score = metric.measure(text=output)
+    test_case = LLMTestCase(output=output)
+    metric.measure(test_case)
     assert metric.is_successful(), "Overall score metric not working"

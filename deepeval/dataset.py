@@ -5,20 +5,20 @@ import random
 import time
 from collections import UserList
 from datetime import datetime
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional
 
 from tabulate import tabulate
 
 from deepeval.metrics.metric import Metric
 from deepeval.retry import retry
-from deepeval.test_case import TestCase
+from deepeval.test_case import LLMTestCase
 
 
 class EvaluationDataset(UserList):
     """Class for Evaluation Datasets -  which are a list of test cases"""
 
-    def __init__(self, test_cases: List[TestCase]):
-        self.data: List[TestCase] = test_cases
+    def __init__(self, test_cases: List[LLMTestCase]):
+        self.data: List[LLMTestCase] = test_cases
 
     @classmethod
     def from_csv(
@@ -36,7 +36,10 @@ class EvaluationDataset(UserList):
         df = pd.read_csv(csv_filename)
         if query_column is not None and query_column in df.columns:
             querys = df[query_column].values
-        if expected_output_column is not None and expected_output_column in df.columns:
+        if (
+            expected_output_column is not None
+            and expected_output_column in df.columns
+        ):
             expected_outputs = df[expected_output_column].values
         if context_column is not None and context_column in df.columns:
             contexts = df[context_column].values
@@ -50,7 +53,7 @@ class EvaluationDataset(UserList):
 
         for i, query_data in enumerate(querys):
             cls.data.append(
-                TestCase(
+                LLMTestCase(
                     query=query_data,
                     expected_output=expected_outputs[i],
                     metrics=metrics,
@@ -70,6 +73,8 @@ class EvaluationDataset(UserList):
         json_filename: str,
         query_column: str,
         expected_output_column: str,
+        context_column: str,
+        output_column: str,
         id_column: str = None,
         metrics: List[Metric] = None,
     ):
@@ -77,9 +82,11 @@ class EvaluationDataset(UserList):
         This is for JSON data in the format of key-value array pairs.
         {
             "query": ["What is the customer success number", "What is the customer success number"],
+            "context": ["Context 1", "Context 2"],
+            "output": ["Output 1", "Output 2"]
         }
 
-        if the JSON data is in a list of dicionaries, use from_json_list
+        if the JSON data is in a list of dictionaries, use from_json_list
         """
         with open(json_filename, "r") as f:
             data = json.load(f)
@@ -87,14 +94,16 @@ class EvaluationDataset(UserList):
 
         for i, query in enumerate(data[query_column]):
             test_cases.append(
-                TestCase(
+                LLMTestCase(
                     query=data[query_column][i],
                     expected_output=data[expected_output_column][i],
                     metrics=metrics,
-                    id=data[id_column][i],
+                    context=data[context_column][i],
+                    output=data[output_column][i],
+                    id=data[id_column][i] if id_column else None,
                 )
             )
-        return cls(data)
+        return cls(test_cases)
 
     @classmethod
     def from_json_list(
@@ -102,13 +111,15 @@ class EvaluationDataset(UserList):
         json_filename: str,
         query_column: str,
         expected_output_column: str,
+        context_column: str,
+        output_column: str,
         id_column: str = None,
         metrics: List[Metric] = None,
     ):
         """
         This is for JSON data in the format of a list of dictionaries.
         [
-            {"query": "What is the customer success number", "expected_output": "What is the customer success number"},
+            {"query": "What is the customer success number", "expected_output": "What is the customer success number", "context": "Context 1", "output": "Output 1"},
         ]
         """
         with open(json_filename, "r") as f:
@@ -116,14 +127,16 @@ class EvaluationDataset(UserList):
         test_cases = []
         for i, query in enumerate(data):
             test_cases.append(
-                TestCase(
+                LLMTestCase(
                     query=data[i][query_column],
                     expected_output=data[i][expected_output_column],
                     metrics=metrics,
-                    id=data[i][id_column],
+                    context=data[i][context_column],
+                    output=data[i][output_column],
+                    id=data[i][id_column] if id_column else None,
                 )
             )
-        return cls(data)
+        return cls(test_cases)
 
     @classmethod
     def from_dict(
@@ -131,10 +144,39 @@ class EvaluationDataset(UserList):
         data: List[dict],
         query_key: str,
         expected_output_key: str,
+        context_key: str = None,
+        output_key: str = None,
         id_key: str = None,
         metrics: List[Metric] = None,
     ):
-        pass
+        """
+        Load test cases from a list of dictionaries.
+
+        Args:
+            data (List[dict]): The list of dictionaries containing the test case data.
+            query_key (str): The key in each dictionary corresponding to the query.
+            expected_output_key (str): The key in each dictionary corresponding to the expected output.
+            context_key (str, optional): The key in each dictionary corresponding to the context. Defaults to None.
+            output_key (str, optional): The key in each dictionary corresponding to the output. Defaults to None.
+            id_key (str, optional): The key in each dictionary corresponding to the ID. Defaults to None.
+            metrics (List[Metric], optional): The list of metrics to be associated with the test cases. Defaults to None.
+
+        Returns:
+            EvaluationDataset: An instance of EvaluationDataset containing the loaded test cases.
+        """
+        test_cases = []
+        for i, case_data in enumerate(data):
+            test_cases.append(
+                LLMTestCase(
+                    query=case_data[query_key],
+                    expected_output=case_data[expected_output_key],
+                    metrics=metrics,
+                    context=case_data[context_key] if context_key else None,
+                    output=case_data[output_key] if output_key else None,
+                    id=case_data[id_key] if id_key else None,
+                )
+            )
+        return cls(test_cases)
 
     def to_dict(self):
         return [x.dict() for x in self.data]
@@ -178,17 +220,21 @@ class EvaluationDataset(UserList):
 
     def run_evaluation(
         self,
-        completion_fn: Callable,
+        completion_fn: Callable[[str], str] = None,
+        outputs: List[str] = None,
         test_filename: str = None,
         max_retries: int = 3,
         min_success: int = 1,
         raise_error_on_run: bool = False,
         metrics: List[Metric] = None,
-    ):
+    ) -> str:
         """Run evaluation with given metrics"""
-        table = []
+        if completion_fn is None:
+            assert outputs is not None
 
-        headers = [
+        table: List[List[Any]] = []
+
+        headers: List[str] = [
             "Test Passed",
             "Metric Name",
             "Score",
@@ -197,17 +243,18 @@ class EvaluationDataset(UserList):
             "Message",
         ]
         for case in self.data:
-            output = completion_fn(case.query)
+            output: str = completion_fn(case.query)
+            # Get the metrics
             if metrics is None:
                 metrics = case.metrics
             for metric in metrics:
 
                 @retry(max_retries=max_retries, min_success=min_success)
-                def assert_metric():
-                    score = metric.measure(case)
+                def assert_metric() -> None:
+                    score: float = metric.measure(case)
                     is_successful: bool = metric.is_successful()
-                    is_successful: bool = bool(is_successful)
-                    message = f"""{metric.__class__.__name__} was unsuccessful for 
+                    is_successful = bool(is_successful)
+                    message: str = f"""{metric.__class__.__name__} was unsuccessful for 
 {case.query} 
 which should have matched 
 {case.expected_output}
@@ -247,14 +294,24 @@ which should have matched
     def review(self):
         """A bulk editor for reviewing synthetic data."""
         try:
-            from dash import Dash, Input, Output, State, callback, dash_table, dcc, html
+            from dash import (
+                Dash,
+                Input,
+                Output,
+                State,
+                callback,
+                dash_table,
+                dcc,
+                html,
+            )
         except ModuleNotFoundError:
             raise Exception(
                 """You will need to run `pip install dash` to be able to review tests that were automatically created."""
             )
 
         table_data = [
-            {"query": x.query, "expected_output": x.expected_output} for x in self.data
+            {"query": x.query, "expected_output": x.expected_output}
+            for x in self.data
         ]
         app = Dash(
             __name__,
@@ -379,7 +436,9 @@ which should have matched
                 import csv
 
                 with open(filename, "w", newline="") as f:
-                    writer = csv.DictWriter(f, fieldnames=[c["id"] for c in columns])
+                    writer = csv.DictWriter(
+                        f, fieldnames=[c["id"] for c in columns]
+                    )
                     writer.writeheader()
                     writer.writerows(rows)
             return n_clicks
@@ -479,7 +538,9 @@ Respond in JSON format in 1 single line without white spaces an array of JSON wi
 """
     for _ in range(3):
         try:
-            responses = generate_chatgpt_output(prompt, openai_api_key=openai_api_key)
+            responses = generate_chatgpt_output(
+                prompt, openai_api_key=openai_api_key
+            )
             responses = json.loads(responses)
             break
         except Exception as e:
@@ -487,8 +548,10 @@ Respond in JSON format in 1 single line without white spaces an array of JSON wi
 
     test_cases = []
     for response in responses:
-        test_case = TestCase(
-            query=response["query"], expected_output=response["answer"], context=context
+        test_case = LLMTestCase(
+            query=response["query"],
+            expected_output=response["answer"],
+            context=context,
         )
         test_cases.append(test_case)
 

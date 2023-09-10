@@ -8,6 +8,7 @@ import warnings
 from typing import Optional
 
 from ..singleton import Singleton
+from ..test_case import LLMTestCase
 from .metric import Metric
 
 
@@ -31,14 +32,14 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
         )
         return score
 
-    def measure(self, text: str):
+    def measure(self, test_case: LLMTestCase):
         from Dbias.bias_classification import classifier
 
         warnings.warn(
             "Run `pip install deepeval[bias]`. If you have, please ignore this warning."
         )
 
-        results = classifier(text)
+        results = classifier(test_case.output)
         # sample output
         # [{'label': 'Biased', 'score': 0.9938021898269653}]
         if results[0]["label"] == "Biased":
@@ -51,10 +52,14 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
         if v > self.minimum_score:
             self.success = True
 
+        self.score = v
         return v
 
     def is_successful(self):
         return self.success
+
+    def assert_successful(self):
+        assert self.success, f"Text is biased - score: {self.score}"
 
     @property
     def __name__(self):
@@ -65,5 +70,6 @@ def assert_unbiased(
     text: str, minimum_score: float = 0.5
 ):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
     metric = UnBiasedMetric(minimum_score=minimum_score)
-    score = metric.measure(text)
+    test_case = LLMTestCase(output=text)
+    score = metric.measure(test_case)
     assert metric.is_successful(), f"Text is biased - got {score}"

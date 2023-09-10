@@ -1,5 +1,6 @@
 import numpy as np
-from ..test_case import TestCase
+
+from ..test_case import LLMTestCase
 from .metric import Metric
 
 
@@ -14,7 +15,7 @@ class AnswerRelevancyMetric(Metric):
             "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
         )
 
-    def __call__(self, test_case: TestCase):
+    def __call__(self, test_case: LLMTestCase):
         score = self.measure(test_case.query, test_case.output)
         success = score > self.minimum_score
         if self._is_send_okay():
@@ -27,7 +28,7 @@ class AnswerRelevancyMetric(Metric):
             )
         return score
 
-    def measure(self, test_case: TestCase) -> float:
+    def measure(self, test_case: LLMTestCase) -> float:
         from sentence_transformers import util
 
         docs = [test_case.output]
@@ -58,9 +59,12 @@ class AnswerRelevancyMetric(Metric):
         return "Answer Relevancy"
 
 
-def assert_answer_relevancy(query: str, output: str, minimum_score: float = 0.5):
+def assert_answer_relevancy(
+    query: str, output: str, minimum_score: float = 0.5
+):
     metric = AnswerRelevancyMetric(minimum_score=minimum_score)
-    score = metric(query=query, output=output)
+    test_case = LLMTestCase(query=query, output=output)
+    score = metric.measure(test_case)
     assert metric.is_successful(), (
         metric.__class__.__name__ + " was unsuccessful - " + str(score)
     )

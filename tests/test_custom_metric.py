@@ -2,6 +2,7 @@
 """
 
 import pytest
+
 from deepeval.metrics.metric import Metric
 
 

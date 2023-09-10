@@ -6,7 +6,7 @@ from ..client import Client
 from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
 from ..get_api_key import _get_api_key, _get_implementation_name
 from ..singleton import Singleton
-from ..test_case import TestCase
+from ..test_case import LLMTestCase
 from ..utils import softmax
 
 
@@ -47,7 +47,7 @@ class Metric(metaclass=Singleton):
         # DOing this until the API endpoint is fixed
         return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
 
-    def __call__(self, test_case: TestCase, *args, **kwargs):
+    def __call__(self, test_case: LLMTestCase, *args, **kwargs):
         score = self.measure(
             query=test_case.query,
             expected_output=test_case.expected_output,

@@ -1,6 +1,7 @@
 from typing import Optional
 
 from ..singleton import Singleton
+from ..test_case import LLMTestCase
 from ..utils import cosine_similarity
 from .metric import Metric
 
@@ -23,8 +24,8 @@ class BertScoreMetric(Metric, metaclass=Singleton):
         vectors = self.model.encode([text_a, text_b])
         return vectors
 
-    def measure(self, a: str, b: str):
-        vectors = self._vectorize(a, b)
+    def measure(self, test_case: LLMTestCase):
+        vectors = self._vectorize(test_case.output, test_case.expected_output)
         self.score = cosine_similarity(vectors[0], vectors[1])
         return self.score
 

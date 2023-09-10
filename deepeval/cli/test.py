@@ -16,7 +16,9 @@ app = typer.Typer(name="test")
 def sample():
     set_env_vars()
     print("Sending sample test results...")
-    print("If this is your first time running these models, it may take a while.")
+    print(
+        "If this is your first time running these models, it may take a while."
+    )
     try:
         query = "How does photosynthesis work?"
         output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with the help of chlorophyll pigment."
@@ -44,7 +46,9 @@ def sample():
         context = "Biology"
         minimum_score = 0.8  # Adjusting the minimum score threshold
 
-        assert_overall_score(query, output, expected_output, context, minimum_score)
+        assert_overall_score(
+            query, output, expected_output, context, minimum_score
+        )
 
     except AssertionError as e:
         pass
@@ -73,7 +77,9 @@ def sample():
 def check_if_legit_file(test_file: str):
     if test_file.endswith(".py"):
         if not test_file.startswith("test_"):
-            raise ValueError("Test will not run. Please ensure the `test_` prefix.")
+            raise ValueError(
+                "Test will not run. Please ensure the `test_` prefix."
+            )
 
 
 @app.command()

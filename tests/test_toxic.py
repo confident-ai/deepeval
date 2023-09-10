@@ -3,7 +3,9 @@
 
 
 import pytest
+
 from deepeval.metrics.toxic_classifier import NonToxicMetric, assert_non_toxic
+
 from .utils import assert_viable_score
 
 output = "Winners of the FIFA world cup were the French national football team"

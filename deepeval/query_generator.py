@@ -6,7 +6,9 @@ from typing import List
 
 class QueryGenerator(ABC):
     @abstractmethod
-    def generate_queries(self, texts: List, tags: List = None, num_queries: int = 3):
+    def generate_queries(
+        self, texts: List, tags: List = None, num_queries: int = 3
+    ):
         pass
 
 
@@ -16,7 +18,9 @@ class BEIRQueryGenerator:
     def __init__(self):
         self._load_model()
 
-    def generate_queries(self, texts: List, tags: List = None, num_queries: int = 3):
+    def generate_queries(
+        self, texts: List, tags: List = None, num_queries: int = 3
+    ):
         """Generates a number of queries"""
         import torch
 
