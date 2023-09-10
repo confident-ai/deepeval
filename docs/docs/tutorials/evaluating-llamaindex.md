@@ -71,6 +71,7 @@ We then build an evaluator based on the `BaseEvaluator` class that requires an `
 In this example, we show you how to write a factual consistency check.
 
 ```python
+from deepeval.test_case import LLMTestCase
 class FactualConsistencyResponseEvaluator:
   def get_context(self, response: Response) -> List[Document]:
     """Get context information from given Response object using source nodes.
@@ -92,10 +93,11 @@ class FactualConsistencyResponseEvaluator:
     """Evaluate factual consistency metrics
     """
     answer = str(response)
-    context = self.get_context(response)
     metric = FactualConsistencyMetric()
+    context = self.get_context(response)
     context = " ".join([d.text for d in context])
-    score = metric.measure(output=answer, context=context)
+    test_case = LLMTestCase(context=context, output=answer)
+    score = metric.measure(test_case=test_case)
     if metric.is_successful():
         return "YES"
     else:
