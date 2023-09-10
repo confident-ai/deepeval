@@ -167,6 +167,7 @@ Our up-coming roadmap:
 - [ ] Project View To Web UI
 - [ ] Integration with HumanEval
 - [ ] Integration with Microsoft Guidance
+- [ ] Guardrail integrations (Nvidia-Nemo, GuardRails AI)
 
 ## Why DeepEval?
 
