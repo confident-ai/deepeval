@@ -3,7 +3,7 @@
 </div>
 
 <div style="width: 700px; height: 200px; overflow: hidden;">
-  <img src="assets/deepevals-cover.jpeg" alt="DeepEval" style="width: 100%; height: 100%; object-fit: cover;">
+  <img src="assets/deepevals-cover.jpeg" alt="DeepEval" style="width: 100%; height: 200px; object-fit: cover;">
 </div>
 <br>
 <div style="text-align: center;">
