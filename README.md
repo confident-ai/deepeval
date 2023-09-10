@@ -1,10 +1,19 @@
-# 👩‍⚖️ DeepEval
+<div style="text-align: center;">
+    <h1>👩‍⚖️ DeepEval</h1>
+</div>
 
-[![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt) 
+<div style="width: 700px; height: 200px; overflow: hidden;">
+  <img src="assets/deepevals-cover.jpeg" alt="DeepEval" style="width: 100%; height: 100%; object-fit: cover;">
+</div>
+<br>
+<div style="text-align: center;">
+
+[![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
 
 [![PyPI version](https://badge.fury.io/py/deepeval.svg)](https://badge.fury.io/py/deepeval)<a target="_blank" href="https://colab.research.google.com/drive/1jnRUg0GHS_dTN0heijUr_88NnWiNOIFA?usp=sharing">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a> [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Stay%20Updated%20On%20X)](https://twitter.com/colabdog)
+</div>
 
 DeepEval provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production. The guiding philosophy is a "Pytest for LLM" that aims to make productionizing and evaluating LLMs as easy as ensuring all tests pass.
 
