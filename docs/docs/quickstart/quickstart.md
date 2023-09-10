@@ -65,15 +65,27 @@ def test_0():
 
 Now we often don't want to write our own tests or at least be given a variety of queries by which we can create these tests.
 
-You can create these automatically from scratch with DeepEval.
+You can automatically create tests in DeepEval in just a few lines of code:
 
 ```python
 from deepeval.dataset import create_evaluation_dataset
-dataset = create_evaluation_query_answer_pairs("Python is a great language for mathematical expression and machine learning.",
-n=3)
+dataset = create_evaluation_query_answer_pairs(
+    openai_api_key="<YOUR_OPENAI_API_KEY>",
+    context="FastAPI is a modern, fast (high-performance), web framework for building APIs with Python 3.7+ based on standard Python type hints.",
+    n=3    
+)
+
 ```
 
-This will automatically load in 3 sample queries for you. The best part? You can review them easily. If you are in a Jupyter Notebook, it will spin up as a gradio cell.
+What just happened?
+
+We automatically created a dataset that stored the query answer pairs for you.
+
+You can replace the string with whatever is stored in your database and it will automatically create question-answer pairs.
+
+Once you have created your dataset, we provide an easy way for you to just review what is inside your dataset.
+
+This is done with our `review` function.
 
 ```python
 dataset.review()
