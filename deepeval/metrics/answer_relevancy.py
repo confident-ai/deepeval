@@ -2,7 +2,7 @@ import numpy as np
 from .metric import Metric
 
 
-class AnswerRelevancy(Metric):
+class AnswerRelevancyMetric(Metric):
     def __init__(self, minimum_score: bool = 0.5):
         from sentence_transformers import SentenceTransformer, util
 
@@ -58,7 +58,7 @@ class AnswerRelevancy(Metric):
 
 
 def assert_answer_relevancy(query: str, output: str, minimum_score: float = 0.5):
-    metric = AnswerRelevancy(minimum_score=minimum_score)
+    metric = AnswerRelevancyMetric(minimum_score=minimum_score)
     score = metric(query=query, output=output)
     assert metric.is_successful(), (
         metric.__class__.__name__ + " was unsuccessful - " + str(score)

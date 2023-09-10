@@ -3,14 +3,14 @@
 from .metric import Metric
 from .entailment_metric import EntailmentScoreMetric
 
-# from .answer_relevancy import AnswerRelevancy
+# from .answer_relevancy import AnswerRelevancyMetric
 
 
 class AlertScoreMetric(Metric):
     def __init__(self, minimum_score: float = 0.5):
         self.minimum_score = minimum_score
         self.entailment_metric = EntailmentScoreMetric()
-        # self.answer_relevancy = AnswerRelevancy()
+        # self.answer_relevancy = AnswerRelevancyMetric()
 
     def __call__(self, output: str, expected_output: str, context: str):
         score = self.measure(output, expected_output, context)
@@ -19,7 +19,6 @@ class AlertScoreMetric(Metric):
     def measure(
         self, query: str, output: str, expected_output: str, context: str
     ) -> float:
-
         entailment_score = self.entailment_metric.measure(
             context,
             output,
