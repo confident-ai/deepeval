@@ -399,7 +399,7 @@ which should have matched
             else:
                 return ""
 
-        app.run(debug=True)
+        app.run(debug=False)
 
     def add_evaluation_query_answer_pairs(
         self,
