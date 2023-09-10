@@ -1,11 +1,14 @@
 """Test alert score
 """
-import pytest
-from deepeval.api import Api
-from deepeval.metrics.overall_score import assert_overall_score
-from deepeval.metrics.overall_score import OverallScoreMetric
-from .utils import assert_viable_score
 import os
+
+import pytest
+
+from deepeval.api import Api
+from deepeval.metrics.overall_score import (OverallScoreMetric,
+                                            assert_overall_score)
+
+from .utils import assert_viable_score
 
 IMPLEMENTATION_NAME = "Overall"
 TEST_API_KEY = "u1s5aFlB6kRyVz/16CZuc7JOQ7e7sCw00N7nfeMZOrk="
@@ -133,4 +136,6 @@ def test_implementation_inside_overall():
     for imp in imps:
         if imp["name"] == IMPLEMENTATION_NAME:
             FOUND = True
-    assert FOUND, f"{IMPLEMENTATION_NAME} not found in {[x['name'] for x in imps]}"
+    assert (
+        FOUND
+    ), f"{IMPLEMENTATION_NAME} not found in {[x['name'] for x in imps]}"

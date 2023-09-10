@@ -1,4 +1,4 @@
-# from deepeval.bulk_runner import BulkTestRunner, TestCase
+# from deepeval.bulk_runner import BulkTestRunner, LLMTestCase
 
 
 # def generate_llm_output(input: str):
@@ -11,7 +11,7 @@
 #         @property
 #         def bulk_test_cases(self):
 #             return [
-#                 TestCase(
+#                 LLMTestCase(
 #                     input="What is the customer success number",
 #                     expected_output="1800-213-123",
 #                 )

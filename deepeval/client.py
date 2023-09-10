@@ -22,15 +22,25 @@ class Client(Api):
             self.data = []
         super().__init__(api_key=api_key, **kwargs)
 
-    def add_ground_truth(self, query: str, expected_response: str, tags: list = None):
+    def add_ground_truth(
+        self, query: str, expected_response: str, tags: list = None
+    ):
         """Add ground truth"""
         if self.local_mode:
             self.data.append(
-                {"query": query, "expected_response": expected_response, "tags": tags}
+                {
+                    "query": query,
+                    "expected_response": expected_response,
+                    "tags": tags,
+                }
             )
         return self.post_request(
             endpoint="v1/pipeline/eval",
-            body={"query": query, "expected_response": expected_response, "tags": tags},
+            body={
+                "query": query,
+                "expected_response": expected_response,
+                "tags": tags,
+            },
         )
 
     async def add_ground_truth_async(
@@ -39,7 +49,11 @@ class Client(Api):
         """Add ground truth"""
         return self.post_request(
             endpoint="v1/pipeline/eval",
-            body={"query": query, "expected_response": expected_response, "tags": tags},
+            body={
+                "query": query,
+                "expected_response": expected_response,
+                "tags": tags,
+            },
         )
 
     def _get_ground_truths(self, take: int = 50, skip: int = 0):
@@ -71,7 +85,9 @@ class Client(Api):
             if imp["name"] == name:
                 imp_id = imp["id"]
         if imp_id is None:
-            created_imp = self.create_implementation(name=name, description=description)
+            created_imp = self.create_implementation(
+                name=name, description=description
+            )
             imp_id = created_imp["id"]
         # to avoid hammering the server
         self._implementation_id[name] = imp_id

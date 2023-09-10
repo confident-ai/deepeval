@@ -150,7 +150,11 @@ class Api:
             except ValueError:
                 # Some endpoints only return 'OK' message without JSON
                 return json
-        elif res.status_code == 409 and "task" in endpoint and body.get("unique_id"):
+        elif (
+            res.status_code == 409
+            and "task" in endpoint
+            and body.get("unique_id")
+        ):
             retry_history = res.raw.retries.history
             # Example RequestHistory tuple
             # RequestHistory(method='POST',
@@ -177,7 +181,11 @@ class Api:
     def get_request(self, endpoint, params=None):
         """Generic GET Request Wrapper"""
         return self._api_request(
-            "GET", endpoint, headers=self._headers, auth=self._auth, params=params
+            "GET",
+            endpoint,
+            headers=self._headers,
+            auth=self._auth,
+            params=params,
         )
 
     def post_request(self, endpoint, body=None, files=None, data=None):
@@ -309,7 +317,9 @@ class Api:
             endpoint="/v1/prod-data?implementationId=" + implementation_id
         )
 
-    def create_implementation(self, name: str, description: Optional[str] = None):
+    def create_implementation(
+        self, name: str, description: Optional[str] = None
+    ):
         body = {"name": name}
         if description:
             body["description"] = description

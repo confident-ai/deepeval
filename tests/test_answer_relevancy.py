@@ -1,8 +1,9 @@
 """Tests for answer relevancy
 """
 import pytest
-from deepeval.metrics.answer_relevancy import assert_answer_relevancy
-from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
+
+from deepeval.metrics.answer_relevancy import (AnswerRelevancyMetric,
+                                               assert_answer_relevancy)
 
 query = "What is Python?"
 answer = "Python is a programming language?"
@@ -26,7 +27,9 @@ def test_query_answer_relevancy():
 def test_compare_answer_relevancy_2():
     scorer = AnswerRelevancyMetric(minimum_score=0.5)
     result = scorer.measure(query=query, output="Programming lang")
-    result_2 = scorer.measure(query=query, output="Python is a programming lang")
+    result_2 = scorer.measure(
+        query=query, output="Python is a programming lang"
+    )
     assert result_2 > result
 
 
@@ -34,5 +37,7 @@ def test_compare_answer_relevancy():
     scorer = AnswerRelevancyMetric(minimum_score=0.5)
     query = "what is python"
     result = scorer.measure(query=query, output="Programming lang")
-    result_2 = scorer.measure(query=query, output="Python is a programming lang")
+    result_2 = scorer.measure(
+        query=query, output="Python is a programming lang"
+    )
     assert result_2 > result

@@ -129,7 +129,6 @@ class RBO:
         AO[0] = weights[0] if self.S[0] == self.T[0] else 0
 
         for d in tqdm(range(1, k), disable=~self.verbose):
-
             tmp = 0
             # if the new item from S is in T already
             if self.S[d] in T_running:

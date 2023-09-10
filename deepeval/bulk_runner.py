@@ -4,7 +4,7 @@ from typing import Callable, List
 from tabulate import tabulate
 
 from .metrics.metric import Metric
-from .test_case import TestCase
+from .test_case import LLMTestCase
 
 
 class BulkTestRunner:
@@ -12,7 +12,7 @@ class BulkTestRunner:
         self.test_filename = test_filename
 
     @abstractmethod
-    def bulk_test_cases(self) -> List[TestCase]:
+    def bulk_test_cases(self) -> List[LLMTestCase]:
         return []
 
     def run(self, completion_fn: Callable):
@@ -26,8 +26,7 @@ class BulkTestRunner:
             "Expected output",
             "Message",
         ]
-        for case in self.bulk_test_cases:
-            case: TestCase
+        for case in self.bulk_test_cases():
             output = completion_fn(case.query)
             for metric in case.metrics:
                 score = metric(output, case.expected_output)

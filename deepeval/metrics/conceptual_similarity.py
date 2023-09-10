@@ -1,8 +1,9 @@
 """Asserting conceptual similarity
 """
 from typing import Optional
-from ..test_case import TestCase
+
 from ..singleton import Singleton
+from ..test_case import LLMTestCase
 from ..utils import cosine_similarity
 from .metric import Metric
 
@@ -25,7 +26,7 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
         vectors = self.model.encode([text_a, text_b])
         return vectors
 
-    def measure(self, test_case: TestCase) -> float:
+    def measure(self, test_case: LLMTestCase) -> float:
         vectors = self._vectorize(test_case.output, test_case.expected_output)
         self.score = cosine_similarity(vectors[0], vectors[1])
         self.log(
@@ -44,4 +45,6 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
 def assert_conceptual_similarity(text_1: str, text_2: str, minimum_score=0.3):
     metric = ConceptualSimilarityMetric(minimum_score=minimum_score)
     score = metric.measure(text_1, text_2)
-    assert metric.is_successful(), f"Metric is not conceptually similar - got {score}"
+    assert (
+        metric.is_successful()
+    ), f"Metric is not conceptually similar - got {score}"

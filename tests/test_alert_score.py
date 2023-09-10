@@ -1,9 +1,10 @@
 """Test alert score
 """
 import os
-from deepeval.metrics.alert_score import assert_alert_score
-from deepeval.metrics.alert_score import AlertScoreMetric
+
 from deepeval.client import Client
+from deepeval.metrics.alert_score import AlertScoreMetric, assert_alert_score
+
 from .utils import assert_viable_score
 
 IMPLEMENTATION_NAME = "Alert"
@@ -45,4 +46,6 @@ def test_implementation_inside_overall():
     for imp in imps:
         if imp["name"] == IMPLEMENTATION_NAME:
             FOUND = True
-    assert FOUND, f"{IMPLEMENTATION_NAME} not found in {[x['name'] for x in imps]}"
+    assert (
+        FOUND
+    ), f"{IMPLEMENTATION_NAME} not found in {[x['name'] for x in imps]}"

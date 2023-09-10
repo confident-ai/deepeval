@@ -1,8 +1,9 @@
 """Tests for metric
 """
 import os
-from deepeval.metrics.metric import Metric
+
 from deepeval.constants import API_KEY_ENV, LOG_TO_SERVER_ENV
+from deepeval.metrics.metric import Metric
 
 
 class RandomMetric(Metric):

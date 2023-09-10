@@ -1,5 +1,6 @@
 from typing import Optional
 
+from ..test_case import LLMTestCase
 from .metric import Metric
 
 
@@ -29,10 +30,10 @@ class CohereRerankerMetric(Metric):
         )
         return score
 
-    def measure(self, a, b):
+    def measure(self, test_case: LLMTestCase):
         reranked_results = self.cohere_client.rerank(
-            query=a,
-            documents=[b],
+            query=test_case.query,
+            documents=[test_case.output],
             top_n=1,
             model="rerank-english-v2.0",
         )

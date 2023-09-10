@@ -1,14 +1,16 @@
 """Test clients
 """
-import pytest
 import unittest
+
+import pytest
+
 from deepeval.evaluator import Evaluator
-from deepeval.pipeline import Pipeline
 from deepeval.metrics.randomscore import RandomMetric
+from deepeval.pipeline import Pipeline
 
 
 @pytest.mark.skip(reason="Evaluator not finished")
-class TestEvaluator(unittest.TestCase):
+class TestEvaluator(unittest.LLMTestCase):
     def test_eval(self):
         eval = Evaluator()
         result = eval.add_ground_truth(
@@ -24,11 +26,12 @@ def result_function(query):
 
 
 @pytest.mark.skip(reason="Evaluator not finished")
-class TestE2E(unittest.TestCase):
+class TestE2E(unittest.LLMTestCase):
     def test_e2e(self):
         eval = Evaluator()
         pipeline = Pipeline(
-            pipeline_id="textract-pdf-processing", result_function=result_function
+            pipeline_id="textract-pdf-processing",
+            result_function=result_function,
         )
         metric = RandomMetric()
         result = eval.evaluate(pipeline=pipeline, metric=metric)
