@@ -20,8 +20,8 @@ assert_answer_relevancy(query, output=answer, minimum_score=0.5)
 If you would instead like a score of how relevant an answer is to a query, simply call the metric class.
 
 ```python
-from deepeval.metrics.answer_relevancy import AnswerRelevancy
-scorer = AnswerRelevancy(minimum_score=0.5)
+from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
+scorer = AnswerRelevancyMetric(minimum_score=0.5)
 scorer.measure(query=query, output=answer)
 # Returns a floating point number between 0 and 1
 ```
