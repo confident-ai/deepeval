@@ -413,6 +413,7 @@ which should have matched
             openai_api_key=openai_api_key, context=context, n=n, model=model
         )
         self.data += new_dataset.data
+        print(f"Added {len(new_dataset.data)}!")
 
 
 def make_chat_completion_request(prompt: str, openai_api_key: str):
