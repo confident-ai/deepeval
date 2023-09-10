@@ -91,7 +91,6 @@ def test_llm_output():
     output = generate_chatgpt_output(query)
     assert_factual_consistency(output, expected_output)
 
-test_llm_output()
 ```
 
 Once you have set that up, you can simply call pytest

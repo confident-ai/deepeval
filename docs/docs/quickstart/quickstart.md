@@ -93,7 +93,45 @@ dataset.review()
 
 When you run this code, it will spin up a quick server for you to review your dataset.
 
-![Data Review Dashboard](../../assets/bulk-review.png)
+![Bulk Data Review Dashboard](../../assets/bulk-review.png)
+
+This synthetic creator dashboard allows you to automatically review the text cases in your dataset.
+
+Simply click "Add Test Case" to add a new row to the dataset or click the "X" button to the left to remove if you don't think the generated synthetic question was worth it. 
+
+Once you finish reviewing the synthetic data, name your file and hit "Save File".
+
+Once you save the file, you can load the dataset back using:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+# Replace 'filename.csv' with the actual filename
+ds = EvaluationDataset.from_csv('review-test.csv')
+
+# Access the data in the CSV file
+# For example, you can print a few rows
+print(ds.sample())
+```
+
+Great! Your evaluation dataset is ready to go! Now to run tests on your evaluation dataset, simply run: 
+
+```python
+import openai
+def generate_chatgpt_output(query: str):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "assistant", "content": "The customer success phone line is 1200-231-231 and the customer success state is in Austin."},
+            {"role": "user", "content": query}
+        ]
+    )
+    expected_output = response.choices[0].message.content
+    return expected_output
+
+ds.run_evaluation(generate_chatgpt_output)
+```
 
 ## What next?
 
