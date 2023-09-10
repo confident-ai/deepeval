@@ -2,43 +2,33 @@
 """
 import hashlib
 from collections import UserList
+from dataclasses import dataclass
 from typing import Any, List, Optional
 
 from .metrics.factual_consistency import FactualConsistencyMetric
 from .metrics.metric import Metric
 
 
+@dataclass
 class TestCase:
     pass
 
 
+@dataclass
 class LLMTestCase(TestCase):
-    def __init__(
-        self,
-        query: Any,
-        expected_output: Any,
-        context: str = None,
-        metrics: List[Metric] = None,
-        output: Optional[str] = None,
-        id: str = None,
-    ):
-        if metrics is None:
-            fact_consistency_metric = FactualConsistencyMetric(
-                minimum_score=0.3
+    query: Optional[str] = None
+    expected_output: Optional[str] = None
+    context: Optional[str] = None
+    metrics: Optional[List[Metric]] = None
+    output: Optional[str] = None
+    id: Optional[str] = None
+
+    def __post_init__(self):
+        if self.id is None:
+            id_string = (
+                str(self.query) + str(self.expected_output) + str(self.context)
             )
-            self.metrics = [fact_consistency_metric]
-        else:
-            self.metrics = metrics
-        self.query = query
-        self.expected_output = expected_output
-        self.context = context
-        if id is None:
-            id_string = str(self.query) + str(self.expected_output)
             self.id = hashlib.md5(id_string.encode()).hexdigest()
-        else:
-            self.id = id
-        if output is None:
-            self.output = output
 
     def dict(self):
         data = {
@@ -57,4 +47,6 @@ class LLMTestCase(TestCase):
 
 
 class AgentTestCase(TestCase):
+    """Test Case For Agents"""
+
     pass

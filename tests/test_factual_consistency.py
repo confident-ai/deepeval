@@ -2,8 +2,10 @@ import os
 
 import pytest
 
-from deepeval.metrics.factual_consistency import (FactualConsistencyMetric,
-                                                  assert_factual_consistency)
+from deepeval.metrics.factual_consistency import (
+    FactualConsistencyMetric,
+    assert_factual_consistency,
+)
 
 IMPLEMENTATION_NAME = "Test Factual Consistency"
 os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME

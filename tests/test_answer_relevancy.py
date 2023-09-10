@@ -2,8 +2,10 @@
 """
 import pytest
 
-from deepeval.metrics.answer_relevancy import (AnswerRelevancyMetric,
-                                               assert_answer_relevancy)
+from deepeval.metrics.answer_relevancy import (
+    AnswerRelevancyMetric,
+    assert_answer_relevancy,
+)
 
 query = "What is Python?"
 answer = "Python is a programming language?"
