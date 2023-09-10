@@ -48,8 +48,8 @@ Watch a Youtube video on how to get started here: [Get started in under 1 minute
 ```bash
 # Optional - if you want a web UI
 deepeval login
-# Run a sample test
-deepeval login
+# Run the API key and implementation name
+deepeval login --api-key $API_KEY --implementation-name "sample"
 # Generate a sample test file
 deepeval test generate --output-file test_sample.py
 # Run this test
