@@ -5,7 +5,7 @@ import random
 import time
 from collections import UserList
 from datetime import datetime
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from tabulate import tabulate
 
@@ -26,14 +26,22 @@ class EvaluationDataset(UserList):
         csv_filename: str,
         query_column: str,
         expected_output_column: str,
+        context_column: str,
+        output_column: Optional[str] = None,
         id_column: str = None,
         metrics: List[Metric] = None,
     ):
         import pandas as pd
 
         df = pd.read_csv(csv_filename)
-        querys = df[query_column].values
-        expected_outputs = df[expected_output_column].values
+        if query_column is not None and query_column in df.columns:
+            querys = df[query_column].values
+        if expected_output_column is not None and expected_output_column in df.columns:
+            expected_outputs = df[expected_output_column].values
+        if context_column is not None and context_column in df.columns:
+            contexts = df[context_column].values
+        if output_column is not None and output_column in df.columns:
+            outputs = df[output_column].values
         if id_column is not None:
             ids = df[id_column].values
 
@@ -46,7 +54,9 @@ class EvaluationDataset(UserList):
                     query=query_data,
                     expected_output=expected_outputs[i],
                     metrics=metrics,
+                    context=contexts[i],
                     id=ids[i] if id_column else None,
+                    output=outputs[i] if output_column else None,
                 )
             )
         return cls(cls.data)
@@ -154,6 +164,9 @@ class EvaluationDataset(UserList):
         result = random.sample(self.data, n)
         return [r.dict() for r in result]
 
+    def head(self, n: int = 5):
+        return self.data[:n]
+
     def __getitem__(self, index):
         return self.data[index]
 
@@ -184,7 +197,6 @@ class EvaluationDataset(UserList):
             "Message",
         ]
         for case in self.data:
-            case: TestCase
             output = completion_fn(case.query)
             if metrics is None:
                 metrics = case.metrics
@@ -192,7 +204,7 @@ class EvaluationDataset(UserList):
 
                 @retry(max_retries=max_retries, min_success=min_success)
                 def assert_metric():
-                    score = metric(output, case.expected_output)
+                    score = metric.measure(case)
                     is_successful: bool = metric.is_successful()
                     is_successful: bool = bool(is_successful)
                     message = f"""{metric.__class__.__name__} was unsuccessful for 
