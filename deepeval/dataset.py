@@ -251,7 +251,19 @@ which should have matched
 
         app.layout = html.Div(
             [
-                html.H1("Bulk Review Test Cases"),
+                html.H1("Bulk Review Test Cases", style={"marginLeft": "20px"}),
+                html.Button(
+                    "Add Test case",
+                    id="editing-rows-button",
+                    n_clicks=0,
+                    style={
+                        "padding": "8px",
+                        "backgroundColor": "purple",  # Added purple background color
+                        "color": "white",
+                        "border": "2px solid purple",  # Added purple border
+                        "marginLeft": "20px",
+                    },
+                ),
                 html.Div(
                     dash_table.DataTable(
                         id="adding-rows-table",
@@ -300,35 +312,32 @@ which should have matched
                 ),
                 html.Div(style={"margin-top": "20px"}),
                 html.Button(
-                    "Add Test case",
-                    id="editing-rows-button",
-                    n_clicks=0,
-                    style={
-                        "padding": "8px",
-                        "backgroundColor": "rgb(30, 30, 30)",
-                        "color": "white",
-                    },
-                ),
-                html.Button(
                     "Save To CSV",
                     id="save-button",
                     n_clicks=0,
                     style={
                         "padding": "8px",
-                        "backgroundColor": "rgb(30, 30, 30)",
+                        "backgroundColor": "purple",  # Added purple background color
                         "color": "white",
+                        "border": "2px solid purple",  # Added purple border
+                        "marginLeft": "20px",
                     },
                 ),
                 dcc.Input(
                     id="filename-input",
                     type="text",
-                    placeholder="Enter filename",
+                    placeholder="Enter filename (.csv format)",
                     style={
                         "padding": "8px",
                         "backgroundColor": "rgb(30, 30, 30)",
                         "color": "white",
+                        "marginLeft": "20px",
+                        "border": "2px solid purple",  # Added purple border
+                        "width": "200px",  # Edited width
                     },
+                    value="review-test.csv",
                 ),
+                html.Div(id="code-output"),
             ],
             style={"padding": "20px"},  # Added padding
         )
@@ -361,7 +370,36 @@ which should have matched
                     writer.writerows(rows)
             return n_clicks
 
-        app.run(debug=False)
+        @app.callback(
+            Output("code-output", "children"),
+            Input("save-button", "n_clicks"),
+            State("filename-input", "value"),
+        )
+        def show_code(n_clicks, filename):
+            if n_clicks > 0:
+                code = f"""
+        from deepeval.dataset import EvaluationDataset
+
+        # Replace 'filename.csv' with the actual filename
+        ds = EvaluationDataset.from_csv('{filename}')
+
+        # Access the data in the CSV file
+        # For example, you can print a few rows
+        print(ds.sample())
+        """
+                return html.Div(
+                    [
+                        html.P(
+                            "Code to load the CSV file back into a dataset for testing:"
+                        ),
+                        html.Pre(code, className="language-python"),
+                    ],
+                    style={"padding": "20px"},  # Added padding
+                )
+            else:
+                return ""
+
+        app.run(debug=True)
 
     def add_evaluation_query_answer_pairs(
         self,
