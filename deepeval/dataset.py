@@ -243,7 +243,10 @@ class EvaluationDataset(UserList):
             "Message",
         ]
         for case in self.data:
-            output: str = completion_fn(case.query)
+            if case.output is not None:
+                output: str = case.output
+            else:
+                output: str = completion_fn(case.query)
             # Get the metrics
             if metrics is None:
                 metrics = case.metrics

@@ -31,6 +31,9 @@ class AnswerRelevancyMetric(Metric):
     def measure(self, test_case: LLMTestCase) -> float:
         from sentence_transformers import util
 
+        if test_case.query is None or test_case.output is None:
+            raise ValueError("query and output cannot be None")
+
         docs = [test_case.output]
 
         # Encode query and documents

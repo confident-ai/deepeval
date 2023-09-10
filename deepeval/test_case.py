@@ -1,17 +1,20 @@
 """Investigate test case.
 """
 import hashlib
-from collections import UserList
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
-from .metrics.factual_consistency import FactualConsistencyMetric
 from .metrics.metric import Metric
 
 
 @dataclass
 class TestCase:
-    pass
+    id: Optional[str] = None
+
+    def __post_init__(self):
+        if self.id is None:
+            id_string = "".join(str(value) for value in self.__dict__.values())
+            self.id = hashlib.md5(id_string.encode()).hexdigest()
 
 
 @dataclass
@@ -21,14 +24,6 @@ class LLMTestCase(TestCase):
     context: Optional[str] = None
     metrics: Optional[List[Metric]] = None
     output: Optional[str] = None
-    id: Optional[str] = None
-
-    def __post_init__(self):
-        if self.id is None:
-            id_string = (
-                str(self.query) + str(self.expected_output) + str(self.context)
-            )
-            self.id = hashlib.md5(id_string.encode()).hexdigest()
 
     def dict(self):
         data = {
@@ -44,6 +39,12 @@ class LLMTestCase(TestCase):
         if self.output:
             data["output"] = self.output
         return data
+
+
+@dataclass
+class SearchTestCase(TestCase):
+    output_list: List[Any]
+    golden_list: List[Any]
 
 
 class AgentTestCase(TestCase):

@@ -32,6 +32,8 @@ class NonToxicMetric(Metric, metaclass=Singleton):
             )
 
     def measure(self, test_case: LLMTestCase):
+        if test_case.output is None:
+            raise ValueError("output cannot be None")
         results = self.model.predict(test_case.output)
         # sample output
         # {'toxicity': 0.98057544,
