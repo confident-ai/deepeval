@@ -17,6 +17,9 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         self.minimum_score = minimum_score
 
     def measure(self, test_case: LLMTestCase):
+        if test_case.output is None or test_case.context is None:
+            raise ValueError("Output or context cannot be None")
+
         context_list = chunk_text(test_case.context)
         max_score = 0
         for c in context_list:
