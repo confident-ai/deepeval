@@ -18,15 +18,9 @@ class AlertScoreMetric(Metric):
         return score
 
     def measure(self, test_case: LLMTestCase) -> float:
-        entailment_score = self.entailment_metric.measure(
-            test_case.context,
-            test_case.output,
-        )
+        entailment_score = self.entailment_metric.measure(test_case)
 
-        answer_expected_score = self.entailment_metric.measure(
-            test_case.output,
-            test_case.expected_output,
-        )
+        answer_expected_score = self.entailment_metric.measure(test_case)
 
         # This metric is very very bad right now as it requires the answer
         # to re-gurgitate the question.
