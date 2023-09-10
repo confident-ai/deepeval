@@ -252,42 +252,51 @@ which should have matched
         app.layout = html.Div(
             [
                 html.H1("Bulk Review Test Cases"),
-                dash_table.DataTable(
-                    id="adding-rows-table",
-                    columns=[
-                        {
-                            "name": c.title().replace("_", " "),
-                            "id": c,
-                            "deletable": True,
-                            "renamable": True,
-                        }
-                        for i, c in enumerate(["query", "expected_output"])
-                    ],
-                    data=table_data,
-                    editable=True,
-                    row_deletable=True,
-                    style_data_conditional=[
-                        {
-                            "if": {"row_index": "odd"},
-                            "backgroundColor": "rgb(40, 40, 40)",
-                            "color": "white",
-                        },
-                        {
-                            "if": {"row_index": "even"},
+                html.Div(
+                    dash_table.DataTable(
+                        id="adding-rows-table",
+                        columns=[
+                            {
+                                "name": c.title().replace("_", " "),
+                                "id": c,
+                                "deletable": True,
+                                "renamable": True,
+                            }
+                            for i, c in enumerate(["query", "expected_output"])
+                        ],
+                        data=table_data,
+                        editable=True,
+                        row_deletable=True,
+                        style_data_conditional=[
+                            {
+                                "if": {"row_index": "odd"},
+                                "backgroundColor": "rgb(40, 40, 40)",
+                                "color": "white",
+                            },
+                            {
+                                "if": {"row_index": "even"},
+                                "backgroundColor": "rgb(30, 30, 30)",
+                                "color": "white",
+                            },
+                            {
+                                "if": {"state": "selected"},
+                                "backgroundColor": "white",
+                                "color": "white",
+                            },
+                        ],
+                        style_header={
                             "backgroundColor": "rgb(30, 30, 30)",
                             "color": "white",
+                            "fontWeight": "bold",
+                            "padding": "10px",  # Added padding
                         },
-                        {
-                            "if": {"state": "selected"},
-                            "backgroundColor": "white",
-                            "color": "white",
+                        style_cell={
+                            "padding": "10px",  # Added padding
+                            "whiteSpace": "pre-wrap",  # Wrap cell contents
+                            "maxHeight": "200px",
                         },
-                    ],
-                    style_header={
-                        "backgroundColor": "rgb(30, 30, 30)",
-                        "color": "white",
-                        "fontWeight": "bold",
-                    },
+                    ),
+                    style={"padding": "20px"},  # Added padding
                 ),
                 html.Div(style={"margin-top": "20px"}),
                 html.Button(
@@ -321,6 +330,7 @@ which should have matched
                     },
                 ),
             ],
+            style={"padding": "20px"},  # Added padding
         )
 
         @callback(
@@ -351,7 +361,20 @@ which should have matched
                     writer.writerows(rows)
             return n_clicks
 
-        app.run(debug=True)
+        app.run(debug=False)
+
+    def add_evaluation_query_answer_pairs(
+        self,
+        openai_api_key: str,
+        context: str,
+        n: int = 3,
+        model: str = "openai/gpt-3.5-turbo",
+    ):
+        """Utility function to create an evaluation dataset using GPT."""
+        new_dataset = create_evaluation_query_answer_pairs(
+            openai_api_key=openai_api_key, context=context, n=n, model=model
+        )
+        self.data += new_dataset.data
 
 
 def make_chat_completion_request(prompt: str, openai_api_key: str):
@@ -390,7 +413,10 @@ def generate_chatgpt_output(prompt: str, openai_api_key: str) -> str:
 
 
 def create_evaluation_query_answer_pairs(
-    openai_api_key: str, context: str, n: int = 3, model: str = "openai/gpt-3.5-turbo"
+    openai_api_key: str,
+    context: str,
+    n: int = 3,
+    model: str = "openai/gpt-3.5-turbo",
 ) -> EvaluationDataset:
     """Utility function to create an evaluation dataset using GPT."""
     prompt = f"""You are generating {n} sets of of query-answer pairs to create an evaluation dataset based on the below context.
