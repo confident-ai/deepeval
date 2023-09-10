@@ -3,7 +3,7 @@
 from typing import Optional
 from .metric import Metric
 from .factual_consistency import FactualConsistencyMetric
-from .answer_relevancy import AnswerRelevancy
+from .answer_relevancy import AnswerRelevancyMetric
 from .conceptual_similarity import ConceptualSimilarityMetric
 from ..singleton import Singleton
 
@@ -11,7 +11,7 @@ from ..singleton import Singleton
 class OverallScoreMetric(Metric, metaclass=Singleton):
     def __init__(self, minimum_score: float = 0.5):
         self.minimum_score = minimum_score
-        self.answer_relevancy = AnswerRelevancy()
+        self.answer_relevancy = AnswerRelevancyMetric()
         self.factual_consistency_metric = FactualConsistencyMetric()
         self.conceptual_similarity_metric = ConceptualSimilarityMetric()
 

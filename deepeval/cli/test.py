@@ -5,6 +5,7 @@ from ..metrics.overall_score import assert_overall_score
 
 try:
     from rich import print
+    from rich.progress import Progress, SpinnerColumn, TextColumn
 except Exception as e:
     pass
 
@@ -97,7 +98,17 @@ def run(
             "--pdb" if pdb else "",
         ]
     )
-    retcode = pytest.main(pytest_args)
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+    ) as progress:
+        # progress.add_task(description="Preparing tests...", total=None)
+        progress.add_task(
+            description="Downloading models (may take up to 2 minutes if running for the first time)...",
+            total=None,
+        )
+        retcode = pytest.main(pytest_args)
     print("✅ Tests finished! View results on https://app.confident-ai.com/")
     return retcode
 
