@@ -1,6 +1,6 @@
 """Tests for answer relevancy
 """
-import pytest
+from deepeval.test_case import SearchTestCase
 
 list1 = ["a", "b"]
 list2 = ["b", "c"]
@@ -20,14 +20,17 @@ def test_query_answer_relevancy():
     from deepeval.metrics.ranking_similarity import RankingSimilarity
 
     scorer = RankingSimilarity(minimum_score=0.5)
-    result = scorer.measure(list_1=list1, list_2=list2)
-    result_2 = scorer.measure(list_1=list1, list_2=list3)
+    test_case = SearchTestCase(list1, list2)
+    test_case_2 = SearchTestCase(list1, list3)
+    result = scorer.measure(test_case)
+    result_2 = scorer.measure(test_case_2)
     assert result_2 > result, "Ranking not working."
 
 
 def test_query_answer_relevancy_dict():
     from deepeval.metrics.ranking_similarity import RankingSimilarity
 
-    scorer = RankingSimilarity(minimum_score=0.3)
-    result = scorer.measure(list_1=list_dict_1, list_2=list_dict_2)
-    assert scorer.is_successful(), "Ranking dicts not working."
+    metric = RankingSimilarity(minimum_score=0.3)
+    test_case = SearchTestCase(list1, list2)
+    score = metric.measure(test_case)
+    assert metric.is_successful(), f"Ranking dicts not working - {score}."

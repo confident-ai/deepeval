@@ -3,7 +3,7 @@
 
 
 import pytest
-
+from deepeval.test_case import LLMTestCase
 from deepeval.metrics.toxic_classifier import NonToxicMetric, assert_non_toxic
 
 from .utils import assert_viable_score
@@ -26,5 +26,6 @@ def test_non_toxic_2():
 
 def test_non_toxic_metric():
     metric = NonToxicMetric()
-    score = metric.measure(text=output)
-    assert metric.is_successful(), "Overall score metric not working"
+    test_case = LLMTestCase(output=output)
+    score = metric.measure(test_case)
+    assert metric.is_successful(), f"Overall score metric not working - {score}"
