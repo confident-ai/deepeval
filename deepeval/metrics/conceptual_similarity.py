@@ -1,7 +1,7 @@
 """Asserting conceptual similarity
 """
 from typing import Optional
-
+from ..test_case import TestCase
 from ..singleton import Singleton
 from ..utils import cosine_similarity
 from .metric import Metric
@@ -25,15 +25,15 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
         vectors = self.model.encode([text_a, text_b])
         return vectors
 
-    def measure(self, output: str, expected_output: str):
-        vectors = self._vectorize(output, expected_output)
+    def measure(self, test_case: TestCase) -> float:
+        vectors = self._vectorize(test_case.output, test_case.expected_output)
         self.score = cosine_similarity(vectors[0], vectors[1])
         self.log(
             success=self.is_successful(),
             score=self.score,
             metric_name="Conceptual Similarity With Ground Truth",
-            output=output,
-            expected_output=expected_output,
+            output=test_case.output,
+            expected_output=test_case.expected_output,
         )
         return float(self.score)
 

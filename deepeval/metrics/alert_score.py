@@ -2,6 +2,7 @@
 """
 from .entailment_metric import EntailmentScoreMetric
 from .metric import Metric
+from ..test_case import TestCase
 
 # from .answer_relevancy import AnswerRelevancyMetric
 
@@ -16,17 +17,15 @@ class AlertScoreMetric(Metric):
         score = self.measure(output, expected_output, context)
         return score
 
-    def measure(
-        self, query: str, output: str, expected_output: str, context: str
-    ) -> float:
+    def measure(self, test_case: TestCase) -> float:
         entailment_score = self.entailment_metric.measure(
-            context,
-            output,
+            test_case.context,
+            test_case.output,
         )
 
         answer_expected_score = self.entailment_metric.measure(
-            output,
-            expected_output,
+            test_case.output,
+            test_case.expected_output,
         )
 
         # This metric is very very bad right now as it requires the answer
@@ -40,10 +39,10 @@ class AlertScoreMetric(Metric):
             success=self.success,
             score=alert_score,
             metric_name=self.__name__,
-            query=query,
-            output=output,
-            expected_output=expected_output,
-            # context=context
+            query=test_case.query,
+            output=test_case.output,
+            expected_output=test_case.expected_output,
+            context=test_case.context,
         )
         return alert_score
 
