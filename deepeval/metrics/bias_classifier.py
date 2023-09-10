@@ -6,8 +6,9 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 
 import warnings
 from typing import Optional
-from .metric import Metric
+
 from ..singleton import Singleton
+from .metric import Metric
 
 
 class UnBiasedMetric(Metric, metaclass=Singleton):

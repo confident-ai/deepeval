@@ -1,7 +1,7 @@
 """Module for the query generator
 """
+from abc import ABC, abstractmethod
 from typing import List
-from abc import abstractmethod, ABC
 
 
 class QueryGenerator(ABC):
@@ -41,7 +41,7 @@ class BEIRQueryGenerator:
         if hasattr(self, "model"):
             return
         try:
-            from transformers import T5Tokenizer, T5ForConditionalGeneration
+            from transformers import T5ForConditionalGeneration, T5Tokenizer
         except ModuleNotFoundError as e:
             raise Exception("Run `pip install transformers`")
 

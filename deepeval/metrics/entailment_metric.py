@@ -1,5 +1,5 @@
-from ..utils import softmax
 from ..singleton import Singleton
+from ..utils import softmax
 from .metric import Metric
 
 

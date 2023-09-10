@@ -3,13 +3,15 @@
 import json
 import random
 import time
-from tabulate import tabulate
-from datetime import datetime
-from typing import List, Callable
 from collections import UserList
-from deepeval.test_case import TestCase
+from datetime import datetime
+from typing import Callable, List
+
+from tabulate import tabulate
+
 from deepeval.metrics.metric import Metric
 from deepeval.retry import retry
+from deepeval.test_case import TestCase
 
 
 class EvaluationDataset(UserList):
@@ -168,7 +170,7 @@ class EvaluationDataset(UserList):
         max_retries: int = 3,
         min_success: int = 1,
         raise_error_on_run: bool = False,
-        metrics: List[TestCase] = None,
+        metrics: List[Metric] = None,
     ):
         """Run evaluation with given metrics"""
         table = []
@@ -233,7 +235,8 @@ which should have matched
     def review(self):
         """A bulk editor for reviewing synthetic data."""
         try:
-            from dash import Dash, dash_table, dcc, html, Input, Output, State, callback
+            from dash import (Dash, Input, Output, State, callback, dash_table,
+                              dcc, html)
         except ModuleNotFoundError:
             raise Exception(
                 """You will need to run `pip install dash` to be able to review tests that were automatically created."""
@@ -408,7 +411,7 @@ which should have matched
         n: int = 3,
         model: str = "openai/gpt-3.5-turbo",
     ):
-        """Utility function to create an evaluation dataset using GPT."""
+        """Utility function to create an evaluation dataset using ChatGPT."""
         new_dataset = create_evaluation_query_answer_pairs(
             openai_api_key=openai_api_key, context=context, n=n, model=model
         )
@@ -474,7 +477,7 @@ Respond in JSON format in 1 single line without white spaces an array of JSON wi
     test_cases = []
     for response in responses:
         test_case = TestCase(
-            query=response["query"], expected_output=response["answer"]
+            query=response["query"], expected_output=response["answer"], context=context
         )
         test_cases.append(test_case)
 

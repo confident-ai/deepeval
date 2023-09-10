@@ -1,7 +1,8 @@
 """File for handling API key
 """
 import json
-from .constants import KEY_FILE, IMPLEMENTATION_ID_NAME
+
+from .constants import IMPLEMENTATION_ID_NAME, KEY_FILE
 
 
 class KeyFileHandler:

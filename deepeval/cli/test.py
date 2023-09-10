@@ -1,7 +1,8 @@
 import pytest
 import typer
-from .cli_key_handler import set_env_vars
+
 from ..metrics.overall_score import assert_overall_score
+from .cli_key_handler import set_env_vars
 
 try:
     from rich import print

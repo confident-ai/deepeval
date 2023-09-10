@@ -1,6 +1,7 @@
-import typer
 import os
 from typing import Optional
+
+import typer
 from typing_extensions import Annotated
 
 # Rich has a few dependency issues
@@ -8,10 +9,10 @@ try:
     from rich import print
 except Exception as e:
     pass
-from ..key_handler import KEY_FILE_HANDLER
-from .test import app as test_app
 from ..api import Api
 from ..constants import IMPLEMENTATION_ID_NAME
+from ..key_handler import KEY_FILE_HANDLER
+from .test import app as test_app
 
 app = typer.Typer(name="deepeval")
 

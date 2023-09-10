@@ -1,4 +1,5 @@
 from typing import Optional
+
 from .metric import Metric
 
 

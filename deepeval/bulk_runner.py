@@ -1,6 +1,8 @@
-from typing import List, Callable
 from abc import abstractmethod
+from typing import Callable, List
+
 from tabulate import tabulate
+
 from .metrics.metric import Metric
 from .test_case import TestCase
 

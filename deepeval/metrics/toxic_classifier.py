@@ -2,8 +2,8 @@
 1 - Healthy
 0 - Toxic
 """
-from .metric import Metric
 from ..singleton import Singleton
+from .metric import Metric
 
 
 class NonToxicMetric(Metric, metaclass=Singleton):

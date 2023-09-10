@@ -1,11 +1,13 @@
 import os
-from typing import Optional
-from ..get_api_key import _get_api_key, _get_implementation_name
-from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
 from abc import abstractmethod
+from typing import Optional
+
 from ..client import Client
-from ..utils import softmax
+from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
+from ..get_api_key import _get_api_key, _get_implementation_name
 from ..singleton import Singleton
+from ..test_case import TestCase
+from ..utils import softmax
 
 
 class Metric(metaclass=Singleton):
@@ -45,8 +47,11 @@ class Metric(metaclass=Singleton):
         # DOing this until the API endpoint is fixed
         return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
 
-    def __call__(self, *args, **kwargs):
-        score = self.measure(*args, **kwargs)
+    def __call__(self, test_case: TestCase, *args, **kwargs):
+        score = self.measure(
+            query=test_case.query,
+            expected_output=test_case.expected_output,
+        )
         success = score >= self.minimum_score
         self._send_to_server(
             metric_score=score,

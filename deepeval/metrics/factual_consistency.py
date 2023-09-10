@@ -1,5 +1,6 @@
 from ..singleton import Singleton
-from ..utils import softmax, chunk_text
+from ..test_case import TestCase
+from ..utils import chunk_text, softmax
 from .metric import Metric
 
 
@@ -15,11 +16,11 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         self.model = CrossEncoder(model_name)
         self.minimum_score = minimum_score
 
-    def measure(self, output: str, context: str):
-        context_list = chunk_text(context)
+    def measure(self, test_case: TestCase):
+        context_list = chunk_text(test_case.context)
         max_score = 0
         for c in context_list:
-            scores = self.model.predict([(c, output), (output, c)])
+            scores = self.model.predict([(c, test_case.output), (test_case.output, c)])
             # https://huggingface.co/cross-encoder/nli-deberta-base
             # label_mapping = ["contradiction", "entailment", "neutral"]
             softmax_scores = softmax(scores)
@@ -37,9 +38,9 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
             success=self.success,
             score=max_score,
             metric_name="Factual Consistency",
-            output=output,
-            expected_output=context,
-            context=context,
+            output=test_case.output,
+            expected_output=test_case.context,
+            context=test_case.context,
         )
         return max_score
 

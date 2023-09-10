@@ -1,5 +1,6 @@
 # Sample Metric for BLEU
 import numpy as np
+
 from .metric import Metric
 
 
