@@ -21,8 +21,10 @@ If you would instead like a score of how relevant an answer is to a query, simpl
 
 ```python
 from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
-scorer = AnswerRelevancyMetric(minimum_score=0.5)
-scorer.measure(query=query, output=answer)
+from deepeval.test_case import LLMTestCase
+metric = AnswerRelevancyMetric(minimum_score=0.5)
+test_case = LLMTestCase(query=query, output=answer)
+metric.measure(test_case)
 # Returns a floating point number between 0 and 1
 ```
 

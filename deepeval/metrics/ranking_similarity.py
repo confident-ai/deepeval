@@ -5,6 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 from .metric import Metric
+from ..test_case import SearchTestCase
 
 
 class RBO:
@@ -164,20 +165,20 @@ class RankingSimilarity(Metric):
     def __init__(self, minimum_score: float = 0.1):
         self.minimum_score = minimum_score
 
-    def __call__(self, list_1: List[Any], list_2: List[Any]):
-        score = self.measure(list_1, list_2)
+    def __call__(self, test_case: SearchTestCase):
+        score = self.measure(test_case.golden_list, test_case.output_list)
         if self._is_send_okay():
             self._send_to_server(
                 metric_score=score,
                 metric_name=self.__name__,
-                query=str(list_1),
-                output=str(list_2),
+                query=str(test_case.golden_list),
+                output=str(test_case.output_list),
             )
         return score
 
-    def measure(self, list_1: List, list_2: List):
-        list_1 = [str(x) for x in list_1]
-        list_2 = [str(x) for x in list_2]
+    def measure(self, test_case: SearchTestCase):
+        list_1 = [str(x) for x in test_case.golden_list]
+        list_2 = [str(x) for x in test_case.output_list]
         scorer = RBO(list_1, list_2)
         result = scorer.rbo(p=0.9, ext=True)
         self.success = result > self.minimum_score
