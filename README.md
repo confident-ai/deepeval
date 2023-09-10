@@ -192,6 +192,7 @@ Built by the Confident AI Team. For any questions/business enquiries - please co
 
 # Citation
 
+```
 @misc{embedchain,
   author = {Jacky Wong},
   title = {DeepEval: Framework to unit test LLMS},
@@ -200,3 +201,4 @@ Built by the Confident AI Team. For any questions/business enquiries - please co
   journal = {GitHub repository},
   howpublished = {\url{https://github.com/confident-ai/deepeval}},
 }
+```
