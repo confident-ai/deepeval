@@ -7,10 +7,9 @@ from tabulate import tabulate
 from datetime import datetime
 from typing import List, Callable
 from collections import UserList
-from .test_case import TestCase
-from .metrics.metric import Metric
-from .query_generator import BEIRQueryGenerator
-from .retry import retry
+from deepeval.test_case import TestCase
+from deepeval.metrics.metric import Metric
+from deepeval.retry import retry
 
 
 class EvaluationDataset(UserList):
@@ -231,24 +230,190 @@ which should have matched
             assert t[0] == True, t[-1]
         return test_filename
 
+    def review(self):
+        """A bulk editor for reviewing synthetic data."""
+        try:
+            from dash import Dash, dash_table, dcc, html, Input, Output, State, callback
+        except ModuleNotFoundError:
+            raise Exception(
+                """You will need to run `pip install dash` to be able to review tests that were automatically created."""
+            )
 
-def create_evaluation_dataset_from_raw_text(text: str, output_fn: str = "output.csv"):
-    """Utility function to create an evaluation dataset from raw text."""
-    print(f"Outputting to {output_fn}")
+        table_data = [
+            {"query": x.query, "expected_output": x.expected_output} for x in self.data
+        ]
+        app = Dash(
+            __name__,
+            external_stylesheets=[
+                "https://cdn.jsdelivr.net/npm/bootswatch@5.3.1/dist/darkly/bootstrap.min.css"
+            ],
+        )
 
-    # NOTE: loading this may take a while as the model used is quite big
-    gen = BEIRQueryGenerator()
-    queries = gen.generate_queries(texts=[text], num_queries=2)
-    test_cases = []
-    with open(output_fn, "w") as f:
-        f.write("query,expected_output\n")
-        for query in queries:
-            f.write(f"{query}, {text}\n")
-        test_case = TestCase(query=text, expected_output=text)
-        test_cases.append(test_case)
+        app.layout = html.Div(
+            [
+                html.H1("Bulk Review Test Cases", style={"marginLeft": "20px"}),
+                html.Button(
+                    "Add Test case",
+                    id="editing-rows-button",
+                    n_clicks=0,
+                    style={
+                        "padding": "8px",
+                        "backgroundColor": "purple",  # Added purple background color
+                        "color": "white",
+                        "border": "2px solid purple",  # Added purple border
+                        "marginLeft": "20px",
+                    },
+                ),
+                html.Div(
+                    dash_table.DataTable(
+                        id="adding-rows-table",
+                        columns=[
+                            {
+                                "name": c.title().replace("_", " "),
+                                "id": c,
+                                "deletable": True,
+                                "renamable": True,
+                            }
+                            for i, c in enumerate(["query", "expected_output"])
+                        ],
+                        data=table_data,
+                        editable=True,
+                        row_deletable=True,
+                        style_data_conditional=[
+                            {
+                                "if": {"row_index": "odd"},
+                                "backgroundColor": "rgb(40, 40, 40)",
+                                "color": "white",
+                            },
+                            {
+                                "if": {"row_index": "even"},
+                                "backgroundColor": "rgb(30, 30, 30)",
+                                "color": "white",
+                            },
+                            {
+                                "if": {"state": "selected"},
+                                "backgroundColor": "white",
+                                "color": "white",
+                            },
+                        ],
+                        style_header={
+                            "backgroundColor": "rgb(30, 30, 30)",
+                            "color": "white",
+                            "fontWeight": "bold",
+                            "padding": "10px",  # Added padding
+                        },
+                        style_cell={
+                            "padding": "10px",  # Added padding
+                            "whiteSpace": "pre-wrap",  # Wrap cell contents
+                            "maxHeight": "200px",
+                        },
+                    ),
+                    style={"padding": "20px"},  # Added padding
+                ),
+                html.Div(style={"margin-top": "20px"}),
+                html.Button(
+                    "Save To CSV",
+                    id="save-button",
+                    n_clicks=0,
+                    style={
+                        "padding": "8px",
+                        "backgroundColor": "purple",  # Added purple background color
+                        "color": "white",
+                        "border": "2px solid purple",  # Added purple border
+                        "marginLeft": "20px",
+                    },
+                ),
+                dcc.Input(
+                    id="filename-input",
+                    type="text",
+                    placeholder="Enter filename (.csv format)",
+                    style={
+                        "padding": "8px",
+                        "backgroundColor": "rgb(30, 30, 30)",
+                        "color": "white",
+                        "marginLeft": "20px",
+                        "border": "2px solid purple",  # Added purple border
+                        "width": "200px",  # Edited width
+                    },
+                    value="review-test.csv",
+                ),
+                html.Div(id="code-output"),
+            ],
+            style={"padding": "20px"},  # Added padding
+        )
 
-    dataset = EvaluationDataset(test_cases=test_cases)
-    return dataset
+        @callback(
+            Output("adding-rows-table", "data"),
+            Input("editing-rows-button", "n_clicks"),
+            State("adding-rows-table", "data"),
+            State("adding-rows-table", "columns"),
+        )
+        def add_row(n_clicks, rows, columns):
+            if n_clicks > 0:
+                rows.append({c["id"]: "" for c in columns})
+            return rows
+
+        @callback(
+            Output("save-button", "n_clicks"),
+            Input("save-button", "n_clicks"),
+            State("adding-rows-table", "data"),
+            State("adding-rows-table", "columns"),
+            State("filename-input", "value"),
+        )
+        def save_data(n_clicks, rows, columns, filename):
+            if n_clicks > 0:
+                import csv
+
+                with open(filename, "w", newline="") as f:
+                    writer = csv.DictWriter(f, fieldnames=[c["id"] for c in columns])
+                    writer.writeheader()
+                    writer.writerows(rows)
+            return n_clicks
+
+        @app.callback(
+            Output("code-output", "children"),
+            Input("save-button", "n_clicks"),
+            State("filename-input", "value"),
+        )
+        def show_code(n_clicks, filename):
+            if n_clicks > 0:
+                code = f"""
+        from deepeval.dataset import EvaluationDataset
+
+        # Replace 'filename.csv' with the actual filename
+        ds = EvaluationDataset.from_csv('{filename}')
+
+        # Access the data in the CSV file
+        # For example, you can print a few rows
+        print(ds.sample())
+        """
+                return html.Div(
+                    [
+                        html.P(
+                            "Code to load the CSV file back into a dataset for testing:"
+                        ),
+                        html.Pre(code, className="language-python"),
+                    ],
+                    style={"padding": "20px"},  # Added padding
+                )
+            else:
+                return ""
+
+        app.run(debug=False)
+
+    def add_evaluation_query_answer_pairs(
+        self,
+        openai_api_key: str,
+        context: str,
+        n: int = 3,
+        model: str = "openai/gpt-3.5-turbo",
+    ):
+        """Utility function to create an evaluation dataset using GPT."""
+        new_dataset = create_evaluation_query_answer_pairs(
+            openai_api_key=openai_api_key, context=context, n=n, model=model
+        )
+        self.data += new_dataset.data
+        print(f"Added {len(new_dataset.data)}!")
 
 
 def make_chat_completion_request(prompt: str, openai_api_key: str):
@@ -287,7 +452,10 @@ def generate_chatgpt_output(prompt: str, openai_api_key: str) -> str:
 
 
 def create_evaluation_query_answer_pairs(
-    openai_api_key: str, context: str, n: int = 3, model: str = "openai/gpt-3.5-turbo"
+    openai_api_key: str,
+    context: str,
+    n: int = 3,
+    model: str = "openai/gpt-3.5-turbo",
 ) -> EvaluationDataset:
     """Utility function to create an evaluation dataset using GPT."""
     prompt = f"""You are generating {n} sets of of query-answer pairs to create an evaluation dataset based on the below context.

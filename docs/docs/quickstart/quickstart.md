@@ -61,6 +61,78 @@ def test_0():
     assert_overall_score(query, output, expected_output, context)
 ```
 
+## Automatically Create Tests
+
+Now we often don't want to write our own tests or at least be given a variety of queries by which we can create these tests.
+
+You can automatically create tests in DeepEval in just a few lines of code:
+
+```python
+from deepeval.dataset import create_evaluation_dataset
+dataset = create_evaluation_query_answer_pairs(
+    openai_api_key="<YOUR_OPENAI_API_KEY>",
+    context="FastAPI is a modern, fast (high-performance), web framework for building APIs with Python 3.7+ based on standard Python type hints.",
+    n=3    
+)
+
+```
+
+What just happened?
+
+We automatically created a dataset that stored the query answer pairs for you.
+
+You can replace the string with whatever is stored in your database and it will automatically create question-answer pairs.
+
+Once you have created your dataset, we provide an easy way for you to just review what is inside your dataset.
+
+This is done with our `review` function.
+
+```python
+dataset.review()
+```
+
+When you run this code, it will spin up a quick server for you to review your dataset.
+
+![Bulk Data Review Dashboard](../../assets/bulk-review.png)
+
+This synthetic creator dashboard allows you to automatically review the text cases in your dataset.
+
+Simply click "Add Test Case" to add a new row to the dataset or click the "X" button to the left to remove if you don't think the generated synthetic question was worth it. 
+
+Once you finish reviewing the synthetic data, name your file and hit "Save File".
+
+Once you save the file, you can load the dataset back using:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+# Replace 'filename.csv' with the actual filename
+ds = EvaluationDataset.from_csv('review-test.csv')
+
+# Access the data in the CSV file
+# For example, you can print a few rows
+print(ds.sample())
+```
+
+Great! Your evaluation dataset is ready to go! Now to run tests on your evaluation dataset, simply run: 
+
+```python
+import openai
+def generate_chatgpt_output(query: str):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "assistant", "content": "The customer success phone line is 1200-231-231 and the customer success state is in Austin."},
+            {"role": "user", "content": query}
+        ]
+    )
+    expected_output = response.choices[0].message.content
+    return expected_output
+
+ds.run_evaluation(generate_chatgpt_output)
+```
+
 ## What next?
 
 We recommend diving into [creating a dataset](dataset) to learn how to run tests in bulk or [defining custom metrics](../quickstart/custom-metrics) so you can support writing custom tests and metrics for your own use cases.
