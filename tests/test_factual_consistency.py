@@ -34,7 +34,6 @@ def test_factual_consistency_metric():
     test_case = LLMTestCase(
         output="Python is a programming language.",
         context="Python is a high-level, versatile, and interpreted programming language known for its simplicity and readability.",
-        metrics=[metric],
     )
     assert_test(test_case, [metric])
 
