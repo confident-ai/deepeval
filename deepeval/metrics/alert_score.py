@@ -5,8 +5,6 @@ from .entailment_metric import EntailmentScoreMetric
 from .metric import Metric
 from ..run_test import run_test
 
-# from .answer_relevancy import AnswerRelevancyMetric
-
 
 class AlertScoreMetric(Metric):
     def __init__(self, minimum_score: float = 0.5):

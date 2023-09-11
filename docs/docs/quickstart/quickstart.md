@@ -49,7 +49,8 @@ With overall score, if you leave out `query` or `expected_output`, DeepEval will
 For these tests, you will need a `test_` prefix for this to be ran in Python.
 
 ```python
-from deepeval.metrics.overall_score import assert_overall_score
+from deepeval.metrics.overall_score import OverallScoreMetric
+from deepeval import assert_test, LLMTestCase
 
 
 def test_0():
@@ -58,7 +59,22 @@ def test_0():
     expected_output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize food with the help of chlorophyll pigment."
     context = "Biology"
 
-    assert_overall_score(query, output, expected_output, context)
+    test_case = LLMTestCase(
+        query=query,
+        output=output,
+        expected_output=expected_output,
+        context=context
+    )
+    metric = OverallScoreMetric()
+    # If you want to run the test
+    test_result = run_test(test_case, metrics=[metric])
+    # if you want to make sure that the test returns an error
+    assert_test(test_case)
+    
+    # You can also inspect the test result class 
+    print(test_result.success)
+    print(test_result.score)
+
 ```
 
 ## Automatically Create Tests

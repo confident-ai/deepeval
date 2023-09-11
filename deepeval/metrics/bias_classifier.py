@@ -10,6 +10,7 @@ from typing import Optional
 from ..singleton import Singleton
 from ..test_case import LLMTestCase
 from .metric import Metric
+from ..run_test import assert_test
 
 
 class UnBiasedMetric(Metric, metaclass=Singleton):
@@ -74,5 +75,4 @@ def assert_unbiased(
 ):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
     metric = UnBiasedMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(output=text)
-    score = metric.measure(test_case)
-    assert metric.is_successful(), f"Text is biased - got {score}"
+    assert_test(test_case, metric)

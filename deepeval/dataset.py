@@ -9,6 +9,7 @@ from typing import Any, Callable, List, Optional
 
 from tabulate import tabulate
 
+from deepeval.run_test import run_test
 from deepeval.metrics.metric import Metric
 from deepeval.retry import retry
 from deepeval.test_case import LLMTestCase
