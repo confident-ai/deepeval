@@ -71,6 +71,7 @@ import os
 import openai
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.run_test import run_test
 
 openai.api_key = "sk-XXX"
 
@@ -116,7 +117,7 @@ To define a custom metric, you simply need to define the `measure` and `is_succe
 ```python
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.metric import Metric
-
+from deepeval.run_test import assert_test
 
 class LengthMetric(Metric):
     """This metric checks if the output is more than 3 letters"""

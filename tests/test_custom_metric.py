@@ -3,7 +3,7 @@
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.metric import Metric
-from deepeval import assert_test
+from deepeval.run_test import assert_test
 
 
 class LengthMetric(Metric):
