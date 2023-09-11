@@ -18,12 +18,6 @@ class LengthMetric(Metric):
         score = len(text)
         self.success = score > self.minimum_length
         # Optional: Logs it to the server
-        self.log(
-            query=text,
-            score=score
-            / 100,  # just to have something here - should be between 0 and 1
-            success=self.success,
-        )
         return score
 
     def is_successful(self):
