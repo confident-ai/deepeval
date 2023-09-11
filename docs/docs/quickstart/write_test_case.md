@@ -1,6 +1,6 @@
 # Write a simple test case
 
-To write a simple test case, the below infographic provides the best guide: 
+To write a test case takes less than 5 minutes and can be done in just a few lines of code.
 
 ![3 step process to writing a test case](./../../assets/3-step-metrics.png)
 
