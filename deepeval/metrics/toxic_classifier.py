@@ -53,7 +53,8 @@ class NonToxicMetric(Metric):
                 self.success = False
                 min_score = 1 - v
         results["min_score"] = min_score
-        return results
+        print(results)
+        return min_score
 
     def is_successful(self):
         return self.success
