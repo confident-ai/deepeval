@@ -28,10 +28,17 @@ assert_conceptual_similarity(
 
 ```python
 from deepeval.metrics.conceptual_similarity import ConceptualSimilarityMetric
+from deepeval.run_test import run_test, assert_test
+from deepeval.test_case import LLMTestCase
 
 metric = ConceptualSimilarityMetric(minimum_score=0.3)
-score = metric.measure(text_1="Python is a programming language.", text_2="Python is a snake.")
-metric.is_successful()
+test_case = LLMTestCase(output=output, context=context)
+
+# If you want to run a test, log it and check results
+run_test(test_case, metrics=[metric])
+
+# If you want to make sure a test passes
+assert_test(test_case, metrics=[metric])
 ```
 
 ### Parameters

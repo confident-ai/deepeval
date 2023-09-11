@@ -28,15 +28,23 @@ assert_overall_score(
 
 ```python
 from deepeval.metrics.overall_score import OverallScoreMetric
-metric = OverallScoreMetric()
-score = metric.measure(
+from deepeval.run_test import run_test, assert_test
+from deepeval.test_case import LLMTestCase
+
+metric = OverallScoreMetric(minimum_score=0.3)
+test_case = LLMTestCase(
     query="Who won the FIFA World Cup in 2018?",
     output="French national football team",
     expected_output="The FIFA World Cup in 2018 was won by the French national football team.",
     context="The FIFA World Cup in 2018 was won by the French national football team. They defeated Croatia 4-2 in the final match to claim the championship.",
-    minimum_score=0.3
 )
-score
+
+# If you want to run a test, log it and check results
+run_test(test_case, metrics=[metric])
+
+# If you want to make sure a test passes
+assert_test(test_case, metrics=[metric])
+
 ```
 
 ### How it is measured
