@@ -28,9 +28,10 @@ class NonToxicMetric(Metric):
         self.detoxify_model = DetoxifyModel(model_name)
         self.minimum_score = minimum_score
 
-    def __call__(self, text: str):
-        score = self.measure(text)
+    def __call__(self, test_case: LLMTestCase):
+        score = self.measure(test_case.output)
         score = score["min_score"]
+        return score
 
     def measure(self, test_case: LLMTestCase):
         if test_case.output is None:
