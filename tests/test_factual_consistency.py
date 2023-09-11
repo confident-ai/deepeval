@@ -31,7 +31,10 @@ def test_factual_consistency_metric():
     test_case = LLMTestCase(
         output="Python is a programming language.",
         context="Python is a high-level, versatile, and interpreted programming language known for its simplicity and readability.",
+        metrics=[metric],
     )
+    # Question - Should this test case be run on the test case level?
+    assert test_case.is_successful()
     result = metric.measure(test_case)
     assert metric.is_successful()
     assert result > 0.8, f"Failed {result}"
