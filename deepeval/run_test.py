@@ -183,7 +183,7 @@ def run_test(
                     expected_output=test_case.expected_output
                     if test_case.expected_output
                     else "-",
-                    context=test_case.context,
+                    context=test_case.context if test_case.context else "-",
                 )
                 test_result = TestResult(
                     success=success,
