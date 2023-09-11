@@ -24,9 +24,9 @@ class EvaluationDataset(UserList):
     def from_csv(
         cls,  # Use 'cls' instead of 'self' for class methods
         csv_filename: str,
-        query_column: str,
-        expected_output_column: str,
-        context_column: str,
+        query_column: Optional[str] = None,
+        expected_output_column: Optional[str] = None,
+        context_column: Optional[str] = None,
         output_column: Optional[str] = None,
         id_column: str = None,
         metrics: List[Metric] = None,
