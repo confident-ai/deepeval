@@ -4,8 +4,8 @@ from typing import Any, List, Optional, Union
 import numpy as np
 from tqdm import tqdm
 
-from .metric import Metric
 from ..test_case import SearchTestCase
+from .metric import Metric
 
 
 class RBO:
