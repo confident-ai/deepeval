@@ -23,7 +23,7 @@ Diving into the arguments for `assert_factual_consistency`:
 
 ## Factual Consistency As A Metric
 
-If you would instead like a score of how factually consistent the output is relative to the context.
+You can also use factual consistency as a metric as shown below.
 
 ```python
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
