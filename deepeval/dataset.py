@@ -11,7 +11,6 @@ from tabulate import tabulate
 
 from deepeval.run_test import run_test
 from deepeval.metrics.metric import Metric
-from deepeval.retry import retry
 from deepeval.test_case import LLMTestCase
 
 
@@ -226,7 +225,6 @@ class EvaluationDataset(UserList):
         test_filename: str = None,
         max_retries: int = 3,
         min_success: int = 1,
-        raise_error_on_run: bool = False,
         metrics: List[Metric] = None,
     ) -> str:
         """Run evaluation with given metrics"""
@@ -243,47 +241,24 @@ class EvaluationDataset(UserList):
             "Expected output",
             "Message",
         ]
-        for case in self.data:
-            if case.output is not None:
-                output: str = case.output
-            else:
-                output: str = completion_fn(case.query)
-            # Get the metrics
-            if metrics is None:
-                metrics = case.metrics
-            for metric in metrics:
-
-                @retry(max_retries=max_retries, min_success=min_success)
-                def assert_metric() -> None:
-                    score: float = metric.measure(case)
-                    is_successful: bool = metric.is_successful()
-                    is_successful = bool(is_successful)
-                    message: str = f"""{metric.__class__.__name__} was unsuccessful for 
-{case.query} 
-which should have matched 
-{case.expected_output}
-"""
-                    table.append(
-                        [
-                            is_successful,
-                            metric.__class__.__name__,
-                            score,
-                            output,
-                            case.expected_output,
-                            message,
-                        ]
-                    )
-                    assert is_successful, metric.__name__ + " wasn't successful"
-
-                if raise_error_on_run:
-                    assert_metric()
-                else:
-                    try:
-                        assert_metric()
-                    except AssertionError as e:
-                        print(e)
-                    except Exception as e:
-                        print(e)
+        results = run_test(
+            test_cases=self.data,
+            metrics=metrics,
+            raise_error=True,
+            max_retries=max_retries,
+            min_success=min_success,
+        )
+        for result in results:
+            table.append(
+                [
+                    result.success,
+                    result.metric_name,
+                    result.score,
+                    result.output,
+                    result.expected_output,
+                    "",
+                ]
+            )
         if test_filename is None:
             test_filename = (
                 f"test-result-{datetime.now().__str__().replace(' ', '-')}.txt"
