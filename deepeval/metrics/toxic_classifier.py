@@ -65,4 +65,5 @@ class NonToxicMetric(Metric):
 
 def assert_non_toxic(text: str, minimum_score: float = 0.5):
     metric = NonToxicMetric(minimum_score=minimum_score)
-    assert_test(text, [metric])
+    test_case = LLMTestCase(output=text)
+    assert_test(test_case, [metric])
