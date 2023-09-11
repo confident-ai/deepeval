@@ -40,8 +40,15 @@ class LLMTestCase(TestCase):
 
 @dataclass
 class SearchTestCase(TestCase):
-    output_list: List[Any]
-    golden_list: List[Any]
+    def __init__(
+        self,
+        output_list: List[Any],
+        golden_list: List[Any],
+        id: Optional[str] = None,
+    ):
+        super().__init__(id)
+        self.output_list = output_list
+        self.golden_list = golden_list
 
 
 class AgentTestCase(TestCase):
