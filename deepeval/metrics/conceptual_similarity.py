@@ -38,6 +38,10 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
     def is_successful(self) -> bool:
         return bool(self.score >= self.minimum_score)
 
+    @property
+    def __name__(self):
+        return "Conceptual Similarity"
+
 
 def assert_conceptual_similarity(
     output: str, expected_output: str, minimum_score=0.3
