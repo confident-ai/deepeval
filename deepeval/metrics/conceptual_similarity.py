@@ -6,6 +6,7 @@ from ..singleton import Singleton
 from ..test_case import LLMTestCase
 from ..utils import cosine_similarity
 from .metric import Metric
+from ..run_test import assert_test
 
 
 class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
@@ -43,7 +44,4 @@ def assert_conceptual_similarity(
 ):
     metric = ConceptualSimilarityMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(output=output, expected_output=expected_output)
-    score = metric.measure(test_case)
-    assert (
-        metric.is_successful()
-    ), f"Metric is not conceptually similar - got {score}"
+    assert_test(test_case, [metric])
