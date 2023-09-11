@@ -35,6 +35,7 @@ setup(
         "toxic": [
             "detoxify",  # for toxic classifier
         ],
+        "dev": ["black"],
     },
     entry_points={
         "console_scripts": [

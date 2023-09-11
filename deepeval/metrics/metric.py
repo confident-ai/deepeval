@@ -3,6 +3,7 @@ from abc import abstractmethod
 from ..singleton import Singleton
 from ..test_case import LLMTestCase
 from ..utils import softmax
+from sentence_transformers import CrossEncoder
 
 
 class Metric(metaclass=Singleton):
@@ -32,7 +33,6 @@ class Metric(metaclass=Singleton):
 class EntailmentScoreMetric(Metric):
     def __init__(self, model_name: str = "cross-encoder/nli-deberta-base"):
         # We use a smple cross encoder model
-        from sentence_transformers import CrossEncoder
 
         self.model = CrossEncoder(model_name)
 

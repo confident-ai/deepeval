@@ -3,11 +3,12 @@ from ..test_case import LLMTestCase
 from ..utils import chunk_text, softmax
 from .metric import Metric
 
+from sentence_transformers import CrossEncoder
+
 
 class FactualConsistencyModel(metaclass=Singleton):
     def __init__(self, model_name: str = "cross-encoder/nli-deberta-v3-large"):
         # We use a smple cross encoder model
-        from sentence_transformers import CrossEncoder
 
         self.model = CrossEncoder(model_name)
 
