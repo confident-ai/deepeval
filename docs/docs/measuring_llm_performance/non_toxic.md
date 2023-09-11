@@ -18,12 +18,17 @@ assert_non_toxic(text="Who is that?")
 
 ```python
 from deepeval.metrics.toxic_classifier import NonToxicMetric
+from deepeval.run_test import run_test, assert_test
+from deepeval.test_case import LLMTestCase
 
 metric = NonToxicMetric()
-score = metric.measure(text=output)
-score
-# Prints out a dictionary of values showing the scores for each trait
+test_case = LLMTestCase(output=output)
 
+# If you want to run a test, log it and check results
+run_test(test_case, metrics=[metric])
+
+# If you want to make sure a test passes
+assert_test(test_case, metrics=[metric])
 ```
 
 ### How it is measured
