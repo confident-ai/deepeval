@@ -2,6 +2,7 @@ from ..singleton import Singleton
 from ..test_case import LLMTestCase
 from ..utils import chunk_text, softmax
 from .metric import Metric
+from ..run_test import assert_test
 
 from sentence_transformers import CrossEncoder
 
@@ -61,7 +62,5 @@ def assert_factual_consistency(
     """Assert that the output is factually consistent with the context."""
 
     metric = FactualConsistencyMetric(minimum_score=minimum_score)
-    score = metric(context, output)
-    assert metric.is_successful(), (
-        metric.__class__.__name__ + " was unsuccessful."
-    )
+    test_case = LLMTestCase(output=output, context=context)
+    assert_test(test_case, [metric])
