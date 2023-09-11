@@ -33,8 +33,6 @@ class retry:
                 else:
                     print(f"Max retries ({self.max_retries}) exceeded.")
                     if self.success_count < self.min_success:
-                        raise Exception(
-                            "Operation failed the required number of times."
-                        )
+                        raise e
 
         return wrapper
