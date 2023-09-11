@@ -13,6 +13,7 @@ os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
 
 
 def test_factual_consistency():
+    # legacy functions - consider removing
     with pytest.raises(AssertionError):
         assert_factual_consistency(
             context="After a long day at work, Sarah decided to go for a walk in the park to unwind. She put on her sneakers and grabbed her headphones before heading out. As she strolled along the path, she noticed families having picnics, children playing on the playground, and ducks swimming in the pond.",
@@ -21,6 +22,7 @@ def test_factual_consistency():
 
 
 def test_factual_consistency_2():
+    # legacy functions - consider removing
     assert_factual_consistency(
         context="After a long day at work, Sarah decided to go for a walk in the park to unwind. She put on her sneakers and grabbed her headphones before heading out. As she strolled along the path, she noticed families having picnics, children playing on the playground, and ducks swimming in the pond.",
         output="Sarah went out for a walk in the park.",
@@ -43,7 +45,6 @@ def test_factual_consistency_metric_2():
         output="Python is a programming language.",
         context="Python is NOT a programming language.",
     )
-    result = metric.measure(test_case)
     with pytest.raises(AssertionError):
         run_test(test_case, [metric])
 

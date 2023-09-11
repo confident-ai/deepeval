@@ -32,13 +32,6 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
 
         vectors = self._vectorize(test_case.output, test_case.expected_output)
         self.score = cosine_similarity(vectors[0], vectors[1])
-        self.log(
-            success=self.is_successful(),
-            score=self.score,
-            metric_name="Conceptual Similarity With Ground Truth",
-            output=test_case.output,
-            expected_output=test_case.expected_output,
-        )
         return float(self.score)
 
     def is_successful(self) -> bool:
