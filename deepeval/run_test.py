@@ -38,9 +38,9 @@ def _get_init_values(metric: Metric):
 
 
 def _send_to_server(
+    metric: Metric,
     success: bool,
     metric_score: float,
-    metric_name: str,
     query: str = "-",
     output: str = "-",
     expected_output: str = "-",
@@ -62,10 +62,11 @@ def _send_to_server(
             query=query, expected_output=expected_output, context=context
         )
 
-        metric_metadata: dict = _get_init_values()
+        metric_metadata: dict = _get_init_values(metric)
         if metadata:
             metric_metadata.update(metadata)
 
+        metric_name = metric.__name__
         return client.add_test_case(
             metric_score=float(metric_score),
             metric_name=metric_name,
@@ -79,9 +80,9 @@ def _send_to_server(
 
 
 def log(
+    metric: Metric,
     success: bool = True,
     score: float = 1e-10,
-    metric_name: str = "-",
     query: str = "-",
     output: str = "-",
     expected_output: str = "-",
@@ -97,8 +98,8 @@ def log(
     """
     if _is_send_okay():
         _send_to_server(
+            metric=metric,
             metric_score=score,
-            metric_name=metric_name,
             query=query,
             output=output,
             expected_output=expected_output,
@@ -176,7 +177,7 @@ def run_test(
                 log(
                     success=success,
                     score=score,
-                    metric_name=metric.__name__,
+                    metric=metric,
                     query=test_case.query if test_case.query else "-",
                     output=test_case.output if test_case.output else "-",
                     expected_output=test_case.expected_output
