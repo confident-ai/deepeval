@@ -193,7 +193,7 @@ Built by the Confident AI Team. For any questions/business enquiries - please co
 # Citation
 
 ```
-@misc{embedchain,
+@misc{deepeval,
   author = {Jacky Wong},
   title = {DeepEval: Framework to unit test LLMS},
   year = {2023},
