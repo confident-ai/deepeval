@@ -1,7 +1,7 @@
 """Tests for answer relevancy
 """
 from deepeval.test_case import SearchTestCase
-from deepeval import run_test, assert_test
+from deepeval.run_test import run_test, assert_test
 
 list1 = ["a", "b"]
 list2 = ["b", "c"]
