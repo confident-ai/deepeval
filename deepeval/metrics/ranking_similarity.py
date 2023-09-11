@@ -167,13 +167,6 @@ class RankingSimilarity(Metric):
 
     def __call__(self, test_case: SearchTestCase):
         score = self.measure(test_case.golden_list, test_case.output_list)
-        if self._is_send_okay():
-            self._send_to_server(
-                metric_score=score,
-                metric_name=self.__name__,
-                query=str(test_case.golden_list),
-                output=str(test_case.output_list),
-            )
         return score
 
     def measure(self, test_case: SearchTestCase):

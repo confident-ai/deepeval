@@ -20,14 +20,6 @@ class CohereRerankerMetric(Metric):
         success = False
         if score > self.minimum_score:
             success = True
-        self._send_to_server(
-            metric_score=score,
-            metric_name=self.__name__,
-            query=query,
-            output=output,
-            expected_output=expected_output,
-            success=success,
-        )
         return score
 
     def measure(self, test_case: LLMTestCase):

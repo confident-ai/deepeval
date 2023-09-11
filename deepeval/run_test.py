@@ -133,10 +133,10 @@ class TestResult:
 def run_test(
     test_cases: Union[LLMTestCase, List[LLMTestCase]],
     metrics: List[Metric],
-    raise_error: bool = False,
     max_retries: int = 1,
     delay: int = 1,
     min_success: int = 1,
+    raise_error: bool = False,
 ) -> List[TestResult]:
     """
     Args:
@@ -211,7 +211,6 @@ def run_test(
 def assert_test(
     test_cases: Union[LLMTestCase, List[LLMTestCase]],
     metrics: List[Metric],
-    raise_error: bool = False,
     max_retries: int = 1,
     delay: int = 1,
     min_success: int = 1,
@@ -220,8 +219,8 @@ def assert_test(
     return run_test(
         test_cases=test_cases,
         metrics=metrics,
-        raise_error=raise_error,
         max_retries=max_retries,
         delay=delay,
         min_success=min_success,
+        raise_error=True,
     )

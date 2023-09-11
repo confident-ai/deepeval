@@ -23,14 +23,6 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
     def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
         success = score >= self.minimum_score
-        self._send_to_server(
-            metric_score=score,
-            metric_name=self.__name__,
-            query=query,
-            output=output,
-            expected_output=expected_output,
-            success=success,
-        )
         return score
 
     def measure(self, test_case: LLMTestCase):
@@ -75,4 +67,4 @@ def assert_unbiased(
 ):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
     metric = UnBiasedMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(output=text)
-    assert_test(test_case, metric)
+    assert_test(test_case, [metric])
