@@ -297,16 +297,8 @@ which should have matched
     def review(self):
         """A bulk editor for reviewing synthetic data."""
         try:
-            from dash import (
-                Dash,
-                Input,
-                Output,
-                State,
-                callback,
-                dash_table,
-                dcc,
-                html,
-            )
+            from dash import (Dash, Input, Output, State, callback, dash_table,
+                              dcc, html)
         except ModuleNotFoundError:
             raise Exception(
                 """You will need to run `pip install dash` to be able to review tests that were automatically created."""
