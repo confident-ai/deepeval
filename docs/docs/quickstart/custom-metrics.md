@@ -4,13 +4,15 @@ You can define a custom metric by defining the `measure` and `is_successful` fun
 
 ```python
 from deepeval.metrics.metric import Metric
+from deepeval.test_case import LLMTestCase
+from deepeval import run_test
 
 class LengthMetric(Metric):
     """This metric checks if the output is more than 3 letters"""
     def __init__(self, minimum_length: int=3):
         self.minimum_length = minimum_length
 
-    def measure(self, text: str):
+    def measure(self, test_case: LLMTestCase):
         # sends to server
         score = len(text)
         self.success = score > self.minimum_length
@@ -25,4 +27,7 @@ class LengthMetric(Metric):
 
 metric = LengthMetric()
 
+# Defining a custom test case
+test_case = LLMTestCase()
+run_test(test_case, metrics=[metric])
 ```

@@ -12,4 +12,4 @@ from . import (
     utils,
 )
 from ._version import __version__
-from .run_test import run_test
+from .run_test import run_test, assert_test

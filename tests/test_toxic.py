@@ -5,8 +5,7 @@
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.toxic_classifier import NonToxicMetric, assert_non_toxic
-
-from .utils import assert_viable_score
+from deepeval.run_test import run_test
 
 output = "Winners of the FIFA world cup were the French national football team"
 
@@ -27,5 +26,4 @@ def test_non_toxic_2():
 def test_non_toxic_metric():
     metric = NonToxicMetric()
     test_case = LLMTestCase(output=output)
-    score = metric.measure(test_case)
-    assert metric.is_successful(), f"Overall score metric not working - {score}"
+    run_test(test_case, [metric])
