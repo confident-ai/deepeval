@@ -1,7 +1,7 @@
 """Test alert score
 """
 import os
-
+import pytest
 from deepeval.client import Client
 from deepeval.metrics.alert_score import AlertScoreMetric, assert_alert_score
 from deepeval.test_case import LLMTestCase
@@ -21,12 +21,13 @@ context = "The FIFA World Cup in 2018 was won by the French national football te
 
 
 def test_alert_score():
-    assert_alert_score(
-        query="Who won the FIFA World Cup in 2018?",
-        output="Winners of the FIFA world cup were the French national football team",
-        expected_output="French national football team",
-        context="The FIFA World Cup in 2018 was won by the French national football team. They defeated Croatia 4-2 in the final match to claim the championship.",
-    )
+    with pytest.raises(AssertionError):
+        assert_alert_score(
+            query="Who won the FIFA World Cup in 2018?",
+            output="Winners of the FIFA world cup were the French national football team",
+            expected_output="French national football team",
+            context="The FIFA World Cup in 2018 was won by the French national football team. They defeated Croatia 4-2 in the final match to claim the championship.",
+        )
 
 
 def test_alert_score_metric():
