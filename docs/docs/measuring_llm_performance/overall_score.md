@@ -26,6 +26,8 @@ assert_overall_score(
 
 ## Metric
 
+You can also dive into the lower level API which explores how to use this as a metric.
+
 ```python
 from deepeval.metrics.overall_score import OverallScoreMetric
 from deepeval.run_test import run_test, assert_test

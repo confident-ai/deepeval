@@ -66,7 +66,7 @@ const sidebars = {
       label: "Tutorials",
       items: [
         "tutorials/evaluating-llamaindex",
-        // "tutorials/evaluating-langchain",
+        "tutorials/evaluating-langchain",
       ]
     },
     {
