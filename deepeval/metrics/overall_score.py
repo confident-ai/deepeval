@@ -7,6 +7,7 @@ from .answer_relevancy import AnswerRelevancyMetric
 from .conceptual_similarity import ConceptualSimilarityMetric
 from .factual_consistency import FactualConsistencyMetric
 from .metric import Metric
+from ..run_test import assert_test
 
 
 class OverallScoreMetric(Metric, metaclass=Singleton):
@@ -52,16 +53,6 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
         overall_score = sum(metadata.values()) / len(metadata)
 
         self.success = bool(overall_score > self.minimum_score)
-        self.log(
-            success=self.success,
-            score=overall_score,
-            metric_name=self.__name__,
-            query=test_case.query,
-            output=test_case.output,
-            expected_output=test_case.expected_output,
-            metadata=metadata,
-            context=test_case.context,
-        )
         return overall_score
 
     def is_successful(self) -> bool:
@@ -80,12 +71,10 @@ def assert_overall_score(
     minimum_score: float = 0.5,
 ):
     metric = OverallScoreMetric(minimum_score=minimum_score)
-    score = metric.measure(
+    test_case = LLMTestCase(
         query=query,
         output=output,
         expected_output=expected_output,
         context=context,
     )
-    assert (
-        metric.is_successful()
-    ), f"Metric is not conceptually similar - got {score}"
+    assert_test(test_case=test_case, metrics=[metric])
