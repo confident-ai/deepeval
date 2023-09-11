@@ -4,6 +4,8 @@ import os
 
 from deepeval.client import Client
 from deepeval.metrics.alert_score import AlertScoreMetric, assert_alert_score
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test
 
 from .utils import assert_viable_score
 
@@ -29,14 +31,13 @@ def test_alert_score():
 
 def test_alert_score_metric():
     metric = AlertScoreMetric()
-    score = metric.measure(
+    test_case = LLMTestCase(
         query=query,
         output=output,
         expected_output=expected_output,
         context=context,
     )
-    assert metric.is_successful(), "Overall score metric not working"
-    assert_viable_score(score)
+    assert_test(test_case, metrics=[metric])
 
 
 def test_implementation_inside_overall():
