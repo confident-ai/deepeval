@@ -37,7 +37,7 @@ const sidebars = {
       label: 'Evaluating LLMs',
       items: [
         "measuring_llm_performance/overall_score",
-        "measuring_llm_performance/alert_score",
+        // "measuring_llm_performance/alert_score",
         'measuring_llm_performance/factual_consistency',
         'measuring_llm_performance/answer_relevancy',
         "measuring_llm_performance/conceptual_similarity",

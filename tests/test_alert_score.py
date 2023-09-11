@@ -30,6 +30,7 @@ def test_alert_score():
         )
 
 
+@pytest.mark.skip(reason="More research required for Alert Score")
 def test_alert_score_metric():
     metric = AlertScoreMetric()
     test_case = LLMTestCase(
@@ -41,6 +42,7 @@ def test_alert_score_metric():
     assert_test(test_case, metrics=[metric])
 
 
+@pytest.mark.skip(reason="More research required for Alert Score")
 def test_implementation_inside_overall():
     client = Client(TEST_API_KEY)
     imps = client.list_implementations()
