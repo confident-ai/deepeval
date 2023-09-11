@@ -26,7 +26,7 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
         return score
 
     def measure(self, test_case: LLMTestCase):
-        if test_case.output is None or test_case.expected_output is None:
+        if test_case.output:
             raise ValueError("Required attributes for test_case cannot be None")
 
         from Dbias.bias_classification import classifier
