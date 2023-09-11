@@ -1,31 +1,29 @@
-import numpy as np
-
+from ..singleton import Singleton
 from ..test_case import LLMTestCase
 from .metric import Metric
 
 
-class AnswerRelevancyMetric(Metric):
-    def __init__(self, minimum_score: bool = 0.5):
-        from sentence_transformers import SentenceTransformer, util
-
-        self.minimum_score = minimum_score
+class AnswerRelevancyModel(metaclass=Singleton):
+    def __init__(self):
+        from sentence_transformers import SentenceTransformer
 
         # Load the model
         self.model = SentenceTransformer(
             "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
         )
 
+    def encode(self, text):
+        return self.model.encode(text)
+
+
+class AnswerRelevancyMetric(Metric):
+    def __init__(self, minimum_score: bool = 0.5):
+        self.minimum_score = minimum_score
+        self.model = AnswerRelevancyModel()
+
     def __call__(self, test_case: LLMTestCase):
         score = self.measure(test_case.query, test_case.output)
-        success = score > self.minimum_score
-        if self._is_send_okay():
-            self._send_to_server(
-                metric_score=float(score),
-                query=test_case.query,
-                output=test_case.output,
-                metric_name=self.__name__,
-                success=bool(success),
-            )
+        self.success = score > self.minimum_score
         return score
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -45,13 +43,6 @@ class AnswerRelevancyMetric(Metric):
         score = scores[0]
         self.success = score > self.minimum_score
         # Log answer relevancy
-        self.log(
-            success=self.success,
-            score=score,
-            metric_name=self.__name__,
-            query=test_case.query,
-            output=test_case.output,
-        )
         return score
 
     def is_successful(self) -> bool:
