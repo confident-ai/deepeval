@@ -1,9 +1,9 @@
 """Test for custom metrics in Python
 """
 
-import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.metric import Metric
+from deepeval import assert_test
 
 
 class LengthMetric(Metric):
@@ -39,5 +39,4 @@ def test_length_metric():
     test_case = LLMTestCase(
         output="This is a long sentence that is more than 3 letters"
     )
-    metric.measure(test_case)
-    assert metric.is_successful()
+    assert_test(test_case, [metric])
