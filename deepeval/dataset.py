@@ -36,17 +36,27 @@ class EvaluationDataset(UserList):
         df = pd.read_csv(csv_filename)
         if query_column is not None and query_column in df.columns:
             querys = df[query_column].values
+        else:
+            querys = [None] * len(df)
         if (
             expected_output_column is not None
             and expected_output_column in df.columns
         ):
             expected_outputs = df[expected_output_column].values
+        else:
+            expected_outputs = [None] * len(df)
         if context_column is not None and context_column in df.columns:
             contexts = df[context_column].values
+        else:
+            contexts = [None] * len(df)
         if output_column is not None and output_column in df.columns:
             outputs = df[output_column].values
+        else:
+            outputs = [None] * len(df)
         if id_column is not None:
             ids = df[id_column].values
+        else:
+            ids = [None] * len(df)
 
         # Initialize the 'data' attribute as an empty list
         cls.data = []
@@ -56,7 +66,6 @@ class EvaluationDataset(UserList):
                 LLMTestCase(
                     query=query_data,
                     expected_output=expected_outputs[i],
-                    metrics=metrics,
                     context=contexts[i],
                     id=ids[i] if id_column else None,
                     output=outputs[i] if output_column else None,
