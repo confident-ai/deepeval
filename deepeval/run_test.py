@@ -122,6 +122,14 @@ class TestResult:
     metadata: Optional[dict]
     context: str
 
+    def __gt__(self, other: "TestResult") -> bool:
+        """Greater than comparison based on score"""
+        return self.score > other.score
+
+    def __lt__(self, other: "TestResult") -> bool:
+        """Less than comparison based on score"""
+        return self.score < other.score
+
 
 def run_test(
     test_cases: Union[LLMTestCase, List[LLMTestCase]],

@@ -9,6 +9,7 @@ from deepeval.metrics.overall_score import (
     OverallScoreMetric,
     assert_overall_score,
 )
+from deepeval.run_test import assert_test, run_test
 
 from .utils import assert_viable_score
 
@@ -46,15 +47,14 @@ class TestOverallScore(LLMTestCase):
             expected_output=expected_output,
             context="He doesn't know how to code",
         )
-        score_2 = self.metric.measure(test_case)
         test_case_2 = LLMTestCase(
             query=query,
             output=output,
             expected_output=expected_output,
             context=context,
         )
-        score_1 = self.metric.measure(test_case_2)
-        assert score_2 < score_1, "Worst context."
+        scores = run_test([test_case, test_case_2], metrics=[self.metric])
+        assert scores[1].score > scores[0].score, "Failed the test"
 
     def test_overall_score_worst_output(self):
         test_case = LLMTestCase(
@@ -70,8 +70,8 @@ class TestOverallScore(LLMTestCase):
             expected_output=expected_output,
             context="He doesn't know how to code",
         )
-        score_2 = self.metric.measure(test_case_2)
-        assert score_3 < score_2, "Worst output and context."
+        scores = run_test([test_case, test_case_2], metrics=[self.metric])
+        assert scores[0] > scores[1]
 
     def test_worst_expected_output(self):
         test_case = LLMTestCase(
@@ -87,8 +87,8 @@ class TestOverallScore(LLMTestCase):
             expected_output=expected_output,
             context="He doesn't know how to code",
         )
-        score_3 = self.metric.measure(test_case_2)
-        assert score_4 < score_3, "Worst lol"
+        scores = run_test([test_case, test_case_2], metrics=[self.metric])
+        assert scores[0] > scores[1]
 
     def test_overall_score_metric(self):
         test_case = LLMTestCase(
@@ -97,9 +97,8 @@ class TestOverallScore(LLMTestCase):
             expected_output=expected_output,
             context=context,
         )
-        score = self.metric.measure(test_case)
-        assert self.metric.is_successful(), "Overall score metric not working"
-        assert_viable_score(score)
+        result = run_test([test_case], metrics=[self.metric])
+        assert_viable_score(result.score)
 
     def test_overall_score_metric_no_query(self):
         test_case = LLMTestCase(
@@ -107,18 +106,16 @@ class TestOverallScore(LLMTestCase):
             expected_output=expected_output,
             context=context,
         )
-        score = self.metric.measure(test_case)
-        assert self.metric.is_successful(), "Overall score metric not working"
-        assert_viable_score(score)
+        assert_test([test_case], metrics=[self.metric])
 
     def test_overall_score_metric_no_query_no_context(self):
         test_case = LLMTestCase(
             output=output,
             expected_output=expected_output,
         )
-        score = self.metric.measure(test_case)
-        assert self.metric.is_successful(), "Overall score metric not working"
-        assert_viable_score(score)
+        result = run_test([test_case], metrics=[self.metric])
+        assert result[0].success, "Overall score metric not working"
+        assert_viable_score(result[0].score)
 
     def test_overall_score_metric_no_context_no_expected_output(self):
         test_case = LLMTestCase(
@@ -126,8 +123,9 @@ class TestOverallScore(LLMTestCase):
             output=output,
         )
         score = self.metric.measure(test_case)
-        assert self.metric.is_successful(), "Overall score metric not working"
-        assert_viable_score(score)
+        result = run_test([test_case], metrics=[self.metric])
+        assert result[0].success, "Overall score metric not working"
+        assert_viable_score(result[0].score)
 
     def test_implementation_inside_overall(self):
         imps = self.client.list_implementations()
