@@ -146,7 +146,7 @@ def generate_chatgpt_output(query: str):
     expected_output = response.choices[0].message.content
     return expected_output
 
-ds.run_evaluation(generate_chatgpt_output)
+ds.run_evaluation(completion_fn=generate_chatgpt_output)
 ```
 
 ## What next?
