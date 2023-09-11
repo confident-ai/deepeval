@@ -3,7 +3,7 @@
 from ..test_case import LLMTestCase
 from .entailment_metric import EntailmentScoreMetric
 from .metric import Metric
-from ..run_test import run_test
+from ..run_test import assert_test
 
 
 class AlertScoreMetric(Metric):
@@ -53,5 +53,4 @@ def assert_alert_score(
         context=context,
         output=output,
     )
-    score = metric.measure(test_case)
-    assert metric.is_successful(), f"Found issue - Alert score: {score}"
+    assert_test(test_case, [metric])
