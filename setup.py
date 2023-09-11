@@ -26,6 +26,7 @@ setup(
         "typer",
         "rich",
         "protobuf<=3.20.5",
+        "pandas",
     ],
     extras_require={
         "bias": [
