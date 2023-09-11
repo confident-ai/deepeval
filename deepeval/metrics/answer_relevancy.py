@@ -1,5 +1,6 @@
 from ..singleton import Singleton
 from ..test_case import LLMTestCase
+from ..run_test import run_test
 from .metric import Metric
 
 
@@ -58,7 +59,4 @@ def assert_answer_relevancy(
 ):
     metric = AnswerRelevancyMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(query=query, output=output)
-    score = metric.measure(test_case)
-    assert metric.is_successful(), (
-        metric.__class__.__name__ + " was unsuccessful - " + str(score)
-    )
+    run_test(test_case, metrics=[metric])

@@ -3,6 +3,7 @@
 from ..test_case import LLMTestCase
 from .entailment_metric import EntailmentScoreMetric
 from .metric import Metric
+from ..run_test import run_test
 
 # from .answer_relevancy import AnswerRelevancyMetric
 

@@ -1,8 +1,8 @@
 """Function for running test
 """
 import os
-from typing import List, Optional
-
+from typing import List, Optional, Union
+from dataclasses import dataclass
 from .client import Client
 from .constants import IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
 from .get_api_key import _get_api_key, _get_implementation_name
@@ -108,11 +108,29 @@ def log(
         )
 
 
-def run_test(test_case: LLMTestCase, metrics: List[Metric]):
+@dataclass
+class TestResult:
+    """Returned from run_test"""
+
+    success: bool
+    score: float
+    metric_name: str
+    query: str
+    output: str
+    expected_output: str
+    metadata: Optional[dict]
+    context: str
+
+
+def run_test(
+    test_cases: Union[LLMTestCase, List[LLMTestCase]],
+    metrics: List[Metric],
+    raise_error: bool = False,
+) -> List[TestResult]:
     """
     Args:
-        test_case: Test case to run
-        metric: Metric to run
+        test_cases: Either a single test case or a list of test cases to run
+        metrics: List of metrics to run
 
     Example:
         >>> from deepeval.metrics.facutal_consistency import FactualConsistencyMetric
@@ -120,28 +138,59 @@ def run_test(test_case: LLMTestCase, metrics: List[Metric]):
         >>> from deepeval.run_test import run_test
         >>> metric = FactualConsistencyMetric()
         >>> test_case = LLMTestCase(
-            ...     query="What is the capital of France?",
-            ...     output="Paris",
-            ...     expected_output="Paris",
-            ...     context="Geography",
-            ... )
+        ...     query="What is the capital of France?",
+        ...     output="Paris",
+        ...     expected_output="Paris",
+        ...     context="Geography",
+        ... )
         >>> run_test(test_case, metric)
     """
-    for metric in metrics:
-        score = metric.measure(test_case)
-        success = metric.is_successful()
-        log(
-            success=success,
-            score=score,
-            metric_name=metric.__name__,
-            query=test_case.query if test_case.query else "-",
-            output=test_case.output if test_case.output else "-",
-            expected_output=test_case.expected_output
-            if test_case.expected_output
-            else "-",
-            context=test_case.context,
-        )
+    if isinstance(test_cases, LLMTestCase):
+        test_cases = [test_cases]
 
-        assert (
-            metric.is_successful()
-        ), f"{metric.__name__} failed. Score: {score}."
+    test_results = []
+    for test_case in test_cases:
+        for metric in metrics:
+            score = metric.measure(test_case)
+            success = metric.is_successful()
+            log(
+                success=success,
+                score=score,
+                metric_name=metric.__name__,
+                query=test_case.query if test_case.query else "-",
+                output=test_case.output if test_case.output else "-",
+                expected_output=test_case.expected_output
+                if test_case.expected_output
+                else "-",
+                context=test_case.context,
+            )
+            test_result = TestResult(
+                success=success,
+                score=score,
+                metric_name=metric.__name__,
+                query=test_case.query if test_case.query else "-",
+                output=test_case.output if test_case.output else "-",
+                expected_output=test_case.expected_output
+                if test_case.expected_output
+                else "-",
+                metadata=None,
+                context=test_case.context,
+            )
+            test_results.append(test_result)
+
+            if raise_error:
+                assert (
+                    metric.is_successful()
+                ), f"{metric.__name__} failed. Score: {score}."
+    return test_results
+
+
+def assert_test(
+    test_cases: Union[LLMTestCase, List[LLMTestCase]], metrics: List[Metric]
+) -> List[TestResult]:
+    """Assert a test"""
+    return run_test(
+        test_cases=test_cases,
+        metrics=metrics,
+        raise_error=True,
+    )
