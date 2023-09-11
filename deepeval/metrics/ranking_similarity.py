@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from ..test_case import SearchTestCase
 from .metric import Metric
+from ..run_test import assert_test
 
 
 class RBO:
@@ -183,3 +184,9 @@ class RankingSimilarity(Metric):
     @property
     def __name__(self):
         return "Ranking Similarity"
+
+
+def assert_ranking_similarity(list1, list2, minimum_score):
+    scorer = RankingSimilarity(minimum_score=minimum_score)
+    test_case = SearchTestCase(list1, list2)
+    assert_test(test_case, [scorer])

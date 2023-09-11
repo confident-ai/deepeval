@@ -2,6 +2,10 @@
 """
 from deepeval.test_case import SearchTestCase
 from deepeval.run_test import run_test, assert_test
+from deepeval.metrics.ranking_similarity import (
+    RankingSimilarity,
+    assert_ranking_similarity,
+)
 
 list1 = ["a", "b"]
 list2 = ["b", "c"]
@@ -11,15 +15,11 @@ list_dict_1 = [{"text": "a"}, {"text": "b"}]
 list_dict_2 = [{"text": "b"}, {"text": "c"}]
 
 
-def test_answer_relevancy():
-    from deepeval.test_utils import assert_ranking_similarity
-
+def test_assert_similar_ranking():
     assert_ranking_similarity(list1, list2, minimum_score=0.4)
 
 
-def test_query_answer_relevancy():
-    from deepeval.metrics.ranking_similarity import RankingSimilarity
-
+def test_similar_ranking_2():
     scorer = RankingSimilarity(minimum_score=0.5)
     test_case = SearchTestCase(list1, list2)
     test_case_2 = SearchTestCase(list1, list3)
@@ -29,9 +29,7 @@ def test_query_answer_relevancy():
     ), "Similarity not working"
 
 
-def test_query_answer_relevancy_dict():
-    from deepeval.metrics.ranking_similarity import RankingSimilarity
-
+def test_similar_ranking_3():
     metric = RankingSimilarity(minimum_score=0.3)
     test_case = SearchTestCase(list1, list2)
     assert_test(test_cases=test_case, metrics=[metric])
