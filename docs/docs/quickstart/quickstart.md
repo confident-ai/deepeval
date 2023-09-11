@@ -66,18 +66,18 @@ def test_0():
         context=context
     )
     metric = OverallScoreMetric()
+    # if you want to make sure that the test returns an error
+    assert_test(test_case, metrics=[metric])
+    
     # If you want to run the test
     test_result = run_test(test_case, metrics=[metric])
-    # if you want to make sure that the test returns an error
-    assert_test(test_case)
-    
     # You can also inspect the test result class 
     print(test_result.success)
     print(test_result.score)
 
 ```
 
-## Automatically Create Tests
+## Automatically Create Tests Cases
 
 Now we often don't want to write our own tests or at least be given a variety of queries by which we can create these tests.
 
