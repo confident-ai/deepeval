@@ -5,8 +5,6 @@ import os
 import pytest
 
 from deepeval.api import Api
-from deepeval.constants import API_KEY_ENV
-from deepeval.metrics.bertscore_metric import BertScoreMetric
 from deepeval.metrics.factual_consistency import assert_factual_consistency
 
 IMPLEMENTATION_NAME = "Quickstart Example 2"

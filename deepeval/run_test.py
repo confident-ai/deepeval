@@ -8,7 +8,7 @@ from .client import Client
 from .constants import IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
 from .get_api_key import _get_api_key, _get_implementation_name
 from .metrics import Metric
-from .test_case import LLMTestCase
+from .test_case import LLMTestCase, TestCase, SearchTestCase
 
 
 def _is_api_key_set():
@@ -97,7 +97,7 @@ def log(
     - expected_output: The output that's expected.
     """
     if _is_send_okay():
-        _send_to_server(
+        return _send_to_server(
             metric=metric,
             metric_score=score,
             query=query,
@@ -132,7 +132,7 @@ class TestResult:
 
 
 def run_test(
-    test_cases: Union[LLMTestCase, List[LLMTestCase]],
+    test_cases: Union[TestCase, LLMTestCase, SearchTestCase, List[LLMTestCase]],
     metrics: List[Metric],
     max_retries: int = 1,
     delay: int = 1,
@@ -161,7 +161,7 @@ def run_test(
         ... )
         >>> run_test(test_case, metric)
     """
-    if isinstance(test_cases, LLMTestCase):
+    if isinstance(test_cases, TestCase):
         test_cases = [test_cases]
 
     test_results = []
@@ -174,29 +174,61 @@ def run_test(
             def measure_metric():
                 score = metric.measure(test_case)
                 success = metric.is_successful()
-                log(
-                    success=success,
-                    score=score,
-                    metric=metric,
-                    query=test_case.query if test_case.query else "-",
-                    output=test_case.output if test_case.output else "-",
-                    expected_output=test_case.expected_output
-                    if test_case.expected_output
-                    else "-",
-                    context=test_case.context if test_case.context else "-",
-                )
-                test_result = TestResult(
-                    success=success,
-                    score=score,
-                    metric_name=metric.__name__,
-                    query=test_case.query if test_case.query else "-",
-                    output=test_case.output if test_case.output else "-",
-                    expected_output=test_case.expected_output
-                    if test_case.expected_output
-                    else "-",
-                    metadata=None,
-                    context=test_case.context,
-                )
+                if isinstance(test_case, LLMTestCase):
+                    log(
+                        success=success,
+                        score=score,
+                        metric=metric,
+                        query=test_case.query if test_case.query else "-",
+                        output=test_case.output if test_case.output else "-",
+                        expected_output=test_case.expected_output
+                        if test_case.expected_output
+                        else "-",
+                        context=test_case.context if test_case.context else "-",
+                    )
+
+                    test_result = TestResult(
+                        success=success,
+                        score=score,
+                        metric_name=metric.__name__,
+                        query=test_case.query if test_case.query else "-",
+                        output=test_case.output if test_case.output else "-",
+                        expected_output=test_case.expected_output
+                        if test_case.expected_output
+                        else "-",
+                        metadata=None,
+                        context=test_case.context,
+                    )
+                elif isinstance(test_case, SearchTestCase):
+                    log(
+                        success=success,
+                        score=score,
+                        metric=metric,
+                        query=test_case.query if test_case.query else "-",
+                        output=str(test_case.output_list)
+                        if test_case.output_list
+                        else "-",
+                        expected_output=str(test_case.golden_list)
+                        if test_case.golden_list
+                        else "-",
+                        context="-",
+                    )
+                    test_result = TestResult(
+                        success=success,
+                        score=score,
+                        metric_name=metric.__name__,
+                        query=test_case.query if test_case.query else "-",
+                        output=test_case.output_list
+                        if test_case.output_list
+                        else "-",
+                        expected_output=test_case.golden_list
+                        if test_case.golden_list
+                        else "-",
+                        metadata=None,
+                        context="-",
+                    )
+                else:
+                    raise ValueError("TestCase not supported yet.")
                 test_results.append(test_result)
 
                 if raise_error:

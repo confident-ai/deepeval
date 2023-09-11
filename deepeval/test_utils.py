@@ -39,16 +39,6 @@ def assert_exact_match(text_input: str, text_output: str):
     assert text_input == text_output, f"{text_output} != {text_input}"
 
 
-def assert_ranking_similarity(
-    list_1: List[Any], list_2: List[Any], minimum_score: float = 0.1
-):
-    metric = RankingSimilarity(minimum_score=minimum_score)
-    result = metric(list_1, list_2)
-    assert metric.is_successful(), (
-        metric.__class__.__name__ + " was unsuccessful - " + str(result)
-    )
-
-
 class TestEvalCase:
     pass
 
