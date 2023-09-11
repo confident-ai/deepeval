@@ -5,6 +5,7 @@
 from ..singleton import Singleton
 from ..test_case import LLMTestCase
 from .metric import Metric
+from ..run_test import assert_test
 
 
 class DetoxifyModel(metaclass=Singleton):
@@ -64,6 +65,4 @@ class NonToxicMetric(Metric):
 
 def assert_non_toxic(text: str, minimum_score: float = 0.5):
     metric = NonToxicMetric(minimum_score=minimum_score)
-    test_case = LLMTestCase(output=text)
-    score = metric.measure(test_case)
-    assert metric.is_successful(), f"Text is toxic - got {score}"
+    assert_test(text, [metric])
