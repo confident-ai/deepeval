@@ -6,6 +6,7 @@ from deepeval.metrics.factual_consistency import (
     FactualConsistencyMetric,
     assert_factual_consistency,
 )
+from deepeval.run_test import run_test
 
 IMPLEMENTATION_NAME = "Test Factual Consistency"
 os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
@@ -27,17 +28,13 @@ def test_factual_consistency_2():
 
 
 def test_factual_consistency_metric():
-    metric = FactualConsistencyMetric(minimum_score=0.6)
     test_case = LLMTestCase(
         output="Python is a programming language.",
         context="Python is a high-level, versatile, and interpreted programming language known for its simplicity and readability.",
         metrics=[metric],
     )
-    # Question - Should this test case be run on the test case level?
-    assert test_case.is_successful()
-    result = metric.measure(test_case)
-    assert metric.is_successful()
-    assert result > 0.8, f"Failed {result}"
+    metric = FactualConsistencyMetric(minimum_score=0.8)
+    run_test(test_case, [metric])
 
 
 def test_factual_consistency_metric_2():
@@ -47,7 +44,8 @@ def test_factual_consistency_metric_2():
         context="Python is NOT a programming language.",
     )
     result = metric.measure(test_case)
-    assert not metric.is_successful()
+    with pytest.raises(AssertionError):
+        run_test(test_case, [metric])
 
 
 def test_factual_consistency_metric_3():
@@ -56,5 +54,5 @@ def test_factual_consistency_metric_3():
         output="Python is a programming language.",
         context="Python is a snake.",
     )
-    result = metric.measure(test_case)
-    assert not metric.is_successful()
+    with pytest.raises(AssertionError):
+        run_test(test_case, metric)
