@@ -30,12 +30,12 @@ def test_factual_consistency_2():
 
 
 def test_factual_consistency_metric():
+    metric = FactualConsistencyMetric(minimum_score=0.8)
     test_case = LLMTestCase(
         output="Python is a programming language.",
         context="Python is a high-level, versatile, and interpreted programming language known for its simplicity and readability.",
         metrics=[metric],
     )
-    metric = FactualConsistencyMetric(minimum_score=0.8)
     assert_test(test_case, [metric])
 
 
