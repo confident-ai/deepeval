@@ -12,4 +12,4 @@
 #     utils,
 # )
 from ._version import __version__
-from .run_test import run_test, assert_test
+from deepeval.run_test import run_test, assert_test
