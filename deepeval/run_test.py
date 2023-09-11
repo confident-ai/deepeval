@@ -38,7 +38,6 @@ def _get_init_values(metric: Metric):
 
 
 def _send_to_server(
-    self,
     success: bool,
     metric_score: float,
     metric_name: str,
