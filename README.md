@@ -119,6 +119,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics.metric import Metric
 from deepeval.run_test import assert_test
 
+# Run this test
 class LengthMetric(Metric):
     """This metric checks if the output is more than 3 letters"""
 
@@ -129,14 +130,7 @@ class LengthMetric(Metric):
         # sends to server
         text = test_case.output
         score = len(text)
-        self.success = score > self.minimum_length
-        # Optional: Logs it to the server
-        self.log(
-            query=text,
-            score=score
-            / 100,  # just to have something here - should be between 0 and 1
-            success=self.success,
-        )
+        self.success = bool(score > self.minimum_length)
         return score
 
     def is_successful(self):
@@ -145,7 +139,6 @@ class LengthMetric(Metric):
     @property
     def __name__(self):
         return "Length"
-
 
 def test_length_metric():
     metric = LengthMetric()

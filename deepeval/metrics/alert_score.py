@@ -27,7 +27,7 @@ class AlertScoreMetric(Metric):
         #     query=query, answer=output
         # )
         alert_score = min(entailment_score, answer_expected_score)
-        self.success = alert_score > self.minimum_score
+        self.success = bool(alert_score > self.minimum_score)
         return alert_score
 
     def is_successful(self) -> bool:
