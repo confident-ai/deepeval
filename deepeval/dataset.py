@@ -85,7 +85,6 @@ class EvaluationDataset(UserList):
         context_column: str,
         output_column: str,
         id_column: str = None,
-        metrics: List[Metric] = None,
     ):
         """
         This is for JSON data in the format of key-value array pairs.
@@ -106,7 +105,6 @@ class EvaluationDataset(UserList):
                 LLMTestCase(
                     query=data[query_column][i],
                     expected_output=data[expected_output_column][i],
-                    metrics=metrics,
                     context=data[context_column][i],
                     output=data[output_column][i],
                     id=data[id_column][i] if id_column else None,
@@ -123,7 +121,6 @@ class EvaluationDataset(UserList):
         context_column: str,
         output_column: str,
         id_column: str = None,
-        metrics: List[Metric] = None,
     ):
         """
         This is for JSON data in the format of a list of dictionaries.
@@ -139,7 +136,6 @@ class EvaluationDataset(UserList):
                 LLMTestCase(
                     query=data[i][query_column],
                     expected_output=data[i][expected_output_column],
-                    metrics=metrics,
                     context=data[i][context_column],
                     output=data[i][output_column],
                     id=data[i][id_column] if id_column else None,
@@ -156,7 +152,6 @@ class EvaluationDataset(UserList):
         context_key: str = None,
         output_key: str = None,
         id_key: str = None,
-        metrics: List[Metric] = None,
     ):
         """
         Load test cases from a list of dictionaries.
@@ -179,7 +174,6 @@ class EvaluationDataset(UserList):
                 LLMTestCase(
                     query=case_data[query_key],
                     expected_output=case_data[expected_output_key],
-                    metrics=metrics,
                     context=case_data[context_key] if context_key else None,
                     output=case_data[output_key] if output_key else None,
                     id=case_data[id_key] if id_key else None,
