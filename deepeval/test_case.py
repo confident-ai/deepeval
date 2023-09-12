@@ -1,67 +1,59 @@
+"""Investigate test case.
+"""
 import hashlib
-from typing import Any, List
-from collections import UserList
-from .metrics.metric import Metric
-from .metrics.randomscore import RandomMetric
-from .metrics.factual_consistency import FactualConsistencyMetric
+from dataclasses import dataclass
+from typing import Any, List, Optional
 
 
+@dataclass
 class TestCase:
+    id: Optional[str] = None
+
+    def __post_init__(self):
+        if self.id is None:
+            id_string = "".join(str(value) for value in self.__dict__.values())
+            self.id = hashlib.md5(id_string.encode()).hexdigest()
+
+
+@dataclass
+class LLMTestCase(TestCase):
+    query: Optional[str] = None
+    expected_output: Optional[str] = None
+    context: Optional[str] = None
+    output: Optional[str] = None
+
+    # def dict(self):
+    #     data = {
+    #         "metrics": self.metrics,
+    #         "id": self.id,
+    #     }
+    #     if self.query:
+    #         data["query"] = self.query
+    #     if self.expected_output:
+    #         data["expected_output"] = self.expected_output
+    #     if self.context:
+    #         data["context"] = self.context
+    #     if self.output:
+    #         data["output"] = self.output
+    #     return data
+
+
+@dataclass
+class SearchTestCase(TestCase):
     def __init__(
         self,
-        query: Any,
-        expected_output: Any,
-        metrics: List[Metric] = None,
-        id: str = None,
+        output_list: List[Any],
+        golden_list: List[Any],
+        query: Optional[str] = None,
+        id: Optional[str] = None,
     ):
-        if metrics is None:
-            fact_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
-            self.metrics = [fact_consistency_metric]
-        else:
-            self.metrics = metrics
+        super().__init__(id)
+        self.output_list = output_list
+        self.golden_list = golden_list
         self.query = query
-        self.expected_output = expected_output
-        if id is None:
-            id_string = str(self.query) + str(self.expected_output)
-            self.id = hashlib.md5(id_string.encode()).hexdigest()
-        else:
-            self.id = id
-
-    def dict(self):
-        return {
-            "query": self.query,
-            "expected_output": self.expected_output,
-            "metrics": self.metrics,
-            "id": self.id,
-        }
 
 
-class TestCases(UserList):
-    """A list of test cases for easy access"""
+class AgentTestCase(TestCase):
+    """Test Case For Agents"""
 
-    @classmethod
-    def from_csv(
-        self,
-        csv_filename: str,
-        query_column: str,
-        expected_output_column: str,
-        id_column: str = None,
-        metrics: List[Metric] = None,
-    ):
-        import pandas as pd
-
-        df = pd.read_csv(csv_filename)
-        querys = df[query_column].values
-        expected_outputs = df[expected_output_column].values
-        if id_column is not None:
-            ids = df[id_column].values
-        for i, query in enumerate(querys):
-            self.data.append(
-                TestCase(
-                    query=query,
-                    expected_output=expected_outputs[i],
-                    metrics=metrics,
-                    id=ids[i],
-                )
-            )
-        return self
+    pass

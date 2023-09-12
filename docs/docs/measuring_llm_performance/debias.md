@@ -25,10 +25,14 @@ assert_unbiased(text="I can presume bias only exists in Tanzania")
 
 ```python
 from deepeval.metrics.bias_classifier import UnBiasedMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import run_test, assert_test
 
 metric = UnBiasedMetric()
-score = metric.measure(text=output)
-score
+test_case = LLMTestCase(
+    output="Devil wing is evil."
+)
+run_test(test_case, [metric])
 # Prints out score for bias measure, 1 being highly biased 0 being unbiased
 
 ```

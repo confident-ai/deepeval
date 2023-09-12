@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 from deepeval._version import __version__
 
 with open("requirements.txt", "r") as f:
@@ -25,6 +26,7 @@ setup(
         "typer",
         "rich",
         "protobuf<=3.20.5",
+        "pandas",
     ],
     extras_require={
         "bias": [
@@ -34,6 +36,7 @@ setup(
         "toxic": [
             "detoxify",  # for toxic classifier
         ],
+        "dev": ["black"],
     },
     entry_points={
         "console_scripts": [

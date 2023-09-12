@@ -1,11 +1,17 @@
 """Test alert score
 """
-import pytest
-from deepeval.api import Api
-from deepeval.metrics.overall_score import assert_overall_score
-from deepeval.metrics.overall_score import OverallScoreMetric
-from .utils import assert_viable_score
 import os
+
+import pytest
+from deepeval.test_case import LLMTestCase
+from deepeval.api import Api
+from deepeval.metrics.overall_score import (
+    OverallScoreMetric,
+    assert_overall_score,
+)
+from deepeval.run_test import assert_test, run_test
+
+from .utils import assert_viable_score
 
 IMPLEMENTATION_NAME = "Overall"
 TEST_API_KEY = "u1s5aFlB6kRyVz/16CZuc7JOQ7e7sCw00N7nfeMZOrk="
@@ -22,115 +28,111 @@ client = Api(api_key=TEST_API_KEY)
 metric = OverallScoreMetric()
 
 
-@pytest.fixture
-def score_1():
-    return metric.measure(
-        query=query,
-        output=output,
-        expected_output=expected_output,
-        context=context,
-    )
-
-
-@pytest.fixture
-def score_2():
-    return metric.measure(
-        query=query,
-        output=output,
-        expected_output=expected_output,
-        context="He doesn't know how to code",
-    )
-
-
-@pytest.fixture
-def score_3():
-    return metric.measure(
-        query=query,
-        output="Not relevant",
-        expected_output=expected_output,
-        context="He doesn't know how to code",
-    )
-
-
-@pytest.fixture
-def score_4():
-    return metric.measure(
-        query=query,
-        output="Not relevant",
-        expected_output="STranger things",
-        context="He doesn't know how to code",
-    )
-
-
-def test_overall_score():
-    os.environ["CONFIDENT_AI_API_KEY"] = TEST_API_KEY
-    assert_overall_score(
-        query=query,
-        output=output,
-        expected_output=expected_output,
-        context=context,
-    )
-
-
-def test_overall_score_worst_context(score_2, score_1):
-    assert score_2 < score_1, "Worst context."
-
-
-def test_overall_score_worst_output(score_3, score_2):
-    assert score_3 < score_2, "Worst output and context."
-
-
-def test_worst_expected_output(score_4, score_3):
-    assert score_4 < score_3, "Worst lol"
-
-
-def test_overall_score_metric():
+class TestOverallScore(LLMTestCase):
     metric = OverallScoreMetric()
-    score = metric.measure(
-        query=query,
-        output=output,
-        expected_output=expected_output,
-        context=context,
-    )
-    assert metric.is_successful(), "Overall score metric not working"
-    assert_viable_score(score)
 
+    def test_overall_score(self):
+        os.environ["CONFIDENT_AI_API_KEY"] = TEST_API_KEY
+        assert_overall_score(
+            query=query,
+            output=output,
+            expected_output=expected_output,
+            context=context,
+        )
 
-def test_overall_score_metric_no_query():
-    metric = OverallScoreMetric()
-    score = metric.measure(
-        output=output,
-        expected_output=expected_output,
-        context=context,
-    )
-    assert metric.is_successful(), "Overall score metric not working"
-    assert_viable_score(score)
+    def test_overall_score_worst_context(self):
+        test_case = LLMTestCase(
+            query=query,
+            output=output,
+            expected_output=expected_output,
+            context="He doesn't know how to code",
+        )
+        test_case_2 = LLMTestCase(
+            query=query,
+            output=output,
+            expected_output=expected_output,
+            context=context,
+        )
+        scores = run_test([test_case, test_case_2], metrics=[self.metric])
+        assert scores[1].score > scores[0].score, "Failed the test"
 
+    def test_overall_score_worst_output(self):
+        test_case = LLMTestCase(
+            query=query,
+            output="Not relevant",
+            expected_output=expected_output,
+            context="He doesn't know how to code",
+        )
+        score_3 = self.metric.measure(test_case)
+        test_case_2 = LLMTestCase(
+            query=query,
+            output=output,
+            expected_output=expected_output,
+            context="He doesn't know how to code",
+        )
+        scores = run_test([test_case, test_case_2], metrics=[self.metric])
+        assert scores[0] > scores[1]
 
-def test_overall_score_metric_no_query_no_context():
-    metric = OverallScoreMetric()
-    score = metric.measure(
-        output=output,
-        expected_output=expected_output,
-    )
-    assert metric.is_successful(), "Overall score metric not working"
-    assert_viable_score(score)
+    def test_worst_expected_output(self):
+        test_case = LLMTestCase(
+            query=query,
+            output="Not relevant",
+            expected_output="STranger things",
+            context="He doesn't know how to code",
+        )
+        score_4 = self.metric.measure(test_case)
+        test_case_2 = LLMTestCase(
+            query=query,
+            output="Not relevant",
+            expected_output=expected_output,
+            context="He doesn't know how to code",
+        )
+        scores = run_test([test_case, test_case_2], metrics=[self.metric])
+        assert scores[0] > scores[1]
 
+    def test_overall_score_metric(self):
+        test_case = LLMTestCase(
+            query=query,
+            output=output,
+            expected_output=expected_output,
+            context=context,
+        )
+        result = run_test([test_case], metrics=[self.metric])
+        assert_viable_score(result.score)
 
-def test_overall_score_metric_no_context_no_expected_output():
-    metric = OverallScoreMetric()
-    score = metric.measure(
-        query=query,
-        output=output,
-    )
-    assert metric.is_successful(), "Overall score metric not working"
-    assert_viable_score(score)
+    def test_overall_score_metric_no_query(self):
+        test_case = LLMTestCase(
+            output=output,
+            expected_output=expected_output,
+            context=context,
+        )
+        assert_test([test_case], metrics=[self.metric])
 
+    def test_overall_score_metric_no_query_no_context(self):
+        test_case = LLMTestCase(
+            output=output,
+            expected_output=expected_output,
+        )
+        result = run_test([test_case], metrics=[self.metric])
+        assert result[0].success, "Overall score metric not working"
+        assert_viable_score(result[0].score)
 
-def test_implementation_inside_overall():
-    imps = client.list_implementations()
-    FOUND = False
-    for imp in imps:
-        if imp["name"] == IMPLEMENTATION_NAME:
-            FOUND = True
-    assert FOUND, f"{IMPLEMENTATION_NAME} not found in {[x['name'] for x in imps]}"
+    def test_overall_score_metric_no_context_no_expected_output(self):
+        test_case = LLMTestCase(
+            query=query,
+            output=output,
+        )
+        score = self.metric.measure(test_case)
+        result = run_test([test_case], metrics=[self.metric])
+        assert result[0].success, "Overall score metric not working"
+        assert_viable_score(result[0].score)
+
+    def test_implementation_inside_overall(self):
+        imps = self.client.list_implementations()
+        FOUND = False
+        for imp in imps:
+            if imp["name"] == IMPLEMENTATION_NAME:
+                FOUND = True
+        assert (
+            FOUND
+        ), f"{IMPLEMENTATION_NAME} not found in {[x['name'] for x in imps]}"

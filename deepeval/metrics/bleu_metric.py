@@ -1,5 +1,6 @@
 # Sample Metric for BLEU
 import numpy as np
+
 from .metric import Metric
 
 
@@ -38,7 +39,9 @@ class BLEUMetric(Metric):
             reference_ngram_freq = nltk.FreqDist(reference_ngrams)
 
             clipped_counts = {
-                ngram: min(candidate_ngram_freq[ngram], reference_ngram_freq[ngram])
+                ngram: min(
+                    candidate_ngram_freq[ngram], reference_ngram_freq[ngram]
+                )
                 for ngram in candidate_ngram_freq
             }
             precision = sum(clipped_counts.values()) / sum(

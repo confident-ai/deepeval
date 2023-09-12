@@ -1,5 +1,6 @@
-import numpy as np
 import os
+
+import numpy as np
 
 
 def softmax(x):
@@ -18,6 +19,7 @@ def cosine_similarity(vector_a, vector_b):
 def chunk_text(text, chunk_size=20):
     words = text.split()
     chunks = [
-        " ".join(words[i : i + chunk_size]) for i in range(0, len(words), chunk_size)
+        " ".join(words[i : i + chunk_size])
+        for i in range(0, len(words), chunk_size)
     ]
     return chunks

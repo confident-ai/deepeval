@@ -38,8 +38,11 @@ You can measure ranking similarity as a metric.
 
 ```python
 from deepeval.metrics.ranking_similarity import RankingSimilarity
-scorer = RankingSimilarity(minimum_score=0.5)
-result = scorer.measure(list_1=list1, list_2=list2)
+from deepeval.run_test import run_test, assert_test
+
+metric = RankingSimilarity(minimum_score=0.5)
+test_case = SearchTestCase(list1, list2)
+assert_test(test_cases=test_case, metrics=[metric])
 ```
 
 ### Parameters

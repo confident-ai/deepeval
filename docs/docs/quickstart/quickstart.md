@@ -49,7 +49,8 @@ With overall score, if you leave out `query` or `expected_output`, DeepEval will
 For these tests, you will need a `test_` prefix for this to be ran in Python.
 
 ```python
-from deepeval.metrics.overall_score import assert_overall_score
+from deepeval.metrics.overall_score import OverallScoreMetric
+from deepeval import assert_test, LLMTestCase
 
 
 def test_0():
@@ -58,10 +59,25 @@ def test_0():
     expected_output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize food with the help of chlorophyll pigment."
     context = "Biology"
 
-    assert_overall_score(query, output, expected_output, context)
+    test_case = LLMTestCase(
+        query=query,
+        output=output,
+        expected_output=expected_output,
+        context=context
+    )
+    metric = OverallScoreMetric()
+    # if you want to make sure that the test returns an error
+    assert_test(test_case, metrics=[metric])
+    
+    # If you want to run the test
+    test_result = run_test(test_case, metrics=[metric])
+    # You can also inspect the test result class 
+    print(test_result.success)
+    print(test_result.score)
+
 ```
 
-## Automatically Create Tests
+## Automatically Create Tests Cases
 
 Now we often don't want to write our own tests or at least be given a variety of queries by which we can create these tests.
 
@@ -77,11 +93,7 @@ dataset = create_evaluation_query_answer_pairs(
 
 ```
 
-What just happened?
-
-We automatically created a dataset that stored the query answer pairs for you.
-
-You can replace the string with whatever is stored in your database and it will automatically create question-answer pairs.
+What just happened? We automatically created a dataset that stored the query answer pairs for you.
 
 Once you have created your dataset, we provide an easy way for you to just review what is inside your dataset.
 
@@ -91,7 +103,7 @@ This is done with our `review` function.
 dataset.review()
 ```
 
-When you run this code, it will spin up a quick server for you to review your dataset.
+When you run this code, it will spin up a quick server for you to review your dataset - which will look like this.
 
 ![Bulk Data Review Dashboard](../../assets/bulk-review.png)
 
@@ -101,7 +113,7 @@ Simply click "Add Test Case" to add a new row to the dataset or click the "X" bu
 
 Once you finish reviewing the synthetic data, name your file and hit "Save File".
 
-Once you save the file, you can load the dataset back using:
+Once you save the file, you can load the dataset back using example code below.
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -117,6 +129,7 @@ print(ds.sample())
 Great! Your evaluation dataset is ready to go! Now to run tests on your evaluation dataset, simply run: 
 
 ```python
+# Define your completion protocol
 import openai
 def generate_chatgpt_output(query: str):
     response = openai.ChatCompletion.create(
@@ -130,7 +143,7 @@ def generate_chatgpt_output(query: str):
     expected_output = response.choices[0].message.content
     return expected_output
 
-ds.run_evaluation(generate_chatgpt_output)
+ds.run_evaluation(completion_fn=generate_chatgpt_output)
 ```
 
 ## What next?

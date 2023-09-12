@@ -1,11 +1,13 @@
 """Overall Score
 """
-from typing import Optional
-from .metric import Metric
-from .factual_consistency import FactualConsistencyMetric
+
+from ..singleton import Singleton
+from ..test_case import LLMTestCase
 from .answer_relevancy import AnswerRelevancyMetric
 from .conceptual_similarity import ConceptualSimilarityMetric
-from ..singleton import Singleton
+from .factual_consistency import FactualConsistencyMetric
+from .metric import Metric
+from ..run_test import assert_test
 
 
 class OverallScoreMetric(Metric, metaclass=Singleton):
@@ -15,56 +17,37 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
         self.factual_consistency_metric = FactualConsistencyMetric()
         self.conceptual_similarity_metric = ConceptualSimilarityMetric()
 
-    def __call__(self, query, output: str, expected_output: str, context: str):
-        score = self.measure(
-            query=query,
-            output=output,
-            expected_output=expected_output,
-            context=context,
-        )
+    def __call__(self, test_case: LLMTestCase):
+        score = self.measure(test_case=test_case)
         self.success = score > self.minimum_score
         return score
 
     def measure(
         self,
-        query: str = "-",
-        output: str = "-",
-        expected_output: str = "-",
-        context: str = "-",
+        test_case: LLMTestCase,
     ) -> float:
         metadata = {}
-        if context != "-":
+        if test_case.context is not None:
             factual_consistency_score = self.factual_consistency_metric.measure(
-                context=context,
-                output=output,
+                test_case
             )
             metadata["factual_consistency"] = float(factual_consistency_score)
 
-        if query != "-":
-            answer_relevancy_score = self.answer_relevancy.measure(
-                query=query, output=output
-            )
+        if test_case.query is not None:
+            answer_relevancy_score = self.answer_relevancy.measure(test_case)
             metadata["answer_relevancy"] = float(answer_relevancy_score)
 
-        if expected_output != "-":
-            conceptual_similarity_score = self.conceptual_similarity_metric.measure(
-                expected_output, output
+        if test_case.expected_output is not None:
+            conceptual_similarity_score = (
+                self.conceptual_similarity_metric.measure(test_case)
             )
-            metadata["conceptual_similarity"] = float(conceptual_similarity_score)
+            metadata["conceptual_similarity"] = float(
+                conceptual_similarity_score
+            )
 
         overall_score = sum(metadata.values()) / len(metadata)
 
         self.success = bool(overall_score > self.minimum_score)
-        self.log(
-            success=self.success,
-            score=overall_score,
-            metric_name=self.__name__,
-            query=query,
-            output=output,
-            expected_output=expected_output,
-            metadata=metadata,
-            context=context,
-        )
         return overall_score
 
     def is_successful(self) -> bool:
@@ -83,10 +66,10 @@ def assert_overall_score(
     minimum_score: float = 0.5,
 ):
     metric = OverallScoreMetric(minimum_score=minimum_score)
-    score = metric.measure(
+    test_case = LLMTestCase(
         query=query,
         output=output,
         expected_output=expected_output,
         context=context,
     )
-    assert metric.is_successful(), f"Metric is not conceptually similar - got {score}"
+    assert_test(test_case, metrics=[metric])

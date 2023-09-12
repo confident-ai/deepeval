@@ -1,6 +1,7 @@
 import os
-from ..key_handler import KEY_FILE_HANDLER
+
 from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_NAME
+from ..key_handler import KEY_FILE_HANDLER
 
 
 def set_api_key():
