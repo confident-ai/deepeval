@@ -77,4 +77,4 @@ def assert_overall_score(
         expected_output=expected_output,
         context=context,
     )
-    assert_test(test_case=test_case, metrics=[metric])
+    assert_test(test_case, metrics=[metric])
