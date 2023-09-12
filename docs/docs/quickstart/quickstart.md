@@ -1,5 +1,7 @@
 # QuickStart
 
+You can view a Colab example here (note - it excludes being able to create synthetic data): https://colab.research.google.com/drive/1HxPWwNdNnq6cLkMh4NQ_pAAPgd8vlOly?usp=sharing 
+
 Once you have installed, run the login command. During this step, you will be asked to visit https://app.confident-ai.com to grab your API key.
 
 Note: this step is entirely optional if you do not wish to track your results but we highly recommend it so you can view how results differ over time.
