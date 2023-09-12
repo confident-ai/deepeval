@@ -27,7 +27,7 @@ You can also use factual consistency as a metric as shown below.
 
 ```python
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
-from deepeval.test_case import LLMtestCase
+from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test, run_test
 metric = FactualConsistencyMetric(minimum_score=0.5)
 test_case = LLMTestCase(output=output, context=context)
