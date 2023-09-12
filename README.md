@@ -71,7 +71,7 @@ import os
 import openai
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import run_test
+from deepeval.run_test import assert_test
 
 openai.api_key = "sk-XXX"
 
@@ -93,7 +93,7 @@ def test_llm_output():
     expected_output = "Our customer success phone line is 1200-231-231."
     test_case = LLMTestCase(query=query, expected_output=expected_output)
     metric = FactualConsistencyMetric()
-    run_test(test_case, metrics=[metric])
+    assert_test(test_case, metrics=[metric])
 
 ```
 
