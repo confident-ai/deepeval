@@ -169,11 +169,9 @@ def test_4():
     # Add a test that fails
     query = "What is the capital of Germany?"
     output = "The capital of Germany is Berlin."
-    expected_output = "The capital of Germany is Munich."
-    context = "Geography"
-
-    assert_overall_score(query, output, expected_output, context)
-            
+    metric = AnswerRelevancyMetric(minimum_score=0.5)
+    test_case = LLMTestCase(query=query, output=output)
+    assert_test(test_case, [metric])
 """
         )
 
