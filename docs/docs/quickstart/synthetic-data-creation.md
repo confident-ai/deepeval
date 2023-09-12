@@ -13,10 +13,33 @@ from deepeval.dataset import create_evaluation_query_answer_pairs
 dataset = create_evaluation_query_answer_pairs("Python is a great language for mathematical expression and machine learning.")
 ```
 
-Once you have created your evaluation dataset, we recommend saving it.
+After creating the dataset, you can then review it. 
+
+## Reviewing Dataset
+
+To review the dataset, simply run: 
 
 ```python
-dataset.to_csv("sample.csv")
+dataset.review()
+```
+
+![Bulk Review Dashboard](../../assets/bulk-review.png)
+
+On this dashboard, you can add a test case by clicking "Add Test Case" or delete a test case by clicking "X" on the left.
+After editting, you will need to save it to CSV to load it back up again later.
+
+To load your evaluation dataset:
+
+```python
+
+from deepeval.dataset import EvaluationDataset
+
+filename = 'xxx.csv'
+# Replace 'filename.csv' with the actual filename
+ds = EvaluationDataset.from_csv(filename)
+
+# If you wish to save it again
+dataset.to_csv(filename)
 ```
 
 ## Running tests/evaluation
