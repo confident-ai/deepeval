@@ -48,7 +48,9 @@ deepeval test run sample.py
 # If you want to stay with pytest instead
 ```
 
-We can broke down how to write this test and what exactly goes into an LLMTestCase:
+## LLMTestCase
+
+We can broke down how to write this test and what exactly goes into an `LLMTestCase`:
 
 Explanation of variables:
 - `query`: The input query for the ChatGPT model.
@@ -56,4 +58,26 @@ Explanation of variables:
 - `output`: The generated output response from the ChatGPT model.
 - `expected_output`: The expected output response for the given input query and context.
 
+## Running a Test
 
+### `run_test` 
+
+`run_test` allows you to run a test based on the metrics provided with a given number of retries and minimum successes.
+
+You can run it with 1 or multiple test case and metrics.
+```python
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
+
+metric_1 = FactualConsistencyMetric()
+metric_2 = AnswerRelevancyMetric()
+run_test(test_case, [metric_1, metric_2])
+```
+
+### `assert_test`
+
+`assert_test` is a wrapper on top of `run_test` and can be used for enforcing errors and to maintain similar logic as other tests.
+
+```python
+assert_test(test_case, [metric_1])
+```
