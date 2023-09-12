@@ -93,11 +93,7 @@ dataset = create_evaluation_query_answer_pairs(
 
 ```
 
-What just happened?
-
-We automatically created a dataset that stored the query answer pairs for you.
-
-You can replace the string with whatever is stored in your database and it will automatically create question-answer pairs.
+What just happened? We automatically created a dataset that stored the query answer pairs for you.
 
 Once you have created your dataset, we provide an easy way for you to just review what is inside your dataset.
 
@@ -107,7 +103,7 @@ This is done with our `review` function.
 dataset.review()
 ```
 
-When you run this code, it will spin up a quick server for you to review your dataset.
+When you run this code, it will spin up a quick server for you to review your dataset - which will look like this.
 
 ![Bulk Data Review Dashboard](../../assets/bulk-review.png)
 
@@ -117,7 +113,7 @@ Simply click "Add Test Case" to add a new row to the dataset or click the "X" bu
 
 Once you finish reviewing the synthetic data, name your file and hit "Save File".
 
-Once you save the file, you can load the dataset back using:
+Once you save the file, you can load the dataset back using example code below.
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -133,6 +129,7 @@ print(ds.sample())
 Great! Your evaluation dataset is ready to go! Now to run tests on your evaluation dataset, simply run: 
 
 ```python
+# Define your completion protocol
 import openai
 def generate_chatgpt_output(query: str):
     response = openai.ChatCompletion.create(
