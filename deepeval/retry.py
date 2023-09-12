@@ -15,17 +15,19 @@ class retry:
         def wrapper(*args, **kwargs):
             self.retry_count = 0
             self.success_count = 0
+            last_error = None  # Store the last error
             while self.retry_count < self.max_retries:
                 try:
                     self.retry_count += 1
                     for _ in range(self.min_success - self.success_count):
-                        func(*args, **kwargs)
+                        result = func(*args, **kwargs)
                         self.success_count += 1
-                    return
                 except AssertionError as e:
                     print(f"Attempt {self.retry_count} failed: {str(e)}")
+                    last_error = e  # Update the last error
                 except Exception as e:
                     print(f"Attempt {self.retry_count} failed: {str(e)}")
+                    last_error = e  # Update the last error
 
                 if self.retry_count < self.max_retries:
                     print(f"Retrying in {self.delay} seconds...")
@@ -33,8 +35,7 @@ class retry:
                 else:
                     print(f"Max retries ({self.max_retries}) exceeded.")
                     if self.success_count < self.min_success:
-                        raise Exception(
-                            "Operation failed the required number of times."
-                        )
+                        if last_error is not None:
+                            raise last_error  # Raise the last error
 
         return wrapper

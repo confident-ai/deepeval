@@ -1,11 +1,9 @@
-import os
-from typing import Optional
-from ..get_api_key import _get_api_key, _get_implementation_name
-from ..constants import API_KEY_ENV, IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
 from abc import abstractmethod
-from ..client import Client
-from ..utils import softmax
+
 from ..singleton import Singleton
+from ..test_case import LLMTestCase
+from ..utils import softmax
+from sentence_transformers import CrossEncoder
 
 
 class Metric(metaclass=Singleton):
@@ -15,7 +13,7 @@ class Metric(metaclass=Singleton):
     # Measure function signature is subject to be different - not sure
     # how applicable this is - might need a better abstraction
     @abstractmethod
-    def measure(self, output, expected_output, query: Optional[str] = None):
+    def measure(self, test_case: LLMTestCase, *args, **kwargs):
         raise NotImplementedError
 
     def _get_init_values(self):
@@ -31,112 +29,10 @@ class Metric(metaclass=Singleton):
     def is_successful(self) -> bool:
         raise NotImplementedError
 
-    def _is_api_key_set(self):
-        result = _get_api_key()
-        # if result == "" or result is None:
-        #     warnings.warn(
-        #         """API key is not set - you won't be able to log to the DeepEval dashboard. Please set it by running `deepeval login`"""
-        #     )
-        if result == "" or result is None:
-            return False
-        return True
-
-    def _is_send_okay(self):
-        # DOing this until the API endpoint is fixed
-        return self._is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
-
-    def __call__(self, *args, **kwargs):
-        score = self.measure(*args, **kwargs)
-        success = score >= self.minimum_score
-        self._send_to_server(
-            metric_score=score,
-            metric_name=self.__name__,
-            query=kwargs.get("query", "-"),
-            output=kwargs.get("output", "-"),
-            expected_output=kwargs.get("expected_output", "-"),
-            success=success,
-        )
-        return score
-
-    def log(
-        self,
-        success: bool = True,
-        score: float = 1e-10,
-        metric_name: str = "-",
-        query: str = "-",
-        output: str = "-",
-        expected_output: str = "-",
-        metadata: Optional[dict] = None,
-        context: str = "-",
-    ):
-        """Log to the server.
-
-        Parameters
-        - query: What was asked to the model. This can also be context.
-        - output: The LLM output.
-        - expected_output: The output that's expected.
-        """
-        if self._is_send_okay():
-            self._send_to_server(
-                metric_score=score,
-                metric_name=metric_name,
-                query=query,
-                output=output,
-                expected_output=expected_output,
-                success=success,
-                metadata=metadata,
-                context=context,
-            )
-
-    def _send_to_server(
-        self,
-        metric_score: float,
-        metric_name: str,
-        query: str = "-",
-        output: str = "-",
-        expected_output: str = "-",
-        success: Optional[bool] = None,
-        metadata: Optional[dict] = None,
-        context: str = "-",
-        **kwargs
-    ):
-        if self._is_send_okay():
-            api_key = _get_api_key()
-            client = Client(api_key=api_key)
-            implementation_name = _get_implementation_name()
-            # implementation_id = os.getenv(IMPLEMENTATION_ID_ENV, "")
-            # if implementation_id != "":
-            implementation_id = client.get_implementation_id_by_name(
-                implementation_name
-            )
-            os.environ[IMPLEMENTATION_ID_ENV] = implementation_id
-            datapoint_id = client.add_golden(
-                query=query, expected_output=expected_output, context=context
-            )
-            if success is None:
-                success = bool(self.is_successful())
-                print({"success": success, "og": self.is_successful()})
-
-            metric_metadata: dict = self._get_init_values()
-            if metadata:
-                metric_metadata.update(metadata)
-
-            return client.add_test_case(
-                metric_score=float(metric_score),
-                metric_name=metric_name,
-                actual_output=output,
-                query=query,
-                implementation_id=implementation_id,
-                metrics_metadata=metric_metadata,
-                success=bool(success),
-                datapoint_id=datapoint_id["id"],
-            )
-
 
 class EntailmentScoreMetric(Metric):
     def __init__(self, model_name: str = "cross-encoder/nli-deberta-base"):
         # We use a smple cross encoder model
-        from sentence_transformers import CrossEncoder
 
         self.model = CrossEncoder(model_name)
 

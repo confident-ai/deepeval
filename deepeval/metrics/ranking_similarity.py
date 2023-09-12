@@ -1,8 +1,12 @@
 # Testing for ranking similarity
+from typing import Any, List, Optional, Union
+
 import numpy as np
-from typing import List, Optional, Union, Any
 from tqdm import tqdm
+
+from ..test_case import SearchTestCase
 from .metric import Metric
+from ..run_test import assert_test
 
 
 class RBO:
@@ -127,7 +131,6 @@ class RBO:
         AO[0] = weights[0] if self.S[0] == self.T[0] else 0
 
         for d in tqdm(range(1, k), disable=~self.verbose):
-
             tmp = 0
             # if the new item from S is in T already
             if self.S[d] in T_running:
@@ -163,20 +166,13 @@ class RankingSimilarity(Metric):
     def __init__(self, minimum_score: float = 0.1):
         self.minimum_score = minimum_score
 
-    def __call__(self, list_1: List[Any], list_2: List[Any]):
-        score = self.measure(list_1, list_2)
-        if self._is_send_okay():
-            self._send_to_server(
-                metric_score=score,
-                metric_name=self.__name__,
-                query=str(list_1),
-                output=str(list_2),
-            )
+    def __call__(self, test_case: SearchTestCase):
+        score = self.measure(test_case.golden_list, test_case.output_list)
         return score
 
-    def measure(self, list_1: List, list_2: List):
-        list_1 = [str(x) for x in list_1]
-        list_2 = [str(x) for x in list_2]
+    def measure(self, test_case: SearchTestCase):
+        list_1 = [str(x) for x in test_case.golden_list]
+        list_2 = [str(x) for x in test_case.output_list]
         scorer = RBO(list_1, list_2)
         result = scorer.rbo(p=0.9, ext=True)
         self.success = result > self.minimum_score
@@ -188,3 +184,9 @@ class RankingSimilarity(Metric):
     @property
     def __name__(self):
         return "Ranking Similarity"
+
+
+def assert_ranking_similarity(list1, list2, minimum_score):
+    scorer = RankingSimilarity(minimum_score=minimum_score)
+    test_case = SearchTestCase(list1, list2)
+    assert_test(test_case, [scorer])

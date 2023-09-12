@@ -24,12 +24,18 @@ assert_alert_score(
 
 ```python
 from deepeval.metrics.alert_score import AlertScoreMetric
+from deepeval.run_test import run_test, assert_test
+from deepeval.test_case import LLMTestCase
+
 metric = AlertScoreMetric()
-score = metric.measure(
-    output="Who won the FIFA World Cup in 2018?",
-    expected_output="French national football team"
-)
-score
+test_case = LLMTestCase(output=output, context=context)
+
+# If you want to run a test, log it and check results
+run_test(test_case, metrics=[metric])
+
+# If you want to make sure a test passes
+assert_test(test_case, metrics=[metric])
+
 ```
 
 ### How it is measured

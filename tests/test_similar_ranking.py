@@ -1,6 +1,11 @@
 """Tests for answer relevancy
 """
-import pytest
+from deepeval.test_case import SearchTestCase
+from deepeval.run_test import run_test, assert_test
+from deepeval.metrics.ranking_similarity import (
+    RankingSimilarity,
+    assert_ranking_similarity,
+)
 
 list1 = ["a", "b"]
 list2 = ["b", "c"]
@@ -10,24 +15,21 @@ list_dict_1 = [{"text": "a"}, {"text": "b"}]
 list_dict_2 = [{"text": "b"}, {"text": "c"}]
 
 
-def test_answer_relevancy():
-    from deepeval.test_utils import assert_ranking_similarity
-
+def test_assert_similar_ranking():
     assert_ranking_similarity(list1, list2, minimum_score=0.4)
 
 
-def test_query_answer_relevancy():
-    from deepeval.metrics.ranking_similarity import RankingSimilarity
-
+def test_similar_ranking_2():
     scorer = RankingSimilarity(minimum_score=0.5)
-    result = scorer.measure(list_1=list1, list_2=list2)
-    result_2 = scorer.measure(list_1=list1, list_2=list3)
-    assert result_2 > result, "Ranking not working."
+    test_case = SearchTestCase(list1, list2)
+    test_case_2 = SearchTestCase(list1, list3)
+    test_results = run_test([test_case, test_case_2], metrics=[scorer])
+    assert (
+        test_results[1].score > test_results[0].score
+    ), "Similarity not working"
 
 
-def test_query_answer_relevancy_dict():
-    from deepeval.metrics.ranking_similarity import RankingSimilarity
-
-    scorer = RankingSimilarity(minimum_score=0.3)
-    result = scorer.measure(list_1=list_dict_1, list_2=list_dict_2)
-    assert scorer.is_successful(), "Ranking dicts not working."
+def test_similar_ranking_3():
+    metric = RankingSimilarity(minimum_score=0.3)
+    test_case = SearchTestCase(list1, list2)
+    assert_test(test_cases=test_case, metrics=[metric])

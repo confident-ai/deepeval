@@ -23,13 +23,20 @@ Diving into the arguments for `assert_factual_consistency`:
 
 ## Factual Consistency As A Metric
 
-If you would instead like a score of how factually consistent the output is relative to the context.
+You can also use factual consistency as a metric as shown below.
 
 ```python
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.test_case import LLMtestCase
+from deepeval.run_test import assert_test, run_test
 metric = FactualConsistencyMetric(minimum_score=0.5)
-metric.measure(output=output, context=context)
-# Returns a floating point number between 0 and 1
+test_case = LLMTestCase(output=output, context=context)
+
+# If you want to run a test, log it and check results
+run_test(test_case, metrics=[metric])
+
+# If you want to make sure a test passes
+assert_test(test_case, metrics=[metric])
 ```
 
 ### How It Is Measured

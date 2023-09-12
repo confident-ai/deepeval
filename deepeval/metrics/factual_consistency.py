@@ -1,6 +1,26 @@
 from ..singleton import Singleton
-from ..utils import softmax, chunk_text
+from ..test_case import LLMTestCase
+from ..utils import chunk_text, softmax
 from .metric import Metric
+from ..run_test import assert_test
+
+from sentence_transformers import CrossEncoder
+
+
+class FactualConsistencyModel(metaclass=Singleton):
+    def __init__(self, model_name: str = "cross-encoder/nli-deberta-v3-large"):
+        # We use a smple cross encoder model
+
+        self.model = CrossEncoder(model_name)
+
+    def predict(self, text_a: str, text_b: str):
+        scores = self.model.predict([(text_a, text_b), (text_b, text_a)])
+        # https://huggingface.co/cross-encoder/nli-deberta-base
+        # label_mapping = ["contradiction", "entailment", "neutral"]
+        softmax_scores = softmax(scores)
+        score = softmax_scores[0][1]
+        second_score = softmax_scores[1][1]
+        return max(score, second_score)
 
 
 class FactualConsistencyMetric(Metric, metaclass=Singleton):
@@ -9,38 +29,23 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         minimum_score: float = 0.6,
         model_name: str = "cross-encoder/nli-deberta-v3-large",
     ):
-        # We use a smple cross encoder model
-        from sentence_transformers import CrossEncoder
-
-        self.model = CrossEncoder(model_name)
+        # For Crossencoder model, move to singleton to avoid re-instantiating
+        self.model = FactualConsistencyModel(model_name)
         self.minimum_score = minimum_score
 
-    def measure(self, output: str, context: str):
-        context_list = chunk_text(context)
+    def measure(self, test_case: LLMTestCase):
+        if test_case.output is None or test_case.context is None:
+            raise ValueError("Output or context cannot be None")
+
+        context_list = chunk_text(test_case.context)
         max_score = 0
         for c in context_list:
-            scores = self.model.predict([(c, output), (output, c)])
-            # https://huggingface.co/cross-encoder/nli-deberta-base
-            # label_mapping = ["contradiction", "entailment", "neutral"]
-            softmax_scores = softmax(scores)
-            score = softmax_scores[0][1]
+            score = self.model.predict(c, test_case.output)
             if score > max_score:
                 max_score = score
 
-            second_score = softmax_scores[1][1]
-            if second_score > max_score:
-                max_score = second_score
-
         self.success = max_score > self.minimum_score
         print({"success": self.success, "score": max_score})
-        self.log(
-            success=self.success,
-            score=max_score,
-            metric_name="Factual Consistency",
-            output=output,
-            expected_output=context,
-            context=context,
-        )
         return max_score
 
     def is_successful(self) -> bool:
@@ -51,9 +56,11 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         return "Factual Consistency"
 
 
-def assert_factual_consistency(output: str, context: str, minimum_score: float = 0.3):
+def assert_factual_consistency(
+    output: str, context: str, minimum_score: float = 0.3
+):
     """Assert that the output is factually consistent with the context."""
 
     metric = FactualConsistencyMetric(minimum_score=minimum_score)
-    score = metric(context, output)
-    assert metric.is_successful(), metric.__class__.__name__ + " was unsuccessful."
+    test_case = LLMTestCase(output=output, context=context)
+    assert_test(test_case, [metric])

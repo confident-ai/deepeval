@@ -1,6 +1,8 @@
 # Write a simple test case
 
-If you are interested in running a quick Colab example, you can [click here](https://colab.research.google.com/drive/1Lfq5geYsvfVoquDqv84UkWS57SdAHm30?usp=sharing).
+To write a test case takes less than 5 minutes and can be done in just a few lines of code.
+
+![3 step process to writing a test case](./../../assets/3-step-metrics.png)
 
 You can write a simple test case as simply as:
 
@@ -11,7 +13,9 @@ deepeval test generate test_sample.py
 ```python
 import os
 import openai
-from deepeval.metrics.factual_consistency import assert_factual_consistency
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.run_test import assert_test
+from deepeval.test_case import LLMTestCase
 
 openai.api_key = "sk-XXX"
 
@@ -32,29 +36,24 @@ def test_factual_consistency():
     query = "What is the customer success phone line?"
     context = "Our customer success phone line is 1200-231-231."
     output = generate_chatgpt_output(query)
-    assert_factual_consistency(output, context)
+    metric = FactualConsistencyMetric()
+    test_case = LLMTestCase(query=query, context=context, output=output)
+    assert_test(test_case, metrics=[metric])
 
-# Just run the following code in Python if required
-test_factual_consistency()
 ```
-
-### Running it in Pytest
-
-To run this in Pytest, just run:
-
-```python
-# sample.py
-
-def test_factual_consistency():
-    query = "What is the customer success phone line?"
-    context = "Our customer success phone line is 1200-231-231."
-    output = generate_chatgpt_output(query)
-    assert_factual_consistency(output, context)
-```
-
-You can then run it in CLI using:
+After writing this test, just run: 
 
 ```bash
 deepeval test run sample.py
 # If you want to stay with pytest instead
 ```
+
+We can broke down how to write this test and what exactly goes into an LLMTestCase:
+
+Explanation of variables:
+- `query`: The input query for the ChatGPT model.
+- `context`: The context or conversation history for the ChatGPT model.
+- `output`: The generated output response from the ChatGPT model.
+- `expected_output`: The expected output response for the given input query and context.
+
+

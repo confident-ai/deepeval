@@ -1,9 +1,12 @@
 """Asserting conceptual similarity
 """
 from typing import Optional
-from .metric import Metric
-from ..utils import cosine_similarity
+
 from ..singleton import Singleton
+from ..test_case import LLMTestCase
+from ..utils import cosine_similarity
+from .metric import Metric
+from ..run_test import assert_test
 
 
 class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
@@ -24,23 +27,25 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
         vectors = self.model.encode([text_a, text_b])
         return vectors
 
-    def measure(self, output: str, expected_output: str):
-        vectors = self._vectorize(output, expected_output)
+    def measure(self, test_case: LLMTestCase) -> float:
+        if test_case.output is None or test_case.expected_output is None:
+            raise ValueError("Output or expected_output cannot be None")
+
+        vectors = self._vectorize(test_case.output, test_case.expected_output)
         self.score = cosine_similarity(vectors[0], vectors[1])
-        self.log(
-            success=self.is_successful(),
-            score=self.score,
-            metric_name="Conceptual Similarity With Ground Truth",
-            output=output,
-            expected_output=expected_output,
-        )
         return float(self.score)
 
     def is_successful(self) -> bool:
         return bool(self.score >= self.minimum_score)
 
+    @property
+    def __name__(self):
+        return "Conceptual Similarity"
 
-def assert_conceptual_similarity(text_1: str, text_2: str, minimum_score=0.3):
+
+def assert_conceptual_similarity(
+    output: str, expected_output: str, minimum_score=0.3
+):
     metric = ConceptualSimilarityMetric(minimum_score=minimum_score)
-    score = metric.measure(text_1, text_2)
-    assert metric.is_successful(), f"Metric is not conceptually similar - got {score}"
+    test_case = LLMTestCase(output=output, expected_output=expected_output)
+    assert_test(test_case, [metric])

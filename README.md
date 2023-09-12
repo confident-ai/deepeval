@@ -69,7 +69,9 @@ Grab your API key from [https://app.confident-ai.com](https://app.confident-ai.c
 # test_example.py
 import os
 import openai
-from deepeval.metrics.factual_consistency import assert_factual_consistency
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test
 
 openai.api_key = "sk-XXX"
 
@@ -89,8 +91,9 @@ def generate_chatgpt_output(query: str):
 def test_llm_output():
     query = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
-    output = generate_chatgpt_output(query)
-    assert_factual_consistency(output, expected_output)
+    test_case = LLMTestCase(query=query, expected_output=expected_output)
+    metric = FactualConsistencyMetric()
+    assert_test(test_case, metrics=[metric])
 
 ```
 
@@ -112,23 +115,22 @@ Once you have ran tests, you should be able to see your dashboard on [https://ap
 To define a custom metric, you simply need to define the `measure` and `is_successful` property.
 
 ```python
+from deepeval.test_case import LLMTestCase
 from deepeval.metrics.metric import Metric
+from deepeval.run_test import assert_test
 
+# Run this test
 class LengthMetric(Metric):
     """This metric checks if the output is more than 3 letters"""
-    def __init__(self, minimum_length: int=3):
+
+    def __init__(self, minimum_length: int = 3):
         self.minimum_length = minimum_length
 
-    def measure(self, text: str):
+    def measure(self, test_case: LLMTestCase):
         # sends to server
+        text = test_case.output
         score = len(text)
-        self.success = score > self.minimum_length
-        # Optional: Logs it to the server
-        self.log(
-            query=text,
-            score=score/100, # just to have something here - should be between 0 and 1
-            success=self.success
-        )
+        self.success = bool(score > self.minimum_length)
         return score
 
     def is_successful(self):
@@ -138,9 +140,12 @@ class LengthMetric(Metric):
     def __name__(self):
         return "Length"
 
-metric = LengthMetric()
-score = metric.measure("this is a test")
-assert metric.is_successful()
+def test_length_metric():
+    metric = LengthMetric()
+    test_case = LLMTestCase(
+        output="This is a long sentence that is more than 3 letters"
+    )
+    assert_test(test_case, [metric])
 ```
 
 ## Integrate tightly with LangChain

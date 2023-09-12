@@ -1,12 +1,14 @@
 """Module for the query generator
 """
+from abc import ABC, abstractmethod
 from typing import List
-from abc import abstractmethod, ABC
 
 
 class QueryGenerator(ABC):
     @abstractmethod
-    def generate_queries(self, texts: List, tags: List = None, num_queries: int = 3):
+    def generate_queries(
+        self, texts: List, tags: List = None, num_queries: int = 3
+    ):
         pass
 
 
@@ -16,7 +18,9 @@ class BEIRQueryGenerator:
     def __init__(self):
         self._load_model()
 
-    def generate_queries(self, texts: List, tags: List = None, num_queries: int = 3):
+    def generate_queries(
+        self, texts: List, tags: List = None, num_queries: int = 3
+    ):
         """Generates a number of queries"""
         import torch
 
@@ -41,7 +45,7 @@ class BEIRQueryGenerator:
         if hasattr(self, "model"):
             return
         try:
-            from transformers import T5Tokenizer, T5ForConditionalGeneration
+            from transformers import T5ForConditionalGeneration, T5Tokenizer
         except ModuleNotFoundError as e:
             raise Exception("Run `pip install transformers`")
 
