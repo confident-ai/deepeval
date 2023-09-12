@@ -139,7 +139,6 @@ def test_0():
 
     assert_overall_score(query, output, expected_output, context)
 
-
 def test_1():
     # Check to make sure it is relevant
     query = "What is the capital of France?"
@@ -148,16 +147,7 @@ def test_1():
     test_case = LLMTestCase(query=query, output=output)
     assert_test(test_case, [metric])
 
-
 def test_2():
-    # Check to make sure it is relevant
-    query = "What is the capital of France?"
-    output = "The capital of France is Paris."
-    metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output)
-    assert_test(test_case, [metric])
-
-def test_3():
     # Check to make sure it is factually consistent
     output = "Cells have many major components, including the cell membrane, nucleus, mitochondria, and endoplasmic reticulum."
     context = "Biology"
@@ -165,7 +155,7 @@ def test_3():
     test_case = LLMTestCase(output=output, context=context)
     assert_test(test_case, [metric])
 
-def test_4():
+def test_3():
     # Add a test that fails
     query = "What is the capital of Germany?"
     output = "The capital of Germany is Berlin."
