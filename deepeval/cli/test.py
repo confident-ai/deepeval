@@ -157,18 +157,13 @@ def test_2():
     test_case = LLMTestCase(query=query, output=output)
     assert_test(test_case, [metric])
 
-
 def test_3():
     # Check to make sure it is factually consistent
     output = "Cells have many major components, including the cell membrane, nucleus, mitochondria, and endoplasmic reticulum."
     context = "Biology"
-    minimum_score = 0.8  # Adjusting the minimum score threshold
-    metric = FactualConsistencyMetric(minimum_score=minimum_score)
-    metric.measure(output, context)
-    assert metric.is_successful(), (
-        metric.__class__.__name__ + " was unsuccessful."
-    )
-
+    metric = FactualConsistencyMetric(minimum_score=0.8)
+    test_case = LLMTestCase(output=output, context=context)
+    assert_test(test_case, [metric])
 
 def test_4():
     # Add a test that fails
