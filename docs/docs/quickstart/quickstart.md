@@ -1,16 +1,21 @@
-# QuickStart
+# QuickStart - Get Started In 5 Minutes
 
-You can view a Colab example here (note - it excludes being able to create synthetic data): https://colab.research.google.com/drive/1HxPWwNdNnq6cLkMh4NQ_pAAPgd8vlOly?usp=sharing 
+## Why run this quickstart? 
+- Learn about DeepEval in under 5 minutes
+- Run your first set of test via our CLI
+- View your test results in our dashboard
+- Create synthetic data
+- Review the synthetic data
+
+[You can view a Colab example here (note - it excludes being able to create synthetic data)](https://colab.research.google.com/drive/1HxPWwNdNnq6cLkMh4NQ_pAAPgd8vlOly?usp=sharing)
 
 Once you have installed, run the login command. During this step, you will be asked to visit https://app.confident-ai.com to grab your API key.
 
 Note: this step is entirely optional if you do not wish to track your results but we highly recommend it so you can view how results differ over time.
 
 ```bash
+# Configure your login
 deepeval login
-
-# If you already have an API key and want to feed it in through CLI
-deepeval login --api-key $API_KEY
 
 # If you have project name and api key 
 deepeval login --api-key $API_KEY --implementation-name "sample"
