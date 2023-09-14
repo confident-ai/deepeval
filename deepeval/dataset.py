@@ -11,7 +11,7 @@ from tabulate import tabulate
 
 from deepeval.run_test import run_test
 from deepeval.metrics.metric import Metric
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, TestCase
 
 
 class EvaluationDataset(UserList):
@@ -469,6 +469,11 @@ class EvaluationDataset(UserList):
         )
         self.data += new_dataset.data
         print(f"Added {len(new_dataset.data)}!")
+
+    def add_test_case(self, test_case: TestCase):
+        """Add test cases to the evaluation dataset."""
+        self.data.append(test_case)
+        print(f"Added test case! - there are now {len(self.data)} test cases.")
 
 
 def make_chat_completion_request(prompt: str, openai_api_key: str):

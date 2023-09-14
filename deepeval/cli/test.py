@@ -1,6 +1,6 @@
 import pytest
 import typer
-
+import os
 from ..metrics.overall_score import assert_overall_score
 from .cli_key_handler import set_env_vars
 
@@ -92,6 +92,15 @@ def run(
     pdb: bool = False,
 ):
     """Run a test"""
+    # IF you want to run a test
+    if (
+        not os.path.exists(test_file_or_directory)
+        and test_file_or_directory == "test_sample.py"
+    ):
+        print("Generating test_sample.py...")
+        generate(test_file_or_directory)
+        print("✅ Done! Now running tests...")
+
     pytest_args = ["-k", test_file_or_directory]
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")

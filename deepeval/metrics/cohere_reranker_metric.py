@@ -1,10 +1,8 @@
-from typing import Optional
-
 from ..test_case import LLMTestCase
 from .metric import Metric
 
 
-class CohereRerankerMetric(Metric):
+class CohereAnswerRelevancyMetric(Metric):
     def __init__(self, api_key: str, minimum_score: float = 0.5):
         try:
             import cohere
@@ -15,12 +13,12 @@ class CohereRerankerMetric(Metric):
             print("Run `pip install cohere`.")
         self.minimum_score = minimum_score
 
-    def __call__(self, output, expected_output, query: Optional[str] = "-"):
-        score = self.measure(output, expected_output)
+    def __call__(self, test_case: LLMTestCase):
+        score = self.measure(test_case)
         success = False
         if score > self.minimum_score:
             success = True
-        return score
+        return success, score
 
     def measure(self, test_case: LLMTestCase):
         reranked_results = self.cohere_client.rerank(
