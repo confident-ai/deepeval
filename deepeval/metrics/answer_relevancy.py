@@ -2,6 +2,7 @@ from ..singleton import Singleton
 from ..test_case import LLMTestCase
 from ..run_test import assert_test
 from .metric import Metric
+from typing import List
 
 
 class AnswerRelevancyModel(metaclass=Singleton):
@@ -17,10 +18,24 @@ class AnswerRelevancyModel(metaclass=Singleton):
         return self.model.encode(text)
 
 
-class AnswerRelevancyMetric(Metric):
-    def __init__(self, minimum_score: bool = 0.5):
+class CrossEncoderAnswerRelevancyModel(metaclass=Singleton):
+    def __init__(self, model_name: str = "cross-encoder/nli-deberta-v3-base"):
+        from sentence_transformers.cross_encoder import CrossEncoder
+
+        self.model = CrossEncoder(model_name)
+
+    def encode(self, question: str, answer: str):
+        scores = self.model.predict([[question, answer]])
+        return scores[0][0]
+
+
+class AnswerRelevancyMetric(Metric, metaclass=Singleton):
+    def __init__(self, minimum_score: bool = 0.5, model_type: str = "default"):
         self.minimum_score = minimum_score
-        self.model = AnswerRelevancyModel()
+        if model_type == "cross_encoder":
+            self.model = CrossEncoderAnswerRelevancyModel()
+        else:
+            self.model = AnswerRelevancyModel()
 
     def __call__(self, test_case: LLMTestCase):
         score = self.measure(test_case.query, test_case.output)
@@ -33,15 +48,17 @@ class AnswerRelevancyMetric(Metric):
         if test_case.query is None or test_case.output is None:
             raise ValueError("query and output cannot be None")
 
-        docs = [test_case.output]
+        if isinstance(self.model, CrossEncoderAnswerRelevancyModel):
+            score = self.model.encode(test_case.query, test_case.output)
+        else:
+            docs = [test_case.output]
+            # Encode query and documents
+            query_emb = self.model.encode(test_case.query)
+            doc_emb = self.model.encode(docs)
+            # Compute dot score between query and all document embeddings
+            scores = util.dot_score(query_emb, doc_emb)[0].cpu().tolist()
+            score = scores[0]
 
-        # Encode query and documents
-        query_emb = self.model.encode(test_case.query)
-        doc_emb = self.model.encode(docs)
-
-        # Compute dot score between query and all document embeddings
-        scores = util.dot_score(query_emb, doc_emb)[0].cpu().tolist()
-        score = scores[0]
         self.success = score > self.minimum_score
         # Log answer relevancy
         return score
@@ -55,8 +72,13 @@ class AnswerRelevancyMetric(Metric):
 
 
 def assert_answer_relevancy(
-    query: str, output: str, minimum_score: float = 0.5
+    query: str,
+    output: str,
+    minimum_score: float = 0.5,
+    model_type: str = "default",
 ):
-    metric = AnswerRelevancyMetric(minimum_score=minimum_score)
+    metric = AnswerRelevancyMetric(
+        minimum_score=minimum_score, model_type=model_type
+    )
     test_case = LLMTestCase(query=query, output=output)
     assert_test(test_case, metrics=[metric])
