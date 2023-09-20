@@ -25,8 +25,10 @@ class CrossEncoderAnswerRelevancyModel(metaclass=Singleton):
         self.model = CrossEncoder(model_name)
 
     def encode(self, question: str, answer: str):
+        import numpy as np
+
         scores = self.model.predict([[question, answer]])
-        return scores[0][0]
+        return np.exp(scores[0][0])
 
 
 class AnswerRelevancyMetric(Metric, metaclass=Singleton):
