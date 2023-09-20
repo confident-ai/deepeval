@@ -2,7 +2,12 @@ from ..singleton import Singleton
 from ..test_case import LLMTestCase
 from ..run_test import assert_test
 from .metric import Metric
-from typing import List
+import numpy as np
+
+
+def softmax(x):
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0)
 
 
 class AnswerRelevancyModel(metaclass=Singleton):
@@ -25,10 +30,8 @@ class CrossEncoderAnswerRelevancyModel(metaclass=Singleton):
         self.model = CrossEncoder(model_name)
 
     def encode(self, question: str, answer: str):
-        import numpy as np
-
         scores = self.model.predict([[question, answer]])
-        return np.exp(scores[0][0])
+        return softmax(scores[0])[2]
 
 
 class AnswerRelevancyMetric(Metric, metaclass=Singleton):
