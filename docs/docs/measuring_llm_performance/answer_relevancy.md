@@ -36,6 +36,13 @@ assert_test(test_case, metrics=[metric])
 ### Parameters
 
 - `minimum_score` refers to the minimum score for this to be considered relevant
+- `model_type` can be `bi_encoder` or `cross_encoder`. It is `cross_encoder` by default.
+
+### Why Use Cross-Encoder As Default And Not Bi-Encoder?
+
+We can use cross-encoder as default and not bi-encoder because bi-encoders inherently bias towards sentences of similar length. 
+
+This means answers can be considered more relevant if they are of similar length and not if they are actually more relevant. However, they are still a common method of measuring answer relevancy and we see [early attempts at trying to minimize this](https://www.sbert.net/examples/applications/semantic-search/README.html#symmetric-vs-asymmetric-semantic-search).
 
 ## How It is Measured
 
