@@ -7,6 +7,7 @@ from deepeval.metrics.answer_relevancy import (
     assert_answer_relevancy,
 )
 from deepeval.run_test import run_test, assert_test
+from .utils import assert_viable_score
 
 query = "What is Python?"
 answer = "Python is a programming language?"
@@ -53,4 +54,5 @@ def test_cross_encoder_answer_relevancy():
         minimum_score=0.5, model_type="cross_encoder"
     )
     test_case = LLMTestCase(query=query, output=answer)
-    assert_test(test_case, [scorer])
+    score = assert_test(test_case, [scorer])
+    assert_viable_score(score)
