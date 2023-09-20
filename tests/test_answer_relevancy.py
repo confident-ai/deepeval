@@ -55,4 +55,4 @@ def test_cross_encoder_answer_relevancy():
     )
     test_case = LLMTestCase(query=query, output=answer)
     score = assert_test(test_case, [scorer])
-    assert_viable_score(score)
+    assert_viable_score(score[0].score)
