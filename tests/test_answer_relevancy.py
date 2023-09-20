@@ -46,3 +46,11 @@ def test_compare_answer_relevancy():
     )
     result = run_test([test_case, test_case_2], metrics=[metric])
     assert result[1].score > result[0].score
+
+
+def test_cross_encoder_answer_relevancy():
+    scorer = AnswerRelevancyMetric(
+        minimum_score=0.5, model_type="cross_encoder"
+    )
+    test_case = LLMTestCase(query=query, output=answer)
+    assert_test(test_case, [scorer])
