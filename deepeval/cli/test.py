@@ -1,6 +1,6 @@
 import pytest
 import typer
-
+import pkg_resources
 from ..metrics.overall_score import assert_overall_score
 from .cli_key_handler import set_env_vars
 
@@ -100,11 +100,13 @@ def run(
             "--verbose" if verbose else "--quiet",
             f"--color={color}",
             f"--durations={durations}",
-            # f"--cov={cov}",
-            # f"--cov-report={cov_report}",
             "--pdb" if pdb else "",
         ]
     )
+    # Add the plugin file to pytest arguments
+
+    plugin_path = pkg_resources.resource_filename("deepeval", "plugin.py")
+    pytest_args.append(f"--plugins={plugin_path}")
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
