@@ -1,8 +1,11 @@
 import pytest
 import typer
 import pkg_resources
+import os
+import datetime
 from ..metrics.overall_score import assert_overall_score
 from .cli_key_handler import set_env_vars
+from ..constants import PYTEST_RUN_ENV_VAR
 
 try:
     from rich import print
@@ -95,6 +98,11 @@ def run(
     pytest_args = ["-k", test_file_or_directory]
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
+
+    # Generate environment variable based on current date and time
+    env_var = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    os.environ[PYTEST_RUN_ENV_VAR] = env_var
+
     pytest_args.extend(
         [
             "--verbose" if verbose else "--quiet",
@@ -103,7 +111,7 @@ def run(
             "--pdb" if pdb else "",
         ]
     )
-    # Add the plugin file to pytest arguments
+    # Add the deepeval plugin file to pytest arguments
 
     plugin_path = pkg_resources.resource_filename("deepeval", "plugin.py")
     pytest_args.append(f"--plugins={plugin_path}")
