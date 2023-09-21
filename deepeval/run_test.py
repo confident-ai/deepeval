@@ -9,6 +9,7 @@ from .constants import IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
 from .get_api_key import _get_api_key, _get_implementation_name
 from .metrics import Metric
 from .test_case import LLMTestCase, TestCase, SearchTestCase
+from .api import TestRun
 
 
 def _is_api_key_set():

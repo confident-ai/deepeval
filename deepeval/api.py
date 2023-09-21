@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List
 from requests.adapters import HTTPAdapter, Response, Retry
 
-from deepeval.constants import API_KEY_ENV
+from deepeval.constants import API_KEY_ENV, PYTEST_RUN_ENV_VAR
 from deepeval.key_handler import KEY_FILE_HANDLER
 
 API_BASE_URL = "https://app.confident-ai.com/api"
@@ -57,10 +57,23 @@ class TestRun(BaseModel):
     def add_test_case(self, test_case: TestCase):
         self.test_cases.append(test_case)
 
+    def add_metric_score(self, metric_score: MetricScore):
+        self.metric_scores.append(metric_score)
+
+    def add_test_case_and_metric(
+        self, test_case: TestCase, metric_score: MetricScore
+    ):
+        self.add_test_case(test_case)
+        self.add_metric_score(metric_score)
+
     def save(self, file_path: Optional[str] = None):
         if file_path is None:
-            current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-            file_path = f"{self.alias}_{self.test_file}_{current_time}.json"
+            file_path = os.getenv(PYTEST_RUN_ENV_VAR)
+            if not file_path:
+                current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+                file_path = f"{self.alias}_{self.test_file}_{current_time}.json"
+            elif not file_path.endswith(".json"):
+                file_path = f"{file_path}.json"
         with open(file_path, "w") as f:
             f.write(self.json())
         return file_path
@@ -68,7 +81,11 @@ class TestRun(BaseModel):
     @classmethod
     def load(cls, file_path: Optional[str] = None):
         if file_path is None:
-            raise ValueError("File path must be provided for loading.")
+            file_path = os.getenv(PYTEST_RUN_ENV_VAR)
+            if not file_path:
+                raise ValueError("File path must be provided for loading.")
+            elif not file_path.endswith(".json"):
+                file_path = f"{file_path}.json"
         with open(file_path, "r") as f:
             return cls.parse_raw(f.read())
 
