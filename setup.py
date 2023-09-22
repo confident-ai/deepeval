@@ -27,6 +27,7 @@ setup(
         "rich",
         "protobuf<=3.20.5",
         "pandas",
+        "pydantic>=2.0.0",
     ],
     extras_require={
         "bias": [
@@ -41,6 +42,9 @@ setup(
     entry_points={
         "console_scripts": [
             "deepeval = deepeval.cli.main:app",
-        ]
+        ],
+        "pytest11": [
+            "plugins = deepeval.plugins.plugin",
+        ],
     },
 )

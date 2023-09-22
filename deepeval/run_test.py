@@ -1,14 +1,20 @@
 """Function for running test
 """
 import os
+import copy
 from typing import List, Optional, Union
 from dataclasses import dataclass
 from .retry import retry
 from .client import Client
-from .constants import IMPLEMENTATION_ID_ENV, LOG_TO_SERVER_ENV
+from .constants import (
+    IMPLEMENTATION_ID_ENV,
+    LOG_TO_SERVER_ENV,
+    PYTEST_RUN_ENV_VAR,
+)
 from .get_api_key import _get_api_key, _get_implementation_name
 from .metrics import Metric
 from .test_case import LLMTestCase, TestCase, SearchTestCase
+from .api import TestRun
 
 
 def _is_api_key_set():
@@ -230,6 +236,15 @@ def run_test(
                 else:
                     raise ValueError("TestCase not supported yet.")
                 test_results.append(test_result)
+
+                # Load the test_run and add the test_case regardless of the success of the test
+                if os.getenv(PYTEST_RUN_ENV_VAR):
+                    test_run = TestRun.load()
+                    test_run.add_llm_test_case(
+                        test_case=test_case,
+                        metrics=[metric],
+                    )
+                    test_run.save()
 
                 if raise_error:
                     assert (

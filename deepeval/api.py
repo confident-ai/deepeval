@@ -1,13 +1,19 @@
 import os
 import platform
 import urllib.parse
-from typing import Any, Optional
-
 import requests
+import json
+
+from datetime import datetime
+from typing import Any, Optional, Union
+from pydantic import BaseModel, Field
+from typing import List
 from requests.adapters import HTTPAdapter, Response, Retry
 
-from .constants import API_KEY_ENV
-from .key_handler import KEY_FILE_HANDLER
+from deepeval.constants import API_KEY_ENV, PYTEST_RUN_ENV_VAR
+from deepeval.key_handler import KEY_FILE_HANDLER
+from deepeval.metrics.metric import Metric
+from deepeval.test_case import LLMTestCase
 
 API_BASE_URL = "https://app.confident-ai.com/api"
 # API_BASE_URL = "http://localhost:3000/api"
@@ -17,6 +23,123 @@ HTTP_TOTAL_RETRIES = 3  # Number of total retries
 HTTP_RETRY_BACKOFF_FACTOR = 2  # Wait 1, 2, 4 seconds between retries
 HTTP_STATUS_FORCE_LIST = [408, 429] + list(range(500, 531))
 HTTP_RETRY_ALLOWED_METHODS = frozenset({"GET", "POST", "DELETE"})
+
+
+class MetricsMetadata(BaseModel):
+    metric: str
+    score: float
+    minimum_score: float = Field(None, alias="minimumScore")
+
+
+class APITestCase(BaseModel):
+    name: str
+    input: str
+    actual_output: str = Field(..., alias="actualOutput")
+    expected_output: str = Field(..., alias="expectedOutput")
+    success: bool
+    metrics_metadata: List[MetricsMetadata] = Field(
+        ..., alias="metricsMetadata"
+    )
+    threshold: float
+    run_duration: int = Field(..., alias="runDuration")
+
+
+class MetricScore(BaseModel):
+    metric: str
+    score: float
+
+    @classmethod
+    def from_metric(cls, metric: Metric):
+        return cls(metric=metric.__name__, score=metric.score)
+
+
+class TestRun(BaseModel):
+    test_file: Optional[str] = Field(
+        # TODO: Fix test_file
+        "test.py",
+        alias="testFile",
+    )
+    test_cases: List[APITestCase] = Field(
+        alias="testCases", default_factory=lambda: []
+    )
+    metric_scores: List[MetricScore] = Field(
+        default_factory=lambda: [], alias="metricScores"
+    )
+    configurations: dict
+
+    def add_llm_test_case(self, test_case: LLMTestCase, metrics: List[Metric]):
+        self.metric_scores.extend([MetricScore.from_metric(m) for m in metrics])
+        # Check if test case with the same ID already exists
+        existing_test_case: APITestCase = next(
+            (tc for tc in self.test_cases if tc.name == test_case.__name__),
+            None,
+        )
+        if existing_test_case:
+            # If it exists, append the metrics to the existing test case
+            existing_test_case.metricsMetadata.extend(
+                [
+                    MetricsMetadata(
+                        metric=metric.__name__,
+                        score=metric.score,
+                        minimumScore=metric.minimum_score,
+                    )
+                    for metric in metrics
+                ]
+            )
+            # Update the success status and threshold
+            existing_test_case.success = all(
+                [metric.is_successful() for metric in metrics]
+            )
+            existing_test_case.threshold = metrics[0].minimum_score
+        else:
+            # If it doesn't exist, create a new test case
+            self.test_cases.append(
+                APITestCase(
+                    name=test_case.__name__,
+                    input=test_case.query,
+                    actualOutput=test_case.output,
+                    expectedOutput=test_case.expected_output,
+                    success=all([metric.is_successful() for metric in metrics]),
+                    metricsMetadata=[
+                        MetricsMetadata(
+                            metric=metric.__name__,
+                            score=metric.score,
+                            minimumScore=metric.minimum_score,
+                        )
+                        for metric in metrics
+                    ],
+                    threshold=metrics[0].minimum_score,
+                    runDuration=0,  # TODO: add duration
+                )
+            )
+
+    def save(self, file_path: Optional[str] = None):
+        if file_path is None:
+            file_path = os.getenv(PYTEST_RUN_ENV_VAR)
+            # If file Path is None, remove it
+            if not file_path:
+                return
+            elif not file_path.endswith(".json"):
+                file_path = f"{file_path}.json"
+        print({"save_filepath", file_path})
+
+        with open(file_path, "w") as f:
+            json.dump(self.dict(by_alias=True, exclude_none=True), f)
+
+        return file_path
+
+    @classmethod
+    def load(cls, file_path: Optional[str] = None):
+        if file_path is None:
+            file_path = os.getenv(PYTEST_RUN_ENV_VAR)
+            # If file Path is None, remove it
+            if not file_path:
+                return
+            elif not file_path.endswith(".json"):
+                file_path = f"{file_path}.json"
+        print({"load_filepath", file_path})
+        with open(file_path, "r") as f:
+            return cls(**json.load(f))
 
 
 class Api:
@@ -330,3 +453,10 @@ class Api:
         Returns a list of implementations
         """
         return self.get_request(endpoint="/v1/implementation")
+
+    def post_test_run(self, test_run: TestRun):
+        """Post a test run"""
+        return self.post_request(
+            endpoint="/v1/test-run",
+            body=test_run.model_dump(by_alias=True),
+        )
