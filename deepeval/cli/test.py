@@ -128,6 +128,12 @@ def run(
             total=None,
         )
         retcode = pytest.main(pytest_args)
+
+    # Print this if the run env var is not set
+    if not os.getenv(PYTEST_RUN_ENV_VAR):
+        print(
+            "✅ Tests finished! If logged in, view results on https://app.confident-ai.com/"
+        )
     return retcode
 
 
