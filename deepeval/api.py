@@ -121,7 +121,6 @@ class TestRun(BaseModel):
                 return
             elif not file_path.endswith(".json"):
                 file_path = f"{file_path}.json"
-
         with open(file_path, "w") as f:
             json.dump(self.dict(by_alias=True, exclude_none=True), f)
 
@@ -136,7 +135,6 @@ class TestRun(BaseModel):
                 return
             elif not file_path.endswith(".json"):
                 file_path = f"{file_path}.json"
-        print({"load_filepath", file_path})
         with open(file_path, "r") as f:
             return cls(**json.load(f))
 
