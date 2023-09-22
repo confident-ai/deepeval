@@ -243,6 +243,7 @@ def run_test(
                 run_duration = test_end_time - test_start_time
                 if os.getenv(PYTEST_RUN_ENV_VAR):
                     test_run = TestRun.load()
+                    metric.score = score
                     test_run.add_llm_test_case(
                         test_case=test_case,
                         metrics=[metric],
