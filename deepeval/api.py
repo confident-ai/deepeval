@@ -3,9 +3,9 @@ import platform
 import urllib.parse
 import requests
 import json
+import warnings
 
-from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 from typing import List
 from requests.adapters import HTTPAdapter, Response, Retry
@@ -238,6 +238,8 @@ class Api:
             message = res.json().get("error", res.text)
         except ValueError:
             message = res.text
+        if res.status_code == 410:
+            warnings.warn(f"Deprecation Warning: {message}", DeprecationWarning)
         raise Exception(message)
 
     def _api_request(
