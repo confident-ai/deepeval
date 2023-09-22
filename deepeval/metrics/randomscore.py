@@ -9,9 +9,9 @@ class RandomMetric(Metric, metaclass=Singleton):
         self.minimum_score = minimum_score
 
     def measure(self, test_case: LLMTestCase):
-        score = random.random()
-        self.success = score >= self.minimum_score
-        return score
+        self.score = random.random()
+        self.success = self.score >= self.minimum_score
+        return self.score
 
     def is_successful(self):
         return self.success
