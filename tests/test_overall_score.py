@@ -28,7 +28,7 @@ client = Api(api_key=TEST_API_KEY)
 metric = OverallScoreMetric()
 
 
-class TestOverallScore(LLMTestCase):
+class TestOverallScore:
     metric = OverallScoreMetric()
 
     def test_overall_score(self):

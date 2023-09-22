@@ -17,10 +17,14 @@ class TestCase:
 
 @dataclass
 class LLMTestCase(TestCase):
-    query: Optional[str] = None
-    expected_output: Optional[str] = None
-    context: Optional[str] = None
-    output: Optional[str] = None
+    query: str = "-"
+    expected_output: str = "-"
+    context: str = "-"
+    output: str = "-"
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.__name__ = f"LLMTestCase_{self.id}"
 
     # def dict(self):
     #     data = {
