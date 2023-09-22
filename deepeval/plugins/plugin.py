@@ -27,6 +27,9 @@ def pytest_sessionfinish(session, exitstatus):
     # Code after yield will run after the test teardown
     if os.getenv(PYTEST_RUN_ENV_VAR):
         test_run = TestRun.load(test_filename)
-        api.post_test_run(test_run)
-    # if os.path.exists(test_filename):
-    #     os.remove(test_filename)
+        result = api.post_test_run(test_run)
+        run_id = result["id"]
+        print(
+            "✅ Tests finished! View results on "
+            + f"https://app.confident-ai.com/unit-tests/{run_id}/test-cases"
+        )

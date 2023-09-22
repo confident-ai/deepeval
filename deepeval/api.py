@@ -3,9 +3,9 @@ import platform
 import urllib.parse
 import requests
 import json
+import warnings
 
-from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 from typing import List
 from requests.adapters import HTTPAdapter, Response, Retry
@@ -41,7 +41,7 @@ class APITestCase(BaseModel):
         ..., alias="metricsMetadata"
     )
     threshold: float
-    run_duration: int = Field(..., alias="runDuration")
+    run_duration: float = Field(..., alias="runDuration")
 
 
 class MetricScore(BaseModel):
@@ -67,7 +67,9 @@ class TestRun(BaseModel):
     )
     configurations: dict
 
-    def add_llm_test_case(self, test_case: LLMTestCase, metrics: List[Metric]):
+    def add_llm_test_case(
+        self, test_case: LLMTestCase, metrics: List[Metric], run_duration: float
+    ):
         self.metric_scores.extend([MetricScore.from_metric(m) for m in metrics])
         # Check if test case with the same ID already exists
         existing_test_case: APITestCase = next(
@@ -109,7 +111,7 @@ class TestRun(BaseModel):
                         for metric in metrics
                     ],
                     threshold=metrics[0].minimum_score,
-                    runDuration=0,  # TODO: add duration
+                    runDuration=run_duration,
                 )
             )
 
@@ -236,6 +238,8 @@ class Api:
             message = res.json().get("error", res.text)
         except ValueError:
             message = res.text
+        if res.status_code == 410:
+            warnings.warn(f"Deprecation Warning: {message}", DeprecationWarning)
         raise Exception(message)
 
     def _api_request(
