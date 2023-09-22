@@ -54,7 +54,6 @@ class MetricScore(BaseModel):
 
 
 class TestRun(BaseModel):
-    alias: str
     test_file: Optional[str] = Field(
         # TODO: Fix test_file
         "test.py",

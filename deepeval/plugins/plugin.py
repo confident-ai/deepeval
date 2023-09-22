@@ -7,10 +7,8 @@ from datetime import datetime
 
 def pytest_sessionstart(session):
     current_time = datetime.now().strftime("%H:%M:%S")
-    session_name = session.name
     global test_filename
     test_run = TestRun(
-        alias=str(current_time),
         testFile=current_time,
         testCases=[],
         metricScores=[],
