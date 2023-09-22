@@ -40,7 +40,7 @@ deepeval test run --pdb test_sample.py
 Under the hood, it triggers pytest and offers support for a number of pytest command line functionalities. Similarly, you may also trigger `pytest` natively for these tests such as 
 
 ```bash
-pytest test_sample.py
+deepeval test run test_sample.py
 ```
 
 Once you run the tests, you should be able to see a dashboard similar to the one below.
