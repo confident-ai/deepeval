@@ -1,6 +1,5 @@
 import pytest
 import typer
-import pkg_resources
 import os
 import datetime
 from ..metrics.overall_score import assert_overall_score
@@ -12,6 +11,7 @@ try:
     from rich.progress import Progress, SpinnerColumn, TextColumn
 except Exception as e:
     pass
+
 
 app = typer.Typer(name="test")
 
@@ -112,9 +112,8 @@ def run(
         ]
     )
     # Add the deepeval plugin file to pytest arguments
+    pytest_args.extend(["-p", "plugins"])
 
-    plugin_path = pkg_resources.resource_filename("deepeval", "plugin.py")
-    pytest_args.append(f"--plugins={plugin_path}")
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),

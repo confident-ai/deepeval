@@ -41,6 +41,9 @@ setup(
     entry_points={
         "console_scripts": [
             "deepeval = deepeval.cli.main:app",
-        ]
+        ],
+        "pytest11": [
+            "plugins = deepeval.plugins.plugin",
+        ],
     },
 )
