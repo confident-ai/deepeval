@@ -46,6 +46,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
 
         self.success = max_score > self.minimum_score
         print({"success": self.success, "score": max_score})
+        self.score = max_score
         return max_score
 
     def is_successful(self) -> bool:
