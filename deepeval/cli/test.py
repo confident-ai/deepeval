@@ -2,6 +2,7 @@ import pytest
 import typer
 import os
 import datetime
+from typing_extensions import Annotated
 from ..metrics.overall_score import assert_overall_score
 from .cli_key_handler import set_env_vars
 from ..constants import PYTEST_RUN_ENV_VAR
@@ -88,12 +89,13 @@ def check_if_legit_file(test_file: str):
 @app.command()
 def run(
     test_file_or_directory: str,
-    x: bool = False,
     verbose: bool = False,
     color: str = "yes",
     durations: int = 10,
     pdb: bool = False,
-    exit_on_first_failure: bool = False,
+    exit_on_first_failure: Annotated[
+        bool, typer.Option("--exit-on-first-failure", "-x/-X")
+    ] = False,
 ):
     """Run a test"""
     pytest_args = ["-k", test_file_or_directory]
