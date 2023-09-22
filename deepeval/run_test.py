@@ -1,6 +1,7 @@
 """Function for running test
 """
 import os
+import copy
 from typing import List, Optional, Union
 from dataclasses import dataclass
 from .retry import retry
@@ -200,12 +201,6 @@ def run_test(
                         metadata=None,
                         context=test_case.context,
                     )
-                    test_run = TestRun.load()
-                    test_run.add_test_case_and_metric(
-                        test_case=test_case,
-                        metric_score=metric,
-                    )
-
                 elif isinstance(test_case, SearchTestCase):
                     log(
                         success=success,
@@ -234,14 +229,18 @@ def run_test(
                         metadata=None,
                         context="-",
                     )
-                    test_run = TestRun.load()
-                    test_run.add_test_case_and_metric(
-                        test_case=test_case,
-                        metric_score=metric,
-                    )
                 else:
                     raise ValueError("TestCase not supported yet.")
                 test_results.append(test_result)
+
+                # Load the test_run and add the test_case regardless of the success of the test
+                print("Loading...")
+                test_run = TestRun.load()
+                test_run.add_llm_test_case(
+                    test_case=test_case,
+                    metrics=[metric],
+                )
+                test_run.save()
 
                 if raise_error:
                     assert (
