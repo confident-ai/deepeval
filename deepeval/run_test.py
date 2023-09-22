@@ -203,9 +203,7 @@ def run_test(
                     test_run = TestRun.load()
                     test_run.add_test_case_and_metric(
                         test_case=test_case,
-                        metric=metric,
-                        success=success,
-                        score=score,
+                        metric_score=metric,
                     )
 
                 elif isinstance(test_case, SearchTestCase):
@@ -235,6 +233,11 @@ def run_test(
                         else "-",
                         metadata=None,
                         context="-",
+                    )
+                    test_run = TestRun.load()
+                    test_run.add_test_case_and_metric(
+                        test_case=test_case,
+                        metric_score=metric,
                     )
                 else:
                     raise ValueError("TestCase not supported yet.")
