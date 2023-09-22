@@ -2,9 +2,10 @@ import os
 import platform
 import urllib.parse
 import requests
+import json
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from pydantic import BaseModel, Field
 from typing import List
 from requests.adapters import HTTPAdapter, Response, Retry
@@ -12,6 +13,7 @@ from requests.adapters import HTTPAdapter, Response, Retry
 from deepeval.constants import API_KEY_ENV, PYTEST_RUN_ENV_VAR
 from deepeval.key_handler import KEY_FILE_HANDLER
 from deepeval.metrics.metric import Metric
+from deepeval.test_case import LLMTestCase
 
 API_BASE_URL = "https://app.confident-ai.com/api"
 # API_BASE_URL = "http://localhost:3000/api"
@@ -29,7 +31,7 @@ class MetricsMetadata(BaseModel):
     minimum_score: float = Field(None, alias="minimumScore")
 
 
-class TestCase(BaseModel):
+class APITestCase(BaseModel):
     name: str
     input: str
     actual_output: str = Field(..., alias="actualOutput")
@@ -58,7 +60,7 @@ class TestRun(BaseModel):
         "test.py",
         alias="testFile",
     )
-    test_cases: List[TestCase] = Field(
+    test_cases: List[APITestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
     metric_scores: List[MetricScore] = Field(
@@ -66,17 +68,51 @@ class TestRun(BaseModel):
     )
     configurations: dict
 
-    def add_test_case(self, test_case: TestCase):
-        self.test_cases.append(test_case)
-
-    def add_metric_score(self, metric_score: MetricScore):
-        self.metric_scores.append(metric_score)
-
-    def add_test_case_and_metric(
-        self, test_case: TestCase, metric_score: MetricScore
-    ):
-        self.add_test_case(test_case)
-        self.add_metric_score(metric_score)
+    def add_llm_test_case(self, test_case: LLMTestCase, metrics: List[Metric]):
+        self.metric_scores.extend([MetricScore.from_metric(m) for m in metrics])
+        # Check if test case with the same ID already exists
+        existing_test_case: APITestCase = next(
+            (tc for tc in self.test_cases if tc.name == test_case.__name__),
+            None,
+        )
+        if existing_test_case:
+            # If it exists, append the metrics to the existing test case
+            existing_test_case.metricsMetadata.extend(
+                [
+                    MetricsMetadata(
+                        metric=metric.__name__,
+                        score=metric.score,
+                        minimumScore=metric.minimum_score,
+                    )
+                    for metric in metrics
+                ]
+            )
+            # Update the success status and threshold
+            existing_test_case.success = all(
+                [metric.is_successful() for metric in metrics]
+            )
+            existing_test_case.threshold = metrics[0].minimum_score
+        else:
+            # If it doesn't exist, create a new test case
+            self.test_cases.append(
+                APITestCase(
+                    name=test_case.__name__,
+                    input=test_case.query,
+                    actualOutput=test_case.output,
+                    expectedOutput=test_case.expected_output,
+                    success=all([metric.is_successful() for metric in metrics]),
+                    metricsMetadata=[
+                        MetricsMetadata(
+                            metric=metric.__name__,
+                            score=metric.score,
+                            minimumScore=metric.minimum_score,
+                        )
+                        for metric in metrics
+                    ],
+                    threshold=metrics[0].minimum_score,
+                    runDuration=0,  # TODO: add duration
+                )
+            )
 
     def save(self, file_path: Optional[str] = None):
         if file_path is None:
@@ -86,8 +122,11 @@ class TestRun(BaseModel):
                 file_path = f"{self.alias}_{self.test_file}_{current_time}.json"
             elif not file_path.endswith(".json"):
                 file_path = f"{file_path}.json"
+        print({"save_filepath", file_path})
+
         with open(file_path, "w") as f:
-            f.write(self.json())
+            json.dump(self.dict(by_alias=True, exclude_none=True), f)
+
         return file_path
 
     @classmethod
@@ -98,8 +137,9 @@ class TestRun(BaseModel):
                 raise ValueError("File path must be provided for loading.")
             elif not file_path.endswith(".json"):
                 file_path = f"{file_path}.json"
+        print({"load_filepath", file_path})
         with open(file_path, "r") as f:
-            return cls.parse_raw(f.read())
+            return cls(**json.load(f))
 
 
 class Api:
@@ -418,5 +458,5 @@ class Api:
         """Post a test run"""
         return self.post_request(
             endpoint="/v1/test-run",
-            body=test_run.dict(by_alias=True),
+            body=test_run.model_dump(by_alias=True),
         )

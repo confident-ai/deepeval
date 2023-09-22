@@ -20,7 +20,7 @@ def pytest_sessionstart(session):
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_teardown(item, nextitem):
+def pytest_sessionfinish(session, exitstatus):
     # Code before yield will run before the test teardown
     api: Api = Api()
 
@@ -28,7 +28,10 @@ def pytest_runtest_teardown(item, nextitem):
     yield
 
     # Code after yield will run after the test teardown
+    print(test_filename)
     test_run = TestRun.load(test_filename)
+    print(test_run)
+    print(test_run.metric_scores)
     api.post_test_run(test_run)
     # if os.path.exists(test_filename):
     #     os.remove(test_filename)
