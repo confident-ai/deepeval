@@ -68,6 +68,7 @@ class AnswerRelevancyMetric(Metric, metaclass=Singleton):
 
         self.success = score > self.minimum_score
         # Log answer relevancy
+        self.score = score
         return score
 
     def is_successful(self) -> bool:
