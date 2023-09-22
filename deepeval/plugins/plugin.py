@@ -33,3 +33,4 @@ def pytest_sessionfinish(session, exitstatus):
             "✅ Tests finished! View results on "
             + f"https://app.confident-ai.com/unit-tests/{run_id}/test-cases"
         )
+        os.remove(test_filename)

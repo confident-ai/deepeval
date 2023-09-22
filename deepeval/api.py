@@ -95,9 +95,10 @@ class TestRun(BaseModel):
             existing_test_case.threshold = metrics[0].minimum_score
         else:
             # If it doesn't exist, create a new test case
+            name = "Test " + str(len(self.test_cases) + 1)
             self.test_cases.append(
                 APITestCase(
-                    name=test_case.__name__,
+                    name=name,
                     input=test_case.query,
                     actualOutput=test_case.output,
                     expectedOutput=test_case.expected_output,
