@@ -41,7 +41,7 @@ class APITestCase(BaseModel):
         ..., alias="metricsMetadata"
     )
     threshold: float
-    run_duration: int = Field(..., alias="runDuration")
+    run_duration: float = Field(..., alias="runDuration")
 
 
 class MetricScore(BaseModel):
@@ -111,7 +111,7 @@ class TestRun(BaseModel):
                         for metric in metrics
                     ],
                     threshold=metrics[0].minimum_score,
-                    runDuration=0,  # TODO: add duration
+                    runDuration=run_duration,
                 )
             )
 
