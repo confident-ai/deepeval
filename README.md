@@ -207,3 +207,18 @@ Built by the Confident AI Team. For any questions/business enquiries - please co
   howpublished = {\url{https://github.com/confident-ai/deepeval}},
 }
 ```
+
+# Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+<a href="https://github.com/confident-ai/deepeval/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=confident-ai/deepeval" />
+</a>

@@ -4,6 +4,7 @@ import urllib.parse
 import requests
 import json
 import warnings
+from collections import defaultdict
 
 from typing import Any, Optional
 from pydantic import BaseModel, Field
@@ -70,29 +71,45 @@ class TestRun(BaseModel):
     def add_llm_test_case(
         self, test_case: LLMTestCase, metrics: List[Metric], run_duration: float
     ):
-        self.metric_scores.extend([MetricScore.from_metric(m) for m in metrics])
+        metric_dict = defaultdict(list)
+        for metric in metrics:
+            metric_dict[metric.__name__].extend(
+                [metric.score]
+                + [
+                    ms.score
+                    for ms in self.metric_scores
+                    if ms.metric == metric.__name__
+                ]
+            )
+        self.metric_scores = [
+            MetricScore(metric=metric_name, score=sum(scores) / len(scores))
+            for metric_name, scores in metric_dict.items()
+        ]
         # Check if test case with the same ID already exists
         existing_test_case: APITestCase = next(
             (tc for tc in self.test_cases if tc.name == test_case.__name__),
             None,
         )
+        metric_dict = defaultdict(list)
+        for metric in metrics:
+            metric_dict[metric.__name__].append(metric.score)
+        metrics_metadata = [
+            MetricsMetadata(
+                metric=metric_name,
+                score=sum(scores) / len(scores),
+                minimumScore=min(scores),
+            )
+            for metric_name, scores in metric_dict.items()
+        ]
+        success = all([metric.is_successful() for metric in metrics])
+        threshold = metrics[0].minimum_score
+
         if existing_test_case:
             # If it exists, append the metrics to the existing test case
-            existing_test_case.metricsMetadata.extend(
-                [
-                    MetricsMetadata(
-                        metric=metric.__name__,
-                        score=metric.score,
-                        minimumScore=metric.minimum_score,
-                    )
-                    for metric in metrics
-                ]
-            )
+            existing_test_case.metricsMetadata.extend(metrics_metadata)
             # Update the success status and threshold
-            existing_test_case.success = all(
-                [metric.is_successful() for metric in metrics]
-            )
-            existing_test_case.threshold = metrics[0].minimum_score
+            existing_test_case.success = success
+            existing_test_case.threshold = threshold
         else:
             # If it doesn't exist, create a new test case
             name = "Test " + str(len(self.test_cases) + 1)
@@ -102,16 +119,9 @@ class TestRun(BaseModel):
                     input=test_case.query,
                     actualOutput=test_case.output,
                     expectedOutput=test_case.expected_output,
-                    success=all([metric.is_successful() for metric in metrics]),
-                    metricsMetadata=[
-                        MetricsMetadata(
-                            metric=metric.__name__,
-                            score=metric.score,
-                            minimumScore=metric.minimum_score,
-                        )
-                        for metric in metrics
-                    ],
-                    threshold=metrics[0].minimum_score,
+                    success=success,
+                    metricsMetadata=metrics_metadata,
+                    threshold=threshold,
                     runDuration=run_duration,
                 )
             )
@@ -124,8 +134,6 @@ class TestRun(BaseModel):
                 return
             elif not file_path.endswith(".json"):
                 file_path = f"{file_path}.json"
-        print({"save_filepath", file_path})
-
         with open(file_path, "w") as f:
             json.dump(self.dict(by_alias=True, exclude_none=True), f)
 
@@ -140,7 +148,6 @@ class TestRun(BaseModel):
                 return
             elif not file_path.endswith(".json"):
                 file_path = f"{file_path}.json"
-        print({"load_filepath", file_path})
         with open(file_path, "r") as f:
             return cls(**json.load(f))
 

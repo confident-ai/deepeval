@@ -31,6 +31,6 @@ def pytest_sessionfinish(session, exitstatus):
         run_id = result["id"]
         print(
             "✅ Tests finished! View results on "
-            + f"https://app.confident-ai.com/unit-tests/{run_id}/test-cases"
+            + f"https://app.confident-ai.com/unit-tests/{run_id}"
         )
         os.remove(test_filename)
