@@ -65,7 +65,6 @@ class TestRun(BaseModel):
         default_factory=lambda: [], alias="metricScores"
     )
     configurations: dict
-    parallel_execution: bool = Field(False, alias="parallelExecution")
 
     def add_test_case(self, test_case: TestCase):
         self.test_cases.append(test_case)
