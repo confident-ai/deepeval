@@ -234,7 +234,6 @@ def run_test(
                 test_results.append(test_result)
 
                 # Load the test_run and add the test_case regardless of the success of the test
-                print("Loading...")
                 test_run = TestRun.load()
                 test_run.add_llm_test_case(
                     test_case=test_case,
