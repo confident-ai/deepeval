@@ -173,7 +173,7 @@ def run_test(
     test_results = []
     for test_case in test_cases:
         for metric in metrics:
-            t1 = time.perf_counter()
+            test_start_time = time.perf_counter()
 
             @retry(
                 max_retries=max_retries, delay=delay, min_success=min_success
@@ -239,8 +239,8 @@ def run_test(
                 test_results.append(test_result)
 
                 # Load the test_run and add the test_case regardless of the success of the test
-                t2 = time.perf_counter()
-                run_duration = t2 - t1
+                test_end_time = time.perf_counter()
+                run_duration = test_end_time - test_start_time
                 if os.getenv(PYTEST_RUN_ENV_VAR):
                     test_run = TestRun.load()
                     test_run.add_llm_test_case(
