@@ -134,7 +134,7 @@ class TestRun(BaseModel):
             file_path = os.getenv(PYTEST_RUN_ENV_VAR)
             # If file Path is None, remove it
             if not file_path:
-                raise ValueError("File path must be provided for loading.")
+                return
             elif not file_path.endswith(".json"):
                 file_path = f"{file_path}.json"
         print({"load_filepath", file_path})
