@@ -93,10 +93,11 @@ def run(
     color: str = "yes",
     durations: int = 10,
     pdb: bool = False,
+    exit_on_first_failure: bool = False,
 ):
     """Run a test"""
     pytest_args = ["-k", test_file_or_directory]
-    if x:
+    if x or exit_on_first_failure:
         pytest_args.insert(0, "-x")
 
     # Generate environment variable based on current date and time
