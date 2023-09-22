@@ -71,7 +71,13 @@ class TestRun(BaseModel):
     def add_llm_test_case(
         self, test_case: LLMTestCase, metrics: List[Metric], run_duration: float
     ):
-        self.metric_scores.extend([MetricScore.from_metric(m) for m in metrics])
+        metric_dict = defaultdict(list)
+        for metric in metrics:
+            metric_dict[metric.__name__].append(metric.score)
+        self.metric_scores = [
+            MetricScore(metric=metric_name, score=sum(scores) / len(scores))
+            for metric_name, scores in metric_dict.items()
+        ]
         # Check if test case with the same ID already exists
         existing_test_case: APITestCase = next(
             (tc for tc in self.test_cases if tc.name == test_case.__name__),
