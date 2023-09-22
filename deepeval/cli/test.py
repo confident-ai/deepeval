@@ -88,7 +88,7 @@ def check_if_legit_file(test_file: str):
 @app.command()
 def run(
     test_file_or_directory: str,
-    exit_on_first_failure: bool = False,
+    x: bool = False,
     verbose: bool = False,
     color: str = "yes",
     durations: int = 10,
@@ -96,7 +96,7 @@ def run(
 ):
     """Run a test"""
     pytest_args = ["-k", test_file_or_directory]
-    if exit_on_first_failure:
+    if x:
         pytest_args.insert(0, "-x")
 
     # Generate environment variable based on current date and time
