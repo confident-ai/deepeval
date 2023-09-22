@@ -9,6 +9,7 @@ from sentence_transformers import CrossEncoder
 class Metric(metaclass=Singleton):
     # set an arbitrary minimum score that will get over-ridden later
     minimum_score: float = 0
+    score: float = 0
 
     # Measure function signature is subject to be different - not sure
     # how applicable this is - might need a better abstraction
@@ -28,6 +29,10 @@ class Metric(metaclass=Singleton):
     @abstractmethod
     def is_successful(self) -> bool:
         raise NotImplementedError
+
+    @property
+    def __name__(self):
+        return "Metric"
 
 
 class EntailmentScoreMetric(Metric):

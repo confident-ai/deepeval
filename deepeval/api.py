@@ -11,6 +11,7 @@ from requests.adapters import HTTPAdapter, Response, Retry
 
 from deepeval.constants import API_KEY_ENV, PYTEST_RUN_ENV_VAR
 from deepeval.key_handler import KEY_FILE_HANDLER
+from deepeval.metrics.metric import Metric
 
 API_BASE_URL = "https://app.confident-ai.com/api"
 # API_BASE_URL = "http://localhost:3000/api"
@@ -45,12 +46,24 @@ class MetricScore(BaseModel):
     metric: str
     score: float
 
+    @classmethod
+    def from_metric(cls, metric: Metric):
+        return cls(metric=metric.__name__, score=metric.score)
+
 
 class TestRun(BaseModel):
     alias: str
-    test_file: str = Field(..., alias="testFile")
-    test_cases: List[TestCase] = Field(..., alias="testCases")
-    metric_scores: List[MetricScore] = Field(..., alias="metricScores")
+    test_file: Optional[str] = Field(
+        # TODO: Fix test_file
+        "test.py",
+        alias="testFile",
+    )
+    test_cases: List[TestCase] = Field(
+        alias="testCases", default_factory=lambda: []
+    )
+    metric_scores: List[MetricScore] = Field(
+        default_factory=lambda: [], alias="metricScores"
+    )
     configurations: dict
     parallel_execution: bool = Field(False, alias="parallelExecution")
 

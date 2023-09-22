@@ -200,6 +200,14 @@ def run_test(
                         metadata=None,
                         context=test_case.context,
                     )
+                    test_run = TestRun.load()
+                    test_run.add_test_case_and_metric(
+                        test_case=test_case,
+                        metric=metric,
+                        success=success,
+                        score=score,
+                    )
+
                 elif isinstance(test_case, SearchTestCase):
                     log(
                         success=success,

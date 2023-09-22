@@ -10,7 +10,7 @@ def pytest_sessionstart(session):
     session_name = session.name
     global test_filename
     test_run = TestRun(
-        alias=session_name,
+        alias=str(current_time),
         testFile=current_time,
         testCases=[],
         metricScores=[],
