@@ -77,49 +77,38 @@ class TestRun(BaseModel):
             (tc for tc in self.test_cases if tc.name == test_case.__name__),
             None,
         )
+        metric_dict = defaultdict(list)
+        for metric in metrics:
+            metric_dict[metric.__name__].append(metric.score)
+        metrics_metadata = [
+            MetricsMetadata(
+                metric=metric_name,
+                score=sum(scores) / len(scores),
+                minimumScore=min(scores),
+            )
+            for metric_name, scores in metric_dict.items()
+        ]
+        success = all([metric.is_successful() for metric in metrics])
+        threshold = metrics[0].minimum_score
+
         if existing_test_case:
             # If it exists, append the metrics to the existing test case
-
-            metric_dict = defaultdict(list)
-            for metric in metrics:
-                metric_dict[metric.__name__].append(metric.score)
-            for metric_name, scores in metric_dict.items():
-                average_score = sum(scores) / len(scores)
-                existing_test_case.metricsMetadata.append(
-                    MetricsMetadata(
-                        metric=metric_name,
-                        score=average_score,
-                        minimumScore=min(scores),
-                    )
-                )
+            existing_test_case.metricsMetadata.extend(metrics_metadata)
             # Update the success status and threshold
-            existing_test_case.success = all(
-                [metric.is_successful() for metric in metrics]
-            )
-            existing_test_case.threshold = metrics[0].minimum_score
+            existing_test_case.success = success
+            existing_test_case.threshold = threshold
         else:
             # If it doesn't exist, create a new test case
             name = "Test " + str(len(self.test_cases) + 1)
-            metric_dict = defaultdict(list)
-            for metric in metrics:
-                metric_dict[metric.__name__].append(metric.score)
-            metrics_metadata = [
-                MetricsMetadata(
-                    metric=metric_name,
-                    score=sum(scores) / len(scores),
-                    minimumScore=min(scores),
-                )
-                for metric_name, scores in metric_dict.items()
-            ]
             self.test_cases.append(
                 APITestCase(
                     name=name,
                     input=test_case.query,
                     actualOutput=test_case.output,
                     expectedOutput=test_case.expected_output,
-                    success=all([metric.is_successful() for metric in metrics]),
+                    success=success,
                     metricsMetadata=metrics_metadata,
-                    threshold=metrics[0].minimum_score,
+                    threshold=threshold,
                     runDuration=run_duration,
                 )
             )
@@ -132,7 +121,6 @@ class TestRun(BaseModel):
                 return
             elif not file_path.endswith(".json"):
                 file_path = f"{file_path}.json"
-        print({"save_filepath", file_path})
 
         with open(file_path, "w") as f:
             json.dump(self.dict(by_alias=True, exclude_none=True), f)
