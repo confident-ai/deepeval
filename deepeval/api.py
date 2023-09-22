@@ -116,9 +116,9 @@ class TestRun(BaseModel):
     def save(self, file_path: Optional[str] = None):
         if file_path is None:
             file_path = os.getenv(PYTEST_RUN_ENV_VAR)
+            # If file Path is None, remove it
             if not file_path:
-                current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_path = f"{self.test_file}_{current_time}.json"
+                return
             elif not file_path.endswith(".json"):
                 file_path = f"{file_path}.json"
         print({"save_filepath", file_path})
@@ -132,6 +132,7 @@ class TestRun(BaseModel):
     def load(cls, file_path: Optional[str] = None):
         if file_path is None:
             file_path = os.getenv(PYTEST_RUN_ENV_VAR)
+            # If file Path is None, remove it
             if not file_path:
                 raise ValueError("File path must be provided for loading.")
             elif not file_path.endswith(".json"):
