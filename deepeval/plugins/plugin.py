@@ -6,10 +6,9 @@ from datetime import datetime
 
 
 def pytest_sessionstart(session):
-    current_time = datetime.now().strftime("%H:%M:%S")
     global test_filename
     test_run = TestRun(
-        testFile=current_time,
+        testFile="-",
         testCases=[],
         metricScores=[],
         configurations={},
