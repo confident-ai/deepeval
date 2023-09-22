@@ -4,6 +4,7 @@ import urllib.parse
 import requests
 import json
 import warnings
+from collections import defaultdict
 
 from typing import Any, Optional
 from pydantic import BaseModel, Field
@@ -78,16 +79,19 @@ class TestRun(BaseModel):
         )
         if existing_test_case:
             # If it exists, append the metrics to the existing test case
-            existing_test_case.metricsMetadata.extend(
-                [
+
+            metric_dict = defaultdict(list)
+            for metric in metrics:
+                metric_dict[metric.__name__].append(metric.score)
+            for metric_name, scores in metric_dict.items():
+                average_score = sum(scores) / len(scores)
+                existing_test_case.metricsMetadata.append(
                     MetricsMetadata(
-                        metric=metric.__name__,
-                        score=metric.score,
-                        minimumScore=metric.minimum_score,
+                        metric=metric_name,
+                        score=average_score,
+                        minimumScore=min(scores),
                     )
-                    for metric in metrics
-                ]
-            )
+                )
             # Update the success status and threshold
             existing_test_case.success = all(
                 [metric.is_successful() for metric in metrics]
@@ -96,6 +100,17 @@ class TestRun(BaseModel):
         else:
             # If it doesn't exist, create a new test case
             name = "Test " + str(len(self.test_cases) + 1)
+            metric_dict = defaultdict(list)
+            for metric in metrics:
+                metric_dict[metric.__name__].append(metric.score)
+            metrics_metadata = [
+                MetricsMetadata(
+                    metric=metric_name,
+                    score=sum(scores) / len(scores),
+                    minimumScore=min(scores),
+                )
+                for metric_name, scores in metric_dict.items()
+            ]
             self.test_cases.append(
                 APITestCase(
                     name=name,
@@ -103,14 +118,7 @@ class TestRun(BaseModel):
                     actualOutput=test_case.output,
                     expectedOutput=test_case.expected_output,
                     success=all([metric.is_successful() for metric in metrics]),
-                    metricsMetadata=[
-                        MetricsMetadata(
-                            metric=metric.__name__,
-                            score=metric.score,
-                            minimumScore=metric.minimum_score,
-                        )
-                        for metric in metrics
-                    ],
+                    metricsMetadata=metrics_metadata,
                     threshold=metrics[0].minimum_score,
                     runDuration=run_duration,
                 )
