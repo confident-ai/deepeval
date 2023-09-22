@@ -73,7 +73,14 @@ class TestRun(BaseModel):
     ):
         metric_dict = defaultdict(list)
         for metric in metrics:
-            metric_dict[metric.__name__].append(metric.score)
+            metric_dict[metric.__name__].extend(
+                [metric.score]
+                + [
+                    ms.score
+                    for ms in self.metric_scores
+                    if ms.metric == metric.__name__
+                ]
+            )
         self.metric_scores = [
             MetricScore(metric=metric_name, score=sum(scores) / len(scores))
             for metric_name, scores in metric_dict.items()
