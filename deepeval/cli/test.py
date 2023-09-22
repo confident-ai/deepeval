@@ -128,7 +128,6 @@ def run(
             total=None,
         )
         retcode = pytest.main(pytest_args)
-    print("✅ Tests finished! View results on https://app.confident-ai.com/")
     return retcode
 
 
