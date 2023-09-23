@@ -86,12 +86,7 @@ def check_if_legit_file(test_file_or_directory: str):
                     "Test will not run. Please ensure the file starts with `test_` prefix."
                 )
     elif os.path.isdir(test_file_or_directory):
-        for filename in os.listdir(test_file_or_directory):
-            if filename.endswith(".py"):
-                if not filename.startswith("test_"):
-                    raise ValueError(
-                        "Test will not run. Please ensure all files in the directory start with `test_` prefix."
-                    )
+        return
     else:
         raise ValueError(
             "Provided path is neither a valid file nor a directory."
