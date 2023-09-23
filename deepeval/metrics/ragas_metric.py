@@ -12,11 +12,9 @@ class ContextualRelevancyRagasMetric(Metric):
 
     def __init__(
         self,
-        openai_api_key: str,
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        os.environ["OPENAI_API_KEY"] = openai_api_key
         try:
             # Adding a list of metrics
             from ragas.metrics import context_relevancy
@@ -46,7 +44,8 @@ class ContextualRelevancyRagasMetric(Metric):
         data = {
             "expected_output": [test_case.expected_output],
             "contexts": [test_case.context],
-            "output": [test_case.output],
+            "question": [test_case.query],
+            "answer": [test_case.output],
             "id": [test_case.id],
         }
         dataset = Dataset.from_dict(data)
@@ -73,11 +72,9 @@ class AnswerRelevancyRagasMetric(Metric):
 
     def __init__(
         self,
-        openai_api_key: str,
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        os.environ["OPENAI_API_KEY"] = openai_api_key
         try:
             from ragas.metrics import answer_relevancy
 
@@ -104,7 +101,8 @@ class AnswerRelevancyRagasMetric(Metric):
         data = {
             "expected_output": [test_case.expected_output],
             "contexts": [test_case.context],
-            "output": [test_case.output],
+            "question": [test_case.query],
+            "answer": [test_case.output],
             "id": [test_case.id],
         }
         dataset = Dataset.from_dict(data)
@@ -125,11 +123,9 @@ class AnswerRelevancyRagasMetric(Metric):
 class FaithfulnessRagasMetric(Metric):
     def __init__(
         self,
-        openai_api_key: str,
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        os.environ["OPENAI_API_KEY"] = openai_api_key
         try:
             from ragas.metrics import faithfulness
 
@@ -156,7 +152,8 @@ class FaithfulnessRagasMetric(Metric):
         data = {
             "expected_output": [test_case.expected_output],
             "contexts": [test_case.context],
-            "output": [test_case.output],
+            "question": [test_case.query],
+            "answer": [test_case.output],
             "id": [test_case.id],
         }
         dataset = Dataset.from_dict(data)
@@ -210,7 +207,8 @@ class ContextRecallRagasMetric(Metric):
         data = {
             "expected_output": [test_case.expected_output],
             "contexts": [test_case.context],
-            "output": [test_case.output],
+            "question": [test_case.query],
+            "answer": [test_case.output],
             "id": [test_case.id],
         }
         dataset = Dataset.from_dict(data)
@@ -264,7 +262,8 @@ class HarmfulnessRagasMetric(Metric):
         data = {
             "expected_output": [test_case.expected_output],
             "contexts": [test_case.context],
-            "output": [test_case.output],
+            "question": [test_case.query],
+            "answer": [test_case.output],
             "id": [test_case.id],
         }
         dataset = Dataset.from_dict(data)
@@ -287,12 +286,10 @@ class RagasMetric(Metric):
 
     def __init__(
         self,
-        openai_api_key: str,
         metrics: List[Metric] = None,
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        os.environ["OPENAI_API_KEY"] = openai_api_key
         if metrics is None:
             self.metrics = [
                 HarmfulnessRagasMetric,
@@ -323,7 +320,8 @@ class RagasMetric(Metric):
         # Convert the LLMTestCase to a format compatible with Dataset
         scores = []
         for metric in self.metrics:
-            score = metric.measure(test_case)
+            m = metric()
+            score = m.measure(test_case)
             scores.append(score)
 
         # ragas score is harmonic mean of all the scores
