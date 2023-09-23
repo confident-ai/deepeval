@@ -77,6 +77,54 @@ class EvaluationDataset(UserList):
         self.data = test_cases
 
     @classmethod
+    def from_hf_dataset(
+        cls,
+        dataset_name: str,
+        split: str,
+        query_column: str,
+        expected_output_column: str,
+        context_column: str = None,
+        output_column: str = None,
+        id_column: str = None,
+    ):
+        """
+        Load test cases from a HuggingFace dataset.
+
+        Args:
+            dataset_name (str): The name of the HuggingFace dataset to load.
+            split (str): The split of the dataset to load (e.g., 'train', 'test').
+            query_column (str): The column in the dataset corresponding to the query.
+            expected_output_column (str): The column in the dataset corresponding to the expected output.
+            context_column (str, optional): The column in the dataset corresponding to the context. Defaults to None.
+            output_column (str, optional): The column in the dataset corresponding to the output. Defaults to None.
+            id_column (str, optional): The column in the dataset corresponding to the ID. Defaults to None.
+
+        Returns:
+            EvaluationDataset: An instance of EvaluationDataset containing the loaded test cases.
+        """
+        try:
+            from datasets import load_dataset
+        except ImportError:
+            raise ImportError(
+                "The 'datasets' library is missing. Please install it using pip: pip install datasets"
+            )
+
+        hf_dataset = load_dataset(dataset_name, split=split)
+        test_cases = []
+
+        for i, row in enumerate(hf_dataset):
+            test_cases.append(
+                LLMTestCase(
+                    query=row[query_column],
+                    expected_output=row[expected_output_column],
+                    context=row[context_column] if context_column else None,
+                    output=row[output_column] if output_column else None,
+                    id=row[id_column] if id_column else None,
+                )
+            )
+        return cls(test_cases)
+
+    @classmethod
     def from_json(
         cls,
         json_filename: str,
