@@ -78,18 +78,30 @@ def sample():
         pass
 
 
-def check_if_legit_file(test_file: str):
-    if test_file.endswith(".py"):
-        if not test_file.startswith("test_"):
-            raise ValueError(
-                "Test will not run. Please ensure the `test_` prefix."
-            )
+def check_if_legit_file(test_file_or_directory: str):
+    if os.path.isfile(test_file_or_directory):
+        if test_file_or_directory.endswith(".py"):
+            if not os.path.basename(test_file_or_directory).startswith("test_"):
+                raise ValueError(
+                    "Test will not run. Please ensure the file starts with `test_` prefix."
+                )
+    elif os.path.isdir(test_file_or_directory):
+        for filename in os.listdir(test_file_or_directory):
+            if filename.endswith(".py"):
+                if not filename.startswith("test_"):
+                    raise ValueError(
+                        "Test will not run. Please ensure all files in the directory start with `test_` prefix."
+                    )
+    else:
+        raise ValueError(
+            "Provided path is neither a valid file nor a directory."
+        )
 
 
 @app.command()
 def run(
     test_file_or_directory: str,
-    verbose: bool = False,
+    verbose: bool = True,
     color: str = "yes",
     durations: int = 10,
     pdb: bool = False,
@@ -98,7 +110,8 @@ def run(
     ] = False,
 ):
     """Run a test"""
-    pytest_args = ["-k", test_file_or_directory]
+    check_if_legit_file(test_file_or_directory)
+    pytest_args = [test_file_or_directory]
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
 
@@ -111,9 +124,10 @@ def run(
             "--verbose" if verbose else "--quiet",
             f"--color={color}",
             f"--durations={durations}",
-            "--pdb" if pdb else "",
         ]
     )
+    if pdb:
+        pytest_args.append("--pdb")
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
 
@@ -122,7 +136,6 @@ def run(
         TextColumn("[progress.description]{task.description}"),
         transient=True,
     ) as progress:
-        # progress.add_task(description="Preparing tests...", total=None)
         progress.add_task(
             description="Downloading models (may take up to 2 minutes if running for the first time)...",
             total=None,

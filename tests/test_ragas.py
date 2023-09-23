@@ -11,16 +11,15 @@ expected_output = "French national football team"
 context = "The FIFA World Cup in 2018 was won by the French national football team. They defeated Croatia 4-2 in the final match to claim the championship."
 
 
-class TestOverallScore:
-    def test_overall_score(self):
-        test_case = LLMTestCase(
-            query=query,
-            output=output,
-            expected_output=expected_output,
-            context=context,
-        )
-        metric = RagasMetric()
-        assert_test(
-            test_cases=[test_case],
-            metrics=[metric],
-        )
+def test_overall_score():
+    test_case = LLMTestCase(
+        query=query,
+        output=output,
+        expected_output=expected_output,
+        context=context,
+    )
+    metric = RagasMetric()
+    assert_test(
+        test_cases=[test_case],
+        metrics=[metric],
+    )
