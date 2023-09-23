@@ -1,5 +1,4 @@
 import pytest
-import os
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.ragas_metric import RagasMetric
 from deepeval.run_test import assert_test
