@@ -468,7 +468,13 @@ class Api:
 
     def post_test_run(self, test_run: TestRun):
         """Post a test run"""
+        try:
+            body = test_run.model_dump(by_alias=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = test_run.dict(by_alias=True)
+
         return self.post_request(
             endpoint="/v1/test-run",
-            body=test_run.model_dump(by_alias=True),
+            body=body,
         )
