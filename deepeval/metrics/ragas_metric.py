@@ -42,11 +42,11 @@ class ContextualRelevancyRagasMetric(Metric):
 
         # Create a dataset from the test case
         data = {
-            "expected_output": [test_case.expected_output],
-            "contexts": [test_case.context],
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [[test_case.context]],
             "question": [test_case.query],
             "answer": [test_case.output],
-            "id": [test_case.id],
+            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
 
@@ -99,11 +99,11 @@ class AnswerRelevancyRagasMetric(Metric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
-            "expected_output": [test_case.expected_output],
-            "contexts": [test_case.context],
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [[test_case.context]],
             "question": [test_case.query],
             "answer": [test_case.output],
-            "id": [test_case.id],
+            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=self.metrics)
@@ -150,11 +150,11 @@ class FaithfulnessRagasMetric(Metric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
-            "expected_output": [test_case.expected_output],
-            "contexts": [test_case.context],
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [[test_case.context]],
             "question": [test_case.query],
             "answer": [test_case.output],
-            "id": [test_case.id],
+            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=self.metrics)
@@ -176,11 +176,9 @@ class ContextRecallRagasMetric(Metric):
 
     def __init__(
         self,
-        openai_api_key: str,
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        os.environ["OPENAI_API_KEY"] = openai_api_key
         try:
             from ragas.metrics import context_recall
 
@@ -205,11 +203,11 @@ class ContextRecallRagasMetric(Metric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
-            "expected_output": [test_case.expected_output],
-            "contexts": [test_case.context],
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [[test_case.context]],
             "question": [test_case.query],
             "answer": [test_case.output],
-            "id": [test_case.id],
+            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=self.metrics)
@@ -231,11 +229,9 @@ class HarmfulnessRagasMetric(Metric):
 
     def __init__(
         self,
-        openai_api_key: str,
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        os.environ["OPENAI_API_KEY"] = openai_api_key
         try:
             from ragas.metrics.critique import harmfulness
 
@@ -260,11 +256,11 @@ class HarmfulnessRagasMetric(Metric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
-            "expected_output": [test_case.expected_output],
-            "contexts": [test_case.context],
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [[test_case.context]],
             "question": [test_case.query],
             "answer": [test_case.output],
-            "id": [test_case.id],
+            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=self.metrics)
@@ -350,12 +346,11 @@ class RagasMetric(Metric):
 
 def assert_ragas(
     test_case: LLMTestCase,
-    openai_api_key: str,
     metrics: List[str] = None,
     minimum_score: float = 0.3,
 ):
     """Asserts if the Ragas score is above the minimum score"""
-    metric = RagasMetric(openai_api_key, metrics, minimum_score)
+    metric = RagasMetric(metrics, minimum_score)
     score = metric.measure(test_case)
     assert (
         score >= metric.minimum_score
