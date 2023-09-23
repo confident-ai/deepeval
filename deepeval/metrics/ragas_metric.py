@@ -1,10 +1,285 @@
 """An implementation of the Ragas metric
 """
 import os
+import numpy as np
 from deepeval.metrics.metric import Metric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import run_test
 from typing import List
+
+
+class ContextualRelevancyRagasMetric(Metric):
+    """This metric checks the contextual relevancy using Ragas"""
+
+    def __init__(
+        self,
+        openai_api_key: str,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+        os.environ["OPENAI_API_KEY"] = openai_api_key
+        try:
+            # Adding a list of metrics
+            from ragas.metrics import context_relevancy
+
+            self.metrics = [context_relevancy]
+
+        except ModuleNotFoundError as e:
+            print(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+    def measure(self, test_case: LLMTestCase):
+        # sends to server
+        try:
+            from ragas import evaluate
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        # Create a dataset from the test case
+        data = {
+            "expected_output": [test_case.expected_output],
+            "contexts": [test_case.context],
+            "output": [test_case.output],
+            "id": [test_case.id],
+        }
+        dataset = Dataset.from_dict(data)
+
+        # Evaluate the dataset using Ragas
+        scores = evaluate(dataset, metrics=self.metrics)
+
+        # Ragas only does dataset-level comparisons
+        context_relevancy_score = scores["context_relevancy"]
+        self.success = context_relevancy_score >= self.minimum_score
+        self.score = context_relevancy_score
+        return context_relevancy_score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Contextual Relevancy Ragas Score"
+
+
+class AnswerRelevancyRagasMetric(Metric):
+    """This metric checks the answer relevancy using Ragas"""
+
+    def __init__(
+        self,
+        openai_api_key: str,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+        os.environ["OPENAI_API_KEY"] = openai_api_key
+        try:
+            from ragas.metrics import answer_relevancy
+
+            self.metrics = [answer_relevancy]
+        except ModuleNotFoundError as e:
+            print(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+    def measure(self, test_case: LLMTestCase):
+        # sends to server
+        try:
+            from ragas import evaluate
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        data = {
+            "expected_output": [test_case.expected_output],
+            "contexts": [test_case.context],
+            "output": [test_case.output],
+            "id": [test_case.id],
+        }
+        dataset = Dataset.from_dict(data)
+        scores = evaluate(dataset, metrics=self.metrics)
+        answer_relevancy_score = scores["answer_relevancy"]
+        self.success = answer_relevancy_score >= self.minimum_score
+        self.score = answer_relevancy_score
+        return answer_relevancy_score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Answer Relevancy Ragas Score"
+
+
+class FaithfulnessRagasMetric(Metric):
+    def __init__(
+        self,
+        openai_api_key: str,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+        os.environ["OPENAI_API_KEY"] = openai_api_key
+        try:
+            from ragas.metrics import faithfulness
+
+            self.metrics = [faithfulness]
+        except ModuleNotFoundError as e:
+            print(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+    def measure(self, test_case: LLMTestCase):
+        # sends to server
+        try:
+            from ragas import evaluate
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        data = {
+            "expected_output": [test_case.expected_output],
+            "contexts": [test_case.context],
+            "output": [test_case.output],
+            "id": [test_case.id],
+        }
+        dataset = Dataset.from_dict(data)
+        scores = evaluate(dataset, metrics=self.metrics)
+        faithfulness_score = scores["faithfulness"]
+        self.success = faithfulness_score >= self.minimum_score
+        self.score = faithfulness_score
+        return faithfulness_score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Faithfulness Ragas Score"
+
+
+class ContextRecallRagasMetric(Metric):
+    """This metric checks the context recall using Ragas"""
+
+    def __init__(
+        self,
+        openai_api_key: str,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+        os.environ["OPENAI_API_KEY"] = openai_api_key
+        try:
+            from ragas.metrics import context_recall
+
+            self.metrics = [context_recall]
+        except ModuleNotFoundError as e:
+            print(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+    def measure(self, test_case: LLMTestCase):
+        # sends to server
+        try:
+            from ragas import evaluate
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        data = {
+            "expected_output": [test_case.expected_output],
+            "contexts": [test_case.context],
+            "output": [test_case.output],
+            "id": [test_case.id],
+        }
+        dataset = Dataset.from_dict(data)
+        scores = evaluate(dataset, metrics=self.metrics)
+        context_recall_score = scores["context_recall"]
+        self.success = context_recall_score >= self.minimum_score
+        self.score = context_recall_score
+        return context_recall_score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Context Recall Ragas Score"
+
+
+class HarmfulnessRagasMetric(Metric):
+    """This metric checks the harmfulness using Ragas"""
+
+    def __init__(
+        self,
+        openai_api_key: str,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+        os.environ["OPENAI_API_KEY"] = openai_api_key
+        try:
+            from ragas.metrics.critique import harmfulness
+
+            self.metrics = [harmfulness]
+        except ModuleNotFoundError as e:
+            print(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+    def measure(self, test_case: LLMTestCase):
+        # sends to server
+        try:
+            from ragas import evaluate
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        data = {
+            "expected_output": [test_case.expected_output],
+            "contexts": [test_case.context],
+            "output": [test_case.output],
+            "id": [test_case.id],
+        }
+        dataset = Dataset.from_dict(data)
+        scores = evaluate(dataset, metrics=self.metrics)
+        harmfulness_score = scores["harmfulness"]
+        self.success = harmfulness_score >= self.minimum_score
+        self.score = harmfulness_score
+        return harmfulness_score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Harmfulness Ragas Score"
 
 
 class RagasMetric(Metric):
@@ -13,36 +288,21 @@ class RagasMetric(Metric):
     def __init__(
         self,
         openai_api_key: str,
-        metrics: List[str] = None,
+        metrics: List[Metric] = None,
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
         os.environ["OPENAI_API_KEY"] = openai_api_key
         if metrics is None:
-            try:
-                # Adding a list of metrics
-                from ragas.metrics import (
-                    context_relevancy,
-                    answer_relevancy,
-                    faithfulness,
-                    context_recall,
-                )
-                from ragas.metrics.critique import harmfulness
-
-                self.metrics = [
-                    context_relevancy,
-                    answer_relevancy,
-                    faithfulness,
-                    context_recall,
-                    harmfulness,
-                ]
-
-            except ModuleNotFoundError as e:
-                print(
-                    "Please install ragas to use this metric. `pip install ragas`."
-                )
+            self.metrics = [
+                HarmfulnessRagasMetric,
+                ContextRecallRagasMetric,
+                FaithfulnessRagasMetric,
+                AnswerRelevancyRagasMetric,
+                ContextualRelevancyRagasMetric,
+            ]
         else:
-            metrics = self.metrics
+            self.metrics = metrics
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -61,22 +321,23 @@ class RagasMetric(Metric):
 
         # Create a dataset from the test case
         # Convert the LLMTestCase to a format compatible with Dataset
-        data = {
-            "expected_output": [test_case.expected_output],
-            "contexts": [test_case.context],
-            "output": [test_case.output],
-            "id": [test_case.id],
-        }
-        dataset = Dataset.from_dict(data)
+        scores = []
+        for metric in self.metrics:
+            score = metric.measure(test_case)
+            scores.append(score)
 
-        # Evaluate the dataset using Ragas
-        scores = evaluate(dataset, metrics=self.metrics)
+        # ragas score is harmonic mean of all the scores
+        if len(scores) > 0:
+            ragas_score = len(scores) / sum(
+                1.0 / score for score in scores if score != 0
+            )
+        else:
+            ragas_score = 0
 
         # Ragas only does dataset-level comparisons
         # >>> print(result["ragas_score"])
         # {'ragas_score': 0.860, 'context_relevancy': 0.817, 'faithfulness': 0.892,
         # 'answer_relevancy': 0.874}
-        ragas_score = scores["ragas_score"]
         self.success = ragas_score >= self.minimum_score
         self.score = ragas_score
         return ragas_score
