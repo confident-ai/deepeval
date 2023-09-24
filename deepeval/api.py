@@ -54,7 +54,7 @@ class MetricScore(BaseModel):
         return cls(metric=metric.__name__, score=metric.score)
 
 
-class TestRunResponse:
+class TestRunResponse(BaseModel):
     """Add Test Run Results"""
 
     testRunId: str
