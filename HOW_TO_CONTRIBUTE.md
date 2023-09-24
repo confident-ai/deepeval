@@ -5,6 +5,7 @@ To contribute a metric, we recommend looking at a metric file to see how it's do
 - An `assert` statement so users know
 - A `Metric` class so that this can be used in other areas of the codebase
 - A test to make sure it works (just a simple one to get it working - we'll personally add more ourselves as time goes on as metrics become more important!)
+- Documentation in a Markdown file showing how to use it (no need to add it to the Docusaurus Index - we are happy to handle that ourselve)
 
 And that's it!
 
