@@ -28,9 +28,8 @@ def pytest_sessionfinish(session, exitstatus):
         api: Api = Api()
         test_run = TestRun.load(test_filename)
         result = api.post_test_run(test_run)
-        run_id = result["id"]
         print(
             "✅ Tests finished! View results on "
-            + f"https://app.confident-ai.com/unit-tests/{run_id}"
+            + f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}"
         )
         os.remove(test_filename)
