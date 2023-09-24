@@ -1,5 +1,6 @@
 import pytest
 import os
+from rich import print
 from deepeval.api import Api, TestRun
 
 from deepeval.constants import PYTEST_RUN_ENV_VAR
@@ -28,9 +29,8 @@ def pytest_sessionfinish(session, exitstatus):
         api: Api = Api()
         test_run = TestRun.load(test_filename)
         result = api.post_test_run(test_run)
-        run_id = result["id"]
+        link = f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}"
         print(
-            "✅ Tests finished! View results on "
-            + f"https://app.confident-ai.com/unit-tests/{run_id}"
+            "✅ Tests finished! View results on " f"[link={link}]{link}[/link]"
         )
         os.remove(test_filename)
