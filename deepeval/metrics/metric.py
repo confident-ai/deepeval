@@ -8,8 +8,15 @@ from sentence_transformers import CrossEncoder
 
 class Metric(metaclass=Singleton):
     # set an arbitrary minimum score that will get over-ridden later
-    minimum_score: float = 0
     score: float = 0
+
+    @property
+    def minimum_score(self) -> float:
+        return self._minimum_score
+
+    @minimum_score.setter
+    def minimum_score(self, value: float):
+        self._minimum_score = value
 
     # Measure function signature is subject to be different - not sure
     # how applicable this is - might need a better abstraction
