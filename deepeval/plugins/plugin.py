@@ -19,13 +19,13 @@ def pytest_sessionstart(session):
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_sessionfinish(session, exitstatus):
     # Code before yield will run before the test teardown
-    api: Api = Api()
 
     # yield control back to pytest for the actual teardown
     yield
 
     # Code after yield will run after the test teardown
-    if os.getenv(PYTEST_RUN_ENV_VAR):
+    if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
+        api: Api = Api()
         test_run = TestRun.load(test_filename)
         result = api.post_test_run(test_run)
         run_id = result["id"]
