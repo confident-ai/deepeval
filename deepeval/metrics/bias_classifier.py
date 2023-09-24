@@ -25,7 +25,7 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
         success = score >= self.minimum_score
         return score
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase, return_all_scores: bool = False):
         if test_case.output is None:
             raise ValueError("Required attributes for test_case cannot be None")
 
@@ -49,6 +49,8 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
             self.success = True
 
         self.score = v
+        if return_all_scores:
+            return results
         return v
 
     def is_successful(self):
