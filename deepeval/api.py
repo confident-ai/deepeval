@@ -54,6 +54,13 @@ class MetricScore(BaseModel):
         return cls(metric=metric.__name__, score=metric.score)
 
 
+class TestRunResponse:
+    """Add Test Run Results"""
+
+    testRunId: str
+    projectId: str
+
+
 class TestRun(BaseModel):
     test_file: Optional[str] = Field(
         # TODO: Fix test_file
@@ -466,7 +473,7 @@ class Api:
         """
         return self.get_request(endpoint="/v1/implementation")
 
-    def post_test_run(self, test_run: TestRun):
+    def post_test_run(self, test_run: TestRun) -> TestRunResponse:
         """Post a test run"""
         try:
             body = test_run.model_dump(by_alias=True)
@@ -474,7 +481,11 @@ class Api:
             # Pydantic version below 2.0
             body = test_run.dict(by_alias=True)
 
-        return self.post_request(
+        result = self.post_request(
             endpoint="/v1/test-run",
             body=body,
         )
+        response = TestRunResponse(
+            testRunId=result["testRunId"], projectId=result["projectId"]
+        )
+        return response
