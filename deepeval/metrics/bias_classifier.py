@@ -6,10 +6,10 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 
 import warnings
 from typing import Optional
+from .metric import Metric
 
 from ..singleton import Singleton
 from ..test_case import LLMTestCase
-from .metric import Metric
 from ..run_test import assert_test
 
 
