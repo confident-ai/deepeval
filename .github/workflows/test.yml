@@ -15,21 +15,18 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-          # cache: "pip"
 
-      # - name: Get pip cache dir
-      #   id: pip-cache
-      #   run: echo "::set-output name=dir::$(pip cache dir)"
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
 
-      - name: Cache dependencies
-        id: cache-dependencies
+      - name: Cache pip dependencies
         uses: actions/cache@v2
         with:
-          path: ~/.cache/pip
-          key: dependencies-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            dependencies-${{ matrix.python-version }}-
-            dependencies-
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         env:
@@ -47,3 +44,4 @@ jobs:
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
           deepeval test run -x tests
+
