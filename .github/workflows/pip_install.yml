@@ -1,26 +1,26 @@
-name: Pip install comment
+# name: Pip install comment
 
-on:
-  pull_request:
+# on:
+#   pull_request:
 
-jobs:
-  create-pip-link-comment:
-    runs-on: ubuntu-latest
-    permissions: write-all
-    name: pip link
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+# jobs:
+#   create-pip-link-comment:
+#     runs-on: ubuntu-latest
+#     permissions: write-all
+#     name: pip link
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
 
-      - name: Comment PR
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          hide_and_recreate: true
-          hide_classify: "OUTDATED"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: |
-            Thanks for the PR! Going to review and merge soon 😉
-            Just before that though can you please test the installation with the command below? 😎
-            ```
-            pip install git+https://github.com/confident-ai/deepeval.git@${{ github.head_ref }}
-            ```
+#       - name: Comment PR
+#         uses: marocchino/sticky-pull-request-comment@v2
+#         with:
+#           hide_and_recreate: true
+#           hide_classify: "OUTDATED"
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           message: |
+#             Thanks for the PR! Going to review and merge soon 😉
+#             Just before that though can you please test the installation with the command below? 😎
+#             ```
+#             pip install git+https://github.com/confident-ai/deepeval.git@${{ github.head_ref }}
+#             ```
