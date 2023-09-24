@@ -79,6 +79,8 @@ def sample():
 
 
 def check_if_legit_file(test_file_or_directory: str):
+    if "::" in test_file_or_directory:
+        test_file_or_directory, test_case = test_file_or_directory.split("::")
     if os.path.isfile(test_file_or_directory):
         if test_file_or_directory.endswith(".py"):
             if not os.path.basename(test_file_or_directory).startswith("test_"):
