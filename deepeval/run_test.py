@@ -43,78 +43,6 @@ def _get_init_values(metric: Metric):
     return init_values
 
 
-def _send_to_server(
-    metric: Metric,
-    success: bool,
-    metric_score: float,
-    query: str = "-",
-    output: str = "-",
-    expected_output: str = "-",
-    metadata: Optional[dict] = None,
-    context: str = "-",
-    **kwargs,
-):
-    if _is_send_okay():
-        api_key = _get_api_key()
-        client = Client(api_key=api_key)
-        implementation_name = _get_implementation_name()
-        # implementation_id = os.getenv(IMPLEMENTATION_ID_ENV, "")
-        # if implementation_id != "":
-        implementation_id = client.get_implementation_id_by_name(
-            implementation_name
-        )
-        os.environ[IMPLEMENTATION_ID_ENV] = implementation_id
-        datapoint_id = client.add_golden(
-            query=query, expected_output=expected_output, context=context
-        )
-
-        metric_metadata: dict = _get_init_values(metric)
-        if metadata:
-            metric_metadata.update(metadata)
-
-        metric_name = metric.__name__
-        return client.add_test_case(
-            metric_score=float(metric_score),
-            metric_name=metric_name,
-            actual_output=output,
-            query=query,
-            implementation_id=implementation_id,
-            metrics_metadata=metric_metadata,
-            success=bool(success),
-            datapoint_id=datapoint_id["id"],
-        )
-
-
-def log(
-    metric: Metric,
-    success: bool = True,
-    score: float = 1e-10,
-    query: str = "-",
-    output: str = "-",
-    expected_output: str = "-",
-    metadata: Optional[dict] = None,
-    context: str = "-",
-):
-    """Log to the server.
-
-    Parameters
-    - query: What was asked to the model. This can also be context.
-    - output: The LLM output.
-    - expected_output: The output that's expected.
-    """
-    if _is_send_okay():
-        return _send_to_server(
-            metric=metric,
-            metric_score=score,
-            query=query,
-            output=output,
-            expected_output=expected_output,
-            success=success,
-            metadata=metadata,
-            context=context,
-        )
-
-
 @dataclass
 class TestResult:
     """Returned from run_test"""
@@ -182,18 +110,6 @@ def run_test(
                 score = metric.measure(test_case)
                 success = metric.is_successful()
                 if isinstance(test_case, LLMTestCase):
-                    log(
-                        success=success,
-                        score=score,
-                        metric=metric,
-                        query=test_case.query if test_case.query else "-",
-                        output=test_case.output if test_case.output else "-",
-                        expected_output=test_case.expected_output
-                        if test_case.expected_output
-                        else "-",
-                        context=test_case.context if test_case.context else "-",
-                    )
-
                     test_result = TestResult(
                         success=success,
                         score=score,
@@ -207,19 +123,6 @@ def run_test(
                         context=test_case.context,
                     )
                 elif isinstance(test_case, SearchTestCase):
-                    log(
-                        success=success,
-                        score=score,
-                        metric=metric,
-                        query=test_case.query if test_case.query else "-",
-                        output=str(test_case.output_list)
-                        if test_case.output_list
-                        else "-",
-                        expected_output=str(test_case.golden_list)
-                        if test_case.golden_list
-                        else "-",
-                        context="-",
-                    )
                     test_result = TestResult(
                         success=success,
                         score=score,
