@@ -12,6 +12,7 @@ from tabulate import tabulate
 from deepeval.run_test import run_test
 from deepeval.metrics.metric import Metric
 from deepeval.test_case import LLMTestCase
+from dataclasses import asdict
 
 
 class EvaluationDataset(UserList):
@@ -230,7 +231,7 @@ class EvaluationDataset(UserList):
         return cls(test_cases)
 
     def to_dict(self):
-        return [x.dict() for x in self.data]
+        return [asdict(x) for x in self.data]
 
     def to_csv(self, csv_filename: str):
         import pandas as pd
@@ -255,7 +256,7 @@ class EvaluationDataset(UserList):
         if len(self.data) <= n:
             n = len(self.data)
         result = random.sample(self.data, n)
-        return [r.dict() for r in result]
+        return [asdict(r) for r in result]
 
     def head(self, n: int = 5):
         return self.data[:n]
