@@ -37,5 +37,6 @@ jobs:
         env:
           python-version: ${{ matrix.python-version }}
         run: |
+          python tests/test_without_pytest.py
           deepeval test run -x tests
 

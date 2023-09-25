@@ -44,7 +44,7 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
 
 
 def assert_conceptual_similarity(
-    output: str, expected_output: str, minimum_score=0.3
+    output: str, expected_output: str, minimum_score=0.7
 ):
     metric = ConceptualSimilarityMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(output=output, expected_output=expected_output)
