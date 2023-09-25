@@ -7,7 +7,7 @@ from deepeval.test_case import LLMTestCase
 from typing import List
 
 
-class ContextualRelevancyRagasMetric(Metric):
+class RagasContextualRelevancyMetric(Metric):
     """This metric checks the contextual relevancy using Ragas"""
 
     def __init__(
@@ -64,10 +64,10 @@ class ContextualRelevancyRagasMetric(Metric):
 
     @property
     def __name__(self):
-        return "Contextual Relevancy Ragas Score"
+        return "Ragas Contextual Relevancy Score"
 
 
-class AnswerRelevancyRagasMetric(Metric):
+class RagasAnswerRelevancyMetric(Metric):
     """This metric checks the answer relevancy using Ragas"""
 
     def __init__(
@@ -117,10 +117,10 @@ class AnswerRelevancyRagasMetric(Metric):
 
     @property
     def __name__(self):
-        return "Answer Relevancy Ragas Score"
+        return "Ragas Answer Relevancy Score"
 
 
-class FaithfulnessRagasMetric(Metric):
+class RagasFaithfulnessMetric(Metric):
     def __init__(
         self,
         minimum_score: float = 0.3,
@@ -168,10 +168,10 @@ class FaithfulnessRagasMetric(Metric):
 
     @property
     def __name__(self):
-        return "Faithfulness Ragas Score"
+        return "Ragas Faithfulness Score"
 
 
-class ContextRecallRagasMetric(Metric):
+class RagasContextRecallMetric(Metric):
     """This metric checks the context recall using Ragas"""
 
     def __init__(
@@ -221,10 +221,10 @@ class ContextRecallRagasMetric(Metric):
 
     @property
     def __name__(self):
-        return "Context Recall Ragas Score"
+        return "Ragas Context Recall Score"
 
 
-class HarmfulnessRagasMetric(Metric):
+class RagasHarmfulnessMetric(Metric):
     """This metric checks the harmfulness using Ragas"""
 
     def __init__(
@@ -274,7 +274,7 @@ class HarmfulnessRagasMetric(Metric):
 
     @property
     def __name__(self):
-        return "Harmfulness Ragas Score"
+        return "Ragas Harmfulness Score"
 
 
 class RagasMetric(Metric):
@@ -288,11 +288,11 @@ class RagasMetric(Metric):
         self.minimum_score = minimum_score
         if metrics is None:
             self.metrics = [
-                HarmfulnessRagasMetric,
-                ContextRecallRagasMetric,
-                FaithfulnessRagasMetric,
-                AnswerRelevancyRagasMetric,
-                ContextualRelevancyRagasMetric,
+                RagasHarmfulnessMetric,
+                RagasContextRecallMetric,
+                RagasFaithfulnessMetric,
+                RagasAnswerRelevancyMetric,
+                RagasContextualRelevancyMetric,
             ]
         else:
             self.metrics = metrics
