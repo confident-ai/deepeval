@@ -11,7 +11,7 @@ context = "The FIFA World Cup in 2018 was won by the French national football te
 
 
 @pytest.mark.skip(reason="openai is expensive")
-def test_overall_score():
+def test_ragas_score():
     test_case = LLMTestCase(
         query=query,
         output=output,
