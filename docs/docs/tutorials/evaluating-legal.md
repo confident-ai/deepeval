@@ -46,7 +46,7 @@ Table:"""}
 
 ```
 
-For much of this evaluation, we credit the incredible work done by LegalBench team.
+For much of this evaluation, we credit the incredible work done by the LegalBench team.
 
 ```
 @misc{guha2023legalbench,
