@@ -87,11 +87,12 @@ Now we often don't want to write our own tests or at least be given a variety of
 You can automatically create tests in DeepEval in just a few lines of code:
 
 ```python
-from deepeval.dataset import create_evaluation_dataset
+from deepeval.dataset import create_evaluation_query_answer_pairs
+
 dataset = create_evaluation_query_answer_pairs(
     openai_api_key="<YOUR_OPENAI_API_KEY>",
     context="FastAPI is a modern, fast (high-performance), web framework for building APIs with Python 3.7+ based on standard Python type hints.",
-    n=3    
+    n=3,
 )
 
 ```
