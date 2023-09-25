@@ -43,3 +43,37 @@ def test_overall_score():
     )
 ```
 
+
+## Individual Metrics
+
+You can call any of the following methodologies to use specific Ragas metrics. Below is an example of how you can do just that!
+
+```python
+from deepeval.metrics.ragas_metric import RagasContextualRelevancyMetric
+from deepeval.metrics.ragas_metric import RagasAnswerRelevancyMetric
+from deepeval.metrics.ragas_metric import RagasFaithfulnessMetric
+from deepeval.metrics.ragas_metric import RagasContextRecallMetric
+from deepeval.metrics.ragas_metric import RagasHarmfulnessMetric
+
+def test_individual_metrics():
+    test_case = LLMTestCase(
+        query=query,
+        output=output,
+        expected_output=expected_output,
+        context=context,
+    )
+    metrics = [
+        RagasContextualRelevancyMetric(),
+        RagasAnswerRelevancyMetric(),
+        RagasFaithfulnessMetric(),
+        RagasContextRecallMetric(),
+        RagasHarmfulnessMetric(),
+    ]
+    for metric in metrics:
+        score = metric.measure(test_case)
+        print(f"{metric.__name__}: {score}")
+```
+
+This will print the individual scores for each metric.
+
+
