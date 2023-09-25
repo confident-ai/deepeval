@@ -1,6 +1,8 @@
 name: Run pytest in matrix
 
-on: push
+on: 
+  push:
+  pull_request:
 
 jobs:
   examples:
@@ -44,4 +46,5 @@ jobs:
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
           deepeval test run -x tests
+
 
