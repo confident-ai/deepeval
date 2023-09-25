@@ -1,4 +1,4 @@
-# Ranking Similarity
+# Top-K Ranking Similarity
 
 If you are building retrieval-augmented generation applications, you may be constantly iterating on the embeddings andv ector search index.
 
