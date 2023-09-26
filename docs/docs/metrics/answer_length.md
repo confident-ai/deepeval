@@ -13,11 +13,10 @@ from deepeval.metrics.answer_length import LengthMetric
 def generate_llm_output(text_input: str):
     return text_input
 
-
-def test_llm_output(self):
-    input = " some output "
-    expected_output = len(input.strip())
-    output = generate_llm_output(input)
+def test_length_metric():
     metric = LengthMetric()
-    assert_llm_output(output, expected_output, metric=metric)
+    test_case = LLMTestCase(
+        output=" some output "
+    )
+    assert_test(test_case, [metric])
 ```
