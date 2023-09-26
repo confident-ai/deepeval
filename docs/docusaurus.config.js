@@ -127,6 +127,14 @@ const config = {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },
+      scripts: [
+        {
+          src: 'https://cdn.getkoala.com/v1/pk_c2f9444e23cd5fd7c2b34105b24d241bfdad/sdk.js',
+          async: true,
+          'data-cfasync': 'false',
+          defer: true,
+        },
+      ],
     }),
 };
 
