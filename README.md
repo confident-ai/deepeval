@@ -165,30 +165,21 @@ Set up a simple dashboard in just 1 line of code. You can read more about how to
 
 ![docs/assets/dashboard-app.png](docs/assets/dashboard-screenshot.png)
 
-# RoadMap
-
-Our up-coming roadmap:
-
-- [ ] Project View To Web UI
-- [ ] Integration with HumanEval
-- [ ] Integration with Microsoft Guidance
-- [ ] Guardrail integrations (Nvidia-Nemo, GuardRails AI)
-
 ## Why DeepEval?
 
-Our motivation behind this is to streamline the testing process behind Language Learning Model (LLM) applications such as Retrieval Augmented Generation (RAG). We intend to accomplish this by making the process of writing tests as straightforward as authoring unit tests in Python.
+DeepEval was created to simplify the testing process for Language Learning Model (LLM) applications such as Retrieval Augmented Generation (RAG). Our goal is to make writing tests as simple as writing unit tests in Python.
 
-Any seasoned Python developer knows the importance of having something like PyTest, a default testing suite renown for its clean, user-friendly interface that makes test-writing an efficient and hassle-free task. Yet, when we transition from traditional software development to the realm of Machine Learning (ML), this streamlined process becomes, perhaps surprisingly, a rarity.
+Python developers understand the value of a tool like PyTest, a testing suite known for its clean, user-friendly interface that makes writing tests efficient and straightforward. However, when we move from traditional software development to Machine Learning (ML), this streamlined process is often missing.
 
-In the ML world, feedback often ends up being in the raw form of an evaluation loss, which deviates a bit from the structured way that feedback is usually consumed in software development.
+In the ML domain, feedback is often provided as raw evaluation loss, which is a departure from the structured feedback typically seen in software development.
 
-As we see a rising tide in the deployment of agents, LLMs, and AI, an unfulfilled necessity emerges: a tool that can extend the same, familiar abstractions and tooling found in general software development to the ML engineers. The aim? Facilitate a more rapid feedback loop that expedite iterative improvements.
+With the increasing deployment of agents, LLMs, and AI, there is a growing need for a tool that provides the same familiar abstractions and tools found in general software development to ML engineers. The goal is to enable a faster feedback loop to speed up iterative improvements.
 
-A lacuna such as this in the ML landscape underscores the importance of establishing a novel type of testing framework specifically tailored for LLMs. This will ensure engineers can keep evolving their prompts, agents, and LLMs, all the while continually adding new items to their test suite.
+This gap in the ML landscape highlights the need for a new type of testing framework specifically designed for LLMs. This will allow engineers to continually evolve their prompts, agents, and LLMs, while continually adding new items to their test suite.
 
-DeepEval – your tool for easy and efficient LLM testing. Time to revolutionize how we write, run, automate and manage our LLM tests!
+DeepEval is a tool designed to simplify and streamline LLM testing. Our aim is to change the way we write, run, automate, and manage our LLM tests.
 
-Introducing DeepEval.
+Welcome to DeepEval.
 
 
 # Authors
