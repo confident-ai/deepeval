@@ -16,7 +16,9 @@
 </a> [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Stay%20Updated%20On%20X)](https://twitter.com/colabdog)
 </div>
 
-DeepEval is a comprehensive evaluation platform designed for easy assessment of various development pipelines, including but not limited to Language Model (LLM) pipelines. 
+# Unit Testing For LLMs
+
+DeepEval provides metrics on different aspects when evaluating an LLM response to ensure that answers are relevant, consistent, unbiased, non-toxic. These can easily fit in nicely with a CI/CD pipeline that allows ML engineers to quickly evaluate and check that when they improve their LLM application that their LLM application is performing well.
 
 DeepEval offers a Python-friendly approach to conduct offline evaluations, ensuring your pipelines are ready for production. It's like having a "Pytest for your pipelines", making the process of productionizing and evaluating your pipelines as straightforward as passing all tests.
 
