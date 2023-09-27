@@ -58,6 +58,7 @@ const sidebars = {
       label: 'Metrics',
       items: [
         'quickstart/custom-metrics',
+        'metrics/answer_length',
         // 'metrics/entailment',
         // 'metrics/bertscore'
       ]
