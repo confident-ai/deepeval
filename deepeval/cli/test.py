@@ -133,12 +133,7 @@ def run(
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        transient=True,
-    ) as progress:
-        retcode = pytest.main(pytest_args)
+    retcode = pytest.main(pytest_args)
 
     # Print this if the run env var is not set
     if not os.getenv(PYTEST_RUN_ENV_VAR):
