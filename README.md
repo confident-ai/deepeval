@@ -22,6 +22,8 @@ DeepEval provides metrics on different aspects when evaluating an LLM response t
 
 DeepEval offers a Python-friendly approach to conduct offline evaluations, ensuring your pipelines are ready for production. It's like having a "Pytest for your pipelines", making the process of productionizing and evaluating your pipelines as straightforward as passing all tests.
 
+DeepEval's Web UI allows engineers to then analyze and view their evaluation.
+
 # Features
 
 - Tests for answer relevancy, factual consistency, toxicness, bias
