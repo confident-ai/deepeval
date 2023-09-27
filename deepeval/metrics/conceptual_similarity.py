@@ -2,11 +2,12 @@
 """
 from typing import Optional
 
-from ..singleton import Singleton
-from ..test_case import LLMTestCase
-from ..utils import cosine_similarity
-from .metric import Metric
-from ..run_test import assert_test
+from deepeval.singleton import Singleton
+from deepeval.test_case import LLMTestCase
+from deepeval.utils import cosine_similarity
+from deepeval.run_test import assert_test
+from deepeval.progress_context import progress_context
+from deepeval.metrics.metric import Metric
 
 
 class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
@@ -20,7 +21,10 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
         from sentence_transformers import SentenceTransformer
 
         self.model_name = model_name
-        self.model = SentenceTransformer(self.model_name).eval()
+        with progress_context(
+            "Downloading Conceptual SImilarity model (may take up to 2 minutes if running for the first time)..."
+        ):
+            self.model = SentenceTransformer(self.model_name).eval()
         self.minimum_score = minimum_score
 
     def _vectorize(self, text_a: str, text_b: str):

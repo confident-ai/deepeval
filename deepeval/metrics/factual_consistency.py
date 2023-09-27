@@ -1,16 +1,17 @@
-from ..singleton import Singleton
-from ..test_case import LLMTestCase
-from ..utils import chunk_text, softmax
-from .metric import Metric
-from ..run_test import assert_test
-
+import os
+from deepeval.singleton import Singleton
+from deepeval.test_case import LLMTestCase
+from deepeval.utils import chunk_text, softmax
+from deepeval.metrics.metric import Metric
+from deepeval.run_test import assert_test
+from deepeval.progress_context import progress_context
 from sentence_transformers import CrossEncoder
 
 
 class FactualConsistencyModel(metaclass=Singleton):
     def __init__(self, model_name: str = "cross-encoder/nli-deberta-v3-large"):
         # We use a smple cross encoder model
-
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
         self.model = CrossEncoder(model_name)
 
     def predict(self, text_a: str, text_b: str):
@@ -30,7 +31,11 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         model_name: str = "cross-encoder/nli-deberta-v3-large",
     ):
         # For Crossencoder model, move to singleton to avoid re-instantiating
-        self.model = FactualConsistencyModel(model_name)
+
+        with progress_context(
+            "Downloading FactualConsistencyModel (may take up to 2 minutes if running for the first time)..."
+        ):
+            self.model = FactualConsistencyModel(model_name)
         self.minimum_score = minimum_score
 
     def measure(self, test_case: LLMTestCase):

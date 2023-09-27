@@ -16,20 +16,18 @@
 </a> [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Stay%20Updated%20On%20X)](https://twitter.com/colabdog)
 </div>
 
-DeepEval provides a Pythonic way to run offline evaluations on your LLM pipelines so you can launch comfortably into production. The guiding philosophy is a "Pytest for LLM" that aims to make productionizing and evaluating LLMs as easy as ensuring all tests pass.
+# Unit Testing For LLMs
 
-## 🤝 Schedule a session
+DeepEval provides metrics on different aspects when evaluating an LLM response to ensure that answers are relevant, consistent, unbiased, non-toxic. These can easily fit in nicely with a CI/CD pipeline that allows ML engineers to quickly evaluate and check that when they improve their LLM application that their LLM application is performing well.
 
-Would you like to be onboarded / would like a demo / want to see about our roadmap? Feel free to book in a time on our calendly here: https://calendly.com/d/z7h-75h-6dz/confident-ai-demo
+DeepEval offers a Python-friendly approach to conduct offline evaluations, ensuring your pipelines are ready for production. It's like having a "Pytest for your pipelines", making the process of productionizing and evaluating your pipelines as straightforward as passing all tests.
 
-We highly recommend getting started reading our documentation here: https://docs.confident-ai.com/docs/
-
-Join our discord: https://discord.gg/a3K9c8GRGt
+DeepEval's Web UI allows engineers to then analyze and view their evaluation.
 
 # Features
 
-- Opinionated tests for answer relevancy, factual consistency, toxicness, bias
-- Web UI to view tests, implementations, comparisons
+- Tests for answer relevancy, factual consistency, toxicness, bias
+- Web UI for viewing tests, implementations, comparisons
 - Auto-evaluation through synthetic query-answer creation
 
 # Installation
@@ -38,7 +36,7 @@ Join our discord: https://discord.gg/a3K9c8GRGt
 pip install deepeval
 ```
 
-Watch a Youtube video on how to get started here: [Get started in under 1 minute](http://www.youtube.com/watch?v=05uoNgZpnzM)
+For a quick start guide, watch this Youtube video: [Get started in under 1 minute](http://www.youtube.com/watch?v=05uoNgZpnzM)
 
 # QuickStart
 
@@ -63,7 +61,7 @@ deepeval test run tests/test_sample.py
 
 ## Individual Test Cases
 
-Grab your API key from [https://app.confident-ai.com](https://app.confident-ai.com) to start logging!
+To start logging, get your API key from [https://app.confident-ai.com](https://app.confident-ai.com)
 
 ```python
 # test_example.py
@@ -97,7 +95,7 @@ def test_llm_output():
 
 ```
 
-Once you have set that up, you can simply call pytest
+After setting up, you can call pytest
 
 ```bash
 deepeval test run test_example.py
@@ -106,13 +104,13 @@ deepeval test run test_example.py
 Running tests ... ✅
 ```
 
-Once you have ran tests, you should be able to see your dashboard on [https://app.confident-ai.com](https://app.confident-ai.com)
+After running tests, you can view your dashboard on [https://app.confident-ai.com](https://app.confident-ai.com)
 
 ## Setting up metrics
 
 ### Setting up custom metrics
 
-To define a custom metric, you simply need to define the `measure` and `is_successful` property.
+To define a custom metric, you need to define the `measure` and `is_successful` property.
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -148,38 +146,41 @@ def test_length_metric():
     assert_test(test_case, [metric])
 ```
 
-## Integrate tightly with LangChain
+## Integration with LangChain
 
-We integrate DeepEval tightly with common frameworks such as Langchain and lLamaIndex.
+DeepEval integrates with common frameworks such as Langchain and lLamaIndex.
 
 # Synthetic Query Generation
 
 ![Synthetic Queries](assets/synthetic-query-generation.png)
 
-Generating synthetic queries allows you to quickly evaluate the queries related to your prompts.
-We help developers get up and running with a lot of example queries.
+Synthetic queries allow for quick evaluation of queries related to your prompts. We provide a variety of example queries to help developers get started.
 
 # Dashboard
 
-Set up a simple dashboard in just 1 line of code. You can read more about how to do this [here in our documentation](https://docs.confident-ai.com/docs/quickstart/dashboard-app).
+Set up a simple dashboard in just 1 line of code. Learn more about this in our [documentation](https://docs.confident-ai.com/docs/quickstart/dashboard-app).
 
 ![docs/assets/dashboard-app.png](docs/assets/dashboard-screenshot.png)
 
-## Why DeepEval?
+## About DeepEval
 
-DeepEval was created to simplify the testing process for Language Learning Model (LLM) applications such as Retrieval Augmented Generation (RAG). Our goal is to make writing tests as simple as writing unit tests in Python.
+DeepEval simplifies the testing process for Language Learning Model (LLM) applications such as Retrieval Augmented Generation (RAG). Our goal is to make writing tests as simple as writing unit tests in Python.
 
-Python developers understand the value of a tool like PyTest, a testing suite known for its clean, user-friendly interface that makes writing tests efficient and straightforward. However, when we move from traditional software development to Machine Learning (ML), this streamlined process is often missing.
+In the Machine Learning (ML) domain, feedback is often provided as raw evaluation loss, which is a departure from the structured feedback typically seen in software development.
 
-In the ML domain, feedback is often provided as raw evaluation loss, which is a departure from the structured feedback typically seen in software development.
-
-With the increasing deployment of agents, LLMs, and AI, there is a growing need for a tool that provides the same familiar abstractions and tools found in general software development to ML engineers. The goal is to enable a faster feedback loop to speed up iterative improvements.
-
-This gap in the ML landscape highlights the need for a new type of testing framework specifically designed for LLMs. This will allow engineers to continually evolve their prompts, agents, and LLMs, while continually adding new items to their test suite.
+With the increasing deployment of agents, LLMs, and AI, there is a need for a tool that provides the same familiar abstractions and tools found in general software development to ML engineers. The goal is to enable a faster feedback loop to speed up iterative improvements.
 
 DeepEval is a tool designed to simplify and streamline LLM testing. Our aim is to change the way we write, run, automate, and manage our LLM tests.
 
 Welcome to DeepEval.
+
+## 🤝 Connect with us
+
+For onboarding, demos, or inquiries about our roadmap, please schedule a session with us: https://calendly.com/d/z7h-75h-6dz/confident-ai-demo
+
+We recommend starting with our documentation: https://docs.confident-ai.com/docs/
+
+Join our community on Discord: https://discord.gg/a3K9c8GRGt
 
 
 # Authors
@@ -213,3 +214,4 @@ Built by the Confident AI Team. For any questions/business enquiries - please co
 <a href="https://github.com/confident-ai/deepeval/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=confident-ai/deepeval" />
 </a>
+

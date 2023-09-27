@@ -2,14 +2,14 @@ import pytest
 import os
 from rich import print
 from deepeval.api import Api, TestRun
+from typing import Optional, Any
+from deepeval.constants import PYTEST_RUN_ENV_VAR, PYTEST_RUN_TEST_NAME
 
-from deepeval.constants import PYTEST_RUN_ENV_VAR
 
-
-def pytest_sessionstart(session):
+def pytest_sessionstart(session: pytest.Session):
     global test_filename
     test_run = TestRun(
-        testFile="-",
+        testFile=session.config.getoption("file_or_dir")[0],
         testCases=[],
         metricScores=[],
         configurations={},
@@ -17,8 +17,16 @@ def pytest_sessionstart(session):
     test_filename = test_run.save()
 
 
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_protocol(
+    item: pytest.Item, nextitem: Optional[pytest.Item]
+) -> Optional[Any]:
+    os.environ[PYTEST_RUN_TEST_NAME] = item.nodeid.split("::")[-1]
+    return None  # continue with the default protocol
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_sessionfinish(session, exitstatus):
+def pytest_sessionfinish(session: pytest.Session, exitstatus):
     # Code before yield will run before the test teardown
 
     # yield control back to pytest for the actual teardown

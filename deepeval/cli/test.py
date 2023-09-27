@@ -105,6 +105,9 @@ def run(
     exit_on_first_failure: Annotated[
         bool, typer.Option("--exit-on-first-failure", "-x/-X")
     ] = False,
+    show_warnings: Annotated[
+        bool, typer.Option("--show-warnings", "-w/-W")
+    ] = False,
 ):
     """Run a test"""
     check_if_legit_file(test_file_or_directory)
@@ -121,23 +124,17 @@ def run(
             "--verbose" if verbose else "--quiet",
             f"--color={color}",
             f"--durations={durations}",
+            "-s",
         ]
     )
     if pdb:
         pytest_args.append("--pdb")
+    if not show_warnings:
+        pytest_args.append("--disable-warnings")
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        transient=True,
-    ) as progress:
-        progress.add_task(
-            description="Downloading models (may take up to 2 minutes if running for the first time)...",
-            total=None,
-        )
-        retcode = pytest.main(pytest_args)
+    retcode = pytest.main(pytest_args)
 
     # Print this if the run env var is not set
     if not os.getenv(PYTEST_RUN_ENV_VAR):
