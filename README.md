@@ -20,14 +20,6 @@ DeepEval is a comprehensive evaluation platform designed for easy assessment of 
 
 DeepEval offers a Python-friendly approach to conduct offline evaluations, ensuring your pipelines are ready for production. It's like having a "Pytest for your pipelines", making the process of productionizing and evaluating your pipelines as straightforward as passing all tests.
 
-## 🤝 Connect with us
-
-For onboarding, demos, or inquiries about our roadmap, please schedule a session with us: https://calendly.com/d/z7h-75h-6dz/confident-ai-demo
-
-We recommend starting with our documentation: https://docs.confident-ai.com/docs/
-
-Join our community on Discord: https://discord.gg/a3K9c8GRGt
-
 # Features
 
 - Tests for answer relevancy, factual consistency, toxicness, bias
@@ -178,6 +170,14 @@ DeepEval is a tool designed to simplify and streamline LLM testing. Our aim is t
 
 Welcome to DeepEval.
 
+## 🤝 Connect with us
+
+For onboarding, demos, or inquiries about our roadmap, please schedule a session with us: https://calendly.com/d/z7h-75h-6dz/confident-ai-demo
+
+We recommend starting with our documentation: https://docs.confident-ai.com/docs/
+
+Join our community on Discord: https://discord.gg/a3K9c8GRGt
+
 
 # Authors
 
@@ -210,3 +210,4 @@ Built by the Confident AI Team. For any questions/business enquiries - please co
 <a href="https://github.com/confident-ai/deepeval/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=confident-ai/deepeval" />
 </a>
+

@@ -124,6 +124,7 @@ def run(
             "--verbose" if verbose else "--quiet",
             f"--color={color}",
             f"--durations={durations}",
+            "-s",
         ]
     )
     if pdb:
