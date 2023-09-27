@@ -127,7 +127,7 @@ class TestRun(BaseModel):
             self.test_cases.append(
                 APITestCase(
                     # Get the test from the pytest plugin
-                    name=os.getenv(PYTEST_RUN_TEST_NAME),
+                    name=os.getenv(PYTEST_RUN_TEST_NAME, "-"),
                     input=test_case.query,
                     actualOutput=test_case.output,
                     expectedOutput=test_case.expected_output,
