@@ -11,7 +11,11 @@ from pydantic import BaseModel, Field
 from typing import List
 from requests.adapters import HTTPAdapter, Response, Retry
 
-from deepeval.constants import API_KEY_ENV, PYTEST_RUN_ENV_VAR
+from deepeval.constants import (
+    API_KEY_ENV,
+    PYTEST_RUN_ENV_VAR,
+    PYTEST_RUN_TEST_NAME,
+)
 from deepeval.key_handler import KEY_FILE_HANDLER
 from deepeval.metrics.metric import Metric
 from deepeval.test_case import LLMTestCase
@@ -122,7 +126,8 @@ class TestRun(BaseModel):
             name = "Test " + str(len(self.test_cases) + 1)
             self.test_cases.append(
                 APITestCase(
-                    name=name,
+                    # Get the test from the pytest plugin
+                    name=os.getenv(PYTEST_RUN_TEST_NAME),
                     input=test_case.query,
                     actualOutput=test_case.output,
                     expectedOutput=test_case.expected_output,
