@@ -6,7 +6,7 @@ import json
 import warnings
 from collections import defaultdict
 
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from pydantic import BaseModel, Field
 from typing import List
 from requests.adapters import HTTPAdapter, Response, Retry
@@ -47,6 +47,7 @@ class APITestCase(BaseModel):
     )
     threshold: float
     run_duration: float = Field(..., alias="runDuration")
+    context: list = Field(default_factory=list)
 
 
 class MetricScore(BaseModel):
@@ -124,6 +125,11 @@ class TestRun(BaseModel):
         else:
             # If it doesn't exist, create a new test case
             name = "Test " + str(len(self.test_cases) + 1)
+
+            # Adding backwards compatibility to ensure context still works.
+            context = test_case.context
+            if isinstance(context, str):
+                context = [context]
             self.test_cases.append(
                 APITestCase(
                     # Get the test from the pytest plugin
@@ -135,6 +141,7 @@ class TestRun(BaseModel):
                     metricsMetadata=metrics_metadata,
                     threshold=threshold,
                     runDuration=run_duration,
+                    context=context,
                 )
             )
 
@@ -481,10 +488,11 @@ class Api:
     def post_test_run(self, test_run: TestRun) -> TestRunResponse:
         """Post a test run"""
         try:
-            body = test_run.model_dump(by_alias=True)
+            # make sure to exclude none for `context` to ensure it is handled properly
+            body = test_run.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
             # Pydantic version below 2.0
-            body = test_run.dict(by_alias=True)
+            body = test_run.dict(by_alias=True, exclude_none=True)
 
         result = self.post_request(
             endpoint="/v1/test-run",

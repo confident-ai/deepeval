@@ -2,7 +2,7 @@
 """
 import hashlib
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 
 @dataclass
@@ -19,7 +19,7 @@ class TestCase:
 class LLMTestCase(TestCase):
     query: str = "-"
     expected_output: str = "-"
-    context: str = "-"
+    context: Optional[Union[str, List[str]]] = None
     output: str = "-"
 
     def __post_init__(self):
