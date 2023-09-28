@@ -66,6 +66,29 @@ class TestRunResponse(BaseModel):
     projectId: str
 
 
+class MetricDict:
+    def __init__(self):
+        self.metric_dict = {}
+        self.metric_count = {}
+
+    def add_metric(self, metric_name, score):
+        if metric_name not in self.metric_dict:
+            self.metric_dict[metric_name] = score
+            self.metric_count[metric_name] = 1
+        else:
+            self.metric_dict[metric_name] += score
+            self.metric_count[metric_name] += 1
+
+    def get_average_metric_score(self):
+        return [
+            MetricScore(
+                metric=metric,
+                score=self.metric_dict[metric] / self.metric_count[metric],
+            )
+            for metric in self.metric_dict
+        ]
+
+
 class TestRun(BaseModel):
     test_file: Optional[str] = Field(
         # TODO: Fix test_file
@@ -144,6 +167,34 @@ class TestRun(BaseModel):
                     context=context,
                 )
             )
+        # Update metric_scores with the average metrics from all the test cases
+        for test_case in self.test_cases:
+            for metric in test_case.metrics_metadata:
+                metric_dict[metric.metric].append(metric.score)
+
+        # for test_case in self.test_cases:
+        #     # for metric in
+        #     for m in test_case.metricsMetadata:
+        #     for test_case in metrics_metadata:
+        #         metric_dict[metric.metric].append(metric.score)
+        #     #     metric_dict[metric.metric].append(metric.score)
+
+        #     metric_scores = [
+        #         test_case.metrics_metadata[metric.__name__].score
+        #         for test_case in self.test_cases
+        #         if test_case.metrics_metadata
+        #     ]
+
+        all_metric_dict = MetricDict()
+
+        for test_case in self.test_cases:
+            test_case: APITestCase
+            metrics = test_case.metrics_metadata
+            for metric in metrics:
+                metric: MetricsMetadata
+                all_metric_dict.add_metric(metric.metric, metric.score)
+
+        self.metric_scores = all_metric_dict.get_average_metric_score()
 
     def save(self, file_path: Optional[str] = None):
         if file_path is None:
