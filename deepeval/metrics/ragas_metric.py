@@ -277,6 +277,214 @@ class RagasHarmfulnessMetric(Metric):
         return "Ragas Harmfulness Score"
 
 
+class RagasCoherenceMetric(Metric):
+    """This metric checks the coherence using Ragas"""
+
+    def __init__(
+        self,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+        try:
+            from ragas.metrics.critique import coherence
+
+            self.metrics = [coherence]
+        except ModuleNotFoundError as e:
+            print(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+    def measure(self, test_case: LLMTestCase):
+        try:
+            from ragas import evaluate
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        data = {
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [[test_case.context]],
+            "question": [test_case.query],
+            "answer": [test_case.output],
+            "id": [[test_case.id]],
+        }
+        dataset = Dataset.from_dict(data)
+        scores = evaluate(dataset, metrics=self.metrics)
+        coherence_score = scores["coherence"]
+        self.success = coherence_score >= self.minimum_score
+        self.score = coherence_score
+        return coherence_score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Ragas Coherence Score"
+
+
+class RagasMaliciousnessMetric(Metric):
+    """This metric checks the maliciousness using Ragas"""
+
+    def __init__(
+        self,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+        try:
+            from ragas.metrics.critique import maliciousness
+
+            self.metrics = [maliciousness]
+        except ModuleNotFoundError as e:
+            print(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+    def measure(self, test_case: LLMTestCase):
+        try:
+            from ragas import evaluate
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        data = {
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [[test_case.context]],
+            "question": [test_case.query],
+            "answer": [test_case.output],
+            "id": [[test_case.id]],
+        }
+        dataset = Dataset.from_dict(data)
+        scores = evaluate(dataset, metrics=self.metrics)
+        maliciousness_score = scores["maliciousness"]
+        self.success = maliciousness_score >= self.minimum_score
+        self.score = maliciousness_score
+        return maliciousness_score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Ragas Maliciousness Score"
+
+
+class RagasCorrectnessMetric(Metric):
+    """This metric checks the correctness using Ragas"""
+
+    def __init__(
+        self,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+        try:
+            from ragas.metrics.critique import correctness
+
+            self.metrics = [correctness]
+        except ModuleNotFoundError as e:
+            print(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+    def measure(self, test_case: LLMTestCase):
+        try:
+            from ragas import evaluate
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        data = {
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [[test_case.context]],
+            "question": [test_case.query],
+            "answer": [test_case.output],
+            "id": [[test_case.id]],
+        }
+        dataset = Dataset.from_dict(data)
+        scores = evaluate(dataset, metrics=self.metrics)
+        correctness_score = scores["correctness"]
+        self.success = correctness_score >= self.minimum_score
+        self.score = correctness_score
+        return correctness_score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Ragas Correctness Score"
+
+
+class RagasConcisenessMetric(Metric):
+    """This metric checks the conciseness using Ragas"""
+
+    def __init__(
+        self,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+        try:
+            from ragas.metrics.critique import conciseness
+
+            self.metrics = [conciseness]
+        except ModuleNotFoundError as e:
+            print(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+    def measure(self, test_case: LLMTestCase):
+        try:
+            from ragas import evaluate
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        data = {
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [[test_case.context]],
+            "question": [test_case.query],
+            "answer": [test_case.output],
+            "id": [[test_case.id]],
+        }
+        dataset = Dataset.from_dict(data)
+        scores = evaluate(dataset, metrics=self.metrics)
+        conciseness_score = scores["conciseness"]
+        self.success = conciseness_score >= self.minimum_score
+        self.score = conciseness_score
+        return conciseness_score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Ragas Conciseness Score"
+
+
 class RagasMetric(Metric):
     """This metric checks if the output is more than 3 letters"""
 
