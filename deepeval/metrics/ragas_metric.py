@@ -1,7 +1,5 @@
 """An implementation of the Ragas metric
 """
-import os
-import numpy as np
 from deepeval.metrics.metric import Metric
 from deepeval.test_case import LLMTestCase
 from typing import List
