@@ -76,4 +76,34 @@ def test_individual_metrics():
 
 This will print the individual scores for each metric.
 
+## Other Metrics
+
+In addition to the individual metrics, we have also added the following metrics:
+
+```python
+from deepeval.metrics.ragas_metric import RagasConcisenessMetric
+from deepeval.metrics.ragas_metric import RagasCorrectnessMetric
+from deepeval.metrics.ragas_metric import RagasCoherenceMetric
+from deepeval.metrics.ragas_metric import RagasMaliciousnessMetric
+
+def test_other_metrics():
+    test_case = LLMTestCase(
+        query=query,
+        output=output,
+        expected_output=expected_output,
+        context=context,
+    )
+    metrics = [
+        RagasConcisenessMetric(),
+        RagasCorrectnessMetric(),
+        RagasCoherenceMetric(),
+        RagasMaliciousnessMetric(),
+    ]
+    for metric in metrics:
+        score = metric.measure(test_case)
+        print(f"{metric.__name__}: {score}")
+```
+
+This will print the scores for each of the other metrics.
+
 

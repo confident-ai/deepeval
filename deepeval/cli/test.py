@@ -6,6 +6,7 @@ from typing_extensions import Annotated
 from ..metrics.overall_score import assert_overall_score
 from .cli_key_handler import set_env_vars
 from ..constants import PYTEST_RUN_ENV_VAR
+from .examples import CUSTOMER_EXAMPLE
 
 try:
     from rich import print
@@ -147,59 +148,7 @@ def run(
 @app.command()
 def generate(output_file: str = "test_sample.py"):
     with open(output_file, "w") as f:
-        f.write(
-            """import pytest
-from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
-from deepeval.metrics.overall_score import assert_overall_score
-from deepeval.metrics.randomscore import RandomMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.run_test import assert_test
-
-
-def test_1():
-    # Check to make sure it is relevant
-    query = "What is the capital of France?"
-    output = "The capital of France is Paris."
-    metric = RandomMetric()
-    # Comment this out for differne metrics/models
-    # metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output)
-    assert_test(test_case, [metric])
-
-
-def test_2():
-    # Check to make sure it is factually consistent
-    output = "Cells have many major components, including the cell membrane, nucleus, mitochondria, and endoplasmic reticulum."
-    context = "Biology"
-    metric = RandomMetric()
-    # Comment this out for factual consistency tests
-    # metric = FactualConsistencyMetric(minimum_score=0.8)
-    test_case = LLMTestCase(output=output, context=context)
-    assert_test(test_case, [metric])
-
-
-def test_3():
-    # Add a test that fails
-    query = "What is the capital of Germany?"
-    output = "The capital of Germany is Berlin."
-    metric = RandomMetric()
-    # metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output)
-    assert_test(test_case, [metric])
-
-
-# This is how you can skip a test
-@pytest.mark.skip(reason="Can take a while")
-def test_0():
-    query = "How does photosynthesis work?"
-    output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with the help of chlorophyll pigment."
-    expected_output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize food with the help of chlorophyll pigment."
-    context = "Biology"
-
-    assert_overall_score(query, output, expected_output, context)
-"""
-        )
+        f.write(CUSTOMER_EXAMPLE)
 
     print(f"✨ Done! Now run: [bold]deepeval test run {output_file}[/bold]")
     print(
