@@ -89,6 +89,29 @@ class MetricDict:
         ]
 
 
+class MetricsMetadataAverageDict:
+    def __init__(self):
+        self.metric_dict = defaultdict(list)
+        self.min_score_dict = defaultdict(float)
+
+    def add_metric(self, metric: Metric):
+        self.metric_dict[metric.__name__].append(metric.score)
+        self.min_score_dict[metric.__name__] = min(
+            self.min_score_dict.get(metric.__name__, float("inf")),
+            metric.minimum_score,
+        )
+
+    def get_metrics_metadata(self):
+        return [
+            MetricsMetadata(
+                metric=metric_name,
+                score=sum(scores) / len(scores),
+                minimumScore=self.min_score_dict[metric_name],
+            )
+            for metric_name, scores in self.metric_dict.items()
+        ]
+
+
 class TestRun(BaseModel):
     test_file: Optional[str] = Field(
         # TODO: Fix test_file
@@ -106,49 +129,27 @@ class TestRun(BaseModel):
     def add_llm_test_case(
         self, test_case: LLMTestCase, metrics: List[Metric], run_duration: float
     ):
-        metric_dict = defaultdict(list)
-        for metric in metrics:
-            metric_dict[metric.__name__].extend(
-                [metric.score]
-                + [
-                    ms.score
-                    for ms in self.metric_scores
-                    if ms.metric == metric.__name__
-                ]
-            )
-        self.metric_scores = [
-            MetricScore(metric=metric_name, score=sum(scores) / len(scores))
-            for metric_name, scores in metric_dict.items()
-        ]
         # Check if test case with the same ID already exists
         existing_test_case: APITestCase = next(
             (tc for tc in self.test_cases if tc.name == test_case.__name__),
             None,
         )
-        metric_dict = defaultdict(list)
+
+        metrics_metadata_dict = MetricsMetadataAverageDict()
         for metric in metrics:
-            metric_dict[metric.__name__].append(metric.score)
-        metrics_metadata = [
-            MetricsMetadata(
-                metric=metric_name,
-                score=sum(scores) / len(scores),
-                minimumScore=min(scores),
-            )
-            for metric_name, scores in metric_dict.items()
-        ]
+            metrics_metadata_dict.add_metric(metric)
+        metrics_metadata = metrics_metadata_dict.get_metrics_metadata()
         success = all([metric.is_successful() for metric in metrics])
         threshold = metrics[0].minimum_score
 
         if existing_test_case:
             # If it exists, append the metrics to the existing test case
-            existing_test_case.metricsMetadata.extend(metrics_metadata)
+            existing_test_case.metrics_metadata.extend(metrics_metadata)
             # Update the success status and threshold
             existing_test_case.success = success
             existing_test_case.threshold = threshold
         else:
             # If it doesn't exist, create a new test case
-            name = "Test " + str(len(self.test_cases) + 1)
-
             # Adding backwards compatibility to ensure context still works.
             context = test_case.context
             if isinstance(context, str):
@@ -167,23 +168,6 @@ class TestRun(BaseModel):
                     context=context,
                 )
             )
-        # Update metric_scores with the average metrics from all the test cases
-        for test_case in self.test_cases:
-            for metric in test_case.metrics_metadata:
-                metric_dict[metric.metric].append(metric.score)
-
-        # for test_case in self.test_cases:
-        #     # for metric in
-        #     for m in test_case.metricsMetadata:
-        #     for test_case in metrics_metadata:
-        #         metric_dict[metric.metric].append(metric.score)
-        #     #     metric_dict[metric.metric].append(metric.score)
-
-        #     metric_scores = [
-        #         test_case.metrics_metadata[metric.__name__].score
-        #         for test_case in self.test_cases
-        #         if test_case.metrics_metadata
-        #     ]
 
         all_metric_dict = MetricDict()
 
