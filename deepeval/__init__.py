@@ -10,6 +10,7 @@
 #     utils,
 # )
 import warnings
+from packaging import version
 from ._version import __version__
 
 
@@ -19,7 +20,8 @@ def check_for_update():
 
         response = requests.get("https://pypi.org/pypi/deepeval/json")
         latest_version = response.json()["info"]["version"]
-        if latest_version > __version__:
+
+        if version.parse(latest_version) > version.parse(__version__):
             warnings.warn(
                 f'You are using deepeval version {__version__}, however version {latest_version} is available. You should consider upgrading via the "pip install --upgrade deepeval" command.'
             )
