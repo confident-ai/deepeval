@@ -35,8 +35,57 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
     # Code after yield will run after the test teardown
     if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
         api: Api = Api()
-        test_run = TestRun.load(test_filename)
+        test_run: TestRun = TestRun.load(test_filename)
         result = api.post_test_run(test_run)
+        # Calculate the average of each metric
+        metrics_avg = {
+            metric.metric: metric.score for metric in test_run.metric_scores
+        }
+        # Count the number of passes and failures
+        passes = {
+            metric.metric: sum(
+                1 for test_case in test_run.test_cases if test_case.success
+            )
+            for metric in test_run.metric_scores
+        }
+        failures = {
+            metric.metric: len(test_run.test_cases) - passes[metric.metric]
+            for metric in test_run.metric_scores
+        }
+        # Create a table with rich
+        from rich.table import Table
+
+        table = Table(title="Test Results")
+        table.add_column("Metric", justify="right")
+        table.add_column("Average Score", justify="right")
+        table.add_column("Passes", justify="right")
+        table.add_column("Failures", justify="right")
+        table.add_column("Success Rate", justify="right")
+        total_passes = 0
+        total_failures = 0
+        for metric, avg in metrics_avg.items():
+            pass_count = passes[metric]
+            fail_count = failures[metric]
+            total_passes += pass_count
+            total_failures += fail_count
+            success_rate = pass_count / (pass_count + fail_count) * 100
+            table.add_row(
+                metric,
+                str(avg),
+                f"[green]{str(pass_count)}[/green]",
+                f"[red]{str(fail_count)}[/red]",
+                f"{success_rate:.2f}%",
+            )
+        total_tests = total_passes + total_failures
+        overall_success_rate = total_passes / total_tests * 100
+        table.add_row(
+            "Total",
+            "-",
+            f"[green]{str(total_passes)}[/green]",
+            f"[red]{str(total_failures)}[/red]",
+            f"{overall_success_rate:.2f}%",
+        )
+        print(table)
         link = f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}"
         print(
             "✅ Tests finished! View results on " f"[link={link}]{link}[/link]"
