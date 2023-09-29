@@ -69,7 +69,8 @@ const sidebars = {
       items: [
         "tutorials/evaluating-llamaindex",
         "tutorials/evaluating-langchain",
-        "tutorials/evaluating-legal"
+        "tutorials/evaluating-legal",
+        "tutorials/guardrails"
       ]
     },
     {
