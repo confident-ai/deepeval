@@ -28,7 +28,6 @@ setup(
         "protobuf<=3.20.5",
         "pandas",
         "pydantic>=2.0.0",
-        "packaging",
     ],
     extras_require={
         "bias": [
