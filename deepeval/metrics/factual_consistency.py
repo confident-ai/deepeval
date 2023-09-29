@@ -42,7 +42,15 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         if test_case.output is None or test_case.context is None:
             raise ValueError("Output or context cannot be None")
 
-        context_list = chunk_text(test_case.context)
+        context_list = []
+        if isinstance(test_case.context, str):
+            context_list.extend(chunk_text(test_case.context))
+        elif isinstance(test_case.context, list):
+            for context in test_case.context:
+                context_list.extend(chunk_text(context))
+        else:
+            raise ValueError("Context must be a string or a list of strings")
+
         max_score = 0
         for c in context_list:
             score = self.model.predict(c, test_case.output)
