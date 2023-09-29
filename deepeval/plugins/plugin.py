@@ -42,15 +42,32 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
             metric.metric: metric.score for metric in test_run.metric_scores
         }
         # Count the number of passes and failures
+        # Get all the possible metrics first
+        all_metrics = {metric.metric for metric in test_run.metric_scores}
+
+        # Loop through to filter for each metric
         passes = {
-            metric.metric: sum(
-                1 for test_case in test_run.test_cases if test_case.success
+            metric: len(
+                [
+                    test_case_metric
+                    for test_case in test_run.test_cases
+                    for test_case_metric in test_case.metrics_metadata
+                    if test_case_metric.metric == metric and test_case.success
+                ]
             )
-            for metric in test_run.metric_scores
+            for metric in all_metrics
         }
         failures = {
-            metric.metric: len(test_run.test_cases) - passes[metric.metric]
-            for metric in test_run.metric_scores
+            metric: len(
+                [
+                    test_case_metric
+                    for test_case in test_run.test_cases
+                    for test_case_metric in test_case.metrics_metadata
+                    if test_case_metric.metric == metric
+                ]
+            )
+            - passes[metric]
+            for metric in all_metrics
         }
         # Create a table with rich
         from rich.table import Table
