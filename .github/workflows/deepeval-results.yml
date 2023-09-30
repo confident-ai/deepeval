@@ -2,7 +2,6 @@ name: Capture and comment stdout
 
 on:
   push:
-  pull_request:
 
 jobs:
   comment-pr-with-stdout:
@@ -25,11 +24,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const stdout = context.payload.review.body + "\n\n```\n" + github.workflow.runs.capture-stdout.outputs.stdout + "\n```";
+            const stdout = steps.capture-stdout.outputs.stdout + "\n\n```\n" + github.workflow.runs.capture-stdout.outputs.stdout + "\n```";
             const response = await github.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
+              owner: github.context.repo.owner,
+              repo: github.context.repo.repo,
+              pull_number: github.context.issue.number,
               body: stdout,
               event: "COMMENT"
             });
