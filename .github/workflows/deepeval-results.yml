@@ -20,7 +20,7 @@ jobs:
       - name: Run Test
         run: |
           echo "test_result=$(cat << EOF
-          deepeval test run tests/test_quickstart.py  > output.txt
+          $(deepeval test run tests/test_quickstart.py)  > output.txt
           EOF
           )" >> $GITHUB_ENV
 
