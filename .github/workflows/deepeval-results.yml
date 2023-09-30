@@ -14,12 +14,10 @@ jobs:
 
       - name: Echo Command
         id: echo
-        run: echo 'OUTPUT="pip install git+https://github.com/confident-ai/deepeval.git@${{ github.head_ref }}"' >> "$GITHUB_OUTPUT"
+        run: echo "OUTPUT='pip install git+https://github.com/confident-ai/deepeval.git@${{ github.head_ref }}'" >> "$GITHUB_ENV"
 
       - name: Comment PR
         uses: marocchino/sticky-pull-request-comment@v2
-        env:
-          OUTPUT: ${{ steps.echo.outputs.OUTPUT }}
         with:
           hide_and_recreate: true
           hide_classify: "OUTDATED"
