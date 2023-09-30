@@ -20,10 +20,13 @@ jobs:
       
       - name: Run Test
         run: |
-          deepeval test run tests/test_quickstart.py | tr '\n' ' ' > output.txt
-          EOF=$(cat output.txt)
-          echo "test_result=$EOF" >> "$GITHUB_ENV"
-          echo "$EOF" >> "$GITHUB_ENV"
+          echo 'var<<EOF' >> $GITHUB_ENV
+          echo $(deepeval test run tests/test_quickstart.py) >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+          # deepeval test run tests/test_quickstart.py | tr '\n' ' ' > output.txt
+          # EOF=$(cat output.txt)
+          # echo "test_result=$EOF" >> "$GITHUB_ENV"
+          # echo "$EOF" >> "$GITHUB_ENV"
 
       - name: Comment PR
         uses: marocchino/sticky-pull-request-comment@v2
