@@ -1,0 +1,37 @@
+name: Capture and comment stdout
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+
+jobs:
+  comment-pr-with-stdout:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run your command and capture stdout
+        id: capture-stdout
+        run: |
+          # Replace this command with the one you want to run and capture stdout
+          echo "This is a sample command and its stdout."
+          echo "::set-output name=stdout::$(echo 'This is a sample command and its stdout.')"
+
+      - name: Comment PR with stdout
+        if: steps.capture-stdout.outputs.stdout
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const stdout = context.payload.review.body + "\n\n```\n" + github.workflow.runs.capture-stdout.outputs.stdout + "\n```";
+            const response = await github.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              body: stdout,
+              event: "COMMENT"
+            });
+            console.log(response);
