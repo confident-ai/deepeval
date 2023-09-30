@@ -46,5 +46,3 @@ jobs:
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
           deepeval test run -x tests
-
-

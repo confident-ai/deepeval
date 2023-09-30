@@ -1,0 +1,63 @@
+name: DeepEval Test Run Example
+
+# This is an example YML file to show the results of a DeepEval test run to a PR
+
+on:
+  pull_request:
+
+jobs:
+  create-pip-link-comment:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    name: pip link
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Cache pip packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        env:
+          python-version: ${{ matrix.python-version }}
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt ragas
+          python -m pip install . pytest-rerunfailures pytest-asyncio
+
+      - name: Run Test
+        id: run_test
+        env:
+          CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
+          CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
+        run: |
+          deepeval login --api-key $CONFIDENT_AI_API_KEY --implementation-name testrun
+          (deepeval test run tests/test_quickstart.py) > output.txt 2>&1
+          # remove the ANCI codes
+          sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
+          output=$(cat output.txt)
+          echo "test_result<<EOF" >> $GITHUB_ENV
+          echo "$output" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          cat output.txt
+
+        shell: bash
+
+      - name: Comment PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          hide_and_recreate: true
+          hide_classify: "OUTDATED"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          message: |
+            Thanks for running DeepEval 😎
+            ```
+            ${{ env.test_result }}
+            ```
+
