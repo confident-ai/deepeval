@@ -37,6 +37,8 @@ jobs:
           echo "test_result<<EOF" >> $GITHUB_ENV
           echo "$output" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+          cat output.txt
+
         shell: bash
 
       - name: Comment PR
