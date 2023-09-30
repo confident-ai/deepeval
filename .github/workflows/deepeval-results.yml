@@ -25,7 +25,8 @@ jobs:
           script: |
             const stdout = process.env['STDOUT'] + "\n\n```\n" + process.env['STDOUT'] + "\n```";
             try {
-              const response = await github.pulls.createReview({
+              const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+              const response = await octokit.pulls.createReview({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
                 pull_number: github.context.issue.number,
