@@ -19,12 +19,11 @@ jobs:
           echo "::set-output name=stdout::$(echo 'This is a sample command and its stdout.')"
 
       - name: Comment PR with stdout
-        if: steps.capture-stdout.outputs.stdout
         uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const stdout = steps.capture-stdout.outputs.stdout + "\n\n```\n" + github.workflow.runs.capture-stdout.outputs.stdout + "\n```";
+            const stdout = `process.env['STDOUT'] + "\n\n```\n" + process.env['STDOUT'] + "\n```"`;
             const response = await github.pulls.createReview({
               owner: github.context.repo.owner,
               repo: github.context.repo.repo,
