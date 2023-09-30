@@ -26,5 +26,5 @@ jobs:
             Thanks for the PR! Going to review and merge soon 😉
             Just before that though can you please test the installation with the command below? 😎
             ```
-            $OUTPUT
+            ${{ env.OUTPUT }}
             ```
