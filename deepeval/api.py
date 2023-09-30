@@ -47,7 +47,7 @@ class APITestCase(BaseModel):
     )
     threshold: float
     run_duration: float = Field(..., alias="runDuration")
-    context: Optional[list] = Field(None, default_factory=list)
+    context: Optional[list] = Field(None)
 
 
 class MetricScore(BaseModel):
