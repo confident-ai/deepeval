@@ -20,9 +20,12 @@ jobs:
       
       - name: Run Test
         run: |
-          echo 'var<<EOF' >> $GITHUB_ENV
-          echo $(deepeval test run tests/test_quickstart.py) >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          MY_STRING=$(cat << EOF
+deepeval test run tests/test_quickstart.py  > output.txt
+ EOF
+          )
+          echo "$MY_STRING" >> "$GITHUB_ENV"
+          # the following works if all you need is just 1 line
           # deepeval test run tests/test_quickstart.py | tr '\n' ' ' > output.txt
           # EOF=$(cat output.txt)
           # echo "test_result=$EOF" >> "$GITHUB_ENV"
