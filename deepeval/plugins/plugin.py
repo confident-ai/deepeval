@@ -74,60 +74,60 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
     # Check if running inside a GitHub Action
     is_github_action = os.getenv("GITHUB_ACTIONS", False)
 
-    if is_github_action:
-        # Create a markdown table for GitHub
-        table = (
-            "| Metric | Average Score | Passes | Failures | Success Rate |\n"
-        )
-        table += "| --- | --- | --- | --- | --- |\n"
-        total_passes = 0
-        total_failures = 0
-        for metric, avg in metrics_avg.items():
-            pass_count = passes[metric]
-            fail_count = failures[metric]
-            total_passes += pass_count
-            total_failures += fail_count
-            success_rate = pass_count / (pass_count + fail_count) * 100
-            table += f"| {metric} | {avg} | {pass_count} | {fail_count} | {success_rate:.2f}% |\n"
-        total_tests = total_passes + total_failures
-        overall_success_rate = total_passes / total_tests * 100
-        table += f"| Total | - | {total_passes} | {total_failures} | {overall_success_rate:.2f}% |\n"
-        print(table)
-    else:
-        # Create a table with rich
-        from rich.table import Table
+    # if is_github_action:
+    #     # Create a markdown table for GitHub
+    #     table = (
+    #         "| Metric | Average Score | Passes | Failures | Success Rate |\n"
+    #     )
+    #     table += "| --- | --- | --- | --- | --- |\n"
+    #     total_passes = 0
+    #     total_failures = 0
+    #     for metric, avg in metrics_avg.items():
+    #         pass_count = passes[metric]
+    #         fail_count = failures[metric]
+    #         total_passes += pass_count
+    #         total_failures += fail_count
+    #         success_rate = pass_count / (pass_count + fail_count) * 100
+    #         table += f"| {metric} | {avg} | {pass_count} | {fail_count} | {success_rate:.2f}% |\n"
+    #     total_tests = total_passes + total_failures
+    #     overall_success_rate = total_passes / total_tests * 100
+    #     table += f"| Total | - | {total_passes} | {total_failures} | {overall_success_rate:.2f}% |\n"
+    #     print(table)
+    # else:
+    # Create a table with rich
+    from rich.table import Table
 
-        table = Table(title="Test Results")
-        table.add_column("Metric", justify="right")
-        table.add_column("Average Score", justify="right")
-        table.add_column("Passes", justify="right")
-        table.add_column("Failures", justify="right")
-        table.add_column("Success Rate", justify="right")
-        total_passes = 0
-        total_failures = 0
-        for metric, avg in metrics_avg.items():
-            pass_count = passes[metric]
-            fail_count = failures[metric]
-            total_passes += pass_count
-            total_failures += fail_count
-            success_rate = pass_count / (pass_count + fail_count) * 100
-            table.add_row(
-                metric,
-                str(avg),
-                f"[green]{str(pass_count)}[/green]",
-                f"[red]{str(fail_count)}[/red]",
-                f"{success_rate:.2f}%",
-            )
-        total_tests = total_passes + total_failures
-        overall_success_rate = total_passes / total_tests * 100
+    table = Table(title="Test Results")
+    table.add_column("Metric", justify="right")
+    table.add_column("Average Score", justify="right")
+    table.add_column("Passes", justify="right")
+    table.add_column("Failures", justify="right")
+    table.add_column("Success Rate", justify="right")
+    total_passes = 0
+    total_failures = 0
+    for metric, avg in metrics_avg.items():
+        pass_count = passes[metric]
+        fail_count = failures[metric]
+        total_passes += pass_count
+        total_failures += fail_count
+        success_rate = pass_count / (pass_count + fail_count) * 100
         table.add_row(
-            "Total",
-            "-",
-            f"[green]{str(total_passes)}[/green]",
-            f"[red]{str(total_failures)}[/red]",
-            f"{overall_success_rate:.2f}%",
+            metric,
+            str(avg),
+            f"[green]{str(pass_count)}[/green]",
+            f"[red]{str(fail_count)}[/red]",
+            f"{success_rate:.2f}%",
         )
-        print(table)
+    total_tests = total_passes + total_failures
+    overall_success_rate = total_passes / total_tests * 100
+    table.add_row(
+        "Total",
+        "-",
+        f"[green]{str(total_passes)}[/green]",
+        f"[red]{str(total_failures)}[/red]",
+        f"{overall_success_rate:.2f}%",
+    )
+    print(table)
 
     if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
         link = f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}"
