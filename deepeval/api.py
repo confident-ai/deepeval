@@ -6,7 +6,7 @@ import json
 import warnings
 from collections import defaultdict
 
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 from typing import List
 from requests.adapters import HTTPAdapter, Response, Retry
@@ -47,7 +47,7 @@ class APITestCase(BaseModel):
     )
     threshold: float
     run_duration: float = Field(..., alias="runDuration")
-    context: list = Field(default_factory=list)
+    context: Optional[list] = Field(None)
 
 
 class MetricScore(BaseModel):
