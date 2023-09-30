@@ -27,6 +27,7 @@ def pytest_runtest_protocol(
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_sessionfinish(session: pytest.Session, exitstatus):
+    print("Running teardown with pytest sessionfinish...")
     # Code before yield will run before the test teardown
 
     # yield control back to pytest for the actual teardown
