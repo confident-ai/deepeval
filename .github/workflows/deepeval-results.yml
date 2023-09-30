@@ -12,12 +12,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install deepeval
+        run: pip install deepeval
+
       - name: Echo Command
         id: echo
         run: deepeval test run tests/test_quickstart.py >> "$GITHUB_ENV"
-
-      - name: Install deepeval
-        run: pip install deepeval
 
       - name: Comment PR
         uses: marocchino/sticky-pull-request-comment@v2
