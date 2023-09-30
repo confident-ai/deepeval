@@ -46,5 +46,5 @@ jobs:
             Thanks for running DeepEval 😎
             Results:
             ```
-            ${{ echo env.test_result | sed 's/UNIQUESTRING/\\n/g' }}
+            ${{ env.test_result.split('UNIQUESTRING').join('\n') }}
             ```
