@@ -37,6 +37,7 @@ jobs:
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
+          deepeval login --api-key $CONFIDENT_AI_API_KEY
           (deepeval test run tests/test_quickstart.py) > output.txt 2>&1
           output=$(cat output.txt)
           echo "test_result<<EOF" >> $GITHUB_ENV
@@ -54,7 +55,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           message: |
             Thanks for running DeepEval 😎
-            Results:
             ```
             ${{ env.test_result }}
             ```
