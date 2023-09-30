@@ -36,14 +36,6 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
         shell: bash
 
-      # - name: Run Test
-      #   id: run_test
-      #   run: |
-      #     (deepeval test run --color=no tests/test_quickstart.py) > output.txt 2>&1
-      #     mapfile -t lines < output.txt
-      #     echo "test_result=${lines[*]}" >> $GITHUB_ENV
-      #   shell: bash
-
       - name: Comment PR
         uses: marocchino/sticky-pull-request-comment@v2
         with:
