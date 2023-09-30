@@ -7,8 +7,7 @@ on:
 
 jobs:
   create-pip-link-comment:
-    # Try switching to macos just quickly
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     permissions: write-all
     name: pip link
     steps:
@@ -24,7 +23,6 @@ jobs:
           deepeval test run tests/test_quickstart.py | tr '\n' ' ' > output.txt
           EOF=$(cat output.txt)
           echo "test_result=$EOF" >> "$GITHUB_ENV"
-          rake test >> "$GITHUB_ENV"
           echo "$EOF" >> "$GITHUB_ENV"
 
       - name: Comment PR
