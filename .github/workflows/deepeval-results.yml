@@ -22,10 +22,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install deepeval
-        run: pip install deepeval
+      - name: Install dependencies
+        env:
+          python-version: ${{ matrix.python-version }}
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt ragas
+          python -m pip install . pytest-rerunfailures pytest-asyncio
 
-      
       - name: Run Test
         id: run_test
         env:
