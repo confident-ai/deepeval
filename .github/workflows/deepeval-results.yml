@@ -20,8 +20,9 @@ jobs:
       
       - name: Run Test
         run: |
-          EOF=$(deepeval test run tests/test_quickstart.py)
-          echo "test_result<<$EOF" >> "$GITHUB_ENV"
+          deepeval test run tests/test_quickstart.py > output.txt
+          EOF=$(cat output.txt)
+          echo "test_result=$EOF" >> "$GITHUB_ENV"
           rake test >> "$GITHUB_ENV"
           echo "$EOF" >> "$GITHUB_ENV"
 
