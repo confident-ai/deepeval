@@ -104,6 +104,9 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         f"{overall_success_rate:.2f}%",
     )
     print(table)
-    link = f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}"
-    print("✅ Tests finished! View results on " f"[link={link}]{link}[/link]")
+    if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
+        link = f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}"
+        print(
+            "✅ Tests finished! View results on " f"[link={link}]{link}[/link]"
+        )
     os.remove(test_filename)
