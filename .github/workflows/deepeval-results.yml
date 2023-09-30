@@ -7,7 +7,8 @@ on:
 
 jobs:
   create-pip-link-comment:
-    runs-on: ubuntu-latest
+    # Try switching to macos just quickly
+    runs-on: macos-latest
     permissions: write-all
     name: pip link
     steps:
