@@ -1,7 +1,13 @@
-import openai
+import json
 from typing import Optional, Callable
 from deepeval.metrics.metric import Metric
 from deepeval.test_case import LLMTestCase
+from pydantic import BaseModel
+
+
+class LLMEvalResponse(BaseModel):
+    score: float
+    reason: str
 
 
 class LLMEvalMetric(Metric):
@@ -22,9 +28,7 @@ Criteria: {criteria}
 Text: {text}
 
 Respond in JSON format in 1 single line without white spaces.
-JSON:""".format(
-                criteria=criteria
-            )
+JSON:"""
         self.minimum_score = minimum_score
         self.completion_function = completion_function
 
@@ -32,8 +36,20 @@ JSON:""".format(
     def __name__(self):
         return "LLMEval"
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase, include_score: bool = False):
         """Measure out the LLMEval metric."""
         # Measure the test case
-        prompt: dict = self.prompt_template.format(text=test_case.output)
-        output = self.completion_function(prompt)
+        prompt: dict = self.prompt_template.format(
+            text=test_case.output, criteria=self.criteria
+        )
+        output: str = self.completion_function(prompt)
+        response = json.loads(output.strip())
+        score = float(response["score"]) / 100
+        reason = response["reason"]
+        self.success = score >= self.minimum_score
+        if include_score:
+            return score
+        return reason
+
+    def is_successful(self):
+        return self.success

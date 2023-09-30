@@ -39,6 +39,8 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         api: Api = Api()
         result = api.post_test_run(test_run)
 
+    if test_run is None:
+        return
     # Calculate the average of each metric
     metrics_avg = {
         metric.metric: metric.score for metric in test_run.metric_scores
