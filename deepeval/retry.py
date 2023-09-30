@@ -42,9 +42,11 @@ class retry:
                     )
                     time.sleep(self.delay)
                 else:
-                    print(
-                        f"Max retries ({self.max_retries}) for executing {func.__name__} exceeded."
-                    )
+                    if self.retry_count != 1:
+                        # No need to print it out if you can only retry once
+                        print(
+                            f"Max retries ({self.max_retries}) for executing {func.__name__} exceeded."
+                        )
                     if self.success_count < self.min_success:
                         if last_error is not None:
                             raise last_error  # Raise the last error
