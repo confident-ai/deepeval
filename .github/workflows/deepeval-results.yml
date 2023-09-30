@@ -23,12 +23,16 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const stdout = `process.env['STDOUT'] + "\n\n```\n" + process.env['STDOUT'] + "\n```"`;
-            const response = await github.pulls.createReview({
-              owner: github.context.repo.owner,
-              repo: github.context.repo.repo,
-              pull_number: github.context.issue.number,
-              body: stdout,
-              event: "COMMENT"
-            });
-            console.log(response);
+            const stdout = process.env['STDOUT'] + "\n\n```\n" + process.env['STDOUT'] + "\n```";
+            try {
+              const response = await github.pulls.createReview({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                pull_number: github.context.issue.number,
+                body: stdout,
+                event: "COMMENT"
+              });
+              console.log(response);
+            } catch (error) {
+              console.error(error);
+            }
