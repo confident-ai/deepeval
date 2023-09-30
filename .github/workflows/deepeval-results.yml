@@ -28,7 +28,7 @@ jobs:
       - name: Run Test
         id: run_test
         run: |
-          deepeval test run tests/test_quickstart.py > output.txt
+          deepeval test run tests/test_quickstart.py > output.txt 2>&1
           echo "::set-output name=test_result::$(cat output.txt)"
 
       - name: Comment PR
