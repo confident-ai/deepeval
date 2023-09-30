@@ -30,7 +30,7 @@ jobs:
         run: |
           (deepeval test run tests/test_quickstart.py) > output.txt 2>&1
           mapfile -t lines < output.txt
-          IFS=$'\n'; printf "::set-output name=test_result::${lines[*]}"
+          echo "test_result=${lines[*]}" >> $GITHUB_ENV
         shell: bash
 
       - name: Comment PR
@@ -43,6 +43,6 @@ jobs:
             Thanks for running DeepEval 😎
             Results:
             ```
-            ${{ steps.run_test.outputs.test_result }}
+            ${{ env.test_result }}
             ```
 
