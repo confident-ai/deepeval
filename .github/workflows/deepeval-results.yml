@@ -1,9 +1,8 @@
 name: Capture and comment stdout
 
 on:
-  pull_request_review:
-    types:
-      - submitted
+  push:
+  pull_request:
 
 jobs:
   comment-pr-with-stdout:
