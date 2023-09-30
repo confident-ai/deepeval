@@ -21,8 +21,8 @@ jobs:
       - name: Run Test
         run: |
           MY_STRING=$(cat << EOF
-deepeval test run tests/test_quickstart.py  > output.txt
- EOF
+          deepeval test run tests/test_quickstart.py  > output.txt
+          EOF
           )
           echo "$MY_STRING" >> "$GITHUB_ENV"
           # the following works if all you need is just 1 line
