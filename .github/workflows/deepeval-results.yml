@@ -21,7 +21,7 @@ jobs:
         id: echo
         run: |
           OUTPUT=$(deepeval test run tests/test_quickstart.py)
-          echo "OUTPUT=$OUTPUT" >> $GITHUB_ENV
+          echo "OUTPUT=$OUTPUT" >> "$GITHUB_ENV"
 
       - name: Comment PR
         uses: marocchino/sticky-pull-request-comment@v2
