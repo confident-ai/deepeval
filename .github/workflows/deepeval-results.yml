@@ -28,6 +28,9 @@ jobs:
       
       - name: Run Test
         id: run_test
+        env:
+          CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
+          CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
           (deepeval test run --color=no tests/test_quickstart.py) > output.txt 2>&1
           output=$(cat output.txt)
