@@ -14,7 +14,7 @@ jobs:
 
       - name: Echo Command
         id: echo
-        run: echo "pip install git+https://github.com/confident-ai/deepeval.git@${{ github.head_ref }}" | bash
+        run: echo "pip install git+https://github.com/confident-ai/deepeval.git@${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
 
       - name: Comment PR
         uses: marocchino/sticky-pull-request-comment@v2
@@ -26,5 +26,5 @@ jobs:
             Thanks for the PR! Going to review and merge soon 😉
             Just before that though can you please test the installation with the command below? 😎
             ```
-            ${{ steps.echo.outputs.stdout }}
+            ${{ steps.echo.outputs.secret-number }}
             ```
