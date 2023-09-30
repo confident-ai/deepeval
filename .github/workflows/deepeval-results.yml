@@ -39,6 +39,8 @@ jobs:
         run: |
           deepeval login --api-key $CONFIDENT_AI_API_KEY
           (deepeval test run tests/test_quickstart.py) > output.txt 2>&1
+          # remove the ANCI codes
+          sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
           output=$(cat output.txt)
           echo "test_result<<EOF" >> $GITHUB_ENV
           echo "$output" >> $GITHUB_ENV
