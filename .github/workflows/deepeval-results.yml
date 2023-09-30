@@ -1,4 +1,6 @@
-name: Pip install comment
+name: DeepEval Test Run Example
+
+# This is an example YML file to show the results of a DeepEval test run to a PR
 
 on:
   pull_request:
