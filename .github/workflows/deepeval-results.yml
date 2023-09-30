@@ -25,17 +25,12 @@ jobs:
       - name: Install deepeval
         run: pip install deepeval
 
-      # - name: Run Test
-      #   id: run_test
-      #   run: |
-      #     (deepeval test run tests/test_quickstart.py) > output.txt 2>&1
-      #     echo "::set-output name=test_result::$(< output.txt)"
       - name: Run Test
         id: run_test
         run: |
           (deepeval test run tests/test_quickstart.py) > output.txt 2>&1
           mapfile -t lines < output.txt
-          IFS=$'\n'; echo "::set-output name=test_result::${lines[*]}"
+          IFS=$'\n'; printf "::set-output name=test_result::${lines[*]}"
         shell: bash
 
       - name: Comment PR
