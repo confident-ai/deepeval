@@ -25,18 +25,24 @@ jobs:
       - name: Install deepeval
         run: pip install deepeval
 
+      
       - name: Run Test
         id: run_test
         run: |
           (deepeval test run --color=no tests/test_quickstart.py) > output.txt 2>&1
-          mapfile -t lines < output.txt
-          for line in "${lines[@]}"; do
-            echo -e "${line}\n" >> $GITHUB_ENV
-          done
-          # (deepeval test run --color=no tests/test_quickstart.py) > output.txt 2>&1
-          # mapfile -t lines < output.txt
-          # echo "test_result=${lines[*]}" >> $GITHUB_ENV
+          output=$(cat output.txt)
+          echo "test_result<<EOF" >> $GITHUB_ENV
+          echo "$output" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         shell: bash
+
+      # - name: Run Test
+      #   id: run_test
+      #   run: |
+      #     (deepeval test run --color=no tests/test_quickstart.py) > output.txt 2>&1
+      #     mapfile -t lines < output.txt
+      #     echo "test_result=${lines[*]}" >> $GITHUB_ENV
+      #   shell: bash
 
       - name: Comment PR
         uses: marocchino/sticky-pull-request-comment@v2
