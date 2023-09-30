@@ -20,18 +20,22 @@ jobs:
       - name: Echo Command
         id: echo
         run: |
-          OUTPUT=$(deepeval test run tests/test_quickstart.py)
-          echo "OUTPUT=$OUTPUT" >> "$GITHUB_ENV"
+          PROGRAM_OUTPUT=$(deepeval test run tests/test_quickstart.py)
+          echo "OUTPUT=$PROGRAM_OUTPUT" >> $GITHUB_ENV
+        
+      - name: Using the previously defined environment variable
+        run: |
+          echo ${{ env.OUTPUT }}
 
-      - name: Comment PR
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          hide_and_recreate: true
-          hide_classify: "OUTDATED"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: |
-            Thanks for the PR! Going to review and merge soon 😉
-            Just before that though can you please test the installation with the command below? 😎
-            ```
-            ${{ env.OUTPUT }}
-            ```
+      # - name: Comment PR
+      #   uses: marocchino/sticky-pull-request-comment@v2
+      #   with:
+      #     hide_and_recreate: true
+      #     hide_classify: "OUTDATED"
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     message: |
+      #       Thanks for the PR! Going to review and merge soon 😉
+      #       Just before that though can you please test the installation with the command below? 😎
+      #       ```
+      #       ${{ env.OUTPUT }}
+      #       ```
