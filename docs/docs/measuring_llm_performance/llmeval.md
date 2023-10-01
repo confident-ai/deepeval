@@ -2,6 +2,8 @@
 
 LLM-Based evaluation is useful for more specific types of answers such as how funny the LLM is where you want to use the LLM to score and critique it.
 
+Warning - as identified in the G-Eval paper (https://arxiv.org/abs/2303.16634), large language models may rate text that aligns with its text distribution distribution more.
+
 ```python
 import openai
 from deepeval.metrics.llm_eval import LLMEval
@@ -33,3 +35,21 @@ By default, it only outputs the score. If you would like to include a reason, yo
 ```
 metric.measure(test_case, include_reason=True)
 ```
+
+## Arguments
+
+When instantiating `LLMEvalMetric`, there are a few arguments to go over.
+
+- `prompt_template` - this is the template that we are using in order to fill in the criteria and text. This template must have `criteria` and `text` as a string in order to provide a useful prompt. For example: 
+
+```
+prompt_template = """For the following criteria, evaluate the text, state the reason and then return a score in a JSON with the key `reason` and `score` out of 100 with 100 being that it follows the criteria and 1 being that it does not.
+
+Criteria: {criteria}
+Text: {text}
+
+Respond in JSON format in 1 single line without white spaces.
+JSON:"""
+```
+
+- `completion_function` - This expects a callable accepting a text input and returns a string (Similar to OpenAI's completion protocol).
