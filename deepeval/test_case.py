@@ -3,7 +3,6 @@
 import hashlib
 from dataclasses import dataclass
 from typing import Any, List, Optional, Union
-from PIL import Image
 
 
 @dataclass
@@ -55,14 +54,14 @@ class ImageTestCase(TestCase):
 
     def __init__(
         self,
-        image: str,
+        image_path: str,
         query: Optional[str] = None,
-        ground_truth_image: Optional[str] = None,
+        ground_truth_image_path: Optional[str] = None,
         minimum_score: float = 0.3,
         id: Optional[str] = None,
     ):
         self.query = query
-        self.image = image
-        self.ground_truth_image = Image.open(ground_truth_image)
+        self.image_path = image_path
+        self.ground_truth_image_path = ground_truth_image_path
         self.minimum_score = minimum_score
         super().__init__(id)
