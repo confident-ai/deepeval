@@ -2,7 +2,7 @@
 """
 import time
 from functools import wraps
-from typing import Callable
+from typing import Callable, List
 
 
 class retry:
@@ -14,7 +14,7 @@ class retry:
         max_retries: int = 3,
         delay: int = 1,
         min_success: int = 1,
-        fail_hooks: list[Callable] = None,
+        fail_hooks: List[Callable] = None,
     ) -> None:
         self.max_retries = max_retries
         self.delay = delay
