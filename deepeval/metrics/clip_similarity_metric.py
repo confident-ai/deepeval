@@ -2,14 +2,15 @@ from deepeval.metrics.metric import Metric
 from deepeval.test_case import ImageTestCase
 
 
-class ClipSimilarityMetric:
-    def __init__(self, model_name="ViT-B/32"):
+class ClipSimilarityMetric(Metric):
+    def __init__(self, model_name="ViT-B/32", minimum_score: float = 0.3):
         self.model_name = model_name
         import torch
         import clip
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model, self.preprocess = clip.load(model_name, device=self.device)
+        self.minimum_score = minimum_score
 
     def measure(self, test_case: ImageTestCase):
         import clip
@@ -33,4 +34,13 @@ class ClipSimilarityMetric:
         image_features /= image_features.norm(dim=-1, keepdim=True)
         text_features /= text_features.norm(dim=-1, keepdim=True)
         similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
-        return float(similarity[0])
+        score = float(similarity[0])
+        self.success = score > self.minimum_score
+        return score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Clip Similarity"
