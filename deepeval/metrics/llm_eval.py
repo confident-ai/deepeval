@@ -36,7 +36,7 @@ JSON:"""
     def __name__(self):
         return "LLMEval"
 
-    def measure(self, test_case: LLMTestCase, include_score: bool = False):
+    def measure(self, test_case: LLMTestCase, include_reason: bool = False):
         """Measure out the LLMEval metric."""
         # Measure the test case
         prompt: dict = self.prompt_template.format(
@@ -47,9 +47,9 @@ JSON:"""
         score = float(response["score"]) / 100
         reason = response["reason"]
         self.success = score >= self.minimum_score
-        if include_score:
-            return score
-        return reason
+        if include_reason:
+            return {"score": score, "reason": reason}
+        return score
 
     def is_successful(self):
         return self.success
