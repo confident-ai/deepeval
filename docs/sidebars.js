@@ -44,6 +44,7 @@ const sidebars = {
         "measuring_llm_performance/non_toxic",
         "measuring_llm_performance/debias",
         "measuring_llm_performance/ragas_score",
+        "measuring_llm_performance/llmeval"
       ]
     },
     {

@@ -1,8 +1,6 @@
 # LLM-Evaluation
 
-LLM-Based evaluation is useful for more specific types of answers.
-
-DeepEval makes it easy to output a metric.
+LLM-Based evaluation is useful for more specific types of answers such as how funny the LLM is where you want to use the LLM to score and critique it.
 
 ```python
 import openai
@@ -23,15 +21,15 @@ def make_chat_completion_request(prompt: str):
 
 metric = LLMEval(
     criteria="How funny it is",
-    completion_function=chatgpt
+    completion_function=make_chat_completion_request
 )
 
 test_case = LLMTestCase(output="Mobile phones are rocks.")
 score = metric.measure(test_case)
 ```
 
-By default, it only outputs the score.
+By default, it only outputs the score. If you would like to include a reason, you can set `include_reason` to `True`.
 
-## Under the hood
-
-Under the hood, it uses LLM evaluation.
+```
+metric.measure(test_case, include_reason=True)
+```
