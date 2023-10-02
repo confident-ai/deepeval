@@ -61,11 +61,11 @@ deepeval test run tests/test_sample.py
 
 ## Individual Test Cases
 
-To start logging, get your API key from [https://app.confident-ai.com](https://app.confident-ai.com)
+To start logging, get your API key from [https://app.confident-ai.com](https://app.confident-ai.com).
 
 ```python
 # test_example.py
-import os
+
 import openai
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
@@ -73,23 +73,35 @@ from deepeval.run_test import assert_test
 
 openai.api_key = "sk-XXX"
 
+
 # Write a sample ChatGPT function
 def generate_chatgpt_output(query: str):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "assistant", "content": "The customer success phone line is 1200-231-231 and the customer success state is in Austin."},
-            {"role": "user", "content": query}
-        ]
+            {
+                "role": "assistant",
+                "content": "The customer success phone line is 1200-231-231 and the customer success state is in Austin.",
+            },
+            {"role": "user", "content": query},
+        ],
     )
     expected_output = response.choices[0].message.content
     return expected_output
 
+
 def test_llm_output():
     query = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
-    test_case = LLMTestCase(query=query, expected_output=expected_output)
+    context = "The customer success phone line is 1200-231-231. The customer success state is in Austin."
+    output = generate_chatgpt_output(query)
+    test_case = LLMTestCase(
+        query=query,
+        output=output,
+        expected_output=expected_output,
+        context=context,
+    )
     metric = FactualConsistencyMetric()
     assert_test(test_case, metrics=[metric])
 
