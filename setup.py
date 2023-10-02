@@ -27,7 +27,7 @@ setup(
         "rich",
         "protobuf<=3.20.5",
         "pandas",
-        "pydantic>=2.0.0",
+        "pydantic",  # loosen pydantic requirements as we support multiple
     ],
     extras_require={
         "bias": [

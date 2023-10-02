@@ -26,21 +26,6 @@ class LLMTestCase(TestCase):
         super().__post_init__()
         self.__name__ = f"LLMTestCase_{self.id}"
 
-    # def dict(self):
-    #     data = {
-    #         "metrics": self.metrics,
-    #         "id": self.id,
-    #     }
-    #     if self.query:
-    #         data["query"] = self.query
-    #     if self.expected_output:
-    #         data["expected_output"] = self.expected_output
-    #     if self.context:
-    #         data["context"] = self.context
-    #     if self.output:
-    #         data["output"] = self.output
-    #     return data
-
 
 @dataclass
 class SearchTestCase(TestCase):
@@ -61,3 +46,22 @@ class AgentTestCase(TestCase):
     """Test Case For Agents"""
 
     pass
+
+
+@dataclass
+class ImageTestCase(TestCase):
+    """Test Case For Images. This is a beta interface and is subject to change."""
+
+    def __init__(
+        self,
+        image_path: str,
+        query: Optional[str] = None,
+        ground_truth_image_path: Optional[str] = None,
+        minimum_score: float = 0.3,
+        id: Optional[str] = None,
+    ):
+        self.query = query
+        self.image_path = image_path
+        self.ground_truth_image_path = ground_truth_image_path
+        self.minimum_score = minimum_score
+        super().__init__(id)
