@@ -37,6 +37,14 @@ metric = ClipSimilarityMetric()
 score = metric.measure(test_case)
 ```
 
-## Under the hood
+### Under the hood
 
 Under the hood, it uses CLIP to measure cosine similarity between images and text and outputs the cosine similarity score.
+
+## Parameters
+
+This image similarity introduces the `ImageTestCase` that compares 2 images and text with image. The image test case has the following parameters:
+
+- `image_path` - The path of the generated image
+- `query` - The specified query
+- `ground_truth_image_path` - The ground truth image path mentions that 
