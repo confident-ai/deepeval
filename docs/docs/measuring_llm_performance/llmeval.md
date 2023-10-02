@@ -6,7 +6,7 @@ Warning - as identified in the G-Eval paper (https://arxiv.org/abs/2303.16634), 
 
 ```python
 import openai
-from deepeval.metrics.llm_eval import LLMEval
+from deepeval.metrics.llm_eval import LLMEvalMetric
 from deepeval.test_cases import LLMTestCase
 
 openai.api_key = openai_api_key
@@ -21,7 +21,7 @@ def make_chat_completion_request(prompt: str):
     )
     return response.choices[0].message.content
 
-metric = LLMEval(
+metric = LLMEvalMetric(
     criteria="How funny it is",
     completion_function=make_chat_completion_request
 )
