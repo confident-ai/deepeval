@@ -23,7 +23,8 @@ def make_chat_completion_request(prompt: str):
 
 metric = LLMEvalMetric(
     criteria="How funny it is",
-    completion_function=make_chat_completion_request
+    completion_function=make_chat_completion_request,
+    minimum_score=0.3
 )
 
 test_case = LLMTestCase(output="Mobile phones are rocks.")
@@ -53,3 +54,4 @@ JSON:"""
 ```
 
 - `completion_function` - This expects a callable accepting a text input and returns a string (Similar to OpenAI's completion protocol).
+- `minimum_score` - The minimum score is a score from 0 to 1 that shows the minimum score required to pass a test based on LLMEval. Defaults to 0.5.
