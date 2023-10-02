@@ -12,75 +12,146 @@ An evaluation dataset is a list of test cases designed to make testing a large n
 
 ### Example
 
-```python
-from deepeval.dataset import EvaluationDataset
+#### CSV Example
 
-# from a csv
-# sample.csv
-# query,expected_output,id
-# sample_query,sample_output,312
-ds = EvaluationDataset.from_csv(
-    csv_filename="sample.csv",
-    query_column="query",
-    expected_output_column="expected_output",
-    id_column="312"
+Below is an example of how you can feed in a CSV into pytest parametrize
+
+```python
+# You can also load this in a CSV
+
+import pandas as pd
+
+# Here we are defining a CSV formatted string that contains our test cases.
+# Each line represents a test case with a query, expected output, and context.
+# The context is a string of sentences separated by '|'.
+CSV_DATA = """query,output,context
+"What are your operating hours?","Our operating hours are from 9 AM to 5 PM, Monday to Friday.","Our company operates from 10 AM to 6 PM, Monday to Friday.|We are closed on weekends and public holidays.|Our customer service is available 24/7."
+"What are your operating hours?","We are open from 10 AM to 6 PM, Monday to Friday.","Our company operates from 10 AM to 6 PM, Monday to Friday.|We are closed on weekends and public holidays.|Our customer service is available 24/7."
+"Do you offer free shipping?","Yes, we offer free shipping on orders over $50.","Our company offers free shipping on orders over $100.|Free shipping applies to all products.|The free shipping offer is valid only within the country."
+"""
+
+# We read the CSV_DATA into a pandas DataFrame.
+# This allows us to easily manipulate and process the data.
+import io
+
+# Create a temporary file with CSV_DATA
+temp_file = io.StringIO(CSV_DATA)
+
+# Read the temporary file as a CSV
+df = pd.read_csv(temp_file)
+
+# We then split the context column into a list of sentences.
+# This is done by splitting the string on each '|'.
+# The result is a list of context sentences for each test case.
+df["context"] = df["context"].apply(lambda x: x.split("|"))
+
+# Finally, we convert the DataFrame to a list of dictionaries.
+# Each dictionary represents a test case and can be directly used in our tests.
+# The keys of the dictionary are the column names in the DataFrame (query, output, context).
+# The values are the corresponding values for each test case.
+CHATBOT_TEST_CASES = df.to_dict("records")
+
+# pytest provides a decorator called 'parametrize' that allows you to run a test function multiple times with different arguments.
+# Here, we use it to run the test function for each test case in CHATBOT_TEST_CASES.
+# The test function takes a test case as an argument, extracts the query, output, and context, and then runs the test.
+@pytest.mark.parametrize(
+    "test_case",
+    CHATBOT_TEST_CASES,
 )
+def test_customer_chatbot(test_case: dict):
+    query = test_case["query"]
+    output = test_case["output"]
+    context = test_case["context"]
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+    test_case = LLMTestCase(query=query, output=output, context=context)
+    assert_test(
+        test_case, [factual_consistency_metric, answer_relevancy_metric]
+    )
+
 ```
 
-#### Running Tests
-
-Running the tests is easy with the `run_evaluation` method. When you call `run_evaluation` , it will output a text file for you to review the results which will contain
+### Python Dictionary Example
 
 ```python
-ds.run_evaluation(
-    completion_fn=generate_llm_output,
-    max_retries=3,
-    min_success=3
+# We can also define multiple test cases at once in a list of dictionaries.
+# Each dictionary represents a test case and can be directly used in our tests.
+# The keys of the dictionary are the column names in the DataFrame (query, output, context).
+# The values are the corresponding values for each test case.
+CHATBOT_TEST_CASES = [
+    {
+        "query": "What are your operating hours?",
+        "output": "Our operating hours are from 9 AM to 5 PM, Monday to Friday.",
+        "context": [
+            "Our company operates from 10 AM to 6 PM, Monday to Friday.",
+            "We are closed on weekends and public holidays.",
+            "Our customer service is available 24/7.",
+        ],
+    },
+    {
+        "query": "Do you offer free shipping?",
+        "output": "Yes, we offer free shipping on orders over $50.",
+        "context": [
+            "Our company offers free shipping on orders over $100.",
+            "Free shipping applies to all products.",
+            "The free shipping offer is valid only within the country.",
+        ],
+    },
+    {
+        "query": "What is your return policy?",
+        "output": "We accept returns within 30 days of purchase.",
+        "context": [
+            "Our company accepts returns within 60 days of purchase.",
+            "The product must be in its original condition.",
+            "The return shipping cost will be covered by the customer.",
+        ],
+    },
+    {
+        "query": "Do you have a physical store?",
+        "output": "Yes, we have a physical store in New York.",
+        "context": [
+            "Our company has physical stores in several locations across the country.",
+            "The New York store is our flagship store.",
+            "Our stores offer a wide range of products.",
+        ],
+    },
+    {
+        "query": "Do you offer international shipping?",
+        "output": "Yes, we offer international shipping to selected countries.",
+        "context": [
+            "Our company offers international shipping to all countries.",
+            "International shipping rates apply.",
+            "Delivery times vary depending on the destination.",
+        ],
+    },
+    {
+        "query": "Do you have a customer loyalty program?",
+        "output": "Yes, we have a loyalty program called 'Rewards Club'.",
+        "context": [
+            "Our company has a loyalty program that offers exclusive benefits to members.",
+            "The 'Rewards Club' program offers discounts, early access to sales, and more.",
+            "Customers can join the 'Rewards Club' by signing up on our website.",
+        ],
+    },
+]
+
+
+# pytest provides a decorator called 'parametrize' that allows you to run a test function multiple times with different arguments.
+# Here, we use it to run the test function for each test case in CHATBOT_TEST_CASES.
+# The test function takes a test case as an argument, extracts the query, output, and context, and then runs the test.
+@pytest.mark.parametrize(
+    "test_case",
+    CHATBOT_TEST_CASES,
 )
-# Returns the evaluation
+def test_customer_chatbot(test_case: dict):
+    query = test_case["query"]
+    output = test_case["output"]
+    context = test_case["context"]
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+    test_case = LLMTestCase(query=query, output=output, context=context)
+    assert_test(
+        test_case, [factual_consistency_metric, answer_relevancy_metric]
+    )
+
 ```
-
-Once you run these tests, you will then be given a table that looks like this and is saved to a text file.
-
-```
-Test Passed    Metric Name                  Score    Output                                            Expected output    Message
--------------  ---------------------  -----------  ------------------------------------------------  -----------------  -------------------------------------------
-        True  EntailmentScoreMetric  0.000830871  Our customer success phone line is 1200-231-231.  1800-213-123       EntailmentScoreMetric was unsuccessful for
-                                                                                                                        What is the customer success number
-                                                                                                                        which should have matched
-                                                                                                                        1800-213-123
-```
-
-##### Parameters
-
-- `max_retries` - refers to the maximum number of times you may be interested in re-trying us.
-- `min_success` - refers to the minimum number of successes you will need for evaluating LLMs.
-- `delay` - The amount of time before each retry
-
-### View a sample of data inside the Evaluation Dataset
-
-To view a sample of data, simply run:
-
-```python
-ds.sample(5)
-```
-
-### From CSV
-
-You can set up an evaluation dataset from the CSV the `from_csv` method
-
-```python
-dataset = EvaluationDataset.from_csv(
-    csv_filename="query.csv",
-    query_column="query",
-    expected_output_column="expected_output",
-)
-```
-
-##### Parameters
-
-- `csv_filename` - the name of the CSV file
-- `query_column` - the query column name
-- `expected_output_column`- the expected output column
-- `id_column` - the ID column
-- `metrics` - The list of metrics you want to supply to run this test.
