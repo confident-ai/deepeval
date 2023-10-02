@@ -13,6 +13,8 @@ class Modifier:
 
 
 class ClipInterrogatorModifier(Modifier):
+    """Modifies a query"""
+
     def modify(self, image_path: str, model_name="ViT-L-14/openai"):
         from PIL import Image
         from clip_interrogator import Config, Interrogator
