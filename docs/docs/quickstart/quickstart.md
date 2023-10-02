@@ -7,7 +7,7 @@
 - Create synthetic data
 - Review the synthetic data
 
-[You can view a Colab example here (note - it excludes being able to create synthetic data)](https://colab.research.google.com/drive/1HxPWwNdNnq6cLkMh4NQ_pAAPgd8vlOly?usp=sharing)
+<!-- [You can view a Colab example here (note - it excludes being able to create synthetic data)](https://colab.research.google.com/drive/1HxPWwNdNnq6cLkMh4NQ_pAAPgd8vlOly?usp=sharing) -->
 
 Once you have installed, run the login command. During this step, you will be asked to visit https://app.confident-ai.com to grab your API key.
 
@@ -120,21 +120,25 @@ Once you finish reviewing the synthetic data, name your file and hit "Save File"
 Once you save the file, you can load the dataset back using example code below.
 
 ```python
-from deepeval.dataset import EvaluationDataset
+import io
 
-# Replace 'filename.csv' with the actual filename
-ds = EvaluationDataset.from_csv('review-test.csv')
+# Create a temporary file with CSV_DATA
+temp_file = io.StringIO(CSV_DATA)
 
-# Access the data in the CSV file
-# For example, you can print a few rows
-print(ds.sample())
-```
+# Read the temporary file as a CSV
+df = pd.read_csv(temp_file)
 
-Great! Your evaluation dataset is ready to go! Now to run tests on your evaluation dataset, simply run: 
+# We then split the context column into a list of sentences.
+# This is done by splitting the string on each '|'.
+# The result is a list of context sentences for each test case.
+df["context"] = df["context"].apply(lambda x: x.split("|"))
 
-```python
-# Define your completion protocol
-import openai
+# Finally, we convert the DataFrame to a list of dictionaries.
+# Each dictionary represents a test case and can be directly used in our tests.
+# The keys of the dictionary are the column names in the DataFrame (query, output, context).
+# The values are the corresponding values for each test case.
+CHATBOT_TEST_CASES = df.to_dict("records")
+
 def generate_chatgpt_output(query: str):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -147,7 +151,23 @@ def generate_chatgpt_output(query: str):
     expected_output = response.choices[0].message.content
     return expected_output
 
-ds.run_evaluation(completion_fn=generate_chatgpt_output)
+# pytest provides a decorator called 'parametrize' that allows you to run a test function multiple times with different arguments.
+# Here, we use it to run the test function for each test case in CHATBOT_TEST_CASES.
+# The test function takes a test case as an argument, extracts the query, output, and context, and then runs the test.
+@pytest.mark.parametrize(
+    "test_case",
+    CHATBOT_TEST_CASES,
+)
+def test_customer_chatbot(test_case: dict):
+    query = test_case["query"]
+    output = generate_chatgpt_output(query)
+    context = test_case["context"]
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+    test_case = LLMTestCase(query=query, output=output, context=context)
+    assert_test(
+        test_case, [factual_consistency_metric, answer_relevancy_metric]
+    )
 ```
 
 ## What next?
