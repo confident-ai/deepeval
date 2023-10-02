@@ -61,13 +61,13 @@ deepeval test run tests/test_sample.py
 
 ## Individual Test Cases
 
-To start logging, get your API key from [https://app.confident-ai.com](https://app.confident-ai.com)
+To start logging, get your API key from [https://app.confident-ai.com](https://app.confident-ai.com).
 
 ```python
 # test_example.py
-import os
+
 import openai
-from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test
 
@@ -94,9 +94,17 @@ def generate_chatgpt_output(query: str):
 def test_llm_output():
     query = "What is the customer success phone line?"
     expected_output = "Our customer success phone line is 1200-231-231."
-    test_case = LLMTestCase(query=query, expected_output=expected_output)
-    metric = AnswerRelevancyMetric()
+    context = "The customer success phone line is 1200-231-231. The customer success state is in Austin."
+    output = generate_chatgpt_output(query)
+    test_case = LLMTestCase(
+        query=query,
+        output=output,
+        expected_output=expected_output,
+        context=context,
+    )
+    metric = FactualConsistencyMetric()
     assert_test(test_case, metrics=[metric])
+
 ```
 
 After setting up, you can call pytest
