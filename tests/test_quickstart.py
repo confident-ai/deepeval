@@ -52,8 +52,8 @@ def test_0():
     # If you want to run the test
     test_result = run_test(test_case, metrics=[metric])
     # You can also inspect the test result class
-    print(test_result.success)
-    print(test_result.score)
+    print(test_result[0].success)
+    print(test_result[0].score)
 
 
 def test_implementation_inside_quickstart():
