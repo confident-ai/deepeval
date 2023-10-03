@@ -1,217 +1,84 @@
-<div style="text-align: center;">
-    <h1>👩‍⚖️ DeepEval</h1>
-</div>
-
-<div style="width: 700px; height: 200px; overflow: hidden;">
-  <img src="assets/deepevals-cover.jpeg" alt="DeepEval" style="width: 100%; height: 200px; object-fit: cover;">
-</div>
-<br>
-
-<div align="center">
-
+# DeepEval - Unit Testing for LLMs
 [![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
+[![PyPI version](https://badge.fury.io/py/deepeval.svg)](https://badge.fury.io/py/deepeval)
 
-[![PyPI version](https://badge.fury.io/py/deepeval.svg)](https://badge.fury.io/py/deepeval)<a target="_blank" href="https://colab.research.google.com/drive/1HxPWwNdNnq6cLkMh4NQ_pAAPgd8vlOly?usp=sharing">
-  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a> [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Stay%20Updated%20On%20X)](https://twitter.com/colabdog)
-</div>
+**Deepeval** is a simple, yet powerful open source package that allows any developer to unit test LLM outputs in python. We also integrate seamlessly with your CI/CD pipeline, and provide you out-of-the-box metric for you to evaluate your LLM applications on things you care about - such as output factuality, relevancy, biasness, and toxicity. 
 
-# Unit Testing For LLMs
+May it be a RAG or fine-tuning, we make it easy to develope, deploy, and productionize LLM applications with confidence.
 
-DeepEval provides metrics on different aspects when evaluating an LLM response to ensure that answers are relevant, consistent, unbiased, non-toxic. These can easily fit in nicely with a CI/CD pipeline that allows ML engineers to quickly evaluate and check that when they improve their LLM application that their LLM application is performing well.
+<br />
 
-DeepEval offers a Python-friendly approach to conduct offline evaluations, ensuring your pipelines are ready for production. It's like having a "Pytest for your pipelines", making the process of productionizing and evaluating your pipelines as straightforward as passing all tests.
+## Getting Started 🚀
+Let's pretend your LLM application is a customer support chatbot, here's how Deepeval can help test what you've built.
 
-DeepEval's Web UI allows engineers to then analyze and view their evaluation.
-
-# Features
-
-- Tests for answer relevancy, factual consistency, toxicness, bias
-- Web UI for viewing tests, implementations, comparisons
-- Auto-evaluation through synthetic query-answer creation
-
-# Installation
-
+### Installation
 ```
-pip install deepeval
+pip install -U deepeval
+```
+### Write your first test case
+Create a test file:
+``` bash
+touch test_chatbot.py
 ```
 
-For a quick start guide, watch this Youtube video: [Get started in under 1 minute](http://www.youtube.com/watch?v=05uoNgZpnzM)
-
-# QuickStart
-
-![CLI Reveal](docs/assets/deepeval-cli-reveal.png)
-
-## Running from a command-line interface
-
-```bash
-# Optional - if you want a web UI
-deepeval login
-# Run the API key and implementation name
-deepeval login --api-key $API_KEY --implementation-name "sample"
-# Generate a sample test file
-deepeval test generate --output-file test_sample.py
-# Run this test
-deepeval test run test_sample.py
-```
-
-```bash
-deepeval test run tests/test_sample.py
-```
-
-## Individual Test Cases
-
-To start logging, get your API key from [https://app.confident-ai.com](https://app.confident-ai.com)
-
-```python
-# test_example.py
-import os
-import openai
+Open `test_chatbot.py` and write your first test case using Deepeval:
+``` python
+import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test
 
-openai.api_key = "sk-XXX"
+def my_first_llm_test_case():
+    query = "What if these shoes don't fit?"
+    context = "All customers are eligible for a 30 day full refund at no extra costs."
 
-# Write a sample ChatGPT function
-def generate_chatgpt_output(query: str):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "assistant", "content": "The customer success phone line is 1200-231-231 and the customer success state is in Austin."},
-            {"role": "user", "content": query}
-        ]
-    )
-    expected_output = response.choices[0].message.content
-    return expected_output
+    # Replace this with the actual output from your LLM application
+    actual_output = "We offer a 30-day full refund at no extra costs."
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+    test_case = LLMTestCase(output=actual_output, context=context)
+    assert_test(test_case, [factual_consistency_metric])
+```
+Run `test_chatbot.py` in the CLI:
+```
+deepeval test run test_chatbot.py
+```
+**Your test should have passed** ✅ Let's breakdown what happened. 
 
-def test_llm_output():
-    query = "What is the customer success phone line?"
-    expected_output = "Our customer success phone line is 1200-231-231."
-    test_case = LLMTestCase(query=query, expected_output=expected_output)
-    metric = FactualConsistencyMetric()
-    assert_test(test_case, metrics=[metric])
+The variable `query` mimics a user input, and `actual_output` is a placeholder for what your chatbot's supposed to output based on this query. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an out-of-the-box metric provided by DeepEval for you to evaluate how factually correct your chatbot's output is based on the provided context. This metric score ranges from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
 
+[Read our documentation](https://docs.confident-ai.com/docs/) for more information on how to use additional and create your own custom metric, and tutorials on how to integrate with other tools like LangChain and lLamaIndex.
+
+<br />
+
+## Evaluate your test results
+We offer a [web platform](https://app.confident-ai.com) for you to log and view all test results from `deepeval test run`. Our platform allows you to quickly draw insights on how your metrics are improving with each test run, and to determine the optimal parameters (such as prompt templates, models, retrieval pipeline) for your specific LLM application.
+
+To begin, login from the CLI:
+``` bash
+deepeval login
+```
+Login, create your account, and paste in your API key in the CLI. 
+
+Now run your test file again:
+``` bash
+deepeval test run test_chatbot.py
 ```
 
-After setting up, you can call pytest
+You should see a link being displayed in the CLI once the test has finished running. Paste it in your browser to view results!
 
-```bash
-deepeval test run test_example.py
+<br />
 
-# Output
-Running tests ... ✅
-```
+## Contributing
 
-After running tests, you can view your dashboard on [https://app.confident-ai.com](https://app.confident-ai.com)
+Please read [CONTRIBUTING.md](https://github.com/confident-ai/deepeval/blob/main/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
-## Setting up metrics
+<br />
 
-### Setting up custom metrics
+## Authors
+Built by co-founders of Confident AI. 
+- for anything related to the package, contact jacky@confident-ai.com
+- for anything related to the web platform, contact jeffreyip@confident-ai.com
 
-To define a custom metric, you need to define the `measure` and `is_successful` property.
-
-```python
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics.metric import Metric
-from deepeval.run_test import assert_test
-
-# Run this test
-class LengthMetric(Metric):
-    """This metric checks if the output is more than 3 letters"""
-
-    def __init__(self, minimum_length: int = 3):
-        self.minimum_length = minimum_length
-
-    def measure(self, test_case: LLMTestCase):
-        # sends to server
-        text = test_case.output
-        score = len(text)
-        self.success = bool(score > self.minimum_length)
-        return score
-
-    def is_successful(self):
-        return self.success
-
-    @property
-    def __name__(self):
-        return "Length"
-
-def test_length_metric():
-    metric = LengthMetric()
-    test_case = LLMTestCase(
-        output="This is a long sentence that is more than 3 letters"
-    )
-    assert_test(test_case, [metric])
-```
-
-## Integration with LangChain
-
-DeepEval integrates with common frameworks such as Langchain and lLamaIndex.
-
-# Synthetic Query Generation
-
-![Synthetic Queries](assets/synthetic-query-generation.png)
-
-Synthetic queries allow for quick evaluation of queries related to your prompts. We provide a variety of example queries to help developers get started.
-
-# Dashboard
-
-Set up a simple dashboard in just 1 line of code. Learn more about this in our [documentation](https://docs.confident-ai.com/docs/quickstart/dashboard-app).
-
-![docs/assets/dashboard-app.png](docs/assets/dashboard-screenshot.png)
-
-## About DeepEval
-
-DeepEval simplifies the testing process for Language Learning Model (LLM) applications such as Retrieval Augmented Generation (RAG). Our goal is to make writing tests as simple as writing unit tests in Python.
-
-In the Machine Learning (ML) domain, feedback is often provided as raw evaluation loss, which is a departure from the structured feedback typically seen in software development.
-
-With the increasing deployment of agents, LLMs, and AI, there is a need for a tool that provides the same familiar abstractions and tools found in general software development to ML engineers. The goal is to enable a faster feedback loop to speed up iterative improvements.
-
-DeepEval is a tool designed to simplify and streamline LLM testing. Our aim is to change the way we write, run, automate, and manage our LLM tests.
-
-Welcome to DeepEval.
-
-## 🤝 Connect with us
-
-For onboarding, demos, or inquiries about our roadmap, please schedule a session with us: https://calendly.com/d/z7h-75h-6dz/confident-ai-demo
-
-We recommend starting with our documentation: https://docs.confident-ai.com/docs/
-
-Join our community on Discord: https://discord.gg/a3K9c8GRGt
-
-
-# Authors
-
-Built by the Confident AI Team. For any questions/business enquiries - please contact jacky@confident-ai.com
-
-# Citation
-
-```
-@misc{deepeval,
-  author = {Jacky Wong},
-  title = {DeepEval: Framework to unit test LLMS},
-  year = {2023},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/confident-ai/deepeval}},
-}
-```
-
-# Contributors
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-<a href="https://github.com/confident-ai/deepeval/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=confident-ai/deepeval" />
-</a>
+## Lisence 
+DeepEval is licensed under Apache 2.0 - see the [LICENSE.md](https://github.com/confident-ai/deepeval/blob/main/LICENSE.md) file for details.
 
