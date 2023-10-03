@@ -53,7 +53,8 @@ For these tests, you will need a `test_` prefix for this to be ran in Python.
 
 ```python
 from deepeval.metrics.overall_score import OverallScoreMetric
-from deepeval.test_case import assert_test, LLMTestCase
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test, run_test
 
 def test_0():
     query = "How does photosynthesis work?"
@@ -65,15 +66,15 @@ def test_0():
         query=query,
         output=output,
         expected_output=expected_output,
-        context=context
+        context=context,
     )
     metric = OverallScoreMetric()
     # if you want to make sure that the test returns an error
     assert_test(test_case, metrics=[metric])
-    
+
     # If you want to run the test
     test_result = run_test(test_case, metrics=[metric])
-    # You can also inspect the test result class 
+    # You can also inspect the test result class
     print(test_result.success)
     print(test_result.score)
 
