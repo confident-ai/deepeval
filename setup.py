@@ -23,7 +23,7 @@ setup(
         "tabulate",
         "sentence-transformers",  # for similarity
         "pytest",
-        "typer",
+        "typer==0.9.0",
         "rich",
         "protobuf<=3.20.5",
         "pandas",
