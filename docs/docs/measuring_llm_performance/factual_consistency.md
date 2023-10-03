@@ -19,7 +19,11 @@ assert_factual_consistency(
 Diving into the arguments for `assert_factual_consistency`:
 
 - `output` - the LLM generated text
+
+You will then need one of the following:
 - `context` - the text from which the LLM is supposed to reason and derive conclusions from
+OR
+- `ground_truth` - the answer that you expect to have
 
 ## Factual Consistency As A Metric
 

@@ -38,7 +38,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
             self.model = FactualConsistencyModel(model_name)
         self.minimum_score = minimum_score
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase, return_all_scores: bool = False):
         if test_case.output is None or test_case.context is None:
             raise ValueError("Output or context cannot be None")
 
@@ -51,15 +51,32 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         else:
             raise ValueError("Context must be a string or a list of strings")
 
-        max_score = 0
+        max_context_score = 0
         for c in context_list:
             score = self.model.predict(c, test_case.output)
-            if score > max_score:
-                max_score = score
+            if score > max_context_score:
+                max_context_score = score
 
-        self.success = max_score > self.minimum_score
-        self.score = max_score
-        return max_score
+        ground_truth_score = 0
+        if test_case.expected_output and test_case.expected_output != "-":
+            ground_truth_score = self.model.predict(
+                test_case.expected_output, test_case.output
+            )
+
+        self.success = (
+            max_context_score > self.minimum_score
+            or ground_truth_score > self.minimum_score
+        )
+        self.context_score = max_context_score
+        self.ground_truth_score = ground_truth_score
+        if return_all_scores:
+            return {
+                "context_score": self.context_score,
+                "ground_truth_score": self.ground_truth_score,
+                "max_score": max(max_context_score, ground_truth_score),
+            }
+
+        return max(max_context_score, ground_truth_score)
 
     def is_successful(self) -> bool:
         return self.success
