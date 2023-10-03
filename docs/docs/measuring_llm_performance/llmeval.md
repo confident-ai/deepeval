@@ -6,7 +6,7 @@ Warning - as identified in the G-Eval paper (https://arxiv.org/abs/2303.16634), 
 
 ```python
 import openai
-from deepeval.metrics.llm_eval import LLMEval
+from deepeval.metrics.llm_eval import LLMEvalMetric
 from deepeval.test_cases import LLMTestCase
 
 openai.api_key = openai_api_key
@@ -21,9 +21,10 @@ def make_chat_completion_request(prompt: str):
     )
     return response.choices[0].message.content
 
-metric = LLMEval(
+metric = LLMEvalMetric(
     criteria="How funny it is",
-    completion_function=make_chat_completion_request
+    completion_function=make_chat_completion_request,
+    minimum_score=0.3
 )
 
 test_case = LLMTestCase(output="Mobile phones are rocks.")
@@ -53,3 +54,4 @@ JSON:"""
 ```
 
 - `completion_function` - This expects a callable accepting a text input and returns a string (Similar to OpenAI's completion protocol).
+- `minimum_score` - The minimum score is a score from 0 to 1 that shows the minimum score required to pass a test based on LLMEval. Defaults to 0.5.
