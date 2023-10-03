@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.11"]
+        python-version: ["3.11"]
     steps:
       - uses: actions/checkout@v2
 
@@ -36,7 +36,7 @@ jobs:
         run: |
           python -c "import sys; print(sys.version)"
           python -m pip install --upgrade pip
-          python -m pip requests tqdm transformers pytest tabulate sentence-transformers
+          python -m pip install requests tqdm transformers pytest tabulate sentence-transformers
           python -m pip install . pytest-rerunfailures pytest-asyncio
 
       - name: Run Unit Tests (pytest)
