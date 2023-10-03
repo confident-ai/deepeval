@@ -1,8 +1,18 @@
 # DeepEval - Unit Testing for LLMs
 
-<a href="https://discord.gg/a3K9c8GRGt">
-    <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/a3K9c8GRGt?style=flat">
-</a>
+
+<p align="center">
+    <a>
+        <img alt="Pepy Total Downlods" src="https://img.shields.io/pepy/dt/deepeval">
+    </a>
+    <a href="https://github.com/vector-ai/vectorhub">
+        <img alt="Release" src="https://img.shields.io/github/v/tag/confident-ai/deepeval?label=release">
+    </a>
+    <a href="https://discord.gg/a3K9c8GRGt">
+        <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/a3K9c8GRGt?style=flat">
+    </a>
+</p>
+
 
 **DeepEval** is a simple, yet powerful open source package that allows any developer to unit test LLM outputs in python. DeepEval also integrate seamlessly with CI/CD pipelines, and provide out-of-the-box metrics for you to evaluate your LLM applications on things you care about - such as output factuality, relevancy, bias, and toxicity. 
 
