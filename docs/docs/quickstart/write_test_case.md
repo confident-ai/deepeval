@@ -1,51 +1,50 @@
 # Write a simple test case
-
-To write a test case takes less than 5 minutes and can be done in just a few lines of code.
-
-![3 step process to writing a test case](./../../assets/3-step-metrics.png)
-
-You can write a simple test case as simply as:
-
-```bash
-deepeval test generate test_sample.py
+Create a test file:
+``` bash
+touch test_chatbot.py
 ```
 
-```python
-import os
-import openai
+Open `test_chatbot.py` and write your first test case using Deepeval:
+``` python
+import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
-from deepeval.run_test import assert_test
 from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test
 
-openai.api_key = "sk-XXX"
+def test_case():
+    query = "What if these shoes don't fit?"
+    context = "All customers are eligible for a 30 day full refund at no extra costs."
 
-# Write a sample ChatGPT function
-def generate_chatgpt_output(query: str):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "assistant", "content": "The customer success phone line is 1200-231-231 and the customer success state is in Austin."},
-            {"role": "user", "content": query}
-        ]
-    )
-    llm_output = response.choices[0].message.content
-    return llm_output
-
-def test_factual_consistency():
-    query = "What is the customer success phone line?"
-    context = "Our customer success phone line is 1200-231-231."
-    output = generate_chatgpt_output(query)
-    metric = FactualConsistencyMetric()
-    test_case = LLMTestCase(query=query, context=context, output=output)
-    assert_test(test_case, metrics=[metric])
-
+    # Replace this with the actual output from your LLM application
+    actual_output = "We offer a 30-day full refund at no extra costs."
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+    test_case = LLMTestCase(query=query, output=actual_output, context=context)
+    assert_test(test_case, [factual_consistency_metric])
 ```
-After writing this test, just run: 
+Run `test_chatbot.py` in the CLI:
+```
+deepeval test run test_chatbot.py
+```
+**Your test should have passed** ✅ Let's breakdown what happened. 
 
-```bash
-deepeval test run sample.py
-# If you want to stay with pytest instead
+The variable `query` mimics a user input, and `actual_output` is a placeholder for what your chatbot's supposed to output based on this query. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an out-of-the-box metric provided by DeepEval for you to evaluate how factually correct your chatbot's output is based on the provided context. This metric score ranges from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
+
+[Read our documentation](https://docs.confident-ai.com/docs/) for more information on how to use additional and create your own custom metric, and tutorials on how to integrate with other tools like LangChain and lLamaIndex.
+
+<br />
+
+## Evaluate your test results on the web
+We offer a [web platform](https://app.confident-ai.com) for you to log and view all test results from `deepeval test run`. Our platform allows you to quickly draw insights on how your metrics are improving with each test run, and to determine the optimal parameters (such as prompt templates, models, retrieval pipeline) for your specific LLM application.
+
+To begin, login from the CLI:
+``` bash
+deepeval login
+```
+Follow the instructions to login, create your account, and paste in your API key in the CLI. 
+
+Now run your test file again:
+``` bash
+deepeval test run test_chatbot.py
 ```
 
 ## LLMTestCase
