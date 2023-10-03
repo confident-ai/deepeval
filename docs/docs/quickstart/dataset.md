@@ -1,4 +1,4 @@
-# How To Bulk Run Tests
+# How To Run Tests From CSV/JSON
 
 We support bulk-running tests from the following data sources:
 
