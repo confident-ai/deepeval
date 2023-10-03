@@ -1,10 +1,12 @@
-# Create An Evaluation Dataset
+# How To Bulk Run Tests
 
-An evaluation dataset is a way to load in:
+We support bulk-running tests from the following data sources:
 
 - CSV files
 - JSON files
 - Custom data sources (to be supported soon)
+
+This allows non-technical engineers to load in lots of tests.
 
 ## Defining A Dataset
 
