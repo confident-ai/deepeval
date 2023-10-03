@@ -53,8 +53,7 @@ For these tests, you will need a `test_` prefix for this to be ran in Python.
 
 ```python
 from deepeval.metrics.overall_score import OverallScoreMetric
-from deepeval import assert_test, LLMTestCase
-
+from deepeval.test_case import assert_test, LLMTestCase
 
 def test_0():
     query = "How does photosynthesis work?"
