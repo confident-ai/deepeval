@@ -34,7 +34,6 @@ const sidebars = {
     {
       type: 'category',
       label: 'Evaluating LLMs',
-      collapsible: false,
       items: [
         "framework",
         "measuring_llm_performance/overall_score",
@@ -51,7 +50,6 @@ const sidebars = {
     {
       type: 'category',
       label: 'Evaluating RAG Systems',
-      collapsible: false,
       items: [
         "measuring_llm_performance/ranking_similarity",
       ]
@@ -59,7 +57,6 @@ const sidebars = {
     {
       type: 'category',
       label: 'Evaluating Image Systems',
-      collapsible: false,
       items: [
         "image/image_similarity",
       ]
@@ -77,7 +74,6 @@ const sidebars = {
     {
       type: "category",
       label: "Tutorials",
-      collapsible: false,
       items: [
         "tutorials/evaluating-llamaindex",
         "tutorials/evaluating-langchain",
@@ -88,7 +84,6 @@ const sidebars = {
     {
       type: "category",
       label: "Utilities",
-      collapsible: false,
       items: ["utilities/retry"]
     }
   ],
