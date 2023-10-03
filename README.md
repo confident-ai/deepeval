@@ -1,5 +1,4 @@
 # DeepEval - Unit Testing for LLMs
-[![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
 <a href="https://discord.gg/a3K9c8GRGt">
     <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/a3K9c8GRGt?style=flat">
 </a>
