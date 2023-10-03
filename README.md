@@ -2,9 +2,9 @@
 [![](https://dcbadge.vercel.app/api/server/a3K9c8GRGt)](https://discord.gg/a3K9c8GRGt)
 [![PyPI version](https://badge.fury.io/py/deepeval.svg)](https://badge.fury.io/py/deepeval)
 
-**Deepeval** is a simple, yet powerful open source package that allows any developer to unit test LLM outputs in python. We also integrate seamlessly with your CI/CD pipeline, and provide you out-of-the-box metric for you to evaluate your LLM applications on things you care about - such as output factuality, relevancy, biasness, and toxicity. 
+**DeepEval** is a simple, yet powerful open source package that allows any developer to unit test LLM outputs in python. DeepEval also integrate seamlessly with CI/CD pipelines, and provide out-of-the-box metrics for you to evaluate your LLM applications on things you care about - such as output factuality, relevancy, bias, and toxicity. 
 
-May it be a RAG or fine-tuning, we make it easy to develope, deploy, and productionize LLM applications with confidence.
+Whether you're using RAG or fine-tuning, we make it easy to develop, deploy, and productionize LLM applications with confidence.
 
 <br />
 
@@ -15,7 +15,7 @@ Let's pretend your LLM application is a customer support chatbot, here's how Dee
 ```
 pip install -U deepeval
 ```
-### Write your first test case
+### Writing your first test case
 Create a test file:
 ``` bash
 touch test_chatbot.py
@@ -35,7 +35,7 @@ def my_first_llm_test_case():
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra costs."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
-    test_case = LLMTestCase(output=actual_output, context=context)
+    test_case = LLMTestCase(query=query, output=actual_output, context=context)
     assert_test(test_case, [factual_consistency_metric])
 ```
 Run `test_chatbot.py` in the CLI:
@@ -50,14 +50,14 @@ The variable `query` mimics a user input, and `actual_output` is a placeholder f
 
 <br />
 
-## Evaluate your test results
+## Evaluate your test results on the web
 We offer a [web platform](https://app.confident-ai.com) for you to log and view all test results from `deepeval test run`. Our platform allows you to quickly draw insights on how your metrics are improving with each test run, and to determine the optimal parameters (such as prompt templates, models, retrieval pipeline) for your specific LLM application.
 
 To begin, login from the CLI:
 ``` bash
 deepeval login
 ```
-Login, create your account, and paste in your API key in the CLI. 
+Follow the instructions to login, create your account, and paste in your API key in the CLI. 
 
 Now run your test file again:
 ``` bash
