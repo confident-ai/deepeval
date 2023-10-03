@@ -30,7 +30,7 @@ from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test
 
-def my_first_llm_test_case():
+def test_case():
     query = "What if these shoes don't fit?"
     context = "All customers are eligible for a 30 day full refund at no extra costs."
 
