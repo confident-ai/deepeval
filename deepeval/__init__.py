@@ -26,7 +26,6 @@ def check_for_update():
         import requests
 
         try:
-
             response = requests.get("https://pypi.org/pypi/deepeval/json")
             latest_version = response.json()["info"]["version"]
 
@@ -41,6 +40,7 @@ def check_for_update():
             requests.exceptions.SSLError,
             requests.exceptions.Timeout,
         ):
+            # when pypi servers go down
             pass
     except ModuleNotFoundError:
         # they're just getting the versione
