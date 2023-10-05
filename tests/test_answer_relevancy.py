@@ -6,6 +6,7 @@ from deepeval.metrics.answer_relevancy import (
     AnswerRelevancyMetric,
     assert_answer_relevancy,
 )
+from deepeval.metrics.answer_relevancy import is_answer_relevant
 from deepeval.run_test import run_test, assert_test
 from .utils import assert_viable_score
 
@@ -15,6 +16,10 @@ answer = "Python is a programming language?"
 
 def test_answer_relevancy():
     assert_answer_relevancy(query, answer, minimum_score=0.5)
+
+
+def test_answer_relevancy():
+    assert is_answer_relevant(query, answer, minimum_score=0.5)
 
 
 def test_answer_not_relevant():
