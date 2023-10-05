@@ -10,17 +10,8 @@ from deepeval.metrics.answer_relevancy import is_answer_relevant
 query = "What is Python?"
 answer = "Python is a programming language?"
 
-assert_answer_relevancy(query, output=output, minimum_score=0.5)
+assert is_answer_relevant(query=query, output=output, minimum_score=0.5)
 
-```
-
-
-```python
-from deepeval.metrics.answer_relevancy import is_answer_relevant
-
-query = "What is Python?"
-answer = "Python is a programming language?"
-assert_answer_relevancy(query, output=answer, minimum_score=0.5)
 ```
 
 ### Parameters

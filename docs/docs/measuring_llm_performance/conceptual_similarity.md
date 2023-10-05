@@ -15,9 +15,9 @@ While they are both relevant and may not be hallucinating - it's important to no
 ## Assert Conceptual Similarity
 
 ```python
-from deepeval.metrics.conceptual_similarity import assert_conceptual_similarity
+from deepeval.metrics.conceptual_similarity import is_conceptually_similar
 
-assert_conceptual_similarity(
+assert is_conceptually_similar(
     output="python is a programming language",
     expected_output="Python is a snake.",
     minimum_score=0.3

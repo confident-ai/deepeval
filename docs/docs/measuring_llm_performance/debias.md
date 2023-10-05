@@ -16,9 +16,9 @@ Bias, however, is a very vague term so the paper focuses on bias in the followin
 ## Assert UnBiased
 
 ```python
-from deepeval.metrics.bias_classfier import assert_unbiased
+from deepeval.metrics.bias_classfier import is_unbiased
 
-assert_unbiased(text="I can presume bias only exists in Tanzania")
+assert is_unbiased(text="I can presume bias only exists in Tanzania")
 ```
 
 ## UnBiased as a Metric

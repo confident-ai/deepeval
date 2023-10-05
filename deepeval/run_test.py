@@ -195,3 +195,22 @@ def assert_test(
         min_success=min_success,
         raise_error=True,
     )
+
+
+def is_test_passing(
+    test_cases: Union[LLMTestCase, List[LLMTestCase]],
+    metrics: List[Metric],
+    max_retries: int = 1,
+    delay: int = 1,
+    min_success: int = 1,
+) -> bool:
+    """Check if a test is passing"""
+    test_results = run_test(
+        test_cases=test_cases,
+        metrics=metrics,
+        max_retries=max_retries,
+        delay=delay,
+        min_success=min_success,
+        raise_error=False,
+    )
+    return all(result.success for result in test_results)
