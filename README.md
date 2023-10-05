@@ -32,7 +32,9 @@ pip install -U deepeval
 
 
 ### [Optional] Create an account
-Creating an account on our platform would allow you to log test results to our platform, which allows you to easily keep track of changes and performances over iterations. This step is optional and you can run test cases even without logging in, but we highly recommend giving it a try. To login, run:
+Creating an account on our platform would allow you to log test results to our platform, which allows you to easily keep track of changes and performances over iterations. This step is optional and you can run test cases even without logging in, but we highly recommend giving it a try. 
+
+To login, run:
 ```
 deepeval login
 ```
