@@ -5,7 +5,19 @@ We provide a simple interface for ensuring question-answering relevancy powered 
 ## Assert Answer Relevancy
 
 ```python
-from deepeval.metrics.answer_relevancy import assert_answer_relevancy
+from deepeval.metrics.answer_relevancy import is_answer_relevant
+
+query = "What is Python?"
+answer = "Python is a programming language?"
+
+assert_answer_relevancy(query, output=output, minimum_score=0.5)
+
+```
+
+
+```python
+from deepeval.metrics.answer_relevancy import is_answer_relevant
+
 query = "What is Python?"
 answer = "Python is a programming language?"
 assert_answer_relevancy(query, output=answer, minimum_score=0.5)

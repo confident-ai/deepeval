@@ -69,6 +69,16 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         return "Factual Consistency"
 
 
+def is_factually_consistent(
+    output: str, context: str, minimum_score: float = 0.3
+) -> bool:
+    """Check if the output is factually consistent with the context."""
+
+    metric = FactualConsistencyMetric(minimum_score=minimum_score)
+    test_case = LLMTestCase(output=output, context=context)
+    return metric.measure(test_case) >= minimum_score
+
+
 def assert_factual_consistency(
     output: str, context: str, minimum_score: float = 0.3
 ):
