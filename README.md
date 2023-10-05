@@ -18,24 +18,28 @@
 
 Whether you're using RAG or fine-tuning, we make it easy to develop, deploy, and productionize LLM applications with confidence.
 
+<hr />
 <br />
 
 ## Getting Started 🚀
 Let's pretend your LLM application is a customer support chatbot, here's how Deepeval can help test what you've built.
+
 
 ### Installation
 ```
 pip install -U deepeval
 ```
 
-### (Optional) Login
-Logging into our platform would allow you to log test results to our platform, which we will display nicely on a web UI.
+
+### [Optional] Create an account
+Creating an account on our platform would allow you to log test results to our platform, which we will display nicely on a web UI.
 
 This step is optional and you can run test cases even without logging in. To login run:
 ```
 deepeval login
 ```
 Follow the instructions in the CLI to create an account, copy your API key, and paste your API key in the CLI. All test cases will automatically be logged.
+
 
 ### Writing your first test case
 Create a test file:
@@ -70,9 +74,10 @@ The variable `query` mimics a user input, and `actual_output` is a placeholder f
 
 [Read our documentation](https://docs.confident-ai.com/docs/) for more information on how to use additional and create your own custom metric, and tutorials on how to integrate with other tools like LangChain and lLamaIndex.
 
+<hr />
 <br />
 
-## Evaluate your test results on the web
+## Evaluate your test results on our platform
 We offer a [web platform](https://app.confident-ai.com) for you to log and view all test results from `deepeval test run`. Our platform allows you to quickly draw insights on how your metrics are improving with each test run, and to determine the optimal parameters (such as prompt templates, models, retrieval pipeline) for your specific LLM application.
 
 To begin, login from the CLI:
