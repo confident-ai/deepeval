@@ -27,6 +27,16 @@ Let's pretend your LLM application is a customer support chatbot, here's how Dee
 ```
 pip install -U deepeval
 ```
+
+### (Optional) Login
+Logging into our platform would allow you to log test results to our platform, which we will display nicely on a web UI.
+
+This step is optional and you can run test cases even without logging in. To login run:
+```
+deepeval login
+```
+Follow the instructions in the CLI to create an account, copy your API key, and paste your API key in the CLI. All test cases will automatically be logged.
+
 ### Writing your first test case
 Create a test file:
 ``` bash
