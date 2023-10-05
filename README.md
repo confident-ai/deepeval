@@ -14,7 +14,7 @@
 </p>
 
 
-**DeepEval** is a simple, yet powerful open source package that allows any developer to unit test LLM outputs in python. DeepEval also integrate seamlessly with CI/CD pipelines, and provide out-of-the-box metrics for you to evaluate your LLM applications on things you care about - such as output factuality, relevancy, bias, and toxicity. 
+**DeepEval** is an open-science and open-source evaluation effort that applies cutting-edge research into evaluation benchmarks. It aims to make evaluation accessible for all developers and engineers to unit test LLMs in python. DeepEval allows engineers/developers to integrate seamlessly with CI/CD pipelines, and provide out-of-the-box metrics for you to evaluate your LLM applications on things you care about - such as output factuality, relevancy, bias, and toxicity.
 
 Whether you're using RAG or fine-tuning, we make it easy to develop, deploy, and productionize LLM applications with confidence.
 
@@ -26,13 +26,14 @@ Let's pretend your LLM application is a customer support chatbot, here's how Dee
 
 
 ### Installation
+
 ```
 pip install -U deepeval
 ```
 
 
 ### [Optional] Create an account
-Creating an account on our platform would allow you to log test results to our platform, which allows you to easily keep track of changes and performances over iterations. This step is optional and you can run test cases even without logging in, but we highly recommend giving it a try. 
+Creating an account on our platform would allow you to log test results to our platform, which allows you to easily keep track of changes and performances over iterations. This step is optional and you can run test cases even without logging in, but we highly recommend giving it a try.
 
 To login, run:
 ```
