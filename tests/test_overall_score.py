@@ -63,7 +63,6 @@ class TestOverallScore:
             expected_output=expected_output,
             context="He doesn't know how to code",
         )
-        score_3 = self.metric.measure(test_case)
         test_case_2 = LLMTestCase(
             query=query,
             output=output,
@@ -102,6 +101,7 @@ class TestOverallScore:
 
     def test_overall_score_metric_no_query(self):
         test_case = LLMTestCase(
+            query="placeholder",
             output=output,
             expected_output=expected_output,
             context=context,
@@ -110,6 +110,7 @@ class TestOverallScore:
 
     def test_overall_score_metric_no_query_no_context(self):
         test_case = LLMTestCase(
+            query="placeholder",
             output=output,
             expected_output=expected_output,
         )
