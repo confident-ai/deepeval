@@ -29,7 +29,7 @@ class LLMTestCase(TestCase):
             raise ValueError("Query cannot be empty")
         elif self.output is None:
             raise ValueError("Output cannot be empty")
-        
+
         self.__name__ = f"LLMTestCase_{self.id}"
 
 
