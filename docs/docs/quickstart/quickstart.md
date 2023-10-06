@@ -1,6 +1,7 @@
 # QuickStart - Get Started In 5 Minutes
 
-## Why run this quickstart? 
+## Why run this quickstart?
+
 - Learn about DeepEval in under 5 minutes
 - Run your first set of test via our CLI
 - View your test results in our dashboard
@@ -17,8 +18,8 @@ Note: this step is entirely optional if you do not wish to track your results bu
 # Configure your login
 deepeval login
 
-# If you have project name and api key 
-deepeval login --api-key $API_KEY --implementation-name "sample"
+# If you have project name and api key
+deepeval login --api-key $API_KEY
 ```
 
 Once you have logged in, you can generate a sample test file as shown below. This test file allows you to quickly get started modifying it with various tests. (More on this later)
@@ -31,7 +32,7 @@ Once you have generated the test file, you can then run tests as shown.
 
 ```bash
 deepeval test run test_sample.py
-# if you wish to fail first 
+# if you wish to fail first
 deepeval test run -x test_sample.py
 # If you want to run an interactive debugger when a test fails
 deepeval test run --pdb test_sample.py
@@ -113,7 +114,7 @@ When you run this code, it will spin up a quick server for you to review your da
 
 This synthetic creator dashboard allows you to automatically review the text cases in your dataset.
 
-Simply click "Add Test Case" to add a new row to the dataset or click the "X" button to the left to remove if you don't think the generated synthetic question was worth it. 
+Simply click "Add Test Case" to add a new row to the dataset or click the "X" button to the left to remove if you don't think the generated synthetic question was worth it.
 
 Once you finish reviewing the synthetic data, name your file and hit "Save File".
 
@@ -173,4 +174,3 @@ def test_customer_chatbot(test_case: dict):
 ## What next?
 
 We recommend diving into [creating a dataset](dataset) to learn how to run tests in bulk or [defining custom metrics](../quickstart/custom-metrics) so you can support writing custom tests and metrics for your own use cases.
-
