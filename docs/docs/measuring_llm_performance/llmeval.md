@@ -27,7 +27,7 @@ metric = LLMEvalMetric(
     minimum_score=0.3
 )
 
-test_case = LLMTestCase(output="Mobile phones are rocks.")
+test_case = LLMTestCase(query="This is an example input", output="Mobile phones are rocks.")
 score = metric.measure(test_case)
 ```
 
@@ -41,7 +41,7 @@ metric.measure(test_case, include_reason=True)
 
 When instantiating `LLMEvalMetric`, there are a few arguments to go over.
 
-- `prompt_template` - this is the template that we are using in order to fill in the criteria and text. This template must have `criteria` and `text` as a string in order to provide a useful prompt. For example: 
+- `prompt_template` - this is the template that we are using in order to fill in the criteria and text. This template must have `criteria` and `text` as a string in order to provide a useful prompt. For example:
 
 ```
 prompt_template = """For the following criteria, evaluate the text, state the reason and then return a score in a JSON with the key `reason` and `score` out of 100 with 100 being that it follows the criteria and 1 being that it does not.

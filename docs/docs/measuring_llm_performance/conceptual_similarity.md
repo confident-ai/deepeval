@@ -7,6 +7,7 @@ Asserting for conceptual similarity allows developers to ensure that the expecte
 For example - when asked:
 
 How big is this apple?
+
 - 12 square feet
 - The size of an orange
 
@@ -40,7 +41,7 @@ from deepeval.run_test import run_test, assert_test
 from deepeval.test_case import LLMTestCase
 
 metric = ConceptualSimilarityMetric(minimum_score=0.3)
-test_case = LLMTestCase(output=output, context=context)
+test_case = LLMTestCase(query="This is an example input", output=output, context=context)
 
 # If you want to run a test, log it and check results
 run_test(test_case, metrics=[metric])

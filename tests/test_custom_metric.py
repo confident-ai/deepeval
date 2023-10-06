@@ -31,6 +31,7 @@ class LengthMetric(Metric):
 def test_length_metric():
     metric = LengthMetric()
     test_case = LLMTestCase(
+        query="placeholder",
         output="This is a long sentence that is more than 3 letters"
     )
     assert_test(test_case, [metric])
