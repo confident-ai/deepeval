@@ -13,9 +13,10 @@
     </a>
 </p>
 
-**DeepEval** is an open-source package that integrates research into evaluation benchmarks, enabling developers to unit test LLM outputs in Python. It seamlessly integrates with CI/CD pipelines, providing out-of-the-box metrics for evaluating your LLM applications on aspects such as output factuality, relevancy, bias, and toxicity. As part of an open-science evaluation effort, DeepEval aims to make evaluation accessible for all developers and engineers, fostering a more robust and reliable development of LLMs.
+**DeepEval** is a tool that helps developers evaluate the outputs of Large Language Models (LLMs) using Python. It can easily connect with your Continuous Integration/Continuous Delivery (CI/CD) systems, offering ready-made metrics to assess characteristics of your LLM apps, like faithfulness, accuracy, relevance, bias, and harmful language. DeepEval's goal is to make this checking process user-friendly for all developers to encourage the creation of robust LLM applications.
 
-Whether you're using RAG or fine-tuning, we make it easy to develop, deploy, and productionize LLM applications with confidence.
+As an open science effort, we welcome contributions from researchers/scientists with research papers/open source repositories. Feel free to also file a Github feature request.
+
 
 <hr />
 <br />
