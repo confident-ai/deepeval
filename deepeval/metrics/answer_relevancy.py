@@ -90,3 +90,18 @@ def assert_answer_relevancy(
     )
     test_case = LLMTestCase(query=query, output=output)
     assert_test(test_case, metrics=[metric])
+
+
+def is_answer_relevant(
+    query: str,
+    output: str,
+    minimum_score: float = 0.5,
+    model_type: str = "default",
+) -> bool:
+    """Check if the output is relevant to the query."""
+
+    metric = AnswerRelevancyMetric(
+        minimum_score=minimum_score, model_type=model_type
+    )
+    test_case = LLMTestCase(query=query, output=output)
+    return metric.measure(test_case) >= minimum_score

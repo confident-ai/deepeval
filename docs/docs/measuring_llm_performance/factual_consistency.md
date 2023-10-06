@@ -7,8 +7,10 @@ Factual consistency refers to the accuracy and reliability of information presen
 DeepEval offers an opinionated method for factual consistency based on entailment score.
 
 ```python
-from deepeval.metrics.factual_consistency import assert_factual_consistency
-assert_factual_consistency(
+from deepeval.metrics.factual_consistency import is_factually_consistent
+
+
+assert is_factually_consistent(
     output="Sarah spent the evening at the library, engrossed in a book.",
     context="After a long day at work, Sarah decided to go for a walk in the park to unwind. She put on her sneakers and grabbed her headphones before heading out. As she strolled along the path, she noticed families having picnics, children playing on the playground, and ducks swimming in the pond."
 )
@@ -32,7 +34,7 @@ from deepeval.run_test import assert_test, run_test
 metric = FactualConsistencyMetric(minimum_score=0.5)
 test_case = LLMTestCase(output=output, context=context)
 
-# If you want to run a test, log it and check results
+# If you want to run a test, log it and check the score
 run_test(test_case, metrics=[metric])
 
 # If you want to make sure a test passes
