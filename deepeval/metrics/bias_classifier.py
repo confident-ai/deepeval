@@ -70,3 +70,14 @@ def assert_unbiased(
     metric = UnBiasedMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(output=text)
     assert_test(test_case, [metric])
+
+
+def is_unbiased(
+    text: str,
+    minimum_score: float = 0.5,
+) -> bool:
+    """Check if the text is unbiased."""
+
+    metric = UnBiasedMetric(minimum_score=minimum_score)
+    test_case = LLMTestCase(output=text)
+    return metric.measure(test_case) >= minimum_score

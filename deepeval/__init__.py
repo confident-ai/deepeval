@@ -24,8 +24,8 @@ def compare_versions(version1, version2):
 def check_for_update():
     try:
         import requests
-        try:
 
+        try:
             response = requests.get("https://pypi.org/pypi/deepeval/json")
             latest_version = response.json()["info"]["version"]
 
@@ -33,11 +33,14 @@ def check_for_update():
                 warnings.warn(
                     f'You are using deepeval version {__version__}, however version {latest_version} is available. You should consider upgrading via the "pip install --upgrade deepeval" command.'
                 )
-        except (requests.exceptions.RequestException, 
-                requests.exceptions.ConnectionError, 
-                requests.exceptions.HTTPError, 
-                requests.exceptions.SSLError,
-                requests.exceptions.Timeout):
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+            requests.exceptions.SSLError,
+            requests.exceptions.Timeout,
+        ):
+            # when pypi servers go down
             pass
     except ModuleNotFoundError:
         # they're just getting the versione

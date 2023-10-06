@@ -1,4 +1,4 @@
-# AnswerLength 
+# Answer Length
 
 Answer Length is simply a character count of model output and intended to balance the case if a model meeting additional eval criteria by simply adding a longer answer, if this becomes the case. 
 - Answer length removes any preceding and trailing spaces, if exists
