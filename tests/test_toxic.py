@@ -25,5 +25,5 @@ def test_non_toxic_2():
 
 def test_non_toxic_metric():
     metric = NonToxicMetric()
-    test_case = LLMTestCase(output=output)
+    test_case = LLMTestCase(query="placeholder", output=output)
     assert_test(test_case, [metric])

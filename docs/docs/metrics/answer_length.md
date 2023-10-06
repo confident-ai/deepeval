@@ -1,6 +1,7 @@
 # Answer Length
 
-Answer Length is simply a character count of model output and intended to balance the case if a model meeting additional eval criteria by simply adding a longer answer, if this becomes the case. 
+Answer Length is simply a character count of model output and intended to balance the case if a model meeting additional eval criteria by simply adding a longer answer, if this becomes the case.
+
 - Answer length removes any preceding and trailing spaces, if exists
 - Originally intended for use in natural language models to measure brevity, however it may also be relevent for additional modalities if the user feels it relevant.
 
@@ -16,6 +17,7 @@ def generate_llm_output(text_input: str):
 def test_length_metric():
     metric = LengthMetric()
     test_case = LLMTestCase(
+        query="some input",
         output=" some output "
     )
     assert_test(test_case, [metric])
