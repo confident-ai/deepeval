@@ -17,19 +17,22 @@ class TestCase:
 
 @dataclass
 class LLMTestCase(TestCase):
-    expected_output: str = "-"
-    context: Optional[Union[str, List[str]]] = None
-    query: str = None
-    output: str = None
+    def __init__(
+        self,
+        query: str,
+        output: str,
+        expected_output: str = "-",
+        context: Optional[Union[str, List[str]]] = None,
+        id: Optional[str] = None,
+    ):
+        super().__init__(id)
+        self.query = query
+        self.output = output
+        self.expected_output = expected_output
+        self.context = context
 
     def __post_init__(self):
         super().__post_init__()
-
-        if self.query is None:
-            raise ValueError("Query cannot be empty")
-        elif self.output is None:
-            raise ValueError("Output cannot be empty")
-
         self.__name__ = f"LLMTestCase_{self.id}"
 
 
