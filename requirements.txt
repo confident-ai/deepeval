@@ -7,3 +7,4 @@ sentence-transformers
 detoxify
 tensorflow==2.10.0
 Dbias
+llama-index==0.8.40
