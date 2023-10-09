@@ -29,6 +29,9 @@ class LLMTestCase(TestCase):
         self.query = query
         self.output = output
         self.expected_output = expected_output
+        # Force context to be a list
+        if isinstance(context, str):
+            context = [context]
         self.context = context
 
     def __post_init__(self):
