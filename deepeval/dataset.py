@@ -583,6 +583,8 @@ Respond in JSON format in 1 single line without white spaces an array of JSON wi
             query=response["query"],
             expected_output=response["answer"],
             context=context,
+            # store this as None for now
+            output="-",
         )
         test_cases.append(test_case)
 

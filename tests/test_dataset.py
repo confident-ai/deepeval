@@ -28,7 +28,7 @@ def test_evaluation_dataset():
     assert len(dataset) == 5
 
 
-@pytest.mark.skip(reason="OpenAI costs")
+# @pytest.mark.skip(reason="OpenAI costs")
 def test_create_synthetic_dataset():
     """
     test for creating a synthetic dataset
