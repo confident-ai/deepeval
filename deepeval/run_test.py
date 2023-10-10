@@ -134,47 +134,47 @@ def run_test(
     if isinstance(test_cases, TestCase):
         test_cases = [test_cases]
 
-        test_results = []
-        for test_case in test_cases:
-            failed_metrics = []
-            for metric in metrics:
-                test_start_time = time.perf_counter()
+    test_results = []
+    for test_case in test_cases:
+        failed_metrics = []
+        for metric in metrics:
+            test_start_time = time.perf_counter()
 
-                @retry(
-                    max_retries=max_retries,
-                    delay=delay,
-                    min_success=min_success,
-                )
-                def measure_metric():
-                    score = metric.measure(test_case)
-                    success = metric.is_successful()
-                    test_result = create_test_result(
-                        test_case, success, score, metric
-                    )
-                    test_results.append(test_result)
-
-                    # Load the test_run and add the test_case regardless of the success of the test
-                    test_end_time = time.perf_counter()
-                    run_duration = test_end_time - test_start_time
-                    if os.getenv(PYTEST_RUN_ENV_VAR):
-                        test_run = TestRun.load()
-                        metric.score = score
-                        test_run.add_llm_test_case(
-                            test_case=test_case,
-                            metrics=[metric],
-                            run_duration=run_duration,
-                        )
-                        test_run.save()
-
-                    if not success:
-                        failed_metrics.append((metric.__name__, score))
-
-                measure_metric()
-
-        if raise_error and failed_metrics:
-            raise AssertionError(
-                f"Metrics {', '.join([f'{name} (Score: {score})' for name, score in failed_metrics])} failed."
+            @retry(
+                max_retries=max_retries,
+                delay=delay,
+                min_success=min_success,
             )
+            def measure_metric():
+                score = metric.measure(test_case)
+                success = metric.is_successful()
+                test_result = create_test_result(
+                    test_case, success, score, metric
+                )
+                test_results.append(test_result)
+
+                # Load the test_run and add the test_case regardless of the success of the test
+                test_end_time = time.perf_counter()
+                run_duration = test_end_time - test_start_time
+                if os.getenv(PYTEST_RUN_ENV_VAR):
+                    test_run = TestRun.load()
+                    metric.score = score
+                    test_run.add_llm_test_case(
+                        test_case=test_case,
+                        metrics=[metric],
+                        run_duration=run_duration,
+                    )
+                    test_run.save()
+
+                if not success:
+                    failed_metrics.append((metric.__name__, score))
+
+            measure_metric()
+
+    if raise_error and failed_metrics:
+        raise AssertionError(
+            f"Metrics {', '.join([f'{name} (Score: {score})' for name, score in failed_metrics])} failed."
+        )
 
     return test_results
 
