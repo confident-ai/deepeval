@@ -8,10 +8,14 @@ A `fixture` is a fundamental part of Pytest, which allows for setup code to be w
 
 :::
 
-To log the configuration, we run the following:
+You can log configuration by adding the following to your log script
 
 ```python
 @pytest.fixture
 def run_configuration() -> dict:
     return {"model": "gpt2"}
 ```
+
+:::warning
+Make sure that you return a JSON-decodable object. Failure to do so will cause the test to not log.
+:::
