@@ -11,6 +11,9 @@
 # )
 import warnings
 import re
+
+# Optionally add telemtry
+import telemetry
 from ._version import __version__
 
 
