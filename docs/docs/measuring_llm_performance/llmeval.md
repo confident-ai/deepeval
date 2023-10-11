@@ -6,7 +6,7 @@ Warning - as identified in the G-Eval paper (https://arxiv.org/abs/2303.16634), 
 
 ```python
 import openai
-from deepeval.metrics.llm_eval import LLMEvalMetric
+from deepeval.metrics.llm_eval_metric import LLMEvalMetric
 from deepeval.test_cases import LLMTestCase
 
 openai.api_key = openai_api_key
