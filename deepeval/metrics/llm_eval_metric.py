@@ -17,12 +17,12 @@ def make_chat_completion_request(prompt: str):
     return response.choices[0].message.content
 
 
-class LLMMetricResponse(BaseModel):
+class LLMEvalMetricResponse(BaseModel):
     score: float
     reason: str
 
 
-class LLMMetric(Metric):
+class LLMEvalMetric(Metric):
     def __init__(
         self,
         name: str,
@@ -51,7 +51,7 @@ JSON:"""
         return self.name
 
     def measure(self, test_case: LLMTestCase, include_reason: bool = False):
-        """Measure out the LLM metric."""
+        """Measure out the LLM evaluated metric."""
         # Measure the test case
         prompt: dict = self.prompt_template.format(
             text=test_case.output, criteria=self.criteria
