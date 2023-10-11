@@ -54,13 +54,13 @@ const sidebars = {
         "measuring_llm_performance/ranking_similarity",
       ]
     },
-    {
-      type: 'category',
-      label: 'Evaluating Image Systems',
-      items: [
-        "image/image_similarity",
-      ]
-    },
+    // {
+    //   type: 'category',
+    //   label: 'Evaluating Image Systems',
+    //   items: [
+    //     "image/image_similarity",
+    //   ]
+    // },
     {
       type: 'category',
       label: 'Metrics',
