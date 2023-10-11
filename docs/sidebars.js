@@ -85,6 +85,11 @@ const sidebars = {
       type: "category",
       label: "Utilities",
       items: ["utilities/retry"]
+    },
+    {
+      type: "category",
+      label: "Other",
+      items: ["other/telemetry"]
     }
   ],
 };
