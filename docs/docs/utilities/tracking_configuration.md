@@ -8,9 +8,10 @@ A `fixture` is a fundamental part of Pytest, which allows for setup code to be w
 
 :::
 
-You can log configuration by adding the following to your log script
+You can log configuration by adding the following to your test script
 
 ```python
+# test_bias.py
 @pytest.fixture
 def run_configuration() -> dict:
     return {"model": "gpt2"}
