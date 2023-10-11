@@ -12,6 +12,11 @@ output = "Winners of the FIFA world cup were the French national football team"
 metric = UnBiasedMetric()
 
 
+@pytest.fixture
+def run_configuration() -> dict:
+    return {"model": "gpt2"}
+
+
 def test_non_toxic():
     assert_test(
         test_cases=LLMTestCase(
