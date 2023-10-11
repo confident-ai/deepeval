@@ -1,5 +1,5 @@
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.llm_metric import LLMMetric
+from deepeval.metrics.llm_eval_metric import LLMEvalMetric
 
 
 def generate_chatgpt3(prompt):
@@ -9,7 +9,7 @@ def generate_chatgpt3(prompt):
 
 def test_chat_completion():
     """Test Chat Completion"""
-    metric = LLMMetric(
+    metric = LLMEvalMetric(
         name="Validity",
         criteria="The response is a valid response to the prompt.",
         completion_function=generate_chatgpt3,
