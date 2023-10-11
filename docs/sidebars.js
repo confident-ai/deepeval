@@ -84,7 +84,10 @@ const sidebars = {
     {
       type: "category",
       label: "Utilities",
-      items: ["utilities/retry"]
+      items: [
+        "utilities/retry",
+        "utilities/tracking_configuration"
+      ]
     },
     {
       type: "category",
