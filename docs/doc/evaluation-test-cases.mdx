@@ -188,3 +188,24 @@ deepeval login
 ```
 
 Run `deepeval test run test_assert_example.py` in the CLI again to start evaluating results on the web.
+
+## Run A Test Case
+
+`deepeval` also offers an option to quickly run test cases without going through the CLI or creating a test file.
+
+```python
+from deepeval.run_test import run_test
+
+prompt = prompt_template.format(text="Who's a good boy?")
+context = ["Rocky is a good boy."]
+
+test_case = LLMTestCase(
+    query=prompt,
+    # Replace this with your actual LLM application
+    actual_output=chatbot.run(prompt),
+    expected_output="Me, ruff!",
+    context=context
+)
+metric = FactualConsistencyMetric(minimum_score=0.7)
+run_test(test_case, [metric])
+```

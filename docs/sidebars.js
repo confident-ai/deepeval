@@ -19,5 +19,14 @@ module.exports = {
       ],
       collapsed: false,
     },
+    {
+      type: 'category',
+      label: 'Integrations',
+      items: [
+        'integrations-introduction',
+        'integrations-llamaindex'
+      ],
+      collapsed: false,
+    },
   ]
 }

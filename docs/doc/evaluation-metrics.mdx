@@ -6,7 +6,7 @@ sidebar_label: Metrics
 
 ## Quick Summary
 
-In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM based on specific criteria of interest. Essentially, while the metric acts as the ruler, the test case represents what you're assessing.
+In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, the test case represents what you're assessing.
 
 `deepeval` offers a range of default metrics for you to quickly get started with, which includes:
 
@@ -17,16 +17,29 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
 - Bias
 - RAGAS
 
-`deepeval` offers a straightforward method for you to develop your own LLM-based evaluation metrics. **This is noteworthy because the standard metrics in deepeval are derived from traditional NLP models, not LLMs.**
+`deepeval` also offers you a straightforward way to develop your own custom LLM-based evaluation metrics. **This is noteworthy because the standard metrics in `deepeval` are derived from traditional NLP models, not LLMs.**
 
-## Custom Metrics
+Metrics are measured on a test case. As outlined in the [test cases section](evaluation-test-cases), you may be required to supply the optional `context` and `expected_output` arguments for your `LLMTestCase` depending on the metrics you're evaluating it on.
 
-### LLM Evaluated Metrics
+## Types of Metrics
 
-To create a custom metric that uses LLMs for evaluation, simply instantiate a `LLMEvalMetric` class:
+A _custom metric_ is a type of metric you can create and customize by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versitle and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an _LLM evaluated_ or _classic metric_. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
+
+`deepeval` also offer _default metrics_. All default metrics offered by `deepeval` are classic metrics. This means all default metrics in `deepeval` does not use LLMs for evaluation. This is delibrate for two main reasons:
+
+- LLM evaluated metrics are versitle in nature and it's better if you create one using `deepeval`'s build-ins
+- Classic metrics are much harder to compute and requires extensive research
+
+:::note
+Our suggestion is to begin with custom LLM evaluated metrics (which frequently surpass and offer more versatility than leading NLP models) and gradually transition to default metrics when feasible. We recommend using default metrics as an optimization to your evaluation workflow because they are more cost-effective.
+:::
+
+## Custom LLM Evaluated Metrics
+
+A custom LLM evalated metric, is a custom metric whose evaluation is powered by LLMs. To create a custom metric that uses LLMs for evaluation, simply instantiate an `LLMEvalMetric` class:
 
 ```python
-from deepeval.metrics.llm_eval import LLMEvalMetric
+from deepeval.metrics.llm_eval_metric import LLMEvalMetric
 
 funny_metric = LLMEvalMetric(
     name="Funny",
@@ -35,16 +48,20 @@ funny_metric = LLMEvalMetric(
 )
 ```
 
-There are two mandatory and two optional parameters required when instantiating a `LLMEvalMetric` class:
+There are two mandatory and two optional parameters required when instantiating an `LLMEvalMetric` class:
 
 - `name`
 - `criteria`
 - [Optional] `minimum_score`
 - [Optional] `completion_function`
 
-Every `LLMEvalMetric` returns a score ranging from 0-1 upon evaluation. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
+All instances of `LLMEvalMetric` returns a score ranging from 0-1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
 
-You can also supply a custom `completion_function` if for example you want to utilize different LLM providers to evaluate your test cases. By default, `deepeval` uses the `openai` chat completion function.
+:::info
+`LLMEvalMetric` may or may not not require `context` or `expected_output`, but we recommend providing both arguments where possible for the most accurate scores.
+:::
+
+You can also supply a custom `completion_function` if for example you want to utilize another LLM provider to evaluate your `LLMTestCase`. By default, `deepeval` uses the `openai` chat completion function.
 
 ```python
 def make_chat_completion_request(prompt: str):
@@ -58,18 +75,106 @@ def make_chat_completion_request(prompt: str):
     return response.choices[0].message.content
 ```
 
-### Classic Metrics
+## Custom Classic Metrics
 
-## Default Metrics
+A custom classic metric, is a metric not provided by `deepeval` and whose criteria isn't evaluated using an LLM.
 
-### Factual Consistency
+```python
+from deepeval.metrics.metric import Metric
 
-### Answer Relevancy
+class LengthMetric(Metric):
+    # This metric checks if the output length is greater than 10 characters
+    def __init__(self, max_length: int=10):
+        self.max_length = max_length
 
-### Conceptual Similarity
+    def measure(self, test_case: LLMTestCase):
+        self.success = len(test_case.output) > self.max_length
+        return score
 
-### Toxicity
+    def is_successful(self):
+        return self.success
 
-### Bias
+    @property
+    def name(self):
+        return "Length"
+```
 
-### RAGAS
+Noticed that we accessed `test_case.output` in `measure`. you will have to supply the optional context or expected_output arguments in the `LLMTestCase` depending on your `measure` implementation.
+
+In this example, you would instantiate `LengthMetric` as follows:
+
+```python
+length_metric = LengthMetric(20)
+```
+
+:::info
+You must implement `measure`, `is_successful`, and `name` yourself, as these are abstract methods and properties inherited from `Metric`.
+:::
+
+## Factual Consistency
+
+Factual consistency measures how factually correct the `actual_output` of your LLM application is compared to the provided `context`. You'll have to supply `context` when creating an `LLMTestCase` to evaluate factual consistency.
+
+```python
+import pytest
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test
+
+def test_factual_consistency():
+    query = "What if these shoes don't fit?"
+    context = "All customers are eligible for a 30 day full refund at no extra cost."
+
+    # Replace this with the actual output from your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+    test_case = LLMTestCase(query=query, output=actual_output, context=context)
+    assert_test(test_case, [factual_consistency_metric])
+```
+
+## Answer Relevancy
+
+Answer Relevancy measures how relevant the `actual_output` of your LLM application is compared to the provided `query`. You don't have to supply `context` or `expected_output` when creating an `LLMTestCase` if you're just evaluating answer relevancy.
+
+```python
+import pytest
+from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test
+
+def test_answer_relevancy():
+    query = "What if these shoes don't fit?"
+
+    # Replace this with the actual output from your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
+    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.7)
+    test_case = LLMTestCase(query=query, output=actual_output)
+    assert_test(test_case, [answer_relevancy_metric])
+```
+
+## Conceptual Similarity
+
+Conceptual Similarity measures how conceptually similar the `actual_output` of your LLM application is compared to the provided `context`. You'll have to supply `context` when creating an `LLMTestCase` to evaluate conceptual similarity.
+
+```python
+import pytest
+from deepeval.metrics.conceptual_similarity import ConceptualSimilarityMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test
+
+def test_answer_relevancy():
+    query = "What if these shoes don't fit?"
+    context = "All customers are eligible for a 30 day full refund at no extra cost."
+
+    # Replace this with the actual output from your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
+    conceptual_similarity_metric = ConceptualSimilarityMetric(minimum_score=0.7)
+    test_case = LLMTestCase(query=query, output=actual_output, context=context)
+    assert_test(test_case, [conceptual_similarity_metric])
+```
+
+## Toxicity
+
+## Bias
+
+## RAGAS
