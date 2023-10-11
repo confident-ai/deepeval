@@ -3,3 +3,73 @@ id: evaluation-metrics
 title: Metrics
 sidebar_label: Metrics
 ---
+
+## Quick Summary
+
+In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM based on specific criteria of interest. Essentially, while the metric acts as the ruler, the test case represents what you're assessing.
+
+`deepeval` offers a range of default metrics for you to quickly get started with, which includes:
+
+- Factual Consistency
+- Answer Relevancy
+- Conceptual Similarity
+- Toxicity
+- Bias
+- RAGAS
+
+`deepeval` offers a straightforward method for you to develop your own LLM-based evaluation metrics. **This is noteworthy because the standard metrics in deepeval are derived from traditional NLP models, not LLMs.**
+
+## Custom Metrics
+
+### LLM Evaluated Metrics
+
+To create a custom metric that uses LLMs for evaluation, simply instantiate a `LLMEvalMetric` class:
+
+```python
+from deepeval.metrics.llm_eval import LLMEvalMetric
+
+funny_metric = LLMEvalMetric(
+    name="Funny",
+    criteria="How funny it is",
+    minimum_score=0.5
+)
+```
+
+There are two mandatory and two optional parameters required when instantiating a `LLMEvalMetric` class:
+
+- `name`
+- `criteria`
+- [Optional] `minimum_score`
+- [Optional] `completion_function`
+
+Every `LLMEvalMetric` returns a score ranging from 0-1 upon evaluation. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
+
+You can also supply a custom `completion_function` if for example you want to utilize different LLM providers to evaluate your test cases. By default, `deepeval` uses the `openai` chat completion function.
+
+```python
+def make_chat_completion_request(prompt: str):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt},
+        ],
+    )
+    return response.choices[0].message.content
+```
+
+### Classic Metrics
+
+## Default Metrics
+
+### Factual Consistency
+
+### Answer Relevancy
+
+### Conceptual Similarity
+
+### Toxicity
+
+### Bias
+
+### RAGAS
