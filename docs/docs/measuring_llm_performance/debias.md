@@ -31,7 +31,7 @@ from deepeval import run_test, assert_test
 metric = UnBiasedMetric()
 test_case = LLMTestCase(
     input="This is an example input",
-    output="Devil wing is evil."
+    actual_output="Devil wing is evil."
 )
 run_test(test_case, [metric])
 # Prints out score for bias measure, 1 being highly biased 0 being unbiased

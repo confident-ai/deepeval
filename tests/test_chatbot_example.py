@@ -11,7 +11,7 @@ def test_1():
     )
     context = "Our company specializes in cloud computing, data analytics, and machine learning. We offer a range of services including cloud storage solutions, data analytics platforms, and custom machine learning models."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=1.0)
-    test_case = LLMTestCase(input=input, output=output, context=context)
+    test_case = LLMTestCase(input=input, actual_output=output, context=context)
     with pytest.raises(AssertionError):
         assert_test(test_case, [factual_consistency_metric])
 
@@ -27,5 +27,5 @@ def test_2():
     )
     if factual_consistency_metric_half.minimum_score != 0.5:
         raise ValueError("Minimum score should be 0.5")
-    test_case = LLMTestCase(input=input, output=output, context=context)
+    test_case = LLMTestCase(input=input, actual_output=output, context=context)
     assert_test(test_case, [factual_consistency_metric_half])

@@ -68,7 +68,7 @@ def assert_overall_score(
     metric = OverallScoreMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(
         input=query,
-        output=output,
+        actual_output=output,
         expected_output=expected_output,
         context=context,
     )

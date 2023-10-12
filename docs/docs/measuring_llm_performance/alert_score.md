@@ -28,7 +28,7 @@ from deepeval.run_test import run_test, assert_test
 from deepeval.test_case import LLMTestCase
 
 metric = AlertScoreMetric()
-test_case = LLMTestCase(input="This is an example input", output=output, context=context)
+test_case = LLMTestCase(input="This is an example input", actual_output=output, context=context)
 
 # If you want to run a test, log it and check results
 run_test(test_case, metrics=[metric])

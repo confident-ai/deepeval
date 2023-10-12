@@ -26,7 +26,7 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
         return score
 
     def measure(self, test_case: LLMTestCase, return_all_scores: bool = False):
-        if test_case.output is None:
+        if test_case.actual_output is None:
             raise ValueError("Required attributes for test_case cannot be None")
 
         from Dbias.bias_classification import classifier
@@ -35,7 +35,7 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
             "Run `pip install deepeval[bias]`. If you have, please ignore this warning."
         )
 
-        results = classifier(test_case.output)
+        results = classifier(test_case.actual_output)
         # sample output
         # [{'label': 'Biased', 'score': 0.9938021898269653}]
         if results[0]["label"] == "Biased":
@@ -68,7 +68,7 @@ def assert_unbiased(
     text: str, minimum_score: float = 0.5
 ):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
     metric = UnBiasedMetric(minimum_score=minimum_score)
-    test_case = LLMTestCase(input="placeholder", output=text)
+    test_case = LLMTestCase(input="placeholder", actual_output=text)
     assert_test(test_case, [metric])
 
 
@@ -79,5 +79,5 @@ def is_unbiased(
     """Check if the text is unbiased."""
 
     metric = UnBiasedMetric(minimum_score=minimum_score)
-    test_case = LLMTestCase(input="placeholder", output=text)
+    test_case = LLMTestCase(input="placeholder", actual_output=text)
     return metric.measure(test_case) >= minimum_score

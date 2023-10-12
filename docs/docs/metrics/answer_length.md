@@ -18,7 +18,7 @@ def test_length_metric():
     metric = LengthMetric()
     test_case = LLMTestCase(
         input="some input",
-        output=" some output "
+        actual_output=" some output "
     )
     assert_test(test_case, [metric])
 ```
