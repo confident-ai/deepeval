@@ -28,7 +28,7 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import run_test, assert_test
 metric = AnswerRelevancyMetric(minimum_score=0.5)
-test_case = LLMTestCase(input=query, output=answer)
+test_case = LLMTestCase(input=query, actual_output=answer)
 
 # If you want to run a test, log it and check results
 run_test(test_case, metrics=[metric])

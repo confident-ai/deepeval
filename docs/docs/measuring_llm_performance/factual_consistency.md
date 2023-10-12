@@ -32,7 +32,7 @@ from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test, run_test
 metric = FactualConsistencyMetric(minimum_score=0.5)
-test_case = LLMTestCase(input="This is an example input", output=output, context=context)
+test_case = LLMTestCase(input="This is an example input", actual_output=output, context=context)
 
 # If you want to run a test, log it and check the score
 run_test(test_case, metrics=[metric])

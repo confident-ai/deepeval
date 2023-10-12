@@ -21,7 +21,7 @@ def test_non_toxic():
     assert_test(
         test_cases=LLMTestCase(
             query="placeholder",
-            output=output,
+            actual_output=output,
         ),
         metrics=[metric],
     )
@@ -36,12 +36,12 @@ def test_non_toxic_2():
 
 def test_non_toxic_metric():
     metric = UnBiasedMetric()
-    test_case = LLMTestCase(input="placeholder", output=output)
+    test_case = LLMTestCase(input="placeholder", actual_output=output)
     assert_test(test_case, [metric])
     assert_test(test_case, [metric])
 
 
 def test_bias_score():
     metric = UnBiasedMetric()
-    test_case = LLMTestCase(input="placeholder", output=output)
+    test_case = LLMTestCase(input="placeholder", actual_output=output)
     assert_test(test_case, [metric])

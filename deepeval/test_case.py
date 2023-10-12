@@ -20,14 +20,14 @@ class LLMTestCase(TestCase):
     def __init__(
         self,
         input: str,
-        output: str,
+        actual_output: str,
         expected_output: str = "-",
         context: Optional[Union[str, List[str]]] = None,
         id: Optional[str] = None,
     ):
         super().__init__(id)
         self.input = input
-        self.output = output
+        self.actual_output = actual_output
         self.expected_output = expected_output
         # Force context to be a list
         if isinstance(context, str):

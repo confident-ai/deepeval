@@ -51,6 +51,6 @@ def assert_alert_score(
         input=query,
         expected_output=expected_output,
         context=context,
-        output=output,
+        actual_output=output,
     )
     assert_test(test_case, [metric])

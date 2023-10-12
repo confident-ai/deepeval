@@ -36,7 +36,7 @@ from deepeval.test_case import LLMTestCase
 metric = OverallScoreMetric(minimum_score=0.3)
 test_case = LLMTestCase(
     input="Who won the FIFA World Cup in 2018?",
-    output="French national football team",
+    actual_output="French national football team",
     expected_output="The FIFA World Cup in 2018 was won by the French national football team.",
     context="The FIFA World Cup in 2018 was won by the French national football team. They defeated Croatia 4-2 in the final match to claim the championship.",
 )

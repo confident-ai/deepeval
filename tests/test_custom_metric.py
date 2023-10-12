@@ -14,7 +14,7 @@ class LengthMetric(Metric):
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
-        text = test_case.output
+        text = test_case.actual_output
         score = len(text)
         self.success = score > self.minimum_length
         # Optional: Logs it to the server
@@ -32,6 +32,6 @@ def test_length_metric():
     metric = LengthMetric()
     test_case = LLMTestCase(
         query="placeholder",
-        output="This is a long sentence that is more than 3 letters",
+        actual_output="This is a long sentence that is more than 3 letters",
     )
     assert_test(test_case, [metric])

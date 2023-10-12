@@ -19,7 +19,7 @@ def test_customer_chatbot_simple():
     context = "Our company operates from 10 AM to 6 PM, Monday to Friday."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(input=input, output=output, context=context)
+    test_case = LLMTestCase(input=input, actual_output=output, context=context)
     assert_test(
         test_case, [factual_consistency_metric, answer_relevancy_metric]
     )
@@ -100,7 +100,7 @@ def test_customer_chatbot(test_case: dict):
     context = test_case["context"]
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(input=input, output=output, context=context)
+    test_case = LLMTestCase(input=input, actual_output=output, context=context)
     assert_test(
         test_case, [factual_consistency_metric, answer_relevancy_metric]
     )

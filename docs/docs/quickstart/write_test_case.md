@@ -21,7 +21,7 @@ def test_case():
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra costs."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
-    test_case = LLMTestCase(input=query, output=actual_output, context=context)
+    test_case = LLMTestCase(input=query, actual_output=actual_output, context=context)
     assert_test(test_case, [factual_consistency_metric])
 ```
 

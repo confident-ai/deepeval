@@ -10,7 +10,7 @@ class LengthMetric(Metric):
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
-        score = len(test_case.output.strip())
+        score = len(test_case.actual_output.strip())
         self.success = score > self.minimum_length
         return score
 
