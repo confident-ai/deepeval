@@ -30,6 +30,8 @@ A _custom metric_ is a type of metric you can create and customize by implementi
 - LLM evaluated metrics are versitle in nature and it's better if you create one using `deepeval`'s build-ins
 - Classic metrics are much harder to compute and requires extensive research
 
+All default metrics output a score between 0-1, and require a `minimum_score` argument to instantiate. A default metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
+
 :::note
 Our suggestion is to begin with custom LLM evaluated metrics (which frequently surpass and offer more versatility than leading NLP models) and gradually transition to default metrics when feasible. We recommend using default metrics as an optimization to your evaluation workflow because they are more cost-effective.
 :::

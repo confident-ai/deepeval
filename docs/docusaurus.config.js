@@ -66,11 +66,11 @@ const config = {
             position: 'left',
             label: 'Docs',
           },
-          {
-            to: "docs/tutorial",
-            position: 'left',
-            label: 'Tutorials',
-          },
+          // {
+          //   to: "docs/tutorial",
+          //   position: 'left',
+          //   label: 'Tutorials',
+          // },
           {
             href: "https://confident-ai.com/blog",
             position: 'left',
@@ -103,12 +103,16 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Documentation',
             items: [
               {
-                label: 'Tutorial',
-                to: '/docs/intro',
+                label: 'Introduction',
+                to: '/docs/getting-started',
               },
+              // {
+              //   label: 'Tutorial',
+              //   to: '/docs/intro',
+              // },
             ],
           },
           {

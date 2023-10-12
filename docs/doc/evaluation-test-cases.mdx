@@ -13,7 +13,7 @@ A test case is a blueprint provided by `deepeval` to unit test LLM outputs based
 - [Optional] `expected_output`
 - [Optional] `context`
 
-Except for `actual_output`, all parameters should come from your evaluation dataset (if you have one). Here's an example implementation of a test case:
+Except for `actual_output`, all parameters should originate from your evaluation dataset (if you have one). Here's an example implementation of a test case:
 
 ```python
 test_case = LLMTestCase(
@@ -28,11 +28,11 @@ test_case = LLMTestCase(
 
 However, depending on the specific metric you're evaluating your test case on, you may or may not require an `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating factual consistency you'll have to supply `context` in order for `deepeval` to know what the **ground truth** is.
 
-Let's dive into the purpsoe of each parameter.
+Let's go through the purpsoe of each parameter.
 
 ## Query
 
-A query is the input provided to an LLM, and mimics a user interacting with your LLM application. The query is usually a prompt composed of dynamic data embedded in your prompt template.
+A query is the input provided to an LLM, and mimics a user interacting with your LLM application. The query is usually a prompt composed of dynamic data embedded in a prompt template.
 
 ```python
 prompt_template = """
@@ -52,7 +52,7 @@ test_case = LLMTestCase(
 
 ## Actual Output
 
-An actual output is simply the output your LLM application returns for a given query. This is what your users are going to see. Typcailly, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
+An actual output is simply the output your LLM application returns for a given query. This is what your users are going to interact with. Typcailly, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
 
 Expanding on the previous example:
 
@@ -80,7 +80,7 @@ test_case = LLMTestCase(
 
 An expected output is literally what you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
 
-The expected output also doesn't have to exactly match the actual output in order for your test case to pass, since `deepeval` uses a variety of methods to evaluate your LLM's non-deterministic outputs. Don't worry, we'll dive deeper into this [in the metrics section.](evaluation-metrics)
+The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. Don't worry, we'll dive deeper into this [in the metrics section.](evaluation-metrics)
 
 ```python
 # A hypothetical LLM application example
@@ -104,11 +104,11 @@ test_case = LLMTestCase(
 
 ## Context
 
-The `context` is an optional parameter that signifies additional data received by your LLM application as supplementary sources of truth. You can view it as the segment of your knowledge base relevant to a specific query. Context allows your LLM to generate customized outputs that are outside the scope of the data it was trained on.
+The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of truth. You can view it as the segment of your knowledge base relevant to a specific query. Context allows your LLM to generate customized outputs that are outside the scope of the data it was trained on.
 
 In RAG applications, contextual information is typically stored in your selected vector database. Conversely, for a fine-tuning use case, this data is usually found in training datasets used to fine-tune your model. Providing the appropriate contextual information when constructing your evaluation dataset is one of the most challenging part of evaluating LLMs, since data in your knowledge base can constantly be changing.
 
-Unlike other parameters, a test case accepts either a string or a list of strings.
+Unlike other parameters, a context accepts a list of strings.
 
 ```python
 # A hypothetical LLM application example
@@ -122,7 +122,6 @@ prompt_template = """
 
 prompt = prompt_template.format(text="Who's a good boy?")
 
-# context = "Rocky is good boy." would also work
 context = ["Rocky is a good boy."]
 
 test_case = LLMTestCase(
@@ -135,7 +134,7 @@ test_case = LLMTestCase(
 ```
 
 :::note
-Often times people confuse `expected_output` with `context` since due to their similar level of factual accuracy. However, while both are (or should be) factually correct, expected_output also takes into account aspects like tone and linguistic patterns, whereas context is strictly factual.
+Often times people confuse `expected_output` with `context` since due to their similar level of factual accuracy. However, while both are (or should be) factually correct, `expected_output` also takes aspects like tone and linguistic patterns into account, whereas context is strictly factual.
 :::
 
 ## Assert A Test Case
@@ -181,7 +180,7 @@ In the CLI, run `deepeval test run`:
 deepeval test run test_assert_example.py
 ```
 
-We also highly recommend you to login to **[Confident AI](https://confident-ai.com)** (the platform powering deepeval) via the CLI. This way, you can keep track of all evaluation results generated each time you execute `deepeval test run`. You can also export completed evaluation datasets generated from your test file, view average metric scores, and much more.
+We also highly recommend you to login to **[Confident AI](https://confident-ai.com)** (the platform powering deepeval) via the CLI. This way, you can keep track of all evaluation results generated each time you execute `deepeval test run`. You can also export completed evaluation datasets generated from your test file, view average metric scores for each test run, and much more.
 
 ```
 deepeval login
