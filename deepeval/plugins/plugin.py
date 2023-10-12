@@ -27,15 +27,15 @@ def pytest_runtest_protocol(
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_fixture_setup(fixturedef, request: pytest.FixtureRequest) -> None:
-    print("Fixture setup: ", fixturedef.fixturename)
-    name = fixturedef.fixturename
-    if name == "run_configuration":
-        if fixturedef.cached_result:
-            fixture_value, _, _ = fixturedef.cached_result
-            print("Fixture value: ", fixture_value)
-            test_run: TestRun = TestRun.load(test_filename)
-            test_run.configurations = fixture_value
-            test_filename = test_run.save()
+    if hasattr(fixturedef, "fixturenamea"):
+        name = fixturedef.fixturename
+        if name == "run_configuration":
+            if fixturedef.cached_result:
+                fixture_value, _, _ = fixturedef.cached_result
+                print("Fixture value: ", fixture_value)
+                test_run: TestRun = TestRun.load(test_filename)
+                test_run.configurations = fixture_value
+                test_filename = test_run.save()
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
