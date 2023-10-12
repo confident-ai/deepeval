@@ -22,7 +22,7 @@ from deepeval.run_test import run_test, assert_test
 from deepeval.test_case import LLMTestCase
 
 metric = NonToxicMetric()
-test_case = LLMTestCase(query="This is an example query", output=output)
+test_case = LLMTestCase(input="This is an example query", output=output)
 
 # If you want to run a test, log it and check results
 run_test(test_case, metrics=[metric])

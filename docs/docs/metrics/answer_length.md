@@ -17,7 +17,7 @@ def generate_llm_output(text_input: str):
 def test_length_metric():
     metric = LengthMetric()
     test_case = LLMTestCase(
-        query="some input",
+        input="some input",
         output=" some output "
     )
     assert_test(test_case, [metric])

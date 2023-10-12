@@ -30,7 +30,7 @@ from deepeval import run_test, assert_test
 
 metric = UnBiasedMetric()
 test_case = LLMTestCase(
-    query="This is an example input",
+    input="This is an example input",
     output="Devil wing is evil."
 )
 run_test(test_case, [metric])

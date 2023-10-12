@@ -45,22 +45,22 @@ class AnswerRelevancyMetric(Metric, metaclass=Singleton):
             self.model = AnswerRelevancyModel()
 
     def __call__(self, test_case: LLMTestCase):
-        score = self.measure(test_case.query, test_case.output)
+        score = self.measure(test_case.input, test_case.output)
         self.success = score > self.minimum_score
         return score
 
     def measure(self, test_case: LLMTestCase) -> float:
         from sentence_transformers import util
 
-        if test_case.query is None or test_case.output is None:
+        if test_case.input is None or test_case.output is None:
             raise ValueError("query and output cannot be None")
 
         if isinstance(self.model, CrossEncoderAnswerRelevancyModel):
-            score = self.model.encode(test_case.query, test_case.output)
+            score = self.model.encode(test_case.input, test_case.output)
         else:
             docs = [test_case.output]
             # Encode query and documents
-            query_emb = self.model.encode(test_case.query)
+            query_emb = self.model.encode(test_case.input)
             doc_emb = self.model.encode(docs)
             # Compute dot score between query and all document embeddings
             scores = util.dot_score(query_emb, doc_emb)[0].cpu().tolist()
@@ -88,7 +88,7 @@ def assert_answer_relevancy(
     metric = AnswerRelevancyMetric(
         minimum_score=minimum_score, model_type=model_type
     )
-    test_case = LLMTestCase(query=query, output=output)
+    test_case = LLMTestCase(input=query, output=output)
     assert_test(test_case, metrics=[metric])
 
 
@@ -103,5 +103,5 @@ def is_answer_relevant(
     metric = AnswerRelevancyMetric(
         minimum_score=minimum_score, model_type=model_type
     )
-    test_case = LLMTestCase(query=query, output=output)
+    test_case = LLMTestCase(input=query, output=output)
     return metric.measure(test_case) >= minimum_score

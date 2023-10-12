@@ -28,6 +28,6 @@ class LengthMetric(Metric):
 metric = LengthMetric()
 
 # Defining a custom test case
-test_case = LLMTestCase(query="This is an example input", output="This is an example output")
+test_case = LLMTestCase(input="This is an example input", output="This is an example output")
 run_test(test_case, metrics=[metric])
 ```

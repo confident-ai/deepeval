@@ -11,12 +11,12 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 
 # Define the test case
 def test_customer_chatbot_simple():
-    query = "What are your operating hours?"
+    input = "What are your operating hours?"
     output = "Our operating hours are from 9 AM to 5 PM, Monday to Friday."
     context = "Our company operates from 10 AM to 6 PM, Monday to Friday."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output, context=context)
+    test_case = LLMTestCase(input=input, output=output, context=context)
     assert_test(
         test_case, [factual_consistency_metric, answer_relevancy_metric]
     )
@@ -130,12 +130,12 @@ CHATBOT_TEST_CASES = [
     CHATBOT_TEST_CASES,
 )
 def test_customer_chatbot(test_case: dict):
-    query = test_case["query"]
+    input = test_case["input"]
     output = test_case["output"]
     context = test_case["context"]
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output, context=context)
+    test_case = LLMTestCase(input=input, output=output, context=context)
     assert_test(
         test_case, [factual_consistency_metric, answer_relevancy_metric]
     )
