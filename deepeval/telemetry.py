@@ -1,5 +1,6 @@
 import os
 import socket
+import sys
 
 
 def check_firewall():
@@ -24,6 +25,15 @@ if os.getenv("TURN_OFF_DEEPEVAL_TELEMETRY") != "Y" and not check_firewall():
             # We recommend adjusting this value in production.
             profiles_sample_rate=1.0,
         )
+
+        # Add a global error handler
+        def handle_exception(exc_type, exc_value, exc_traceback):
+            print({"exc_type": exc_type, "exc_value": exc_value})
+            sentry_sdk.capture_exception(exc_value)
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+
+        sys.excepthook = handle_exception
+
     except ModuleNotFoundError:
         # sentry_sdk not installed
         pass

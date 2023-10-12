@@ -13,7 +13,7 @@ import warnings
 import re
 
 # Optionally add telemtry
-from . import telemetry
+from .telemetry import *
 from ._version import __version__
 
 
