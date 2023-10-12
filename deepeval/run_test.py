@@ -1,6 +1,7 @@
 """Function for running test
 """
 import os
+import warnings
 from typing import List, Optional, Union
 import time
 from dataclasses import dataclass
@@ -55,6 +56,15 @@ class TestResult:
     expected_output: str
     metadata: Optional[dict]
     context: str
+
+    def __post_init__(self):
+        """Ensures score is between 0 and 1 after initialization"""
+        original_score = self.score
+        self.score = min(max(0, self.score), 1)
+        if self.score != original_score:
+            warnings.warn(
+                "The score was adjusted to be within the range [0, 1]."
+            )
 
     def __gt__(self, other: "TestResult") -> bool:
         """Greater than comparison based on score"""
