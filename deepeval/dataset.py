@@ -565,8 +565,8 @@ def create_evaluation_query_answer_pairs(
     prompt = f"""You are generating {n} sets of of query-answer pairs to create an evaluation dataset based on the below context.
 Context: {context}
 
-Respond in JSON format in 1 single line without white spaces an array of JSON with the keys `query` and `answer`.
-"""
+Respond in JSON format in 1 single line without white spaces an array of JSON with the keys `query` and `answer`. Do not use any other keys in the response.
+JSON:"""
     for _ in range(3):
         try:
             responses = generate_chatgpt_output(
@@ -575,6 +575,7 @@ Respond in JSON format in 1 single line without white spaces an array of JSON wi
             responses = json.loads(responses)
             break
         except Exception as e:
+            print(e)
             return EvaluationDataset(test_cases=[])
 
     test_cases = []
