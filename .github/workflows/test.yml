@@ -36,8 +36,8 @@ jobs:
         run: |
           python -c "import sys; print(sys.version)"
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt ragas
-          python -m pip install . pytest-rerunfailures pytest-asyncio
+          python -m pip install -r requirements.txt
+          python -m pip install ragas sentry-sdk . pytest-rerunfailures pytest-asyncio
 
       - name: Run Unit Tests (pytest)
         env:
