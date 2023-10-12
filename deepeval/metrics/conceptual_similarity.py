@@ -52,7 +52,7 @@ def assert_conceptual_similarity(
 ):
     metric = ConceptualSimilarityMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(
-        query="placeholder", output=output, expected_output=expected_output
+        input="placeholder", output=output, expected_output=expected_output
     )
     assert_test(test_case, [metric])
 
@@ -62,6 +62,6 @@ def is_conceptually_similar(
 ) -> bool:
     metric = ConceptualSimilarityMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(
-        query="placeholder", output=output, expected_output=expected_output
+        input="placeholder", output=output, expected_output=expected_output
     )
     return metric.measure(test_case) >= minimum_score

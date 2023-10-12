@@ -25,7 +25,7 @@ def factual_consistency(value: str, metadata: Dict) -> ValidationResult:
     metric = FactualConsistencyMetric()
     # We use the 'assert_factual_consistency' function from deepeval to get the factual consistency score.
 
-    test_case = LLMTestCase(query="This is an example input", output=output, context=context)
+    test_case = LLMTestCase(input="This is an example input", output=output, context=context)
     score = metric.measure(test_case)
 
     # If the score is greater than the metric's minimum score, give it a PassResult

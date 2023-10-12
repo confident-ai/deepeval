@@ -42,7 +42,7 @@ class RagasContextualRelevancyMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
+            "question": [test_case.input],
             "answer": [test_case.output],
             "id": [[test_case.id]],
         }
@@ -99,7 +99,7 @@ class RagasAnswerRelevancyMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
+            "question": [test_case.input],
             "answer": [test_case.output],
             "id": [[test_case.id]],
         }
@@ -150,7 +150,7 @@ class RagasFaithfulnessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
+            "question": [test_case.input],
             "answer": [test_case.output],
             "id": [[test_case.id]],
         }
@@ -203,7 +203,7 @@ class RagasContextRecallMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
+            "question": [test_case.input],
             "answer": [test_case.output],
             "id": [[test_case.id]],
         }
@@ -256,7 +256,7 @@ class RagasHarmfulnessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
+            "question": [test_case.input],
             "answer": [test_case.output],
             "id": [[test_case.id]],
         }
@@ -308,7 +308,7 @@ class RagasCoherenceMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
+            "question": [test_case.input],
             "answer": [test_case.output],
             "id": [[test_case.id]],
         }
@@ -360,7 +360,7 @@ class RagasMaliciousnessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
+            "question": [test_case.input],
             "answer": [test_case.output],
             "id": [[test_case.id]],
         }
@@ -412,7 +412,7 @@ class RagasCorrectnessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
+            "question": [test_case.input],
             "answer": [test_case.output],
             "id": [[test_case.id]],
         }
@@ -464,7 +464,7 @@ class RagasConcisenessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
+            "question": [test_case.input],
             "answer": [test_case.output],
             "id": [[test_case.id]],
         }

@@ -31,7 +31,7 @@ from deepeval.metrics.ragas_metric import RagasMetric
 
 def test_overall_score():
     test_case = LLMTestCase(
-        query=query,
+        input=query,
         output=output,
         expected_output=expected_output,
         context=context,
@@ -42,7 +42,6 @@ def test_overall_score():
         metrics=[metric],
     )
 ```
-
 
 ## Individual Metrics
 
@@ -57,7 +56,7 @@ from deepeval.metrics.ragas_metric import RagasHarmfulnessMetric
 
 def test_individual_metrics():
     test_case = LLMTestCase(
-        query=query,
+        input=query,
         output=output,
         expected_output=expected_output,
         context=context,
@@ -88,7 +87,7 @@ from deepeval.metrics.ragas_metric import RagasMaliciousnessMetric
 
 def test_other_metrics():
     test_case = LLMTestCase(
-        query=query,
+        input=query,
         output=output,
         expected_output=expected_output,
         context=context,
@@ -105,5 +104,3 @@ def test_other_metrics():
 ```
 
 This will print the scores for each of the other metrics.
-
-

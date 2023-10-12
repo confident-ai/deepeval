@@ -86,7 +86,7 @@ def create_test_result(
             success=success,
             score=score,
             metric_name=metric.__name__,
-            query=test_case.query if test_case.query else "-",
+            query=test_case.input if test_case.input else "-",
             output=test_case.output if test_case.output else "-",
             expected_output=test_case.expected_output
             if test_case.expected_output
@@ -99,7 +99,7 @@ def create_test_result(
             success=success,
             score=score,
             metric_name=metric.__name__,
-            query=test_case.query if test_case.query else "-",
+            query=test_case.input if test_case.input else "-",
             output=test_case.output_list if test_case.output_list else "-",
             expected_output=test_case.golden_list
             if test_case.golden_list
@@ -134,7 +134,7 @@ def run_test(
         >>> from deepeval.run_test import run_test
         >>> metric = FactualConsistencyMetric()
         >>> test_case = LLMTestCase(
-        ...     query="What is the capital of France?",
+        ...     input="What is the capital of France?",
         ...     output="Paris",
         ...     expected_output="Paris",
         ...     context="Geography",

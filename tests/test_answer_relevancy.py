@@ -29,13 +29,13 @@ def test_answer_not_relevant():
 
 def test_query_answer_relevancy():
     scorer = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=answer)
+    test_case = LLMTestCase(input=query, output=answer)
     assert_test(test_case, [scorer])
 
 
 def test_compare_answer_relevancy_2():
     scorer = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output="Programming lang")
+    test_case = LLMTestCase(input=query, output="Programming lang")
     test_case_2 = LLMTestCase(
         query=query, output="Python is a programming lang"
     )
@@ -46,7 +46,7 @@ def test_compare_answer_relevancy_2():
 def test_compare_answer_relevancy():
     metric = AnswerRelevancyMetric(minimum_score=0.5)
     query = "what is python"
-    test_case = LLMTestCase(query=query, output="Programming lang")
+    test_case = LLMTestCase(input=query, output="Programming lang")
     test_case_2 = LLMTestCase(
         query=query, output="Python is a programming lang"
     )
@@ -58,6 +58,6 @@ def test_cross_encoder_answer_relevancy():
     scorer = AnswerRelevancyMetric(
         minimum_score=0.5, model_type="cross_encoder"
     )
-    test_case = LLMTestCase(query=query, output=answer)
+    test_case = LLMTestCase(input=query, output=answer)
     score = assert_test(test_case, [scorer])
     assert_viable_score(score[0].score)
