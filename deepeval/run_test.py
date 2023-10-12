@@ -87,7 +87,7 @@ def create_test_result(
             score=score,
             metric_name=metric.__name__,
             query=test_case.input if test_case.input else "-",
-            actual_output=test_case.actual_output
+            output=test_case.actual_output
             if test_case.actual_output
             else "-",
             expected_output=test_case.expected_output
@@ -102,7 +102,7 @@ def create_test_result(
             score=score,
             metric_name=metric.__name__,
             query=test_case.input if test_case.input else "-",
-            actual_output=test_case.output_list
+            output=test_case.output_list
             if test_case.output_list
             else "-",
             expected_output=test_case.golden_list
