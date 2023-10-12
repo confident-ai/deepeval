@@ -35,7 +35,9 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
         if test_case.actual_output is None or test_case.expected_output is None:
             raise ValueError("Output or expected_output cannot be None")
 
-        vectors = self._vectorize(test_case.actual_output, test_case.expected_output)
+        vectors = self._vectorize(
+            test_case.actual_output, test_case.expected_output
+        )
         self.score = cosine_similarity(vectors[0], vectors[1])
         return float(self.score)
 
@@ -52,7 +54,9 @@ def assert_conceptual_similarity(
 ):
     metric = ConceptualSimilarityMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(
-        input="placeholder", actual_output=output, expected_output=expected_output
+        input="placeholder",
+        actual_output=output,
+        expected_output=expected_output,
     )
     assert_test(test_case, [metric])
 
@@ -62,6 +66,8 @@ def is_conceptually_similar(
 ) -> bool:
     metric = ConceptualSimilarityMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(
-        input="placeholder", actual_output=output, expected_output=expected_output
+        input="placeholder",
+        actual_output=output,
+        expected_output=expected_output,
     )
     return metric.measure(test_case) >= minimum_score

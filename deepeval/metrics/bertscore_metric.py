@@ -25,7 +25,9 @@ class BertScoreMetric(Metric, metaclass=Singleton):
         return vectors
 
     def measure(self, test_case: LLMTestCase):
-        vectors = self._vectorize(test_case.actual_output, test_case.expected_output)
+        vectors = self._vectorize(
+            test_case.actual_output, test_case.expected_output
+        )
         self.score = cosine_similarity(vectors[0], vectors[1])
         return self.score
 
