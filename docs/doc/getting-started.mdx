@@ -37,7 +37,7 @@ The command above will install the latest version of `deepeval` into your projec
 
 Run `touch test_examply.py` to create a test file in your root directory. Open `test_example.py` and paste in your first test case:
 
-```python
+```python title="test_example.py"
 import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
@@ -62,10 +62,10 @@ deepeval test run test_example.py
 
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
-The variable `query` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this query. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an out-of-the-box metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context. All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
+The variable `query` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this query. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context. All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
 
 :::note
-`deepeval`'s "classic" metrics are not evaluated using LLMs by default. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
+`deepeval`'s default metrics are not evaluated by LLMs. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
 :::
 
 ## Create Your First Custom Metric
@@ -74,35 +74,28 @@ The variable `query` mimics a user input, and `actual_output` is a placeholder f
 
 ### LLM Evaluated Metrics
 
-An LLM evaluated metric, is one where evaluation is carried out by an LLM. Here's how you can create create a custom, LLM evaluated metric.
+An LLM evaluated metric, is one where evaluation is carried out by an LLM. Here's how you can create a custom, LLM evaluated metric.
 
-```python
-def make_chat_completion_request(prompt: str):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt},
-        ],
-    )
-    return response.choices[0].message.content
+```python title="test_example.py"
+from deepeval.metrics.llm_eval_metric import LLMEvalMetric
 
-metric = LLMEvalMetric(
-    criteria="How funny it is",
-    completion_function=make_chat_completion_request,
-    minimum_score=0.3
-)
+...
+
+def test_humor():
+    query = "What if these shoes don't fit?"
+
+    # Replace this with the actual output from your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
+    funny_metric = LLMEvalMetric(name="Funny Metric", criteria="How funny it is", minimum_score=0.3)
+    test_case = LLMTestCase(query=query, output=actual_output)
+    assert_test(test_case, [length_metric])
 ```
-
-:::warning
-We're changing the way to create an LLM metric soon, stay tuned for updates.
-:::
 
 ### Classic Metrics
 
-A classic metric is a metric where evluation is not carried out by another LLM. You can define a custom classic metric by defining the `measure` and `is_successful` methods upon inheriting the base `Metric` class. Continuing in `test_example.py`, paste in the following:
+A classic metric is a metric where evluation is not carried out by another LLM. You can define a custom classic metric by defining the `measure` and `is_successful` methods upon inheriting the base `Metric` class. Paste in the following:
 
-```python
+```python title="test_example.py"
 from deepeval.metrics.metric import Metric
 
 ...
@@ -122,12 +115,7 @@ class LengthMetric(Metric):
     @property
     def __name__(self):
         return "Length"
-```
 
-Now write a new test case that uses this new metric:
-
-```python
-...
 
 def test_length():
     query = "What if these shoes don't fit?"
@@ -154,9 +142,11 @@ You should see both `test_factual_consistency` and `test_length` passing.
 
 ## Combine Your Metrics
 
-You might've noticed we have duplicated test cases for both `test_factual_consistency` and `test_length` (ie. they have the same input and expected output). To avoid this redundancy, `deepeval` offers an easy way to apply as many metrics as you wish on a single test case. Also in `test_example.py`, paste in the following code:
+You might've noticed we have duplicated test cases for both `test_factual_consistency` and `test_length` (ie. they have the same input and expected output). To avoid this redundancy, `deepeval` offers an easy way to apply as many metrics as you wish on a single test case.
 
-```python
+```python title="test_example.py"
+...
+
 def test_everything():
     query = "What if these shoes don't fit?"
     context = "All customers are eligible for a 30 day full refund at no extra cost."
@@ -165,18 +155,17 @@ def test_everything():
     actual_output = "We offer a 30-day full refund at no extra cost."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
     length_metric = LengthMetric(max_length=10)
+    funny_metric = LLMEvalMetric(name="Funny Metric", criteria="How funny it is", minimum_score=0.3)
 
     test_case = LLMTestCase(query=query, output=actual_output, context=context)
-    assert_test(test_case, [factual_consistency_metric, length_metric])
+    assert_test(test_case, [factual_consistency_metric, length_metric, funny_metric])
 ```
 
-In this scenario, `test_everything` only passes if all metrics are passing. Run `deepeval test run` again:
+In this scenario, `test_everything` only passes if all metrics are passing. Run `deepeval test run` again to see the results:
 
 ```console
 deepeval test run test_example.py
 ```
-
-All done! You should see all 3 test cases passing.
 
 ## Visualize Your Results
 

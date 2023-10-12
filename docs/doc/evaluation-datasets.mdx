@@ -5,3 +5,63 @@ sidebar_label: Datasets
 ---
 
 ## Quick Summary
+
+`deepeval` leverages decorators provided by Pytest to run test cases on entire evaluation datasets which are often prepared in the form of CSVs. However, your data does not have to strictly be in CSV format. To run test cases on your evaluation dataset, simply process your data into the data structure shown below:
+
+```python
+class DataPoint:
+    query: str
+    output: str
+    expected_output: Union[str, None]
+    context: Union[List[str], None]
+
+class Dataset:
+   data_points: List[DataPoint]
+```
+
+For example, this would consitute as a valid dataset structure:
+
+```
+dataset = [
+    {
+        "query": "What are your operating hours?",
+        "output": "Our operating hours are from 9 AM to 5 PM, Monday to Friday.",
+        "context": [
+            "Our company operates from 10 AM to 6 PM, Monday to Friday.",
+            "We are closed on weekends and public holidays.",
+            "Our customer service is available 24/7.",
+        ],
+    },
+    {
+        "query": "Do you offer free shipping?",
+        "output": "Yes, we offer free shipping on orders over $50.",
+        "expected_output": "Yes, we offer free shipping on orders over $50."
+    },
+    {
+        "query": "What is your return policy?",
+        "output": "We accept returns within 30 days of purchase.",
+    },
+]
+```
+
+Finally, utilize the `@pytest.mark.parametrize` to create test cases for each of the data points.
+
+```python
+@pytest.mark.parametrize(
+    "test_case",
+    dataset,
+)
+def test_customer_chatbot(test_case: dict):
+    query = test_case["query"]
+    expected_output = test_case["expected_output]
+
+    context = test_case["context"]
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+    test_case = LLMTestCase(query=query, output=output, context=context)
+    assert_test(
+        test_case, [factual_consistency_metric, answer_relevancy_metric]
+    )
+```
+
+## Create An Evaluation Dataset
