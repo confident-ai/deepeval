@@ -270,9 +270,13 @@ from deepeval.metrics.ragas_metric import RagasContextualRelevancyMetric
 from deepeval.metrics.ragas_metric import RagasAnswerRelevancyMetric
 from deepeval.metrics.ragas_metric import RagasFaithfulnessMetric
 from deepeval.metrics.ragas_metric import RagasContextRecallMetric
+from deepeval.metrics.ragas_metric import RagasConcisenessMetric
+from deepeval.metrics.ragas_metric import RagasCorrectnessMetric
+from deepeval.metrics.ragas_metric import RagasCoherenceMetric
+from deepeval.metrics.ragas_metric import RagasMaliciousnessMetric
 ```
 
-As an overview here are what each metric measures:
+As an overview, here are what each metric measures:
 
 - `RagasFaithfulnessMetric` - ensures output align with context. Penalizes claims not deduced from the context. Calculated using the `actual_output` and `context`.
 
