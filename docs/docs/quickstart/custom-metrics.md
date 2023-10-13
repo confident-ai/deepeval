@@ -8,13 +8,13 @@ from deepeval.test_case import LLMTestCase
 from deepeval.run_test import run_test
 
 class LengthMetric(Metric):
-    """This metric checks if the output is more than 3 letters"""
+    """This metric checks if the actual output is more than 3 letters"""
     def __init__(self, minimum_length: int=3):
         self.minimum_length = minimum_length
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
-        score = len(test_case.output)
+        score = len(test_case.actual_output)
         self.success = score > self.minimum_length
         return score
 
@@ -28,6 +28,6 @@ class LengthMetric(Metric):
 metric = LengthMetric()
 
 # Defining a custom test case
-test_case = LLMTestCase(query="This is an example input", output="This is an example output")
+test_case = LLMTestCase(input="This is an example input", actual_output="This is an example output")
 run_test(test_case, metrics=[metric])
 ```

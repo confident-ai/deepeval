@@ -43,13 +43,13 @@ class TestOverallScore:
     def test_overall_score_worst_context(self):
         test_case = LLMTestCase(
             query=query,
-            output=output,
+            actual_output=output,
             expected_output=expected_output,
             context="He doesn't know how to code",
         )
         test_case_2 = LLMTestCase(
             query=query,
-            output=output,
+            actual_output=output,
             expected_output=expected_output,
             context=context,
         )
@@ -59,13 +59,13 @@ class TestOverallScore:
     def test_overall_score_worst_output(self):
         test_case = LLMTestCase(
             query=query,
-            output="Not relevant",
+            actual_output="Not relevant",
             expected_output=expected_output,
             context="He doesn't know how to code",
         )
         test_case_2 = LLMTestCase(
             query=query,
-            output=output,
+            actual_output=output,
             expected_output=expected_output,
             context="He doesn't know how to code",
         )
@@ -75,14 +75,14 @@ class TestOverallScore:
     def test_worst_expected_output(self):
         test_case = LLMTestCase(
             query=query,
-            output="Not relevant",
+            actual_output="Not relevant",
             expected_output="STranger things",
             context="He doesn't know how to code",
         )
         score_4 = self.metric.measure(test_case)
         test_case_2 = LLMTestCase(
             query=query,
-            output="Not relevant",
+            actual_output="Not relevant",
             expected_output=expected_output,
             context="He doesn't know how to code",
         )
@@ -92,7 +92,7 @@ class TestOverallScore:
     def test_overall_score_metric(self):
         test_case = LLMTestCase(
             query=query,
-            output=output,
+            actual_output=output,
             expected_output=expected_output,
             context=context,
         )
@@ -102,7 +102,7 @@ class TestOverallScore:
     def test_overall_score_metric_no_query(self):
         test_case = LLMTestCase(
             query="placeholder",
-            output=output,
+            actual_output=output,
             expected_output=expected_output,
             context=context,
         )
@@ -111,7 +111,7 @@ class TestOverallScore:
     def test_overall_score_metric_no_query_no_context(self):
         test_case = LLMTestCase(
             query="placeholder",
-            output=output,
+            actual_output=output,
             expected_output=expected_output,
         )
         result = run_test([test_case], metrics=[self.metric])
@@ -121,7 +121,7 @@ class TestOverallScore:
     def test_overall_score_metric_no_context_no_expected_output(self):
         test_case = LLMTestCase(
             query=query,
-            output=output,
+            actual_output=output,
         )
         score = self.metric.measure(test_case)
         result = run_test([test_case], metrics=[self.metric])

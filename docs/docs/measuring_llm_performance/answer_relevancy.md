@@ -28,7 +28,7 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import run_test, assert_test
 metric = AnswerRelevancyMetric(minimum_score=0.5)
-test_case = LLMTestCase(query=query, output=answer)
+test_case = LLMTestCase(input=query, actual_output=answer)
 
 # If you want to run a test, log it and check results
 run_test(test_case, metrics=[metric])
@@ -44,7 +44,7 @@ assert_test(test_case, metrics=[metric])
 
 ### Why Use Cross-Encoder As Default And Not Bi-Encoder?
 
-We can use cross-encoder as default and not bi-encoder because bi-encoders inherently bias towards sentences of similar length. 
+We can use cross-encoder as default and not bi-encoder because bi-encoders inherently bias towards sentences of similar length.
 
 This means answers can be considered more relevant if they are of similar length and not if they are actually more relevant. However, they are still a common method of measuring answer relevancy and we see [early attempts at trying to minimize this](https://www.sbert.net/examples/applications/semantic-search/README.html#symmetric-vs-asymmetric-semantic-search).
 

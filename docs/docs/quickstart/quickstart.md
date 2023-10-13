@@ -58,14 +58,14 @@ from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test, run_test
 
 def test_0():
-    query = "How does photosynthesis work?"
+    input = "How does photosynthesis work?"
     output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with the help of chlorophyll pigment."
     expected_output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize food with the help of chlorophyll pigment."
     context = "Biology"
 
     test_case = LLMTestCase(
-        query=query,
-        output=output,
+        input=input,
+        actual_output=output,
         expected_output=expected_output,
         context=context,
     )
@@ -165,7 +165,7 @@ def test_customer_chatbot(test_case: dict):
     context = test_case["context"]
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output, context=context)
+    test_case = LLMTestCase(input=query, actual_output=output, context=context)
     assert_test(
         test_case, [factual_consistency_metric, answer_relevancy_metric]
     )

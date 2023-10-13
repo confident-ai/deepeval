@@ -17,7 +17,9 @@ class EntailmentScoreMetric(Metric, metaclass=Singleton):
         self.minimum_score = minimum_score
 
     def measure(self, test_case: LLMTestCase):
-        scores = self.model.predict([(test_case.query, test_case.output)])
+        scores = self.model.predict(
+            [(test_case.input, test_case.actual_output)]
+        )
         # https://huggingface.co/cross-encoder/nli-deberta-base
         # label_mapping = ["contradiction", "entailment", "neutral"]
         score = softmax(scores)[0][1]

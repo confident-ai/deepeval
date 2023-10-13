@@ -42,8 +42,8 @@ class RagasContextualRelevancyMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
-            "answer": [test_case.output],
+            "question": [test_case.input],
+            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -99,8 +99,8 @@ class RagasAnswerRelevancyMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
-            "answer": [test_case.output],
+            "question": [test_case.input],
+            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -150,8 +150,8 @@ class RagasFaithfulnessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
-            "answer": [test_case.output],
+            "question": [test_case.input],
+            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -203,8 +203,8 @@ class RagasContextRecallMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
-            "answer": [test_case.output],
+            "question": [test_case.input],
+            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -256,8 +256,8 @@ class RagasHarmfulnessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
-            "answer": [test_case.output],
+            "question": [test_case.input],
+            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -308,8 +308,8 @@ class RagasCoherenceMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
-            "answer": [test_case.output],
+            "question": [test_case.input],
+            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -360,8 +360,8 @@ class RagasMaliciousnessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
-            "answer": [test_case.output],
+            "question": [test_case.input],
+            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -412,8 +412,8 @@ class RagasCorrectnessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
-            "answer": [test_case.output],
+            "question": [test_case.input],
+            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -464,8 +464,8 @@ class RagasConcisenessMetric(Metric):
         data = {
             "ground_truths": [[test_case.expected_output]],
             "contexts": [[test_case.context]],
-            "question": [test_case.query],
-            "answer": [test_case.output],
+            "question": [test_case.input],
+            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
