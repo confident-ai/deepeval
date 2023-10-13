@@ -41,7 +41,7 @@ def test_0():
 
     test_case = LLMTestCase(
         query=query,
-        output=output,
+        actual_output=output,
         expected_output=expected_output,
         context=context,
     )

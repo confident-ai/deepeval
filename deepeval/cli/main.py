@@ -1,6 +1,3 @@
-import os
-from typing import Optional
-
 import typer
 from typing_extensions import Annotated
 
@@ -26,10 +23,7 @@ def login(
         typer.Option(
             help="API key to get from https://app.confident-ai.com. Required if you want to log events to the server."
         ),
-    ] = "",
-    implementation_name: Annotated[
-        str, typer.Option(help="The name of your project")
-    ] = "",
+    ] = ""
 ):
     """Login to the DeepEval platform."""
     print("Welcome to [bold]DeepEval[/bold]!")
@@ -37,31 +31,19 @@ def login(
         "Grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
     )
     if api_key == "":
-        api_key = KEY_FILE_HANDLER.fetch_api_key()
-        api_key = typer.prompt(
-            text="Paste it here (Hit enter if default is right)",
-            default=api_key,
-        )
+        while True:
+            api_key = input("Paste your API Key: ").strip()
+            if api_key:
+                break
+            else:
+                print("API Key cannot be empty. Please try again.\n")
     KEY_FILE_HANDLER.write_api_key(api_key)
     client = Api(api_key=api_key)
-    if implementation_name == "":
-        implementation_name = KEY_FILE_HANDLER.fetch_implementation_name()
-        if implementation_name is None or implementation_name == "":
-            implementation_name = "example"
-        print("What is the name of your project?")
-        implementation_name = typer.prompt(
-            text="Name (Hit enter if default is right):",
-            default=implementation_name,
-        )
-    KEY_FILE_HANDLER.write_data(IMPLEMENTATION_ID_NAME, implementation_name)
     print("Success! :raising_hands:")
     print(
         "If you are new to DeepEval, try generate a sample test: [bold]deepeval test generate --output-file test_sample.py[/bold]"
     )
     print("Run a sample test: [bold]deepeval test run test_sample.py[/bold]")
-    print(
-        "To switch to a different project: [bold]deepeval switch --implementation_name your_project_name[/bold]"
-    )
 
 
 @app.command()

@@ -9,7 +9,7 @@ def test_bert_score():
     metric = BertScoreMetric()
     test_case = LLMTestCase(
         query="placeholder",
-        output="Why are you weird",
+        actual_output="Why are you weird",
         expected_output="Why are you strange?",
     )
     assert_test(test_case, [metric])

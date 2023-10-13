@@ -24,8 +24,8 @@ class CohereRerankerMetric(Metric):
 
     def measure(self, test_case: LLMTestCase):
         reranked_results = self.cohere_client.rerank(
-            query=test_case.query,
-            documents=[test_case.output],
+            query=test_case.input,
+            documents=[test_case.actual_output],
             top_n=1,
             model="rerank-english-v2.0",
         )

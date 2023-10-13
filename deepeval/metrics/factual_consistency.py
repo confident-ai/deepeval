@@ -39,7 +39,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
         self.minimum_score = minimum_score
 
     def measure(self, test_case: LLMTestCase):
-        if test_case.output is None or test_case.context is None:
+        if test_case.actual_output is None or test_case.context is None:
             raise ValueError("Output or context cannot be None")
 
         context_list = []
@@ -53,7 +53,7 @@ class FactualConsistencyMetric(Metric, metaclass=Singleton):
 
         max_score = 0
         for c in context_list:
-            score = self.model.predict(c, test_case.output)
+            score = self.model.predict(c, test_case.actual_output)
             if score > max_score:
                 max_score = score
 
@@ -75,7 +75,9 @@ def is_factually_consistent(
     """Check if the output is factually consistent with the context."""
 
     metric = FactualConsistencyMetric(minimum_score=minimum_score)
-    test_case = LLMTestCase(query="placeholder", output=output, context=context)
+    test_case = LLMTestCase(
+        input="placeholder", actual_output=output, context=context
+    )
     return metric.measure(test_case) >= minimum_score
 
 
@@ -85,5 +87,7 @@ def assert_factual_consistency(
     """Assert that the output is factually consistent with the context."""
 
     metric = FactualConsistencyMetric(minimum_score=minimum_score)
-    test_case = LLMTestCase(query="placeholder", output=output, context=context)
+    test_case = LLMTestCase(
+        input="placeholder", actual_output=output, context=context
+    )
     assert_test(test_case, [metric])

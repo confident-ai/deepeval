@@ -14,12 +14,12 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 # The query is the question asked to the chatbot, the output is the expected answer, and the context is the actual answer.
 # We then use the assert_test function from deepeval to check if the chatbot's response is as expected.
 def test_customer_chatbot_simple():
-    query = "What are your operating hours?"
+    input = "What are your operating hours?"
     output = "Our operating hours are from 9 AM to 5 PM, Monday to Friday."
     context = "Our company operates from 10 AM to 6 PM, Monday to Friday."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output, context=context)
+    test_case = LLMTestCase(input=input, actual_output=output, context=context)
     assert_test(
         test_case, [factual_consistency_metric, answer_relevancy_metric]
     )
@@ -31,7 +31,7 @@ def test_customer_chatbot_simple():
 # The values are the corresponding values for each test case.
 CHATBOT_TEST_CASES = [
     {
-        "query": "What are your operating hours?",
+        "input": "What are your operating hours?",
         "output": "Our operating hours are from 9 AM to 5 PM, Monday to Friday.",
         "context": [
             "Our company operates from 10 AM to 6 PM, Monday to Friday.",
@@ -40,7 +40,7 @@ CHATBOT_TEST_CASES = [
         ],
     },
     {
-        "query": "Do you offer free shipping?",
+        "input": "Do you offer free shipping?",
         "output": "Yes, we offer free shipping on orders over $50.",
         "context": [
             "Our company offers free shipping on orders over $100.",
@@ -49,7 +49,7 @@ CHATBOT_TEST_CASES = [
         ],
     },
     {
-        "query": "What is your return policy?",
+        "input": "What is your return policy?",
         "output": "We accept returns within 30 days of purchase.",
         "context": [
             "Our company accepts returns within 60 days of purchase.",
@@ -58,7 +58,7 @@ CHATBOT_TEST_CASES = [
         ],
     },
     {
-        "query": "Do you have a physical store?",
+        "input": "Do you have a physical store?",
         "output": "Yes, we have a physical store in New York.",
         "context": [
             "Our company has physical stores in several locations across the country.",
@@ -67,7 +67,7 @@ CHATBOT_TEST_CASES = [
         ],
     },
     {
-        "query": "Do you offer international shipping?",
+        "input": "Do you offer international shipping?",
         "output": "Yes, we offer international shipping to selected countries.",
         "context": [
             "Our company offers international shipping to all countries.",
@@ -76,7 +76,7 @@ CHATBOT_TEST_CASES = [
         ],
     },
     {
-        "query": "Do you have a customer loyalty program?",
+        "input": "Do you have a customer loyalty program?",
         "output": "Yes, we have a loyalty program called 'Rewards Club'.",
         "context": [
             "Our company has a loyalty program that offers exclusive benefits to members.",
@@ -95,12 +95,12 @@ CHATBOT_TEST_CASES = [
     CHATBOT_TEST_CASES,
 )
 def test_customer_chatbot(test_case: dict):
-    query = test_case["query"]
+    input = test_case["input"]
     output = test_case["output"]
     context = test_case["context"]
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output, context=context)
+    test_case = LLMTestCase(input=input, actual_output=output, context=context)
     assert_test(
         test_case, [factual_consistency_metric, answer_relevancy_metric]
     )
