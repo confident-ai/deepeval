@@ -91,6 +91,10 @@ class LengthMetric(Metric):
 
     def measure(self, test_case: LLMTestCase):
         self.success = len(test_case.actual_output) > self.max_length
+        if self.success:
+            score = 1
+        else:
+            score = 0
         return score
 
     def is_successful(self):
@@ -106,7 +110,7 @@ Noticed that we accessed `test_case.actual_output` in `measure`. you will have t
 In this example, you would instantiate `LengthMetric` as follows:
 
 ```python
-length_metric = LengthMetric(20)
+length_metric = LengthMetric(max_length=20)
 ```
 
 :::info
