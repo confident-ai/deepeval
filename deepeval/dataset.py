@@ -341,7 +341,7 @@ class EvaluationDataset(UserList):
             )
 
         table_data = [
-            {"query": x.query, "expected_output": x.expected_output}
+            {"input": x.query, "expected_output": x.expected_output}
             for x in self.data
         ]
         app = Dash(
@@ -376,7 +376,7 @@ class EvaluationDataset(UserList):
                                 "deletable": True,
                                 "renamable": True,
                             }
-                            for i, c in enumerate(["query", "expected_output"])
+                            for i, c in enumerate(["input", "expected_output"])
                         ],
                         data=table_data,
                         editable=True,
