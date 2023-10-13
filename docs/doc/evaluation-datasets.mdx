@@ -1,0 +1,71 @@
+---
+id: evaluation-datasets
+title: Datasets
+sidebar_label: Datasets
+---
+
+## Quick Summary
+
+`deepeval` leverages decorators provided by Pytest to run test cases on entire evaluation datasets which are often prepared in the form of CSVs. However, your data does not have to strictly be in CSV format. To run test cases on your evaluation dataset, simply process your data structure into the data type of `Dataset`.
+
+```python
+class DataPoint:
+    input: str
+    expected_output: Union[str, None]
+    context: Union[List[str], None]
+
+class Dataset:
+   data_points: List[DataPoint]
+```
+
+For example, the following would consitute as a valid `Dataset`:
+
+```
+dataset = [
+    {
+        "input": "What are your operating hours?",
+        "context": [
+            "Our company operates from 10 AM to 6 PM, Monday to Friday.",
+            "We are closed on weekends and public holidays.",
+            "Our customer service is available 24/7.",
+        ],
+    },
+    {
+        "input": "Do you offer free shipping?",
+        "expected_output": "Yes, we offer free shipping on orders over $50."
+    },
+    {
+        "input": "What is your return policy?",
+    },
+]
+```
+
+Finally, utilize the `@pytest.mark.parametrize` to create test cases for each of the data points.
+
+```python
+@pytest.mark.parametrize(
+    "test_case",
+    dataset,
+)
+def test_customer_chatbot(test_case: dict):
+    input = test_case["input"]
+    expected_output = test_case["expected_output"]
+    context = test_case["context"]
+
+    # Replace with your LLM application
+    actual_output = "..."
+
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+    test_case = LLMTestCase(
+        input=input,
+        actual_output=actual_output,
+        expected_output=expected_output,
+        context=context
+    )
+    assert_test(test_case, [factual_consistency_metric, answer_relevancy_metric])
+```
+
+## Create An Evaluation Dataset
+
+_Coming Soon..._
