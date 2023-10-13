@@ -26,7 +26,7 @@ test_case = LLMTestCase(
 
 **Note that only `input` and `actual_output` is mandatory.**
 
-However, depending on the specific metric you're evaluating your test case on, you may or may not require an `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating factual consistency you'll have to supply `context` in order for `deepeval` to know what the **ground truth** is.
+However, depending on the specific metric you're evaluating your test cases on, you may or may not require an `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating factual consistency you'll have to supply `context` in order for `deepeval` to know what the **ground truth** is.
 
 Let's go through the purpsoe of each parameter.
 

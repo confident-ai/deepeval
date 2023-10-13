@@ -1,7 +1,7 @@
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'DeepEval',
-  tagline: 'Unit Testing for LLMs',
+  tagline: 'Evaluation Framework for LLMs',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
