@@ -15,7 +15,9 @@ def test_factual_consistency():
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
-    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
+    test_case = LLMTestCase(
+        input=input, actual_output=actual_output, context=context
+    )
     assert_test(test_case, [factual_consistency_metric])
 
 
@@ -72,7 +74,9 @@ def test_everything():
         name="Funny Metric", criteria="How funny it is", minimum_score=0.3
     )
 
-    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
+    test_case = LLMTestCase(
+        input=input, actual_output=actual_output, context=context
+    )
     assert_test(
         test_case, [factual_consistency_metric, length_metric, funny_metric]
     )
