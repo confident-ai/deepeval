@@ -8,7 +8,7 @@ sidebar_label: Test Cases
 
 A test case is a blueprint provided by `deepeval` to unit test LLM outputs based on four parameters:
 
-- `query`
+- `input`
 - `actual_output`
 - [Optional] `expected_output`
 - [Optional] `context`
@@ -17,22 +17,22 @@ Except for `actual_output`, all parameters should originate from your evaluation
 
 ```python
 test_case = LLMTestCase(
-    query="What if these shoes don't fit?"
-    expected_output = "You're eligible for a 30 day refund at no extra cost."
-    actual_output = "We offer a 30-day full refund at no extra cost."
+    input="What if these shoes don't fit?",
+    expected_output = "You're eligible for a 30 day refund at no extra cost.",
+    actual_output = "We offer a 30-day full refund at no extra cost.",
     context = "All customers are eligible for a 30 day full refund at no extra cost."
 )
 ```
 
-**Note that only `query` and `actual_output` is mandatory.**
+**Note that only `input` and `actual_output` is mandatory.**
 
 However, depending on the specific metric you're evaluating your test case on, you may or may not require an `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating factual consistency you'll have to supply `context` in order for `deepeval` to know what the **ground truth** is.
 
 Let's go through the purpsoe of each parameter.
 
-## Query
+## Input
 
-A query is the input provided to an LLM, and mimics a user interacting with your LLM application. The query is usually a prompt composed of dynamic data embedded in a prompt template.
+An input mimics a user interacting with your LLM application. The input is usually a prompt composed of dynamic data embedded in a prompt template.
 
 ```python
 prompt_template = """
@@ -44,7 +44,7 @@ prompt_template = """
 prompt = prompt_template.format(text="Who's a good boy?")
 
 test_case = LLMTestCase(
-    query=prompt,
+    input=prompt,
     # Replace this with your actual LLM application
     actual_output="ruff ruff ruff"
 )
@@ -52,7 +52,7 @@ test_case = LLMTestCase(
 
 ## Actual Output
 
-An actual output is simply the output your LLM application returns for a given query. This is what your users are going to interact with. Typcailly, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
+An actual output is simply the output your LLM application returns for a given input. This is what your users are going to interact with. Typcailly, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
 
 Expanding on the previous example:
 
@@ -69,7 +69,7 @@ prompt_template = """
 prompt = prompt_template.format(text="Who's a good boy?")
 
 test_case = LLMTestCase(
-    query=prompt,
+    input=prompt,
     # Replace this with your actual LLM application
     actual_output=chatbot.run(prompt)
 )
@@ -80,7 +80,7 @@ test_case = LLMTestCase(
 
 An expected output is literally what you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
 
-The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. Don't worry, we'll dive deeper into this [in the metrics section.](evaluation-metrics)
+The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](evaluation-metrics)
 
 ```python
 # A hypothetical LLM application example
@@ -95,7 +95,7 @@ prompt_template = """
 prompt = prompt_template.format(text="Who's a good boy?")
 
 test_case = LLMTestCase(
-    query=prompt,
+    input=prompt,
     # Replace this with your actual LLM application
     actual_output=chatbot.run(prompt),
     expected_output="Me, ruff!"
@@ -104,7 +104,7 @@ test_case = LLMTestCase(
 
 ## Context
 
-The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of truth. You can view it as the segment of your knowledge base relevant to a specific query. Context allows your LLM to generate customized outputs that are outside the scope of the data it was trained on.
+The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of truth. You can view it as the segment of your knowledge base relevant to a specific input. Context allows your LLM to generate customized outputs that are outside the scope of the data it was trained on.
 
 In RAG applications, contextual information is typically stored in your selected vector database. Conversely, for a fine-tuning use case, this data is usually found in training datasets used to fine-tune your model. Providing the appropriate contextual information when constructing your evaluation dataset is one of the most challenging part of evaluating LLMs, since data in your knowledge base can constantly be changing.
 
@@ -125,7 +125,7 @@ prompt = prompt_template.format(text="Who's a good boy?")
 context = ["Rocky is a good boy."]
 
 test_case = LLMTestCase(
-    query=prompt,
+    input=prompt,
     # Replace this with your actual LLM application
     actual_output=chatbot.run(prompt),
     expected_output="Me, ruff!",
@@ -141,7 +141,7 @@ Often times people confuse `expected_output` with `context` since due to their s
 
 Similar to Pytest, `deepeval` allows you to assert any test case you create by calling the `assert_test` function by running `deepeval test run` via the CLI.
 
-`assert_test` takes two mandatory arguments: `test_case` and a list of `metrics`. A test case passes only if all metrics meet their respective evaluation criterion. Depending on the metric, a combination of `query`, `actual_output`, `expected_output`, and `context` is used to ascertain whether their criterion have been met.
+`assert_test` takes two mandatory arguments: `test_case` and a list of `metrics`. A test case passes only if all metrics meet their respective evaluation criterion. Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, and `context` is used to ascertain whether their criterion have been met.
 
 ```python title="test_assert_example.py"
 # A hypothetical LLM application example
@@ -160,7 +160,7 @@ def test_case():
     context = ["Rocky is a good boy."]
 
     test_case = LLMTestCase(
-        query=prompt,
+        input=prompt,
         # Replace this with your actual LLM application
         actual_output=chatbot.run(prompt),
         expected_output="Me, ruff!",
@@ -199,12 +199,13 @@ prompt = prompt_template.format(text="Who's a good boy?")
 context = ["Rocky is a good boy."]
 
 test_case = LLMTestCase(
-    query=prompt,
+    input=prompt,
     # Replace this with your actual LLM application
     actual_output=chatbot.run(prompt),
     expected_output="Me, ruff!",
     context=context
 )
+
 metric = FactualConsistencyMetric(minimum_score=0.7)
 run_test(test_case, [metric])
 ```
