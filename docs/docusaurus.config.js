@@ -1,14 +1,8 @@
-// @ts-check
-// Note: type annotations allow type checking and IDEs autocompletion
-
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
-
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'DeepEval',
-  tagline: 'PyTest for LLMs',
-  favicon: 'static/img/favicon.ico',
+  tagline: 'Unit Testing for LLMs',
+  favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
   url: 'https://docs.confident-ai.com',
@@ -43,10 +37,11 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          path: 'doc',
+          editUrl: 'https://github.com/confident-ai/deepeval/edit/main/docs/doc/',
+          showLastUpdateAuthor: true,
+          showLastUpdateTime: true,
           sidebarPath: require.resolve('./sidebars.js'),
-        },
-        blog: {
-          showReadingTime: true,
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -58,26 +53,38 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
-      image: 'img/docusaurus-social-card.jpeg',
+      // TODO: make this an actual social card
+      // image: 'img/docusaurus-social-card.jpeg',
       navbar: {
-        title: '👩‍⚖️ DeepEval',
+        logo: {
+          alt: 'DeepEval Logo',
+          src: 'icons/DeepEval..svg',
+        },
         items: [
           {
-            type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
+            to: "docs/getting-started",
             position: 'left',
             label: 'Docs',
           },
+          // {
+          //   to: "docs/tutorial",
+          //   position: 'left',
+          //   label: 'Tutorials',
+          // },
+          {
+            href: "https://confident-ai.com/blog",
+            position: 'left',
+            label: 'Blog',
+          },
           {
             href: 'https://discord.gg/a3K9c8GRGt',
-            label: 'Join our discord',
+            className: 'header-discord-link',
             position: 'right',
           },
           {
             href: 'https://github.com/mr-gpt/deepeval',
-            label: 'View GitHub',
             position: 'right',
+            className: 'header-github-link',
           },
         ],
       },
@@ -86,47 +93,67 @@ const config = {
         disableSwitch: false,
         respectPrefersColorScheme: false,
       },
+      announcementBar: {
+        id: 'announcementBar-1',
+        content: '⭐️ If you like DeepEval, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/confident-ai/deepeval">GitHub</a>! ⭐️',
+        backgroundColor: '#fff', 
+        textColor: '#091E42',
+      },
       footer: {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Documentation',
             items: [
               {
-                label: 'Tutorial',
-                to: '/docs/intro',
+                label: 'Introduction',
+                to: '/docs/getting-started',
               },
+              // {
+              //   label: 'Tutorial',
+              //   to: '/docs/intro',
+              // },
             ],
           },
           {
             title: 'Community',
             items: [
               {
-                label: 'Discord',
-                href: 'https://discord.gg/a3K9c8GRGt',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
-              },
-            ],
-          },
-          {
-            title: 'More',
-            items: [
-              {
                 label: 'GitHub',
-                href: 'https://github.com/mr-gpt/deepeval',
+                to: 'https://github.com/confident-ai/deepeval',
+              },
+              {
+                label: 'Discord',
+                to: 'https://discord.gg/a3K9c8GRGt',
+              },
+              {
+                label: 'Newsletter',
+                to: 'https://confident-ai.com/blog',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Twilix Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Twilix Inc. Built with ❤️ and confidence.`,
       },
       prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
+        additionalLanguages: ['python'],
+        magicComments: [
+          {
+            className: 'theme-code-block-highlighted-line',
+            line: 'highlight-next-line',
+            block: {start: 'highlight-start', end: 'highlight-end'},
+          },
+          {
+            className: 'code-block-error-message',
+            line: 'highlight-next-line-error-message',
+          },
+          {
+            className: 'code-block-info-line',
+            line: 'highlight-next-line-info',
+            block: {start: 'highlight-info-start', end: 'highlight-info-end'},
+          },
+        ],
+      },      
       scripts: [
         {
           src: 'https://cdn.getkoala.com/v1/pk_c2f9444e23cd5fd7c2b34105b24d241bfdad/sdk.js',

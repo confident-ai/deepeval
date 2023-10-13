@@ -1,0 +1,31 @@
+---
+id: evaluation-introduction
+title: Introduction
+sidebar_label: Introduction
+---
+
+## Quick Summary
+
+Evaluation refers to the process of testing your LLM application outputs, and requires the following components:
+
+- Test cases
+- Metrics
+- Evaluation dataset
+
+Here's a diagram of what an ideal evaluation workflow looks like using `deepeval`:
+
+<img
+  id="invertable-img"
+  src="https://d2lsxfc3p6r9rv.cloudfront.net/workflow.png"
+  style={{ padding: "30px", marginTop: "20px" }}
+/>
+
+Your test cases will typically be in a single python file, and executing them will be as easy as running `deepeval test run`:
+
+```
+deepeval test run test_example.py
+```
+
+:::note
+We understand preparing a comprehensive evaluation dataset can be challenging task, especially if you're doing it for the first time. **[Contact us](https://calendly.com/jeffreyip-cno/sales-call)** if you want a custom evaluation dataset prepared for you.
+:::

@@ -1,0 +1,211 @@
+---
+id: evaluation-test-cases
+title: Test Cases
+sidebar_label: Test Cases
+---
+
+## Quick Summary
+
+A test case is a blueprint provided by `deepeval` to unit test LLM outputs based on four parameters:
+
+- `input`
+- `actual_output`
+- [Optional] `expected_output`
+- [Optional] `context`
+
+Except for `actual_output`, all parameters should originate from your evaluation dataset (if you have one). Here's an example implementation of a test case:
+
+```python
+test_case = LLMTestCase(
+    input="What if these shoes don't fit?",
+    expected_output = "You're eligible for a 30 day refund at no extra cost.",
+    actual_output = "We offer a 30-day full refund at no extra cost.",
+    context = "All customers are eligible for a 30 day full refund at no extra cost."
+)
+```
+
+**Note that only `input` and `actual_output` is mandatory.**
+
+However, depending on the specific metric you're evaluating your test case on, you may or may not require an `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating factual consistency you'll have to supply `context` in order for `deepeval` to know what the **ground truth** is.
+
+Let's go through the purpsoe of each parameter.
+
+## Input
+
+An input mimics a user interacting with your LLM application. The input is usually a prompt composed of dynamic data embedded in a prompt template.
+
+```python
+prompt_template = """
+    Impersonate a dog when replying to the text below.
+
+    {text}
+"""
+
+prompt = prompt_template.format(text="Who's a good boy?")
+
+test_case = LLMTestCase(
+    input=prompt,
+    # Replace this with your actual LLM application
+    actual_output="ruff ruff ruff"
+)
+```
+
+## Actual Output
+
+An actual output is simply the output your LLM application returns for a given input. This is what your users are going to interact with. Typcailly, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
+
+Expanding on the previous example:
+
+```python
+# A hypothetical LLM application example
+import chatbot
+
+prompt_template = """
+    Impersonate a dog when replying to the text below.
+
+    {text}
+"""
+
+prompt = prompt_template.format(text="Who's a good boy?")
+
+test_case = LLMTestCase(
+    input=prompt,
+    # Replace this with your actual LLM application
+    actual_output=chatbot.run(prompt)
+)
+
+```
+
+## Expected Output
+
+An expected output is literally what you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
+
+The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](evaluation-metrics)
+
+```python
+# A hypothetical LLM application example
+import chatbot
+
+prompt_template = """
+    Impersonate a dog when replying to the text below.
+
+    {text}
+"""
+
+prompt = prompt_template.format(text="Who's a good boy?")
+
+test_case = LLMTestCase(
+    input=prompt,
+    # Replace this with your actual LLM application
+    actual_output=chatbot.run(prompt),
+    expected_output="Me, ruff!"
+)
+```
+
+## Context
+
+The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of truth. You can view it as the segment of your knowledge base relevant to a specific input. Context allows your LLM to generate customized outputs that are outside the scope of the data it was trained on.
+
+In RAG applications, contextual information is typically stored in your selected vector database. Conversely, for a fine-tuning use case, this data is usually found in training datasets used to fine-tune your model. Providing the appropriate contextual information when constructing your evaluation dataset is one of the most challenging part of evaluating LLMs, since data in your knowledge base can constantly be changing.
+
+Unlike other parameters, a context accepts a list of strings.
+
+```python
+# A hypothetical LLM application example
+import chatbot
+
+prompt_template = """
+    Impersonate a dog named Rocky when replying to the text below.
+
+    {text}
+"""
+
+prompt = prompt_template.format(text="Who's a good boy?")
+
+context = ["Rocky is a good boy."]
+
+test_case = LLMTestCase(
+    input=prompt,
+    # Replace this with your actual LLM application
+    actual_output=chatbot.run(prompt),
+    expected_output="Me, ruff!",
+    context=context
+)
+```
+
+:::note
+Often times people confuse `expected_output` with `context` since due to their similar level of factual accuracy. However, while both are (or should be) factually correct, `expected_output` also takes aspects like tone and linguistic patterns into account, whereas context is strictly factual.
+:::
+
+## Assert A Test Case
+
+Similar to Pytest, `deepeval` allows you to assert any test case you create by calling the `assert_test` function by running `deepeval test run` via the CLI.
+
+`assert_test` takes two mandatory arguments: `test_case` and a list of `metrics`. A test case passes only if all metrics meet their respective evaluation criterion. Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, and `context` is used to ascertain whether their criterion have been met.
+
+```python title="test_assert_example.py"
+# A hypothetical LLM application example
+import chatbot
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.run_test import assert_test
+
+prompt_template = """
+    Impersonate a dog named Rocky when replying to the text below.
+
+    {text}
+"""
+
+def test_case():
+    prompt = prompt_template.format(text="Who's a good boy?")
+    context = ["Rocky is a good boy."]
+
+    test_case = LLMTestCase(
+        input=prompt,
+        # Replace this with your actual LLM application
+        actual_output=chatbot.run(prompt),
+        expected_output="Me, ruff!",
+        context=context
+    )
+    metric = FactualConsistencyMetric(minimum_score=0.7)
+    assert_test(test_case, metrics=[metric])
+```
+
+:::warning
+Typically, the `prompt_template` is implemented within your LLM application (ie. somewhere in our hypothetical `chatbot.run()` method), but from a visibility perspective we've made the `prompt_template` explicit.
+:::
+
+In the CLI, run `deepeval test run`:
+
+```console
+deepeval test run test_assert_example.py
+```
+
+We also highly recommend you to login to **[Confident AI](https://confident-ai.com)** (the platform powering deepeval) via the CLI. This way, you can keep track of all evaluation results generated each time you execute `deepeval test run`. You can also export completed evaluation datasets generated from your test file, view average metric scores for each test run, and much more.
+
+```
+deepeval login
+```
+
+Run `deepeval test run test_assert_example.py` in the CLI again to start evaluating results on the web.
+
+## Run A Test Case
+
+`deepeval` also offers an option to quickly run test cases without going through the CLI or creating a test file.
+
+```python
+from deepeval.run_test import run_test
+
+prompt = prompt_template.format(text="Who's a good boy?")
+context = ["Rocky is a good boy."]
+
+test_case = LLMTestCase(
+    input=prompt,
+    # Replace this with your actual LLM application
+    actual_output=chatbot.run(prompt),
+    expected_output="Me, ruff!",
+    context=context
+)
+
+metric = FactualConsistencyMetric(minimum_score=0.7)
+run_test(test_case, [metric])
+```

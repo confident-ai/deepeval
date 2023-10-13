@@ -1,0 +1,210 @@
+---
+id: getting-started
+title: Quick Introduction
+sidebar_label: Quick Introduction
+---
+
+import Envelope from "@site/src/components/envelope";
+
+**DeepEval** is an open-source evaluation framework for Python, that makes it easy to build
+and iterate on LLM applications with the following principles in mind:
+
+- Easily "unit test" LLM outputs in a similar way to Pytest.
+- Define evaluation datasets in Python code.
+- Switch between LLM-evaluated and classic evaluation metrics.
+- Provide optimal models for all evaluation metrics (with a continuous open-science initiative to advance evaluation techniques)
+- Metrics are simple to customize.
+- [alpha] Bring evaluation into production using Python decorators.
+
+<Envelope />
+
+## Setup A Python Environement
+
+Go to the root directory of your project and create a virtual environement (if you don't already have one). In the CLI, run:
+
+```console
+python3 -m venv venv
+source venv/bin/activate
+```
+
+## Installation
+
+In your newly created virtual environement, run:
+
+```console.log
+pip install -U deepeval
+```
+
+The command above will install the latest version of `deepeval` into your project's virtual environement.
+
+```console
+deepeval login
+```
+
+Although highly recommended, you can also optionally keep track of all evaluation results by logging into our [hosted platform](https://confident-ai.com).
+
+:::note
+**[Contact us](https://calendly.com/jeffreyip-cno/sales-call)** if you're dealing with sensitive data that has to reside in your private VPCs.
+:::
+
+## Create Your First Test Case
+
+Run `touch test_examply.py` to create a test file in your root directory. Open `test_example.py` and paste in your first test case:
+
+```python title="test_example.py"
+import pytest
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test
+
+def test_factual_consistency():
+    input = "What if these shoes don't fit?"
+    context = "All customers are eligible for a 30 day full refund at no extra cost."
+
+    # Replace this with the actual output of your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
+    assert_test(test_case, [factual_consistency_metric])
+```
+
+Run `deepeval test run` from the root directory of your project:
+
+```console
+deepeval test run test_example.py
+```
+
+**Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
+
+The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context. All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
+
+:::note
+`deepeval`'s default metrics are not evaluated using LLMs. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
+:::
+
+## Create Your First Custom Metric
+
+`deepeval` provides two types of custom metric to evaluate LLM outputs: metrics evaluated with LLMs and metrics evaluated without LLMs. Here is a brief overview of each custom metric.
+
+### LLM Evaluated Metrics
+
+An LLM evaluated metric, is one where evaluation is carried out by an LLM. Here's how you can create a custom, LLM evaluated metric.
+
+```python title="test_example.py"
+from deepeval.metrics.llm_eval_metric import LLMEvalMetric
+
+...
+
+def test_humor():
+    input = "What if these shoes don't fit?"
+
+    # Replace this with the actual output of your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
+    funny_metric = LLMEvalMetric(name="Funny Metric", criteria="How funny it is", minimum_score=0.3)
+    test_case = LLMTestCase(input=input, actual_output=actual_output)
+    assert_test(test_case, [length_metric])
+```
+
+### Classic Metrics
+
+A classic metric is a metric where evluation is not carried out by another LLM. You can define a custom classic metric by defining the `measure` and `is_successful` methods upon inheriting the base `Metric` class. Paste in the following:
+
+```python title="test_example.py"
+from deepeval.metrics.metric import Metric
+
+...
+
+class LengthMetric(Metric):
+    # This metric checks if the output length is greater than 10 characters
+    def __init__(self, max_length: int=10):
+        self.max_length = max_length
+
+    def measure(self, test_case: LLMTestCase):
+        self.success = len(test_case.actual_output) > self.max_length
+        return score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Length"
+
+
+def test_length():
+    input = "What if these shoes don't fit?"
+
+    # Replace this with the actual output of your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
+    length_metric = LengthMetric(max_length=10)
+    test_case = LLMTestCase(input=input, actual_output=actual_output)
+    assert_test(test_case, [length_metric])
+```
+
+Run `deepeval test run` from the root directory of your project again:
+
+```console
+deepeval test run test_example.py
+```
+
+You should see both `test_factual_consistency` and `test_length` passing.
+
+**Two things to note:**
+
+- Unlike `deepeval`'s default metrics, custom metrics does not require a `mimimum_score` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `actual_output` is greater than 10.
+- We removed `context` in `test_length` since it was irrelevant to evaluating output length. All you need is `input` and `actual_output` to create a valid `LLMTestCase`.
+
+## Combine Your Metrics
+
+You might've noticed we have duplicated test cases for both `test_factual_consistency` and `test_length` (ie. they have the same input and expected output). To avoid this redundancy, `deepeval` offers an easy way to apply as many metrics as you wish on a single test case.
+
+```python title="test_example.py"
+...
+
+def test_everything():
+    input = "What if these shoes don't fit?"
+    context = "All customers are eligible for a 30 day full refund at no extra cost."
+
+    # Replace this with the actual output of your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+    length_metric = LengthMetric(max_length=10)
+    funny_metric = LLMEvalMetric(name="Funny Metric", criteria="How funny it is", minimum_score=0.3)
+
+    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
+    assert_test(test_case, [factual_consistency_metric, length_metric, funny_metric])
+```
+
+In this scenario, `test_everything` only passes if all metrics are passing. Run `deepeval test run` again to see the results:
+
+```console
+deepeval test run test_example.py
+```
+
+## Visualize Your Results
+
+If you have reached this point, you've likely ran `deepeval test run` multiple times. To keep track of all future evaluation results created by `deepeval`, login to **[Confident AI](https://app.confident-ai.com/auth/signup)** by running the following command:
+
+```
+deepeval login
+```
+
+**Confident AI** is the platform powering `deepeval`, and offer deep insights to help you quickly figure out how to best implement your LLM application. Follow the instructions displayed on the CLI to create an account, get your Confident API key, and paste it in the CLI.
+
+Once you've pasted your Confident API key in the CLI, run:
+
+```
+deepeval test run test_examply.py
+```
+
+### View Test Run
+
+You should now see a link being returned upon test completion. Paste it in your browser to view results.
+
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/dashboard.png)
+
+### View Individual Test Cases
+
+Also view individual test cases for enhanced debugging:
+
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/dashboard2.png)
