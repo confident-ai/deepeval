@@ -4,6 +4,8 @@ title: Quick Introduction
 sidebar_label: Quick Introduction
 ---
 
+import Envelope from "@site/src/components/envelope";
+
 **DeepEval** is an open-source evaluation framework for Python, that makes it easy to build
 and iterate on LLM applications with the following principles in mind:
 
@@ -13,6 +15,8 @@ and iterate on LLM applications with the following principles in mind:
 - Provide optimal models for all evaluation metrics (with a continuous open-science initiative to advance evaluation techniques)
 - Metrics are simple to customize.
 - [alpha] Bring evaluation into production using Python decorators.
+
+<Envelope />
 
 ## Setup A Python Environement
 
@@ -44,13 +48,13 @@ from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test
 
 def test_factual_consistency():
-    query = "What if these shoes don't fit?"
+    input = "What if these shoes don't fit?"
     context = "All customers are eligible for a 30 day full refund at no extra cost."
 
-    # Replace this with the actual output from your LLM application
+    # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
-    test_case = LLMTestCase(query=query, output=actual_output, context=context)
+    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
     assert_test(test_case, [factual_consistency_metric])
 ```
 
@@ -62,7 +66,7 @@ deepeval test run test_example.py
 
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
-The variable `query` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this query. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context. All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
+The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context. All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
 
 :::note
 `deepeval`'s default metrics are not evaluated by LLMs. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
@@ -70,7 +74,7 @@ The variable `query` mimics a user input, and `actual_output` is a placeholder f
 
 ## Create Your First Custom Metric
 
-`deepeval` provides two types of custom metrics to evaluate LLM outputs: metrics evaluated with LLMs and metrics evaluated without LLMs. Here is a brief overview of each custom metric.
+`deepeval` provides two types of custom metric to evaluate LLM outputs: metrics evaluated with LLMs and metrics evaluated without LLMs. Here is a brief overview of each custom metric.
 
 ### LLM Evaluated Metrics
 
@@ -82,12 +86,12 @@ from deepeval.metrics.llm_eval_metric import LLMEvalMetric
 ...
 
 def test_humor():
-    query = "What if these shoes don't fit?"
+    input = "What if these shoes don't fit?"
 
-    # Replace this with the actual output from your LLM application
+    # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
     funny_metric = LLMEvalMetric(name="Funny Metric", criteria="How funny it is", minimum_score=0.3)
-    test_case = LLMTestCase(query=query, output=actual_output)
+    test_case = LLMTestCase(input=input, actual_output=actual_output)
     assert_test(test_case, [length_metric])
 ```
 
@@ -106,7 +110,7 @@ class LengthMetric(Metric):
         self.max_length = max_length
 
     def measure(self, test_case: LLMTestCase):
-        self.success = len(test_case.output) > self.max_length
+        self.success = len(test_case.actual_output) > self.max_length
         return score
 
     def is_successful(self):
@@ -118,12 +122,12 @@ class LengthMetric(Metric):
 
 
 def test_length():
-    query = "What if these shoes don't fit?"
+    input = "What if these shoes don't fit?"
 
-    # Replace this with the actual output from your LLM application
+    # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
     length_metric = LengthMetric(max_length=10)
-    test_case = LLMTestCase(query=query, output=actual_output)
+    test_case = LLMTestCase(input=input, actual_output=actual_output)
     assert_test(test_case, [length_metric])
 ```
 
@@ -137,8 +141,8 @@ You should see both `test_factual_consistency` and `test_length` passing.
 
 **Two things to note:**
 
-- Unlike `deepeval`'s default metrics, custom metrics does not require a `mimimum_score` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `output` is greater than 10.
-- We removed `context` in `test_length` since it was irrelevant to evaluating output length. All you need is `query` and `output` to create a valid `LLMTestCase`.
+- Unlike `deepeval`'s default metrics, custom metrics does not require a `mimimum_score` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `actual_output` is greater than 10.
+- We removed `context` in `test_length` since it was irrelevant to evaluating output length. All you need is `input` and `actual_output` to create a valid `LLMTestCase`.
 
 ## Combine Your Metrics
 
@@ -148,16 +152,16 @@ You might've noticed we have duplicated test cases for both `test_factual_consis
 ...
 
 def test_everything():
-    query = "What if these shoes don't fit?"
+    input = "What if these shoes don't fit?"
     context = "All customers are eligible for a 30 day full refund at no extra cost."
 
-    # Replace this with the actual output from your LLM application
+    # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
     length_metric = LengthMetric(max_length=10)
     funny_metric = LLMEvalMetric(name="Funny Metric", criteria="How funny it is", minimum_score=0.3)
 
-    test_case = LLMTestCase(query=query, output=actual_output, context=context)
+    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
     assert_test(test_case, [factual_consistency_metric, length_metric, funny_metric])
 ```
 
@@ -186,3 +190,7 @@ deepeval test run test_examply.py
 You should now see a link being returned upon test completion. Paste it in your browser to view results.
 
 ![ok](https://d2lsxfc3p6r9rv.cloudfront.net/dashboard.png)
+
+Also view individual test cases for enhanced debugging:
+
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/dashboard2.png)

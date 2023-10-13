@@ -17,23 +17,23 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
 - Bias
 - RAGAS
 
-`deepeval` also offers you a straightforward way to develop your own custom LLM-based evaluation metrics. **This is noteworthy because the standard metrics in `deepeval` are derived from traditional NLP models, not LLMs.**
+`deepeval` also offers you a straightforward way to develop your own custom LLM-based evaluation metrics. **This is noteworthy because all default metrics in `deepeval` are derived from traditional NLP models, not LLMs.**
 
 Metrics are measured on a test case. As outlined in the [test cases section](evaluation-test-cases), you may be required to supply the optional `context` and `expected_output` arguments for your `LLMTestCase` depending on the metrics you're evaluating it on.
 
 ## Types of Metrics
 
-A _custom metric_ is a type of metric you can create and customize by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versitle and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an _LLM evaluated_ or _classic metric_. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
+A **_custom_** metric is a type of metric you can create and customize by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versitle and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an **_LLM evaluated_** or **_classic_** metric. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
 
-`deepeval` also offer _default metrics_. All default metrics offered by `deepeval` are classic metrics. This means all default metrics in `deepeval` does not use LLMs for evaluation. This is delibrate for two main reasons:
+`deepeval` also offer **_default_** metrics. All default metrics offered by `deepeval` are classic metrics. This means all default metrics in `deepeval` does not use LLMs for evaluation. This is delibrate for two main reasons:
 
 - LLM evaluated metrics are versitle in nature and it's better if you create one using `deepeval`'s build-ins
 - Classic metrics are much harder to compute and requires extensive research
 
-All default metrics output a score between 0-1, and require a `minimum_score` argument to instantiate. A default metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
+All of `deepeval`'s default metrics output a score between 0-1, and require a `minimum_score` argument to instantiate. A default metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
 
 :::note
-Our suggestion is to begin with custom LLM evaluated metrics (which frequently surpass and offer more versatility than leading NLP models) and gradually transition to default metrics when feasible. We recommend using default metrics as an optimization to your evaluation workflow because they are more cost-effective.
+Our suggestion is to begin with custom LLM evaluated metrics (which frequently surpass and offer more versatility than leading NLP models), and gradually transition to `deepeval`'s default metrics when feasible. We recommend using default metrics as an optimization to your evaluation workflow because they are more cost-effective.
 :::
 
 ## Custom LLM Evaluated Metrics
@@ -60,7 +60,7 @@ There are two mandatory and two optional parameters required when instantiating 
 All instances of `LLMEvalMetric` returns a score ranging from 0-1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
 
 :::info
-`LLMEvalMetric` may or may not not require `context` or `expected_output`, but we recommend providing both arguments where possible for the most accurate scores.
+`LLMEvalMetric` may or may not not require `context` or `expected_output` supplied to `LLMTestCase`, but we recommend providing both arguments where possible for the most accurate evaluation.
 :::
 
 You can also supply a custom `completion_function` if for example you want to utilize another LLM provider to evaluate your `LLMTestCase`. By default, `deepeval` uses the `openai` chat completion function.
@@ -90,7 +90,7 @@ class LengthMetric(Metric):
         self.max_length = max_length
 
     def measure(self, test_case: LLMTestCase):
-        self.success = len(test_case.output) > self.max_length
+        self.success = len(test_case.actual_output) > self.max_length
         return score
 
     def is_successful(self):
@@ -101,7 +101,7 @@ class LengthMetric(Metric):
         return "Length"
 ```
 
-Noticed that we accessed `test_case.output` in `measure`. you will have to supply the optional context or expected_output arguments in the `LLMTestCase` depending on your `measure` implementation.
+Noticed that we accessed `test_case.actual_output` in `measure`. you will have to supply the optional `context` or `expected_output` arguments in the `LLMTestCase` depending on your `measure` implementation.
 
 In this example, you would instantiate `LengthMetric` as follows:
 
@@ -121,37 +121,40 @@ Factual consistency measures how factually correct the `actual_output` of your L
 import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import assert_test
+from deepeval.run_test import run_test
 
-def test_factual_consistency():
-    query = "What if these shoes don't fit?"
-    context = "All customers are eligible for a 30 day full refund at no extra cost."
+input = "What if these shoes don't fit?"
+context = "All customers are eligible for a 30 day full refund at no extra cost."
 
-    # Replace this with the actual output from your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
-    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
-    test_case = LLMTestCase(query=query, output=actual_output, context=context)
-    assert_test(test_case, [factual_consistency_metric])
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
+
+run_test(test_case, [metric])
 ```
 
 ## Answer Relevancy
 
-Answer Relevancy measures how relevant the `actual_output` of your LLM application is compared to the provided `query`. You don't have to supply `context` or `expected_output` when creating an `LLMTestCase` if you're just evaluating answer relevancy.
+Answer Relevancy measures how relevant the `actual_output` of your LLM application is compared to the provided `input`. You don't have to supply `context` or `expected_output` when creating an `LLMTestCase` if you're just evaluating answer relevancy.
 
 ```python
 import pytest
 from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import assert_test
+from deepeval.run_test import run_test
 
-def test_answer_relevancy():
-    query = "What if these shoes don't fit?"
 
-    # Replace this with the actual output from your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
-    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.7)
-    test_case = LLMTestCase(query=query, output=actual_output)
-    assert_test(test_case, [answer_relevancy_metric])
+input = "What if these shoes don't fit?"
+
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.7)
+test_case = LLMTestCase(input=input, output=actual_output)
+
+run_test(test_case, [answer_relevancy_metric])
 ```
 
 ## Conceptual Similarity
@@ -162,21 +165,140 @@ Conceptual Similarity measures how conceptually similar the `actual_output` of y
 import pytest
 from deepeval.metrics.conceptual_similarity import ConceptualSimilarityMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import assert_test
+from deepeval.run_test import run_test
 
-def test_answer_relevancy():
-    query = "What if these shoes don't fit?"
-    context = "All customers are eligible for a 30 day full refund at no extra cost."
 
-    # Replace this with the actual output from your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
-    conceptual_similarity_metric = ConceptualSimilarityMetric(minimum_score=0.7)
-    test_case = LLMTestCase(query=query, output=actual_output, context=context)
-    assert_test(test_case, [conceptual_similarity_metric])
+input = "What if these shoes don't fit?"
+context = "All customers are eligible for a 30 day full refund at no extra cost."
+
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+conceptual_similarity_metric = ConceptualSimilarityMetric(minimum_score=0.7)
+test_case = LLMTestCase(input=input, output=actual_output, context=context)
+
+run_test(test_case, [conceptual_similarity_metric])
 ```
 
 ## Toxicity
 
+```console
+pip install deepeval[toxic]
+```
+
+We do not require `expected_output` or `context` as these metrics can be evaluated without a reference.
+
+```python
+from deepeval.metrics.toxic_classifier import NonToxicMetric
+from deepeval.run_test import run_test
+from deepeval.test_case import LLMTestCase
+
+
+input = "What if these shoes don't fit?"
+context = "All customers are eligible for a 30 day full refund at no extra cost."
+
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+non_toxic_metric = NonToxicMetric()
+
+run_test(test_case, metrics=[non_toxic_metric])
+```
+
+:::note
+In `deepeval`, a higher score is always better (which remember, ranges from 0-1). This is why the metric is called `NonToxicMetric` instead of `ToxicMetric`.
+:::
+
 ## Bias
 
+`deepeval` offers an `UnBiasedMetric` to tackle bias that can occur after finetuning from any RLHF or optimizations (gender, racial, and political, just to name a few).
+
+```python
+from deepeval.metrics.bias_classifier import UnBiasedMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import run_test
+
+input = "What if these shoes don't fit?"
+
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+unbias_metric = NonToxicMetric()
+
+test_case = LLMTestCase(
+    input=input,
+    actual_output=actual_output
+)
+
+run_test(test_case, [unbias_metric])
+```
+
+Note that similar to `NonToxicMetric`, `expected_output` and `context` is not reqiured.
+
 ## RAGAS
+
+```console
+pip install ragas
+```
+
+```python
+from deepeval.metrics.ragas_metric import RagasMetric
+from deepeval.test_case import LLMTestCase
+
+input = "What if these shoes don't fit?"
+context = "All customers are eligible for a 30 day full refund at no extra cost."
+expected_output = "You're eligible for a 30 day refund at no extra cost.",
+
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+ragas_metric = RagasMetric()
+test_case = LLMTestCase(
+    input=input,
+    actual_output=actual_output,
+    expected_output=expected_output,
+    context=context,
+)
+
+run_test(test_case, [ragas_metric])
+```
+
+These are the additional RAGAS metrics `deepeval` supports:
+
+```python
+from deepeval.metrics.ragas_metric import RagasContextualRelevancyMetric
+from deepeval.metrics.ragas_metric import RagasAnswerRelevancyMetric
+from deepeval.metrics.ragas_metric import RagasFaithfulnessMetric
+from deepeval.metrics.ragas_metric import RagasContextRecallMetric
+```
+
+As an overview here are what each metric measures:
+
+- `RagasFaithfulnessMetric` - ensures output align with context. Penalizes claims not deduced from the context. Calculated using the `actual_output` and `context`.
+
+- `RagasContextualRelevancyMetric` - assesses the relevance of retrieved contexts to input. Penalizes redundant information. Based on the `input` and `context`.
+
+- `RagasContextRecallMetric` - gauges the recall of the retrieved context using the annotated answer as a reference. Based on the `expected_output` and `context`.
+
+- `RagasAnswerRelevancyMetric` - measures how directly a response addresses a question. Penalizes redundancy or incompleteness. Derived from the `input` and `actual_output`.
+
+## Top-K Similarity
+
+This metric is different from the rest because it measures `SearchTestCase` instead of `LLMTestCase` as introduced in the [test cases](/docs/evaluation-test-cases) section. Unlike an `LLMTestCase`, the `SearchTestCase` focuses solely on the retrieval results, and is especially relevant for assessing retrieval pipelines in RAG applications.
+
+```python
+from deepeval.metrics.ranking_similarity import RankingSimilarity
+from deepeval.test_case import SearchTestCase
+from deepeval.run_test import run_test
+
+
+actual_retrieval_results = ["The Eiffel Tower is located in Paris.", "Jupiter is the largest planet in our solar system."]
+ideal_retrieval_results = ["Paris is home to the Eiffel Tower.", "In our solar system, Jupiter holds the title for the biggest planet."]
+
+ranking_similarity_metric = RankingSimilarity(minimum_score=0.5)
+test_case = SearchTestCase(actual_retrieval_results, ideal_retrieval_results)
+
+run_test(test_case, [ranking_similarity_metric])
+```
+
+Here, `actual_retrieval_results` will be retrieval results from your RAG application and would typically come from your vector database of choice.
