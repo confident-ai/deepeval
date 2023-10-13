@@ -1,7 +1,7 @@
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'DeepEval',
-  tagline: 'Unit Testing for LLMs',
+  tagline: 'Evaluation Framework for LLMs',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -53,8 +53,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // TODO: make this an actual social card
-      // image: 'img/docusaurus-social-card.jpeg',
+      image: 'img/social_card.png',
       navbar: {
         logo: {
           alt: 'DeepEval Logo',

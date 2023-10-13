@@ -75,7 +75,8 @@ class FactualConsistencyResponseEvaluator:
         return context
 
     def evaluate(self, response: Response) -> str:
-        """Evaluate factual consistency metrics"""
+
+        # Evaluate factual consistency metrics
         answer = str(response)
         metric = FactualConsistencyMetric()
         context = self.get_context(response)

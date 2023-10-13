@@ -23,7 +23,7 @@ Metrics are measured on a test case. As outlined in the [test cases section](eva
 
 ## Types of Metrics
 
-A **_custom_** metric is a type of metric you can create and customize by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versitle and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an **_LLM evaluated_** or **_classic_** metric. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
+A **_custom_** metric is a type of metric you can easily create by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versitle and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an **_LLM evaluated_** or **_classic_** metric. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
 
 `deepeval` also offer **_default_** metrics. All default metrics offered by `deepeval` are classic metrics. This means all default metrics in `deepeval` does not use LLMs for evaluation. This is delibrate for two main reasons:
 
@@ -270,9 +270,13 @@ from deepeval.metrics.ragas_metric import RagasContextualRelevancyMetric
 from deepeval.metrics.ragas_metric import RagasAnswerRelevancyMetric
 from deepeval.metrics.ragas_metric import RagasFaithfulnessMetric
 from deepeval.metrics.ragas_metric import RagasContextRecallMetric
+from deepeval.metrics.ragas_metric import RagasConcisenessMetric
+from deepeval.metrics.ragas_metric import RagasCorrectnessMetric
+from deepeval.metrics.ragas_metric import RagasCoherenceMetric
+from deepeval.metrics.ragas_metric import RagasMaliciousnessMetric
 ```
 
-As an overview here are what each metric measures:
+As an overview, here are what each metric measures:
 
 - `RagasFaithfulnessMetric` - ensures output align with context. Penalizes claims not deduced from the context. Calculated using the `actual_output` and `context`.
 
