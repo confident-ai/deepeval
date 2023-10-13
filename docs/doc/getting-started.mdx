@@ -37,6 +37,16 @@ pip install -U deepeval
 
 The command above will install the latest version of `deepeval` into your project's virtual environement.
 
+```console
+deepeval login
+```
+
+Although highly recommended, you can also optionally keep track of all evaluation results by logging into our [hosted platform](https://confident-ai.com).
+
+:::note
+Please [contact us](https://calendly.com/jeffreyip-cno/sales-call) if you're dealing with sensitive data that has to reside in your private VPCs.
+:::
+
 ## Create Your First Test Case
 
 Run `touch test_examply.py` to create a test file in your root directory. Open `test_example.py` and paste in your first test case:
@@ -69,7 +79,7 @@ deepeval test run test_example.py
 The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context. All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
 
 :::note
-`deepeval`'s default metrics are not evaluated by LLMs. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
+`deepeval`'s default metrics are not evaluated using LLMs. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
 :::
 
 ## Create Your First Custom Metric
@@ -187,9 +197,13 @@ Once you've pasted your Confident API key in the CLI, run:
 deepeval test run test_examply.py
 ```
 
+### View Test Run
+
 You should now see a link being returned upon test completion. Paste it in your browser to view results.
 
 ![ok](https://d2lsxfc3p6r9rv.cloudfront.net/dashboard.png)
+
+### View Individual Test Cases
 
 Also view individual test cases for enhanced debugging:
 
