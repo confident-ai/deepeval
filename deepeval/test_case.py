@@ -17,19 +17,25 @@ class TestCase:
 
 @dataclass
 class LLMTestCase(TestCase):
-    expected_output: str = "-"
-    context: Optional[Union[str, List[str]]] = None
-    query: str = None
-    output: str = None
+    def __init__(
+        self,
+        input: str,
+        actual_output: str,
+        expected_output: str = "-",
+        context: Optional[Union[str, List[str]]] = None,
+        id: Optional[str] = None,
+    ):
+        super().__init__(id)
+        self.input = input
+        self.actual_output = actual_output
+        self.expected_output = expected_output
+        # Force context to be a list
+        if isinstance(context, str):
+            context = [context]
+        self.context = context
 
     def __post_init__(self):
         super().__post_init__()
-
-        if self.query is None:
-            raise ValueError("Query cannot be empty")
-        elif self.output is None:
-            raise ValueError("Output cannot be empty")
-
         self.__name__ = f"LLMTestCase_{self.id}"
 
 
@@ -39,13 +45,13 @@ class SearchTestCase(TestCase):
         self,
         output_list: List[Any],
         golden_list: List[Any],
-        query: Optional[str] = None,
+        input: Optional[str] = None,
         id: Optional[str] = None,
     ):
         super().__init__(id)
         self.output_list = output_list
         self.golden_list = golden_list
-        self.query = query
+        self.input = input
 
 
 class AgentTestCase(TestCase):

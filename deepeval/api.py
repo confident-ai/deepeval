@@ -158,8 +158,8 @@ class TestRun(BaseModel):
                 APITestCase(
                     # Get the test from the pytest plugin
                     name=os.getenv(PYTEST_RUN_TEST_NAME, "-"),
-                    input=test_case.query,
-                    actualOutput=test_case.output,
+                    input=test_case.input,
+                    actualOutput=test_case.actual_output,
                     expectedOutput=test_case.expected_output,
                     success=success,
                     metricsMetadata=metrics_metadata,

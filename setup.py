@@ -28,6 +28,7 @@ setup(
         "protobuf<=3.20.5",
         "pandas",
         "pydantic",  # loosen pydantic requirements as we support multiple
+        "sentry-sdk",
     ],
     extras_require={
         "bias": [

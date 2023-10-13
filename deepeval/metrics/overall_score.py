@@ -33,7 +33,7 @@ class OverallScoreMetric(Metric, metaclass=Singleton):
             )
             metadata["factual_consistency"] = float(factual_consistency_score)
 
-        if test_case.query is not None:
+        if test_case.input is not None:
             answer_relevancy_score = self.answer_relevancy.measure(test_case)
             metadata["answer_relevancy"] = float(answer_relevancy_score)
 
@@ -67,8 +67,8 @@ def assert_overall_score(
 ):
     metric = OverallScoreMetric(minimum_score=minimum_score)
     test_case = LLMTestCase(
-        query=query,
-        output=output,
+        input=query,
+        actual_output=output,
         expected_output=expected_output,
         context=context,
     )

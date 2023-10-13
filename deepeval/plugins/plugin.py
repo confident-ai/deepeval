@@ -25,6 +25,19 @@ def pytest_runtest_protocol(
     return None  # continue with the default protocol
 
 
+@pytest.hookimpl(tryfirst=True)
+def pytest_fixture_setup(fixturedef, request: pytest.FixtureRequest) -> None:
+    if hasattr(fixturedef, "fixturenamea"):
+        name = fixturedef.fixturename
+        if name == "run_configuration":
+            if fixturedef.cached_result:
+                fixture_value, _, _ = fixturedef.cached_result
+                print("Fixture value: ", fixture_value)
+                test_run: TestRun = TestRun.load(test_filename)
+                test_run.configurations = fixture_value
+                test_filename = test_run.save()
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_sessionfinish(session: pytest.Session, exitstatus):
     print("Running teardown with pytest sessionfinish...")
@@ -73,29 +86,6 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         - passes[metric]
         for metric in all_metrics
     }
-    # Check if running inside a GitHub Action
-    is_github_action = os.getenv("GITHUB_ACTIONS", False)
-
-    # if is_github_action:
-    #     # Create a markdown table for GitHub
-    #     table = (
-    #         "| Metric | Average Score | Passes | Failures | Success Rate |\n"
-    #     )
-    #     table += "| --- | --- | --- | --- | --- |\n"
-    #     total_passes = 0
-    #     total_failures = 0
-    #     for metric, avg in metrics_avg.items():
-    #         pass_count = passes[metric]
-    #         fail_count = failures[metric]
-    #         total_passes += pass_count
-    #         total_failures += fail_count
-    #         success_rate = pass_count / (pass_count + fail_count) * 100
-    #         table += f"| {metric} | {avg} | {pass_count} | {fail_count} | {success_rate:.2f}% |\n"
-    #     total_tests = total_passes + total_failures
-    #     overall_success_rate = total_passes / total_tests * 100
-    #     table += f"| Total | - | {total_passes} | {total_failures} | {overall_success_rate:.2f}% |\n"
-    #     print(table)
-    # else:
     # Create a table with rich
     from rich.table import Table
 

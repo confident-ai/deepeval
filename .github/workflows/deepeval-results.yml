@@ -37,7 +37,7 @@ jobs:
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
           CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
-          deepeval login --api-key $CONFIDENT_AI_API_KEY --implementation-name testrun
+          deepeval login --api-key $CONFIDENT_AI_API_KEY
           (deepeval test run tests/test_quickstart.py) > output.txt 2>&1
           # remove the ANCI codes
           sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
@@ -60,4 +60,3 @@ jobs:
             ```
             ${{ env.test_result }}
             ```
-
