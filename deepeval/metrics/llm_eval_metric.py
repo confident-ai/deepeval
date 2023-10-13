@@ -54,7 +54,7 @@ JSON:"""
         """Measure out the LLM evaluated metric."""
         # Measure the test case
         prompt: dict = self.prompt_template.format(
-            text=test_case.output, criteria=self.criteria
+            text=test_case.actual_output, criteria=self.criteria
         )
         output: str = self.completion_function(prompt)
         response = json.loads(output.strip())

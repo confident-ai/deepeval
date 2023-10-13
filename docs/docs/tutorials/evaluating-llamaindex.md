@@ -96,7 +96,7 @@ class FactualConsistencyResponseEvaluator:
     metric = FactualConsistencyMetric()
     context = self.get_context(response)
     context = " ".join([d.text for d in context])
-    test_case = LLMTestCase(query="This is an example input", context=context, output=answer)
+    test_case = LLMTestCase(input="This is an example input", context=context, actual_output=answer)
     score = metric.measure(test_case=test_case)
     if metric.is_successful():
         return "YES"

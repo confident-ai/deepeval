@@ -65,11 +65,11 @@ class EvaluationDataset(UserList):
         for i, query_data in enumerate(querys):
             cls.data.append(
                 LLMTestCase(
-                    query=query_data,
+                    input=query_data,
                     expected_output=expected_outputs[i],
                     context=contexts[i],
                     id=ids[i] if id_column else None,
-                    output=outputs[i] if output_column else None,
+                    actual_output=outputs[i] if output_column else None,
                 )
             )
         return cls(cls.data)
@@ -116,10 +116,10 @@ class EvaluationDataset(UserList):
         for i, row in enumerate(hf_dataset):
             test_cases.append(
                 LLMTestCase(
-                    query=row[query_column],
+                    input=row[query_column],
                     expected_output=row[expected_output_column],
                     context=row[context_column] if context_column else None,
-                    output=row[output_column] if output_column else None,
+                    actual_output=row[output_column] if output_column else None,
                     id=row[id_column] if id_column else None,
                 )
             )
@@ -152,10 +152,10 @@ class EvaluationDataset(UserList):
         for i, query in enumerate(data[query_column]):
             test_cases.append(
                 LLMTestCase(
-                    query=data[query_column][i],
+                    input=data[query_column][i],
                     expected_output=data[expected_output_column][i],
                     context=data[context_column][i],
-                    output=data[output_column][i],
+                    actual_output=data[output_column][i],
                     id=data[id_column][i] if id_column else None,
                 )
             )
@@ -183,10 +183,10 @@ class EvaluationDataset(UserList):
         for i, query in enumerate(data):
             test_cases.append(
                 LLMTestCase(
-                    query=data[i][query_column],
+                    input=data[i][query_column],
                     expected_output=data[i][expected_output_column],
                     context=data[i][context_column],
-                    output=data[i][output_column],
+                    actual_output=data[i][output_column],
                     id=data[i][id_column] if id_column else None,
                 )
             )
@@ -221,10 +221,10 @@ class EvaluationDataset(UserList):
         for i, case_data in enumerate(data):
             test_cases.append(
                 LLMTestCase(
-                    query=case_data[query_key],
+                    input=case_data[query_key],
                     expected_output=case_data[expected_output_key],
                     context=case_data[context_key] if context_key else None,
-                    output=case_data[output_key] if output_key else None,
+                    actual_output=case_data[output_key] if output_key else None,
                     id=case_data[id_key] if id_key else None,
                 )
             )
@@ -581,11 +581,11 @@ JSON:"""
     test_cases = []
     for response in responses:
         test_case = LLMTestCase(
-            query=response["query"],
+            input=response["query"],
             expected_output=response["answer"],
             context=context,
             # store this as None for now
-            output="-",
+            actual_output="-",
         )
         test_cases.append(test_case)
 

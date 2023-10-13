@@ -14,7 +14,7 @@ context = "The FIFA World Cup in 2018 was won by the French national football te
 def test_ragas_score():
     test_case = LLMTestCase(
         query=query,
-        output=output,
+        actual_output=output,
         expected_output=expected_output,
         context=context,
     )

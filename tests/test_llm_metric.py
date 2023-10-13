@@ -17,7 +17,7 @@ def test_chat_completion():
     )
     test_case = LLMTestCase(
         query="What is the capital of France?",
-        output="Paris",
+        actual_output="Paris",
         expected_output="Paris",
         context="Geography",
     )

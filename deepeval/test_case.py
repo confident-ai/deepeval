@@ -19,15 +19,15 @@ class TestCase:
 class LLMTestCase(TestCase):
     def __init__(
         self,
-        query: str,
-        output: str,
+        input: str,
+        actual_output: str,
         expected_output: str = "-",
         context: Optional[Union[str, List[str]]] = None,
         id: Optional[str] = None,
     ):
         super().__init__(id)
-        self.query = query
-        self.output = output
+        self.input = input
+        self.actual_output = actual_output
         self.expected_output = expected_output
         # Force context to be a list
         if isinstance(context, str):
@@ -45,13 +45,13 @@ class SearchTestCase(TestCase):
         self,
         output_list: List[Any],
         golden_list: List[Any],
-        query: Optional[str] = None,
+        input: Optional[str] = None,
         id: Optional[str] = None,
     ):
         super().__init__(id)
         self.output_list = output_list
         self.golden_list = golden_list
-        self.query = query
+        self.input = input
 
 
 class AgentTestCase(TestCase):

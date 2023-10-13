@@ -66,7 +66,7 @@ def test_customer_chatbot(test_case: dict):
     context = test_case["context"]
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output, context=context)
+    test_case = LLMTestCase(input=query, actual_output=output, context=context)
     assert_test(
         test_case, [factual_consistency_metric, answer_relevancy_metric]
     )
@@ -151,7 +151,7 @@ def test_customer_chatbot(test_case: dict):
     context = test_case["context"]
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(query=query, output=output, context=context)
+    test_case = LLMTestCase(input=query, actual_output=output, context=context)
     assert_test(
         test_case, [factual_consistency_metric, answer_relevancy_metric]
     )

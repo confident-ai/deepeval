@@ -27,7 +27,7 @@ metric = LLMEvalMetric(
     minimum_score=0.3
 )
 
-test_case = LLMTestCase(query="This is an example input", output="Mobile phones are rocks.")
+test_case = LLMTestCase(input="This is an example input", actual_output="Mobile phones are rocks.")
 score = metric.measure(test_case)
 ```
 
