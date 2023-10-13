@@ -40,6 +40,10 @@ class LengthMetric(Metric):
 
     def measure(self, test_case: LLMTestCase):
         self.success = len(test_case.actual_output) > self.max_length
+        if self.success:
+            score = 1
+        else:
+            score = 0
         return score
 
     def is_successful(self):
