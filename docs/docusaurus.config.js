@@ -2,7 +2,7 @@
 const config = {
   title: 'DeepEval',
   tagline: 'Evaluation Framework for LLMs',
-  favicon: 'img/favicon.ico',
+  favicon: 'static/img/favicon.ico',
 
   // Set the production url of your site here
   url: 'https://docs.confident-ai.com',
@@ -33,12 +33,11 @@ const config = {
   ],
   presets: [
     [
-      'classic',
-      /** @type {import('@docusaurus/preset-classic').Options} */
-      ({
+      '@docusaurus/preset-classic',
+      {
         docs: {
-          path: 'doc',
-          editUrl: 'https://github.com/confident-ai/deepeval/edit/main/docs/doc/',
+          path: 'docs',
+          editUrl: 'https://github.com/confident-ai/deepeval/edit/main/docs/docs/',
           showLastUpdateAuthor: true,
           showLastUpdateTime: true,
           sidebarPath: require.resolve('./sidebars.js'),
@@ -46,14 +45,18 @@ const config = {
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
-      }),
+        gtag: {
+          trackingID: 'G-N2EGDDYG9M',
+          anonymizeIP: true,
+        },
+      },
     ],
-  ],
-
+  ],  
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/social_card.png',
+      // TODO: make this an actual social card
+      // image: 'img/docusaurus-social-card.jpeg',
       navbar: {
         logo: {
           alt: 'DeepEval Logo',
