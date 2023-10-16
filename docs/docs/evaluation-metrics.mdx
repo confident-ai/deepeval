@@ -156,7 +156,7 @@ input = "What if these shoes don't fit?"
 actual_output = "We offer a 30-day full refund at no extra cost."
 
 answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.7)
-test_case = LLMTestCase(input=input, output=actual_output)
+test_case = LLMTestCase(input=input, actual_output=actual_output)
 
 run_test(test_case, [answer_relevancy_metric])
 ```
@@ -179,7 +179,7 @@ context = "All customers are eligible for a 30 day full refund at no extra cost.
 actual_output = "We offer a 30-day full refund at no extra cost."
 
 conceptual_similarity_metric = ConceptualSimilarityMetric(minimum_score=0.7)
-test_case = LLMTestCase(input=input, output=actual_output, context=context)
+test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
 
 run_test(test_case, [conceptual_similarity_metric])
 ```
