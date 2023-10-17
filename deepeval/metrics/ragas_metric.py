@@ -15,7 +15,7 @@ class RagasContextualRelevancyMetric(Metric):
         self.minimum_score = minimum_score
         try:
             # Adding a list of metrics
-            from ragas.metrics import context_relevancy
+            from ragas.metrics.context_precision import context_relevancy
 
             self.metrics = [context_relevancy]
 
@@ -41,7 +41,7 @@ class RagasContextualRelevancyMetric(Metric):
         # Create a dataset from the test case
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -98,7 +98,7 @@ class RagasAnswerRelevancyMetric(Metric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -149,7 +149,7 @@ class RagasFaithfulnessMetric(Metric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -202,7 +202,7 @@ class RagasContextRecallMetric(Metric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -255,7 +255,7 @@ class RagasHarmfulnessMetric(Metric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -494,11 +494,11 @@ class RagasMetric(Metric):
         self.minimum_score = minimum_score
         if metrics is None:
             self.metrics = [
+                RagasContextualRelevancyMetric,
                 RagasHarmfulnessMetric,
                 RagasContextRecallMetric,
                 RagasFaithfulnessMetric,
                 RagasAnswerRelevancyMetric,
-                RagasContextualRelevancyMetric,
             ]
         else:
             self.metrics = metrics

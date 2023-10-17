@@ -20,7 +20,7 @@ def run_configuration() -> dict:
 def test_non_toxic():
     assert_test(
         test_cases=LLMTestCase(
-            query="placeholder",
+            input="placeholder",
             actual_output=output,
         ),
         metrics=[metric],

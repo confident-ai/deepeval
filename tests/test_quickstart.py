@@ -40,7 +40,7 @@ def test_0():
     context = "Biology"
 
     test_case = LLMTestCase(
-        query=query,
+        input=query,
         actual_output=output,
         expected_output=expected_output,
         context=context,
