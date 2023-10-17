@@ -35,9 +35,9 @@ def test_query_answer_relevancy():
 
 def test_compare_answer_relevancy_2():
     scorer = AnswerRelevancyMetric(minimum_score=0.5)
-    test_case = LLMTestCase(input=query, output="Programming lang")
+    test_case = LLMTestCase(input=query, actual_output="Programming lang")
     test_case_2 = LLMTestCase(
-        query=query, actual_output="Python is a programming lang"
+        input=query, actual_output="Python is a programming lang"
     )
     results = run_test([test_case, test_case_2], metrics=[scorer])
     assert results[1].score > results[0].score
@@ -48,7 +48,7 @@ def test_compare_answer_relevancy():
     query = "what is python"
     test_case = LLMTestCase(input=query, actual_output="Programming lang")
     test_case_2 = LLMTestCase(
-        query=query, actual_output="Python is a programming lang"
+        input=query, actual_output="Python is a programming lang"
     )
     result = run_test([test_case, test_case_2], metrics=[metric])
     assert result[1].score > result[0].score
