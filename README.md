@@ -1,4 +1,4 @@
-# DeepEval - Unit Testing for LLMs
+# DeepEval - Evaluation Framework for LLMs
 
 <p align="center">
     <a>
@@ -12,9 +12,7 @@
     </a>
 </p>
 
-**DeepEval** is a Python package that helps developers evaluate the outputs of Large Language Models (LLMs). It easily connects with your Continuous Integration/Continuous Delivery (CI/CD) pipelines through metric-based evaluation. These include evaluation criteria like faithfulness, accuracy, relevance, bias, and harmful language.
-
-We welcome all contributions from researchers/scientists who would like to contribute to this open-science effort. Feel free to also file a Github feature request if there is a particular evaluation benchmark you would like.
+**DeepEval** is a Python package that enables developers to evaluate their LLM applications. Whether your application is implementated via RAG or fine-tuning, you can use DeepEval to "unit test" your LLM outputs through built-in and optimal evaluation practices. Using DeepEval, you can evaluate your LLM application on metrics you care about - such as faithfulness, accuracy, relevance, bias, harmfulness, and much more.
 
 <hr />
 <br />
