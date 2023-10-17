@@ -1,18 +1,24 @@
-# DeepEval - Evaluation Framework for LLMs
+<p align="center">
+    <img src="https://github.com/confident-ai/deepeval/blob/main/docs/static/img/DeepEval.png" alt="DeepEval Logo" width="100%">
+</p>
 
 <p align="center">
-    <a>
-        <img alt="Pepy Total Downlods" src="https://img.shields.io/pepy/dt/deepeval">
+    <a href="https://confident-ai.com" target="_blank">
+        Website
     </a>
-    <a href="https://github.com/vector-ai/vectorhub">
-        <img alt="Release" src="https://img.shields.io/github/v/tag/confident-ai/deepeval?label=release">
+   &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
+    <a href="https://docs.confident-ai.com" target="_blank">
+        Documentation
     </a>
-    <a href="https://discord.gg/a3K9c8GRGt">
-        <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/a3K9c8GRGt?style=flat">
+   &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
+    <a href="https://discord.gg/a3K9c8GRGt" target="_blank">
+        Discord
     </a>
 </p>
 
-**DeepEval** is a Python package that enables developers to evaluate their LLM applications. Whether your application is implementated via RAG or fine-tuning, you can use DeepEval to "unit test" your LLM outputs through built-in and optimal evaluation practices. Using DeepEval, you can evaluate your LLM application on metrics you care about - such as faithfulness, accuracy, relevance, bias, harmfulness, and much more.
+**DeepEval** is a simple-to-use, open-source evaluation framework for LLM applications. You write **"unit tests" in python** to evaluate your entire LLM application on metrics such as faithfulness, accuracy, relevance, and much more. Whether your application is implementated via RAG or fine-tuning, LangChain or lLamaIndex, you can use DeepEval to evaluate your LLM application in seconds. It's an production-ready alternative to **RAGAS**.
+
+DeepEval is designed to help you choose the optimal hyperparameters to improve your RAG pipeline, select the best prompt templates, or even transition from OpenAI to hosting your own lLama2 with confidence. With DeepEval, you'll won't be frustrated with fixing breaking changes in your LLM application ever again.
 
 <hr />
 <br />
