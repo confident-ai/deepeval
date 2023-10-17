@@ -16,7 +16,7 @@
     </a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source evaluation framework for LLM applications. You write **"unit tests" in python** to evaluate your entire LLM application on metrics such as faithfulness, accuracy, relevance, and much more. Whether your application is implementated via RAG or fine-tuning, LangChain or lLamaIndex, you can use DeepEval to evaluate your LLM application in seconds. It's an production-ready alternative to **RAGAS**.
+**DeepEval** is a simple-to-use, open-source evaluation framework for LLM applications. Write **"unit tests" in python** to evaluate your LLM applications on metrics such as faithfulness, accuracy, relevance, and much more. Whether your application is implementated via RAG or fine-tuning, LangChain or lLamaIndex, you can use DeepEval to evaluate your LLM application in seconds. It's an production-ready alternative to **RAGAS**.
 
 DeepEval is designed to help you choose the optimal hyperparameters to improve your RAG pipeline, select the best prompt templates, or even transition from OpenAI to hosting your own lLama2 with confidence. With DeepEval, you'll won't be frustrated with fixing breaking changes in your LLM application ever again.
 
