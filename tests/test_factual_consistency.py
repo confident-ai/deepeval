@@ -42,7 +42,7 @@ def test_factual_consistency_metric():
 def test_factual_consistency_metric_2():
     metric = FactualConsistencyMetric(minimum_score=0.6)
     test_case = LLMTestCase(
-        query="placeholder",
+        input="placeholder",
         actual_output="Python is a programming language.",
         context="Python is NOT a programming language.",
     )
@@ -53,7 +53,7 @@ def test_factual_consistency_metric_2():
 def test_factual_consistency_metric_3():
     metric = FactualConsistencyMetric(minimum_score=0.6)
     test_case = LLMTestCase(
-        query="placeholder",
+        input="placeholder",
         actual_output="Python is a programming language.",
         context="Python is a snake.",
     )
