@@ -119,8 +119,7 @@ Please read [CONTRIBUTING.md](https://github.com/confident-ai/deepeval/blob/main
 
 Built by co-founders of Confident AI.
 
-- for anything related to the package, contact jacky@confident-ai.com or [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Stay%20Updated%20On%20X)](https://twitter.com/colabdog)
-- for anything related to the web platform, contact jeffreyip@confident-ai.com
+- for enquires, contact jeffreyip@confident-ai.com
 
 ## License
 
