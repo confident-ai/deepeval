@@ -54,9 +54,11 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         return
 
     if exitstatus != 0:
-        print("An error occurred during the tests. This does not mean your test failed.")
+        print(
+            "An error occurred during the tests. This does not mean your test failed."
+        )
         return
-    
+
     if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
         api: Api = Api()
         result = api.post_test_run(test_run)
@@ -137,7 +139,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    for report in terminalreporter.getreports('skipped'):
+    for report in terminalreporter.getreports("skipped"):
         if report.skipped:
-            reason = report.longreprtext.split('\n')[-1]
+            reason = report.longreprtext.split("\n")[-1]
             print(f"Test {report.nodeid} was skipped. Reason: {reason}")
