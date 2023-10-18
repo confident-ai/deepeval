@@ -1,14 +1,3 @@
-# from .test_utils import assert_exact_match, TestEvalCase
-# from . import (
-#     _version,
-#     dataset,
-#     evaluator,
-#     metrics,
-#     query_generator,
-#     test_case,
-#     test_utils,
-#     utils,
-# )
 import warnings
 import re
 
@@ -16,6 +5,9 @@ import re
 from .telemetry import *
 from ._version import __version__
 
+from .decorators.hyperparameters import set_hyperparameters
+
+__all__ = ['set_hyperparameters']
 
 def compare_versions(version1, version2):
     def normalize(v):
