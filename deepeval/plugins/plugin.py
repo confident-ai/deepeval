@@ -25,6 +25,7 @@ def pytest_runtest_protocol(
     os.environ[PYTEST_RUN_TEST_NAME] = item.nodeid.split("::")[-1]
     return None  # continue with the default protocol
 
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_sessionfinish(session: pytest.Session, exitstatus):
     print("Running teardown with pytest sessionfinish...")
