@@ -11,6 +11,7 @@ output = "Winners of the FIFA world cup were the French national football team"
 
 metric = UnBiasedMetric()
 
+
 def test_non_toxic():
     assert_test(
         test_cases=LLMTestCase(
