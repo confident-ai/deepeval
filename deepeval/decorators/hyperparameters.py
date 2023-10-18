@@ -1,7 +1,4 @@
-import pytest
-
 _hyperparameters = None
-
 
 def set_hyperparameters(func):
     global _hyperparameters
