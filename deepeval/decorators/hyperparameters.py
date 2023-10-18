@@ -1,5 +1,6 @@
 _hyperparameters = None
 
+
 def set_hyperparameters(func):
     global _hyperparameters
     _hyperparameters = func()
