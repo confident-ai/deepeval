@@ -277,6 +277,7 @@
     height: 200px;
     cursor: pointer;
 }
+
 .animatedMail {
     position: absolute;
     height: 150px;
@@ -285,6 +286,7 @@
     -moz-transition: 0.4s;
     transition: 0.4s;
 }
+
 .animatedMail .body {
     position: absolute;
     bottom: 0;
@@ -400,12 +402,12 @@
     border-radius: 100%;
     background: radial-gradient(black, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.0));
 }
-.letterImage:hover .animatedMail {
+.letterImage .animatedMail {
     transform: translateY(50px);
     -webkit-transform: translateY(50px);
     -moz-transform: translateY(50px);
 }
-.letterImage:hover .animatedMail .topFold {
+.letterImage .animatedMail .topFold {
     transition: transform 0.4s, z-index 0.2s;
     transform: rotateX(180deg);
     -webkit-transition: transform 0.4s, z-index 0.2s;
@@ -414,9 +416,9 @@
     -moz-transform: rotateX(180deg);
     z-index: 0;
 }
-.letterImage:hover .animatedMail .letter {
+.letterImage .animatedMail .letter {
     height: 180px;
 }
-.letterImage:hover .shadow {
+.letterImage .shadow {
     width: 250px;
 }
