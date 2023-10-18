@@ -9,10 +9,10 @@ with open("requirements.txt", "r") as f:
 setup(
     name="deepeval",
     version=__version__,
-    url="https://github.com/mr-gpt/deepeval",
+    url="https://github.com/confident-ai.com/deepeval",
     author="Confident AI",
-    author_email="jacky@twilix.io",
-    description="DeepEval provides evaluation and unit testing to accelerate development of LLMs and Agents.",
+    author_email="jeffreyip@confident-ai.com",
+    description="The open-source evaluation framework for LLMs.",
     packages=find_packages(),
     # TODO - make pandas an 'extra' requirement in the future
     install_requires=[
