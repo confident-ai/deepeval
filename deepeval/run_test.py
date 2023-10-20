@@ -14,7 +14,7 @@ from .constants import (
 )
 from .get_api_key import _get_api_key, _get_implementation_name
 from .metrics import Metric
-from .test_case import LLMTestCase, TestCase, SearchTestCase
+from .test_case import LLMTestCase, TestCase
 from .api import TestRun
 
 
@@ -76,7 +76,7 @@ class TestResult:
 
 
 def create_test_result(
-    test_case: Union[LLMTestCase, SearchTestCase],
+    test_case: LLMTestCase,
     success: bool,
     score: float,
     metric: float,
@@ -94,25 +94,12 @@ def create_test_result(
             metadata=None,
             context=test_case.context,
         )
-    elif isinstance(test_case, SearchTestCase):
-        return TestResult(
-            success=success,
-            score=score,
-            metric_name=metric.__name__,
-            query=test_case.input if test_case.input else "-",
-            output=test_case.output_list if test_case.output_list else "-",
-            expected_output=test_case.golden_list
-            if test_case.golden_list
-            else "-",
-            metadata=None,
-            context="-",
-        )
     else:
         raise ValueError("TestCase not supported yet.")
 
 
 def run_test(
-    test_cases: Union[TestCase, LLMTestCase, SearchTestCase, List[LLMTestCase]],
+    test_cases: Union[TestCase, LLMTestCase, List[LLMTestCase]],
     metrics: List[Metric],
     max_retries: int = 1,
     delay: int = 1,
