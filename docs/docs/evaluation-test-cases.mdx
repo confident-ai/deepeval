@@ -156,6 +156,8 @@ prompt_template = """
 prompt = prompt_template.format(text="Who's a good boy?")
 
 context = ["Rocky is a good boy."]
+
+# Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["Rocky is a good cat."]
 
 test_case = LLMTestCase(
