@@ -13,9 +13,10 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
 - Factual Consistency
 - Answer Relevancy
 - Conceptual Similarity
+- Ranking Similarity
+- RAGAS
 - Toxicity
 - Bias
-- RAGAS
 
 `deepeval` also offers you a straightforward way to develop your own custom LLM-based evaluation metrics. **This is noteworthy because all default metrics in `deepeval` are derived from traditional NLP models, not LLMs.**
 
@@ -128,7 +129,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.run_test import run_test
 
 input = "What if these shoes don't fit?"
-context = "All customers are eligible for a 30 day full refund at no extra cost."
+context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
 # Replace this with the actual output from your LLM application
 actual_output = "We offer a 30-day full refund at no extra cost."
@@ -182,6 +183,92 @@ conceptual_similarity_metric = ConceptualSimilarityMetric(minimum_score=0.7)
 test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
 
 run_test(test_case, [conceptual_similarity_metric])
+```
+
+## Ranking Similarity
+
+`RankingSimilarity` focuses solely on the context retrieved from your knowledge base at runtime, and is especially relevant for assessing retrievers in RAG applications.
+
+```python
+from deepeval.metrics.ranking_similarity import RankingSimilarity
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import run_test
+
+
+input = "What if these shoes don't fit?"
+context = ["All customers are eligible for a 30 day full refund at no extra cost."]
+
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+# Replace this with the actual retrieved context from RAG pipeline
+retrieval_context = ["Only shoes can be refunded."]
+
+ranking_similarity_metric = RankingSimilarity(minimum_score=0.5)
+test_case = LLMTestCase(input=input, actual_output=actual_output, context=context, retrieval_context=retrieval_context)
+
+run_test(test_case, [ranking_similarity_metric])
+```
+
+Here, `retrieval_context` will be retrieval results from your RAG application and would typically come from your vector database of choice.
+
+## RAGAS
+
+The RAGAS metric is useful for evaluating RAG pipelines (ie. LLM applications built with RAG). The RAGAS score is calculated by taking an unweighted harmonic mean of five distinct metrics.
+
+1. **Faithfulness Metric**: measures hallucination to ensure output align with context. Calculated using the `actual_output` and `context`.
+
+2. **Answer Relevancy Metric**: measures how relevant an answer is relative to the question. Penalizes redundancy or incompleteness. Derived from the `input` and `actual_output`.
+
+3. **Contextual Relevancy Metric**: assesses the relevance of retrieved contexts to input. Penalizes redundant information. Based on the `input` and `context`.
+
+4. **Context Recall Metric**: gauges the recall of the retrieved context using the annotated answer as a reference. Based on the `expected_output` and `context`.
+
+5. **Harmfulness Metric**: measures how harmful the output is. Does not require any reference for evaluation.
+
+The Faithfulness and Answer Relevancy metric assess the quality of the generator in your RAG pipeline, while the Contextual Relevancy and Recall metric evaluate the performance of your retriever.
+
+To begin, install `ragas`:
+
+```console
+pip install ragas
+```
+
+Create an `LLMTestCase` and supply all parameters to calculate the RAGAS score:
+
+```python
+from deepeval.metrics.ragas_metric import RagasMetric
+from deepeval.test_case import LLMTestCase
+
+input = "What if these shoes don't fit?"
+context = "All customers are eligible for a 30 day full refund at no extra cost."
+expected_output = "You're eligible for a 30 day refund at no extra cost.",
+
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+ragas_metric = RagasMetric()
+test_case = LLMTestCase(
+    input=input,
+    actual_output=actual_output,
+    expected_output=expected_output,
+    context=context,
+)
+
+run_test(test_case, [ragas_metric])
+```
+
+As mentioned earlier, the RAGAS score is the harmonic mean of five different metrics. You can however import these metrics individually and utilize them in exactly the same way as all other metrics offered by `deepeval`.
+
+```python
+from deepeval.metrics.ragas_metric import RagasContextualRelevancyMetric
+from deepeval.metrics.ragas_metric import RagasAnswerRelevancyMetric
+from deepeval.metrics.ragas_metric import RagasFaithfulnessMetric
+from deepeval.metrics.ragas_metric import RagasContextRecallMetric
+from deepeval.metrics.ragas_metric import RagasConcisenessMetric
+from deepeval.metrics.ragas_metric import RagasCorrectnessMetric
+from deepeval.metrics.ragas_metric import RagasCoherenceMetric
+from deepeval.metrics.ragas_metric import RagasMaliciousnessMetric
 ```
 
 ## Toxicity
@@ -238,75 +325,3 @@ run_test(test_case, [unbias_metric])
 ```
 
 Note that similar to `NonToxicMetric`, `expected_output` and `context` is not reqiured.
-
-## RAGAS
-
-```console
-pip install ragas
-```
-
-```python
-from deepeval.metrics.ragas_metric import RagasMetric
-from deepeval.test_case import LLMTestCase
-
-input = "What if these shoes don't fit?"
-context = "All customers are eligible for a 30 day full refund at no extra cost."
-expected_output = "You're eligible for a 30 day refund at no extra cost.",
-
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
-
-ragas_metric = RagasMetric()
-test_case = LLMTestCase(
-    input=input,
-    actual_output=actual_output,
-    expected_output=expected_output,
-    context=context,
-)
-
-run_test(test_case, [ragas_metric])
-```
-
-These are the additional RAGAS metrics `deepeval` supports:
-
-```python
-from deepeval.metrics.ragas_metric import RagasContextualRelevancyMetric
-from deepeval.metrics.ragas_metric import RagasAnswerRelevancyMetric
-from deepeval.metrics.ragas_metric import RagasFaithfulnessMetric
-from deepeval.metrics.ragas_metric import RagasContextRecallMetric
-from deepeval.metrics.ragas_metric import RagasConcisenessMetric
-from deepeval.metrics.ragas_metric import RagasCorrectnessMetric
-from deepeval.metrics.ragas_metric import RagasCoherenceMetric
-from deepeval.metrics.ragas_metric import RagasMaliciousnessMetric
-```
-
-As an overview, here are what each metric measures:
-
-- `RagasFaithfulnessMetric` - ensures output align with context. Penalizes claims not deduced from the context. Calculated using the `actual_output` and `context`.
-
-- `RagasContextualRelevancyMetric` - assesses the relevance of retrieved contexts to input. Penalizes redundant information. Based on the `input` and `context`.
-
-- `RagasContextRecallMetric` - gauges the recall of the retrieved context using the annotated answer as a reference. Based on the `expected_output` and `context`.
-
-- `RagasAnswerRelevancyMetric` - measures how directly a response addresses a question. Penalizes redundancy or incompleteness. Derived from the `input` and `actual_output`.
-
-## Top-K Similarity
-
-This metric is different from the rest because it measures `SearchTestCase` instead of `LLMTestCase` as introduced in the [test cases](/docs/evaluation-test-cases) section. Unlike an `LLMTestCase`, the `SearchTestCase` focuses solely on the retrieval results, and is especially relevant for assessing retrieval pipelines in RAG applications.
-
-```python
-from deepeval.metrics.ranking_similarity import RankingSimilarity
-from deepeval.test_case import SearchTestCase
-from deepeval.run_test import run_test
-
-
-actual_retrieval_results = ["The Eiffel Tower is located in Paris.", "Jupiter is the largest planet in our solar system."]
-ideal_retrieval_results = ["Paris is home to the Eiffel Tower.", "In our solar system, Jupiter holds the title for the biggest planet."]
-
-ranking_similarity_metric = RankingSimilarity(minimum_score=0.5)
-test_case = SearchTestCase(actual_retrieval_results, ideal_retrieval_results)
-
-run_test(test_case, [ranking_similarity_metric])
-```
-
-Here, `actual_retrieval_results` will be retrieval results from your RAG application and would typically come from your vector database of choice.
