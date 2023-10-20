@@ -41,12 +41,6 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         print("Test Run is empty, please try again.")
         return
 
-    if exitstatus != 0:
-        print(
-            "An error occurred during the tests. This does not mean your test failed."
-        )
-        return
-
     if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
         api: Api = Api()
         test_run.configurations = get_hyperparameters()
