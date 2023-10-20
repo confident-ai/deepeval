@@ -6,12 +6,13 @@ sidebar_label: Test Cases
 
 ## Quick Summary
 
-A test case is a blueprint provided by `deepeval` to unit test LLM outputs based on four parameters:
+A test case is a blueprint provided by `deepeval` to unit test LLM outputs based on five parameters:
 
 - `input`
 - `actual_output`
 - [Optional] `expected_output`
 - [Optional] `context`
+- [Optional] `retrieval_context`
 
 Except for `actual_output`, all parameters should originate from your evaluation dataset (if you have one). Here's an example implementation of a test case:
 
@@ -20,13 +21,14 @@ test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     expected_output = "You're eligible for a 30 day refund at no extra cost.",
     actual_output = "We offer a 30-day full refund at no extra cost.",
-    context = "All customers are eligible for a 30 day full refund at no extra cost."
+    context = ["All customers are eligible for a 30 day full refund at no extra cost."]
+    retrieval_context = ["Only shoes can be refunded."]
 )
 ```
 
 **Note that only `input` and `actual_output` is mandatory.**
 
-However, depending on the specific metric you're evaluating your test cases on, you may or may not require an `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating factual consistency you'll have to supply `context` in order for `deepeval` to know what the **ground truth** is.
+However, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating factual consistency you'll have to supply `context` in order for `deepeval` to know what the **ground truth** is.
 
 Let's go through the purpsoe of each parameter.
 
@@ -104,7 +106,7 @@ test_case = LLMTestCase(
 
 ## Context
 
-The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of truth. You can view it as the segment of your knowledge base relevant to a specific input. Context allows your LLM to generate customized outputs that are outside the scope of the data it was trained on.
+The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant to a specific input. Context allows your LLM to generate customized outputs that are outside the scope of the data it was trained on.
 
 In RAG applications, contextual information is typically stored in your selected vector database. Conversely, for a fine-tuning use case, this data is usually found in training datasets used to fine-tune your model. Providing the appropriate contextual information when constructing your evaluation dataset is one of the most challenging part of evaluating LLMs, since data in your knowledge base can constantly be changing.
 
@@ -135,6 +137,39 @@ test_case = LLMTestCase(
 
 :::note
 Often times people confuse `expected_output` with `context` since due to their similar level of factual accuracy. However, while both are (or should be) factually correct, `expected_output` also takes aspects like tone and linguistic patterns into account, whereas context is strictly factual.
+:::
+
+## Retrieval Context
+
+The `retrieval_context` is an **optional** parameter that represents the nodes your RAG pipeline retrieves at runtime. By providing `retrieval_context`, you can determine how well your retriever is performing based on `context` using `deepeval`'s `RankingSimilarity` metric.
+
+```python
+# A hypothetical LLM application example
+import chatbot
+
+prompt_template = """
+    Impersonate a dog named Rocky when replying to the text below.
+
+    {text}
+"""
+
+prompt = prompt_template.format(text="Who's a good boy?")
+
+context = ["Rocky is a good boy."]
+retrieval_context = ["Rocky is a good cat."]
+
+test_case = LLMTestCase(
+    input=prompt,
+    # Replace this with your actual LLM application
+    actual_output=chatbot.run(prompt),
+    expected_output="Me, ruff!",
+    context=context,
+    retrieval_context=retrieval_context
+)
+```
+
+:::note
+Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results.
 :::
 
 ## Assert A Test Case

@@ -4,7 +4,7 @@ from typing import Any, List, Optional, Union
 import numpy as np
 from tqdm import tqdm
 
-from ..test_case import SearchTestCase
+from ..test_case import LLMTestCase
 from .metric import Metric
 from ..run_test import assert_test
 
@@ -166,13 +166,13 @@ class RankingSimilarity(Metric):
     def __init__(self, minimum_score: float = 0.1):
         self.minimum_score = minimum_score
 
-    def __call__(self, test_case: SearchTestCase):
-        score = self.measure(test_case.golden_list, test_case.output_list)
+    def __call__(self, test_case: LLMTestCase):
+        score = self.measure(test_case.retrieval_context, test_case.context)
         return score
 
-    def measure(self, test_case: SearchTestCase):
-        list_1 = [str(x) for x in test_case.golden_list]
-        list_2 = [str(x) for x in test_case.output_list]
+    def measure(self, test_case: LLMTestCase):
+        list_1 = [str(x) for x in test_case.retrieval_context]
+        list_2 = [str(x) for x in test_case.context]
         scorer = RBO(list_1, list_2)
         result = scorer.rbo(p=0.9, ext=True)
         self.success = result > self.minimum_score
@@ -186,7 +186,20 @@ class RankingSimilarity(Metric):
         return "Ranking Similarity"
 
 
-def assert_ranking_similarity(list1, list2, minimum_score):
+def assert_ranking_similarity(
+    input: str,
+    actual_output: str,
+    context: List[str],
+    retrieval_context: List[str],
+    minimum_score,
+    expected_output: str = "-",
+):
     scorer = RankingSimilarity(minimum_score=minimum_score)
-    test_case = SearchTestCase(list1, list2)
+    test_case = LLMTestCase(
+        input=input,
+        actual_output=actual_output,
+        expected_output=expected_output,
+        context=context,
+        retrieval_context=retrieval_context,
+    )
     assert_test(test_case, [scorer])
