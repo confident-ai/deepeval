@@ -23,12 +23,14 @@ class LLMTestCase(TestCase):
         actual_output: str,
         expected_output: str = "-",
         context: Optional[Union[str, List[str]]] = None,
+        retrieval_context: List[str] = None,
         id: Optional[str] = None,
     ):
         super().__init__(id)
         self.input = input
         self.actual_output = actual_output
         self.expected_output = expected_output
+        self.retrieval_context = retrieval_context
         # Force context to be a list
         if isinstance(context, str):
             context = [context]
@@ -39,39 +41,7 @@ class LLMTestCase(TestCase):
         self.__name__ = f"LLMTestCase_{self.id}"
 
 
-@dataclass
-class SearchTestCase(TestCase):
-    def __init__(
-        self,
-        output_list: List[Any],
-        golden_list: List[Any],
-        input: Optional[str] = None,
-        id: Optional[str] = None,
-    ):
-        super().__init__(id)
-        self.output_list = output_list
-        self.golden_list = golden_list
-        self.input = input
-
-
 class AgentTestCase(TestCase):
     """Test Case For Agents"""
 
     pass
-
-
-@dataclass
-class ImageTestCase(TestCase):
-    """Test Case For Images. This is a beta interface and is subject to change."""
-
-    def __init__(
-        self,
-        image_path: str,
-        query: Optional[str] = None,
-        ground_truth_image_path: Optional[str] = None,
-        id: Optional[str] = None,
-    ):
-        self.query = query
-        self.image_path = image_path
-        self.ground_truth_image_path = ground_truth_image_path
-        super().__init__(id)
