@@ -141,7 +141,7 @@ Often times people confuse `expected_output` with `context` since due to their s
 
 ## Retrieval Context
 
-The `retrieval_context` is an **optional** parameter that represents the nodes your RAG pipeline retrieves at runtime. By providing `retrieval_context`, you can determine how well your retriever is performing based on `context` using `deepeval`'s `RankingSimilarity` metric.
+The `retrieval_context` is an **optional** parameter that represents your RAG pipeline's retrieval results at runtime. By providing `retrieval_context`, you can determine how well your retriever is performing using `context` as a benchmark. This can be done using `deepeval`'s `RankingSimilarity` metric.
 
 ```python
 # A hypothetical LLM application example
