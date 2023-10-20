@@ -36,7 +36,7 @@ class CrossEncoderAnswerRelevancyModel(metaclass=Singleton):
 
 class AnswerRelevancyMetric(Metric, metaclass=Singleton):
     def __init__(
-        self, minimum_score: bool = 0.5, model_type: str = "cross_encoder"
+        self, minimum_score: float = 0.5, model_type: str = "cross_encoder"
     ):
         self.minimum_score = minimum_score
         if model_type == "cross_encoder":
