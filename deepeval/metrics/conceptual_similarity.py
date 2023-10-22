@@ -7,11 +7,11 @@ from deepeval.test_case import LLMTestCase
 from deepeval.utils import cosine_similarity
 from deepeval.run_test import assert_test
 from deepeval.progress_context import progress_context
-from deepeval.metrics.metric import Metric
+from deepeval.metrics.base_metric import BaseMetric
 
 
-class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
-    """basic implementation of BertScoreMetric"""
+class ConceptualSimilarityMetric(BaseMetric, metaclass=Singleton):
+    """basic implementation of ConceptualSimilarityMetric"""
 
     def __init__(
         self,
@@ -22,7 +22,7 @@ class ConceptualSimilarityMetric(Metric, metaclass=Singleton):
 
         self.model_name = model_name
         with progress_context(
-            "Downloading Conceptual SImilarity model (may take up to 2 minutes if running for the first time)..."
+            "Downloading Conceptual Similarity model (may take up to 2 minutes if running for the first time)..."
         ):
             self.model = SentenceTransformer(self.model_name).eval()
         self.minimum_score = minimum_score

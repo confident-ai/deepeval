@@ -1,7 +1,7 @@
-from ..singleton import Singleton
-from ..test_case import LLMTestCase
-from ..run_test import assert_test
-from .metric import Metric
+from deepeval.singleton import Singleton
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test
+from deepeval.metrics.base_metric import BaseMetric
 import numpy as np
 
 
@@ -34,7 +34,7 @@ class CrossEncoderAnswerRelevancyModel(metaclass=Singleton):
         return softmax(scores[0])[2]
 
 
-class AnswerRelevancyMetric(Metric, metaclass=Singleton):
+class AnswerRelevancyMetric(BaseMetric, metaclass=Singleton):
     def __init__(
         self, minimum_score: float = 0.5, model_type: str = "cross_encoder"
     ):

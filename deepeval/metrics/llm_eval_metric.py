@@ -1,6 +1,6 @@
 import json
 from typing import Optional, Callable
-from deepeval.metrics.metric import Metric
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 import openai
 from pydantic import BaseModel
@@ -22,7 +22,7 @@ class LLMEvalMetricResponse(BaseModel):
     reason: str
 
 
-class LLMEvalMetric(Metric):
+class LLMEvalMetric(BaseMetric):
     def __init__(
         self,
         name: str,

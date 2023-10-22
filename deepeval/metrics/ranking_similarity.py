@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 from ..test_case import LLMTestCase
-from .metric import Metric
+from .base_metric import BaseMetric
 from ..run_test import assert_test
 
 
@@ -162,7 +162,7 @@ class RBO:
         return self._bound_range(AO[-1])
 
 
-class RankingSimilarity(Metric):
+class RankingSimilarity(BaseMetric):
     def __init__(self, minimum_score: float = 0.1):
         self.minimum_score = minimum_score
 
