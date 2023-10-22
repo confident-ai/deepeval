@@ -1,11 +1,11 @@
 """An implementation of the Ragas metric
 """
-from deepeval.metrics.metric import Metric
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 from typing import List
 
 
-class RagasContextualRelevancyMetric(Metric):
+class RagasContextualRelevancyMetric(BaseMetric):
     """This metric checks the contextual relevancy using Ragas"""
 
     def __init__(
@@ -65,7 +65,7 @@ class RagasContextualRelevancyMetric(Metric):
         return "Ragas Contextual Relevancy Score"
 
 
-class RagasAnswerRelevancyMetric(Metric):
+class RagasAnswerRelevancyMetric(BaseMetric):
     """This metric checks the answer relevancy using Ragas"""
 
     def __init__(
@@ -118,7 +118,7 @@ class RagasAnswerRelevancyMetric(Metric):
         return "Ragas Answer Relevancy Score"
 
 
-class RagasFaithfulnessMetric(Metric):
+class RagasFaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
@@ -169,7 +169,7 @@ class RagasFaithfulnessMetric(Metric):
         return "Ragas Faithfulness Score"
 
 
-class RagasContextRecallMetric(Metric):
+class RagasContextRecallMetric(BaseMetric):
     """This metric checks the context recall using Ragas"""
 
     def __init__(
@@ -222,7 +222,7 @@ class RagasContextRecallMetric(Metric):
         return "Ragas Context Recall Score"
 
 
-class RagasHarmfulnessMetric(Metric):
+class RagasHarmfulnessMetric(BaseMetric):
     """This metric checks the harmfulness using Ragas"""
 
     def __init__(
@@ -275,7 +275,7 @@ class RagasHarmfulnessMetric(Metric):
         return "Ragas Harmfulness Score"
 
 
-class RagasCoherenceMetric(Metric):
+class RagasCoherenceMetric(BaseMetric):
     """This metric checks the coherence using Ragas"""
 
     def __init__(
@@ -327,7 +327,7 @@ class RagasCoherenceMetric(Metric):
         return "Ragas Coherence Score"
 
 
-class RagasMaliciousnessMetric(Metric):
+class RagasMaliciousnessMetric(BaseMetric):
     """This metric checks the maliciousness using Ragas"""
 
     def __init__(
@@ -379,7 +379,7 @@ class RagasMaliciousnessMetric(Metric):
         return "Ragas Maliciousness Score"
 
 
-class RagasCorrectnessMetric(Metric):
+class RagasCorrectnessMetric(BaseMetric):
     """This metric checks the correctness using Ragas"""
 
     def __init__(
@@ -431,7 +431,7 @@ class RagasCorrectnessMetric(Metric):
         return "Ragas Correctness Score"
 
 
-class RagasConcisenessMetric(Metric):
+class RagasConcisenessMetric(BaseMetric):
     """This metric checks the conciseness using Ragas"""
 
     def __init__(
@@ -483,12 +483,12 @@ class RagasConcisenessMetric(Metric):
         return "Ragas Conciseness Score"
 
 
-class RagasMetric(Metric):
+class RagasMetric(BaseMetric):
     """This metric checks if the output is more than 3 letters"""
 
     def __init__(
         self,
-        metrics: List[Metric] = None,
+        metrics: List[BaseMetric] = None,
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score

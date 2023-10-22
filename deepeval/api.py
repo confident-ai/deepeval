@@ -17,7 +17,7 @@ from deepeval.constants import (
     PYTEST_RUN_TEST_NAME,
 )
 from deepeval.key_handler import KEY_FILE_HANDLER
-from deepeval.metrics.metric import Metric
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 
 API_BASE_URL = "https://app.confident-ai.com/api"
@@ -55,7 +55,7 @@ class MetricScore(BaseModel):
     score: float
 
     @classmethod
-    def from_metric(cls, metric: Metric):
+    def from_metric(cls, metric: BaseMetric):
         return cls(metric=metric.__name__, score=metric.score)
 
 
@@ -94,7 +94,7 @@ class MetricsMetadataAverageDict:
         self.metric_dict = defaultdict(list)
         self.min_score_dict = defaultdict(float)
 
-    def add_metric(self, metric: Metric):
+    def add_metric(self, metric: BaseMetric):
         self.metric_dict[metric.__name__].append(metric.score)
         self.min_score_dict[metric.__name__] = min(
             self.min_score_dict.get(metric.__name__, float("inf")),
@@ -127,7 +127,10 @@ class TestRun(BaseModel):
     configurations: dict
 
     def add_llm_test_case(
-        self, test_case: LLMTestCase, metrics: List[Metric], run_duration: float
+        self,
+        test_case: LLMTestCase,
+        metrics: List[BaseMetric],
+        run_duration: float,
     ):
         # Check if test case with the same ID already exists
         existing_test_case: APITestCase = next(
