@@ -1,4 +1,4 @@
-<p align="center">⭐ Give us a star to help encourage LLM evaluation ⭐</p>
+<p align="center">⭐ Give us a star ⭐</p>
 
 <p align="center">
     <img src="https://github.com/confident-ai/deepeval/blob/main/docs/static/img/DeepEval.png" alt="DeepEval Logo" width="100%">
