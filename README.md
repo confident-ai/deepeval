@@ -25,17 +25,17 @@ DeepEval is designed to help you choose the optimal hyperparameters to improve y
 <hr />
 <br />
 
-## Getting Started 🚀
+# Getting Started 🚀
 
 Let's pretend your LLM application is a customer support chatbot, here's how Deepeval can help test what you've built.
 
-### Installation
+## Installation
 
 ```
 pip install -U deepeval
 ```
 
-### [Optional] Create an account
+## [Optional] Create an account
 
 Creating an account on our platform would allow you to log test results to our platform, which allows you to easily keep track of changes and performances over iterations. This step is optional and you can run test cases even without logging in, but we highly recommend giving it a try.
 
@@ -47,7 +47,7 @@ deepeval login
 
 Follow the instructions in the CLI to create an account, copy your API key, and paste your API key in the CLI. All test cases will automatically be logged.
 
-### Writing your first test case
+## Writing your first test case
 
 Create a test file:
 
@@ -89,7 +89,7 @@ The variable `input` mimics a user input, and `actual_output` is a placeholder f
 <hr />
 <br />
 
-## Evaluate your test results on our platform
+# View results on our platform
 
 We offer a [web platform](https://app.confident-ai.com) for you to log and view all test results from `deepeval test run`. Our platform allows you to quickly draw insights on how your metrics are improving with each test run, and to determine the optimal parameters (such as prompt templates, models, retrieval pipeline) for your specific LLM application.
 
@@ -111,18 +111,34 @@ You should see a link being displayed in the CLI once the test has finished runn
 
 <br />
 
-## Contributing
+# Contributing
 
 Please read [CONTRIBUTING.md](https://github.com/confident-ai/deepeval/blob/main/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 <br />
 
-## Authors
+# Roadmap
 
-Built by co-founders of Confident AI.
+Features:
+- [x] Implement G-Eval 
+- [ ] Referenceless Evaluation
+- [ ] Production Evaluation & Logging
+- [ ] Evaluation Dataset Creation
+
+Integrations:
+- [x] lLamaIndex
+- [ ] langChain
+- [ ] Guidance
+- [ ] Guardrails
+- [ ] EmbedChain 
+
+
+# Authors
+
+Built by the founders of Confident AI.
 
 - for enquires, contact jeffreyip@confident-ai.com
 
-## License
+# License
 
 DeepEval is licensed under Apache 2.0 - see the [LICENSE.md](https://github.com/confident-ai/deepeval/blob/main/LICENSE.md) file for details.
