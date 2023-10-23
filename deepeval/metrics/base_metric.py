@@ -1,12 +1,9 @@
 from abc import abstractmethod
 
-from ..singleton import Singleton
-from ..test_case import LLMTestCase
-from ..utils import softmax
-from sentence_transformers import CrossEncoder
+from deepeval.test_case import LLMTestCase
 
 
-class Metric(metaclass=Singleton):
+class BaseMetric:
     # set an arbitrary minimum score that will get over-ridden later
     score: float = 0
 
@@ -39,17 +36,4 @@ class Metric(metaclass=Singleton):
 
     @property
     def __name__(self):
-        return "Metric"
-
-
-class EntailmentScoreMetric(Metric):
-    def __init__(self, model_name: str = "cross-encoder/nli-deberta-base"):
-        # We use a smple cross encoder model
-
-        self.model = CrossEncoder(model_name)
-
-    def measure(self, a: str, b: str):
-        scores = self.model.predict([(a, b)])
-        # https://huggingface.co/cross-encoder/nli-deberta-base
-        # label_mapping = ["contradiction", "entailment", "neutral"]
-        return softmax(scores)[0][1]
+        return "Base Metric"

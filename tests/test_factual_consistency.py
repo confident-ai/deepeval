@@ -1,5 +1,3 @@
-import os
-
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.factual_consistency import (
@@ -7,9 +5,6 @@ from deepeval.metrics.factual_consistency import (
     assert_factual_consistency,
 )
 from deepeval.run_test import assert_test
-
-IMPLEMENTATION_NAME = "Test Factual Consistency"
-os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
 
 
 def test_factual_consistency():
@@ -32,7 +27,7 @@ def test_factual_consistency_2():
 def test_factual_consistency_metric():
     metric = FactualConsistencyMetric(minimum_score=0.8)
     test_case = LLMTestCase(
-        query="placeholder",
+        input="placeholder",
         actual_output="Python is a programming language.",
         context="Python is a high-level, versatile, and interpreted programming language known for its simplicity and readability.",
     )

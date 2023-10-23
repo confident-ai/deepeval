@@ -12,7 +12,6 @@ def test_chat_completion():
     metric = LLMEvalMetric(
         name="Validity",
         criteria="The response is a valid response to the prompt.",
-        completion_function=generate_chatgpt3,
         minimum_score=0.5,
     )
     test_case = LLMTestCase(
@@ -23,4 +22,4 @@ def test_chat_completion():
     )
     metric.measure(test_case)
     assert metric.is_successful() is True
-    assert metric.measure(test_case, include_score=True) == 1.0
+    assert metric.measure(test_case, include_reason=True) == 1.0

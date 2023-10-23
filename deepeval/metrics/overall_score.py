@@ -1,16 +1,17 @@
 """Overall Score
 """
 
-from ..singleton import Singleton
-from ..test_case import LLMTestCase
-from .answer_relevancy import AnswerRelevancyMetric
-from .conceptual_similarity import ConceptualSimilarityMetric
-from .factual_consistency import FactualConsistencyMetric
-from .metric import Metric
-from ..run_test import assert_test
+from deepeval.test_case import LLMTestCase
+from deepeval.singleton import Singleton
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
+from deepeval.metrics.conceptual_similarity import ConceptualSimilarityMetric
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics.base_metric import BaseMetric
+from deepeval.run_test import assert_test
 
 
-class OverallScoreMetric(Metric, metaclass=Singleton):
+class OverallScoreMetric(BaseMetric, metaclass=Singleton):
     def __init__(self, minimum_score: float = 0.5):
         self.minimum_score = minimum_score
         self.answer_relevancy = AnswerRelevancyMetric()

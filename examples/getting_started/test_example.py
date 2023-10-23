@@ -3,7 +3,7 @@ from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
-from deepeval.metrics.metric import Metric
+from deepeval.metrics.base_metric import BaseMetric
 
 
 def test_factual_consistency():
@@ -33,7 +33,7 @@ def test_humor():
     assert_test(test_case, [funny_metric])
 
 
-class LengthMetric(Metric):
+class LengthMetric(BaseMetric):
     # This metric checks if the output length is greater than 10 characters
     def __init__(self, max_length: int = 10):
         self.max_length = max_length

@@ -11,12 +11,12 @@ def check_firewall():
         return True
 
 
-if os.getenv("TURN_OFF_DEEPEVAL_TELEMETRY") != "Y" and not check_firewall():
+if os.getenv("NO_ERROR_TRACKING") != "Y" and not check_firewall():
     try:
         import sentry_sdk
 
         sentry_sdk.init(
-            dsn="https://a378e1dcd3cd09b8aacf236c9a03dfc0@o4506033502093312.ingest.sentry.io/4506033503797248",
+            dsn="https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
             # Set traces_sample_rate to 1.0 to capture 100%
             # of transactions for performance monitoring.
             traces_sample_rate=1.0,

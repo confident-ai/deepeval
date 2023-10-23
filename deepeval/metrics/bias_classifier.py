@@ -5,18 +5,25 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 """
 
 import warnings
-from typing import Optional
-from .metric import Metric
+from typing import Optional, List
+from deepeval.types import LLMTestCaseParams
+from deepeval.metrics.base_metric import BaseMetric
 
-from ..singleton import Singleton
 from ..test_case import LLMTestCase
 from ..run_test import assert_test
 
 
-class UnBiasedMetric(Metric, metaclass=Singleton):
+class UnBiasedMetric(BaseMetric):
     def __init__(
-        self, model_name: str = "original", minimum_score: float = 0.5
+        self,
+        evaluation_params: List[LLMTestCaseParams],
+        model_name: str = "original",
+        minimum_score: float = 0.5,
     ):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
+        if not evaluation_params:
+            raise ValueError("evaluation_params cannot be empty or None")
+
+        self.evaluation_params = evaluation_params
         self.model_name = model_name
         self.minimum_score = minimum_score
 
@@ -26,8 +33,15 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
         return score
 
     def measure(self, test_case: LLMTestCase, return_all_scores: bool = False):
-        if test_case.actual_output is None:
-            raise ValueError("Required attributes for test_case cannot be None")
+        # Check if each param in evaluation_params exists and is not None in test_case
+        for param in self.evaluation_params:
+            if (
+                not hasattr(test_case, param.value)
+                or getattr(test_case, param.value) is None
+            ):
+                raise ValueError(
+                    f"Test case is missing the required attribute: {param.value}"
+                )
 
         from Dbias.bias_classification import classifier
 
@@ -35,23 +49,32 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
             "Run `pip install deepeval[bias]`. If you have, please ignore this warning."
         )
 
-        results = classifier(test_case.actual_output)
-        # sample output
-        # [{'label': 'Biased', 'score': 0.9938021898269653}]
-        if results[0]["label"] == "Biased":
-            v = 0.5 - (results[0]["score"] / 2)
-        else:
-            # if it's unbiased - use normal score
-            v = 0.5 + (results[0]["score"] / 2)
+        total_score = 0  # to accumulate scores for all evaluation params
+        all_results = (
+            []
+        )  # to accumulate all individual results if return_all_scores is True
 
-        self.success = False
-        if v > self.minimum_score:
-            self.success = True
+        for param in self.evaluation_params:
+            result = classifier(getattr(test_case, param.value))
+            if return_all_scores:
+                all_results.append(result)
 
-        self.score = v
+            if result[0]["label"] == "Biased":
+                v = 0.5 - (result[0]["score"] / 2)
+            else:
+                v = 0.5 + (result[0]["score"] / 2)
+            total_score += v
+
+        # Calculate the average score
+        average_score = total_score / len(self.evaluation_params)
+
+        self.success = average_score > self.minimum_score
+        self.score = average_score
+
         if return_all_scores:
-            return results
-        return v
+            return all_results
+
+        return average_score
 
     def is_successful(self):
         return self.success
@@ -65,10 +88,15 @@ class UnBiasedMetric(Metric, metaclass=Singleton):
 
 
 def assert_unbiased(
-    text: str, minimum_score: float = 0.5
+    evaluation_params: List[LLMTestCaseParams],
+    input: str,
+    actual_output: str,
+    minimum_score: float = 0.5,
 ):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
-    metric = UnBiasedMetric(minimum_score=minimum_score)
-    test_case = LLMTestCase(input="placeholder", actual_output=text)
+    metric = UnBiasedMetric(
+        evaluation_params=evaluation_params, minimum_score=minimum_score
+    )
+    test_case = LLMTestCase(input=input, actual_output=actual_output)
     assert_test(test_case, [metric])
 
 

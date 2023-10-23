@@ -2,11 +2,11 @@
 """
 
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.metric import Metric
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.run_test import assert_test
 
 
-class LengthMetric(Metric):
+class LengthMetric(BaseMetric):
     """This metric checks if the output is more than 3 letters"""
 
     def __init__(self, minimum_length: int = 3):

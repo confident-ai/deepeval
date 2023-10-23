@@ -13,10 +13,8 @@ from deepeval.run_test import assert_test, run_test
 
 from .utils import assert_viable_score
 
-IMPLEMENTATION_NAME = "Overall"
 TEST_API_KEY = "u1s5aFlB6kRyVz/16CZuc7JOQ7e7sCw00N7nfeMZOrk="
 os.environ["CONFIDENT_AI_API_KEY"] = TEST_API_KEY
-os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
 
 query = "Who won the FIFA World Cup in 2018?"
 output = "Winners of the FIFA world cup were the French national football team"
@@ -97,7 +95,7 @@ class TestOverallScore:
             context=context,
         )
         result = run_test([test_case], metrics=[self.metric])
-        assert_viable_score(result.score)
+        assert_viable_score(result[0].score)
 
     def test_overall_score_metric_no_query(self):
         test_case = LLMTestCase(
@@ -127,13 +125,3 @@ class TestOverallScore:
         result = run_test([test_case], metrics=[self.metric])
         assert result[0].success, "Overall score metric not working"
         assert_viable_score(result[0].score)
-
-    def test_implementation_inside_overall(self):
-        imps = self.client.list_implementations()
-        FOUND = False
-        for imp in imps:
-            if imp["name"] == IMPLEMENTATION_NAME:
-                FOUND = True
-        assert (
-            FOUND
-        ), f"{IMPLEMENTATION_NAME} not found in {[x['name'] for x in imps]}"
