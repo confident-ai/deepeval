@@ -28,5 +28,13 @@ module.exports = {
       ],
       collapsed: false,
     },
+    {
+      type: 'category',
+      label: 'Others',
+      items: [
+        'data-privacy',
+      ],
+      collapsed: false,
+    },
   ]
 }
