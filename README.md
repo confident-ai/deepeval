@@ -1,5 +1,3 @@
-<p align="center">⭐ Star our repo to support us, thanks you! ⭐</p>
-
 <p align="center">
     <img src="https://github.com/confident-ai/deepeval/blob/main/docs/static/img/DeepEval.png" alt="DeepEval Logo" width="100%">
 </p>
