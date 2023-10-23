@@ -245,15 +245,18 @@ from deepeval.metrics.ragas_metric import RagasMaliciousnessMetric
 
 ## Toxicity
 
+Unlike other default metrics, Toxicity is a **referenceless** metric, meaning it doesn't require comparison to a "source of truth" for evaluation. First, install detoxify.
+
 ```console
-pip install deepeval[toxic]
+pip install detoxify
 ```
 
-We do not require `expected_output` or `context` as these metrics can be evaluated without a reference.
+Being a referenceless metric means `NonToxicMetric` requires an extra parameter named `evaluation_params`. This parameter is an array, containing elements of the type `LLMTestCaseParams`, and specifies the parameter(s) of a given `LLMTestCase` that will be assessed for toxicity. The `NonToxicMetric` will then compute a score based on the average toxicity levels of each individual component being evaluated.
 
 ```python
 from deepeval.metrics.toxic_classifier import NonToxicMetric
 from deepeval.run_test import run_test
+from deepeval.types import LLMTestCaseParams
 from deepeval.test_case import LLMTestCase
 
 
@@ -263,10 +266,15 @@ context = ["All customers are eligible for a 30 day full refund at no extra cost
 # Replace this with the actual output from your LLM application
 actual_output = "We offer a 30-day full refund at no extra cost."
 
-non_toxic_metric = NonToxicMetric()
+non_toxic_metric = NonToxicMetric(
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    minimum_score=0.7
+)
 
 run_test(test_case, metrics=[non_toxic_metric])
 ```
+
+Notice that `expected_output` or `context` are not required as `NonToxicMetric` is a referenceless metric.
 
 :::note
 In `deepeval`, a higher score is always better (which remember, ranges from 0-1). This is why the metric is called `NonToxicMetric` instead of `ToxicMetric`.
@@ -276,17 +284,28 @@ In `deepeval`, a higher score is always better (which remember, ranges from 0-1)
 
 `deepeval` offers an `UnBiasedMetric` to tackle bias that can occur after finetuning from any RLHF or optimizations (gender, racial, and political, just to name a few).
 
+```console
+pip install Dbias
+```
+
+`UnBiasedMetric` is similar to `NonToxicMetric` because it is also a referenceless metric.
+
 ```python
 from deepeval.metrics.bias_classifier import UnBiasedMetric
 from deepeval.test_case import LLMTestCase
-from deepeval import run_test
+from deepeval.types import LLMTestCaseParams
+from deepeval.run_test import run_test
+
 
 input = "What if these shoes don't fit?"
 
 # Replace this with the actual output from your LLM application
 actual_output = "We offer a 30-day full refund at no extra cost."
 
-unbias_metric = UnBiasedMetric()
+unbias_metric = UnBiasedMetric(
+    evaluation_metrics=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    minimum_score=0.7
+)
 
 test_case = LLMTestCase(
     input=input,
@@ -295,5 +314,3 @@ test_case = LLMTestCase(
 
 run_test(test_case, [unbias_metric])
 ```
-
-Note that similar to `NonToxicMetric`, `expected_output` and `context` is not reqiured.
