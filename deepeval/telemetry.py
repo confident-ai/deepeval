@@ -11,7 +11,7 @@ def check_firewall():
         return True
 
 
-if os.getenv("NO_ERROR_TRACKING") != "Y" and not check_firewall():
+if os.getenv("NO_ERROR_REPORTING") != "Y" and not check_firewall():
     try:
         import sentry_sdk
 
