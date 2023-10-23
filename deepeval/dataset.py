@@ -10,7 +10,7 @@ from typing import Any, Callable, List, Optional
 from tabulate import tabulate
 
 from deepeval.run_test import run_test
-from deepeval.metrics.metric import Metric
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 from dataclasses import asdict
 
@@ -30,7 +30,7 @@ class EvaluationDataset(UserList):
         context_column: Optional[str] = None,
         output_column: Optional[str] = None,
         id_column: str = None,
-        metrics: List[Metric] = None,
+        metrics: List[BaseMetric] = None,
     ):
         import pandas as pd
 
@@ -212,7 +212,7 @@ class EvaluationDataset(UserList):
             context_key (str, optional): The key in each dictionary corresponding to the context. Defaults to None.
             output_key (str, optional): The key in each dictionary corresponding to the output. Defaults to None.
             id_key (str, optional): The key in each dictionary corresponding to the ID. Defaults to None.
-            metrics (List[Metric], optional): The list of metrics to be associated with the test cases. Defaults to None.
+            metrics (List[BaseMetric], optional): The list of metrics to be associated with the test cases. Defaults to None.
 
         Returns:
             EvaluationDataset: An instance of EvaluationDataset containing the loaded test cases.
@@ -277,7 +277,7 @@ class EvaluationDataset(UserList):
         test_filename: str = None,
         max_retries: int = 3,
         min_success: int = 1,
-        metrics: List[Metric] = None,
+        metrics: List[BaseMetric] = None,
     ) -> str:
         """Run evaluation with given metrics"""
         if completion_fn is None:

@@ -2,7 +2,7 @@ import os
 from deepeval.singleton import Singleton
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import chunk_text, softmax
-from deepeval.metrics.metric import Metric
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.run_test import assert_test
 from deepeval.progress_context import progress_context
 from sentence_transformers import CrossEncoder
@@ -24,7 +24,7 @@ class FactualConsistencyModel(metaclass=Singleton):
         return max(score, second_score)
 
 
-class FactualConsistencyMetric(Metric, metaclass=Singleton):
+class FactualConsistencyMetric(BaseMetric, metaclass=Singleton):
     def __init__(
         self,
         minimum_score: float = 0.6,

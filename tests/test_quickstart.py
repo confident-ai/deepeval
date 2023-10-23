@@ -1,17 +1,11 @@
 """This is the ideal user flow
 """
-import os
-
 import pytest
 
-from deepeval.api import Api
 from deepeval.metrics.factual_consistency import assert_factual_consistency
 from deepeval.metrics.overall_score import OverallScoreMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test, run_test
-
-IMPLEMENTATION_NAME = "Quickstart Example 2"
-os.environ["CONFIDENT_AI_IMP_NAME"] = IMPLEMENTATION_NAME
 
 
 def generate_llm_output(query: str):
@@ -54,13 +48,3 @@ def test_0():
     # You can also inspect the test result class
     print(test_result[0].success)
     print(test_result[0].score)
-
-
-def test_implementation_inside_quickstart():
-    client = Api()
-    imps = client.list_implementations()
-    FOUND = False
-    for imp in imps:
-        if imp["name"] == IMPLEMENTATION_NAME:
-            FOUND = True
-    assert FOUND, f"Not found in {imps}"

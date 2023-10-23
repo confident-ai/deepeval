@@ -6,14 +6,12 @@ from typing import List, Optional, Union
 import time
 from dataclasses import dataclass
 from .retry import retry
-from .client import Client
 from .constants import (
-    IMPLEMENTATION_ID_ENV,
     LOG_TO_SERVER_ENV,
     PYTEST_RUN_ENV_VAR,
 )
-from .get_api_key import _get_api_key, _get_implementation_name
-from .metrics import Metric
+from .get_api_key import _get_api_key
+from .metrics import BaseMetric
 from .test_case import LLMTestCase, TestCase
 from .api import TestRun
 
@@ -34,7 +32,7 @@ def _is_send_okay():
     return _is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
 
 
-def _get_init_values(metric: Metric):
+def _get_init_values(metric: BaseMetric):
     # We use this method for sending useful metadata
     init_values = {
         param: getattr(metric, param)
@@ -100,7 +98,7 @@ def create_test_result(
 
 def run_test(
     test_cases: Union[TestCase, LLMTestCase, List[LLMTestCase]],
-    metrics: List[Metric],
+    metrics: List[BaseMetric],
     max_retries: int = 1,
     delay: int = 1,
     min_success: int = 1,
@@ -178,7 +176,7 @@ def run_test(
 
 def assert_test(
     test_cases: Union[LLMTestCase, List[LLMTestCase]],
-    metrics: List[Metric],
+    metrics: List[BaseMetric],
     max_retries: int = 1,
     delay: int = 1,
     min_success: int = 1,
@@ -196,7 +194,7 @@ def assert_test(
 
 def is_test_passing(
     test_cases: Union[LLMTestCase, List[LLMTestCase]],
-    metrics: List[Metric],
+    metrics: List[BaseMetric],
     max_retries: int = 1,
     delay: int = 1,
     min_success: int = 1,
