@@ -42,7 +42,7 @@ To login, run:
 deepeval login
 ```
 
-Follow the instructions in the CLI to create an account, copy your API key, and paste it into the CLI. All test cases will automatically be logged.
+Follow the instructions in the CLI to create an account, copy your API key, and paste it into the CLI. All test cases will automatically be logged (find more information on data privacy [here](https://docs.confident-ai.com/docs/data-privacy)).
 
 ## Writing your first test case
 
