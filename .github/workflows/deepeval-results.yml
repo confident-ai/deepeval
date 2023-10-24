@@ -19,23 +19,23 @@ jobs:
 
       - name: Install Poetry
         run: |
-          curl -sSL https://install.python-poetry.org | python -
+          curl -sSL https://install.python-poetry.org | python3 -
 
       - name: Configure Poetry
         run: |
-          python -m poetry config virtualenvs.in-project true
+          poetry config virtualenvs.in-project true
 
       - name: Install dependencies
         run: |
-          python -m poetry install
+          poetry install
 
       - name: Run Test
         id: run_test
         env:
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
         run: |
-          python -m poetry run deepeval login --api-key $CONFIDENT_AI_API_KEY
-          python -m poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
+          poetry run deepeval login --api-key $CONFIDENT_AI_API_KEY
+          poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
           # remove the ANCI codes
           sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
           output=$(cat output.txt)
