@@ -133,7 +133,7 @@ def run(
     if not show_warnings:
         pytest_args.append("--disable-warnings")
     # Add the deepeval plugin file to pytest arguments
-    pytest_args.extend(["-p", "plugins"])
+    pytest_args.extend(["-p", "deepeval.plugins.plugin"])
 
     retcode = pytest.main(pytest_args)
 
