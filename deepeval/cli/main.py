@@ -7,7 +7,6 @@ try:
 except Exception as e:
     pass
 from ..api import Api
-from ..constants import IMPLEMENTATION_ID_NAME
 from ..key_handler import KEY_FILE_HANDLER
 from .test import app as test_app
 

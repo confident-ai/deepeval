@@ -1,6 +1,9 @@
 [tool.black]
 line-length = 80
 
+[tool.poetry.scripts]
+deepeval = 'deepeval.cli:app'
+
 [tool.poetry]
 name = "deepeval"
 version = "0.20.12"
