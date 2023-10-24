@@ -2,7 +2,7 @@
 line-length = 80
 
 [tool.poetry.scripts]
-deepeval = 'deepeval.cli:app'
+deepeval = 'deepeval.cli.main:app'
 
 [tool.poetry]
 name = "deepeval"
