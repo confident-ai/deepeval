@@ -33,6 +33,7 @@ jobs:
         id: run_test
         env:
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
+          TRANSFORMERS_DISABLE_CACHE_MIGRATION: 1
         run: |
           poetry run deepeval login --api-key $CONFIDENT_AI_API_KEY
           poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
