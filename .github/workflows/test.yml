@@ -1,6 +1,6 @@
 name: Run pytest in matrix
 
-on: 
+on:
   push:
   pull_request:
 
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.9"]
+        python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v2
 
@@ -18,31 +18,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Get pip cache dir
-        id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.in-project true
 
       - name: Install dependencies
-        env:
-          python-version: ${{ matrix.python-version }}
         run: |
-          python -c "import sys; print(sys.version)"
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python -m pip install ragas sentry-sdk . pytest-rerunfailures pytest-asyncio
+          poetry install
 
       - name: Run Unit Tests (pytest)
         env:
           python-version: ${{ matrix.python-version }}
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
-          CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
-          deepeval test run -x tests
+          poetry run deepeval test run -x tests
