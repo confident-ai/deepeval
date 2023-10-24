@@ -1,2 +1,32 @@
 [tool.black]
 line-length = 80
+
+[tool.poetry]
+name = "deepeval"
+version = "0.20.12"
+description = "Evaluation Framework for LLMs"
+documentation = "https://docs.confident-ai.com"
+homepage = "https://confident-ai.com"
+authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/confident-ai/deepeval"
+
+[tool.poetry.dependencies]
+python = "^3.9 <3.12"
+requests = "^2.31.0"
+tqdm = "^4.66.1"
+transformers = ">=4.22.1,<4.35.0"
+pytest = "^7.4.2"
+tabulate = "^0.9.0"
+sentence-transformers = "^2.2.2"
+detoxify = "^0.5.1"
+tensorflow = "^2.14.0"
+dbias = "^0.1.5"
+sentry-sdk = "^1.32.0"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
