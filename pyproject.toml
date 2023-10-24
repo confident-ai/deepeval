@@ -28,7 +28,6 @@ tensorflow = "^2.14.0"
 dbias = "^0.1.5"
 sentry-sdk = "^1.32.0"
 rich = "^10.11.0"
-torch = "^2.0.1"
 
 
 
