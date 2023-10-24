@@ -29,21 +29,29 @@ jobs:
         run: |
           poetry install
 
-      - name: Run Test
-        id: run_test
+      - name: Run DeepEval Login
         env:
           CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
-          TRANSFORMERS_DISABLE_CACHE_MIGRATION: 1
+        run: poetry run deepeval login --api-key $CONFIDENT_AI_API_KEY
+
+      - name: Run DeepEval Test
+        run: poetry run deepeval test run tests/test_quickstart.py
+
+      - name: Save Output to File
+        run: poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
+
+      - name: Remove ANSI Codes from Output
+        run: sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
+
+      - name: Capture Output to Variable
         run: |
-          poetry run deepeval login --api-key $CONFIDENT_AI_API_KEY
-          poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
-          # remove the ANCI codes
-          sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
           output=$(cat output.txt)
           echo "test_result<<EOF" >> $GITHUB_ENV
           echo "$output" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-          cat output.txt
+
+      - name: Display Output
+        run: cat output.txt
 
       - name: Comment PR
         uses: marocchino/sticky-pull-request-comment@v2
