@@ -118,7 +118,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         print(
             "✅ Tests finished! View results on " f"[link={link}]{link}[/link]"
         )
-    os.remove(test_filename)
+        os.remove(test_filename)
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
