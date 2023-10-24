@@ -17,6 +17,11 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Setup CUDA
+        uses: NVIDIA/setup-nvidia-cuda@v1
+        with:
+          cuda-version: "11.x"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
