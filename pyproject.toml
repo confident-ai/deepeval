@@ -4,6 +4,9 @@ line-length = 80
 [tool.poetry.scripts]
 deepeval = 'deepeval.cli.main:app'
 
+[tool.poetry.plugins."pytest11"]
+"deepeval-plugin" = "deepeval.plugins.plugin"
+
 [tool.poetry]
 name = "deepeval"
 version = "0.20.12"
