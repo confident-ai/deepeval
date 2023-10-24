@@ -45,18 +45,18 @@ def login(
     print("Run a sample test: [bold]deepeval test run test_sample.py[/bold]")
 
 
-@app.command()
-def switch(
-    implementation_name: Annotated[
-        str, typer.Option(help="The name of the project you want to switch to")
-    ] = "",
-):
-    """Switch to a different project on the DeepEval platform."""
-    if implementation_name == "":
-        print("You must provide a project name to switch to.")
-    else:
-        KEY_FILE_HANDLER.write_data(IMPLEMENTATION_ID_NAME, implementation_name)
-        print(f"Switched to project: {implementation_name}")
+# @app.command()
+# def switch(
+#     implementation_name: Annotated[
+#         str, typer.Option(help="The name of the project you want to switch to")
+#     ] = "",
+# ):
+#     """Switch to a different project on the DeepEval platform."""
+#     if implementation_name == "":
+#         print("You must provide a project name to switch to.")
+#     else:
+#         KEY_FILE_HANDLER.write_data(IMPLEMENTATION_ID_NAME, implementation_name)
+#         print(f"Switched to project: {implementation_name}")
 
 
 if __name__ == "__main__":
