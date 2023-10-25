@@ -56,6 +56,10 @@ import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test
+import os
+
+# Optional: set the following env to save detailed test results locally
+os.environ["DEEPEVAL_RESULTS_FOLDER"]="./data"
 
 def test_factual_consistency():
     input = "What if these shoes don't fit?"
@@ -76,7 +80,7 @@ deepeval test run test_example.py
 
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
-The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context. All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
+The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context. All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not. If set, detailed results are saved in `DEEPEVAL_RESULTS_FOLDER`. 
 
 :::note
 `deepeval`'s default metrics are not evaluated using LLMs. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
