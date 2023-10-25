@@ -1,4 +1,5 @@
 import pytest
+import shutil
 import os
 from rich import print
 from deepeval.api import Api, TestRun
@@ -118,7 +119,9 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         print(
             "✅ Tests finished! View results on " f"[link={link}]{link}[/link]"
         )
-        os.remove(test_filename)
+    if os.getenv("DEEPEVAL_RESULTS_DIR"):
+        shutil.copy(test_filename, os.getenv("DEEPEVAL_RESULTS_DIR"))
+    os.remove(test_filename)
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
