@@ -1,4 +1,4 @@
-import re 
+import re
 import string
 import numpy as np
 
@@ -42,4 +42,5 @@ def normalize_text(text: str) -> str:
 
     def lower(text: str) -> str:
         return text.lower()
+
     return white_space_fix(remove_articles(remove_punc(lower(text))))
