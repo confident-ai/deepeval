@@ -125,7 +125,21 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         )
 
     if os.getenv("DEEPEVAL_RESULTS_FOLDER"):
-        shutil.copy(test_filename, os.getenv("DEEPEVAL_RESULTS_FOLDER"))
+        if not os.path.exists(os.getenv("DEEPEVAL_RESULTS_FOLDER")):
+            os.mkdir(os.getenv("DEEPEVAL_RESULTS_FOLDER"))
+            shutil.copy(test_filename, os.getenv("DEEPEVAL_RESULTS_FOLDER"))
+            print(
+                f"✅ Results saved in {os.getenv('DEEPEVAL_RESULTS_FOLDER')} as {test_filename}"
+            )
+        elif os.path.isfile(os.getenv("DEEPEVAL_RESULTS_FOLDER")):
+            print(
+                f"""❌ Error: DEEPEVAL_RESULTS_FOLDER={os.getenv('DEEPEVAL_RESULTS_FOLDER')} already exists and is a file.\nDetailed results won't be saved. Please specify a folder or an available path."""
+            )
+        else:
+            shutil.copy(test_filename, os.getenv("DEEPEVAL_RESULTS_FOLDER"))
+            print(
+                f"✅ Results saved in {os.getenv('DEEPEVAL_RESULTS_FOLDER')} as {test_filename}"
+            )
     os.remove(test_filename)
 
 
