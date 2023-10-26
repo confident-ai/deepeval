@@ -11,8 +11,8 @@ sidebar_label: Datasets
 ```python
 class DataPoint:
     input: str
-    expected_output: Union[str, None]
-    context: Union[List[str], None]
+    expected_output: Optional[str]
+    context: Optional[List[str]]
 
 class Dataset:
    data_points: List[DataPoint]
@@ -48,9 +48,9 @@ Finally, utilize the `@pytest.mark.parametrize` to create test cases for each of
     dataset,
 )
 def test_customer_chatbot(test_case: dict):
-    input = test_case["input"]
-    expected_output = test_case["expected_output"]
-    context = test_case["context"]
+    input = test_case.get("input")
+    expected_output = test_case.get("expected_output")
+    context = test_case.get("context")
 
     # Replace with your LLM application
     actual_output = "..."
