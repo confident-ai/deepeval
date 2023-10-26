@@ -40,7 +40,7 @@ class APITestCase(BaseModel):
     name: str
     input: str
     actual_output: str = Field(..., alias="actualOutput")
-    expected_output: str = Field(..., alias="expectedOutput")
+    expected_output: Optional[str] = Field(None, alias="expectedOutput")
     success: bool
     metrics_metadata: List[MetricsMetadata] = Field(
         ..., alias="metricsMetadata"
@@ -133,6 +133,7 @@ class TestRun(BaseModel):
         run_duration: float,
     ):
         # Check if test case with the same ID already exists
+        # TODO: bug for pytest batch runs - unable to find test case name
         existing_test_case: APITestCase = next(
             (tc for tc in self.test_cases if tc.name == test_case.__name__),
             None,
