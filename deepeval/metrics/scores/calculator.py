@@ -3,6 +3,7 @@ from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional
 
+
 class StatisticalMetrics:
     """This class calculates various statistical Natural Language Processing (NLP) evaluation metrics."""
 
