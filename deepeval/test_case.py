@@ -21,9 +21,9 @@ class LLMTestCase(TestCase):
         self,
         input: str,
         actual_output: str,
-        expected_output: str = "-",
+        expected_output: Optional[str] = None,
         context: Optional[Union[str, List[str]]] = None,
-        retrieval_context: List[str] = None,
+        retrieval_context: Optional[List[str]] = None,
         id: Optional[str] = None,
     ):
         super().__init__(id)

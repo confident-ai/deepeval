@@ -56,10 +56,6 @@ import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test
-import os
-
-# Optional: set the following env to save detailed test results locally
-os.environ["DEEPEVAL_RESULTS_FOLDER"]="./data"
 
 def test_factual_consistency():
     input = "What if these shoes don't fit?"
@@ -80,11 +76,19 @@ deepeval test run test_example.py
 
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
-The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input. The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context. All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not. If set, detailed results are saved in `DEEPEVAL_RESULTS_FOLDER`. 
+- The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
+- The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context.
+- All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
 
 :::note
 `deepeval`'s default metrics are not evaluated using LLMs. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
 :::
+
+To save the test results locally for each test run, set the `DEEPEVAL_RESULTS_FOLDER` environement variable to your relative path of choice:
+
+```console
+export DEEPEVAL_RESULTS_FOLDER="./data"
+```
 
 ## Create Your First Custom Metric
 
@@ -189,12 +193,84 @@ In this scenario, `test_everything` only passes if all metrics are passing. Run 
 deepeval test run test_example.py
 ```
 
+## Evaluate Your Dataset in Bulk
+
+First, parse your evaluation dataset into the following format:
+
+```python
+class DataPoint:
+    input: str
+    expected_output: Optional[str]
+    context: Optional[List[str]]
+
+class Dataset:
+   data_points: List[DataPoint]
+```
+
+Utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate your entire evaluation dataset.
+
+```python title="test_bulk.py"
+dataset = [
+    {
+        "input": "What are your operating hours?",
+        "context": [
+            "Our company operates from 10 AM to 6 PM, Monday to Friday.",
+            "We are closed on weekends and public holidays.",
+            "Our customer service is available 24/7.",
+        ],
+    },
+    {
+        "input": "Do you offer free shipping?",
+        "expected_output": "Yes, we offer free shipping on orders over $50.",
+        "context": [
+            "We offer free shipping on all orders over $50.",
+        ],
+    },
+    {
+        "input": "What is your return policy?",
+        "context": [
+            "Free returns within the first 30 days of purchase."
+        ],
+    },
+]
+
+
+@pytest.mark.parametrize(
+    "test_case",
+    dataset,
+)
+def test_factual_consistency(test_case: dict):
+    input = test_case.get("input")
+    expected_output = test_case.get("expected_output")
+    context = test_case.get("context")
+
+    # Replace this with the actual output of your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
+
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+    test_case = LLMTestCase(
+        input=input,
+        actual_output=actual_output,
+        expected_output=expected_output,
+        context=context
+    )
+    assert_test(test_case, [factual_consistency_metric])
+```
+
+Execute `deepeval test run`:
+
+```
+deepeval test run test_bulk.py
+```
+
 ## Visualize Your Results
 
 If you have reached this point, you've likely ran `deepeval test run` multiple times. To keep track of all future evaluation results created by `deepeval`, login to **[Confident AI](https://app.confident-ai.com/auth/signup)** by running the following command:
 
 ```
+
 deepeval login
+
 ```
 
 **Confident AI** is the platform powering `deepeval`, and offer deep insights to help you quickly figure out how to best implement your LLM application. Follow the instructions displayed on the CLI to create an account, get your Confident API key, and paste it in the CLI.
@@ -202,7 +278,9 @@ deepeval login
 Once you've pasted your Confident API key in the CLI, run:
 
 ```
+
 deepeval test run test_examply.py
+
 ```
 
 ### View Test Run
