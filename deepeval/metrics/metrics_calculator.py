@@ -6,8 +6,9 @@ from typing import Union, List, Optional
 
 class StatisticalMetrics:
     """This class calculates various statistical Natural Language Processing (NLP) evaluation metrics."""
+
     # Todo: More metrics are to be added
-    
+
     @classmethod
     def rouge_score(
         cls, target: str, prediction: str, score_type: str
@@ -25,7 +26,11 @@ class StatisticalMetrics:
         Returns:
             float: The Rouge score for the given target and prediction, based on the specified score type.
         """
-        assert score_type in ["rouge1", "rouge2", "rougeL"], "score_type can be either rouge1, rouge2 or rougeL"
+        assert score_type in [
+            "rouge1",
+            "rouge2",
+            "rougeL",
+        ], "score_type can be either rouge1, rouge2 or rougeL"
         scorer = rouge_scorer.RougeScorer([score_type], use_stemmer=True)
         scores = scorer.score(target, prediction)
         return scores[score_type].fmeasure
@@ -50,7 +55,12 @@ class StatisticalMetrics:
         Returns:
             float: The BLEU score for the given prediction and references.
         """
-        assert bleu_type in ["bleu1", "bleu2", "bleu3", "bleu4",], "Invalud bleu_type. Options: 'bleu1', 'bleu2', 'bleu3', 'bleu4'"
+        assert bleu_type in [
+            "bleu1",
+            "bleu2",
+            "bleu3",
+            "bleu4",
+        ], "Invalud bleu_type. Options: 'bleu1', 'bleu2', 'bleu3', 'bleu4'"
         targets = [references] if isinstance(references, str) else references
         tokenized_targets = [word_tokenize(target) for target in targets]
         tokenized_prediction = word_tokenize(prediction)
@@ -76,23 +86,24 @@ class StatisticalMetrics:
 
 
 class ModelBasedMetrics:
-    """ModelBasedMetrics uses seperate external models to evaluate the LLM's predictions. 
-    Example: BertScore. This metrics uses BERT model in order to calculate the score. 
+    """ModelBasedMetrics uses seperate external models to evaluate the LLM's predictions.
+    Example: BertScore. This metrics uses BERT model in order to calculate the score.
     """
-    # Todo: More metrics to be added 
+
+    # Todo: More metrics to be added
 
     @classmethod
     def bert_score(cls, target: str, prediction: str) -> float:
         raise NotImplementedError()
-    
+
     @classmethod
     def faithfulness_score(cls, target: str, prediction: str) -> float:
         raise NotImplementedError()
-    
+
     @classmethod
     def PII_score(cls, target: str, prediction: str) -> float:
         raise NotImplementedError()
-    
+
     @classmethod
     def toxic_score(cls, target: str, prediction: str) -> float:
         raise NotImplementedError()
