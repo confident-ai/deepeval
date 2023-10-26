@@ -48,9 +48,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         result = api.post_test_run(test_run)
 
     # Calculate the average of each metric
-    metrics_avg = {
-        metric.metric: metric.score for metric in test_run.metric_scores
-    }
+    metrics_avg = {metric.metric: metric.score for metric in test_run.metric_scores}
     # Count the number of passes and failures
     # Get all the possible metrics first
     all_metrics = {metric.metric for metric in test_run.metric_scores}
@@ -116,9 +114,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
 
     if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
         link = f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}"
-        print(
-            "✅ Tests finished! View results on " f"[link={link}]{link}[/link]"
-        )
+        print("✅ Tests finished! View results on " f"[link={link}]{link}[/link]")
     else:
         print(
             '✅ Tests finished! Run "deepeval login" to view evaluation results in detail.'
@@ -128,18 +124,14 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         if not os.path.exists(local_folder):
             os.mkdir(local_folder)
             shutil.copy(test_filename, local_folder)
-            print(
-                f"✅ Results saved in {local_folder} as {test_filename}"
-            )
+            print(f"✅ Results saved in {local_folder} as {test_filename}")
         elif os.path.isfile(local_folder):
             print(
                 f"""❌ Error: DEEPEVAL_RESULTS_FOLDER={local_folder} already exists and is a file.\nDetailed results won't be saved. Please specify a folder or an available path."""
             )
         else:
             shutil.copy(test_filename, local_folder)
-            print(
-                f"✅ Results saved in {local_folder} as {test_filename}"
-            )
+            print(f"✅ Results saved in {local_folder} as {test_filename}")
     os.remove(test_filename)
 
 
