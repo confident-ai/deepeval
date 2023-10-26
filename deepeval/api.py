@@ -49,6 +49,7 @@ class APITestCase(BaseModel):
     run_duration: float = Field(..., alias="runDuration")
     context: Optional[list] = Field(None)
 
+
 class MetricScore(BaseModel):
     metric: str
     score: float
