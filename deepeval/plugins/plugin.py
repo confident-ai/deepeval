@@ -121,7 +121,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         )
     else:
         print(
-            '✅ Tests finished! Run "deepeval login" to view and log results in detail'
+            '✅ Tests finished! Run "deepeval login" to view evaluation results in detail.'
         )
 
     if os.getenv("DEEPEVAL_RESULTS_FOLDER"):
