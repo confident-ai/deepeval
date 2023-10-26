@@ -8,3 +8,5 @@ detoxify
 tensorflow==2.10.0
 Dbias
 sentry-sdk
+rouge-score
+nltk
