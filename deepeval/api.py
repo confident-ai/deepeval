@@ -21,7 +21,6 @@ from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 
 API_BASE_URL = "https://app.confident-ai.com/api"
-# API_BASE_URL = "http://localhost:3000/api"
 
 # Parameters for HTTP retry
 HTTP_TOTAL_RETRIES = 3  # Number of total retries
