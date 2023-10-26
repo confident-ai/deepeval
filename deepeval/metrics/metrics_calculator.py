@@ -1,9 +1,4 @@
-import re
-import string
-from rouge_score import scoring
 from rouge_score import rouge_scorer
-from bert_score import BERTScorer
-from nltk.metrics.scores import f_measure
 from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional
