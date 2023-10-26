@@ -123,22 +123,22 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         print(
             '✅ Tests finished! Run "deepeval login" to view evaluation results in detail.'
         )
-
-    if os.getenv("DEEPEVAL_RESULTS_FOLDER"):
-        if not os.path.exists(os.getenv("DEEPEVAL_RESULTS_FOLDER")):
-            os.mkdir(os.getenv("DEEPEVAL_RESULTS_FOLDER"))
-            shutil.copy(test_filename, os.getenv("DEEPEVAL_RESULTS_FOLDER"))
+    local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
+    if local_folder:
+        if not os.path.exists(local_folder):
+            os.mkdir(local_folder)
+            shutil.copy(test_filename, local_folder)
             print(
-                f"✅ Results saved in {os.getenv('DEEPEVAL_RESULTS_FOLDER')} as {test_filename}"
+                f"✅ Results saved in {local_folder} as {test_filename}"
             )
-        elif os.path.isfile(os.getenv("DEEPEVAL_RESULTS_FOLDER")):
+        elif os.path.isfile(local_folder):
             print(
-                f"""❌ Error: DEEPEVAL_RESULTS_FOLDER={os.getenv('DEEPEVAL_RESULTS_FOLDER')} already exists and is a file.\nDetailed results won't be saved. Please specify a folder or an available path."""
+                f"""❌ Error: DEEPEVAL_RESULTS_FOLDER={local_folder} already exists and is a file.\nDetailed results won't be saved. Please specify a folder or an available path."""
             )
         else:
-            shutil.copy(test_filename, os.getenv("DEEPEVAL_RESULTS_FOLDER"))
+            shutil.copy(test_filename, local_folder)
             print(
-                f"✅ Results saved in {os.getenv('DEEPEVAL_RESULTS_FOLDER')} as {test_filename}"
+                f"✅ Results saved in {local_folder} as {test_filename}"
             )
     os.remove(test_filename)
 
