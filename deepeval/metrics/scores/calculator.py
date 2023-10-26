@@ -4,7 +4,7 @@ from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional
 
 
-class StatisticalMetrics:
+class StatisticalCalculator:
     """This class calculates various statistical Natural Language Processing (NLP) evaluation metrics."""
 
     # Todo: More metrics are to be added
@@ -85,8 +85,8 @@ class StatisticalMetrics:
         raise NotImplementedError()
 
 
-class ModelBasedMetrics:
-    """ModelBasedMetrics uses seperate external models to evaluate the LLM's predictions.
+class ModelBasedCalculator:
+    """ModelBasedCalculator uses seperate external models to evaluate the LLM's predictions.
     Example: BertScore. This metrics uses BERT model in order to calculate the score.
     """
 
