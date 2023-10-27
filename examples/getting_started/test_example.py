@@ -3,6 +3,7 @@ from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.run_test import assert_test
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
+from deepeval.types import LLMTestCaseParams
 from deepeval.metrics.base_metric import BaseMetric
 
 
@@ -27,7 +28,10 @@ def test_humor():
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
     funny_metric = LLMEvalMetric(
-        name="Funny Metric", criteria="How funny it is", minimum_score=0.3
+        name="Funny Metric",
+        criteria="How funny the actual output is",
+        minimum_score=0.3,
+        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     )
     test_case = LLMTestCase(input=input, actual_output=actual_output)
     assert_test(test_case, [funny_metric])
@@ -75,7 +79,10 @@ def test_everything():
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
     length_metric = LengthMetric(max_length=10)
     funny_metric = LLMEvalMetric(
-        name="Funny Metric", criteria="How funny it is", minimum_score=0.3
+        name="Funny Metric",
+        criteria="How funny it is",
+        minimum_score=0.3,
+        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     )
 
     test_case = LLMTestCase(

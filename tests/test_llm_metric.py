@@ -1,10 +1,7 @@
+import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
-
-
-def generate_chatgpt3(prompt):
-    """Generate a response from Chat GPT3."""
-    return '{"score": 100, "reason": "The response is a valid response to the prompt."}'
+from deepeval.types import LLMTestCaseParams
 
 
 def test_chat_completion():
@@ -13,6 +10,10 @@ def test_chat_completion():
         name="Validity",
         criteria="The response is a valid response to the prompt.",
         minimum_score=0.5,
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+        ],
     )
     test_case = LLMTestCase(
         input="What is the capital of France?",
@@ -22,4 +23,4 @@ def test_chat_completion():
     )
     metric.measure(test_case)
     assert metric.is_successful() is True
-    assert metric.measure(test_case, include_reason=True) == 1.0
+    assert metric.measure(test_case) == 1.0
