@@ -42,40 +42,30 @@ A custom LLM evalated metric, is a custom metric whose evaluation is powered by 
 
 ```python
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
+from deepeval.types import LLMTestCaseParams
 
-funny_metric = LLMEvalMetric(
-    name="Funny",
-    criteria="How funny it is",
+summarization_metric = LLMEvalMetric(
+    name="Summarization",
+    criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
     minimum_score=0.5
 )
 ```
 
-There are two mandatory and two optional parameters required when instantiating an `LLMEvalMetric` class:
+There are three mandatory and one optional parameters required when instantiating an `LLMEvalMetric` class:
 
-- `name`
-- `criteria`
+- `name`: name of metric
+- `criteria`: a description outlining the specific evaluation aspects for each test case.
+- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
 - [Optional] `minimum_score`
-- [Optional] `completion_function`
 
-All instances of `LLMEvalMetric` returns a score ranging from 0-1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
+All instances of `LLMEvalMetric` returns a score ranging from 0 - 1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
 
-:::info
-`LLMEvalMetric` may or may not not require `context` or `expected_output` supplied to `LLMTestCase`, but we recommend providing both arguments where possible for the most accurate evaluation.
+:::danger
+For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
 :::
 
-You can also supply a custom `completion_function` if for example you want to utilize another LLM provider to evaluate your `LLMTestCase`. By default, `deepeval` uses the `openai` chat completion function.
-
-```python
-def make_chat_completion_request(prompt: str):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt},
-        ],
-    )
-    return response.choices[0].message.content
-```
+By defauly, `LLMEvalMetric` is evaluated using `GPT-4` from OpenAI.
 
 ## Custom Classic Metrics
 
