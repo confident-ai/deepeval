@@ -78,14 +78,14 @@ class StatisticalCalculator:
 
     @classmethod
     def exact_match(cls, target: str, prediction: str) -> int:
-        """Metrics that calculates whether two sequences matches exactly or not. 
+        """Metrics that calculates whether two sequences matches exactly or not.
 
         Args:
             target (str): The target string.
-            prediction (str): The predicted string from the llm 
+            prediction (str): The predicted string from the llm
 
         Returns:
-            int: The exact match score. 
+            int: The exact match score.
         """
         if not prediction:
             return 0
