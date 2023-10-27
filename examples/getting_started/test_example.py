@@ -32,8 +32,11 @@ def test_summarization():
     summarization_metric = LLMEvalMetric(
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
-        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-        minimum_score=0.5
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+        ],
+        minimum_score=0.5,
     )
     test_case = LLMTestCase(input=input, actual_output=actual_output)
     assert_test(test_case, [summarization_metric])
@@ -83,15 +86,19 @@ def test_everything():
     summarization_metric = LLMEvalMetric(
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
-        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-        minimum_score=0.5
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+        ],
+        minimum_score=0.5,
     )
 
     test_case = LLMTestCase(
         input=input, actual_output=actual_output, context=context
     )
     assert_test(
-        test_case, [factual_consistency_metric, length_metric, summarization_metric]
+        test_case,
+        [factual_consistency_metric, length_metric, summarization_metric],
     )
 
 
