@@ -22,6 +22,14 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 <br />
 
+# Features
+- Large variety of ready-to-use evaluation metrics, ranging from LLM evaluated (G-Eval) to metrics computed via statistical methods or NLP models.
+- Easily create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
+- Evaluate your entire dataset in bulk using fewer than 20 lines of Python code.
+- [Integrated with Confident AI](https://confident-ai.com) for instant observability into evaluation results and hyperparameter comparisons (such as prompt templates and model version used).
+
+<br />
+
 # Getting Started 🚀
 
 Let's pretend your LLM application is a customer support chatbot; here's how DeepEval can help test what you've built.
