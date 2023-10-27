@@ -37,7 +37,8 @@ class LLMEvalMetric(BaseMetric):
         return self.name
 
     def measure(self, test_case: LLMTestCase):
-        """Measure out the LLM evaluated metric."""
+        """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
+
         # Measure the test case
         for param in self.evaluation_params:
             if (
