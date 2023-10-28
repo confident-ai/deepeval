@@ -6,9 +6,9 @@ from deepeval.metrics.scoring import Scorer
 
 # Testing exact_match_score metric
 
-class TestScorer(unittest.TestCase):
 
-    # tests for exact_match_score 
+class TestScorer(unittest.TestCase):
+    # tests for exact_match_score
 
     def test_exact_equal_strings(self):
         target = "Winners of the FIFA world cup were the French national football team"
