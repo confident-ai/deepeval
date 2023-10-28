@@ -1,11 +1,15 @@
 from rouge_score import rouge_scorer
 from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Any
 
 
-class StatisticalCalculator:
-    """This class calculates various statistical Natural Language Processing (NLP) evaluation metrics."""
+class Scorer:
+    """This class calculates various Natural Language Processing (NLP) evaluation score.
+
+    The scoring logic can be a simple algorithm or any statistical formula. There are some scores
+    Which also uses an external model (BERTScore) in the scoring logic.
+    """
 
     # Todo: More metrics are to be added
 
@@ -95,26 +99,28 @@ class StatisticalCalculator:
     def quasi_exact_match_score(cls, target: str, prediction: str) -> float:
         raise NotImplementedError()
 
-
-class ModelBasedCalculator:
-    """ModelBasedCalculator uses seperate external models to evaluate the LLM's predictions.
-    Example: BertScore. This metrics uses BERT model in order to calculate the score.
-    """
-
-    # Todo: More metrics to be added
+    # Todo: More mode based metrics to be added
 
     @classmethod
-    def bert_score(cls, target: str, prediction: str) -> float:
+    def bert_score(
+        cls, target: str, prediction: str, model: Optional[Any] = None
+    ) -> float:
         raise NotImplementedError()
 
     @classmethod
-    def faithfulness_score(cls, target: str, prediction: str) -> float:
+    def faithfulness_score(
+        cls, target: str, prediction: str, model: Optional[Any] = None
+    ) -> float:
         raise NotImplementedError()
 
     @classmethod
-    def PII_score(cls, target: str, prediction: str) -> float:
+    def PII_score(
+        cls, target: str, prediction: str, model: Optional[Any] = None
+    ) -> float:
         raise NotImplementedError()
 
     @classmethod
-    def toxic_score(cls, target: str, prediction: str) -> float:
+    def toxic_score(
+        cls, target: str, prediction: str, model: Optional[Any] = None
+    ) -> float:
         raise NotImplementedError()
