@@ -2,7 +2,7 @@ from rouge_score import rouge_scorer
 from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional, Any
-
+from deepeval.utils import normalize_text
 
 class Scorer:
     """This class calculates various Natural Language Processing (NLP) evaluation score.
@@ -96,8 +96,10 @@ class Scorer:
         return 1 if prediction.strip() == target.strip() else 0
 
     @classmethod
-    def quasi_exact_match_score(cls, target: str, prediction: str) -> float:
-        raise NotImplementedError()
+    def quasi_exact_match_score(cls, target: str, prediction: str) -> int:
+        if not prediction:
+            return 0
+        return 1 if normalize_text(target) == normalize_text(prediction) else 0
 
     # Todo: More mode based metrics to be added
 
