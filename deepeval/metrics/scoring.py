@@ -77,7 +77,7 @@ class StatisticalCalculator:
         )
 
     @classmethod
-    def exact_match(cls, target: str, prediction: str) -> int:
+    def exact_match_score(cls, target: str, prediction: str) -> int:
         """Metrics that calculates whether two sequences matches exactly or not. 
 
         Args:
@@ -92,7 +92,7 @@ class StatisticalCalculator:
         return 1 if prediction.strip() == target.strip() else 0
 
     @classmethod
-    def quasi_exact_match(cls, target: str, prediction: str) -> float:
+    def quasi_exact_match_score(cls, target: str, prediction: str) -> float:
         raise NotImplementedError()
 
 
