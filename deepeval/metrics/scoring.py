@@ -4,6 +4,7 @@ from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional, Any
 from deepeval.utils import normalize_text
 
+
 class Scorer:
     """This class calculates various Natural Language Processing (NLP) evaluation score.
 
