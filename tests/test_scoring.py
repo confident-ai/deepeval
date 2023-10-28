@@ -1,9 +1,9 @@
 """Tests for metrics calculator
 """
 
-from deepeval.metrics.scoring import StatisticalCalculator
+from deepeval.metrics.scoring import Scorer
 
-# Testing exact_match metric
+# Testing exact_match_score metric
 
 
 def test_exact_equal_strings():
@@ -13,28 +13,28 @@ def test_exact_equal_strings():
     prediction = (
         "Winners of the FIFA world cup were the French national football team"
     )
-    assert StatisticalCalculator.exact_match(target, prediction) == 1
+    assert Scorer.exact_match_score(target, prediction) == 1
 
 
-def test_exact_match_unequal_strings():
+def test_exact_match_score_unequal_strings():
     target = "Hello, World!"
     prediction = "Goodbye, World!"
-    assert StatisticalCalculator.exact_match(target, prediction) == 0
+    assert Scorer.exact_match_score(target, prediction) == 0
 
 
-def test_exact_match_whitespace_difference():
+def test_exact_match_score_whitespace_difference():
     target = "Hello, World!"
     prediction = " Hello, World! "
-    assert StatisticalCalculator.exact_match(target, prediction) == 1
+    assert Scorer.exact_match_score(target, prediction) == 1
 
 
-def test_exact_match_empty_prediction():
+def test_exact_match_score_empty_prediction():
     target = "Hello, World!"
     prediction = ""
-    assert StatisticalCalculator.exact_match(target, prediction) == 0
+    assert Scorer.exact_match_score(target, prediction) == 0
 
 
-def test_exact_match_empty_target():
+def test_exact_match_score_empty_target():
     target = ""
     prediction = "Hello, World!"
-    assert StatisticalCalculator.exact_match(target, prediction) == 0
+    assert Scorer.exact_match_score(target, prediction) == 0
