@@ -107,8 +107,11 @@ class Scorer:
 
     @classmethod
     def bert_score(
-        cls, references: Union[str, List[str]], predictions: Union[str, List[str]], 
-        model: Optional[str] = "microsoft/deberta-large-mnli", lang: Optional[str] = "en"
+        cls,
+        references: Union[str, List[str]],
+        predictions: Union[str, List[str]],
+        model: Optional[str] = "microsoft/deberta-large-mnli",
+        lang: Optional[str] = "en",
     ) -> float:
         """
         Calculate BERTScore for one or more reference sentences compared to one or more prediction sentences using a specified BERT model.
@@ -134,27 +137,40 @@ class Scorer:
         try:
             from bert_score import BERTScorer
         except ModuleNotFoundError as e:
-            print("Please install bert_score module. Command: pip install bert-score")
-        
-        # FIXME: Fix the case for mps 
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        bert_scorer = BERTScorer(model_type=model, lang=lang, rescale_with_baseline=True, device=device)
+            print(
+                "Please install bert_score module. Command: pip install bert-score"
+            )
+
+        # FIXME: Fix the case for mps
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        bert_scorer = BERTScorer(
+            model_type=model,
+            lang=lang,
+            rescale_with_baseline=True,
+            device=device,
+        )
 
         if isinstance(predictions, str):
             predictions = [predictions]
-        
+
         if isinstance(references, str):
             references = [references]
-        
-        if isinstance(predictions, list) and isinstance(references, list) and not isinstance(references[0], list):
+
+        if (
+            isinstance(predictions, list)
+            and isinstance(references, list)
+            and not isinstance(references[0], list)
+        ):
             if len(predictions) != len(references):
                 references = [references]
-        
-        precision, recall, f1 = bert_scorer.score(cands=predictions, refs=references)
+
+        precision, recall, f1 = bert_scorer.score(
+            cands=predictions, refs=references
+        )
         return {
-            'bert-precision': precision.detach().numpy().tolist(),
-            'bert-recall': recall.detach().numpy().tolist(),
-            'bert-f1': f1.detach().numpy().tolist()
+            "bert-precision": precision.detach().numpy().tolist(),
+            "bert-recall": recall.detach().numpy().tolist(),
+            "bert-f1": f1.detach().numpy().tolist(),
         }
 
     @classmethod
