@@ -4,9 +4,6 @@
 import unittest
 from deepeval.metrics.scoring import Scorer
 
-# Testing exact_match_score metric
-
-
 class TestScorer(unittest.TestCase):
     # tests for exact_match_score
 
@@ -117,3 +114,42 @@ class TestScorer(unittest.TestCase):
             references, prediction, bleu_type
         )
         self.assertNotAlmostEqual(bleu_score, 0.0, places=2)
+
+
+    # Tests for Bert score 
+
+    def test_bert_score_single_reference_single_prediction(self):
+        reference = "The quick brown fox jumps over the lazy dog"
+        prediction = "The quick brown fox jumps over the lazy dog"
+        bert_scores = Scorer.bert_score(reference, prediction)
+        self.assertTrue(isinstance(bert_scores, dict))
+        self.assertIn("bert-precision", bert_scores)
+        self.assertIn("bert-recall", bert_scores)
+        self.assertIn("bert-f1", bert_scores)
+
+    def test_bert_score_single_reference_multiple_predictions(self):
+        reference = "The quick brown fox jumps over the lazy dog"
+        predictions = ["The quick brown fox jumps over the lazy dog", "A fast brown fox jumps over a sleeping dog"]
+        bert_scores = Scorer.bert_score(reference, predictions)
+        self.assertTrue(isinstance(bert_scores, dict))
+        self.assertIn("bert-precision", bert_scores)
+        self.assertIn("bert-recall", bert_scores)
+        self.assertIn("bert-f1", bert_scores)
+
+    def test_bert_score_multiple_references_single_prediction(self):
+        references = ["The quick brown fox jumps over the lazy dog", "A fast brown fox jumps over a sleeping dog"]
+        prediction = "The quick brown fox jumps over the lazy dog"
+        bert_scores = Scorer.bert_score(references, prediction)
+        self.assertTrue(isinstance(bert_scores, dict))
+        self.assertIn("bert-precision", bert_scores)
+        self.assertIn("bert-recall", bert_scores)
+        self.assertIn("bert-f1", bert_scores)
+
+    def test_bert_score_multiple_references_multiple_predictions(self):
+        references  = ["The quick brown fox jumps over the lazy dog", "A fast brown fox jumps over a sleeping dog"]
+        predictions = ["The quick brown fox jumps over the lazy dog", "A fast brown fox jumps over a sleeping dog"]
+        bert_scores = Scorer.bert_score(references, predictions)
+        self.assertTrue(isinstance(bert_scores, dict))
+        self.assertIn("bert-precision", bert_scores)
+        self.assertIn("bert-recall", bert_scores)
+        self.assertIn("bert-f1", bert_scores)
