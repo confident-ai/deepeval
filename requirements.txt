@@ -10,3 +10,4 @@ Dbias
 sentry-sdk
 rouge-score
 nltk
+bert-score
