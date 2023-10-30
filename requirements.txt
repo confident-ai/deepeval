@@ -5,6 +5,7 @@ pytest
 tabulate
 sentence-transformers
 detoxify
+torch==2.0.9
 tensorflow==2.10.0
 Dbias
 sentry-sdk
