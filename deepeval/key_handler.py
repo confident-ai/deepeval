@@ -2,7 +2,7 @@
 """
 import json
 
-from .constants import IMPLEMENTATION_ID_NAME, KEY_FILE
+from .constants import KEY_FILE
 
 
 class KeyFileHandler:
@@ -32,14 +32,6 @@ class KeyFileHandler:
     def fetch_api_key(self) -> str:
         """Fetches the API key from the hidden file"""
         return self.fetch_data("api_key")
-
-    def write_implementation_name(self, implementation_name: str):
-        """Writes the implementation name to the hidden file"""
-        self.write_data(IMPLEMENTATION_ID_NAME, implementation_name)
-
-    def fetch_implementation_name(self) -> str:
-        """Fetches the implementation name from the hidden file"""
-        return self.fetch_data(IMPLEMENTATION_ID_NAME)
 
 
 KEY_FILE_HANDLER = KeyFileHandler()
