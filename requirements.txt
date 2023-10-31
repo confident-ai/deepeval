@@ -11,5 +11,4 @@ sentry-sdk
 rouge-score
 nltk
 bert-score
-allennlp
 protobuf==3.20.1
