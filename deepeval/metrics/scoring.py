@@ -6,6 +6,7 @@ from typing import Union, List, Optional, Any
 from deepeval.utils import normalize_text
 from deepeval.metrics._summac_model import SummaCZS
 
+
 class Scorer:
     """This class calculates various Natural Language Processing (NLP) evaluation score.
 
@@ -179,7 +180,7 @@ class Scorer:
     ) -> float:
         """Calculate the faithfulness score of a prediction compared to a target text using SummaCZS.
 
-        This method computes a faithfulness score, which measures the extent to which a generated prediction matches the provided target text. 
+        This method computes a faithfulness score, which measures the extent to which a generated prediction matches the provided target text.
         The score is based on the SummaCZS (Summarization Competence with Zero-shot Supervision) model.
 
         Args:
@@ -190,10 +191,15 @@ class Scorer:
         Returns:
             float: The computed faithfulness score. Higher values indicate greater faithfulness to the target text.
         """
-        model = "vitc" if model is None else model 
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        scorer = SummaCZS(granularity="sentence", model_name=model, imager_load_cache=False, device=device)
-        return scorer.score_one(target, prediction)['score']
+        model = "vitc" if model is None else model
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        scorer = SummaCZS(
+            granularity="sentence",
+            model_name=model,
+            imager_load_cache=False,
+            device=device,
+        )
+        return scorer.score_one(target, prediction)["score"]
 
     @classmethod
     def PII_score(
