@@ -172,7 +172,9 @@ class TestScorer(unittest.TestCase):
         target = "This is an example target text."
         prediction = "This is an example target text."
         # When the target and prediction are identical, the faithfulness score should be 1.0.
-        self.assertAlmostEqual(1.0 - Scorer.faithfulness_score(target, prediction), 0.0, places=1)
+        self.assertAlmostEqual(
+            1.0 - Scorer.faithfulness_score(target, prediction), 0.0, places=1
+        )
 
     def test_faithfulness_score_different_strings(self):
         target = "The quick brown fox jumps over the lazy dog."
