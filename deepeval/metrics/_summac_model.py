@@ -77,8 +77,14 @@ class SummaCImager:
 
     def load_nli(self):
         if self.model_name == "decomp":
-            from allennlp.predictors.predictor import Predictor
-
+            try:
+                from allennlp.predictors.predictor import Predictor
+            except ModuleNotFoundError:
+                print(
+                    "allennlp library is not installed. "
+                    "Please install the library by following the instruction from their documentation:"
+                    "https://docs.allennlp.org/main/"
+                )
             self.model = Predictor.from_path(
                 "https://storage.googleapis.com/allennlp-public-models/decomposable-attention-elmo-2020.04.09.tar.gz",
                 cuda_device=0,
