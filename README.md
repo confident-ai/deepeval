@@ -3,16 +3,18 @@
 </p>
 
 <p align="center">
+    <a href="https://discord.gg/a3K9c8GRGt" target="_blank">
+        <img src="https://img.shields.io/static/v1?label=Discord&message=Join%20Us&color=1f2937&logo=discord&logoColor=white&labelColor=1d4ed8&style=for-the-badge" alt="Join Discord">
+    </a>
+</p>
+
+<p align="center">
+    <a href="https://docs.confident-ai.com" target="_blank">
+        Read The Docs
+    </a>
+    &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
     <a href="https://confident-ai.com" target="_blank">
         Website
-    </a>
-   &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
-    <a href="https://docs.confident-ai.com" target="_blank">
-        Documentation
-    </a>
-   &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
-    <a href="https://discord.gg/a3K9c8GRGt" target="_blank">
-        Discord
     </a>
 </p>
 

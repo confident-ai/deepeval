@@ -1,6 +1,6 @@
 name: Run pytest in matrix
 
-on: 
+on:
   push:
   pull_request:
 
@@ -42,7 +42,5 @@ jobs:
       - name: Run Unit Tests (pytest)
         env:
           python-version: ${{ matrix.python-version }}
-          CONFIDENT_AI_API_KEY: ${{ secrets.API_KEY_ENV }}
-          CONFIDENT_AI_IMP_ID: ${{ secrets.CONFIDENT_AI_IMP_ID }}
         run: |
           deepeval test run -x tests
