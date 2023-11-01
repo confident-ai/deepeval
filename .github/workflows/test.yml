@@ -1,4 +1,4 @@
-name: Run pytest in matrix
+name: Run pytest with Poetry
 
 on:
   push:
@@ -13,10 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
+      - name: Set up Poetry
+        uses: poetry/actions/setup-poetry@v2
 
       - name: Get pip cache dir
         id: pip-cache
@@ -30,17 +28,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install dependencies
-        env:
-          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies with Poetry
         run: |
-          python -c "import sys; print(sys.version)"
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python -m pip install ragas sentry-sdk . pytest-rerunfailures pytest-asyncio
-
-      - name: Run Unit Tests (pytest)
-        env:
-          python-version: ${{ matrix.python-version }}
-        run: |
-          deepeval test run -x tests
+          poetry install
+          poetry run pytest
