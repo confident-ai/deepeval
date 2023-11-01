@@ -5,7 +5,7 @@ pytest
 tabulate
 sentence-transformers
 detoxify
-tensorflow==2.10.0
+tensorflow = "2.14.0"
 Dbias
 sentry-sdk
 rouge-score
