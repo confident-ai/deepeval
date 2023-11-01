@@ -6,7 +6,7 @@ tabulate
 sentence-transformers
 detoxify
 torch==2.0.9
-tensorflow==2.10.0
+tensorflow==2.14.0
 Dbias
 sentry-sdk
 rouge-score
