@@ -21,6 +21,7 @@ rouge-score = "^0.1.2"
 nltk = "^3.8.1"
 bert-score = "^0.3.13"
 rich = "^13.6.0"
+torch = "2.0.1"
 
 [tool.black]
 line-length = 80
