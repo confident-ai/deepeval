@@ -5,11 +5,6 @@ name: DeepEval Test Run Example
 on:
   pull_request:
 
-name: Run Test
-on:
-  push:
-    branches:
-      - main  # Change this to the branch you want to trigger the workflow on
 
 jobs:
   test:
