@@ -63,8 +63,8 @@ jobs:
       #              Make script executable
       #----------------------------------------------
 
-      - name: Make script executable
-        run: chmod +x tests/test_without_pytest.py
+      # - name: Make script executable
+      #   run: chmod +x tests/test_without_pytest.py
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
