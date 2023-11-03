@@ -192,7 +192,7 @@ class Scorer:
             float: The computed faithfulness score. Higher values indicate greater faithfulness to the target text.
         """
         model = "vitc" if model is None else model
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
         scorer = SummaCZS(
             granularity="sentence",
             model_name=model,
