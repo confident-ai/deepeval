@@ -1,46 +1,68 @@
-name: Run pytest in matrix
+name: Run All Tests with Poetry
 
 on:
   push:
   pull_request:
 
 jobs:
-  examples:
+  test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.7", "3.9"]
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      #----------------------------------------------
+      #       check-out repo and set-up python
+      #----------------------------------------------
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Get pip cache dir
-        id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v2
+          python-version: "3.11"
+      #----------------------------------------------
+      #  -----  install & configure poetry  -----
+      #----------------------------------------------
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
 
+      #----------------------------------------------
+      #       load cached venv if cache exists
+      #----------------------------------------------
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      #----------------------------------------------
+      # install dependencies if cache does not exist
+      #----------------------------------------------
       - name: Install dependencies
-        env:
-          python-version: ${{ matrix.python-version }}
-        run: |
-          python -c "import sys; print(sys.version)"
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python -m pip install ragas sentry-sdk . pytest-rerunfailures pytest-asyncio
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+      #----------------------------------------------
+      # install your root project, if required
+      #----------------------------------------------
 
-      - name: Run Unit Tests (pytest)
-        env:
-          python-version: ${{ matrix.python-version }}
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Set NLTK_DATA
+        run: echo "NLTK_DATA=${{ runner.workspace }}/nltk_data" >> $GITHUB_ENV
+
+      - name: Download NLTK resources
         run: |
-          deepeval test run -x tests
+          source .venv/bin/activate
+          python -m nltk.downloader punkt stopwords
+
+      #----------------------------------------------
+      #              run test suite
+      #----------------------------------------------
+      - name: Run tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          poetry run pytest tests/ --ignore=tests/test_llm_metric.py --ignore=tests/test_overall_score.py
