@@ -22,6 +22,9 @@ nltk = "^3.8.1"
 bert-score = "^0.3.13"
 rich = "^13.6.0"
 torch = "2.0.1"
+ragas = "^0.0.19"
+pytest-rerunfailures = "^12.0"
+pytest-asyncio = "^0.21.1"
 
 [tool.black]
 line-length = 80
