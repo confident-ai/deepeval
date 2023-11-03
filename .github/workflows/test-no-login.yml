@@ -30,6 +30,13 @@ jobs:
           virtualenvs-in-project: true
           installer-parallel: true
 
+      - name: Set NLTK_DATA
+        run: echo "NLTK_DATA=${{ runner.workspace }}/nltk_data" >> $GITHUB_ENV
+
+      - name: Download NLTK 'punkt' resource
+        run: |
+          python -c "import nltk; nltk.download('punkt')"
+
       #----------------------------------------------
       #       load cached venv if cache exists
       #----------------------------------------------
