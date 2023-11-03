@@ -4,6 +4,7 @@ from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional, Any
 from deepeval.utils import normalize_text
+from deepeval.metrics._summac_model import SummaCZS
 
 
 class Scorer:
@@ -177,7 +178,28 @@ class Scorer:
     def faithfulness_score(
         cls, target: str, prediction: str, model: Optional[str] = None
     ) -> float:
-        raise NotImplementedError()
+        """Calculate the faithfulness score of a prediction compared to a target text using SummaCZS.
+
+        This method computes a faithfulness score, which measures the extent to which a generated prediction matches the provided target text.
+        The score is based on the SummaCZS (Summarization Competence with Zero-shot Supervision) model.
+
+        Args:
+            target (str): The reference target text for comparison.
+            prediction (str): The generated prediction to be evaluated.
+            model (Optional[str], optional): The SummaCZS model name to use. If not provided, the "vitc" model will be used by default.
+
+        Returns:
+            float: The computed faithfulness score. Higher values indicate greater faithfulness to the target text.
+        """
+        model = "vitc" if model is None else model
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        scorer = SummaCZS(
+            granularity="sentence",
+            model_name=model,
+            imager_load_cache=False,
+            device=device,
+        )
+        return scorer.score_one(target, prediction)["score"]
 
     @classmethod
     def PII_score(
