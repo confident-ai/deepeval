@@ -60,6 +60,12 @@ jobs:
           source .venv/bin/activate
           python -m nltk.downloader punkt stopwords
       #----------------------------------------------
+      #              Make script executable
+      #----------------------------------------------
+
+      - name: Make script executable
+        run: chmod +x tests/test_without_pytest.py
+      #----------------------------------------------
       #              run test suite
       #----------------------------------------------
       - name: Run tests
