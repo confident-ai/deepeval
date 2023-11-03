@@ -5,6 +5,9 @@ description = "The Evaluation Framework for LLMs"
 authors = ["Jeffrey Ip"]
 readme = "README.md"
 
+[tool.poetry.scripts]
+deepeval = 'deepeval.cli.main:app'
+
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
 detoxify = { git = "https://github.com/topoteretes/detoxify_branches.git" }
@@ -28,9 +31,6 @@ pytest-asyncio = "^0.21.1"
 
 [tool.black]
 line-length = 80
-
-
-
 
 [build-system]
 requires = ["poetry-core"]
