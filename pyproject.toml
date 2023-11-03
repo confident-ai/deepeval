@@ -31,6 +31,7 @@ torch = ">=2.0.0, !=2.0.1, !=2.1.0"
 ragas = "^0.0.19"
 pytest-rerunfailures = "^12.0"
 pytest-asyncio = "^0.21.1"
+coverage = "*"
 
 [tool.black]
 line-length = 80
