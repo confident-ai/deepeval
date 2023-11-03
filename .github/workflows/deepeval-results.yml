@@ -39,6 +39,10 @@ jobs:
       - name: Run deepeval tests and capture output
         run: poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
 
+      - name: Display output.txt
+        if: always()
+        run: cat output.txt
+
       - name: Remove ANSI codes from output
         run: sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
 
