@@ -1,2 +1,41 @@
+[tool.poetry]
+name = "deepeval"
+version = "0.20.13"
+description = "The Evaluation Framework for LLMs"
+authors = ["Jeffrey Ip"]
+readme = "README.md"
+
+[tool.poetry.scripts]
+deepeval = 'deepeval.cli.main:app'
+
+[tool.poetry.plugins."pytest11"]
+plugins = "deepeval.plugins.plugin"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+detoxify = { git = "https://github.com/topoteretes/detoxify_branches.git" }
+tensorflow = "^2.14.0"
+requests = "^2.31.0"
+tqdm = "^4.66.1"
+transformers = "^4.34.1"
+pytest = "^7.4.3"
+tabulate = "^0.9.0"
+sentence-transformers = "^2.2.2"
+dbias = "^0.1.5"
+sentry-sdk = "^1.33.1"
+rouge-score = "^0.1.2"
+nltk = "^3.8.1"
+bert-score = "^0.3.13"
+rich = "^13.6.0"
+torch = ">=2.0.0, !=2.0.1, !=2.1.0"
+ragas = "^0.0.19"
+pytest-rerunfailures = "^12.0"
+pytest-asyncio = "^0.21.1"
+coverage = "*"
+
 [tool.black]
 line-length = 80
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
