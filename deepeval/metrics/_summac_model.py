@@ -135,7 +135,7 @@ class SummaCImager:
             self.model = AutoModelForSequenceClassification.from_pretrained(
                 self.model_card
             ).eval()
-            self.model.to(self.device).half()
+            self.model.to(self.device)
 
     def split_sentences(self, text):
         sentences = nltk.tokenize.sent_tokenize(text)
