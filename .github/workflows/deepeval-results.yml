@@ -5,45 +5,55 @@ name: DeepEval Test Run Example
 on:
   pull_request:
 
+name: Run Test
+on:
+  push:
+    branches:
+      - main  # Change this to the branch you want to trigger the workflow on
+
 jobs:
-  create-pip-link-comment:
+  test:
     runs-on: ubuntu-latest
-    permissions: write-all
-    name: pip link
     steps:
-      - name: Checkout code
+      - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Cache pip packages
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
         uses: actions/cache@v2
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}
 
       - name: Install dependencies
-        env:
-          python-version: ${{ matrix.python-version }}
-        run: |
-          python -c "import sys; print(sys.version)"
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt ragas
-          python -m pip install . pytest-rerunfailures pytest-asyncio
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction
 
-      - name: Run Test
-        id: run_test
-        run: |
-          (deepeval test run tests/test_quickstart.py) > output.txt 2>&1
-          # remove the ANCI codes
-          sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
-          output=$(cat output.txt)
-          echo "test_result<<EOF" >> $GITHUB_ENV
-          echo "$output" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          cat output.txt
+      - name: Install project
+        run: poetry install --no-interaction
 
-        shell: bash
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          python tests/test_without_pytest.py
+          deepeval test run tests/test_quickstart.py > output.txt 2>&1
+
+      - name: Remove ANSI codes
+        run: sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
+
+      - name: Set test_result
+        run: echo "test_result<<EOF" >> $GITHUB_ENV && cat output.txt >> $GITHUB_ENV && echo "EOF" >> $GITHUB_ENV
 
       - name: Comment PR
         uses: marocchino/sticky-pull-request-comment@v2
@@ -55,4 +65,4 @@ jobs:
             Thanks for running DeepEval 😎
             ```
             ${{ env.test_result }}
-            ```
+
