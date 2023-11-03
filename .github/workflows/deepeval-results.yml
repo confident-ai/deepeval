@@ -1,22 +1,20 @@
-name: DeepEval Test Run Example
-
-# This is an example YML file to show the results of a DeepEval test run to a PR
+name: DeepEval Test Run with Enhanced Configuration
 
 on:
+  push:
   pull_request:
-
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -26,38 +24,34 @@ jobs:
 
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
 
-      - name: Install project
-        run: poetry install --no-interaction
+      - name: Run tests without pytest
+        run: poetry run python tests/test_without_pytest.py
 
-      - name: Run tests
-        run: |
-          source .venv/bin/activate
-          python tests/test_without_pytest.py
-          deepeval test run tests/test_quickstart.py > output.txt 2>&1
+      - name: Run deepeval tests and capture output
+        run: poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
 
-      - name: Remove ANSI codes
+      - name: Remove ANSI codes from output
         run: sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" output.txt
 
-      - name: Set test_result
+      - name: Save test results to environment variable
         run: echo "test_result<<EOF" >> $GITHUB_ENV && cat output.txt >> $GITHUB_ENV && echo "EOF" >> $GITHUB_ENV
 
-      - name: Comment PR
+      - name: Comment PR with test results
         uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
         with:
-          hide_and_recreate: true
-          hide_classify: "OUTDATED"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           message: |
             Thanks for running DeepEval 😎
             ```
             ${{ env.test_result }}
-
+            ```
