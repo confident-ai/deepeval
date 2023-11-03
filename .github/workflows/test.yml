@@ -66,4 +66,3 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           poetry run pytest tests/ --ignore=tests/test_llm_metric.py --ignore=tests/test_overall_score.py
-          poetry run coverage report
