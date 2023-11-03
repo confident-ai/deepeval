@@ -52,15 +52,3 @@ jobs:
 
       - name: Save test results to environment variable
         run: echo "test_result<<EOF" >> $GITHUB_ENV && cat output.txt >> $GITHUB_ENV && echo "EOF" >> $GITHUB_ENV
-
-      - name: Comment PR
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          hide_and_recreate: true
-          hide_classify: "OUTDATED"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: |
-            Thanks for running DeepEval 😎
-            ```
-            ${{ env.test_result }}
-            ```
