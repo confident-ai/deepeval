@@ -1,4 +1,4 @@
-name: Run pytest with Poetry
+name: Run All Tests with Poetry
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       #----------------------------------------------
       #  -----  install & configure poetry  -----
       #----------------------------------------------
@@ -62,7 +62,8 @@ jobs:
       #              run test suite
       #----------------------------------------------
       - name: Run tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          source .venv/bin/activate
-          pytest tests/
-          coverage report
+          poetry run pytest tests/
+          poetry run coverage report

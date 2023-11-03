@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "Deepeval"
-version = "0.1.12"
-description = "Deepeval is a library for evaluating LLM models."
-authors = ["penguine-ip"]
+name = "deepeval"
+version = "0.20.13"
+description = "The Evaluation Framework for LLMs"
+authors = ["Jeffrey Ip"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
