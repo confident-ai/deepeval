@@ -58,9 +58,6 @@ jobs:
           source .venv/bin/activate
           python -m nltk.downloader punkt stopwords
 
-      - name: Download NLTK 'punkt' resource
-        run: |
-          python -c "import nltk; nltk.download('punkt')"
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
