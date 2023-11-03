@@ -46,11 +46,17 @@ jobs:
       #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
+
       - name: Install project
         run: poetry install --no-interaction
 
       - name: Set NLTK_DATA
         run: echo "NLTK_DATA=${{ runner.workspace }}/nltk_data" >> $GITHUB_ENV
+
+      - name: Download NLTK resources
+        run: |
+          source .venv/bin/activate
+          python -m nltk.downloader punkt stopwords
 
       - name: Download NLTK 'punkt' resource
         run: |
