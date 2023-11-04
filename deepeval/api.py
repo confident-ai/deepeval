@@ -19,6 +19,7 @@ from deepeval.constants import (
 from deepeval.key_handler import KEY_FILE_HANDLER
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.tracing import TraceData, get_trace_stack
 
 API_BASE_URL = "https://app.confident-ai.com/api"
 # API_BASE_URL = "http://localhost:3000/api"
@@ -45,9 +46,9 @@ class APITestCase(BaseModel):
     metrics_metadata: List[MetricsMetadata] = Field(
         ..., alias="metricsMetadata"
     )
-    threshold: float
     run_duration: float = Field(..., alias="runDuration")
     context: Optional[list] = Field(None)
+    traceStack: Optional[dict] = Field(None)
 
 
 class MetricScore(BaseModel):
@@ -144,14 +145,12 @@ class TestRun(BaseModel):
             metrics_metadata_dict.add_metric(metric)
         metrics_metadata = metrics_metadata_dict.get_metrics_metadata()
         success = all([metric.is_successful() for metric in metrics])
-        threshold = metrics[0].minimum_score
 
         if existing_test_case:
             # If it exists, append the metrics to the existing test case
             existing_test_case.metrics_metadata.extend(metrics_metadata)
-            # Update the success status and threshold
-            existing_test_case.success = success
-            existing_test_case.threshold = threshold
+            # Update the success status
+            existing_test_case.success = success and existing_test_case.success
         else:
             # If it doesn't exist, create a new test case
             # Adding backwards compatibility to ensure context still works.
@@ -167,9 +166,10 @@ class TestRun(BaseModel):
                     expectedOutput=test_case.expected_output,
                     success=success,
                     metricsMetadata=metrics_metadata,
-                    threshold=threshold,
                     runDuration=run_duration,
                     context=context,
+                    # TODO: add it here
+                    traceStack=get_trace_stack(),
                 )
             )
 
