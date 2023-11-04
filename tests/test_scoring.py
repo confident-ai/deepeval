@@ -165,3 +165,19 @@ class TestScorer(unittest.TestCase):
         self.assertIn("bert-precision", bert_scores)
         self.assertIn("bert-recall", bert_scores)
         self.assertIn("bert-f1", bert_scores)
+
+    # Tests for faithfulness score
+
+    def test_faithfulness_score_identical_strings(self):
+        target = "This is an example target text."
+        prediction = "This is an example target text."
+        # When the target and prediction are identical, the faithfulness score should be 1.0.
+        self.assertAlmostEqual(
+            1.0 - Scorer.faithfulness_score(target, prediction), 0.0, places=1
+        )
+
+    def test_faithfulness_score_different_strings(self):
+        target = "The quick brown fox jumps over the lazy dog."
+        prediction = "A fast brown fox leaped over the sleeping dog."
+        # When the prediction is different from the target, the faithfulness score should be less than 1.0.
+        self.assertLess(Scorer.faithfulness_score(target, prediction), 1.0)
