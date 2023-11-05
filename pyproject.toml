@@ -1,9 +1,12 @@
 [tool.poetry]
 name = "deepeval"
-version = "0.20.13"
+version = "0.20.14"
 description = "The Evaluation Framework for LLMs"
-authors = ["Jeffrey Ip"]
+authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
+license = "Apache-2.0"
 readme = "README.md"
+repository = "https://github.com/confident-ai.com/deepeval"
+documentation = "https://docs.confident-ai.com"
 
 [tool.poetry.scripts]
 deepeval = 'deepeval.cli.main:app'
@@ -40,3 +43,4 @@ line-length = 80
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
