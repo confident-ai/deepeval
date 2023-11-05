@@ -4,7 +4,7 @@ from functools import wraps
 from typing import Any, Callable, List, Union, Optional
 from time import perf_counter
 import traceback
-import inspect
+from inspect import signature, isfunction, ismethod
 import threading
 from deepeval.utils import dataclass_to_dict
 
@@ -40,6 +40,7 @@ class EmbeddingMetadata:
 class BaseTrace:
     type: Union[TraceType, str]
     executionTime: float
+    name: str
     input: dict
     output: dict
     status: TraceStatus
@@ -72,6 +73,7 @@ class TraceManager:
     def get_trace_stack(self):
         if not hasattr(self._local, "trace_stack"):
             self._local.trace_stack = []
+            self._local.json_trace_stack = None
         return self._local.trace_stack
 
     def clear_trace_stack(self):
@@ -98,6 +100,7 @@ trace_manager = TraceManager()
 
 def trace(
     type: str,
+    name: Optional[str] = None,
     model: Optional[str] = None,
     characters_per_token: Optional[Union[float, int]] = None,
     cost_per_token: Optional[float] = None,
@@ -142,7 +145,7 @@ def trace(
 
     def decorator_trace(func: Callable):
         if type == TraceType.LLM:
-            sig = inspect.signature(func)
+            sig = signature(func)
             params = sig.parameters.values()
 
             # Check if it's an instance method, adjust parameter list if 'self' or 'cls' is present
@@ -157,6 +160,7 @@ def trace(
 
         @wraps(func)
         def wrapper(*args, **kwargs):
+            sig = signature(func)
             if type == TraceType.LLM:
                 input_str = (
                     args[1]
@@ -168,11 +172,30 @@ def trace(
                         "Argument type for `TraceType.LLM` must be a string"
                     )
 
+            bound_method = False
+            # Check if it is called with 'self' or 'cls' parameter
+            params = sig.parameters
+            if args:
+                first_param = next(iter(params))
+                if first_param == "self" or first_param == "cls":
+                    bound_method = True
+
+            # Remove 'self' or 'cls' parameter if function is a method
+            if bound_method:
+                trace_args = args[1:]
+            else:
+                trace_args = args
+
+            # Proceed to create your trace, using trace_args instead of args
+            trace_instance_input = {"args": trace_args, "kwargs": kwargs}
+
             trace_instance = None
+            effective_name = name if name is not None else func.__name__
             if type == TraceType.LLM:
                 trace_instance = LlmTrace(
                     type=type,
                     executionTime=0,
+                    name=effective_name,
                     input=input_str,
                     output=None,
                     status=TraceStatus.SUCCESS,
@@ -183,7 +206,8 @@ def trace(
                 trace_instance = EmbeddingTrace(
                     type=type,
                     executionTime=0,
-                    input={"args": args, "kwargs": kwargs},
+                    name=effective_name,
+                    input=trace_instance_input,
                     output=None,
                     status=TraceStatus.SUCCESS,
                     traces=[],
@@ -193,7 +217,8 @@ def trace(
                 trace_instance = GenericTrace(
                     type=type,
                     executionTime=0,
-                    input={"args": args, "kwargs": kwargs},
+                    name=effective_name,
+                    input=trace_instance_input,
                     output=None,
                     status=TraceStatus.SUCCESS,
                     traces=[],
@@ -201,7 +226,6 @@ def trace(
 
             trace_manager.append_to_trace_stack(trace_instance)
             start_time = perf_counter()
-
             try:
                 result = func(*args, **kwargs)
                 trace_instance.output = result
@@ -238,7 +262,8 @@ def trace(
                 if len(current_trace_stack) > 1:
                     parent_trace = current_trace_stack[-2]
                     parent_trace.traces.append(trace_instance)
-                elif len(current_trace_stack) == 1:
+
+                if len(current_trace_stack) == 1:
                     dict_representation = dataclass_to_dict(
                         current_trace_stack[0]
                     )

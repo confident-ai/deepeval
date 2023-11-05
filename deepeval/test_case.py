@@ -2,7 +2,7 @@
 """
 import hashlib
 from dataclasses import dataclass
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
 
 
 @dataclass
