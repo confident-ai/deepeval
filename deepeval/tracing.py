@@ -73,7 +73,7 @@ class TraceManager:
     def get_trace_stack(self):
         if not hasattr(self._local, "trace_stack"):
             self._local.trace_stack = []
-            self._local.json_trace_stack = None
+            self._local.dict_trace_stack = None
         return self._local.trace_stack
 
     def clear_trace_stack(self):
@@ -86,13 +86,13 @@ class TraceManager:
     def append_to_trace_stack(self, trace_instance):
         self.get_trace_stack().append(trace_instance)
 
-    def set_json_trace_stack(self, json_trace_stack):
-        self._local.json_trace_stack = json_trace_stack
+    def set_dict_trace_stack(self, dict_trace_stack):
+        self._local.dict_trace_stack = dict_trace_stack
 
-    def get_and_reset_json_trace_stack(self):
-        json_trace_stack = getattr(self._local, "json_trace_stack", None)
-        self._local.json_trace_stack = None
-        return json_trace_stack
+    def get_and_reset_dict_trace_stack(self):
+        dict_trace_stack = getattr(self._local, "dict_trace_stack", None)
+        self._local.dict_trace_stack = None
+        return dict_trace_stack
 
 
 trace_manager = TraceManager()
@@ -267,7 +267,7 @@ def trace(
                     dict_representation = dataclass_to_dict(
                         current_trace_stack[0]
                     )
-                    trace_manager.set_json_trace_stack(dict_representation)
+                    trace_manager.set_dict_trace_stack(dict_representation)
                     trace_manager.clear_trace_stack()
                 else:
                     trace_manager.pop_trace_stack()
@@ -280,4 +280,4 @@ def trace(
 
 
 def get_trace_stack():
-    return trace_manager.get_and_reset_json_trace_stack()
+    return trace_manager.get_and_reset_dict_trace_stack()
