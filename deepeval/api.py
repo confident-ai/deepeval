@@ -168,7 +168,6 @@ class TestRun(BaseModel):
                     metricsMetadata=metrics_metadata,
                     runDuration=run_duration,
                     context=context,
-                    # TODO: add it here
                     traceStack=get_trace_stack(),
                 )
             )
