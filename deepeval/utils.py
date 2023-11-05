@@ -1,9 +1,27 @@
+from enum import Enum
 import os
 import time
+from typing import Any
 import tqdm
 import re
 import string
 import numpy as np
+from dataclasses import asdict, is_dataclass
+
+
+def dataclass_to_dict(instance: Any) -> Any:
+    if is_dataclass(instance):
+        return {k: dataclass_to_dict(v) for k, v in asdict(instance).items()}
+    elif isinstance(instance, Enum):
+        return instance.value
+    elif isinstance(instance, list):
+        return [dataclass_to_dict(item) for item in instance]
+    elif isinstance(instance, tuple):
+        return tuple(dataclass_to_dict(item) for item in instance)
+    elif isinstance(instance, dict):
+        return {k: dataclass_to_dict(v) for k, v in instance.items()}
+    else:
+        return instance
 
 
 def softmax(x):
