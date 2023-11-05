@@ -32,6 +32,7 @@ ragas = "^0.0.19"
 pytest-rerunfailures = "^12.0"
 pytest-asyncio = "^0.21.1"
 coverage = "*"
+black = "*"
 
 [tool.black]
 line-length = 80
