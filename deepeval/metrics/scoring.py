@@ -208,7 +208,31 @@ class Scorer:
         raise NotImplementedError()
 
     @classmethod
-    def toxic_score(
-        cls, target: str, prediction: str, model: Optional[Any] = None
+    def neural_toxic_score(
+        cls, prediction: str, model: Optional[Any] = None
     ) -> float:
-        raise NotImplementedError()
+        """
+        Calculate the toxicity score of a given text prediction using the Detoxify model.
+
+        Args:
+            prediction (str): The text prediction to evaluate for toxicity.
+            model (Optional[str], optional): The variant of the Detoxify model to use. 
+                Available variants: 'original', 'unbiased', 'multilingual'. 
+                If not provided, the 'original' variant is used by default.
+
+        Returns:
+            float: The toxicity score, ranging from 0 (non-toxic) to 1 (highly toxic).
+        """
+        try:
+            from detoxify import Detoxify
+        except ImportError as e:
+            print(e)
+        
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        if model is not None:
+            assert model in ['original', 'unbiased', 'multilingual'], \
+            "Invalid model. Available variants: original, unbiased, multilingual"
+            detoxify_model = Detoxify(model, device=device)
+        else:
+            detoxify_model = Detoxify('original', device=device)
+        return detoxify_model.predict(prediction)
