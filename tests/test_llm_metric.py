@@ -2,6 +2,7 @@ import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
 from deepeval.types import LLMTestCaseParams
+from deepeval.run_test import assert_test
 
 
 def test_chat_completion():
@@ -21,6 +22,7 @@ def test_chat_completion():
         expected_output="Paris",
         context="Geography",
     )
-    metric.measure(test_case)
-    assert metric.is_successful() is True
-    assert metric.measure(test_case) <= 1.0
+    # metric.measure(test_case)
+    # assert metric.is_successful() is True
+    # assert metric.measure(test_case) <= 1.0
+    assert_test(test_case, [metric])
