@@ -8,7 +8,7 @@ from deepeval.templates import (
 from deepeval.types import LLMTestCaseParams
 from deepeval.chat_completion.retry import call_openai_with_retry
 from pydantic import BaseModel
-from litellm import completion, text_completion
+import openai
 
 
 class LLMEvalMetricResponse(BaseModel):
@@ -29,7 +29,6 @@ class LLMEvalMetric(BaseMetric):
         self.model = model
         self.evaluation_steps = ""
         self.evaluation_params = evaluation_params
-
         self.minimum_score = minimum_score
 
     @property
@@ -65,7 +64,7 @@ class LLMEvalMetric(BaseMetric):
         prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
 
         res = call_openai_with_retry(
-            lambda: completion(
+            lambda: openai.ChatCompletion.create(
                 model=self.model,
                 messages=[
                     {
@@ -92,7 +91,7 @@ class LLMEvalMetric(BaseMetric):
         )
 
         res = call_openai_with_retry(
-            lambda: completion(
+            lambda: openai.ChatCompletion.create(
                 model=self.model,
                 messages=[{"role": "system", "content": prompt}],
                 max_tokens=5,
