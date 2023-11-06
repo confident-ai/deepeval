@@ -3,20 +3,22 @@
 </p>
 
 <p align="center">
-    <a href="https://confident-ai.com" target="_blank">
-        Website
-    </a>
-   &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
-    <a href="https://docs.confident-ai.com" target="_blank">
-        Documentation
-    </a>
-   &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
     <a href="https://discord.gg/a3K9c8GRGt" target="_blank">
-        Discord
+        <img src="https://img.shields.io/static/v1?label=Discord&message=Join%20Us&color=1f2937&logo=discord&logoColor=white&labelColor=1d4ed8&style=for-the-badge" alt="Join Discord">
     </a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval evaluates performance based on metrics such as factual consistency, accuracy, answer relevancy, etc., using LLMs and various other NLP models. It's a production-ready alternative to RAGAS.
+<p align="center">
+    <a href="https://docs.confident-ai.com" target="_blank">
+        Read The Docs
+    </a>
+    &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
+    <a href="https://confident-ai.com" target="_blank">
+        Website
+    </a>
+</p>
+
+**DeepEval** is a simple-to-use, open-source evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval evaluates performance based on metrics such as factual consistency, accuracy, answer relevancy, etc., using LLMs and various other NLP models. It's a production-ready alternative to RAGAS .
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama2 with confidence.
 
