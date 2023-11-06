@@ -1,0 +1,95 @@
+---
+id: evaluation-tracing
+title: Tracing
+sidebar_label: Tracing
+---
+
+## Quick Summary
+
+Often times when a test case is failing you're not sure which compopnent of your RAG/agent-based application is the issue. Tracing in the context of evaluating LLM applications provides a quick and easy way for you to identify why certain test cases are failing on specific metrics. From chunking to embedding, and retrieval to generation, tracing allows you to debug your LLM application at a component level.
+
+## Tracing on Confident AI
+
+To start tracing your LLM application for each test case, login to Confident AI.
+
+```
+deepeval login
+```
+
+Follow the instructions displayed on the CLI to create an account, get your Confident API key, and paste it in the CLI.
+
+Once you're logged in, navigate to where you've implemented your LLM application, and import the `trace` decorator from `deepeval.tracing`. Here's a sample implementation for a hypothetical LLM application utilizing `deepeval`'s tracing module.
+
+```python title="test_chatbot.py"
+from deepeval.tracing import trace, TraceType
+import openai
+
+class Chatbot:
+    def __init__(self):
+        pass
+
+    @trace(type=TraceType.LLM, name="OpenAI", model="gpt-4", characters_per_token=4, cost_per_token=0.000003)
+    def llm(self, input=input):
+        response = openai.ChatCompletion.create(
+                    model="gpt-4",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a helpful assistant.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                )
+        return response.choices[0].message.content
+
+    @trace(type=TraceType.EMBEDDING, name="Embedding", model="text-embedding-ada-002")
+    def get_embedding(input):
+        response = openai.Embedding.create(
+            input=input,
+            model="text-embedding-ada-002"
+        )
+        embeddings = response['data'][0]['embedding']
+
+    @trace(type=TraceType.RETRIEVER, name="Retriever")
+    def retriever(self, input=input):
+        embedding = self.get_embedding(input)
+
+        list_of_retrieved_nodes = some_function_that_searches_your_vector_db(embedding)
+        return list_of_retrieved_nodes
+
+    @trace(type=TraceType.TOOL, name="Search")
+    def search(self, input):
+        title_of_the_top_search_results = some_function_that_searches_the_web(input)
+        return title_of_the_top_search_results
+
+
+
+    def format(self, retrieval_nodes, input):
+        prompt = "You are a helpful assistant, based on the following information: "
+        for node in retrieval_nodes:
+            prompt += node + "\n"
+        prompt += "Generate an unbiased response for" + input + "."
+        return prompt
+
+
+    @query(input):
+        top_result_title = search(input)
+        retrieval_results = retriever(top_result)
+        prompt = format(retrieval_results, top_result_title)
+        return llm(prompt)
+
+chatbot = Chatbot()
+chatbot.query("What are some nice tourist attractions in San Francisco?")
+```
+
+In this example, `chatbot.query()` first searches the web for the top tourist attraction, before using this information to retrieve information stored in a vector database. This is then all combined into a single prompt and fed into the `gpt-4` LLM. With this setup, all traces will automatically be logged each time you run `deepeval test run`. This will allow you to debug each failing test case, and here's what a trace stack looks like on Confident AI.
+
+[insert image of mock]
+
+Lastly, let's write some test cases to put everything in action. Continuning from the previous code snippet:
+
+```python title="test_chatbot.py"
+...
+
+
+```
