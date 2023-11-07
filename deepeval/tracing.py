@@ -27,6 +27,7 @@ class TraceStatus(Enum):
 class LlmMetadata:
     model: str
 
+
 @dataclass
 class EmbeddingMetadata:
     model: str
