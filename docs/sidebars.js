@@ -16,7 +16,7 @@ module.exports = {
         'evaluation-test-cases',
         'evaluation-metrics',
         'evaluation-datasets',
-        // 'evaluation-tracing',
+        'evaluation-tracing',
       ],
       collapsed: false,
     },

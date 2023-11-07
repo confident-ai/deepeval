@@ -221,6 +221,11 @@ class Dataset:
 Utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate your entire evaluation dataset.
 
 ```python title="test_bulk.py"
+import pytest
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.run_test import assert_test
+
 dataset = [
     {
         "input": "What are your operating hours?",

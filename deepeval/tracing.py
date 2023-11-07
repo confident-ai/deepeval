@@ -4,7 +4,7 @@ from functools import wraps
 from typing import Any, Callable, List, Union, Optional
 from time import perf_counter
 import traceback
-from inspect import signature, isfunction, ismethod
+from inspect import signature
 import threading
 from deepeval.utils import dataclass_to_dict
 
@@ -26,10 +26,6 @@ class TraceStatus(Enum):
 @dataclass
 class LlmMetadata:
     model: str
-    inputTokenUsage: int
-    outputTokenUsage: int
-    cost: float
-
 
 @dataclass
 class EmbeddingMetadata:
@@ -102,8 +98,6 @@ def trace(
     type: str,
     name: Optional[str] = None,
     model: Optional[str] = None,
-    characters_per_token: Optional[Union[float, int]] = None,
-    cost_per_token: Optional[float] = None,
 ):
     assert isinstance(
         type, Union[TraceType, str]
@@ -120,29 +114,6 @@ def trace(
             f"Parameter 'model' should not be provided for {type} trace types."
         )
 
-    if type == TraceType.LLM and characters_per_token is None:
-        raise ValueError(
-            "LLM trace type requires 'characters_per_token' as a parameters."
-        )
-    assert characters_per_token is None or isinstance(
-        characters_per_token, Union[float, int]
-    ), "'characters_per_token' must be an int, float or None"
-
-    if type == TraceType.LLM and cost_per_token is None:
-        raise ValueError(
-            "LLM trace type requires 'cost_per_token' as a parameters."
-        )
-    assert cost_per_token is None or isinstance(
-        cost_per_token, Union[int, float]
-    ), "'cost_per_token' must be an int, float or None"
-
-    if type != TraceType.LLM and (
-        characters_per_token is not None or cost_per_token is not None
-    ):
-        raise ValueError(
-            "Parameters 'characters_per_token' and 'cost_per_token' should not be provided for non-LLM trace types."
-        )
-
     def decorator_trace(func: Callable):
         if type == TraceType.LLM:
             sig = signature(func)
@@ -152,10 +123,10 @@ def trace(
             if any(p.name in ["self", "cls"] for p in params):
                 params = [p for p in params if p.name not in ["self", "cls"]]
 
-            # There should be exactly one parameter left of type str
+            # There should be exactly one parameter left of type list[str]
             if len(params) != 1:
                 raise ValueError(
-                    "Function of type `TraceType.LLM` must have exactly one parameter of type str"
+                    "Function of type `TraceType.LLM` must have exactly one parameter of type 'list[str]'"
                 )
 
         @wraps(func)
@@ -200,7 +171,7 @@ def trace(
                     output=None,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    llmMetadata=None,
+                    llmMetadata=LlmMetadata(model=model),
                 )
             elif type == TraceType.EMBEDDING:
                 trace_instance = EmbeddingTrace(
@@ -229,22 +200,6 @@ def trace(
             try:
                 result = func(*args, **kwargs)
                 trace_instance.output = result
-
-                if type == TraceType.LLM:
-                    if not isinstance(trace_instance.output, str):
-                        raise ValueError(
-                            "Methods/functions of type 'TraceType.LLM' must return only a string"
-                        )
-
-                    input_token_usage = len(input_str) * characters_per_token
-                    output_token_usage = len(result) * characters_per_token
-                    trace_instance.llmMetadata = LlmMetadata(
-                        model=model,
-                        inputTokenUsage=input_token_usage,
-                        outputTokenUsage=output_token_usage,
-                        cost=(input_token_usage + output_token_usage)
-                        * cost_per_token,
-                    )
 
             except Exception as e:
                 trace_instance.status = TraceStatus.ERROR
@@ -277,6 +232,10 @@ def trace(
         return wrapper
 
     return decorator_trace
+
+
+def set_token_usage(tokens: int):
+    pass
 
 
 def get_trace_stack():
