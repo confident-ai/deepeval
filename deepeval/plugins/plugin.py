@@ -6,6 +6,7 @@ from deepeval.api import Api, TestRun
 from typing import Optional, Any
 from deepeval.constants import PYTEST_RUN_ENV_VAR, PYTEST_RUN_TEST_NAME
 from deepeval.decorators.hyperparameters import get_hyperparameters
+import webbrowser
 
 
 def pytest_sessionstart(session: pytest.Session):
@@ -115,10 +116,11 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
     print(table)
 
     if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
-        link = f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}"
+        link = f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}/test-cases"
         print(
             "✅ Tests finished! View results on " f"[link={link}]{link}[/link]"
         )
+        webbrowser.open(link)
     else:
         print(
             '✅ Tests finished! Run "deepeval login" to view evaluation results in detail.'
