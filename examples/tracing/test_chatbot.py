@@ -1,6 +1,7 @@
 from deepeval.tracing import trace, TraceType
 import openai
 
+
 class Chatbot:
     def __init__(self):
         pass
@@ -8,24 +9,27 @@ class Chatbot:
     @trace(type=TraceType.LLM, name="OpenAI", model="gpt-4")
     def llm(self, input):
         response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": "You are a helpful assistant.",
-                        },
-                        {"role": "user", "content": input},
-                    ],
-                )
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant.",
+                },
+                {"role": "user", "content": input},
+            ],
+        )
         return response.choices[0].message.content
 
-    @trace(type=TraceType.EMBEDDING, name="Embedding", model="text-embedding-ada-002")
+    @trace(
+        type=TraceType.EMBEDDING,
+        name="Embedding",
+        model="text-embedding-ada-002",
+    )
     def get_embedding(self, input):
         response = openai.Embedding.create(
-            input=input,
-            model="text-embedding-ada-002"
+            input=input, model="text-embedding-ada-002"
         )
-        return response['data'][0]['embedding']
+        return response["data"][0]["embedding"]
 
     @trace(type=TraceType.RETRIEVER, name="Retriever")
     def retriever(self, input=input):
@@ -41,7 +45,6 @@ class Chatbot:
         title_of_the_top_search_results = "Search Result: " + input
         return title_of_the_top_search_results
 
-
     @trace(type=TraceType.TOOL, name="Format")
     def format(self, retrieval_nodes, input):
         prompt = "You are a helpful assistant, based on the following information: \n"
@@ -56,7 +59,8 @@ class Chatbot:
         retrieval_results = self.retriever(top_result_title)
         prompt = self.format(retrieval_results, top_result_title)
         return self.llm(prompt)
-    
+
+
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
@@ -64,11 +68,12 @@ from deepeval.run_test import assert_test
 
 chatbot = Chatbot()
 
+
 def test_factual_consistency():
     context = [
         "Be a natural-born citizen of the United States.",
         "Be at least 35 years old.",
-        "Have been a resident of the United States for 14 years."
+        "Have been a resident of the United States for 14 years.",
     ]
     input = "What are the requimrents to be president?"
 
