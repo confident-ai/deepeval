@@ -298,7 +298,7 @@ input = "What if these shoes don't fit?"
 actual_output = "We offer a 30-day full refund at no extra cost."
 
 unbias_metric = UnBiasedMetric(
-    evaluation_metrics=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     minimum_score=0.7
 )
 
