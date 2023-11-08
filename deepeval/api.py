@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from typing import Any, Optional
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Dict
 from requests.adapters import HTTPAdapter, Response, Retry
 
 from deepeval.constants import (
@@ -119,9 +119,13 @@ class TestRun(BaseModel):
         "test.py",
         alias="testFile",
     )
+    dict_test_cases: Dict[str, APITestCase] = Field(
+        default_factory=dict,
+    )
     test_cases: List[APITestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
+
     metric_scores: List[MetricScore] = Field(
         default_factory=lambda: [], alias="metricScores"
     )
@@ -135,10 +139,7 @@ class TestRun(BaseModel):
     ):
         # Check if test case with the same ID already exists
         # TODO: bug for pytest batch runs - unable to find test case name
-        existing_test_case: APITestCase = next(
-            (tc for tc in self.test_cases if tc.name == test_case.__name__),
-            None,
-        )
+        existing_test_case: APITestCase = self.dict_test_cases.get(test_case.id, None)
 
         metrics_metadata_dict = MetricsMetadataAverageDict()
         for metric in metrics:
@@ -157,8 +158,8 @@ class TestRun(BaseModel):
             context = test_case.context
             if isinstance(context, str):
                 context = [context]
-            self.test_cases.append(
-                APITestCase(
+            print(PYTEST_RUN_TEST_NAME, "pytest run test name")
+            api_test_case : APITestCase = APITestCase(
                     # Get the test from the pytest plugin
                     name=os.getenv(PYTEST_RUN_TEST_NAME, "-"),
                     input=test_case.input,
@@ -170,20 +171,22 @@ class TestRun(BaseModel):
                     context=context,
                     traceStack=get_trace_stack(),
                 )
-            )
+            
+            self.dict_test_cases[test_case.id] = api_test_case
+            self.test_cases.append(api_test_case)
+        
+        print(self.dict_test_cases)
+            
 
         all_metric_dict = MetricDict()
-
         for test_case in self.test_cases:
-            test_case: APITestCase
-            metrics = test_case.metrics_metadata
-            for metric in metrics:
-                metric: MetricsMetadata
+            for metric in test_case.metrics_metadata:
                 all_metric_dict.add_metric(metric.metric, metric.score)
-
         self.metric_scores = all_metric_dict.get_average_metric_score()
 
     def save(self, file_path: Optional[str] = None):
+        print("!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(self.dict())
         if file_path is None:
             file_path = os.getenv(PYTEST_RUN_ENV_VAR)
             # If file Path is None, remove it
@@ -193,7 +196,7 @@ class TestRun(BaseModel):
                 file_path = f"{file_path}.json"
         with open(file_path, "w") as f:
             json.dump(self.dict(by_alias=True, exclude_none=True), f)
-
+        print("!!!!!!!!!!!!!!!!!!!!!!!!")
         return file_path
 
     @classmethod
@@ -461,6 +464,8 @@ class Api:
 
     def post_test_run(self, test_run: TestRun) -> TestRunResponse:
         """Post a test run"""
+        del test_run.dict_test_cases
+        print(test_run)
         try:
             # make sure to exclude none for `context` to ensure it is handled properly
             body = test_run.model_dump(by_alias=True, exclude_none=True)

@@ -14,6 +14,7 @@ def pytest_sessionstart(session: pytest.Session):
     test_run = TestRun(
         testFile=session.config.getoption("file_or_dir")[0],
         testCases=[],
+        dict_test_case={},
         metricScores=[],
         configurations={},
     )
