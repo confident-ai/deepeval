@@ -141,30 +141,25 @@ def run_test(
                 min_success=min_success,
             )
             def measure_metric():
-                print("11111111")
                 score = metric.measure(test_case)
                 success = metric.is_successful()
                 test_result = create_test_result(
                     test_case, success, score, metric
                 )
                 test_results.append(test_result)
-                print("22222222")
 
                 # Load the test_run and add the test_case regardless of the success of the test
                 test_end_time = time.perf_counter()
                 run_duration = test_end_time - test_start_time
                 if os.getenv(PYTEST_RUN_ENV_VAR):
-                    print("3333333")
                     test_run = TestRun.load()
                     metric.score = score
-                    print("4444444")
                     test_run.add_llm_test_case(
                         test_case=test_case,
                         metrics=[metric],
                         run_duration=run_duration,
                     )
                     test_run.save()
-                print("3333333")
 
                 if not success:
                     failed_metrics.append((metric.__name__, score))
