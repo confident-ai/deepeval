@@ -140,6 +140,10 @@ class TestRun(BaseModel):
         # Check if test case with the same ID already exists
         # TODO: bug for pytest batch runs - unable to find test case name
         existing_test_case: APITestCase = self.dict_test_cases.get(test_case.id, None)
+        print("??????")
+        print(existing_test_case)
+        print(test_case.id)
+        print("??????")
 
         metrics_metadata_dict = MetricsMetadataAverageDict()
         for metric in metrics:
