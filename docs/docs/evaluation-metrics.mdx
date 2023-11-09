@@ -48,16 +48,18 @@ summarization_metric = LLMEvalMetric(
     name="Summarization",
     criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-    minimum_score=0.5
+    minimum_score=0.5,
+    model="gpt-4"
 )
 ```
 
-There are three mandatory and one optional parameters required when instantiating an `LLMEvalMetric` class:
+There are three mandatory and two optional parameters required when instantiating an `LLMEvalMetric` class:
 
 - `name`: name of metric
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
-- [Optional] `minimum_score`
+- [Optional] `minimum_score`: the passing threshold
+- [Optional] `model`: the model name. This is defaulted to 'gpt-4' and we currently only support models from OpenAI.
 
 All instances of `LLMEvalMetric` returns a score ranging from 0 - 1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
 
