@@ -5,7 +5,7 @@ import pytest
 from deepeval.metrics.factual_consistency import assert_factual_consistency
 from deepeval.metrics.overall_score import OverallScoreMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import assert_test, run_test
+from deepeval.evaluator import assert_test, run_test
 
 
 def generate_llm_output(query: str):

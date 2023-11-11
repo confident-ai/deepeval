@@ -1,7 +1,7 @@
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.ragas_metric import RagasMetric
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 
 query = "Who won the FIFA World Cup in 2018?"
 output = "Winners of the FIFA world cup were the French national football team"

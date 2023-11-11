@@ -62,7 +62,7 @@ class RagasContextualRelevancyMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Contextual Relevancy Score"
+        return "Contextual Relevancy (RAGAS)"
 
 
 class RagasAnswerRelevancyMetric(BaseMetric):
@@ -115,7 +115,7 @@ class RagasAnswerRelevancyMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Answer Relevancy Score"
+        return "Answer Relevancy (RAGAS)"
 
 
 class RagasFaithfulnessMetric(BaseMetric):
@@ -166,7 +166,7 @@ class RagasFaithfulnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Faithfulness Score"
+        return "Faithfulness (RAGAS)"
 
 
 class RagasContextRecallMetric(BaseMetric):
@@ -219,7 +219,7 @@ class RagasContextRecallMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Context Recall Score"
+        return "Context Recall (RAGAS)"
 
 
 class RagasHarmfulnessMetric(BaseMetric):
@@ -272,7 +272,7 @@ class RagasHarmfulnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Harmfulness Score"
+        return "Harmfulness (RAGAS)"
 
 
 class RagasCoherenceMetric(BaseMetric):
@@ -324,7 +324,7 @@ class RagasCoherenceMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Coherence Score"
+        return "Coherence (RAGAS)"
 
 
 class RagasMaliciousnessMetric(BaseMetric):
@@ -376,7 +376,7 @@ class RagasMaliciousnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Maliciousness Score"
+        return "Maliciousness (RAGAS)"
 
 
 class RagasCorrectnessMetric(BaseMetric):
@@ -428,7 +428,7 @@ class RagasCorrectnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Correctness Score"
+        return "Correctness (RAGAS)"
 
 
 class RagasConcisenessMetric(BaseMetric):
@@ -480,7 +480,7 @@ class RagasConcisenessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Conciseness Score"
+        return "Conciseness (RAGAS)"
 
 
 class RagasMetric(BaseMetric):
@@ -547,7 +547,7 @@ class RagasMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Ragas Score"
+        return "RAGAS"
 
 
 def assert_ragas(

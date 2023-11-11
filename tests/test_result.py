@@ -1,4 +1,4 @@
-from deepeval.run_test import TestResult
+from deepeval.evaluator import TestResult
 
 
 def test_result():

@@ -13,7 +13,7 @@ from .constants import (
 from .get_api_key import _get_api_key
 from .metrics import BaseMetric
 from .test_case import LLMTestCase, TestCase
-from .api import TestRun
+from deepeval.test_run import test_run_manager, TestRun
 
 
 def _is_api_key_set():
@@ -104,67 +104,40 @@ def run_test(
     min_success: int = 1,
     raise_error: bool = False,
 ) -> List[TestResult]:
-    """
-    Args:
-        test_cases: Either a single test case or a list of test cases to run
-        metrics: List of metrics to run
-        raise_error: Whether to raise an error if a metric fails
-        max_retries: Maximum number of retries for each metric measurement
-        delay: Delay in seconds between retries
-        min_success: Minimum number of successful measurements required
-
-    Example:
-        >>> from deepeval.metrics.facutal_consistency import FactualConsistencyMetric
-        >>> from deepeval.test_case import LLMTestCase
-        >>> from deepeval.run_test import run_test
-        >>> metric = FactualConsistencyMetric()
-        >>> test_case = LLMTestCase(
-        ...     input="What is the capital of France?",
-        ...     actual_output="Paris",
-        ...     expected_output="Paris",
-        ...     context="Geography",
-        ... )
-        >>> run_test(test_case, metric)
-    """
     if isinstance(test_cases, TestCase):
         test_cases = [test_cases]
 
     test_results = []
+    test_run = test_run_manager.get_test_run()
     for test_case in test_cases:
         failed_metrics = []
         for metric in metrics:
             test_start_time = time.perf_counter()
 
-            @retry(
-                max_retries=max_retries,
-                delay=delay,
-                min_success=min_success,
-            )
-            def measure_metric():
-                score = metric.measure(test_case)
-                success = metric.is_successful()
-                test_result = create_test_result(
-                    test_case, success, score, metric
+            # @retry(
+            #     max_retries=max_retries,
+            #     delay=delay,
+            #     min_success=min_success,
+            # )
+            # def measure_metric():
+            score = metric.measure(test_case)
+            success = metric.is_successful()
+            test_result = create_test_result(test_case, success, score, metric)
+            test_results.append(test_result)
+
+            # Load the test_run and add the test_case regardless of the success of the test
+            test_end_time = time.perf_counter()
+            run_duration = test_end_time - test_start_time
+            if os.getenv(PYTEST_RUN_ENV_VAR):
+                metric.score = score
+                test_run.add_llm_test_case(
+                    test_case=test_case,
+                    metrics=[metric],
+                    run_duration=run_duration,
                 )
-                test_results.append(test_result)
 
-                # Load the test_run and add the test_case regardless of the success of the test
-                test_end_time = time.perf_counter()
-                run_duration = test_end_time - test_start_time
-                if os.getenv(PYTEST_RUN_ENV_VAR):
-                    test_run = TestRun.load()
-                    metric.score = score
-                    test_run.add_llm_test_case(
-                        test_case=test_case,
-                        metrics=[metric],
-                        run_duration=run_duration,
-                    )
-                    test_run.save()
-
-                if not success:
-                    failed_metrics.append((metric.__name__, score))
-
-            measure_metric()
+            if not success:
+                failed_metrics.append((metric.__name__, score))
 
     if raise_error and failed_metrics:
         raise AssertionError(

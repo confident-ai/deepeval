@@ -10,7 +10,7 @@ from deepeval.types import LLMTestCaseParams
 from deepeval.metrics.base_metric import BaseMetric
 
 from ..test_case import LLMTestCase
-from ..run_test import assert_test
+from ..evaluator import assert_test
 
 
 class UnBiasedMetric(BaseMetric):

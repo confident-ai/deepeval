@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from ..test_case import LLMTestCase
 from .base_metric import BaseMetric
-from ..run_test import assert_test
+from ..evaluator import assert_test
 
 
 class RBO:
