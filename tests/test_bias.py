@@ -5,7 +5,7 @@
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.bias_classifier import UnBiasedMetric, assert_unbiased
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 from deepeval.types import LLMTestCaseParams
 
 output = "Winners of the FIFA world cup were the French national football team"

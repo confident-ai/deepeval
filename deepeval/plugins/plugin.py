@@ -2,22 +2,22 @@ import pytest
 import shutil
 import os
 from rich import print
-from deepeval.api import Api, TestRun
+from deepeval.api import Api
 from typing import Optional, Any
 from deepeval.constants import PYTEST_RUN_ENV_VAR, PYTEST_RUN_TEST_NAME
 from deepeval.decorators.hyperparameters import get_hyperparameters
+from deepeval.test_run import TestRun, test_run_manager
 import webbrowser
 
 
 def pytest_sessionstart(session: pytest.Session):
-    global test_filename
     test_run = TestRun(
         testFile=session.config.getoption("file_or_dir")[0],
         testCases=[],
         metricScores=[],
         configurations={},
     )
-    test_filename = test_run.save()
+    test_run_manager.set_test_run(test_run)
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -36,13 +36,12 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
     # yield control back to pytest for the actual teardown
     yield
 
-    # Code after yield will run after the test teardown
-    test_run: TestRun = TestRun.load(test_filename)
-
-    if test_run is None:
+    test_run = test_run_manager.get_test_run()
+    if test_run is None or len(test_run.test_cases) == 0:
         print("Test Run is empty, please try again.")
         return
 
+    del test_run.dict_test_cases
     if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
         api: Api = Api()
         test_run.configurations = get_hyperparameters()
@@ -52,6 +51,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
     metrics_avg = {
         metric.metric: metric.score for metric in test_run.metric_scores
     }
+
     # Count the number of passes and failures
     # Get all the possible metrics first
     all_metrics = {metric.metric for metric in test_run.metric_scores}
@@ -116,17 +116,18 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
     print(table)
 
     if os.getenv(PYTEST_RUN_ENV_VAR) and os.path.exists(".deepeval"):
-        link = f"https://app.confident-ai.com/project/{result.projectId}/unit-tests/{result.testRunId}/test-cases"
+        link = result.link
         print(
             "✅ Tests finished! View results on " f"[link={link}]{link}[/link]"
         )
         webbrowser.open(link)
     else:
         print(
-            '✅ Tests finished! Run "deepeval login" to view evaluation results in detail.'
+            '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'
         )
     local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
     if local_folder:
+        test_filename = test_run.save()
         if not os.path.exists(local_folder):
             os.mkdir(local_folder)
             shutil.copy(test_filename, local_folder)
@@ -138,7 +139,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         else:
             shutil.copy(test_filename, local_folder)
             print(f"Results saved in {local_folder} as {test_filename}")
-    os.remove(test_filename)
+        os.remove(test_filename)
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):

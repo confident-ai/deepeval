@@ -9,7 +9,7 @@ from deepeval.metrics.overall_score import (
     OverallScoreMetric,
     assert_overall_score,
 )
-from deepeval.run_test import assert_test, run_test
+from deepeval.evaluator import assert_test, run_test
 
 from .utils import assert_viable_score
 
@@ -43,7 +43,7 @@ class TestOverallScore:
             input=query,
             actual_output=output,
             expected_output=expected_output,
-            context="He doesn't know how to code",
+            context=["He doesn't know how to code"],
         )
         test_case_2 = LLMTestCase(
             input=query,
@@ -59,13 +59,13 @@ class TestOverallScore:
             input=query,
             actual_output="Not relevant",
             expected_output=expected_output,
-            context="He doesn't know how to code",
+            context=["He doesn't know how to code"],
         )
         test_case_2 = LLMTestCase(
             input=query,
             actual_output=output,
             expected_output=expected_output,
-            context="He doesn't know how to code",
+            context=["He doesn't know how to code"],
         )
         scores = run_test([test_case, test_case_2], metrics=[self.metric])
         assert scores[0] > scores[1]
@@ -75,14 +75,14 @@ class TestOverallScore:
             input=query,
             actual_output="Not relevant",
             expected_output="STranger things",
-            context="He doesn't know how to code",
+            context=["He doesn't know how to code"],
         )
         score_4 = self.metric.measure(test_case)
         test_case_2 = LLMTestCase(
             input=query,
             actual_output="Not relevant",
             expected_output=expected_output,
-            context="He doesn't know how to code",
+            context=["He doesn't know how to code"],
         )
         scores = run_test([test_case, test_case_2], metrics=[self.metric])
         assert scores[0] > scores[1]

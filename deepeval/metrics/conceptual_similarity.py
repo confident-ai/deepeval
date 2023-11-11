@@ -5,7 +5,7 @@ from typing import Optional
 from deepeval.singleton import Singleton
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import cosine_similarity
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 from deepeval.progress_context import progress_context
 from deepeval.metrics.base_metric import BaseMetric
 

@@ -24,8 +24,8 @@ const config = {
     [
       "posthog-docusaurus",
       {
-        apiKey: "phc_WU2fTmokmDGUxquzdiLMJ7CegOmilDv3jFvbWQV6b3p",
-        appUrl: "https://app.posthog.com", // optional
+        apiKey: "phc_qyCLAQQVAYN4mDhkZYSzBvFP2SMoiij0QIbnOwhosp0",
+        appUrl: "https://docs.confident-ai.com", // optional
         enableInDevelopment: false, // optional
         // other options are passed to posthog-js init as is
       },
