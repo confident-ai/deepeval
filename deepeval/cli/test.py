@@ -7,6 +7,7 @@ from ..metrics.overall_score import assert_overall_score
 from .cli_key_handler import set_env_vars
 from ..constants import PYTEST_RUN_ENV_VAR
 from .examples import CUSTOMER_EXAMPLE
+from typing import Optional
 
 try:
     from rich import print
@@ -109,6 +110,9 @@ def run(
     show_warnings: Annotated[
         bool, typer.Option("--show-warnings", "-w/-W")
     ] = False,
+    num_processes: Optional[int] = typer.Option(
+        None, "--num-processes", "-n", help="Number of processes to use with pytest"
+    ),
 ):
     """Run a test"""
     check_if_legit_file(test_file_or_directory)
@@ -132,6 +136,9 @@ def run(
         pytest_args.append("--pdb")
     if not show_warnings:
         pytest_args.append("--disable-warnings")
+    if num_processes is not None:
+        pytest_args.extend(["-n", str(num_processes)])
+
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
 
