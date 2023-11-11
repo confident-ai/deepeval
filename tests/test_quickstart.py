@@ -14,14 +14,14 @@ def generate_llm_output(query: str):
 
 
 def test_llm_output():
-    query = "What is the customer success phone line?"
-    expected_output = "Our customer success phone line is 1200-231-231."
-    output = generate_llm_output(query)
-    assert_factual_consistency(output, expected_output)
+    input = "What is the customer success phone line?"
+    context = ["Our customer success phone line is 1200-231-231."]
+    output = generate_llm_output(input)
+    assert_factual_consistency(output, context)
 
 
 def test_llm_output_custom():
-    actual_output = "The customer success line is 999"
+    actual_output = "Dogs and cats hate to walk around the beach."
     context = ["Dogs and cats love to walk around the beach."]
     with pytest.raises(AssertionError):
         assert_factual_consistency(actual_output, context)
