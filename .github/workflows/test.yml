@@ -64,6 +64,5 @@ jobs:
       - name: Run tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PYTEST_RUN_ENV_VAR: "CONFIDENT_AI_RUN_TIMESTAMP"
         run: |
           poetry run pytest tests/ --ignore=tests/test_llm_metric.py --ignore=tests/test_overall_score.py

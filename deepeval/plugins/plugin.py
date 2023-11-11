@@ -18,7 +18,6 @@ def pytest_sessionstart(session: pytest.Session):
         configurations={},
     )
     test_run_manager.set_test_run(test_run)
-    print(test_run_manager.test_run)
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -52,9 +51,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
     metrics_avg = {
         metric.metric: metric.score for metric in test_run.metric_scores
     }
-    print(test_run)
-    print("!!!!!!!!!!!!!!!")
-    print(test_run.metric_scores)
+
     # Count the number of passes and failures
     # Get all the possible metrics first
     all_metrics = {metric.metric for metric in test_run.metric_scores}
