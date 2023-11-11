@@ -1,0 +1,7 @@
+Test Passed    Metric Name               Score  Output                            Expected output             Message
+-------------  ---------------------  --------  --------------------------------  --------------------------  ---------
+True           Conceptual Similarity  0.899202  This is a friendly greeting.      This is a greeting.
+True           Conceptual Similarity  0.889562  A powerful AI language model.     A powerful language model.
+True           Conceptual Similarity  0.966732  Working with data in CSV format.  Working with CSV data.
+True           Conceptual Similarity  0.948111  Writing code in Python.           Coding in Python.
+True           Conceptual Similarity  0.870464  Exploring and analyzing data.     Analyzing data.

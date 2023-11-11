@@ -1,0 +1,7 @@
+id,query,expected_output,output
+    1,"Hello, world!","This is a greeting.","This is a friendly greeting."
+    2,"OpenAI GPT-3","A powerful language model.","A powerful AI language model."
+    3,"CSV Example","Working with CSV data.","Working with data in CSV format."
+    4,"Python Programming","Coding in Python.","Writing code in Python."
+    5,"Data Science","Analyzing data.","Exploring and analyzing data."
+    
