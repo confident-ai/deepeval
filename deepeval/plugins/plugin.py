@@ -38,7 +38,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
     yield
 
     test_run = test_run_manager.get_test_run()
-    if test_run is None:
+    if test_run is None or len(test_run.test_cases) == 0:
         print("Test Run is empty, please try again.")
         return
 
