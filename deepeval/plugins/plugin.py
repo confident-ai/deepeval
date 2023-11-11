@@ -18,6 +18,7 @@ def pytest_sessionstart(session: pytest.Session):
         configurations={},
     )
     test_run_manager.set_test_run(test_run)
+    print(test_run_manager.test_run)
 
 
 @pytest.hookimpl(tryfirst=True)

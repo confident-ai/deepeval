@@ -154,6 +154,7 @@ class TestRun(BaseModel):
             for metric in test_case.metrics_metadata:
                 all_metric_dict.add_metric(metric.metric, metric.score)
         self.metric_scores = all_metric_dict.get_average_metric_score()
+        print(self.test_cases)
 
     def save(self, file_path: Optional[str] = None):
         if file_path is None:
