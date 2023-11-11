@@ -11,18 +11,18 @@ context = [
 ]
 
 
-@pytest.mark.skip(reason="openai is expensive")
-def test_ragas_score():
-    test_case = LLMTestCase(
-        input=query,
-        actual_output=output,
-        expected_output=expected_output,
-        context=context,
-    )
-    metric = RagasMetric()
+# @pytest.mark.skip(reason="openai is expensive")
+# def test_ragas_score():
+#     test_case = LLMTestCase(
+#         input=query,
+#         actual_output=output,
+#         expected_output=expected_output,
+#         context=context,
+#     )
+#     metric = RagasMetric()
 
-    with pytest.raises(AssertionError):
-        assert_test(
-            test_cases=[test_case],
-            metrics=[metric],
-        )
+#     with pytest.raises(AssertionError):
+#         assert_test(
+#             test_cases=[test_case],
+#             metrics=[metric],
+#         )
