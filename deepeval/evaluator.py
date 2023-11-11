@@ -6,40 +6,11 @@ from typing import List, Optional, Union
 import time
 from dataclasses import dataclass
 from .retry import retry
-from .constants import (
-    LOG_TO_SERVER_ENV,
-    PYTEST_RUN_ENV_VAR,
-)
-from .get_api_key import _get_api_key
+from .constants import PYTEST_RUN_ENV_VAR
+
 from .metrics import BaseMetric
 from .test_case import LLMTestCase, TestCase
-from deepeval.test_run import test_run_manager, TestRun
-
-
-def _is_api_key_set():
-    result = _get_api_key()
-    # if result == "" or result is None:
-    #     warnings.warn(
-    #         """API key is not set - you won't be able to log to the DeepEval dashboard. Please set it by running `deepeval login`"""
-    #     )
-    if result == "" or result is None:
-        return False
-    return True
-
-
-def _is_send_okay():
-    # DOing this until the API endpoint is fixed
-    return _is_api_key_set() and os.getenv(LOG_TO_SERVER_ENV) != "Y"
-
-
-def _get_init_values(metric: BaseMetric):
-    # We use this method for sending useful metadata
-    init_values = {
-        param: getattr(metric, param)
-        for param in vars(metric)
-        if isinstance(getattr(metric, param), (str, int, float))
-    }
-    return init_values
+from deepeval.test_run import test_run_manager
 
 
 @dataclass
@@ -157,6 +128,7 @@ def assert_test(
     min_success: int = 1,
 ) -> List[TestResult]:
     """Assert a test"""
+    print("sldafjnaljfnlasjf")
     return run_test(
         test_cases=test_cases,
         metrics=metrics,
@@ -165,22 +137,3 @@ def assert_test(
         min_success=min_success,
         raise_error=True,
     )
-
-
-def is_test_passing(
-    test_cases: Union[LLMTestCase, List[LLMTestCase]],
-    metrics: List[BaseMetric],
-    max_retries: int = 1,
-    delay: int = 1,
-    min_success: int = 1,
-) -> bool:
-    """Check if a test is passing"""
-    test_results = run_test(
-        test_cases=test_cases,
-        metrics=metrics,
-        max_retries=max_retries,
-        delay=delay,
-        min_success=min_success,
-        raise_error=False,
-    )
-    return all(result.success for result in test_results)
