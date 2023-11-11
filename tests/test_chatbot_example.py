@@ -9,7 +9,9 @@ def test_1():
     output = (
         "Specializes in cloud computing, data analytics, and machine learning."
     )
-    context = ["Our company specializes in cloud computing, data analytics, and machine learning. We offer a range of services including cloud storage solutions, data analytics platforms, and custom machine learning models."]
+    context = [
+        "Our company specializes in cloud computing, data analytics, and machine learning. We offer a range of services including cloud storage solutions, data analytics platforms, and custom machine learning models."
+    ]
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=1.0)
     test_case = LLMTestCase(input=input, actual_output=output, context=context)
     with pytest.raises(AssertionError):
@@ -21,7 +23,9 @@ def test_2():
     output = (
         "Specializes in cloud computing, data analytics, and machine learning."
     )
-    context = ["Our company specializes in cloud computing, data analytics, and machine learning. We offer a range of services including cloud storage solutions, data analytics platforms, and custom machine learning models."]
+    context = [
+        "Our company specializes in cloud computing, data analytics, and machine learning. We offer a range of services including cloud storage solutions, data analytics platforms, and custom machine learning models."
+    ]
     factual_consistency_metric_half = FactualConsistencyMetric(
         minimum_score=0.5
     )
