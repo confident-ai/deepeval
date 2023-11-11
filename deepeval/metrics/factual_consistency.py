@@ -82,7 +82,7 @@ def is_factually_consistent(
 
 
 def assert_factual_consistency(
-    output: str, context: str, minimum_score: float = 0.3
+    output: str, context: list[str], minimum_score: float = 0.3
 ):
     """Assert that the output is factually consistent with the context."""
 
