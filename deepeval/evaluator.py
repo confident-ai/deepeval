@@ -104,6 +104,7 @@ def run_test(
     min_success: int = 1,
     raise_error: bool = False,
 ) -> List[TestResult]:
+    print("ksjfnsakjnfdkasnfkasjfk")
     if isinstance(test_cases, TestCase):
         test_cases = [test_cases]
 
@@ -128,6 +129,7 @@ def run_test(
             # Load the test_run and add the test_case regardless of the success of the test
             test_end_time = time.perf_counter()
             run_duration = test_end_time - test_start_time
+            print("right before")
             if os.getenv(PYTEST_RUN_ENV_VAR):
                 metric.score = score
                 test_run.add_llm_test_case(
