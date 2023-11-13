@@ -6,7 +6,20 @@ from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 from collections import defaultdict
 from deepeval.tracing import get_trace_stack
-from deepeval.constants import PYTEST_RUN_TEST_NAME, PYTEST_RUN_ENV_VAR
+from deepeval.constants import PYTEST_RUN_TEST_NAME
+from deepeval.decorators.hyperparameters import get_hyperparameters
+from deepeval.api import Api
+import shutil
+import webbrowser
+from deepeval.utils import delete_file_if_exists
+import sys
+import datetime
+import portalocker
+from rich.table import Table
+from rich.console import Console
+from rich import print
+
+TEMP_FILE_NAME = "temp_test_run_data.json"
 
 
 class MetricsMetadata(BaseModel):
@@ -147,39 +160,194 @@ class TestRun(BaseModel):
             )
 
             self.dict_test_cases[test_case_id] = api_test_case
-            self.test_cases.append(api_test_case)
 
+    def cleanup(self):
+        for _, test_case in self.dict_test_cases.items():
+            self.test_cases.append(test_case)
+        del self.dict_test_cases
         all_metric_dict = MetricDict()
         for test_case in self.test_cases:
             for metric in test_case.metrics_metadata:
                 all_metric_dict.add_metric(metric.metric, metric.score)
         self.metric_scores = all_metric_dict.get_average_metric_score()
+        self.configurations = get_hyperparameters()
 
-    def save(self, file_path: Optional[str] = None):
-        if file_path is None:
-            file_path = os.getenv(PYTEST_RUN_ENV_VAR)
-            # If file Path is None, remove it
-            if not file_path:
-                return
-            elif not file_path.endswith(".json"):
-                file_path = f"{file_path}.json"
-        with open(file_path, "w") as f:
-            json.dump(self.dict(by_alias=True, exclude_none=True), f)
-        return file_path
+    def save(self, f):
+        json.dump(self.dict(by_alias=True, exclude_none=True), f)
+        return self
+
+    @classmethod
+    def load(cls, f):
+        return cls(**json.load(f))
 
 
-class TestRunManger:
+class TestRunHttpResponse(BaseModel):
+    testRunId: str
+    projectId: str
+    link: str
+
+
+class TestRunManager:
     def __init__(self):
         self.test_run = None
+        self.temp_file_name = TEMP_FILE_NAME
 
-    def set_test_run(self, test_run: TestRun):
+    def set_test_run(self, test_run: "TestRun"):
         self.test_run = test_run
 
     def get_test_run(self):
+        try:
+            with portalocker.Lock(
+                self.temp_file_name, mode="r", timeout=5
+            ) as file:
+                self.test_run = self.test_run.load(file)
+        except (FileNotFoundError, portalocker.exceptions.LockException):
+            print("Error loading test run from disk", file=sys.stderr)
+            self.test_run = None
         return self.test_run
+
+    def save_test_run(self):
+        try:
+            with portalocker.Lock(
+                self.temp_file_name, mode="w", timeout=5
+            ) as file:
+                self.test_run = self.test_run.save(file)
+        except portalocker.exceptions.LockException:
+            print("Error saving test run to disk", file=sys.stderr)
 
     def clear_test_run(self):
         self.test_run = None
 
+    def display_test_run(self, test_run: TestRun):
+        # Calculate the average of each metric
+        metrics_avg = {
+            metric.metric: metric.score for metric in test_run.metric_scores
+        }
 
-test_run_manager = TestRunManger()
+        # Count the number of passes and failures
+        # Get all the possible metrics first
+        all_metrics = {metric.metric for metric in test_run.metric_scores}
+
+        # Loop through to filter for each metric
+        passes = {
+            metric: len(
+                [
+                    test_case_metric
+                    for test_case in test_run.test_cases
+                    for test_case_metric in test_case.metrics_metadata
+                    if test_case_metric.metric == metric and test_case.success
+                ]
+            )
+            for metric in all_metrics
+        }
+        failures = {
+            metric: len(
+                [
+                    test_case_metric
+                    for test_case in test_run.test_cases
+                    for test_case_metric in test_case.metrics_metadata
+                    if test_case_metric.metric == metric
+                ]
+            )
+            - passes[metric]
+            for metric in all_metrics
+        }
+
+        table = Table(title="Test Results")
+        table.add_column("Metric", justify="right")
+        table.add_column("Average Score", justify="right")
+        table.add_column("Passes", justify="right")
+        table.add_column("Failures", justify="right")
+        table.add_column("Success Rate", justify="right")
+        total_passes = 0
+        total_failures = 0
+        for metric, avg in metrics_avg.items():
+            pass_count = passes[metric]
+            fail_count = failures[metric]
+            total_passes += pass_count
+            total_failures += fail_count
+            success_rate = pass_count / (pass_count + fail_count) * 100
+            table.add_row(
+                metric,
+                str(avg),
+                f"[green]{str(pass_count)}[/green]",
+                f"[red]{str(fail_count)}[/red]",
+                f"{success_rate:.2f}%",
+            )
+        total_tests = total_passes + total_failures
+        overall_success_rate = total_passes / total_tests * 100
+        table.add_row(
+            "Total",
+            "-",
+            f"[green]{str(total_passes)}[/green]",
+            f"[red]{str(total_failures)}[/red]",
+            f"{overall_success_rate:.2f}%",
+        )
+        print(table)
+
+    def post_test_run(self, test_run: TestRun):
+        console = Console()
+        if os.path.exists(".deepeval"):
+            try:
+                # make sure to exclude none for `context` to ensure it is handled properly
+                body = test_run.model_dump(by_alias=True, exclude_none=True)
+            except AttributeError:
+                # Pydantic version below 2.0
+                body = test_run.dict(by_alias=True, exclude_none=True)
+            api = Api()
+            result = api.post_request(
+                endpoint="/v1/test-run",
+                body=body,
+            )
+            response = TestRunHttpResponse(
+                testRunId=result["testRunId"],
+                projectId=result["projectId"],
+                link=result["link"],
+            )
+            if response and os.path.exists(".deepeval"):
+                link = response.link
+                console.print(
+                    "✅ Tests finished! View results on "
+                    f"[link={link}]{link}[/link]"
+                )
+                webbrowser.open(link)
+        else:
+            console.print(
+                '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'
+            )
+
+    def save_test_run_locally(self):
+        local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
+        if local_folder:
+            new_test_filename = datetime.datetime.now().strftime(
+                "%Y%m%d_%H%M%S"
+            )
+            os.rename(self.temp_file_name, new_test_filename)
+            if not os.path.exists(local_folder):
+                os.mkdir(local_folder)
+                shutil.copy(new_test_filename, local_folder)
+                print(f"Results saved in {local_folder} as {new_test_filename}")
+            elif os.path.isfile(local_folder):
+                print(
+                    f"""❌ Error: DEEPEVAL_RESULTS_FOLDER={local_folder} already exists and is a file.\nDetailed results won't be saved. Please specify a folder or an available path."""
+                )
+            else:
+                shutil.copy(new_test_filename, local_folder)
+                print(f"Results saved in {local_folder} as {new_test_filename}")
+            os.remove(new_test_filename)
+
+    def wrap_up_test_run(self):
+        test_run = test_run_manager.get_test_run()
+        test_run.cleanup()
+        if test_run is None or len(test_run.test_cases) == 0:
+            print("Test Run is empty, please try again.")
+            delete_file_if_exists(test_run_manager.temp_file_name)
+            return
+
+        self.display_test_run(test_run)
+        self.post_test_run(test_run)
+        self.save_test_run_locally()
+        delete_file_if_exists(self.temp_file_name)
+
+
+test_run_manager = TestRunManager()
