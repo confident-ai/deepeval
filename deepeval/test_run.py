@@ -303,14 +303,14 @@ class TestRunManager:
                 projectId=result["projectId"],
                 link=result["link"],
             )
-        console = Console()
-        if response and os.path.exists(".deepeval"):
-            link = response.link
-            console.print(
-                "✅ Tests finished! View results on "
-                f"[link={link}]{link}[/link]"
-            )
-            webbrowser.open(link)
+            console = Console()
+            if response and os.path.exists(".deepeval"):
+                link = response.link
+                console.print(
+                    "✅ Tests finished! View results on "
+                    f"[link={link}]{link}[/link]"
+                )
+                webbrowser.open(link)
         else:
             console.print(
                 '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'
