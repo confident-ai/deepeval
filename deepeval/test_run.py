@@ -286,6 +286,7 @@ class TestRunManager:
         print(table)
 
     def post_test_run(self, test_run: TestRun):
+        console = Console()
         if os.path.exists(".deepeval"):
             try:
                 # make sure to exclude none for `context` to ensure it is handled properly
@@ -303,7 +304,6 @@ class TestRunManager:
                 projectId=result["projectId"],
                 link=result["link"],
             )
-            console = Console()
             if response and os.path.exists(".deepeval"):
                 link = response.link
                 console.print(
