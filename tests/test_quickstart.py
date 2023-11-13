@@ -5,7 +5,7 @@ import pytest
 from deepeval.metrics.factual_consistency import assert_factual_consistency
 from deepeval.metrics.overall_score import OverallScoreMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import assert_test, run_test
+from deepeval.evaluator import assert_test
 
 
 def generate_llm_output(query: str):
@@ -40,11 +40,4 @@ def test_0():
         context=context,
     )
     metric = OverallScoreMetric()
-    # if you want to make sure that the test returns an error
     assert_test(test_case, metrics=[metric])
-
-    # If you want to run the test
-    test_result = run_test(test_case, metrics=[metric])
-    # You can also inspect the test result class
-    print(test_result[0].success)
-    print(test_result[0].score)

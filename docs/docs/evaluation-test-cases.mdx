@@ -184,7 +184,7 @@ Similar to Pytest, `deepeval` allows you to assert any test case you create by c
 # A hypothetical LLM application example
 import chatbot
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 
 prompt_template = """
     Impersonate a dog named Rocky when replying to the text below.
@@ -211,10 +211,10 @@ def test_case():
 Typically, the `prompt_template` is implemented within your LLM application (ie. somewhere in our hypothetical `chatbot.run()` method), but from a visibility perspective we've made the `prompt_template` explicit.
 :::
 
-In the CLI, run `deepeval test run`:
+In the CLI, run `deepeval test run`. You can also include an optional `-n` flag follow by a number (that determines the number of processes that will be used) to run tests in parallel.
 
 ```console
-deepeval test run test_assert_example.py
+deepeval test run test_assert_example.py -n 4
 ```
 
 We also highly recommend you to login to **[Confident AI](https://confident-ai.com)** (the platform powering deepeval) via the CLI. This way, you can keep track of all evaluation results generated each time you execute `deepeval test run`. You can also export completed evaluation datasets generated from your test file, view average metric scores for each test run, and much more.
@@ -230,7 +230,7 @@ Run `deepeval test run test_assert_example.py` in the CLI again to start evaluat
 `deepeval` also offers an option to quickly run test cases without going through the CLI or creating a test file.
 
 ```python
-from deepeval.run_test import run_test
+from deepeval.evaluator import run_test
 
 prompt = prompt_template.format(text="Who's a good boy?")
 context = ["Rocky is a good boy."]

@@ -1,7 +1,6 @@
 import pytest
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
-from deepeval.types import LLMTestCaseParams
 from deepeval.evaluator import assert_test
 
 

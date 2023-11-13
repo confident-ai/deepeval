@@ -1,11 +1,10 @@
 from typing import Optional, List
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.templates import (
     evaluation_steps_template,
     evaluation_results_template,
 )
-from deepeval.types import LLMTestCaseParams
 from deepeval.chat_completion.retry import call_openai_with_retry
 from pydantic import BaseModel
 import openai

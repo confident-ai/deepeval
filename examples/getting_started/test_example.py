@@ -1,9 +1,8 @@
 import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.evaluator import assert_test
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
-from deepeval.types import LLMTestCaseParams
 from deepeval.metrics.base_metric import BaseMetric
 import deepeval
 
@@ -45,10 +44,10 @@ def test_summarization():
 class LengthMetric(BaseMetric):
     # This metric checks if the output length is greater than 10 characters
     def __init__(self, max_length: int = 10):
-        self.max_length = max_length
+        self.minimum_score = max_length
 
     def measure(self, test_case: LLMTestCase):
-        self.success = len(test_case.actual_output) > self.max_length
+        self.success = len(test_case.actual_output) > self.minimum_score
         if self.success:
             score = 1
         else:
