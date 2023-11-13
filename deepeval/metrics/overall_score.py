@@ -8,7 +8,7 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 from deepeval.metrics.conceptual_similarity import ConceptualSimilarityMetric
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 
 
 class OverallScoreMetric(BaseMetric, metaclass=Singleton):

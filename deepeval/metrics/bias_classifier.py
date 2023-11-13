@@ -6,11 +6,10 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 
 import warnings
 from typing import Optional, List
-from deepeval.types import LLMTestCaseParams
 from deepeval.metrics.base_metric import BaseMetric
 
-from ..test_case import LLMTestCase
-from ..run_test import assert_test
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from ..evaluator import assert_test
 
 
 class UnBiasedMetric(BaseMetric):

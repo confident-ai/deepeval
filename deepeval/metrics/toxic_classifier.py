@@ -4,11 +4,10 @@
 """
 from typing import List
 
-from deepeval.types import LLMTestCaseParams
 from deepeval.singleton import Singleton
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 
 
 class DetoxifyModel(metaclass=Singleton):

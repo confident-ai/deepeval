@@ -9,6 +9,7 @@ except Exception as e:
 from deepeval.api import Api
 from deepeval.key_handler import KEY_FILE_HANDLER
 from deepeval.cli.test import app as test_app
+import webbrowser
 
 app = typer.Typer(name="deepeval")
 
@@ -29,6 +30,7 @@ def login(
     print(
         "Grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
     )
+    webbrowser.open("https://app.confident-ai.com")
     if api_key == "":
         while True:
             api_key = input("Paste your API Key: ").strip()

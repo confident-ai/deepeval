@@ -1,16 +1,15 @@
 import pytest
 import typer
 import os
-import datetime
 from typing_extensions import Annotated
-from ..metrics.overall_score import assert_overall_score
+from deepeval.metrics.overall_score import assert_overall_score
 from .cli_key_handler import set_env_vars
-from ..constants import PYTEST_RUN_ENV_VAR
-from .examples import CUSTOMER_EXAMPLE
+from typing import Optional
+from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
+from deepeval.utils import delete_file_if_exists
 
 try:
     from rich import print
-    from rich.progress import Progress, SpinnerColumn, TextColumn
 except Exception as e:
     pass
 
@@ -79,7 +78,7 @@ def sample():
         pass
 
 
-def check_if_legit_file(test_file_or_directory: str):
+def check_if_valid_file(test_file_or_directory: str):
     if "::" in test_file_or_directory:
         test_file_or_directory, test_case = test_file_or_directory.split("::")
     if os.path.isfile(test_file_or_directory):
@@ -109,16 +108,19 @@ def run(
     show_warnings: Annotated[
         bool, typer.Option("--show-warnings", "-w/-W")
     ] = False,
+    num_processes: Optional[int] = typer.Option(
+        None,
+        "--num-processes",
+        "-n",
+        help="Number of processes to use with pytest",
+    ),
 ):
     """Run a test"""
-    check_if_legit_file(test_file_or_directory)
+    delete_file_if_exists(TEMP_FILE_NAME)
+    check_if_valid_file(test_file_or_directory)
     pytest_args = [test_file_or_directory]
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
-
-    # Generate environment variable based on current date and time
-    env_var = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    os.environ[PYTEST_RUN_ENV_VAR] = env_var
 
     pytest_args.extend(
         [
@@ -132,16 +134,15 @@ def run(
         pytest_args.append("--pdb")
     if not show_warnings:
         pytest_args.append("--disable-warnings")
+    if num_processes is not None:
+        pytest_args.extend(["-n", str(num_processes)])
+
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
 
     retcode = pytest.main(pytest_args)
 
-    # Print this if the run env var is not set
-    if not os.getenv(PYTEST_RUN_ENV_VAR):
-        print(
-            "✅ Tests finished! If logged in, view results on https://app.confident-ai.com/"
-        )
+    test_run_manager.wrap_up_test_run()
     return retcode
 
 

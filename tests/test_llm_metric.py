@@ -1,7 +1,7 @@
 import pytest
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
-from deepeval.types import LLMTestCaseParams
+from deepeval.evaluator import assert_test
 
 
 def test_chat_completion():
@@ -19,8 +19,7 @@ def test_chat_completion():
         input="What is the capital of France?",
         actual_output="Paris",
         expected_output="Paris",
-        context="Geography",
+        context=["Geography"],
     )
-    metric.measure(test_case)
-    assert metric.is_successful() is True
-    assert metric.measure(test_case) == 1.0
+
+    assert_test(test_case, [metric])

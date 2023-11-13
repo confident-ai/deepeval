@@ -24,6 +24,14 @@ def dataclass_to_dict(instance: Any) -> Any:
         return instance
 
 
+def delete_file_if_exists(file_path):
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
 def softmax(x):
     e_x = np.exp(x - np.max(x, axis=1, keepdims=True))
     return e_x / e_x.sum(axis=1, keepdims=True)

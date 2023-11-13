@@ -42,22 +42,24 @@ A custom LLM evalated metric, is a custom metric whose evaluation is powered by 
 
 ```python
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
-from deepeval.types import LLMTestCaseParams
+from deepeval.test_case import LLMTestCaseParams
 
 summarization_metric = LLMEvalMetric(
     name="Summarization",
     criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-    minimum_score=0.5
+    minimum_score=0.5,
+    model="gpt-4"
 )
 ```
 
-There are three mandatory and one optional parameters required when instantiating an `LLMEvalMetric` class:
+There are three mandatory and two optional parameters required when instantiating an `LLMEvalMetric` class:
 
 - `name`: name of metric
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
-- [Optional] `minimum_score`
+- [Optional] `minimum_score`: the passing threshold
+- [Optional] `model`: the model name. This is defaulted to 'gpt-4' and we currently only support models from OpenAI.
 
 All instances of `LLMEvalMetric` returns a score ranging from 0 - 1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
 
@@ -115,7 +117,7 @@ Factual consistency measures how factually correct the `actual_output` of your L
 import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import run_test
+from deepeval.evaluator import run_test
 
 input = "What if these shoes don't fit?"
 context = ["All customers are eligible for a 30 day full refund at no extra cost."]
@@ -137,7 +139,7 @@ Answer Relevancy measures how relevant the `actual_output` of your LLM applicati
 import pytest
 from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import run_test
+from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"
@@ -159,7 +161,7 @@ Conceptual Similarity measures how conceptually similar the `actual_output` of y
 import pytest
 from deepeval.metrics.conceptual_similarity import ConceptualSimilarityMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import run_test
+from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"
@@ -245,9 +247,8 @@ Being a referenceless metric means `NonToxicMetric` requires an extra parameter 
 
 ```python
 from deepeval.metrics.toxic_classifier import NonToxicMetric
-from deepeval.run_test import run_test
-from deepeval.types import LLMTestCaseParams
-from deepeval.test_case import LLMTestCase
+from deepeval.evaluator import run_test
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 
 input = "What if these shoes don't fit?"
@@ -287,9 +288,8 @@ pip install Dbias
 
 ```python
 from deepeval.metrics.bias_classifier import UnBiasedMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.types import LLMTestCaseParams
-from deepeval.run_test import run_test
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"
@@ -298,7 +298,7 @@ input = "What if these shoes don't fit?"
 actual_output = "We offer a 30-day full refund at no extra cost."
 
 unbias_metric = UnBiasedMetric(
-    evaluation_metrics=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     minimum_score=0.7
 )
 

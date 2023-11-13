@@ -9,7 +9,7 @@ from typing import Any, Callable, List, Optional
 
 from tabulate import tabulate
 
-from deepeval.run_test import run_test
+from deepeval.evaluator import run_test
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 from dataclasses import asdict
