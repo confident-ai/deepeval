@@ -25,6 +25,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 <br />
 
 # Features
+
 - Large variety of ready-to-use evaluation metrics, ranging from LLM evaluated (G-Eval) to metrics computed via statistical methods or NLP models.
 - Easily create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
 - Evaluate your entire dataset in bulk using fewer than 20 lines of Python code.
@@ -68,7 +69,7 @@ Open `test_chatbot.py` and write your first test case using DeepEval:
 import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 
 def test_case():
     input = "What if these shoes don't fit?"
@@ -92,7 +93,7 @@ deepeval test run test_chatbot.py
 - The variable `input` mimics user input, and `actual_output` is a placeholder for your chatbot's intended output based on this query.
 - The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an out-of-the-box metric provided by DeepEval. It helps you evaluate the factual accuracy of your chatbot's output based on the provided context.
 - The metric score ranges from 0 - 1. The `minimum_score=0.7` threshold ultimately determines whether your test has passed or not.
-  
+
 [Read our documentation](https://docs.confident-ai.com) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
 
 <br />
@@ -130,17 +131,19 @@ Please read [CONTRIBUTING.md](https://github.com/confident-ai/deepeval/blob/main
 # Roadmap
 
 Features:
-- [x] Implement G-Eval 
+
+- [x] Implement G-Eval
 - [ ] Referenceless Evaluation
 - [ ] Production Evaluation & Logging
 - [ ] Evaluation Dataset Creation
 
 Integrations:
+
 - [x] lLamaIndex
 - [ ] langChain
 - [ ] Guidance
 - [ ] Guardrails
-- [ ] EmbedChain 
+- [ ] EmbedChain
 
 <br />
 

@@ -42,7 +42,7 @@ A custom LLM evalated metric, is a custom metric whose evaluation is powered by 
 
 ```python
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
-from deepeval.types import LLMTestCaseParams
+from deepeval.test_case import LLMTestCaseParams
 
 summarization_metric = LLMEvalMetric(
     name="Summarization",
@@ -117,7 +117,7 @@ Factual consistency measures how factually correct the `actual_output` of your L
 import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import run_test
+from deepeval.evaluator import run_test
 
 input = "What if these shoes don't fit?"
 context = ["All customers are eligible for a 30 day full refund at no extra cost."]
@@ -139,7 +139,7 @@ Answer Relevancy measures how relevant the `actual_output` of your LLM applicati
 import pytest
 from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import run_test
+from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"
@@ -161,7 +161,7 @@ Conceptual Similarity measures how conceptually similar the `actual_output` of y
 import pytest
 from deepeval.metrics.conceptual_similarity import ConceptualSimilarityMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import run_test
+from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"
@@ -247,9 +247,8 @@ Being a referenceless metric means `NonToxicMetric` requires an extra parameter 
 
 ```python
 from deepeval.metrics.toxic_classifier import NonToxicMetric
-from deepeval.run_test import run_test
-from deepeval.types import LLMTestCaseParams
-from deepeval.test_case import LLMTestCase
+from deepeval.evaluator import run_test
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 
 input = "What if these shoes don't fit?"
@@ -289,9 +288,8 @@ pip install Dbias
 
 ```python
 from deepeval.metrics.bias_classifier import UnBiasedMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.types import LLMTestCaseParams
-from deepeval.run_test import run_test
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"

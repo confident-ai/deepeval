@@ -49,13 +49,13 @@ Although highly recommended, you can also optionally keep track of all evaluatio
 
 ## Create Your First Test Case
 
-Run `touch test_examply.py` to create a test file in your root directory. Open `test_example.py` and paste in your first test case:
+Run `touch test_example.py` to create a test file in your root directory. Open `test_example.py` and paste in your first test case:
 
 ```python title="test_example.py"
 import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 
 def test_factual_consistency():
     input = "What if these shoes don't fit?"
@@ -100,6 +100,8 @@ An LLM evaluated metric, is one where evaluation is carried out by an LLM. Here'
 
 ```python title="test_example.py"
 from deepeval.metrics.llm_eval_metric import LLMEvalMetric
+from deepeval.evaluator import assert_test
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 ...
 
@@ -131,10 +133,10 @@ from deepeval.metrics.metric import Metric
 class LengthMetric(Metric):
     # This metric checks if the output length is greater than 10 characters
     def __init__(self, max_length: int=10):
-        self.max_length = max_length
+        self.minimum_score = max_length
 
     def measure(self, test_case: LLMTestCase):
-        self.success = len(test_case.actual_output) > self.max_length
+        self.success = len(test_case.actual_output) > self.minimum_score
         if self.success:
             score = 1
         else:
@@ -169,7 +171,7 @@ You should see both `test_factual_consistency` and `test_length` passing.
 
 **Two things to note:**
 
-- Unlike `deepeval`'s default metrics, custom metrics does not require a `mimimum_score` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `actual_output` is greater than 10.
+- Custom metrics does requires a `mimimum_score` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `actual_output` is greater than 10.
 - We removed `context` in `test_length` since it was irrelevant to evaluating output length. All you need is `input` and `actual_output` to create a valid `LLMTestCase`.
 
 ## Combine Your Metrics
@@ -224,7 +226,7 @@ Utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate yo
 import pytest
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 
 dataset = [
     {
@@ -273,10 +275,10 @@ def test_factual_consistency(test_case: dict):
     assert_test(test_case, [factual_consistency_metric])
 ```
 
-Execute `deepeval test run`:
+To run test cases at once in parallel, use the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 
 ```
-deepeval test run test_bulk.py
+deepeval test run test_bulk.py -n 2
 ```
 
 ## Visualize Your Results
