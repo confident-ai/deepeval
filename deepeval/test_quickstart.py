@@ -1,6 +1,6 @@
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 
@@ -16,7 +16,7 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
 def test_customer_chatbot_simple():
     input = "What are your operating hours?"
     output = "Our operating hours are from 9 AM to 5 PM, Monday to Friday."
-    context = "Our company operates from 10 AM to 6 PM, Monday to Friday."
+    context = ["Our company operates from 10 AM to 6 PM, Monday to Friday."]
     factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
     test_case = LLMTestCase(input=input, actual_output=output, context=context)

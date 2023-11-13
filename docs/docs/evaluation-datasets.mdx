@@ -42,7 +42,7 @@ dataset = [
 
 Finally, utilize the `@pytest.mark.parametrize` to create test cases for each of the data points.
 
-```python
+```python title="test_bulk.py"
 @pytest.mark.parametrize(
     "test_case",
     dataset,
@@ -64,6 +64,12 @@ def test_customer_chatbot(test_case: dict):
         context=context
     )
     assert_test(test_case, [factual_consistency_metric, answer_relevancy_metric])
+```
+
+To run several tests cases at once in parallel, use the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
+
+```
+deepeval test run test_bulk.py -n 3
 ```
 
 ## Create An Evaluation Dataset

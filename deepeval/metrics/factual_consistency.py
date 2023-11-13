@@ -3,7 +3,7 @@ from deepeval.singleton import Singleton
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import chunk_text, softmax
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.run_test import assert_test
+from deepeval.evaluator import assert_test
 from deepeval.progress_context import progress_context
 from sentence_transformers import CrossEncoder
 
@@ -82,7 +82,7 @@ def is_factually_consistent(
 
 
 def assert_factual_consistency(
-    output: str, context: str, minimum_score: float = 0.3
+    output: str, context: list[str], minimum_score: float = 0.3
 ):
     """Assert that the output is factually consistent with the context."""
 

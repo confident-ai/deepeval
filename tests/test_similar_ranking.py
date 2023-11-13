@@ -1,7 +1,7 @@
 """Tests for answer relevancy
 """
 from deepeval.test_case import LLMTestCase
-from deepeval.run_test import run_test, assert_test
+from deepeval.evaluator import run_test, assert_test
 from deepeval.metrics.ranking_similarity import (
     RankingSimilarity,
     assert_ranking_similarity,

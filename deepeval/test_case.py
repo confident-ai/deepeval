@@ -2,7 +2,17 @@
 """
 import hashlib
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import List, Optional
+from enum import Enum
+
+
+class LLMTestCaseParams(Enum):
+    INPUT = "input"
+    ACTUAL_OUTPUT = "actual_output"
+    EXPECTED_OUTPUT = "expected_output"
+    CONTEXT = "context"
+    RETRIEVAL_CONTEXT = "retrieval_context"
+    ID = "id"
 
 
 @dataclass
@@ -22,7 +32,7 @@ class LLMTestCase(TestCase):
         input: str,
         actual_output: str,
         expected_output: Optional[str] = None,
-        context: Optional[Union[str, List[str]]] = None,
+        context: Optional[List[str]] = None,
         retrieval_context: Optional[List[str]] = None,
         id: Optional[str] = None,
     ):
@@ -31,9 +41,6 @@ class LLMTestCase(TestCase):
         self.actual_output = actual_output
         self.expected_output = expected_output
         self.retrieval_context = retrieval_context
-        # Force context to be a list
-        if isinstance(context, str):
-            context = [context]
         self.context = context
 
     def __post_init__(self):

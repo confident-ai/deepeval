@@ -7,7 +7,7 @@ from deepeval.metrics.answer_relevancy import (
     assert_answer_relevancy,
 )
 from deepeval.metrics.answer_relevancy import is_answer_relevant
-from deepeval.run_test import run_test, assert_test
+from deepeval.evaluator import run_test, assert_test
 from .utils import assert_viable_score
 
 query = "What is Python?"
