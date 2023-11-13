@@ -3,9 +3,7 @@ import platform
 import urllib.parse
 import requests
 import warnings
-from pydantic import BaseModel
 from requests.adapters import HTTPAdapter, Response, Retry
-from deepeval.test_run import TestRun
 from deepeval.constants import API_KEY_ENV
 from deepeval.key_handler import KEY_FILE_HANDLER
 
@@ -16,14 +14,6 @@ HTTP_TOTAL_RETRIES = 3  # Number of total retries
 HTTP_RETRY_BACKOFF_FACTOR = 2  # Wait 1, 2, 4 seconds between retries
 HTTP_STATUS_FORCE_LIST = [408, 429] + list(range(500, 531))
 HTTP_RETRY_ALLOWED_METHODS = frozenset({"GET", "POST", "DELETE"})
-
-
-class TestRunResponse(BaseModel):
-    """Add Test Run Results"""
-
-    testRunId: str
-    projectId: str
-    link: str
 
 
 class Api:
@@ -275,23 +265,3 @@ class Api:
             str: Quoted text in return
         """
         return urllib.parse.quote(text, safe="")
-
-    def post_test_run(self, test_run: TestRun) -> TestRunResponse:
-        """Post a test run"""
-        try:
-            # make sure to exclude none for `context` to ensure it is handled properly
-            body = test_run.model_dump(by_alias=True, exclude_none=True)
-        except AttributeError:
-            # Pydantic version below 2.0
-            body = test_run.dict(by_alias=True, exclude_none=True)
-
-        result = self.post_request(
-            endpoint="/v1/test-run",
-            body=body,
-        )
-        response = TestRunResponse(
-            testRunId=result["testRunId"],
-            projectId=result["projectId"],
-            link=result["link"],
-        )
-        return response

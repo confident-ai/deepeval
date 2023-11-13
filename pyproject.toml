@@ -37,6 +37,8 @@ torch = ">=2.0.0, !=2.0.1, !=2.1.0"
 ragas = "^0.0.19"
 coverage = "*"
 black = "*"
+portalocker = "*"
+openai = "0.28"
 
 [tool.black]
 line-length = 80
