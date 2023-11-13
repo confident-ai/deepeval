@@ -4,7 +4,6 @@ from rich import print
 from typing import Optional, Any
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import TestRun, test_run_manager
-import sys
 
 
 def pytest_sessionstart(session: pytest.Session):
