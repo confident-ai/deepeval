@@ -49,10 +49,10 @@ class LengthMetric(BaseMetric):
     def measure(self, test_case: LLMTestCase):
         self.success = len(test_case.actual_output) > self.minimum_score
         if self.success:
-            score = 1
+            self.score = 1
         else:
-            score = 0
-        return score
+            self.score = 0
+        return self.score
 
     def is_successful(self):
         return self.success
