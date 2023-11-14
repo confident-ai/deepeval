@@ -6,12 +6,14 @@ from deepeval.metrics.llm_eval_metric import LLMEvalMetric
 from deepeval.metrics.base_metric import BaseMetric
 import deepeval
 
+# To run this file: deepeval test run <file_name>.py
+
 
 def test_factual_consistency():
     input = "What if these shoes don't fit?"
-    context = (
+    context = [
         "All customers are eligible for a 30 day full refund at no extra cost."
-    )
+    ]
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
@@ -74,9 +76,9 @@ def test_length():
 
 def test_everything():
     input = "What if these shoes don't fit?"
-    context = (
+    context = [
         "All customers are eligible for a 30 day full refund at no extra cost."
-    )
+    ]
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
