@@ -10,9 +10,8 @@ import Envelope from "@site/src/components/envelope";
 and iterate on LLM applications with the following principles in mind:
 
 - Easily "unit test" LLM outputs in a similar way to Pytest.
+- Leverage various out-of-the-box LLM-evaluated and classic evaluation metrics.
 - Define evaluation datasets in Python code.
-- Switch between LLM-evaluated and classic evaluation metrics.
-- Provide optimal models for all evaluation metrics (with a continuous open-science initiative to advance evaluation techniques)
 - Metrics are simple to customize.
 - [alpha] Bring evaluation into production using Python decorators.
 
@@ -35,13 +34,11 @@ In your newly created virtual environement, run:
 pip install -U deepeval
 ```
 
-The command above will install the latest version of `deepeval` into your project's virtual environement.
+You can also keep track of all evaluation results by logging into our [in all one evaluation platform](https://confident-ai.com), and use Confident AI's [proprietary LLM evaluation agent](evaluation-metrics#judgementalgpt) for evaluation:
 
 ```console
 deepeval login
 ```
-
-Although highly recommended, you can also optionally keep track of all evaluation results by logging into our [hosted platform](https://confident-ai.com).
 
 :::note
 **[Contact us](https://calendly.com/jeffreyip-cno/sales-call)** if you're dealing with sensitive data that has to reside in your private VPCs.
