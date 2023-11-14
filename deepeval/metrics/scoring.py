@@ -255,7 +255,7 @@ class Scorer:
         else:
             detoxify_model = Detoxify("original", device=device)
         toxicity_score_dict = detoxify_model.predict(prediction)
-        mean_toxicity_score = list(toxicity_score_dict.values()) / len(
+        mean_toxicity_score = sum(list(toxicity_score_dict.values())) / len(
             toxicity_score_dict
         )
         return mean_toxicity_score, toxicity_score_dict
