@@ -26,6 +26,7 @@ class MetricsMetadata(BaseModel):
     metric: str
     score: float
     minimum_score: float = Field(None, alias="minimumScore")
+    reason: Optional[str] = None
 
 
 class MetricScore(BaseModel):
@@ -62,15 +63,19 @@ class MetricDict:
 
 class MetricsMetadataAverageDict:
     def __init__(self):
-        self.metric_dict = defaultdict(list)
+        self.metric_scores_dict = defaultdict(list)
         self.min_score_dict = defaultdict(float)
+        self.metric_reason_dict = defaultdict(str)
 
     def add_metric(self, metric: BaseMetric):
-        self.metric_dict[metric.__name__].append(metric.score)
-        self.min_score_dict[metric.__name__] = min(
-            self.min_score_dict.get(metric.__name__, float("inf")),
+        metric_name = metric.__name__
+
+        self.metric_scores_dict[metric_name].append(metric.score)
+        self.min_score_dict[metric_name] = min(
+            self.min_score_dict.get(metric_name, float("inf")),
             metric.minimum_score,
         )
+        self.metric_reason_dict[metric_name] = metric.reason
 
     def get_metrics_metadata(self):
         return [
@@ -78,8 +83,9 @@ class MetricsMetadataAverageDict:
                 metric=metric_name,
                 score=sum(scores) / len(scores),
                 minimumScore=self.min_score_dict[metric_name],
+                reason=self.metric_reason_dict[metric_name],
             )
-            for metric_name, scores in self.metric_dict.items()
+            for metric_name, scores in self.metric_scores_dict.items()
         ]
 
 

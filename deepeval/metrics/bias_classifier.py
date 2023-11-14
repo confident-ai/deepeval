@@ -9,7 +9,7 @@ from typing import Optional, List
 from deepeval.metrics.base_metric import BaseMetric
 
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from ..evaluator import assert_test
+from deepeval.evaluator import assert_test
 
 
 class UnBiasedMetric(BaseMetric):
