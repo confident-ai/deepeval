@@ -210,7 +210,7 @@ class Scorer:
     @classmethod
     def neural_toxic_score(
         cls, prediction: str, model: Optional[Any] = None
-    ) -> float:
+    ) -> Union[float, dict]:
         """
         Calculate the toxicity score of a given text prediction using the Detoxify model.
 
@@ -219,9 +219,25 @@ class Scorer:
             model (Optional[str], optional): The variant of the Detoxify model to use. 
                 Available variants: 'original', 'unbiased', 'multilingual'. 
                 If not provided, the 'original' variant is used by default.
-
+                
         Returns:
-            float: The toxicity score, ranging from 0 (non-toxic) to 1 (highly toxic).
+            Union[float, dict]: The mean toxicity score, ranging from 0 (non-toxic) to 1 (highly toxic),
+            and also a dictionary containing different types of toxicity score.
+        
+        For each model, we get mean toxicity score and a dictionary containing different toxicity score types. 
+        Examples:
+        If model is 'original', we get the a dict with the following keys:
+            - 'toxicity',
+            - 'severe_toxicity',
+            - 'obscene',
+            - 'threat'
+            - 'insult'
+            - 'identity_attack'
+        
+        If model is 'unbiased', we get a dict with the same as keys as 'original', but 
+        along with `sexual_explicit`. 
+        
+        If the model is 'multilingual', we get a dict same as the unbiasd one. 
         """
         try:
             from detoxify import Detoxify
@@ -235,4 +251,6 @@ class Scorer:
             detoxify_model = Detoxify(model, device=device)
         else:
             detoxify_model = Detoxify('original', device=device)
-        return detoxify_model.predict(prediction)
+        toxicity_score_dict = detoxify_model.predict(prediction)
+        mean_toxicity_score = list(toxicity_score_dict.values()) / len(toxicity_score_dict)
+        return mean_toxicity_score, toxicity_score_dict
