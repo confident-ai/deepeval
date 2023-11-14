@@ -77,14 +77,13 @@ class MetricsMetadataAverageDict:
         )
         self.metric_reason_dict[metric_name] = metric.reason
 
-
     def get_metrics_metadata(self):
         return [
             MetricsMetadata(
                 metric=metric_name,
                 score=sum(scores) / len(scores),
                 minimumScore=self.min_score_dict[metric_name],
-                reason=self.metric_reason_dict[metric_name]
+                reason=self.metric_reason_dict[metric_name],
             )
             for metric_name, scores in self.metric_scores_dict.items()
         ]

@@ -4,13 +4,16 @@ from typing import List
 from pydantic import BaseModel
 from deepeval.api import Api
 
+
 class JudgementalGPTResponse(BaseModel):
     score: float
     reason: str
 
+
 class JudgementalGPTRequest(BaseModel):
     text: str
     criteria: str
+
 
 class JudgementalGPT(BaseMetric):
     def __init__(
@@ -26,7 +29,7 @@ class JudgementalGPT(BaseMetric):
         self.minimum_score = minimum_score
         self.success = None
         self.reason = None
-    
+
     @property
     def __name__(self):
         return self.name
@@ -37,12 +40,18 @@ class JudgementalGPT(BaseMetric):
             value = getattr(test_case, param.value)
             text += f"{param.value}: {value} \n\n"
 
-        judgemental_gpt_request_data = JudgementalGPTRequest(text=text, criteria=self.criteria)
+        judgemental_gpt_request_data = JudgementalGPTRequest(
+            text=text, criteria=self.criteria
+        )
 
         try:
-            body = judgemental_gpt_request_data.model_dump(by_alias=True, exclude_none=True)
+            body = judgemental_gpt_request_data.model_dump(
+                by_alias=True, exclude_none=True
+            )
         except AttributeError:
-            body = judgemental_gpt_request_data.dict(by_alias=True, exclude_none=True)
+            body = judgemental_gpt_request_data.dict(
+                by_alias=True, exclude_none=True
+            )
         api = Api()
         result = api.post_request(
             endpoint="/v1/judgemental-gpt",
@@ -52,10 +61,11 @@ class JudgementalGPT(BaseMetric):
             score=result["score"],
             reason=result["reason"],
         )
-        self.success = response.score >= self.minimum_score
         self.reason = response.reason
+        self.score = response.score / 10
+        self.success = self.score >= self.minimum_score
 
-        return response.score
+        return self.score
 
     def is_successful(self):
         return self.success
