@@ -181,23 +181,29 @@ class TestScorer(unittest.TestCase):
         prediction = "A fast brown fox leaped over the sleeping dog."
         # When the prediction is different from the target, the faithfulness score should be less than 1.0.
         self.assertLess(Scorer.faithfulness_score(target, prediction), 1.0)
-    
-    # Tests for toxicity scores 
-    # Todo: add more different tests for dict and different types of models. 
-    
+
+    # Tests for toxicity scores
+    # Todo: add more different tests for dict and different types of models.
+
     def test_neural_toxic_score_original_model(self):
         prediction = "This is a non-toxic text."
-        mean_toxicity_score, _ = Scorer.neural_toxic_score(prediction, model='original')
+        mean_toxicity_score, _ = Scorer.neural_toxic_score(
+            prediction, model="original"
+        )
         self.assertTrue(0 <= mean_toxicity_score <= 1)
 
     def test_neural_toxic_score_unbiased_model(self):
         prediction = "This is a non-toxic text."
-        mean_toxicity_score, _ = Scorer.neural_toxic_score(prediction, model='unbiased')
+        mean_toxicity_score, _ = Scorer.neural_toxic_score(
+            prediction, model="unbiased"
+        )
         self.assertTrue(0 <= mean_toxicity_score <= 1)
 
     def test_neural_toxic_score_multilingual_model(self):
         prediction = "This is a non-toxic text."
-        mean_toxicity_score, _ = Scorer.neural_toxic_score(prediction, model='multilingual')
+        mean_toxicity_score, _ = Scorer.neural_toxic_score(
+            prediction, model="multilingual"
+        )
         self.assertTrue(0 <= mean_toxicity_score <= 1)
 
     def test_neural_toxic_score_default_model(self):
@@ -208,4 +214,4 @@ class TestScorer(unittest.TestCase):
     def test_neural_toxic_score_invalid_model(self):
         prediction = "This is a non-toxic text."
         with self.assertRaises(AssertionError):
-            Scorer.neural_toxic_score(prediction, model='invalid_model')
+            Scorer.neural_toxic_score(prediction, model="invalid_model")

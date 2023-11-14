@@ -216,15 +216,15 @@ class Scorer:
 
         Args:
             prediction (str): The text prediction to evaluate for toxicity.
-            model (Optional[str], optional): The variant of the Detoxify model to use. 
-                Available variants: 'original', 'unbiased', 'multilingual'. 
+            model (Optional[str], optional): The variant of the Detoxify model to use.
+                Available variants: 'original', 'unbiased', 'multilingual'.
                 If not provided, the 'original' variant is used by default.
-                
+
         Returns:
             Union[float, dict]: The mean toxicity score, ranging from 0 (non-toxic) to 1 (highly toxic),
             and also a dictionary containing different types of toxicity score.
-        
-        For each model, we get mean toxicity score and a dictionary containing different toxicity score types. 
+
+        For each model, we get mean toxicity score and a dictionary containing different toxicity score types.
         Examples:
         If model is 'original', we get the a dict with the following keys:
             - 'toxicity',
@@ -233,24 +233,29 @@ class Scorer:
             - 'threat'
             - 'insult'
             - 'identity_attack'
-        
-        If model is 'unbiased', we get a dict with the same as keys as 'original', but 
-        along with `sexual_explicit`. 
-        
-        If the model is 'multilingual', we get a dict same as the unbiasd one. 
+
+        If model is 'unbiased', we get a dict with the same as keys as 'original', but
+        along with `sexual_explicit`.
+
+        If the model is 'multilingual', we get a dict same as the unbiasd one.
         """
         try:
             from detoxify import Detoxify
         except ImportError as e:
             print(e)
-        
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         if model is not None:
-            assert model in ['original', 'unbiased', 'multilingual'], \
-            "Invalid model. Available variants: original, unbiased, multilingual"
+            assert model in [
+                "original",
+                "unbiased",
+                "multilingual",
+            ], "Invalid model. Available variants: original, unbiased, multilingual"
             detoxify_model = Detoxify(model, device=device)
         else:
-            detoxify_model = Detoxify('original', device=device)
+            detoxify_model = Detoxify("original", device=device)
         toxicity_score_dict = detoxify_model.predict(prediction)
-        mean_toxicity_score = list(toxicity_score_dict.values()) / len(toxicity_score_dict)
+        mean_toxicity_score = list(toxicity_score_dict.values()) / len(
+            toxicity_score_dict
+        )
         return mean_toxicity_score, toxicity_score_dict
