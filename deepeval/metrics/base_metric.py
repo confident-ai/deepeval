@@ -1,11 +1,13 @@
 from abc import abstractmethod
 
 from deepeval.test_case import LLMTestCase
+from typing import Optional
 
 
 class BaseMetric:
     # set an arbitrary minimum score that will get over-ridden later
     score: float = 0
+    reason: Optional[str] = None
 
     @property
     def minimum_score(self) -> float:
@@ -18,7 +20,7 @@ class BaseMetric:
     # Measure function signature is subject to be different - not sure
     # how applicable this is - might need a better abstraction
     @abstractmethod
-    def measure(self, test_case: LLMTestCase, *args, **kwargs):
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
         raise NotImplementedError
 
     def _get_init_values(self):
