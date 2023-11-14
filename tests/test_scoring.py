@@ -182,25 +182,28 @@ class TestScorer(unittest.TestCase):
         # When the prediction is different from the target, the faithfulness score should be less than 1.0.
         self.assertLess(Scorer.faithfulness_score(target, prediction), 1.0)
     
+    # Tests for toxicity scores 
+    # Todo: add more different tests for dict and different types of models. 
+    
     def test_neural_toxic_score_original_model(self):
         prediction = "This is a non-toxic text."
-        toxicity_score = Scorer.neural_toxic_score(prediction, model='original')
-        self.assertTrue(0 <= toxicity_score <= 1)
+        mean_toxicity_score, _ = Scorer.neural_toxic_score(prediction, model='original')
+        self.assertTrue(0 <= mean_toxicity_score <= 1)
 
     def test_neural_toxic_score_unbiased_model(self):
         prediction = "This is a non-toxic text."
-        toxicity_score = Scorer.neural_toxic_score(prediction, model='unbiased')
-        self.assertTrue(0 <= toxicity_score <= 1)
+        mean_toxicity_score, _ = Scorer.neural_toxic_score(prediction, model='unbiased')
+        self.assertTrue(0 <= mean_toxicity_score <= 1)
 
     def test_neural_toxic_score_multilingual_model(self):
         prediction = "This is a non-toxic text."
-        toxicity_score = Scorer.neural_toxic_score(prediction, model='multilingual')
-        self.assertTrue(0 <= toxicity_score <= 1)
+        mean_toxicity_score, _ = Scorer.neural_toxic_score(prediction, model='multilingual')
+        self.assertTrue(0 <= mean_toxicity_score <= 1)
 
     def test_neural_toxic_score_default_model(self):
         prediction = "This is a non-toxic text."
-        toxicity_score = Scorer.neural_toxic_score(prediction)
-        self.assertTrue(0 <= toxicity_score <= 1)
+        mean_toxicity_score, _ = Scorer.neural_toxic_score(prediction)
+        self.assertTrue(0 <= mean_toxicity_score <= 1)
 
     def test_neural_toxic_score_invalid_model(self):
         prediction = "This is a non-toxic text."
