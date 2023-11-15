@@ -100,14 +100,15 @@ Under the hood, `JudgementalGPT(...)` sends a request to Confident AI's servers 
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
 - [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
 
-## Custom Classic Metrics
+## Custom Metrics
 
-A custom classic metric, is a metric not provided by `deepeval` and whose criteria isn't evaluated using an LLM.
+You can implement your own evaluator (for example, your own GPT evaluator) by creating a custom metric. All custom metrics are automatically integrated with Confident AI.
 
 ```python
-from deepeval.metrics.metric import Metric
+from deepeval.metrics.base_metric import BaseMetric
 
-class LengthMetric(Metric):
+# Inherit BaseMetric
+class LengthMetric(BaseMetric):
     # This metric checks if the output length is greater than 10 characters
     def __init__(self, max_length: int=10):
         self.minimum_score = max_length
