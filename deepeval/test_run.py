@@ -197,29 +197,47 @@ class TestRunManager:
     def __init__(self):
         self.test_run = None
         self.temp_file_name = TEMP_FILE_NAME
+        self.save_to_disk = False
 
-    def set_test_run(self, test_run: "TestRun"):
+    def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
 
+    def create_test_run(self, file_name: Optional[str] = None):
+        test_run = TestRun(
+            testFile=file_name,
+            testCases=[],
+            metricScores=[],
+            configurations={},
+        )
+        self.set_test_run(test_run)
+
+        if self.save_to_disk:
+            self.save_test_run()
+
     def get_test_run(self):
-        try:
-            with portalocker.Lock(
-                self.temp_file_name, mode="r", timeout=5
-            ) as file:
-                self.test_run = self.test_run.load(file)
-        except (FileNotFoundError, portalocker.exceptions.LockException):
-            print("Error loading test run from disk", file=sys.stderr)
-            self.test_run = None
+        if self.test_run is None or not self.save_to_disk:
+            self.create_test_run()
+
+        if self.save_to_disk:
+            try:
+                with portalocker.Lock(
+                    self.temp_file_name, mode="r", timeout=5
+                ) as file:
+                    self.test_run = self.test_run.load(file)
+            except (FileNotFoundError, portalocker.exceptions.LockException):
+                print("Error loading test run from disk", file=sys.stderr)
+                self.test_run = None
         return self.test_run
 
     def save_test_run(self):
-        try:
-            with portalocker.Lock(
-                self.temp_file_name, mode="w", timeout=5
-            ) as file:
-                self.test_run = self.test_run.save(file)
-        except portalocker.exceptions.LockException:
-            print("Error saving test run to disk", file=sys.stderr)
+        if self.save_to_disk:
+            try:
+                with portalocker.Lock(
+                    self.temp_file_name, mode="w", timeout=5
+                ) as file:
+                    self.test_run = self.test_run.save(file)
+            except portalocker.exceptions.LockException:
+                print("Error saving test run to disk", file=sys.stderr)
 
     def clear_test_run(self):
         self.test_run = None

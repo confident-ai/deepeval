@@ -39,10 +39,11 @@ class ConceptualSimilarityMetric(BaseMetric, metaclass=Singleton):
             test_case.actual_output, test_case.expected_output
         )
         self.score = cosine_similarity(vectors[0], vectors[1])
+        self.success = self.score >= self.minimum_score
         return float(self.score)
 
     def is_successful(self) -> bool:
-        return bool(self.score >= self.minimum_score)
+        return self.success
 
     @property
     def __name__(self):

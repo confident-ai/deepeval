@@ -104,7 +104,7 @@ class TestOverallScore:
             expected_output=expected_output,
             context=context,
         )
-        assert_test([test_case], metrics=[self.metric])
+        assert_test(test_case, metrics=[self.metric])
 
     def test_overall_score_metric_no_query_no_context(self):
         test_case = LLMTestCase(

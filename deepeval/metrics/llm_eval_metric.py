@@ -51,10 +51,9 @@ class LLMEvalMetric(BaseMetric):
             self.evaluation_steps = self.generate_evaluation_steps()
 
         score = self.evaluate(test_case)
-        score = float(score) * 2 / 10
-
+        self.score = float(score) * 2 / 10
         self.success = score >= self.minimum_score
-        return score
+        return self.score
 
     def is_successful(self):
         return self.success
