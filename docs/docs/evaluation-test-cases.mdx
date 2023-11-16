@@ -305,10 +305,10 @@ second_test_case = LLMTestCase(
     context=context
 )
 
-test_cases = [first_test_case, second_test_case]
+dataset = [first_test_case, second_test_case]
 
 metric = FactualConsistencyMetric(minimum_score=0.7)
-evaluate(test_cases, [metric])
+evaluate(dataset, [metric])
 ```
 
 Similar to `assert_test`, `evaluate` allows you to log and view test results on Confident AI. For more examples of `evalute`, visit the [datasets section](evaluation-datasets).
