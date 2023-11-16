@@ -1,4 +1,3 @@
-
 import os
 from deepeval.singleton import Singleton
 from deepeval.test_case import LLMTestCase
@@ -8,8 +7,11 @@ from deepeval.evaluator import assert_test
 from deepeval.progress_context import progress_context
 from sentence_transformers import CrossEncoder
 
+
 class VectaraHallucinationEvaluationModel(metaclass=Singleton):
-    def __init__(self, model_name: str = "vectara/hallucination_evaluation_model"):
+    def __init__(
+        self, model_name: str = "vectara/hallucination_evaluation_model"
+    ):
         # We use a smple cross encoder model
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
         self.model = CrossEncoder(model_name)
@@ -17,11 +19,13 @@ class VectaraHallucinationEvaluationModel(metaclass=Singleton):
     def predict(self, text_a: str, text_b: str):
         scores = self.model.predict([[text_a, text_b]])
         # https://huggingface.co/vectara/hallucination_evaluation_model
-        
+
         return scores[0]
 
+
 class HallucinationEvaluationMetric(BaseMetric, metaclass=Singleton):
-    def __init__(self, 
+    def __init__(
+        self,
         minimum_score: float = 0.5,
         model_name: str = "vectara/hallucination_evaluation_model",
     ):
@@ -55,6 +59,6 @@ class HallucinationEvaluationMetric(BaseMetric, metaclass=Singleton):
         self.success = max_score > self.minimum_score
         self.score = max_score
         return max_score
-    
+
     def is_successful(self) -> bool:
-        return self.success    
+        return self.success

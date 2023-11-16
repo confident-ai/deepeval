@@ -11,8 +11,6 @@ def test_hallucination_evaluation_metric():
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="A person on a horse jumps over a broken down airplane.",
-        context=[
-            "A person is at a diner, ordering an omelette."
-        ],
+        context=["A person is at a diner, ordering an omelette."],
     )
     assert_test(test_case, [metric])
