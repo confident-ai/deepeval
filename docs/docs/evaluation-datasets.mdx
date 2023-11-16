@@ -70,8 +70,8 @@ deepeval login
 
 ```python title="test_bulk.py"
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.factual_consistency_metric import FactualConsistencyMetric
-from deepeval.metric.answer_relevancy_metric import AnswerRelevancyMetric
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
 from deepeval.evaluate import assert_test
 
 dataset = [...]
@@ -98,8 +98,8 @@ Alternately, you can use deepeval's `evaluate` function to evaluate datasets. Th
 
 ```python
 from deepeval.evaluator import evaluate
-from deepeval.metrics.factual_consistency_metric import FactualConsistencyMetric
-from deepeval.metric.answer_relevancy_metric import AnswerRelevancyMetric
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
 
 dataset = [...]
 
