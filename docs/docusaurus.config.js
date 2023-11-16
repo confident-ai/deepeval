@@ -2,7 +2,7 @@
 const config = {
   title: 'DeepEval',
   tagline: 'Evaluation Framework for LLMs',
-  favicon: 'static/img/favicon.ico',
+  favicon: 'img/fav.ico',
 
   // Set the production url of your site here
   url: 'https://docs.confident-ai.com',
