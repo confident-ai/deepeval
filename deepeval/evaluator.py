@@ -63,15 +63,11 @@ def create_test_result(
 
 
 def execute_test(
-    test_cases: Union[LLMTestCase, List[LLMTestCase]],
+    test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
     using_pytest: bool = False,
 ) -> List[TestResult]:
-    if isinstance(test_cases, TestCase):
-        test_cases = [test_cases]
-
-    test_results = []
-    failed_metrics = []
+    test_results: TestResult = []
     test_run_manager.save_to_disk = using_pytest
 
     for test_case in test_cases:
@@ -130,7 +126,7 @@ def run_test(
 
 def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
     # len(execute_test(...)) is always 1 for assert_test
-    test_result = execute_test(test_case, metrics, True)[0]
+    test_result = execute_test([test_case], metrics, True)[0]
     if not test_result.success:
         failed_metrics = [
             metric

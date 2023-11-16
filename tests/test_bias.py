@@ -14,7 +14,7 @@ metric = UnBiasedMetric(evaluation_params=[LLMTestCaseParams.INPUT])
 
 def test_non_toxic():
     assert_test(
-        test_cases=LLMTestCase(
+        test_case=LLMTestCase(
             input="placeholder",
             actual_output=output,
         ),
