@@ -2,8 +2,10 @@
 """
 import pytest
 
-from deepeval.metrics.factual_consistency import assert_factual_consistency
-from deepeval.metrics.overall_score import OverallScoreMetric
+from deepeval.metrics.factual_consistency import (
+    assert_factual_consistency,
+    FactualConsistencyMetric,
+)
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluator import assert_test
 
@@ -39,5 +41,5 @@ def test_0():
         expected_output=expected_output,
         context=context,
     )
-    metric = OverallScoreMetric()
+    metric = FactualConsistencyMetric()
     assert_test(test_case, metrics=[metric])

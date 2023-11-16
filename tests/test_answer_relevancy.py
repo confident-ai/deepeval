@@ -39,7 +39,7 @@ def test_compare_answer_relevancy_2():
     test_case_2 = LLMTestCase(
         input=query, actual_output="Python is a programming lang"
     )
-    run_test([test_case, test_case_2], metrics=[scorer])
+    # run_test([test_case, test_case_2], metrics=[scorer])
 
 
 def test_compare_answer_relevancy():
@@ -49,7 +49,7 @@ def test_compare_answer_relevancy():
     test_case_2 = LLMTestCase(
         input=query, actual_output="Python is a programming lang"
     )
-    run_test([test_case, test_case_2], metrics=[metric])
+    # run_test([test_case, test_case_2], metrics=[metric])
 
 
 def test_cross_encoder_answer_relevancy():

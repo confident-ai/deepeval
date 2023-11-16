@@ -185,6 +185,7 @@ Similar to Pytest, `deepeval` allows you to assert any test case you create by c
 import chatbot
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.evaluator import assert_test
+from deepeval.test_case import LLMTestCase
 
 prompt_template = """
     Impersonate a dog named Rocky when replying to the text below.
@@ -230,7 +231,17 @@ Run `deepeval test run test_assert_example.py` in the CLI again to start evaluat
 `deepeval` also offers an option to quickly run test cases without going through the CLI or creating a test file.
 
 ```python
+# A hypothetical LLM application example
+import chatbot
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.evaluator import run_test
+from deepeval.test_case import LLMTestCase
+
+prompt_template = """
+    Impersonate a dog named Rocky when replying to the text below.
+
+    {text}
+"""
 
 prompt = prompt_template.format(text="Who's a good boy?")
 context = ["Rocky is a good boy."]
