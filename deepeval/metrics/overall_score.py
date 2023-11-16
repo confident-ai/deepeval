@@ -49,7 +49,8 @@ class OverallScoreMetric(BaseMetric, metaclass=Singleton):
         overall_score = sum(metadata.values()) / len(metadata)
 
         self.success = bool(overall_score > self.minimum_score)
-        return overall_score
+        self.score = overall_score
+        return self.score
 
     def is_successful(self) -> bool:
         return self.success

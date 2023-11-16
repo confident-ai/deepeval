@@ -74,7 +74,8 @@ class NonToxicMetric(BaseMetric):
 
         # Check if the average score meets the minimum requirement
         self.success = average_score >= self.minimum_score
-        return average_score
+        self.score = average_score
+        return self.score
 
     def is_successful(self):
         return self.success
