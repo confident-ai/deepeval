@@ -1,5 +1,7 @@
 """Function for running test
 """
+
+from typing import List
 import time
 from dataclasses import dataclass
 
