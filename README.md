@@ -118,7 +118,7 @@ deepeval test run test_chatbot.py
 
 You should see a link displayed in the CLI once the test has finished running. Paste it into your browser to view the results!
 
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/dashboard.png)
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/test-summary.png)
 
 <br />
 
