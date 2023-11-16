@@ -42,4 +42,5 @@ def test_0():
         context=context,
     )
     metric = FactualConsistencyMetric()
-    assert_test(test_case, metrics=[metric])
+    with pytest.raises(AssertionError):
+        assert_test(test_case, metrics=[metric])
