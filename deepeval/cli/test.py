@@ -2,11 +2,11 @@ import pytest
 import typer
 import os
 from typing_extensions import Annotated
-from deepeval.metrics.overall_score import assert_overall_score
 from .cli_key_handler import set_env_vars
 from typing import Optional
 from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
 from deepeval.utils import delete_file_if_exists
+from deepeval.metrics.factual_consistency import assert_factual_consistency
 
 try:
     from rich import print
@@ -24,56 +24,54 @@ def sample():
         "If this is your first time running these models, it may take a while."
     )
     try:
-        query = "How does photosynthesis work?"
-        output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with the help of chlorophyll pigment."
+        input = "How does photosynthesis work?"
+        actual_output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with the help of chlorophyll pigment."
         expected_output = "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize food with the help of chlorophyll pigment."
         context = "Biology"
 
-        assert_overall_score(query, output, expected_output, context)
+        assert_factual_consistency(actual_output, context)
 
     except AssertionError as e:
         pass
     try:
-        query = "What is the capital of France?"
-        output = "The capital of France is Paris."
+        input = "What is the capital of France?"
+        actual_output = "The capital of France is Paris."
         expected_output = "The capital of France is Paris."
         context = "Geography"
 
-        assert_overall_score(query, output, expected_output, context)
+        assert_factual_consistency(output, expected_output)
 
     except AssertionError as e:
         pass
     try:
-        query = "What are the major components of a cell?"
-        output = "Cells have many major components, including the cell membrane, nucleus, mitochondria, and endoplasmic reticulum."
+        input = "What are the major components of a cell?"
+        actual_output = "Cells have many major components, including the cell membrane, nucleus, mitochondria, and endoplasmic reticulum."
         expected_output = "Cells have several major components, such as the cell membrane, nucleus, mitochondria, and endoplasmic reticulum."
         context = "Biology"
         minimum_score = 0.8  # Adjusting the minimum score threshold
 
-        assert_overall_score(
-            query, output, expected_output, context, minimum_score
-        )
+        assert_factual_consistency(actual_output, context, minimum_score)
 
     except AssertionError as e:
         pass
 
     try:
-        query = "What is the capital of Japan?"
-        output = "The largest city in Japan is Tokyo."
+        input = "What is the capital of Japan?"
+        actual_output = "The largest city in Japan is Tokyo."
         expected_output = "The capital of Japan is Tokyo."
         context = "Geography"
 
-        assert_overall_score(query, output, expected_output, context)
+        assert_factual_consistency(actual_output, context)
     except AssertionError as e:
         pass
 
     try:
-        query = "Explain the theory of relativity."
-        output = "Einstein's theory of relativity is famous."
+        input = "Explain the theory of relativity."
+        actual_output = "Einstein's theory of relativity is famous."
         expected_output = "Einstein's theory of relativity revolutionized our understanding of space, time, and gravity."
         context = "Physics"
 
-        assert_overall_score(query, output, expected_output, context)
+        assert_factual_consistency(actual_output, context)
     except AssertionError as e:
         pass
 

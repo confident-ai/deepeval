@@ -105,8 +105,7 @@ class APITestCase(BaseModel):
 
 class TestRun(BaseModel):
     test_file: Optional[str] = Field(
-        # TODO: Fix test_file
-        "test.py",
+        None,
         alias="testFile",
     )
     dict_test_cases: Dict[int, APITestCase] = Field(
@@ -126,6 +125,7 @@ class TestRun(BaseModel):
         test_case: LLMTestCase,
         metrics: List[BaseMetric],
         run_duration: float,
+        index: int,
     ):
         # Check if test case with the same ID already exists
         test_case_id = id(test_case)
@@ -154,7 +154,7 @@ class TestRun(BaseModel):
             context = test_case.context
             success = all([metric.is_successful() for metric in metrics])
             api_test_case: APITestCase = APITestCase(
-                name=os.getenv(PYTEST_RUN_TEST_NAME, "-"),
+                name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
                 input=test_case.input,
                 actualOutput=test_case.actual_output,
                 expectedOutput=test_case.expected_output,
@@ -242,7 +242,7 @@ class TestRunManager:
     def clear_test_run(self):
         self.test_run = None
 
-    def display_test_run(self, test_run: TestRun):
+    def display_results_table(self, test_run: TestRun):
         # Calculate the average of each metric
         metrics_avg = {
             metric.metric: metric.score for metric in test_run.metric_scores
@@ -311,6 +311,8 @@ class TestRunManager:
 
     def post_test_run(self, test_run: TestRun):
         console = Console()
+
+        # TODO: change this, very hacky way to check if api key exists
         if os.path.exists(".deepeval"):
             try:
                 # make sure to exclude none for `context` to ensure it is handled properly
@@ -360,7 +362,7 @@ class TestRunManager:
                 print(f"Results saved in {local_folder} as {new_test_filename}")
             os.remove(new_test_filename)
 
-    def wrap_up_test_run(self):
+    def wrap_up_test_run(self, display_table: bool = True):
         test_run = test_run_manager.get_test_run()
         test_run.cleanup()
         if test_run is None or len(test_run.test_cases) == 0:
@@ -368,7 +370,8 @@ class TestRunManager:
             delete_file_if_exists(test_run_manager.temp_file_name)
             return
 
-        self.display_test_run(test_run)
+        if display_table:
+            self.display_results_table(test_run)
         self.post_test_run(test_run)
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
