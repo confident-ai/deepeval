@@ -55,7 +55,7 @@ There are three mandatory and two optional parameters required when instantiatin
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
 - [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
-- [Optional] `model`: the model name. This is defaulted to 'gpt-4' and we currently only support models from OpenAI.
+- [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from OpenAI.
 
 All instances of `LLMEvalMetric` returns a score ranging from 0 - 1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
 
@@ -63,7 +63,25 @@ All instances of `LLMEvalMetric` returns a score ranging from 0 - 1. A metric is
 For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
 :::
 
-By default, `LLMEvalMetric` is evaluated using `GPT-4` from OpenAI.
+By default, `LLMEvalMetric` is evaluated using `GPT-4` from OpenAI. Azure OpenAI endpoints are also supported via LLMEvalMetric, the `deployment_id` parameter should be passed
+during instantiation of `LLMEvalMetric` class
+
+```python
+summarization_metric = LLMEvalMetric(
+    name="Summarization",
+    criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    minimum_score=0.5,
+    deployment_id="your-deployment-id" 
+)
+```
+
+:::note
+Don't forget to set your Azure OpenAI key 
+```python
+openai.api_key = "your-Azure-OpenAI-API-key"
+``` 
+:::
 
 ## JudgementalGPT
 
