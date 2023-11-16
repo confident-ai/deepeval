@@ -10,7 +10,7 @@ def test_hallucination_evaluation_metric():
     metric = HallucinationEvaluationMetric(minimum_score=0.5)
     test_case = LLMTestCase(
         input="placeholder",
-        actual_output="A person on a horse jumps over a broken down airplane.",
-        context=["A person is at a diner, ordering an omelette."],
+        actual_output="A blond drinking water in public.",
+        context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."],
     )
     assert_test(test_case, [metric])
