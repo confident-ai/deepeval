@@ -11,6 +11,8 @@ def test_hallucination_evaluation_metric():
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="A blond drinking water in public.",
-        context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."],
+        context=[
+            "A man with blond-hair, and a brown shirt drinking out of a public water fountain."
+        ],
     )
     assert_test(test_case, [metric])
