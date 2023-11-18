@@ -7,14 +7,13 @@ from deepeval.utils import normalize_text
 from deepeval.metrics._summac_model import SummaCZS
 
 
+# TODO: More scores are to be added
 class Scorer:
     """This class calculates various Natural Language Processing (NLP) evaluation score.
 
     The scoring logic can be a simple algorithm or any statistical formula. There are some scores
     Which also uses an external model (BERTScore) in the scoring logic.
     """
-
-    # Todo: More metrics are to be added
 
     @classmethod
     def rouge_score(

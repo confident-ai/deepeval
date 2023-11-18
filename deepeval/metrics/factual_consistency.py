@@ -3,7 +3,6 @@ from deepeval.singleton import Singleton
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import chunk_text, softmax
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.evaluator import assert_test
 from deepeval.progress_context import progress_context
 from sentence_transformers import CrossEncoder
 
@@ -67,27 +66,3 @@ class FactualConsistencyMetric(BaseMetric, metaclass=Singleton):
     @property
     def __name__(self):
         return "Factual Consistency"
-
-
-def is_factually_consistent(
-    output: str, context: str, minimum_score: float = 0.3
-) -> bool:
-    """Check if the output is factually consistent with the context."""
-
-    metric = FactualConsistencyMetric(minimum_score=minimum_score)
-    test_case = LLMTestCase(
-        input="placeholder", actual_output=output, context=context
-    )
-    return metric.measure(test_case) >= minimum_score
-
-
-def assert_factual_consistency(
-    output: str, context: list[str], minimum_score: float = 0.3
-):
-    """Assert that the output is factually consistent with the context."""
-
-    metric = FactualConsistencyMetric(minimum_score=minimum_score)
-    test_case = LLMTestCase(
-        input="placeholder", actual_output=output, context=context
-    )
-    assert_test(test_case, [metric])

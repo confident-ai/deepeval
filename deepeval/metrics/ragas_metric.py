@@ -548,16 +548,3 @@ class RagasMetric(BaseMetric):
     @property
     def __name__(self):
         return "RAGAS"
-
-
-def assert_ragas(
-    test_case: LLMTestCase,
-    metrics: List[str] = None,
-    minimum_score: float = 0.3,
-):
-    """Asserts if the Ragas score is above the minimum score"""
-    metric = RagasMetric(metrics, minimum_score)
-    score = metric.measure(test_case)
-    assert (
-        score >= metric.minimum_score
-    ), f"Ragas score {score} is below the minimum score {metric.minimum_score}"

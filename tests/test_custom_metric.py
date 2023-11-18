@@ -2,7 +2,7 @@
 """
 
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.metrics import BaseMetric
 from deepeval.evaluator import assert_test
 
 

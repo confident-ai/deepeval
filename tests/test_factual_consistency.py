@@ -1,31 +1,8 @@
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.factual_consistency import (
-    FactualConsistencyMetric,
-    assert_factual_consistency,
-)
+from deepeval.metrics import FactualConsistencyMetric
+
 from deepeval.evaluator import assert_test
-
-
-def test_factual_consistency():
-    # legacy functions - consider removing
-    with pytest.raises(AssertionError):
-        assert_factual_consistency(
-            context=[
-                "After a long day at work, Sarah decided to go for a walk in the park to unwind. She put on her sneakers and grabbed her headphones before heading out. As she strolled along the path, she noticed families having picnics, children playing on the playground, and ducks swimming in the pond."
-            ],
-            output="Sarah spent the evening at the library, engrossed in a book.",
-        )
-
-
-def test_factual_consistency_2():
-    # legacy functions - consider removing
-    assert_factual_consistency(
-        context=[
-            "After a long day at work, Sarah decided to go for a walk in the park to unwind. She put on her sneakers and grabbed her headphones before heading out. As she strolled along the path, she noticed families having picnics, children playing on the playground, and ducks swimming in the pond."
-        ],
-        output="Sarah went out for a walk in the park.",
-    )
 
 
 def test_factual_consistency_metric():

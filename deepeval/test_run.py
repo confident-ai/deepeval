@@ -2,7 +2,7 @@ import os
 import json
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from collections import defaultdict
 from deepeval.tracing import get_trace_stack
@@ -151,7 +151,6 @@ class TestRun(BaseModel):
         else:
             # If it doesn't exist, create a new test case
             # Adding backwards compatibility to ensure context still works.
-            context = test_case.context
             success = all([metric.is_successful() for metric in metrics])
             api_test_case: APITestCase = APITestCase(
                 name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
@@ -161,7 +160,7 @@ class TestRun(BaseModel):
                 success=success,
                 metricsMetadata=metrics_metadata,
                 runDuration=run_duration,
-                context=context,
+                context=test_case.context,
                 traceStack=get_trace_stack(),
             )
 

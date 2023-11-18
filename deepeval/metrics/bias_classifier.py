@@ -6,10 +6,9 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 
 import warnings
 from typing import Optional, List
-from deepeval.metrics.base_metric import BaseMetric
 
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.evaluator import assert_test
 
 
 class UnBiasedMetric(BaseMetric):
@@ -84,27 +83,3 @@ class UnBiasedMetric(BaseMetric):
     @property
     def __name__(self):
         return "Bias Score"
-
-
-def assert_unbiased(
-    evaluation_params: List[LLMTestCaseParams],
-    input: str,
-    actual_output: str,
-    minimum_score: float = 0.5,
-):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
-    metric = UnBiasedMetric(
-        evaluation_params=evaluation_params, minimum_score=minimum_score
-    )
-    test_case = LLMTestCase(input=input, actual_output=actual_output)
-    assert_test(test_case, [metric])
-
-
-def is_unbiased(
-    text: str,
-    minimum_score: float = 0.5,
-) -> bool:
-    """Check if the text is unbiased."""
-
-    metric = UnBiasedMetric(minimum_score=minimum_score)
-    test_case = LLMTestCase(input="placeholder", actual_output=text)
-    return metric.measure(test_case) >= minimum_score
