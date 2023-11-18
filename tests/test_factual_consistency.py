@@ -1,6 +1,6 @@
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import FactualConsistencyMetric
 
 from deepeval.evaluator import assert_test
 

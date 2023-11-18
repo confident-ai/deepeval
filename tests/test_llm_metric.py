@@ -1,8 +1,7 @@
-import os
 import pytest
 import openai
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.metrics.llm_eval_metric import LLMEvalMetric
+from deepeval.metrics import LLMEvalMetric
 from deepeval.evaluator import assert_test
 
 # set openai api type

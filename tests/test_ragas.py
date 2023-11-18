@@ -1,6 +1,6 @@
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.ragas_metric import RagasMetric
+from deepeval.metrics import RagasMetric
 from deepeval.evaluator import assert_test
 
 query = "Who won the FIFA World Cup in 2018?"
