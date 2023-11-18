@@ -8,7 +8,7 @@ from deepeval.progress_context import progress_context
 from sentence_transformers import CrossEncoder
 
 
-class VectaraHallucinationEvaluationModel(metaclass=Singleton):
+class HallucinationEvaluationModel(metaclass=Singleton):
     def __init__(
         self, model_name: str = "vectara/hallucination_evaluation_model"
     ):
@@ -23,7 +23,7 @@ class VectaraHallucinationEvaluationModel(metaclass=Singleton):
         return scores[0]
 
 
-class HallucinationEvaluationMetric(BaseMetric, metaclass=Singleton):
+class HallucinationMetric(BaseMetric, metaclass=Singleton):
     def __init__(
         self,
         minimum_score: float = 0.5,
