@@ -1,4 +1,4 @@
-from .base_metric import *
+from .base_metric import BaseMetric
 from .answer_relevancy import AnswerRelevancyMetric
 from .base_metric import BaseMetric
 from .conceptual_similarity import ConceptualSimilarityMetric
