@@ -12,7 +12,6 @@ class LLMTestCaseParams(Enum):
     EXPECTED_OUTPUT = "expected_output"
     CONTEXT = "context"
     RETRIEVAL_CONTEXT = "retrieval_context"
-    ID = "id"
 
 
 @dataclass
