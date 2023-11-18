@@ -4,9 +4,9 @@
 from typing import List
 import time
 from dataclasses import dataclass
+import copy
 
 from deepeval.progress_context import progress_context
-import copy
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.test_run import test_run_manager

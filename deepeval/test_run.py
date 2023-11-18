@@ -2,7 +2,7 @@ import os
 import json
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from collections import defaultdict
 from deepeval.tracing import get_trace_stack
