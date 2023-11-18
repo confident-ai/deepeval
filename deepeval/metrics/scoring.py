@@ -200,9 +200,11 @@ class Scorer:
             device=device,
         )
         return scorer.score_one(target, prediction)["score"]
-    
+
     @classmethod
-    def hallucination_score(cls, source: str, prediction: str, model: Optional[str] = None) -> float:
+    def hallucination_score(
+        cls, source: str, prediction: str, model: Optional[str] = None
+    ) -> float:
         """Calculate the hallucination score of a prediction compared to a source text.
 
         This method computes a hallucination score, which measures the extent to which a generated prediction contains hallucinations.
@@ -222,11 +224,11 @@ class Scorer:
         except ImportError as e:
             print(e)
         model = "vectara-hallucination" if model is None else model
-        
+
         scorer = HallucinationModel(model_name=model)
-        
+
         return scorer.score(source, prediction)
-    
+
     @classmethod
     def PII_score(
         cls, target: str, prediction: str, model: Optional[Any] = None

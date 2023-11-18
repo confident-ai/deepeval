@@ -44,7 +44,7 @@ model_map = {
         "model_card": "vectara/hallucination_evaluation_model",
         "entailment_idx": None,
         "contradiction_idx": None,
-    }
+    },
 }
 
 

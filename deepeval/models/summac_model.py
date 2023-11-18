@@ -12,6 +12,7 @@ import json
 from deepeval import utils as utils_misc
 from deepeval.models.model_map import name_to_card, get_neutral_idx, model_map
 
+
 class SummaCImager:
     def __init__(
         self,
