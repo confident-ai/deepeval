@@ -1,6 +1,5 @@
 from deepeval.singleton import Singleton
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import assert_test
 from deepeval.metrics.base_metric import BaseMetric
 import numpy as np
 
@@ -77,31 +76,3 @@ class AnswerRelevancyMetric(BaseMetric, metaclass=Singleton):
     @property
     def __name__(self):
         return "Answer Relevancy"
-
-
-def assert_answer_relevancy(
-    query: str,
-    output: str,
-    minimum_score: float = 0.5,
-    model_type: str = "default",
-):
-    metric = AnswerRelevancyMetric(
-        minimum_score=minimum_score, model_type=model_type
-    )
-    test_case = LLMTestCase(input=query, actual_output=output)
-    assert_test(test_case, metrics=[metric])
-
-
-def is_answer_relevant(
-    query: str,
-    output: str,
-    minimum_score: float = 0.5,
-    model_type: str = "default",
-) -> bool:
-    """Check if the output is relevant to the query."""
-
-    metric = AnswerRelevancyMetric(
-        minimum_score=minimum_score, model_type=model_type
-    )
-    test_case = LLMTestCase(input=query, actual_output=output)
-    return metric.measure(test_case) >= minimum_score
