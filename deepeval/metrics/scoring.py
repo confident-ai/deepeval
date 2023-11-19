@@ -225,6 +225,11 @@ class Scorer:
             print(e)
         model = "vectara-hallucination" if model is None else model
 
+        # TODO: add this progress context in the correct place
+        # with progress_context(
+        #     "Downloading HallucinationEvaluationModel (may take up to 2 minutes if running for the first time)..."
+        # ):
+
         scorer = HallucinationModel(model_name=model)
 
         return scorer.score(source, prediction)
