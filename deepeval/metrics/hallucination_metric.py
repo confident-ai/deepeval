@@ -22,10 +22,10 @@ class HallucinationMetric(BaseMetric, metaclass=Singleton):
 
         context_list = []
         if isinstance(test_case.context, str):
-            context_list.extend(test_case.context)
+            context_list.append(test_case.context)
         elif isinstance(test_case.context, list):
             for context in test_case.context:
-                context_list.extend(context)
+                context_list.append(context)
         else:
             raise ValueError("Context must be a string or a list of strings")
 
