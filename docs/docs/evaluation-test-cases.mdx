@@ -174,63 +174,22 @@ test_case = LLMTestCase(
 Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results.
 :::
 
-## Assert A Test Case
+## Run A Test Case
 
-Similar to Pytest, `deepeval` allows you to assert any test case you create by calling the `assert_test` function by running `deepeval test run` via the CLI.
+`deepeval` offers an option to quickly run a test case without going through the CLI.
 
-`assert_test` takes two mandatory arguments: `test_case` and a list of `metrics`. A test case passes only if all metrics meet their respective evaluation criterion. Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, and `context` is used to ascertain whether their criterion have been met.
-
-```python title="test_assert_example.py"
+```python
 # A hypothetical LLM application example
 import chatbot
 from deepeval.metrics.factual_consistency import FactualConsistencyMetric
-from deepeval.evaluator import assert_test
+from deepeval.evaluator import run_test
+from deepeval.test_case import LLMTestCase
 
 prompt_template = """
     Impersonate a dog named Rocky when replying to the text below.
 
     {text}
 """
-
-def test_case():
-    prompt = prompt_template.format(text="Who's a good boy?")
-    context = ["Rocky is a good boy."]
-
-    test_case = LLMTestCase(
-        input=prompt,
-        # Replace this with your actual LLM application
-        actual_output=chatbot.run(prompt),
-        expected_output="Me, ruff!",
-        context=context
-    )
-    metric = FactualConsistencyMetric(minimum_score=0.7)
-    assert_test(test_case, metrics=[metric])
-```
-
-:::warning
-Typically, the `prompt_template` is implemented within your LLM application (ie. somewhere in our hypothetical `chatbot.run()` method), but from a visibility perspective we've made the `prompt_template` explicit.
-:::
-
-In the CLI, run `deepeval test run`. You can also include an optional `-n` flag follow by a number (that determines the number of processes that will be used) to run tests in parallel.
-
-```console
-deepeval test run test_assert_example.py -n 4
-```
-
-We also highly recommend you to login to **[Confident AI](https://confident-ai.com)** (the platform powering deepeval) via the CLI. This way, you can keep track of all evaluation results generated each time you execute `deepeval test run`. You can also export completed evaluation datasets generated from your test file, view average metric scores for each test run, and much more.
-
-```
-deepeval login
-```
-
-Run `deepeval test run test_assert_example.py` in the CLI again to start evaluating results on the web.
-
-## Run A Test Case
-
-`deepeval` also offers an option to quickly run test cases without going through the CLI or creating a test file.
-
-```python
-from deepeval.evaluator import run_test
 
 prompt = prompt_template.format(text="Who's a good boy?")
 context = ["Rocky is a good boy."]
@@ -246,3 +205,110 @@ test_case = LLMTestCase(
 metric = FactualConsistencyMetric(minimum_score=0.7)
 run_test(test_case, [metric])
 ```
+
+## Assert Test Cases
+
+Before we begin going through the final sections, we highly recommend you to login to [Confident AI](https://confident-ai.com) (the platform powering deepeval) via the CLI. This way, you can keep track of all evaluation results generated each time you execute `deepeval test run`.
+
+```
+deepeval login
+```
+
+Similar to Pytest, `deepeval` allows you to assert any test case you create by calling the `assert_test` function by running `deepeval test run` via the CLI. `assert_test` takes two mandatory arguments:
+
+- `test_case`: an `LLMTestCase`
+- `metrics`: a list of metrics
+
+A test case passes only if all metrics meet their respective evaluation criterion. Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, and `context` is used to ascertain whether their criterion have been met.
+
+```python title="test_assert_example.py"
+# A hypothetical LLM application example
+import chatbot
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.evaluator import assert_test
+from deepeval.test_case import LLMTestCase
+
+prompt_template = """
+    Impersonate a dog named Rocky when replying to the text below.
+
+    {text}
+"""
+
+def test_case_1():
+    prompt = prompt_template.format(text="Who's a good boy?")
+    context = ["Rocky is a good boy."]
+
+    test_case = LLMTestCase(
+        input=prompt,
+        # Replace this with your actual LLM application
+        actual_output=chatbot.run(prompt),
+        expected_output="Me, ruff!",
+        context=context
+    )
+    metric = FactualConsistencyMetric(minimum_score=0.7)
+    assert_test(test_case, metrics=[metric])
+
+def test_case_2():
+    prompt = prompt_template.format(text="Who's a good boy?")
+    context = ["Rocky is a good boy."]
+
+    test_case = LLMTestCase(
+        input=prompt,
+        # Replace this with your actual LLM application
+        actual_output=chatbot.run(prompt),
+        expected_output="Me, ruff!",
+        context=context
+    )
+    metric = FactualConsistencyMetric(minimum_score=0.7)
+    assert_test(test_case, metrics=[metric])
+```
+
+In the CLI, run the command `deepeval test run`, which uses Pytest under the hood. You can also include an optional `-n` flag follow by a number (that determines the number of processes that will be used) to run tests in parallel.
+
+```console
+deepeval test run test_assert_example.py -n 4
+```
+
+## Evaluate Test Cases in Bulk
+
+Lastly, `deepeval` offers an `evaluate` function to evaluate multiple test cases at once, which similar to assert_test but without needing pytest or the CLI.
+
+```python
+# A hypothetical LLM application example
+import chatbot
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.evaluator import evaluate
+from deepeval.test_case import LLMTestCase
+
+prompt_template = """
+    Impersonate a dog named Rocky when replying to the text below.
+
+    {text}
+"""
+
+prompt = prompt_template.format(text="Who's a good boy?")
+context = ["Rocky is a good boy."]
+
+first_test_case = LLMTestCase(
+    input=prompt,
+    # Replace this with your actual LLM application
+    actual_output=chatbot.run(prompt),
+    expected_output="Me, ruff!",
+    context=context
+)
+
+second_test_case = LLMTestCase(
+    input=prompt,
+    # Replace this with your actual LLM application
+    actual_output=chatbot.run(prompt),
+    expected_output="Me, ruff!",
+    context=context
+)
+
+dataset = [first_test_case, second_test_case]
+
+metric = FactualConsistencyMetric(minimum_score=0.7)
+evaluate(dataset, [metric])
+```
+
+Similar to `assert_test`, `evaluate` allows you to log and view test results on Confident AI. For more examples of `evalute`, visit the [datasets section](evaluation-datasets).

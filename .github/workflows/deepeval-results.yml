@@ -37,9 +37,6 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
 
-      - name: Run tests without pytest
-        run: poetry run python tests/test_without_pytest.py
-
       - name: Run deepeval tests and capture output
         run: poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
 

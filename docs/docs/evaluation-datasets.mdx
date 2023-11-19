@@ -6,24 +6,23 @@ sidebar_label: Datasets
 
 ## Quick Summary
 
-`deepeval` leverages decorators provided by Pytest to run test cases on entire evaluation datasets which are often prepared in the form of CSVs. However, your data does not have to strictly be in CSV format. To run test cases on your evaluation dataset, simply process your data structure into the data type of `Dataset`.
+In `deepeval`, am evaluation dataset, or just dataset, is a collection of `LLMTestCase`s. There are two approaches to evaluating datasets in `deepeval`:
+
+1. using `@pytest.mark.parametrize` and `assert_test`
+2. using `evaluate`
+
+## Create An Evaluation Dataset
+
+Your original dataset can be in any format, such as CSV or JSON. Let's take JSON for example, the first step is to create a list of `LLMTestCase`s from your original dataset.
 
 ```python
-class DataPoint:
-    input: str
-    expected_output: Optional[str]
-    context: Optional[List[str]]
+from deepeval.test_case import LLMTestCase
 
-class Dataset:
-   data_points: List[DataPoint]
-```
-
-For example, the following would consitute as a valid `Dataset`:
-
-```
-dataset = [
+original_dataset = [
     {
         "input": "What are your operating hours?",
+        # Replace with your LLM application output
+        "actual_output": "..."
         "context": [
             "Our company operates from 10 AM to 6 PM, Monday to Friday.",
             "We are closed on weekends and public holidays.",
@@ -32,37 +31,58 @@ dataset = [
     },
     {
         "input": "Do you offer free shipping?",
+        # Replace with your LLM application output
+        "actual_output": "..."
         "expected_output": "Yes, we offer free shipping on orders over $50."
     },
     {
         "input": "What is your return policy?",
+        # Replace with your LLM application output
+        "actual_output": "..."
     },
 ]
-```
 
-Finally, utilize the `@pytest.mark.parametrize` to create test cases for each of the data points.
+dataset = []
+for datapoint in original_dataset:
+    input = datapoint.get("input", None)
+    actual_output = datapoint.get("actual_output", None)
+    expected_output = datapoint.get("expected_output", None)
+    context = datapoint.get("context", None)
 
-```python title="test_bulk.py"
-@pytest.mark.parametrize(
-    "test_case",
-    dataset,
-)
-def test_customer_chatbot(test_case: dict):
-    input = test_case.get("input")
-    expected_output = test_case.get("expected_output")
-    context = test_case.get("context")
-
-    # Replace with your LLM application
-    actual_output = "..."
-
-    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
-    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
     test_case = LLMTestCase(
         input=input,
         actual_output=actual_output,
         expected_output=expected_output,
         context=context
     )
+    dataset.append(test_case)
+```
+
+## Evaluate Your Dataset With Pytest
+
+Before we begin, we highly recommend [logging into Confident AI](https://app.confident-ai.com) to keep track of all evaluation results on the cloud:
+
+```console
+deepeval login
+```
+
+`deepeval` utilizes the `@pytest.mark.parametrize` decorator to loop through entire datasets.
+
+```python title="test_bulk.py"
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
+from deepeval.evaluate import assert_test
+
+dataset = [...]
+
+@pytest.mark.parametrize(
+    "test_case",
+    dataset,
+)
+def test_customer_chatbot(test_case: LLMTestCase):
+    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
     assert_test(test_case, [factual_consistency_metric, answer_relevancy_metric])
 ```
 
@@ -72,6 +92,18 @@ To run several tests cases at once in parallel, use the optional `-n` flag follo
 deepeval test run test_bulk.py -n 3
 ```
 
-## Create An Evaluation Dataset
+## Evaluate Your Dataset Without Pytest
 
-_coming soon..._
+Alternately, you can use deepeval's `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
+
+```python
+from deepeval.evaluator import evaluate
+from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
+
+dataset = [...]
+
+factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+evaluate(dataset, [factual_consistency_metric, answer_relevancy_metric])
+```

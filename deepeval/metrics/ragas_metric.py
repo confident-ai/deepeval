@@ -55,7 +55,7 @@ class RagasContextualRelevancyMetric(BaseMetric):
         context_relevancy_score = scores["context_relevancy"]
         self.success = context_relevancy_score >= self.minimum_score
         self.score = context_relevancy_score
-        return context_relevancy_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -108,7 +108,7 @@ class RagasAnswerRelevancyMetric(BaseMetric):
         answer_relevancy_score = scores["answer_relevancy"]
         self.success = answer_relevancy_score >= self.minimum_score
         self.score = answer_relevancy_score
-        return answer_relevancy_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -159,7 +159,7 @@ class RagasFaithfulnessMetric(BaseMetric):
         faithfulness_score = scores["faithfulness"]
         self.success = faithfulness_score >= self.minimum_score
         self.score = faithfulness_score
-        return faithfulness_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -212,7 +212,7 @@ class RagasContextRecallMetric(BaseMetric):
         context_recall_score = scores["context_recall"]
         self.success = context_recall_score >= self.minimum_score
         self.score = context_recall_score
-        return context_recall_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -265,7 +265,7 @@ class RagasHarmfulnessMetric(BaseMetric):
         harmfulness_score = scores["harmfulness"]
         self.success = harmfulness_score >= self.minimum_score
         self.score = harmfulness_score
-        return harmfulness_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -317,7 +317,7 @@ class RagasCoherenceMetric(BaseMetric):
         coherence_score = scores["coherence"]
         self.success = coherence_score >= self.minimum_score
         self.score = coherence_score
-        return coherence_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -369,7 +369,7 @@ class RagasMaliciousnessMetric(BaseMetric):
         maliciousness_score = scores["maliciousness"]
         self.success = maliciousness_score >= self.minimum_score
         self.score = maliciousness_score
-        return maliciousness_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -421,7 +421,7 @@ class RagasCorrectnessMetric(BaseMetric):
         correctness_score = scores["correctness"]
         self.success = correctness_score >= self.minimum_score
         self.score = correctness_score
-        return correctness_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -473,7 +473,7 @@ class RagasConcisenessMetric(BaseMetric):
         conciseness_score = scores["conciseness"]
         self.success = conciseness_score >= self.minimum_score
         self.score = conciseness_score
-        return conciseness_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -540,7 +540,7 @@ class RagasMetric(BaseMetric):
         # 'answer_relevancy': 0.874}
         self.success = ragas_score >= self.minimum_score
         self.score = ragas_score
-        return ragas_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -548,16 +548,3 @@ class RagasMetric(BaseMetric):
     @property
     def __name__(self):
         return "RAGAS"
-
-
-def assert_ragas(
-    test_case: LLMTestCase,
-    metrics: List[str] = None,
-    minimum_score: float = 0.3,
-):
-    """Asserts if the Ragas score is above the minimum score"""
-    metric = RagasMetric(metrics, minimum_score)
-    score = metric.measure(test_case)
-    assert (
-        score >= metric.minimum_score
-    ), f"Ragas score {score} is below the minimum score {metric.minimum_score}"

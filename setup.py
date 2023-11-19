@@ -29,6 +29,8 @@ setup(
         "pandas",
         "pydantic",  # loosen pydantic requirements as we support multiple
         "sentry-sdk",
+        "pytest-xdist",
+        "portalocker",
     ],
     extras_require={
         "bias": [

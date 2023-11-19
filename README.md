@@ -73,7 +73,7 @@ from deepeval.evaluator import assert_test
 
 def test_case():
     input = "What if these shoes don't fit?"
-    context = "All customers are eligible for a 30 day full refund at no extra costs."
+    context = ["All customers are eligible for a 30 day full refund at no extra costs."]
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra costs."
@@ -118,7 +118,7 @@ deepeval test run test_chatbot.py
 
 You should see a link displayed in the CLI once the test has finished running. Paste it into your browser to view the results!
 
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/dashboard.png)
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/test-summary.png)
 
 <br />
 

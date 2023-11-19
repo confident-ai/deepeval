@@ -8,6 +8,8 @@ from deepeval.templates import (
 from deepeval.chat_completion.retry import call_openai_with_retry
 from pydantic import BaseModel
 import openai
+from langchain.chat_models import ChatOpenAI
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
 
 class LLMEvalMetricResponse(BaseModel):
@@ -20,15 +22,20 @@ class LLMEvalMetric(BaseMetric):
         name: str,
         criteria: str,
         evaluation_params: List[LLMTestCaseParams],
-        model: Optional[str] = "gpt-4",
+        evaluation_steps: str = "",
+        model: Optional[str] = "gpt-4-1106-preview",
         minimum_score: float = 0.5,
+        **kwargs,
     ):
         self.criteria = criteria
         self.name = name
         self.model = model
-        self.evaluation_steps = ""
+        self.evaluation_steps = evaluation_steps
         self.evaluation_params = evaluation_params
         self.minimum_score = minimum_score
+        self.deployment_id = None
+        if "deployment_id" in kwargs:
+            self.deployment_id = kwargs["deployment_id"]
 
     @property
     def __name__(self):
@@ -51,10 +58,9 @@ class LLMEvalMetric(BaseMetric):
             self.evaluation_steps = self.generate_evaluation_steps()
 
         score = self.evaluate(test_case)
-        score = float(score) * 2 / 10
-
+        self.score = float(score) * 2 / 10
         self.success = score >= self.minimum_score
-        return score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -62,20 +68,16 @@ class LLMEvalMetric(BaseMetric):
     def generate_evaluation_steps(self):
         prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
 
-        res = call_openai_with_retry(
-            lambda: openai.ChatCompletion.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a helpful assistant.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-            )
+        model_kwargs = {}
+        if self.deployment_id is not None:
+            model_kwargs["deployment_id"] = self.deployment_id
+
+        chat_completion = ChatOpenAI(
+            model_name=self.model, model_kwargs=model_kwargs
         )
 
-        return res.choices[0].message.content
+        res = call_openai_with_retry(lambda: chat_completion.invoke(prompt))
+        return res.content
 
     def evaluate(self, test_case: LLMTestCase):
         text = """"""
@@ -89,24 +91,29 @@ class LLMEvalMetric(BaseMetric):
             text=text,
         )
 
+        model_kwargs = {
+            "top_p": 1,
+            "frequency_penalty": 0,
+            "stop": None,
+            "presence_penalty": 0,
+        }
+        if self.deployment_id is not None:
+            model_kwargs["deployment_id"] = self.deployment_id
+
+        chat_completion = ChatOpenAI(
+            model_name=self.model, max_tokens=5, n=20, model_kwargs=model_kwargs
+        )
+
         res = call_openai_with_retry(
-            lambda: openai.ChatCompletion.create(
-                model=self.model,
-                messages=[{"role": "system", "content": prompt}],
-                max_tokens=5,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0,
-                stop=None,
-                # logprobs=5,
-                n=20,
+            lambda: chat_completion.generate_prompt(
+                [chat_completion._convert_input(prompt)]
             )
         )
 
         total_scores = 0
         count = 0
 
-        for content in res.choices:
+        for content in res.generations[0]:
             try:
                 total_scores += float(content.message.content)
                 count += 1

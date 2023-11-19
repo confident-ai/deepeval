@@ -7,7 +7,6 @@ from typing import List
 from deepeval.singleton import Singleton
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.evaluator import assert_test
 
 
 class DetoxifyModel(metaclass=Singleton):
@@ -74,7 +73,8 @@ class NonToxicMetric(BaseMetric):
 
         # Check if the average score meets the minimum requirement
         self.success = average_score >= self.minimum_score
-        return average_score
+        self.score = average_score
+        return self.score
 
     def is_successful(self):
         return self.success
@@ -82,16 +82,3 @@ class NonToxicMetric(BaseMetric):
     @property
     def __name__(self):
         return "Toxicity"
-
-
-def assert_non_toxic(
-    evaluation_params: List[LLMTestCaseParams],
-    input: str,
-    actual_output: str,
-    minimum_score: float = 0.5,
-):
-    metric = NonToxicMetric(
-        evaluation_params=evaluation_params, minimum_score=minimum_score
-    )
-    test_case = LLMTestCase(input=input, actual_output=actual_output)
-    assert_test(test_case, [metric])

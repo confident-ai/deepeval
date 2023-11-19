@@ -2,7 +2,7 @@ import os
 import json
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from collections import defaultdict
 from deepeval.tracing import get_trace_stack
@@ -26,6 +26,7 @@ class MetricsMetadata(BaseModel):
     metric: str
     score: float
     minimum_score: float = Field(None, alias="minimumScore")
+    reason: Optional[str] = None
 
 
 class MetricScore(BaseModel):
@@ -62,15 +63,19 @@ class MetricDict:
 
 class MetricsMetadataAverageDict:
     def __init__(self):
-        self.metric_dict = defaultdict(list)
+        self.metric_scores_dict = defaultdict(list)
         self.min_score_dict = defaultdict(float)
+        self.metric_reason_dict = defaultdict(str)
 
     def add_metric(self, metric: BaseMetric):
-        self.metric_dict[metric.__name__].append(metric.score)
-        self.min_score_dict[metric.__name__] = min(
-            self.min_score_dict.get(metric.__name__, float("inf")),
+        metric_name = metric.__name__
+
+        self.metric_scores_dict[metric_name].append(metric.score)
+        self.min_score_dict[metric_name] = min(
+            self.min_score_dict.get(metric_name, float("inf")),
             metric.minimum_score,
         )
+        self.metric_reason_dict[metric_name] = metric.reason
 
     def get_metrics_metadata(self):
         return [
@@ -78,8 +83,9 @@ class MetricsMetadataAverageDict:
                 metric=metric_name,
                 score=sum(scores) / len(scores),
                 minimumScore=self.min_score_dict[metric_name],
+                reason=self.metric_reason_dict[metric_name],
             )
-            for metric_name, scores in self.metric_dict.items()
+            for metric_name, scores in self.metric_scores_dict.items()
         ]
 
 
@@ -99,8 +105,7 @@ class APITestCase(BaseModel):
 
 class TestRun(BaseModel):
     test_file: Optional[str] = Field(
-        # TODO: Fix test_file
-        "test.py",
+        None,
         alias="testFile",
     )
     dict_test_cases: Dict[int, APITestCase] = Field(
@@ -120,6 +125,7 @@ class TestRun(BaseModel):
         test_case: LLMTestCase,
         metrics: List[BaseMetric],
         run_duration: float,
+        index: int,
     ):
         # Check if test case with the same ID already exists
         test_case_id = id(test_case)
@@ -145,17 +151,16 @@ class TestRun(BaseModel):
         else:
             # If it doesn't exist, create a new test case
             # Adding backwards compatibility to ensure context still works.
-            context = test_case.context
             success = all([metric.is_successful() for metric in metrics])
             api_test_case: APITestCase = APITestCase(
-                name=os.getenv(PYTEST_RUN_TEST_NAME, "-"),
+                name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
                 input=test_case.input,
                 actualOutput=test_case.actual_output,
                 expectedOutput=test_case.expected_output,
                 success=success,
                 metricsMetadata=metrics_metadata,
                 runDuration=run_duration,
-                context=context,
+                context=test_case.context,
                 traceStack=get_trace_stack(),
             )
 
@@ -191,34 +196,52 @@ class TestRunManager:
     def __init__(self):
         self.test_run = None
         self.temp_file_name = TEMP_FILE_NAME
+        self.save_to_disk = False
 
-    def set_test_run(self, test_run: "TestRun"):
+    def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
 
+    def create_test_run(self, file_name: Optional[str] = None):
+        test_run = TestRun(
+            testFile=file_name,
+            testCases=[],
+            metricScores=[],
+            configurations={},
+        )
+        self.set_test_run(test_run)
+
+        if self.save_to_disk:
+            self.save_test_run()
+
     def get_test_run(self):
-        try:
-            with portalocker.Lock(
-                self.temp_file_name, mode="r", timeout=5
-            ) as file:
-                self.test_run = self.test_run.load(file)
-        except (FileNotFoundError, portalocker.exceptions.LockException):
-            print("Error loading test run from disk", file=sys.stderr)
-            self.test_run = None
+        if self.test_run is None or not self.save_to_disk:
+            self.create_test_run()
+
+        if self.save_to_disk:
+            try:
+                with portalocker.Lock(
+                    self.temp_file_name, mode="r", timeout=5
+                ) as file:
+                    self.test_run = self.test_run.load(file)
+            except (FileNotFoundError, portalocker.exceptions.LockException):
+                print("Error loading test run from disk", file=sys.stderr)
+                self.test_run = None
         return self.test_run
 
     def save_test_run(self):
-        try:
-            with portalocker.Lock(
-                self.temp_file_name, mode="w", timeout=5
-            ) as file:
-                self.test_run = self.test_run.save(file)
-        except portalocker.exceptions.LockException:
-            print("Error saving test run to disk", file=sys.stderr)
+        if self.save_to_disk:
+            try:
+                with portalocker.Lock(
+                    self.temp_file_name, mode="w", timeout=5
+                ) as file:
+                    self.test_run = self.test_run.save(file)
+            except portalocker.exceptions.LockException:
+                print("Error saving test run to disk", file=sys.stderr)
 
     def clear_test_run(self):
         self.test_run = None
 
-    def display_test_run(self, test_run: TestRun):
+    def display_results_table(self, test_run: TestRun):
         # Calculate the average of each metric
         metrics_avg = {
             metric.metric: metric.score for metric in test_run.metric_scores
@@ -287,6 +310,8 @@ class TestRunManager:
 
     def post_test_run(self, test_run: TestRun):
         console = Console()
+
+        # TODO: change this, very hacky way to check if api key exists
         if os.path.exists(".deepeval"):
             try:
                 # make sure to exclude none for `context` to ensure it is handled properly
@@ -336,7 +361,7 @@ class TestRunManager:
                 print(f"Results saved in {local_folder} as {new_test_filename}")
             os.remove(new_test_filename)
 
-    def wrap_up_test_run(self):
+    def wrap_up_test_run(self, display_table: bool = True):
         test_run = test_run_manager.get_test_run()
         test_run.cleanup()
         if test_run is None or len(test_run.test_cases) == 0:
@@ -344,7 +369,8 @@ class TestRunManager:
             delete_file_if_exists(test_run_manager.temp_file_name)
             return
 
-        self.display_test_run(test_run)
+        if display_table:
+            self.display_results_table(test_run)
         self.post_test_run(test_run)
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
