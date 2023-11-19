@@ -5,7 +5,6 @@ import json
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import evaluate
 
 
 @dataclass
@@ -218,3 +217,8 @@ class EvaluationDataset:
                     context=context,
                 )
             )
+
+    def evaluate(self, metrics: List[BaseMetric]):
+        from deepeval.evaluator import evaluate
+
+        return evaluate(self, metrics)

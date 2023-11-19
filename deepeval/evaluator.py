@@ -10,6 +10,7 @@ from deepeval.progress_context import progress_context
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.test_run import test_run_manager
+from deepeval.dataset import EvaluationDataset
 
 
 @dataclass
@@ -43,14 +44,14 @@ def create_test_result(
 
 
 def execute_test(
-    test_cases: List[LLMTestCase],
+    dataset: List[LLMTestCase] | EvaluationDataset,
     metrics: List[BaseMetric],
     save_to_disk: bool = False,
 ) -> List[TestResult]:
     test_results: TestResult = []
     test_run_manager.save_to_disk = save_to_disk
     count = 0
-    for test_case in test_cases:
+    for test_case in dataset:
         success = True
         for metric in metrics:
             test_start_time = time.perf_counter()
@@ -107,9 +108,9 @@ def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
         raise AssertionError(f"Metrics {failed_metrics_str} failed.")
 
 
-def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
+def evaluate(dataset: EvaluationDataset, metrics: List[BaseMetric]):
     with progress_context("Evaluating testcases..."):
-        test_results = execute_test(test_cases, metrics, True)
+        test_results = execute_test(dataset, metrics, True)
         for test_result in test_results:
             print_test_result(test_result)
         print("\n" + "-" * 70)
