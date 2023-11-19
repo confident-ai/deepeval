@@ -232,7 +232,7 @@ class Scorer:
 
         scorer = HallucinationModel(model_name=model)
 
-        return scorer.score(source, prediction)
+        return scorer.model.predict([source, prediction])
 
     @classmethod
     def PII_score(
