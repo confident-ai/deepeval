@@ -20,13 +20,8 @@ class HallucinationMetric(BaseMetric, metaclass=Singleton):
             raise ValueError("Output or context cannot be None")
 
         context_list = []
-        if isinstance(test_case.context, str):
-            context_list.append(test_case.context)
-        elif isinstance(test_case.context, list):
-            for context in test_case.context:
-                context_list.append(context)
-        else:
-            raise ValueError("Context must be a string or a list of strings")
+        for context in test_case.context:
+            context_list.append(context)
 
         max_score = 0
         for c in context_list:
