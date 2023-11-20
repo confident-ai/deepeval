@@ -215,3 +215,9 @@ class TestScorer(unittest.TestCase):
         prediction = "This is a non-toxic text."
         with self.assertRaises(AssertionError):
             Scorer.neural_toxic_score(prediction, model="invalid_model")
+
+    def test_hallucination_score(self):
+        prediction = "A blond drinking water in public."
+        source = "A man with blond-hair, and a brown shirt drinking out of a public water fountain."
+        score = Scorer.hallucination_score(source, prediction)
+        self.assertTrue(0 <= score <= 1)

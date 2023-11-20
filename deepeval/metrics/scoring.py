@@ -4,7 +4,7 @@ from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional, Any
 from deepeval.utils import normalize_text
-from deepeval.metrics._summac_model import SummaCZS
+from deepeval.models.summac_model import SummaCZS
 
 
 # TODO: More scores are to be added
@@ -199,6 +199,34 @@ class Scorer:
             device=device,
         )
         return scorer.score_one(target, prediction)["score"]
+
+    @classmethod
+    def hallucination_score(
+        cls, source: str, prediction: str, model: Optional[str] = None
+    ) -> float:
+        """Calculate the hallucination score of a prediction compared to a source text.
+
+        This method computes a hallucination score, which measures the extent to which a generated prediction contains hallucinations.
+        The score is based on the Vectara Hallucination Evaluation Model.
+
+        Args:
+            source (str): The source document where the information is summarized from.
+            prediction (str): The generated summary that is validated against the source summary.
+
+        Returns:
+            float: The computed hallucination score. Lower values indicate greater hallucination.
+        """
+        try:
+            from deepeval.models.hallucination_model import (
+                HallucinationModel,
+            )
+        except ImportError as e:
+            print(e)
+        model = "vectara-hallucination" if model is None else model
+
+        scorer = HallucinationModel(model_name=model)
+
+        return scorer.model.predict([source, prediction])
 
     @classmethod
     def PII_score(
