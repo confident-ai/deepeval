@@ -5,7 +5,6 @@ from deepeval.utils import chunk_text, softmax
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.evaluator import assert_test
 from deepeval.progress_context import progress_context
-from sentence_transformers import CrossEncoder
 from deepeval.metrics.scoring import Scorer
 
 
