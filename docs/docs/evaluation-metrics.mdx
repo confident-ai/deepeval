@@ -141,6 +141,31 @@ length_metric = LengthMetric(max_length=20)
 You must implement `measure`, `is_successful`, and `name` yourself, as these are abstract methods and properties inherited from `Metric`.
 :::
 
+## Hallucination Metric
+Hallucination metric measure the factual correctness between the `actual_output (output of LLM/typically summary)` of your LLM application to the provided `context`.  You'll have to supply `context` when creating an `LLMTestCase` to evaluate hallucination metric. 
+
+```python    
+import pytest
+from deepeval.metrics.hallucination_metric import HallucinationMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.evaluator import run_test
+
+# Replace this with the actual documents that you are passing as input to your LLM. 
+context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."]
+
+# Replace this with the actual output from your LLM application
+actual_output="A blond drinking water in public.",
+
+test_case = LLMTestCase(input="placeholder", actual_output=actual_output, context=context)
+metric = HallucinationMetric(minimum_score=0.5)
+run_test(test_case, [metric]) 
+```
+
+:::note
+This metric uses vectara's hallucination evaluation model, which was specifically designed for summarization task. However, if you are just looking for factual consistency between input and output 
+where the application is not designed for QA task, this metric should work. 
+:::
+
 ## Factual Consistency
 
 Factual consistency measures how factually correct the `actual_output` of your LLM application is compared to the provided `context`. You'll have to supply `context` when creating an `LLMTestCase` to evaluate factual consistency.
