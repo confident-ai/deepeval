@@ -70,11 +70,11 @@ deepeval login
 
 ```python title="test_bulk.py"
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import HallucinationMetric
-from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
+from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.evaluate import assert_test
+from deepeval.dataset import EvaluationDataset
 
-dataset = [...]
+dataset = EvaluationDataset(test_cases=[...])
 
 @pytest.mark.parametrize(
     "test_case",
@@ -98,10 +98,10 @@ Alternately, you can use deepeval's `evaluate` function to evaluate datasets. Th
 
 ```python
 from deepeval.evaluator import evaluate
-from deepeval.metrics import HallucinationMetric
-from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
+from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset
 
-dataset = [...]
+dataset = EvaluationDataset(test_cases=[...])
 
 hallucination_metric = HallucinationMetric(minimum_score=0.3)
 answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
