@@ -76,7 +76,7 @@ class UnBiasedMetric(BaseMetric):
 
     def is_successful(self):
         return self.success
-    
+
     @property
     def __name__(self):
         return "Unbiased Metric"

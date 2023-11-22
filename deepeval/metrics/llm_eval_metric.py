@@ -9,6 +9,7 @@ from deepeval.chat_completion.retry import call_openai_with_retry
 from pydantic import BaseModel
 from langchain.chat_models import ChatOpenAI
 
+
 class LLMEvalMetricResponse(BaseModel):
     score: float
 

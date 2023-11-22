@@ -4,6 +4,7 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import LLMEvalMetric
 from deepeval.evaluator import assert_test
 
+
 def test_chat_completion():
     """Test Chat Completion"""
     metric = LLMEvalMetric(
@@ -23,6 +24,7 @@ def test_chat_completion():
     )
 
     assert_test(test_case, [metric])
+
 
 # # set openai api type
 # openai.api_type = "azure"
