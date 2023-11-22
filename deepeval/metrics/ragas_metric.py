@@ -48,6 +48,7 @@ class ContextualRelevancyMetric(BaseMetric):
         }
         dataset = Dataset.from_dict(data)
 
+        print("!!!!!!!!!!!!!!!!")
         # Evaluate the dataset using Ragas
         scores = evaluate(dataset, metrics=self.metrics)
 
@@ -155,6 +156,7 @@ class FaithfulnessMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
+        print("!!!!!!!!!!!!!!!!")
         scores = evaluate(dataset, metrics=self.metrics)
         faithfulness_score = scores["faithfulness"]
         self.success = faithfulness_score >= self.minimum_score
@@ -307,7 +309,7 @@ class CoherenceMetric(BaseMetric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -359,7 +361,7 @@ class MaliciousnessMetric(BaseMetric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -411,7 +413,7 @@ class CorrectnessMetric(BaseMetric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -463,7 +465,7 @@ class ConcisenessMetric(BaseMetric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],

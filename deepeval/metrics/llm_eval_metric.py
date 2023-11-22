@@ -35,10 +35,6 @@ class LLMEvalMetric(BaseMetric):
         if "deployment_id" in kwargs:
             self.deployment_id = kwargs["deployment_id"]
 
-    @property
-    def __name__(self):
-        return self.name
-
     def measure(self, test_case: LLMTestCase):
         """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
@@ -119,3 +115,7 @@ class LLMEvalMetric(BaseMetric):
                 pass
 
         return total_scores / count
+
+    @property
+    def __name__(self):
+        return self.name

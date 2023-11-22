@@ -1,13 +1,13 @@
 import pytest
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.evaluator import assert_test
-from deepeval.metrics import BaseMetric, LLMEvalMetric, FactualConsistencyMetric
+from deepeval.metrics import BaseMetric, LLMEvalMetric, HallucinationMetric
 import deepeval
 
 # To run this file: deepeval test run <file_name>.py
 
 
-def test_factual_consistency():
+def test_hallucination():
     input = "What if these shoes don't fit?"
     context = [
         "All customers are eligible for a 30 day full refund at no extra cost."
@@ -15,11 +15,11 @@ def test_factual_consistency():
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+    hallucination_metric = HallucinationMetric(minimum_score=0.7)
     test_case = LLMTestCase(
         input=input, actual_output=actual_output, context=context
     )
-    assert_test(test_case, [factual_consistency_metric])
+    assert_test(test_case, [hallucination_metric])
 
 
 def test_summarization():
@@ -80,7 +80,7 @@ def test_everything():
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+    hallucination_metric = HallucinationMetric(minimum_score=0.7)
     length_metric = LengthMetric(max_length=10)
     summarization_metric = LLMEvalMetric(
         name="Summarization",
@@ -97,7 +97,7 @@ def test_everything():
     )
     assert_test(
         test_case,
-        [factual_consistency_metric, length_metric, summarization_metric],
+        [hallucination_metric, length_metric, summarization_metric],
     )
 
 

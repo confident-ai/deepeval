@@ -133,12 +133,12 @@ Continuning from the previous code snippet where you've defined your `Chatbot` c
 
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import FactualConsistencyMetric
+from deepeval.metrics import HallucinationMetric
 from deepeval.evaluator import assert_test
 
 chatbot = Chatbot()
 
-def test_factual_consistency():
+def test_hallucination():
     context = [
         "Be a natural-born citizen of the United States.",
         "Be at least 35 years old.",
@@ -146,7 +146,7 @@ def test_factual_consistency():
     ]
     input = "What are the requimrents to be president?"
 
-    metric = FactualConsistencyMetric(minimum_score=0.8)
+    metric = HallucinationMetric(minimum_score=0.8)
     test_case = LLMTestCase(
         input=input,
         actual_output=chatbot.query(user_input=input),

@@ -31,3 +31,7 @@ class HallucinationMetric(BaseMetric, metaclass=Singleton):
 
     def is_successful(self) -> bool:
         return self.success
+
+    @property
+    def __name__(self):
+        return "Hallucination"
