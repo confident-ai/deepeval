@@ -31,139 +31,9 @@ All of `deepeval`'s default metrics output a score between 0-1, and require a `m
 Our suggestion is to begin with custom LLM evaluated metrics (which frequently surpass and offer more versatility than leading NLP models), and gradually transition to `deepeval`'s default metrics when feasible. We recommend using default metrics as an optimization to your evaluation workflow because they are more cost-effective.
 :::
 
-## Custom LLM Evaluated Metrics
+## Hallucination
 
-A custom LLM evalated metric, is a custom metric whose evaluation is powered by LLMs. To create a custom metric that uses LLMs for evaluation, simply instantiate an `LLMEvalMetric` class:
-
-```python
-from deepeval.metrics import LLMEvalMetric
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-
-summarization_metric = LLMEvalMetric(
-    name="Summarization",
-    criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-    minimum_score=0.5,
-    model="gpt-4"
-)
-```
-
-There are three mandatory and two optional parameters required when instantiating an `LLMEvalMetric` class:
-
-- `name`: name of metric
-- `criteria`: a description outlining the specific evaluation aspects for each test case.
-- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
-- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
-- [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from OpenAI.
-
-All instances of `LLMEvalMetric` returns a score ranging from 0 - 1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
-
-:::danger
-For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
-:::
-
-By default, `LLMEvalMetric` is evaluated using `GPT-4` from OpenAI. Azure OpenAI endpoints are also supported via LLMEvalMetric, the `deployment_id` parameter should be passed
-during instantiation of `LLMEvalMetric` class
-
-```python
-summarization_metric = LLMEvalMetric(
-    name="Summarization",
-    criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-    minimum_score=0.5,
-    deployment_id="your-deployment-id"
-)
-```
-
-:::note
-Don't forget to set your Azure OpenAI key
-
-```python
-openai.api_key = "your-Azure-OpenAI-API-key"
-```
-
-:::
-
-## JudgementalGPT
-
-`JudgementalGPT` is an LLM agent developed in-house by [Confident AI](https://confident-ai.com) that's dedicated to evaluation and is superior to `LLMEvalMetric`. While it operates similarly to `LLMEvalMetric` by utilizing LLMs for scoring, it:
-
-- offers enhanced accuracy and reliability.
-- is capable of generating justifications for its scores
-- has the ability to conditionally execute code that helps detect logical fallacies during evaluations
-
-To use `JudgementalGPT`, start by logging into Confident AI:
-
-```console
-deepeval login
-```
-
-Then paste in the following code to define a metric powered by `JudgementalGPT`:
-
-```python
-from deepeval.metrics import JudgementalGPT
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-
-code_correctness_metric = JudgementalGPT(
-    name="Code Correctness",
-    criteria="Code Correctness - determine whether the python code in the 'actual output' produces a valid JSON.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-    minimum_score=0.5,
-)
-```
-
-Under the hood, `JudgementalGPT(...)` sends a request to Confident AI's servers that hosts `JudgementalGPT`. `JudgementalGPT` accepts four arguments:
-
-- `name`: name of metric
-- `criteria`: a description outlining the specific evaluation aspects for each test case.
-- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
-- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
-
-## Custom Metrics
-
-You can implement your own evaluator (for example, your own GPT evaluator) by creating a custom metric. All custom metrics are automatically integrated with Confident AI.
-
-```python
-from deepeval.metrics import BaseMetric
-
-# Inherit BaseMetric
-class LengthMetric(BaseMetric):
-    # This metric checks if the output length is greater than 10 characters
-    def __init__(self, max_length: int=10):
-        self.minimum_score = max_length
-
-    def measure(self, test_case: LLMTestCase):
-        # Set self.success and self.score in the "measure" method
-        self.success = len(test_case.actual_output) > self.minimum_score
-        if self.success:
-            self.score = 1
-        else:
-            self.score = 0
-        return self.score
-
-    def is_successful(self):
-        return self.success
-
-    @property
-    def name(self):
-        return "Length"
-```
-
-Noticed that we accessed `test_case.actual_output` in `measure`. you will have to supply the optional `context` or `expected_output` arguments in the `LLMTestCase` depending on your `measure` implementation.
-
-In this example, you would instantiate `LengthMetric` as follows:
-
-```python
-length_metric = LengthMetric(max_length=20)
-```
-
-:::info
-You must implement `measure`, `is_successful`, and `name` yourself, as these are abstract methods and properties inherited from `Metric`.
-:::
-
-## Hallucination Metric
-
-The hallucination metric measures whether your LLM application outputs factually correct information by comparing the `actual_output` to the provided `context`. You'll have to supply `context` when creating an `LLMTestCase` to evaluate hallucination.
+Hallucination determines whether your LLM application outputs factually correct information by comparing the `actual_output` to the provided `context`. You'll have to supply `context` when creating an `LLMTestCase` to evaluate hallucination.
 
 ```python
 import pytest
@@ -184,6 +54,38 @@ run_test(test_case, [metric])
 
 :::info
 This metric uses vectara's hallucination evaluation model.
+:::
+
+## LLM Evaluated Metrics
+
+A LLM evalated metric, is a custom metric whose score is calculated by LLMs. To create a custom metric that uses LLMs for evaluation, simply instantiate an `LLMEvalMetric` class and define an evaluation criteria in natural language:
+
+```python
+from deepeval.metrics import LLMEvalMetric
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
+summarization_metric = LLMEvalMetric(
+    name="Summarization",
+    criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    minimum_score=0.5,
+    model="gpt-4"
+)
+```
+
+There are three mandatory and two optional parameters required when instantiating an `LLMEvalMetric` class:
+
+- `name`: name of metric
+- `criteria`: a description outlining the specific evaluation aspects for each test case.
+- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
+- [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from (Azure) OpenAI.
+- [Optional] `deployment_id`: the deployment name you chose when you deployed Azure OpenAI. Only required if you're using Azure OpenAI.
+
+All instances of `LLMEvalMetric` returns a score ranging from 0 - 1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
+
+:::danger
+For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
 :::
 
 ## Answer Relevancy
@@ -341,3 +243,80 @@ test_case = LLMTestCase(
 
 run_test(test_case, [unbias_metric])
 ```
+
+## Custom Metrics
+
+You can implement your own evaluator (for example, your own GPT evaluator) by creating a custom metric. All custom metrics are automatically integrated with Confident AI.
+
+```python
+from deepeval.metrics import BaseMetric
+
+# Inherit BaseMetric
+class LengthMetric(BaseMetric):
+    # This metric checks if the output length is greater than 10 characters
+    def __init__(self, max_length: int=10):
+        self.minimum_score = max_length
+
+    def measure(self, test_case: LLMTestCase):
+        # Set self.success and self.score in the "measure" method
+        self.success = len(test_case.actual_output) > self.minimum_score
+        if self.success:
+            self.score = 1
+        else:
+            self.score = 0
+        return self.score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def name(self):
+        return "Length"
+```
+
+Noticed that we accessed `test_case.actual_output` in `measure`. you will have to supply the optional `context` or `expected_output` arguments in the `LLMTestCase` depending on your `measure` implementation.
+
+In this example, you would instantiate `LengthMetric` as follows:
+
+```python
+length_metric = LengthMetric(max_length=20)
+```
+
+:::info
+You must implement `measure`, `is_successful`, and `name` yourself, as these are abstract methods and properties inherited from `Metric`.
+:::
+
+## JudgementalGPT
+
+`JudgementalGPT` is an LLM agent developed in-house by [Confident AI](https://confident-ai.com) that's dedicated to evaluation and is superior to `LLMEvalMetric`. While it operates similarly to `LLMEvalMetric` by utilizing LLMs for scoring, it:
+
+- offers enhanced accuracy and reliability.
+- is capable of generating justifications for its scores
+- has the ability to conditionally execute code that helps detect logical fallacies during evaluations
+
+To use `JudgementalGPT`, start by logging into Confident AI:
+
+```console
+deepeval login
+```
+
+Then paste in the following code to define a metric powered by `JudgementalGPT`:
+
+```python
+from deepeval.metrics import JudgementalGPT
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
+code_correctness_metric = JudgementalGPT(
+    name="Code Correctness",
+    criteria="Code Correctness - determine whether the python code in the 'actual output' produces a valid JSON.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    minimum_score=0.5,
+)
+```
+
+Under the hood, `JudgementalGPT(...)` sends a request to Confident AI's servers that hosts `JudgementalGPT`. `JudgementalGPT` accepts four arguments:
+
+- `name`: name of metric
+- `criteria`: a description outlining the specific evaluation aspects for each test case.
+- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.

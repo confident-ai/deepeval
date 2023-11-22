@@ -12,7 +12,7 @@ DeepEval integrates nicely with LlamaIndex's `ResponseEvaluator` class. Below is
 from llama_index.response.schema import Response
 from typing import List
 from llama_index.schema import Document
-from deepeval.metrics import FactualConsistencyMetric
+from deepeval.metrics import HallucinationMetric
 from llama_index import (
     TreeIndex,
     VectorStoreIndex,
@@ -56,8 +56,9 @@ In this example, we show you how to write a factual consistency check.
 
 ```python
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import HallucinationMetric
 
-class FactualConsistencyResponseEvaluator:
+class HallucinationResponseEvaluator:
     def get_context(self, response: Response) -> List[Document]:
         """Get context information from given Response object using source nodes.
 
@@ -78,7 +79,7 @@ class FactualConsistencyResponseEvaluator:
 
         # Evaluate factual consistency metrics
         answer = str(response)
-        metric = FactualConsistencyMetric()
+        metric = HallucinationMetric()
         context = self.get_context(response)
         context = " ".join([d.text for d in context])
         test_case = LLMTestCase(input="This is an example input", context=context, actual_output=answer)
@@ -88,7 +89,7 @@ class FactualConsistencyResponseEvaluator:
         else:
             return "NO"
 
-evaluator = FactualConsistencyResponseEvaluator()
+evaluator = HallucinationResponseEvaluator()
 ```
 
 You can then evaluate as such:

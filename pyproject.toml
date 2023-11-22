@@ -38,7 +38,7 @@ ragas = "^0.0.19"
 coverage = "*"
 black = "*"
 portalocker = "*"
-openai = "0.28"
+openai = "*"
 
 [tool.black]
 line-length = 80

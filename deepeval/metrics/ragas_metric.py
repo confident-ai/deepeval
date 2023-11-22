@@ -307,7 +307,7 @@ class CoherenceMetric(BaseMetric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -359,7 +359,7 @@ class MaliciousnessMetric(BaseMetric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -411,7 +411,7 @@ class CorrectnessMetric(BaseMetric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -463,7 +463,7 @@ class ConcisenessMetric(BaseMetric):
 
         data = {
             "ground_truths": [[test_case.expected_output]],
-            "contexts": [[test_case.context]],
+            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],

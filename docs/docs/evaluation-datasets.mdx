@@ -70,7 +70,7 @@ deepeval login
 
 ```python title="test_bulk.py"
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import FactualConsistencyMetric
+from deepeval.metrics import HallucinationMetric
 from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
 from deepeval.evaluate import assert_test
 
@@ -81,9 +81,9 @@ dataset = [...]
     dataset,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
-    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+    hallucination_metric = HallucinationMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    assert_test(test_case, [factual_consistency_metric, answer_relevancy_metric])
+    assert_test(test_case, [hallucination_metric, answer_relevancy_metric])
 ```
 
 To run several tests cases at once in parallel, use the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
@@ -98,12 +98,12 @@ Alternately, you can use deepeval's `evaluate` function to evaluate datasets. Th
 
 ```python
 from deepeval.evaluator import evaluate
-from deepeval.metrics import FactualConsistencyMetric
+from deepeval.metrics import HallucinationMetric
 from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
 
 dataset = [...]
 
-factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+hallucination_metric = HallucinationMetric(minimum_score=0.3)
 answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-evaluate(dataset, [factual_consistency_metric, answer_relevancy_metric])
+evaluate(dataset, [hallucination_metric, answer_relevancy_metric])
 ```
