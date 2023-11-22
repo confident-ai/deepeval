@@ -81,17 +81,3 @@ def run(
 
     test_run_manager.wrap_up_test_run()
     return retcode
-
-
-@app.command()
-def generate(output_file: str = "test_sample.py"):
-    with open(
-        os.path.join(os.path.dirname(__file__), "../test_quickstart.py"),
-        "r",
-    ) as f_in:
-        with open(output_file, "w") as f_out:
-            f_out.write(f_in.read())
-    print(f"✨ Done! Now run: [bold]deepeval test run {output_file}[/bold]")
-    print(
-        "You can generate more tests in the future in our documentation at https://docs.confident-ai.com/docs"
-    )

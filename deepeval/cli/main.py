@@ -40,11 +40,10 @@ def login(
                 print("API Key cannot be empty. Please try again.\n")
     KEY_FILE_HANDLER.write_api_key(api_key)
     client = Api(api_key=api_key)
-    print("Success! :raising_hands:")
+    print("Congratulations! Login successful :raising_hands: ")
     print(
-        "If you are new to DeepEval, try generate a sample test: [bold]deepeval test generate --output-file test_sample.py[/bold]"
+        "If you are new to DeepEval, follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/docs/getting-started]https://docs.confident-ai.com/docs/getting-started[/link][/bold]"
     )
-    print("Run a sample test: [bold]deepeval test run test_sample.py[/bold]")
 
 
 if __name__ == "__main__":
