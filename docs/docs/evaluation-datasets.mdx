@@ -69,9 +69,9 @@ deepeval login
 `deepeval` utilizes the `@pytest.mark.parametrize` decorator to loop through entire datasets.
 
 ```python title="test_bulk.py"
+from deepeval.evaluator import assert_test
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
-from deepeval.evaluate import assert_test
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(test_cases=[...])
@@ -105,5 +105,9 @@ dataset = EvaluationDataset(test_cases=[...])
 
 hallucination_metric = HallucinationMetric(minimum_score=0.3)
 answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+
+dataset.evaluate([hallucination_metric, answer_relevancy_metric])
+
+# You can also call the evaluate() function directly
 evaluate(dataset, [hallucination_metric, answer_relevancy_metric])
 ```
