@@ -28,6 +28,8 @@ class EvaluationDataset:
         return iter(self.test_cases)
 
     def evaluate(self, metrics: List[BaseMetric]):
+        from deepeval.evaluator import evaluate
+
         return evaluate(self.test_cases, metrics)
 
     def add_test_cases_from_csv_file(
