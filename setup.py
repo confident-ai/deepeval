@@ -31,6 +31,7 @@ setup(
         "sentry-sdk",
         "pytest-xdist",
         "portalocker",
+        "langchain",
     ],
     extras_require={
         "bias": [
