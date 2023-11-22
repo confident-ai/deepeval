@@ -42,7 +42,7 @@ original_dataset = [
     },
 ]
 
-dataset = []
+dataset = EvaluationDataset()
 for datapoint in original_dataset:
     input = datapoint.get("input", None)
     actual_output = datapoint.get("actual_output", None)
@@ -55,7 +55,7 @@ for datapoint in original_dataset:
         expected_output=expected_output,
         context=context
     )
-    dataset.append(test_case)
+    dataset.add_test_case(test_case)
 ```
 
 ## Evaluate Your Dataset With Pytest
