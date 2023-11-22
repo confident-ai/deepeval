@@ -50,7 +50,7 @@ Run `touch test_example.py` to create a test file in your root directory. Open `
 
 ```python title="test_example.py"
 import pytest
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluator import assert_test
 
@@ -96,7 +96,7 @@ export DEEPEVAL_RESULTS_FOLDER="./data"
 An LLM evaluated metric, is one where evaluation is carried out by an LLM. Here's how you can create a custom, LLM evaluated metric.
 
 ```python title="test_example.py"
-from deepeval.metrics.llm_eval_metric import LLMEvalMetric
+from deepeval.metrics import LLMEvalMetric
 from deepeval.evaluator import assert_test
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
@@ -123,11 +123,11 @@ def test_summarization():
 A classic metric is a metric where evluation is not carried out by another LLM. You can define a custom classic metric by defining the `measure` and `is_successful` methods upon inheriting the base `Metric` class. Paste in the following:
 
 ```python title="test_example.py"
-from deepeval.metrics.metric import Metric
+from deepeval.metrics import BaseMetric
 
 ...
 
-class LengthMetric(Metric):
+class LengthMetric(BaseMetric):
     # This metric checks if the output length is greater than 10 characters
     def __init__(self, max_length: int=10):
         self.minimum_score = max_length
@@ -221,7 +221,7 @@ Utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate yo
 
 ```python title="test_bulk.py"
 import pytest
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluator import assert_test
 

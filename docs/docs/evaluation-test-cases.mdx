@@ -181,7 +181,7 @@ Remember, `context` is the ideal retrieval results for a given input and typical
 ```python
 # A hypothetical LLM application example
 import chatbot
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import FactualConsistencyMetric
 from deepeval.evaluator import run_test
 from deepeval.test_case import LLMTestCase
 
@@ -224,7 +224,7 @@ A test case passes only if all metrics meet their respective evaluation criterio
 ```python title="test_assert_example.py"
 # A hypothetical LLM application example
 import chatbot
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import FactualConsistencyMetric
 from deepeval.evaluator import assert_test
 from deepeval.test_case import LLMTestCase
 
@@ -276,7 +276,7 @@ Lastly, `deepeval` offers an `evaluate` function to evaluate multiple test cases
 ```python
 # A hypothetical LLM application example
 import chatbot
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import FactualConsistencyMetric
 from deepeval.evaluator import evaluate
 from deepeval.test_case import LLMTestCase
 
