@@ -39,6 +39,7 @@ coverage = "*"
 black = "*"
 portalocker = "*"
 openai = "*"
+langchain = "*"
 
 [tool.black]
 line-length = 80
