@@ -1,6 +1,6 @@
 from deepeval.singleton import Singleton
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.metrics import BaseMetric
 import numpy as np
 
 

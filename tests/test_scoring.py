@@ -2,7 +2,7 @@
 """
 
 import unittest
-from deepeval.metrics.scoring import Scorer
+from deepeval.scorer import Scorer
 
 
 class TestScorer(unittest.TestCase):

@@ -1,9 +1,7 @@
 import pytest
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.evaluator import assert_test
-from deepeval.metrics.llm_eval_metric import LLMEvalMetric
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.metrics import BaseMetric, LLMEvalMetric, FactualConsistencyMetric
 import deepeval
 
 # To run this file: deepeval test run <file_name>.py

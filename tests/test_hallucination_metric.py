@@ -1,8 +1,6 @@
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.hallucination_metric import (
-    HallucinationMetric,
-)
+from deepeval.metrics import HallucinationMetric
 from deepeval.evaluator import assert_test
 
 
