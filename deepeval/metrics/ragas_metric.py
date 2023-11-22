@@ -48,7 +48,6 @@ class ContextualRelevancyMetric(BaseMetric):
         }
         dataset = Dataset.from_dict(data)
 
-        print("!!!!!!!!!!!!!!!!")
         # Evaluate the dataset using Ragas
         scores = evaluate(dataset, metrics=self.metrics)
 
@@ -156,7 +155,6 @@ class FaithfulnessMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        print("!!!!!!!!!!!!!!!!")
         scores = evaluate(dataset, metrics=self.metrics)
         faithfulness_score = scores["faithfulness"]
         self.success = faithfulness_score >= self.minimum_score
