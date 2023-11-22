@@ -8,7 +8,12 @@ from deepeval.test_run import test_run_manager
 
 def pytest_sessionstart(session: pytest.Session):
     test_run_manager.save_to_disk = True
-    test_run_manager.create_test_run(session.config.getoption("file_or_dir")[0])
+    try:
+        test_run_manager.create_test_run(
+            session.config.getoption("file_or_dir")[0]
+        )
+    except:
+        test_run_manager.create_test_run()
 
 
 @pytest.hookimpl(tryfirst=True)

@@ -163,7 +163,7 @@ You must implement `measure`, `is_successful`, and `name` yourself, as these are
 
 ## Hallucination Metric
 
-Hallucination metric measures whether your LLM application is saying things that are untrue by comparing the `actual_output' to the provided `context`. You'll have to supply `context`when creating an`LLMTestCase` to evaluate hallucination.
+The hallucination metric measures whether your LLM application outputs factually correct information by comparing the `actual_output` to the provided `context`. You'll have to supply `context` when creating an `LLMTestCase` to evaluate hallucination.
 
 ```python
 import pytest
@@ -182,9 +182,8 @@ metric = HallucinationMetric(minimum_score=0.5)
 run_test(test_case, [metric])
 ```
 
-:::note
-This metric uses vectara's hallucination evaluation model, which was specifically designed for summarization task. However, if you are just looking for factual consistency between input and output
-where the application is not designed for QA task, this metric should work.
+:::info
+This metric uses vectara's hallucination evaluation model.
 :::
 
 ## Answer Relevancy
