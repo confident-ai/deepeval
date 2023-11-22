@@ -147,10 +147,6 @@ class Api:
             proxies=self.proxies,
             cert=self.cert,
         )
-        print(url)
-        print(method)
-        print(res.status_code)
-        print(res.reason)
         json = None
         if res.status_code == 200:
             try:
