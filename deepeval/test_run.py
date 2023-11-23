@@ -241,6 +241,7 @@ class TestRunManager:
     def clear_test_run(self):
         self.test_run = None
 
+    # TODO: fix table rendering logic
     def display_results_table(self, test_run: TestRun):
         # Calculate the average of each metric
         metrics_avg = {

@@ -13,21 +13,13 @@ class ContextualRelevancyMetric(BaseMetric):
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        try:
-            # Adding a list of metrics
-            from ragas.metrics.context_precision import context_relevancy
-
-            self.metrics = [context_relevancy]
-
-        except ModuleNotFoundError as e:
-            print(
-                "Please install ragas to use this metric. `pip install ragas`."
-            )
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
+            from ragas.metrics import context_relevancy
+
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -49,7 +41,7 @@ class ContextualRelevancyMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
 
         # Evaluate the dataset using Ragas
-        scores = evaluate(dataset, metrics=self.metrics)
+        scores = evaluate(dataset, metrics=[context_relevancy])
 
         # Ragas only does dataset-level comparisons
         context_relevancy_score = scores["context_relevancy"]
@@ -73,19 +65,13 @@ class AnswerRelevancyMetric(BaseMetric):
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        try:
-            from ragas.metrics import answer_relevancy
-
-            self.metrics = [answer_relevancy]
-        except ModuleNotFoundError as e:
-            print(
-                "Please install ragas to use this metric. `pip install ragas`."
-            )
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
+            from ragas.metrics import answer_relevancy
+
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -104,7 +90,7 @@ class AnswerRelevancyMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=self.metrics)
+        scores = evaluate(dataset, metrics=[answer_relevancy])
         answer_relevancy_score = scores["answer_relevancy"]
         self.success = answer_relevancy_score >= self.minimum_score
         self.score = answer_relevancy_score
@@ -124,19 +110,13 @@ class FaithfulnessMetric(BaseMetric):
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        try:
-            from ragas.metrics import faithfulness
-
-            self.metrics = [faithfulness]
-        except ModuleNotFoundError as e:
-            print(
-                "Please install ragas to use this metric. `pip install ragas`."
-            )
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
+            from ragas.metrics import faithfulness
+
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -155,7 +135,7 @@ class FaithfulnessMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=self.metrics)
+        scores = evaluate(dataset, metrics=[faithfulness])
         faithfulness_score = scores["faithfulness"]
         self.success = faithfulness_score >= self.minimum_score
         self.score = faithfulness_score
@@ -177,19 +157,13 @@ class ContextRecallMetric(BaseMetric):
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        try:
-            from ragas.metrics import context_recall
-
-            self.metrics = [context_recall]
-        except ModuleNotFoundError as e:
-            print(
-                "Please install ragas to use this metric. `pip install ragas`."
-            )
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
+            from ragas.metrics import context_recall
+
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -208,7 +182,7 @@ class ContextRecallMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=self.metrics)
+        scores = evaluate(dataset, [context_recall])
         context_recall_score = scores["context_recall"]
         self.success = context_recall_score >= self.minimum_score
         self.score = context_recall_score
@@ -230,19 +204,13 @@ class HarmfulnessMetric(BaseMetric):
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        try:
-            from ragas.metrics.critique import harmfulness
-
-            self.metrics = [harmfulness]
-        except ModuleNotFoundError as e:
-            print(
-                "Please install ragas to use this metric. `pip install ragas`."
-            )
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
+            from ragas.metrics.critique import harmfulness
+
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -261,7 +229,7 @@ class HarmfulnessMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=self.metrics)
+        scores = evaluate(dataset, [harmfulness])
         harmfulness_score = scores["harmfulness"]
         self.success = harmfulness_score >= self.minimum_score
         self.score = harmfulness_score
@@ -283,18 +251,11 @@ class CoherenceMetric(BaseMetric):
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        try:
-            from ragas.metrics.critique import coherence
-
-            self.metrics = [coherence]
-        except ModuleNotFoundError as e:
-            print(
-                "Please install ragas to use this metric. `pip install ragas`."
-            )
 
     def measure(self, test_case: LLMTestCase):
         try:
             from ragas import evaluate
+            from ragas.metrics.critique import coherence
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -313,7 +274,7 @@ class CoherenceMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=self.metrics)
+        scores = evaluate(dataset, [coherence])
         coherence_score = scores["coherence"]
         self.success = coherence_score >= self.minimum_score
         self.score = coherence_score
@@ -335,18 +296,12 @@ class MaliciousnessMetric(BaseMetric):
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        try:
-            from ragas.metrics.critique import maliciousness
-
-            self.metrics = [maliciousness]
-        except ModuleNotFoundError as e:
-            print(
-                "Please install ragas to use this metric. `pip install ragas`."
-            )
 
     def measure(self, test_case: LLMTestCase):
         try:
             from ragas import evaluate
+            from ragas.metrics.critique import maliciousness
+
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -365,7 +320,7 @@ class MaliciousnessMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=self.metrics)
+        scores = evaluate(dataset, [maliciousness])
         maliciousness_score = scores["maliciousness"]
         self.success = maliciousness_score >= self.minimum_score
         self.score = maliciousness_score
@@ -387,18 +342,12 @@ class CorrectnessMetric(BaseMetric):
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        try:
-            from ragas.metrics.critique import correctness
-
-            self.metrics = [correctness]
-        except ModuleNotFoundError as e:
-            print(
-                "Please install ragas to use this metric. `pip install ragas`."
-            )
 
     def measure(self, test_case: LLMTestCase):
         try:
             from ragas import evaluate
+            from ragas.metrics.critique import correctness
+
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -417,7 +366,7 @@ class CorrectnessMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=self.metrics)
+        scores = evaluate(dataset, metrics=[correctness])
         correctness_score = scores["correctness"]
         self.success = correctness_score >= self.minimum_score
         self.score = correctness_score
@@ -439,18 +388,11 @@ class ConcisenessMetric(BaseMetric):
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        try:
-            from ragas.metrics.critique import conciseness
-
-            self.metrics = [conciseness]
-        except ModuleNotFoundError as e:
-            print(
-                "Please install ragas to use this metric. `pip install ragas`."
-            )
 
     def measure(self, test_case: LLMTestCase):
         try:
             from ragas import evaluate
+            from ragas.metrics.critique import conciseness
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -469,7 +411,7 @@ class ConcisenessMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=self.metrics)
+        scores = evaluate(dataset, metrics=[conciseness])
         conciseness_score = scores["conciseness"]
         self.success = conciseness_score >= self.minimum_score
         self.score = conciseness_score
@@ -488,19 +430,9 @@ class RagasMetric(BaseMetric):
 
     def __init__(
         self,
-        metrics: List[BaseMetric] = None,
         minimum_score: float = 0.3,
     ):
         self.minimum_score = minimum_score
-        if metrics is None:
-            self.metrics = [
-                ContextualRelevancyMetric,
-                ContextRecallMetric,
-                FaithfulnessMetric,
-                AnswerRelevancyMetric,
-            ]
-        else:
-            self.metrics = metrics
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -520,9 +452,14 @@ class RagasMetric(BaseMetric):
         # Create a dataset from the test case
         # Convert the LLMTestCase to a format compatible with Dataset
         scores = []
-        for metric in self.metrics:
-            m = metric()
-            score = m.measure(test_case)
+        metrics = [
+            ContextualRelevancyMetric(),
+            ContextRecallMetric(),
+            FaithfulnessMetric(),
+            AnswerRelevancyMetric(),
+        ]
+        for metric in metrics:
+            score = metric.measure(test_case)
             scores.append(score)
 
         # ragas score is harmonic mean of all the scores
@@ -533,10 +470,6 @@ class RagasMetric(BaseMetric):
         else:
             ragas_score = 0
 
-        # Ragas only does dataset-level comparisons
-        # >>> print(result["ragas_score"])
-        # {'ragas_score': 0.860, 'context_relevancy': 0.817, 'faithfulness': 0.892,
-        # 'answer_relevancy': 0.874}
         self.success = ragas_score >= self.minimum_score
         self.score = ragas_score
         return self.score
