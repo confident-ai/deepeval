@@ -1,6 +1,16 @@
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import RagasMetric
+from deepeval.metrics import (
+    RagasMetric,
+    ContextualRelevancyMetric,
+    FaithfulnessMetric,
+    ContextRecallMetric,
+    ConcisenessMetric,
+    CorrectnessMetric,
+    CoherenceMetric,
+    MaliciousnessMetric,
+)
+from deepeval.metrics.ragas_metric import AnswerRelevancyMetric
 from deepeval.evaluator import assert_test
 
 query = "Who won the FIFA World Cup in 2018?"
@@ -23,6 +33,37 @@ def test_ragas_score():
 
     with pytest.raises(AssertionError):
         assert_test(
-            test_cases=[test_case],
+            test_case=[test_case],
             metrics=[metric],
         )
+
+
+@pytest.mark.skip(reason="openai is expensive")
+def test_everything():
+    test_case = LLMTestCase(
+        input=query,
+        actual_output=output,
+        expected_output=expected_output,
+        context=context,
+    )
+    metric1 = ContextualRelevancyMetric()
+    metric2 = FaithfulnessMetric()
+    metric3 = ContextRecallMetric()
+    metric4 = ConcisenessMetric()
+    metric5 = CorrectnessMetric()
+    metric6 = CoherenceMetric()
+    metric7 = MaliciousnessMetric()
+    metric8 = AnswerRelevancyMetric()
+    assert_test(
+        test_case,
+        [
+            metric1,
+            metric2,
+            metric3,
+            metric4,
+            metric5,
+            metric6,
+            metric7,
+            metric8,
+        ],
+    )

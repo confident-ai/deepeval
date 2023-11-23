@@ -181,7 +181,7 @@ Remember, `context` is the ideal retrieval results for a given input and typical
 ```python
 # A hypothetical LLM application example
 import chatbot
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import HallucinationMetric
 from deepeval.evaluator import run_test
 from deepeval.test_case import LLMTestCase
 
@@ -202,7 +202,7 @@ test_case = LLMTestCase(
     context=context
 )
 
-metric = FactualConsistencyMetric(minimum_score=0.7)
+metric = HallucinationMetric(minimum_score=0.7)
 run_test(test_case, [metric])
 ```
 
@@ -224,7 +224,7 @@ A test case passes only if all metrics meet their respective evaluation criterio
 ```python title="test_assert_example.py"
 # A hypothetical LLM application example
 import chatbot
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import HallucinationMetric
 from deepeval.evaluator import assert_test
 from deepeval.test_case import LLMTestCase
 
@@ -245,7 +245,7 @@ def test_case_1():
         expected_output="Me, ruff!",
         context=context
     )
-    metric = FactualConsistencyMetric(minimum_score=0.7)
+    metric = HallucinationMetric(minimum_score=0.7)
     assert_test(test_case, metrics=[metric])
 
 def test_case_2():
@@ -259,7 +259,7 @@ def test_case_2():
         expected_output="Me, ruff!",
         context=context
     )
-    metric = FactualConsistencyMetric(minimum_score=0.7)
+    metric = HallucinationMetric(minimum_score=0.7)
     assert_test(test_case, metrics=[metric])
 ```
 
@@ -276,7 +276,7 @@ Lastly, `deepeval` offers an `evaluate` function to evaluate multiple test cases
 ```python
 # A hypothetical LLM application example
 import chatbot
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import HallucinationMetric
 from deepeval.evaluator import evaluate
 from deepeval.test_case import LLMTestCase
 
@@ -307,7 +307,7 @@ second_test_case = LLMTestCase(
 
 dataset = [first_test_case, second_test_case]
 
-metric = FactualConsistencyMetric(minimum_score=0.7)
+metric = HallucinationMetric(minimum_score=0.7)
 evaluate(dataset, [metric])
 ```
 

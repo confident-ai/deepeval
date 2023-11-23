@@ -1,11 +1,17 @@
 from typing import List, Optional
 from dataclasses import dataclass
 import pandas as pd
+from rich.console import Console
 import json
+import webbrowser
+import os
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluator import evaluate
+from deepeval.api import Api, Endpoints
+from deepeval.dataset.utils import convert_test_cases_to_goldens
+from deepeval.dataset.api import APIDataset, CreateDatasetHttpResponse
 
 
 @dataclass
@@ -24,7 +30,7 @@ class EvaluationDataset:
     def evaluate(self, metrics: List[BaseMetric]):
         return evaluate(self.test_cases, metrics)
 
-    def load_csv(
+    def add_test_cases_from_csv_file(
         self,
         file_path: str,
         input_col_name: str,
@@ -90,7 +96,7 @@ class EvaluationDataset:
             else [default] * len(df)
         )
 
-    def load_json_list(
+    def add_test_cases_from_json_file(
         self,
         file_path: str,
         input_key_name: str,
@@ -152,7 +158,7 @@ class EvaluationDataset:
                 )
             )
 
-    def load_hf_dataset(
+    def add_test_cases_from_hf_dataset(
         self,
         dataset_name: str,
         input_field_name: str,
@@ -218,3 +224,37 @@ class EvaluationDataset:
                     context=context,
                 )
             )
+
+    def push(self, alias: str):
+        if len(self.test_cases) == 0:
+            raise ValueError(
+                "Unable to push empty dataset to Confident AI, there must be at least one test case in dataset"
+            )
+        if os.path.exists(".deepeval"):
+            goldens = convert_test_cases_to_goldens(self.test_cases)
+            body = APIDataset(alias=alias, goldens=goldens).model_dump(
+                by_alias=True, exclude_none=True
+            )
+            api = Api()
+            result = api.post_request(
+                endpoint=Endpoints.CREATE_DATASET_ENDPOINT.value,
+                body=body,
+            )
+            response = CreateDatasetHttpResponse(
+                link=result["link"],
+            )
+            link = response.link
+            console = Console()
+            console.print(
+                "✅ Dataset pushed to Confidnet AI! View on "
+                f"[link={link}]{link}[/link]"
+            )
+            # webbrowser.open(link)
+        else:
+            raise Exception(
+                "To push dataset to Confident AI, run `deepeval login`"
+            )
+
+    # TODO
+    def pull(self, alias: str):
+        pass

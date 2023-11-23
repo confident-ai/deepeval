@@ -1,4 +1,4 @@
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCaseParams, LLMTestCase
 from typing import List
 from pydantic import BaseModel

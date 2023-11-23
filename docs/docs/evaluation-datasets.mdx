@@ -17,6 +17,7 @@ Your original dataset can be in any format, such as CSV or JSON. Let's take JSON
 
 ```python
 from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
 
 original_dataset = [
     {
@@ -42,7 +43,7 @@ original_dataset = [
     },
 ]
 
-dataset = []
+dataset = EvaluationDataset()
 for datapoint in original_dataset:
     input = datapoint.get("input", None)
     actual_output = datapoint.get("actual_output", None)
@@ -55,7 +56,7 @@ for datapoint in original_dataset:
         expected_output=expected_output,
         context=context
     )
-    dataset.append(test_case)
+    dataset.add_test_case(test_case)
 ```
 
 ## Evaluate Your Dataset With Pytest
@@ -69,21 +70,21 @@ deepeval login
 `deepeval` utilizes the `@pytest.mark.parametrize` decorator to loop through entire datasets.
 
 ```python title="test_bulk.py"
+from deepeval.evaluator import assert_test
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
-from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
-from deepeval.evaluate import assert_test
+from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset
 
-dataset = [...]
+dataset = EvaluationDataset(test_cases=[...])
 
 @pytest.mark.parametrize(
     "test_case",
     dataset,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
-    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+    hallucination_metric = HallucinationMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-    assert_test(test_case, [factual_consistency_metric, answer_relevancy_metric])
+    assert_test(test_case, [hallucination_metric, answer_relevancy_metric])
 ```
 
 To run several tests cases at once in parallel, use the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
@@ -98,12 +99,16 @@ Alternately, you can use deepeval's `evaluate` function to evaluate datasets. Th
 
 ```python
 from deepeval.evaluator import evaluate
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
-from deepeval.metric.answer_relevancy import AnswerRelevancyMetric
+from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset
 
-dataset = [...]
+dataset = EvaluationDataset(test_cases=[...])
 
-factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.3)
+hallucination_metric = HallucinationMetric(minimum_score=0.3)
 answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-evaluate(dataset, [factual_consistency_metric, answer_relevancy_metric])
+
+dataset.evaluate([hallucination_metric, answer_relevancy_metric])
+
+# You can also call the evaluate() function directly
+evaluate(dataset, [hallucination_metric, answer_relevancy_metric])
 ```

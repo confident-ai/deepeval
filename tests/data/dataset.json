@@ -1,0 +1,29 @@
+[
+    {
+        "query": "1",
+        "expected_output": "Hello, world!",
+        "actual_output": "Actual output for 1"
+    },
+    {
+        "query": "2",
+        "context": ["A powerful language model.", "Context for 2", "Additional info"],
+        "actual_output": "Actual output for 2"
+    },
+    {
+        "query": "3",
+        "expected_output": "CSV Example",
+        "context": ["Working with CSV data.", "Context for 3", "Additional info"],
+        "actual_output": "Actual output for 3"
+    },
+    {
+        "query": "4",
+        "expected_output": "Python Programming",
+        "actual_output": "Actual output for 4"
+    },
+    {
+        "query": "5",
+        "expected_output": "Data Science",
+        "context": ["Analyzing data.", "Context for 5", "Additional info"],
+        "actual_output": "Actual output for 5"
+    }
+]

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-    <a href="https://docs.confident-ai.com" target="_blank">
+    <a href="https://docs.confident-ai.com/docs/getting-started" target="_blank">
         Read The Docs
     </a>
     &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
@@ -67,7 +67,7 @@ Open `test_chatbot.py` and write your first test case using DeepEval:
 
 ```python
 import pytest
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
+from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluator import assert_test
 
@@ -77,9 +77,9 @@ def test_case():
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra costs."
-    factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
+    hallucination_metric = HallucinationMetric(minimum_score=0.7)
     test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
-    assert_test(test_case, [factual_consistency_metric])
+    assert_test(test_case, [hallucination_metric])
 ```
 
 Run `test_chatbot.py` in the CLI:
@@ -91,10 +91,10 @@ deepeval test run test_chatbot.py
 **Your test should have passed ✅** Let's breakdown what happened.
 
 - The variable `input` mimics user input, and `actual_output` is a placeholder for your chatbot's intended output based on this query.
-- The variable `context` contains the relevant information from your knowledge base, and `FactualConsistencyMetric(minimum_score=0.7)` is an out-of-the-box metric provided by DeepEval. It helps you evaluate the factual accuracy of your chatbot's output based on the provided context.
+- The variable `context` contains the relevant information from your knowledge base, and `HallucinationMetric(minimum_score=0.7)` is an out-of-the-box metric provided by DeepEval. It helps you evaluate the factual accuracy of your chatbot's output based on the provided context.
 - The metric score ranges from 0 - 1. The `minimum_score=0.7` threshold ultimately determines whether your test has passed or not.
 
-[Read our documentation](https://docs.confident-ai.com) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
+[Read our documentation](https://docs.confident-ai.com/docs/getting-started) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
 
 <br />
 

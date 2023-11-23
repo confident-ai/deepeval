@@ -8,9 +8,8 @@ sidebar_label: Metrics
 
 In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, the test case represents what you're assessing. `deepeval` offers a range of default metrics for you to quickly get started with, which includes:
 
-- Factual Consistency
+- Hallucination
 - Answer Relevancy
-- Conceptual Similarity
 - RAGAS
 - Toxicity
 - Bias
@@ -32,12 +31,37 @@ All of `deepeval`'s default metrics output a score between 0-1, and require a `m
 Our suggestion is to begin with custom LLM evaluated metrics (which frequently surpass and offer more versatility than leading NLP models), and gradually transition to `deepeval`'s default metrics when feasible. We recommend using default metrics as an optimization to your evaluation workflow because they are more cost-effective.
 :::
 
-## Custom LLM Evaluated Metrics
+## Hallucination
 
-A custom LLM evalated metric, is a custom metric whose evaluation is powered by LLMs. To create a custom metric that uses LLMs for evaluation, simply instantiate an `LLMEvalMetric` class:
+Hallucination determines whether your LLM application outputs factually correct information by comparing the `actual_output` to the provided `context`. You'll have to supply `context` when creating an `LLMTestCase` to evaluate hallucination.
 
 ```python
-from deepeval.metrics.llm_eval_metric import LLMEvalMetric
+import pytest
+from deepeval.metrics import HallucinationMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.evaluator import run_test
+
+# Replace this with the actual documents that you are passing as input to your LLM.
+context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."]
+
+# Replace this with the actual output from your LLM application
+actual_output="A blond drinking water in public.",
+
+test_case = LLMTestCase(input="placeholder", actual_output=actual_output, context=context)
+metric = HallucinationMetric(minimum_score=0.5)
+run_test(test_case, [metric])
+```
+
+:::info
+This metric uses vectara's hallucination evaluation model.
+:::
+
+## LLM Evaluated Metrics
+
+A LLM evalated metric, is a custom metric whose score is calculated by LLMs. To create a custom metric that uses LLMs for evaluation, simply instantiate an `LLMEvalMetric` class and define an evaluation criteria in natural language:
+
+```python
+from deepeval.metrics import LLMEvalMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 summarization_metric = LLMEvalMetric(
@@ -55,7 +79,8 @@ There are three mandatory and two optional parameters required when instantiatin
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
 - [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
-- [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from OpenAI.
+- [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from (Azure) OpenAI.
+- [Optional] `deployment_id`: the deployment name you chose when you deployed Azure OpenAI. Only required if you're using Azure OpenAI.
 
 All instances of `LLMEvalMetric` returns a score ranging from 0 - 1. A metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
 
@@ -63,132 +88,13 @@ All instances of `LLMEvalMetric` returns a score ranging from 0 - 1. A metric is
 For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
 :::
 
-By default, `LLMEvalMetric` is evaluated using `GPT-4` from OpenAI. Azure OpenAI endpoints are also supported via LLMEvalMetric, the `deployment_id` parameter should be passed
-during instantiation of `LLMEvalMetric` class
-
-```python
-summarization_metric = LLMEvalMetric(
-    name="Summarization",
-    criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-    minimum_score=0.5,
-    deployment_id="your-deployment-id" 
-)
-```
-
-:::note
-Don't forget to set your Azure OpenAI key 
-```python
-openai.api_key = "your-Azure-OpenAI-API-key"
-``` 
-:::
-
-## JudgementalGPT
-
-`JudgementalGPT` is an LLM agent developed in-house by [Confident AI](https://confident-ai.com) that's dedicated to evaluation and is superior to `LLMEvalMetric`. While it operates similarly to `LLMEvalMetric` by utilizing LLMs for scoring, it:
-
-- offers enhanced accuracy and reliability.
-- is capable of generating justifications for its scores
-- has the ability to conditionally execute code that helps detect logical fallacies during evaluations
-
-To use `JudgementalGPT`, start by logging into Confident AI:
-
-```console
-deepeval login
-```
-
-Then paste in the following code to define a metric powered by `JudgementalGPT`:
-
-```python
-from deepeval.metrics.judgemental_gpt import JudgementalGPT
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-
-code_correctness_metric = JudgementalGPT(
-    name="Code Correctness",
-    criteria="Code Correctness - determine whether the python code in the 'actual output' produces a valid JSON.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-    minimum_score=0.5,
-)
-```
-
-Under the hood, `JudgementalGPT(...)` sends a request to Confident AI's servers that hosts `JudgementalGPT`. `JudgementalGPT` accepts four arguments:
-
-- `name`: name of metric
-- `criteria`: a description outlining the specific evaluation aspects for each test case.
-- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
-- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
-
-## Custom Metrics
-
-You can implement your own evaluator (for example, your own GPT evaluator) by creating a custom metric. All custom metrics are automatically integrated with Confident AI.
-
-```python
-from deepeval.metrics.base_metric import BaseMetric
-
-# Inherit BaseMetric
-class LengthMetric(BaseMetric):
-    # This metric checks if the output length is greater than 10 characters
-    def __init__(self, max_length: int=10):
-        self.minimum_score = max_length
-
-    def measure(self, test_case: LLMTestCase):
-        # Set self.success and self.score in the "measure" method
-        self.success = len(test_case.actual_output) > self.minimum_score
-        if self.success:
-            self.score = 1
-        else:
-            self.score = 0
-        return self.score
-
-    def is_successful(self):
-        return self.success
-
-    @property
-    def name(self):
-        return "Length"
-```
-
-Noticed that we accessed `test_case.actual_output` in `measure`. you will have to supply the optional `context` or `expected_output` arguments in the `LLMTestCase` depending on your `measure` implementation.
-
-In this example, you would instantiate `LengthMetric` as follows:
-
-```python
-length_metric = LengthMetric(max_length=20)
-```
-
-:::info
-You must implement `measure`, `is_successful`, and `name` yourself, as these are abstract methods and properties inherited from `Metric`.
-:::
-
-## Factual Consistency
-
-Factual consistency measures how factually correct the `actual_output` of your LLM application is compared to the provided `context`. You'll have to supply `context` when creating an `LLMTestCase` to evaluate factual consistency.
-
-```python
-import pytest
-from deepeval.metrics.factual_consistency import FactualConsistencyMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import run_test
-
-input = "What if these shoes don't fit?"
-context = ["All customers are eligible for a 30 day full refund at no extra cost."]
-
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
-
-factual_consistency_metric = FactualConsistencyMetric(minimum_score=0.7)
-test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
-
-run_test(test_case, [metric])
-```
-
 ## Answer Relevancy
 
 Answer Relevancy measures how relevant the `actual_output` of your LLM application is compared to the provided `input`. You don't have to supply `context` or `expected_output` when creating an `LLMTestCase` if you're just evaluating answer relevancy.
 
 ```python
 import pytest
-from deepeval.metrics.answer_relevancy import AnswerRelevancyMetric
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluator import run_test
 
@@ -202,29 +108,6 @@ answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.7)
 test_case = LLMTestCase(input=input, actual_output=actual_output)
 
 run_test(test_case, [answer_relevancy_metric])
-```
-
-## Conceptual Similarity
-
-Conceptual Similarity measures how conceptually similar the `actual_output` of your LLM application is compared to the provided `context`. You'll have to supply `context` when creating an `LLMTestCase` to evaluate conceptual similarity.
-
-```python
-import pytest
-from deepeval.metrics.conceptual_similarity import ConceptualSimilarityMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import run_test
-
-
-input = "What if these shoes don't fit?"
-context = ["All customers are eligible for a 30 day full refund at no extra cost."]
-
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
-
-conceptual_similarity_metric = ConceptualSimilarityMetric(minimum_score=0.7)
-test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
-
-run_test(test_case, [conceptual_similarity_metric])
 ```
 
 ## RAGAS
@@ -252,7 +135,7 @@ pip install ragas
 Create an `LLMTestCase` and supply all parameters to calculate the RAGAS score:
 
 ```python
-from deepeval.metrics.ragas_metric import RagasMetric
+from deepeval.metrics import RagasMetric
 from deepeval.test_case import LLMTestCase
 
 input = "What if these shoes don't fit?"
@@ -276,14 +159,14 @@ run_test(test_case, [ragas_metric])
 As mentioned earlier, the RAGAS score is the harmonic mean of five different metrics. You can however import these metrics individually and utilize them in exactly the same way as all other metrics offered by `deepeval`.
 
 ```python
-from deepeval.metrics.ragas_metric import RagasContextualRelevancyMetric
-from deepeval.metrics.ragas_metric import RagasAnswerRelevancyMetric
-from deepeval.metrics.ragas_metric import RagasFaithfulnessMetric
-from deepeval.metrics.ragas_metric import RagasContextRecallMetric
-from deepeval.metrics.ragas_metric import RagasConcisenessMetric
-from deepeval.metrics.ragas_metric import RagasCorrectnessMetric
-from deepeval.metrics.ragas_metric import RagasCoherenceMetric
-from deepeval.metrics.ragas_metric import RagasMaliciousnessMetric
+from deepeval.metrics import ContextualRelevancyMetric
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.metrics import ContextRecallMetric
+from deepeval.metrics import ConcisenessMetric
+from deepeval.metrics import CorrectnessMetric
+from deepeval.metrics import CoherenceMetric
+from deepeval.metrics import MaliciousnessMetric
 ```
 
 ## Toxicity
@@ -297,7 +180,7 @@ pip install detoxify
 Being a referenceless metric means `NonToxicMetric` requires an extra parameter named `evaluation_params`. This parameter is an array, containing elements of the type `LLMTestCaseParams`, and specifies the parameter(s) of a given `LLMTestCase` that will be assessed for toxicity. The `NonToxicMetric` will then compute a score based on the average toxicity levels of each individual component being evaluated.
 
 ```python
-from deepeval.metrics.toxic_classifier import NonToxicMetric
+from deepeval.metrics import NonToxicMetric
 from deepeval.evaluator import run_test
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
@@ -338,7 +221,7 @@ pip install Dbias
 `UnBiasedMetric` is similar to `NonToxicMetric` because it is also a referenceless metric.
 
 ```python
-from deepeval.metrics.bias_classifier import UnBiasedMetric
+from deepeval.metrics import UnBiasedMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.evaluator import run_test
 
@@ -360,3 +243,80 @@ test_case = LLMTestCase(
 
 run_test(test_case, [unbias_metric])
 ```
+
+## Custom Metrics
+
+You can implement your own evaluator (for example, your own GPT evaluator) by creating a custom metric. All custom metrics are automatically integrated with Confident AI.
+
+```python
+from deepeval.metrics import BaseMetric
+
+# Inherit BaseMetric
+class LengthMetric(BaseMetric):
+    # This metric checks if the output length is greater than 10 characters
+    def __init__(self, max_length: int=10):
+        self.minimum_score = max_length
+
+    def measure(self, test_case: LLMTestCase):
+        # Set self.success and self.score in the "measure" method
+        self.success = len(test_case.actual_output) > self.minimum_score
+        if self.success:
+            self.score = 1
+        else:
+            self.score = 0
+        return self.score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def name(self):
+        return "Length"
+```
+
+Noticed that we accessed `test_case.actual_output` in `measure`. you will have to supply the optional `context` or `expected_output` arguments in the `LLMTestCase` depending on your `measure` implementation.
+
+In this example, you would instantiate `LengthMetric` as follows:
+
+```python
+length_metric = LengthMetric(max_length=20)
+```
+
+:::info
+You must implement `measure`, `is_successful`, and `name` yourself, as these are abstract methods and properties inherited from `Metric`.
+:::
+
+## JudgementalGPT
+
+`JudgementalGPT` is an LLM agent developed in-house by [Confident AI](https://confident-ai.com) that's dedicated to evaluation and is superior to `LLMEvalMetric`. While it operates similarly to `LLMEvalMetric` by utilizing LLMs for scoring, it:
+
+- offers enhanced accuracy and reliability.
+- is capable of generating justifications for its scores
+- has the ability to conditionally execute code that helps detect logical fallacies during evaluations
+
+To use `JudgementalGPT`, start by logging into Confident AI:
+
+```console
+deepeval login
+```
+
+Then paste in the following code to define a metric powered by `JudgementalGPT`:
+
+```python
+from deepeval.metrics import JudgementalGPT
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
+code_correctness_metric = JudgementalGPT(
+    name="Code Correctness",
+    criteria="Code Correctness - determine whether the python code in the 'actual output' produces a valid JSON.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    minimum_score=0.5,
+)
+```
+
+Under the hood, `JudgementalGPT(...)` sends a request to Confident AI's servers that hosts `JudgementalGPT`. `JudgementalGPT` accepts four arguments:
+
+- `name`: name of metric
+- `criteria`: a description outlining the specific evaluation aspects for each test case.
+- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.

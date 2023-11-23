@@ -2,7 +2,7 @@
 """
 import pytest
 
-from deepeval.metrics import FactualConsistencyMetric
+from deepeval.metrics import HallucinationMetric
 
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluator import assert_test
@@ -19,7 +19,7 @@ def test_llm_output():
     test_case = LLMTestCase(
         input=input, actual_output=generate_llm_output(input), context=context
     )
-    assert_test(test_case, [FactualConsistencyMetric(minimum_score=0.5)])
+    assert_test(test_case, [HallucinationMetric(minimum_score=0.5)])
 
 
 def test_llm_output_custom():
@@ -29,7 +29,7 @@ def test_llm_output_custom():
         input="Placerholder", actual_output=actual_output, context=context
     )
     with pytest.raises(AssertionError):
-        assert_test(test_case, [FactualConsistencyMetric(minimum_score=0.5)])
+        assert_test(test_case, [HallucinationMetric(minimum_score=0.5)])
 
 
 def test_0():
@@ -44,6 +44,6 @@ def test_0():
         expected_output=expected_output,
         context=context,
     )
-    metric = FactualConsistencyMetric()
+    metric = HallucinationMetric()
     with pytest.raises(AssertionError):
         assert_test(test_case, metrics=[metric])

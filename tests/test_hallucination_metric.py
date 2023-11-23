@@ -1,24 +1,23 @@
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import FactualConsistencyMetric
-
+from deepeval.metrics import HallucinationMetric
 from deepeval.evaluator import assert_test
 
 
-def test_factual_consistency_metric():
-    metric = FactualConsistencyMetric(minimum_score=0.8)
+def test_hallucination_metric():
+    metric = HallucinationMetric(minimum_score=0.5)
     test_case = LLMTestCase(
         input="placeholder",
-        actual_output="Python is a programming language.",
+        actual_output="A blond drinking water in public.",
         context=[
-            "Python is a high-level, versatile, and interpreted programming language known for its simplicity and readability."
+            "A man with blond-hair, and a brown shirt drinking out of a public water fountain."
         ],
     )
     assert_test(test_case, [metric])
 
 
-def test_factual_consistency_metric_2():
-    metric = FactualConsistencyMetric(minimum_score=0.6)
+def test_hallucination_metric_2():
+    metric = HallucinationMetric(minimum_score=0.6)
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="Python is a programming language.",
@@ -28,8 +27,8 @@ def test_factual_consistency_metric_2():
         assert_test(test_case, [metric])
 
 
-def test_factual_consistency_metric_3():
-    metric = FactualConsistencyMetric(minimum_score=0.6)
+def test_hallucination_metric_3():
+    metric = HallucinationMetric(minimum_score=0.6)
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="Python is a programming language.",

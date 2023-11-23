@@ -8,7 +8,7 @@ from collections import defaultdict
 from deepeval.tracing import get_trace_stack
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.decorators.hyperparameters import get_hyperparameters
-from deepeval.api import Api
+from deepeval.api import Api, Endpoints
 import shutil
 import webbrowser
 from deepeval.utils import delete_file_if_exists
@@ -314,14 +314,13 @@ class TestRunManager:
         # TODO: change this, very hacky way to check if api key exists
         if os.path.exists(".deepeval"):
             try:
-                # make sure to exclude none for `context` to ensure it is handled properly
                 body = test_run.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
             api = Api()
             result = api.post_request(
-                endpoint="/v1/test-run",
+                endpoint=Endpoints.CREATE_TEST_RUN_ENDPOINT.value,
                 body=body,
             )
             response = TestRunHttpResponse(

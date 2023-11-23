@@ -7,7 +7,7 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 import warnings
 from typing import Optional, List
 
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 
@@ -77,9 +77,6 @@ class UnBiasedMetric(BaseMetric):
     def is_successful(self):
         return self.success
 
-    def assert_successful(self):
-        assert self.success, f"Text is biased - score: {self.score}"
-
     @property
     def __name__(self):
-        return "Bias Score"
+        return "Unbiased Metric"
