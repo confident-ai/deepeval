@@ -4,7 +4,6 @@ from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional, Any
 from deepeval.utils import normalize_text
-from deepeval.models.summac_model import SummaCZS
 
 
 # TODO: More scores are to be added
@@ -190,6 +189,11 @@ class Scorer:
         Returns:
             float: The computed faithfulness score. Higher values indicate greater faithfulness to the target text.
         """
+        try:
+            from deepeval.models import SummaCZS
+        except Exception as e:
+            print(f"SummaCZS model can not be loaded.\n{e}")
+
         model = "vitc" if model is None else model
         device = "cuda" if torch.cuda.is_available() else "cpu"
         scorer = SummaCZS(
@@ -221,7 +225,10 @@ class Scorer:
                 HallucinationModel,
             )
         except ImportError as e:
-            print(e)
+            print(
+                f"Vectera Hallucination detection model can not be loaded.\n{e}"
+            )
+
         model = "vectara-hallucination" if model is None else model
 
         scorer = HallucinationModel(model_name=model)
@@ -236,7 +243,7 @@ class Scorer:
 
     @classmethod
     def neural_toxic_score(
-        cls, prediction: str, model: Optional[Any] = None
+        cls, prediction: str, model: Optional[str] = None
     ) -> Union[float, dict]:
         """
         Calculate the toxicity score of a given text prediction using the Detoxify model.
@@ -286,3 +293,63 @@ class Scorer:
             toxicity_score_dict
         )
         return mean_toxicity_score, toxicity_score_dict
+
+    @classmethod
+    def answer_relevancy_score(
+        cls,
+        predictions: Union[str, List[str]],
+        target: str,
+        model_type: Optional[str] = None,
+        model_name: Optional[str] = None,
+    ) -> float:
+        """Calculates the Answer relevancy score.
+
+        Args:
+            predictions (Union[str, List[str]]): The predictions from the model.
+            target (str): The target on which we need to check relevancy.
+            model_name (str): The type of the answer relevancy model. This can be either an self_encoder or a cross_encoder. By default it is cross_encoder.
+            model_name (Optional[str], optional): The name of the model. Defaults to None.
+
+        Returns:
+            float: Answer relevancy score.
+        """
+        from sentence_transformers import util
+
+        try:
+            from deepeval.models import (
+                AnswerRelevancyModel,
+                CrossEncoderAnswerRelevancyModel,
+            )
+        except Exception as e:
+            print(f"AnswerRelevancyModel model can not be loaded.\n{e}")
+
+        if model_type is not None:
+            assert model_type in [
+                "self_encoder",
+                "cross_encoder",
+            ], "model_type can be either 'self_encoder' or 'cross_encoder'"
+
+        model_type = "cross_encoder" if model_type is None else model_type
+
+        if model_type == "cross_encoder":
+            assert isinstance(
+                predictions, str
+            ), "When model_type is 'cross_encoder', you can compare with one prediction and one target."
+            answer_relevancy_model = CrossEncoderAnswerRelevancyModel(
+                model_name=model_name
+            )
+            score = answer_relevancy_model(predictions, target)
+        else:
+            answer_relevancy_model = AnswerRelevancyModel(model_name=model_name)
+            docs = (
+                [predictions] if isinstance(predictions, str) else predictions
+            )
+            query_embedding = answer_relevancy_model(target)
+            document_embedding = answer_relevancy_model(docs)
+            scores = (
+                util.dot_score(query_embedding, document_embedding)[0]
+                .cpu()
+                .tolist()
+            )
+            score = scores[0]
+        return score
