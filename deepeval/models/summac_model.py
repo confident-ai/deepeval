@@ -5,10 +5,10 @@ from deepeval.models._summac_model import _SummaCZS
 
 class SummaCModels(DeepEvalBaseModel):
     def __init__(self, model_name: str | None = None, granularity: str | None = None, device: str | None = None, *args, **kwargs):
-        self.model_name = "vitc" if model_name is None else model_name
+        model_name = "vitc" if model_name is None else model_name
         self.granularity = "sentence" if granularity is None else granularity
         self.device = device if device is not None else "cuda" if torch.cuda.is_available() else "cpu"
-        super().__init__(model_name)
+        super().__init__(model_name, *args, **kwargs)
     
     def load_model(self, op1: str | None = "max", op2: str | None = "mean", use_ent: bool | None = True, use_con: bool | None = True, image_load_cache: bool | None = True, **kwargs):
         return _SummaCZS(
