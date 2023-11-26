@@ -171,10 +171,10 @@ class Scorer:
             "bert-recall": recall.detach().numpy().tolist(),
             "bert-f1": f1.detach().numpy().tolist(),
         }
-
+    
     @classmethod
     def faithfulness_score(
-        cls, target: str, prediction: str, model: Optional[str] = None, device: Optional[str] = None
+        cls, target: str, prediction: str, model: Optional[str] = None, granularity: Optional[str]=None, device: Optional[str]=None
     ) -> float:
         """Calculate the faithfulness score of a prediction compared to a target text using SummaCZS.
 
@@ -188,21 +188,20 @@ class Scorer:
 
         Returns:
             float: The computed faithfulness score. Higher values indicate greater faithfulness to the target text.
+        
+        Right now we are using score_one method under the hood. Instead of scoring multiple predictions for faithfullness. 
         """
         try:
             from deepeval.models import SummaCModels
         except Exception as e:
             print(f"SummaCZS model can not be loaded.\n{e}")
 
-        model = "vitc" if model is None else model
-        device = device if device is not None else "cuda" if torch.cuda.is_available() else "cpu"
-        scorer = SummaCZS(
-            granularity="sentence",
+        scorer = SummaCModels(
             model_name=model,
-            imager_load_cache=False,
-            device=device,
+            granularity=granularity,
+            device=device
         )
-        return scorer.score_one(target, prediction)["score"]
+        return scorer(target, prediction)["score"]
 
     @classmethod
     def hallucination_score(
