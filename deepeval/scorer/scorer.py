@@ -174,7 +174,7 @@ class Scorer:
 
     @classmethod
     def faithfulness_score(
-        cls, target: str, prediction: str, model: Optional[str] = None
+        cls, target: str, prediction: str, model: Optional[str] = None, device: Optional[str] = None
     ) -> float:
         """Calculate the faithfulness score of a prediction compared to a target text using SummaCZS.
 
@@ -190,12 +190,12 @@ class Scorer:
             float: The computed faithfulness score. Higher values indicate greater faithfulness to the target text.
         """
         try:
-            from deepeval.models import SummaCZS
+            from deepeval.models import SummaCModels
         except Exception as e:
             print(f"SummaCZS model can not be loaded.\n{e}")
 
         model = "vitc" if model is None else model
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = device if device is not None else "cuda" if torch.cuda.is_available() else "cpu"
         scorer = SummaCZS(
             granularity="sentence",
             model_name=model,
@@ -228,11 +228,7 @@ class Scorer:
             print(
                 f"Vectera Hallucination detection model can not be loaded.\n{e}"
             )
-
-        model = "vectara-hallucination" if model is None else model
-
         scorer = HallucinationModel(model_name=model)
-
         return scorer.model.predict([source, prediction])
 
     @classmethod
