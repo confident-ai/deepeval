@@ -269,25 +269,11 @@ class Scorer:
         If the model is 'multilingual', we get a dict same as the unbiasd one.
         """
         try:
-            from detoxify import Detoxify
+            from deepeval.models import DetoxifyModel
         except ImportError as e:
-            print(e)
-
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        if model is not None:
-            assert model in [
-                "original",
-                "unbiased",
-                "multilingual",
-            ], "Invalid model. Available variants: original, unbiased, multilingual"
-            detoxify_model = Detoxify(model, device=device)
-        else:
-            detoxify_model = Detoxify("original", device=device)
-        toxicity_score_dict = detoxify_model.predict(prediction)
-        mean_toxicity_score = sum(list(toxicity_score_dict.values())) / len(
-            toxicity_score_dict
-        )
-        return mean_toxicity_score, toxicity_score_dict
+            print(f"Unable to import.\n {e}")
+        scorer = DetoxifyModel(model_name=model)
+        return scorer(prediction)
 
     @classmethod
     def answer_relevancy_score(
