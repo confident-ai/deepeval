@@ -348,3 +348,20 @@ class Scorer:
             )
             score = scores[0]
         return score
+
+    @classmethod
+    def factual_consistency_score(
+        cls, contexts: Union[List[str], str], prediction: str, model: Optional[str]=None 
+    ) -> float:
+        try:
+            from deepeval.models import FactualConsistencyModel
+        except Exception as e:
+            print(f"AnswerRelevancyModel model can not be loaded.\n{e}")
+        
+        scorer = FactualConsistencyModel(model)
+        contexts = [contexts] if isinstance(contexts, str) else contexts
+        max_score = 0 
+        for context in contexts:
+            score = scorer.predict(context, prediction)
+            max_score = max(max_score, score)
+        return max_score
