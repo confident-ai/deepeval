@@ -302,7 +302,7 @@ class Scorer:
                 CrossEncoderAnswerRelevancyModel,
             )
         except Exception as e:
-            print(f"AnswerRelevancyModel model can not be loaded.\n{e}")
+            print(f"Unable to load AnswerRelevancyModel model.\n{e}")
 
         if model_type is not None:
             assert model_type in [
@@ -342,7 +342,7 @@ class Scorer:
         try:
             from deepeval.models import FactualConsistencyModel
         except Exception as e:
-            print(f"AnswerRelevancyModel model can not be loaded.\n{e}")
+            print(f"Unable to load FactualConsistencyModel\n{e}")
         
         scorer = FactualConsistencyModel(model)
         contexts = [contexts] if isinstance(contexts, str) else contexts
@@ -351,3 +351,13 @@ class Scorer:
             score = scorer.predict(context, prediction)
             max_score = max(max_score, score)
         return max_score
+    
+    @classmethod
+    def neural_bias_score(cls, text: str, model: Optional[str]=None) -> float:
+        try:
+            from deepeval.models import UnBiasedModel
+        except Exception as e:
+            print(f"Unable to load UnBiasedModel.\n{e}")
+        scorer = UnBiasedModel(model_name=model)
+        return scorer(text)
+    
