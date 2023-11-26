@@ -32,10 +32,8 @@ class ContextualPrecisionMetric(BaseMetric):
 
         # Create a dataset from the test case
         data = {
-            "ground_truths": [[test_case.expected_output]],
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
-            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -54,7 +52,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Contextual Relevancy"
+        return "Contextual Precision"
 
 
 class ContextualRelevancyMetric(BaseMetric):
@@ -84,10 +82,8 @@ class ContextualRelevancyMetric(BaseMetric):
 
         # Create a dataset from the test case
         data = {
-            "ground_truths": [[test_case.expected_output]],
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
-            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -135,8 +131,6 @@ class AnswerRelevancyMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
-            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -180,7 +174,6 @@ class FaithfulnessMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
@@ -227,10 +220,9 @@ class ContextRecallMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
+            "question": [test_case.input],
             "ground_truths": [[test_case.expected_output]],
             "contexts": [test_case.retrieval_context],
-            "question": [test_case.input],
-            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -505,6 +497,7 @@ class RagasMetric(BaseMetric):
         # Convert the LLMTestCase to a format compatible with Dataset
         scores = []
         metrics = [
+            ContextualPrecisionMetric(),
             ContextualRelevancyMetric(),
             ContextRecallMetric(),
             FaithfulnessMetric(),
