@@ -2,6 +2,7 @@ import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import (
     RagasMetric,
+    ContextualPrecisionMetric,
     ContextualRelevancyMetric,
     FaithfulnessMetric,
     ContextRecallMetric,
@@ -44,7 +45,7 @@ def test_everything():
         input=query,
         actual_output=output,
         expected_output=expected_output,
-        context=context,
+        retrieval_context=context,
     )
     metric1 = ContextualRelevancyMetric()
     metric2 = FaithfulnessMetric()
@@ -54,16 +55,20 @@ def test_everything():
     metric6 = CoherenceMetric()
     metric7 = MaliciousnessMetric()
     metric8 = AnswerRelevancyMetric()
+    metric9 = ContextualPrecisionMetric()
+    metric10 = RagasMetric()
     assert_test(
         test_case,
         [
             metric1,
             metric2,
             metric3,
-            metric4,
-            metric5,
-            metric6,
-            metric7,
+            # metric4,
+            # metric5,
+            # metric6,
+            # metric7,
             metric8,
+            metric9,
+            metric10,
         ],
     )

@@ -112,25 +112,17 @@ run_test(test_case, [answer_relevancy_metric])
 
 ## RAGAS
 
-The RAGAS metric is useful for evaluating RAG pipelines (ie. LLM applications built with RAG). The RAGAS score is calculated by taking an unweighted harmonic mean of five distinct metrics.
+`deepeval` offers the RAGAS metric, which is useful for evaluating RAG pipelines (ie. LLM applications built with RAG). The RAGAS score is calculated by taking an unweighted harmonic mean of four distinct metrics.
 
-1. **Faithfulness Metric**: measures hallucination to ensure output align with context. Calculated using the `actual_output` and `context`.
+1. **Faithfulness Metric**: measures hallucination to ensure output align with context. Calculated using the `actual_output` and `retrieval_context`.
 
 2. **Answer Relevancy Metric**: measures how relevant an answer is relative to the question. Penalizes redundancy or incompleteness. Derived from the `input` and `actual_output`.
 
-3. **Contextual Relevancy Metric**: assesses the relevance of retrieved contexts to input. Penalizes redundant information. Based on the `input` and `context`.
+3. **Contextual Relevancy Metric**: assesses the relevance of retrieved contexts to input. Penalizes redundant information. Based on the `input` and `retrieval_context`.
 
-4. **Context Recall Metric**: gauges the recall of the retrieved context using the annotated answer as a reference. Based on the `expected_output` and `context`.
-
-5. **Harmfulness Metric**: measures how harmful the output is. Does not require any reference for evaluation.
+4. **Context Recall Metric**: gauges the recall of the retrieved context using the annotated answer as a reference. Based on the `expected_output` and `retrieval_context`.
 
 The Faithfulness and Answer Relevancy metric assess the quality of the generator in your RAG pipeline, while the Contextual Relevancy and Recall metric evaluate the performance of your retriever.
-
-To begin, install `ragas`:
-
-```console
-pip install ragas
-```
 
 Create an `LLMTestCase` and supply all parameters to calculate the RAGAS score:
 
@@ -159,6 +151,7 @@ run_test(test_case, [ragas_metric])
 As mentioned earlier, the RAGAS score is the harmonic mean of five different metrics. You can however import these metrics individually and utilize them in exactly the same way as all other metrics offered by `deepeval`.
 
 ```python
+from deepeval.metrics import ContextualPrecisionMetric
 from deepeval.metrics import ContextualRelevancyMetric
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.metrics import FaithfulnessMetric

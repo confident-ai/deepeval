@@ -11,6 +11,7 @@ class LLMTestCaseParams(Enum):
     ACTUAL_OUTPUT = "actual_output"
     EXPECTED_OUTPUT = "expected_output"
     CONTEXT = "context"
+    RETRIEVAL_CONTEXT = "retrieval_context"
 
 
 @dataclass
@@ -31,6 +32,7 @@ class LLMTestCase(TestCase):
         actual_output: str,
         expected_output: Optional[str] = None,
         context: Optional[List[str]] = None,
+        retrieval_context: Optional[List[str]] = None,
         id: Optional[str] = None,
     ):
         super().__init__(id)
@@ -38,6 +40,7 @@ class LLMTestCase(TestCase):
         self.actual_output = actual_output
         self.expected_output = expected_output
         self.context = context
+        self.retrieval_context = retrieval_context
 
     def __post_init__(self):
         super().__post_init__()
