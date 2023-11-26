@@ -4,12 +4,10 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 0 - Bias
 """
 
-import warnings
 from typing import Optional, List
-
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-
+from deepeval.scorer import Scorer
 
 class UnBiasedMetric(BaseMetric):
     def __init__(
@@ -41,19 +39,13 @@ class UnBiasedMetric(BaseMetric):
                     f"Test case is missing the required attribute: {param.value}"
                 )
 
-        from Dbias.bias_classification import classifier
-
-        warnings.warn(
-            "Run `pip install deepeval[bias]`. If you have, please ignore this warning."
-        )
-
         total_score = 0  # to accumulate scores for all evaluation params
         all_results = (
             []
         )  # to accumulate all individual results if return_all_scores is True
 
         for param in self.evaluation_params:
-            result = classifier(getattr(test_case, param.value))
+            result = Scorer.neural_bias_score(getattr(test_case, param.value), model=self.model_name)
             if return_all_scores:
                 all_results.append(result)
 
