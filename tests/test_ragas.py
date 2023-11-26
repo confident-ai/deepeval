@@ -39,7 +39,7 @@ def test_ragas_score():
         )
 
 
-# @pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     test_case = LLMTestCase(
         input=query,
