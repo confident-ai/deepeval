@@ -34,6 +34,7 @@ setup(
         "langchain",
         "rouge_score==0.1.2",
         "nltk==3.8.1",
+        "ragas",
     ],
     extras_require={
         "bias": [
