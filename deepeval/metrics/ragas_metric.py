@@ -4,6 +4,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from typing import List
 
+
 class ContextualPrecisionMetric(BaseMetric):
     """This metric checks the contextual precision using Ragas"""
 
@@ -54,6 +55,7 @@ class ContextualPrecisionMetric(BaseMetric):
     @property
     def __name__(self):
         return "Contextual Relevancy"
+
 
 class ContextualRelevancyMetric(BaseMetric):
     """This metric checks the contextual relevancy using Ragas"""
