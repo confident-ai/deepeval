@@ -29,7 +29,7 @@ class MetricsMetadata(BaseModel):
     reason: Optional[str] = None
 
 
-class MetricScore(BaseModel):
+class MetricScoreType(BaseModel):
     metric: str
     score: float
 
@@ -38,7 +38,7 @@ class MetricScore(BaseModel):
         return cls(metric=metric.__name__, score=metric.score)
 
 
-class MetricDict:
+class MetricsAverageDict:
     def __init__(self):
         self.metric_dict = {}
         self.metric_count = {}
@@ -53,39 +53,11 @@ class MetricDict:
 
     def get_average_metric_score(self):
         return [
-            MetricScore(
+            MetricScoreType(
                 metric=metric,
                 score=self.metric_dict[metric] / self.metric_count[metric],
             )
             for metric in self.metric_dict
-        ]
-
-
-class MetricsMetadataAverageDict:
-    def __init__(self):
-        self.metric_scores_dict = defaultdict(list)
-        self.min_score_dict = defaultdict(float)
-        self.metric_reason_dict = defaultdict(str)
-
-    def add_metric(self, metric: BaseMetric):
-        metric_name = metric.__name__
-
-        self.metric_scores_dict[metric_name].append(metric.score)
-        self.min_score_dict[metric_name] = min(
-            self.min_score_dict.get(metric_name, float("inf")),
-            metric.minimum_score,
-        )
-        self.metric_reason_dict[metric_name] = metric.reason
-
-    def get_metrics_metadata(self):
-        return [
-            MetricsMetadata(
-                metric=metric_name,
-                score=sum(scores) / len(scores),
-                minimumScore=self.min_score_dict[metric_name],
-                reason=self.metric_reason_dict[metric_name],
-            )
-            for metric_name, scores in self.metric_scores_dict.items()
         ]
 
 
@@ -101,6 +73,7 @@ class APITestCase(BaseModel):
     run_duration: float = Field(..., alias="runDuration")
     traceStack: Optional[dict] = Field(None)
     context: Optional[list] = Field(None)
+    id: Optional[str] = None
 
 
 class TestRun(BaseModel):
@@ -115,7 +88,7 @@ class TestRun(BaseModel):
         alias="testCases", default_factory=lambda: []
     )
 
-    metric_scores: List[MetricScore] = Field(
+    metric_scores: List[MetricScoreType] = Field(
         default_factory=lambda: [], alias="metricScores"
     )
     configurations: Optional[dict[Any, Any]] = Field(default_factory=dict)
@@ -123,7 +96,7 @@ class TestRun(BaseModel):
     def add_llm_test_case(
         self,
         test_case: LLMTestCase,
-        metrics: List[BaseMetric],
+        metric: BaseMetric,
         run_duration: float,
         index: int,
     ):
@@ -132,14 +105,17 @@ class TestRun(BaseModel):
         existing_test_case: LLMTestCase = self.dict_test_cases.get(
             test_case_id, None
         )
-        metrics_metadata_dict = MetricsMetadataAverageDict()
-        for metric in metrics:
-            metrics_metadata_dict.add_metric(metric)
-        metrics_metadata = metrics_metadata_dict.get_metrics_metadata()
+
+        metrics_metadata = MetricsMetadata(
+            metric=metric.__name__,
+            score=metric.score,
+            minimumScore=0.5,
+            reason=metric.reason,
+        )
 
         if existing_test_case:
             # If it exists, append the metrics to the existing test case
-            existing_test_case.metrics_metadata.extend(metrics_metadata)
+            existing_test_case.metrics_metadata.append(metrics_metadata)
             success = all(
                 [
                     metric.score >= metric.minimum_score
@@ -149,28 +125,25 @@ class TestRun(BaseModel):
             # Update the success status
             existing_test_case.success = success
         else:
-            # If it doesn't exist, create a new test case
-            # Adding backwards compatibility to ensure context still works.
-            success = all([metric.is_successful() for metric in metrics])
             api_test_case: APITestCase = APITestCase(
                 name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
                 input=test_case.input,
                 actualOutput=test_case.actual_output,
                 expectedOutput=test_case.expected_output,
-                success=success,
-                metricsMetadata=metrics_metadata,
+                success=metric.is_successful(),
+                metricsMetadata=[metrics_metadata],
                 runDuration=run_duration,
                 context=test_case.context,
                 traceStack=get_trace_stack(),
+                id=test_case.id,
             )
-
             self.dict_test_cases[test_case_id] = api_test_case
 
     def cleanup(self):
         for _, test_case in self.dict_test_cases.items():
             self.test_cases.append(test_case)
         del self.dict_test_cases
-        all_metric_dict = MetricDict()
+        all_metric_dict = MetricsAverageDict()
         for test_case in self.test_cases:
             for metric in test_case.metrics_metadata:
                 all_metric_dict.add_metric(metric.metric, metric.score)
@@ -241,78 +214,65 @@ class TestRunManager:
     def clear_test_run(self):
         self.test_run = None
 
-    # TODO: fix table rendering logic
     def display_results_table(self, test_run: TestRun):
-        # Calculate the average of each metric
-        metrics_avg = {
-            metric.metric: metric.score for metric in test_run.metric_scores
-        }
-
-        # Count the number of passes and failures
-        # Get all the possible metrics first
-        all_metrics = {metric.metric for metric in test_run.metric_scores}
-
-        # Loop through to filter for each metric
-        passes = {
-            metric: len(
-                [
-                    test_case_metric
-                    for test_case in test_run.test_cases
-                    for test_case_metric in test_case.metrics_metadata
-                    if test_case_metric.metric == metric and test_case.success
-                ]
-            )
-            for metric in all_metrics
-        }
-        failures = {
-            metric: len(
-                [
-                    test_case_metric
-                    for test_case in test_run.test_cases
-                    for test_case_metric in test_case.metrics_metadata
-                    if test_case_metric.metric == metric
-                ]
-            )
-            - passes[metric]
-            for metric in all_metrics
-        }
-
         table = Table(title="Test Results")
+        table.add_column("Test case", justify="right")
         table.add_column("Metric", justify="right")
-        table.add_column("Average Score", justify="right")
-        table.add_column("Passes", justify="right")
-        table.add_column("Failures", justify="right")
-        table.add_column("Success Rate", justify="right")
-        total_passes = 0
-        total_failures = 0
-        for metric, avg in metrics_avg.items():
-            pass_count = passes[metric]
-            fail_count = failures[metric]
-            total_passes += pass_count
-            total_failures += fail_count
-            success_rate = pass_count / (pass_count + fail_count) * 100
+        table.add_column("Score", justify="right")
+        table.add_column("Status", justify="right")
+        table.add_column("Overall Success Rate", justify="right")
+
+        for index, test_case in enumerate(test_run.test_cases):
+            pass_count = 0
+            fail_count = 0
+            test_case_name = test_case.name
+            if test_case.id:
+                test_case_name += f" ({test_case.id})"
+
+            for metric_metadata in test_case.metrics_metadata:
+                if metric_metadata.score >= metric_metadata.score:
+                    pass_count += 1
+                else:
+                    fail_count += 1
+
             table.add_row(
-                metric,
-                str(avg),
-                f"[green]{str(pass_count)}[/green]",
-                f"[red]{str(fail_count)}[/red]",
-                f"{success_rate:.2f}%",
+                test_case_name,
+                "",
+                "",
+                "",
+                f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
             )
-        total_tests = total_passes + total_failures
-        overall_success_rate = total_passes / total_tests * 100
-        table.add_row(
-            "Total",
-            "-",
-            f"[green]{str(total_passes)}[/green]",
-            f"[red]{str(total_failures)}[/red]",
-            f"{overall_success_rate:.2f}%",
-        )
+
+            for metric_metadata in test_case.metrics_metadata:
+                if metric_metadata.score >= metric_metadata.minimum_score:
+                    status = "[green]PASSED[/green]"
+                else:
+                    status = "[red]FAILED[/red]"
+
+                table.add_row(
+                    "",
+                    str(metric_metadata.metric),
+                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.minimum_score})",
+                    status,
+                    "",
+                )
+
+            if index is not len(self.test_run.test_cases) - 1:
+                table.add_row(
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                )
         print(table)
 
     def post_test_run(self, test_run: TestRun):
         console = Console()
 
-        # TODO: change this, very hacky way to check if api key exists
+        for test_case in test_run.test_cases:
+            test_case.id = None
+
         if os.path.exists(".deepeval"):
             try:
                 body = test_run.model_dump(by_alias=True, exclude_none=True)
@@ -364,8 +324,12 @@ class TestRunManager:
     def wrap_up_test_run(self, display_table: bool = True):
         test_run = test_run_manager.get_test_run()
         test_run.cleanup()
-        if test_run is None or len(test_run.test_cases) == 0:
+        if test_run is None:
             print("Test Run is empty, please try again.")
+            delete_file_if_exists(test_run_manager.temp_file_name)
+            return
+        elif len(test_run.test_cases) == 0:
+            print("No test cases found, please try again.")
             delete_file_if_exists(test_run_manager.temp_file_name)
             return
 
