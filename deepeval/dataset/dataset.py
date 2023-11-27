@@ -8,15 +8,15 @@ import os
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import evaluate
 from deepeval.api import Api, Endpoints
 from deepeval.dataset.utils import convert_test_cases_to_goldens
-from deepeval.dataset.api import APIDataset, CreateDatasetHttpResponse
+from deepeval.dataset.api import APIDataset, CreateDatasetHttpResponse, Golden
 
 
 @dataclass
 class EvaluationDataset:
     test_cases: List[LLMTestCase]
+    goldens: List[Golden]
 
     def __init__(self, test_cases: List[LLMTestCase] = []):
         self.test_cases = test_cases
@@ -239,7 +239,7 @@ class EvaluationDataset:
             )
             api = Api()
             result = api.post_request(
-                endpoint=Endpoints.CREATE_DATASET_ENDPOINT.value,
+                endpoint=Endpoints.DATASET_ENDPOINT,
                 body=body,
             )
             response = CreateDatasetHttpResponse(
@@ -248,15 +248,16 @@ class EvaluationDataset:
             link = response.link
             console = Console()
             console.print(
-                "✅ Dataset pushed to Confidnet AI! View on "
+                "✅ Dataset successfully pushed to Confidnet AI! View on "
                 f"[link={link}]{link}[/link]"
             )
-            # webbrowser.open(link)
+            webbrowser.open(link)
         else:
             raise Exception(
                 "To push dataset to Confident AI, run `deepeval login`"
             )
 
-    # TODO
     def pull(self, alias: str):
-        pass
+        api = Api()
+        result = api.get_request(endpoint=Endpoints.DATASET_ENDPOINT.value, params={'alias': alias})
+        print(result)

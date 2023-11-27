@@ -281,7 +281,7 @@ class TestRunManager:
                 body = test_run.dict(by_alias=True, exclude_none=True)
             api = Api()
             result = api.post_request(
-                endpoint=Endpoints.CREATE_TEST_RUN_ENDPOINT.value,
+                endpoint=Endpoints.TEST_RUN_ENDPOINT.value,
                 body=body,
             )
             response = TestRunHttpResponse(

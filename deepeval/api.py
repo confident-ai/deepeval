@@ -18,8 +18,8 @@ HTTP_RETRY_ALLOWED_METHODS = frozenset({"GET", "POST", "DELETE"})
 
 
 class Endpoints(Enum):
-    CREATE_DATASET_ENDPOINT = "/v1/dataset"
-    CREATE_TEST_RUN_ENDPOINT = "/v1/test-run"
+    DATASET_ENDPOINT = "/v1/dataset"
+    TEST_RUN_ENDPOINT = "/v1/test-run"
 
 
 class Api:
@@ -94,6 +94,9 @@ class Api:
         try:
             params = params or {}
             body = body or None
+
+            print("!!!!!!!!!!")
+            print(url)
 
             res = https.request(
                 method=method,
