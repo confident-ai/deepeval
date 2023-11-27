@@ -259,5 +259,7 @@ class EvaluationDataset:
 
     def pull(self, alias: str):
         api = Api()
-        result = api.get_request(endpoint=Endpoints.DATASET_ENDPOINT.value, params={'alias': alias})
+        result = api.get_request(
+            endpoint=Endpoints.DATASET_ENDPOINT.value, params={"alias": alias}
+        )
         print(result)

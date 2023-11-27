@@ -95,9 +95,6 @@ class Api:
             params = params or {}
             body = body or None
 
-            print("!!!!!!!!!!")
-            print(url)
-
             res = https.request(
                 method=method,
                 url=url,

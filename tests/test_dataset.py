@@ -28,4 +28,3 @@ def test_create_dataset():
         context_key_name="context",
     )
     assert len(dataset.test_cases) == 10, "Test Cases not loaded from JSON"
-    dataset.pull("test")
