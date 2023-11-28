@@ -1,5 +1,6 @@
 import torch 
 from typing import Union, List 
+from typing import List, Union, get_origin
 from deepeval.models.base import DeepEvalBaseModel
 from deepeval.models._summac_model import _SummaCZS
 
@@ -21,7 +22,9 @@ class SummaCModels(DeepEvalBaseModel):
         )
     
     def _call(self, predictions: Union[str, List[str]], targets: Union[str, List[str]]) -> Union[float, dict]:
-        if isinstance(predictions, List[str]) and isinstance(targets, List[str]):
+        list_type = List[str]
+
+        if get_origin(predictions) is list_type and get_origin(targets) is list_type:
             return self.model.score(targets, predictions)
         elif isinstance(predictions, str) and isinstance(targets, str):
             return self.model.score_one(targets, predictions)
