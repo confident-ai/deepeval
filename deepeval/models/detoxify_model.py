@@ -4,7 +4,8 @@ from detoxify import Detoxify
 
 class DetoxifyModel(DeepEvalBaseModel):
     def __init__(self, model_name: str | None = None, *args, **kwargs):
-        assert model_name in ["original", "unbiased", "multilingual"], "Invalid model. Available variants: original, unbiased, multilingual"
+        if model_name is not None:
+            assert model_name in ["original", "unbiased", "multilingual"], "Invalid model. Available variants: original, unbiased, multilingual"
         model_name = 'original' if model_name is None else model_name
         super().__init__(model_name, *args, **kwargs)
     
