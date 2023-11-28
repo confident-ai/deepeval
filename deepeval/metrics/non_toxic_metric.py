@@ -7,9 +7,10 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.scorer import Scorer
 
+
 class NonToxicMetric(BaseMetric):
     def __init__(
-        self, 
+        self,
         evaluation_params: List[LLMTestCaseParams],
         model_name: str = "original",
         minimum_score: float = 0.5,
@@ -40,7 +41,9 @@ class NonToxicMetric(BaseMetric):
 
         for param in self.evaluation_params:
             text_to_evaluate = getattr(test_case, param.value)
-            _, results = Scorer.neural_toxic_score(prediction=text_to_evaluate, model=self.model_name)
+            _, results = Scorer.neural_toxic_score(
+                prediction=text_to_evaluate, model=self.model_name
+            )
             # sample output
             # {'toxicity': 0.98057544,
             # 'severe_toxicity': 0.106649496,

@@ -171,10 +171,15 @@ class Scorer:
             "bert-recall": recall.detach().numpy().tolist(),
             "bert-f1": f1.detach().numpy().tolist(),
         }
-    
+
     @classmethod
     def faithfulness_score(
-        cls, target: str, prediction: str, model: Optional[str] = None, granularity: Optional[str]=None, device: Optional[str]=None
+        cls,
+        target: str,
+        prediction: str,
+        model: Optional[str] = None,
+        granularity: Optional[str] = None,
+        device: Optional[str] = None,
     ) -> float:
         """Calculate the faithfulness score of a prediction compared to a target text using SummaCZS.
 
@@ -188,8 +193,8 @@ class Scorer:
 
         Returns:
             float: The computed faithfulness score. Higher values indicate greater faithfulness to the target text.
-        
-        Right now we are using score_one method under the hood. Instead of scoring multiple predictions for faithfullness. 
+
+        Right now we are using score_one method under the hood. Instead of scoring multiple predictions for faithfullness.
         """
         try:
             from deepeval.models import SummaCModels
@@ -197,9 +202,7 @@ class Scorer:
             print(f"SummaCZS model can not be loaded.\n{e}")
 
         scorer = SummaCModels(
-            model_name=model,
-            granularity=granularity,
-            device=device
+            model_name=model, granularity=granularity, device=device
         )
         return scorer(target, prediction)["score"]
 
@@ -337,27 +340,29 @@ class Scorer:
 
     @classmethod
     def factual_consistency_score(
-        cls, contexts: Union[List[str], str], prediction: str, model: Optional[str]=None 
+        cls,
+        contexts: Union[List[str], str],
+        prediction: str,
+        model: Optional[str] = None,
     ) -> float:
         try:
             from deepeval.models import FactualConsistencyModel
         except Exception as e:
             print(f"Unable to load FactualConsistencyModel\n{e}")
-        
+
         scorer = FactualConsistencyModel(model)
         contexts = [contexts] if isinstance(contexts, str) else contexts
-        max_score = 0 
+        max_score = 0
         for context in contexts:
             score = scorer.predict(context, prediction)
             max_score = max(max_score, score)
         return max_score
-    
+
     @classmethod
-    def neural_bias_score(cls, text: str, model: Optional[str]=None) -> float:
+    def neural_bias_score(cls, text: str, model: Optional[str] = None) -> float:
         try:
             from deepeval.models import UnBiasedModel
         except Exception as e:
             print(f"Unable to load UnBiasedModel.\n{e}")
         scorer = UnBiasedModel(model_name=model)
         return scorer(text)
-    

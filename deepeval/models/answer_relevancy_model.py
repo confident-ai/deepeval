@@ -2,9 +2,11 @@ import numpy as np
 from typing import Optional
 from deepeval.models.base import DeepEvalBaseModel
 
+
 def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum(axis=0)
+
 
 class AnswerRelevancyModel(DeepEvalBaseModel):
     def __init__(self, model_name: Optional[str] = None):

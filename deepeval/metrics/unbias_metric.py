@@ -9,6 +9,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.scorer import Scorer
 
+
 class UnBiasedMetric(BaseMetric):
     def __init__(
         self,
@@ -45,7 +46,9 @@ class UnBiasedMetric(BaseMetric):
         )  # to accumulate all individual results if return_all_scores is True
 
         for param in self.evaluation_params:
-            result = Scorer.neural_bias_score(getattr(test_case, param.value), model=self.model_name)
+            result = Scorer.neural_bias_score(
+                getattr(test_case, param.value), model=self.model_name
+            )
             if return_all_scores:
                 all_results.append(result)
 
