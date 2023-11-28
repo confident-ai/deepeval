@@ -5,6 +5,56 @@ from deepeval.test_case import LLMTestCase
 from typing import List
 
 
+class ContextualPrecisionMetric(BaseMetric):
+    """This metric checks the contextual precision using Ragas"""
+
+    def __init__(
+        self,
+        minimum_score: float = 0.3,
+    ):
+        self.minimum_score = minimum_score
+
+    def measure(self, test_case: LLMTestCase):
+        # sends to server
+        try:
+            from ragas import evaluate
+            from ragas.metrics import context_precision
+
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install ragas to use this metric. `pip install ragas`."
+            )
+
+        try:
+            from datasets import Dataset
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install dataset")
+
+        # Create a dataset from the test case
+        data = {
+            "contexts": [test_case.retrieval_context],
+            "question": [test_case.input],
+            "id": [[test_case.id]],
+        }
+        dataset = Dataset.from_dict(data)
+
+        # Evaluate the dataset using Ragas
+        scores = evaluate(dataset, metrics=[context_precision])
+
+        # Ragas only does dataset-level comparisons
+        context_precision_score = scores["context_precision"]
+        self.success = context_precision_score >= self.minimum_score
+        self.score = context_precision_score
+        return self.score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Contextual Precision"
+
+
 class ContextualRelevancyMetric(BaseMetric):
     """This metric checks the contextual relevancy using Ragas"""
 
@@ -32,10 +82,8 @@ class ContextualRelevancyMetric(BaseMetric):
 
         # Create a dataset from the test case
         data = {
-            "ground_truths": [[test_case.expected_output]],
-            "contexts": [test_case.context],
+            "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
-            "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -83,8 +131,6 @@ class AnswerRelevancyMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
-            "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -128,8 +174,7 @@ class FaithfulnessMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
-            "contexts": [test_case.context],
+            "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
@@ -175,10 +220,9 @@ class ContextRecallMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
-            "contexts": [test_case.context],
             "question": [test_case.input],
-            "answer": [test_case.actual_output],
+            "ground_truths": [[test_case.expected_output]],
+            "contexts": [test_case.retrieval_context],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -453,6 +497,7 @@ class RagasMetric(BaseMetric):
         # Convert the LLMTestCase to a format compatible with Dataset
         scores = []
         metrics = [
+            ContextualPrecisionMetric(),
             ContextualRelevancyMetric(),
             ContextRecallMetric(),
             FaithfulnessMetric(),

@@ -60,7 +60,7 @@ def execute_test(
 
             test_run_manager.get_test_run().add_llm_test_case(
                 test_case=test_case,
-                metrics=[metric],
+                metric=metric,
                 run_duration=run_duration,
                 index=count,
             )
