@@ -4,7 +4,6 @@ from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional, Any
 from deepeval.utils import normalize_text
-from deepeval.models.summac_model import SummaCZS
 
 
 # TODO: More scores are to be added
@@ -175,7 +174,12 @@ class Scorer:
 
     @classmethod
     def faithfulness_score(
-        cls, target: str, prediction: str, model: Optional[str] = None
+        cls,
+        target: str,
+        prediction: str,
+        model: Optional[str] = None,
+        granularity: Optional[str] = None,
+        device: Optional[str] = None,
     ) -> float:
         """Calculate the faithfulness score of a prediction compared to a target text using SummaCZS.
 
@@ -189,16 +193,18 @@ class Scorer:
 
         Returns:
             float: The computed faithfulness score. Higher values indicate greater faithfulness to the target text.
+
+        Right now we are using score_one method under the hood. Instead of scoring multiple predictions for faithfullness.
         """
-        model = "vitc" if model is None else model
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        scorer = SummaCZS(
-            granularity="sentence",
-            model_name=model,
-            imager_load_cache=False,
-            device=device,
+        try:
+            from deepeval.models import SummaCModels
+        except Exception as e:
+            print(f"SummaCZS model can not be loaded.\n{e}")
+
+        scorer = SummaCModels(
+            model_name=model, granularity=granularity, device=device
         )
-        return scorer.score_one(target, prediction)["score"]
+        return scorer(target, prediction)["score"]
 
     @classmethod
     def hallucination_score(
@@ -221,11 +227,10 @@ class Scorer:
                 HallucinationModel,
             )
         except ImportError as e:
-            print(e)
-        model = "vectara-hallucination" if model is None else model
-
+            print(
+                f"Vectera Hallucination detection model can not be loaded.\n{e}"
+            )
         scorer = HallucinationModel(model_name=model)
-
         return scorer.model.predict([source, prediction])
 
     @classmethod
@@ -236,7 +241,7 @@ class Scorer:
 
     @classmethod
     def neural_toxic_score(
-        cls, prediction: str, model: Optional[Any] = None
+        cls, prediction: str, model: Optional[str] = None
     ) -> Union[float, dict]:
         """
         Calculate the toxicity score of a given text prediction using the Detoxify model.
@@ -267,22 +272,97 @@ class Scorer:
         If the model is 'multilingual', we get a dict same as the unbiasd one.
         """
         try:
-            from detoxify import Detoxify
+            from deepeval.models import DetoxifyModel
         except ImportError as e:
-            print(e)
+            print(f"Unable to import.\n {e}")
+        scorer = DetoxifyModel(model_name=model)
+        return scorer(prediction)
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        if model is not None:
-            assert model in [
-                "original",
-                "unbiased",
-                "multilingual",
-            ], "Invalid model. Available variants: original, unbiased, multilingual"
-            detoxify_model = Detoxify(model, device=device)
+    @classmethod
+    def answer_relevancy_score(
+        cls,
+        predictions: Union[str, List[str]],
+        target: str,
+        model_type: Optional[str] = None,
+        model_name: Optional[str] = None,
+    ) -> float:
+        """Calculates the Answer relevancy score.
+
+        Args:
+            predictions (Union[str, List[str]]): The predictions from the model.
+            target (str): The target on which we need to check relevancy.
+            model_name (str): The type of the answer relevancy model. This can be either an self_encoder or a cross_encoder. By default it is cross_encoder.
+            model_name (Optional[str], optional): The name of the model. Defaults to None.
+
+        Returns:
+            float: Answer relevancy score.
+        """
+        from sentence_transformers import util
+
+        try:
+            from deepeval.models import (
+                AnswerRelevancyModel,
+                CrossEncoderAnswerRelevancyModel,
+            )
+        except Exception as e:
+            print(f"Unable to load AnswerRelevancyModel model.\n{e}")
+
+        if model_type is not None:
+            assert model_type in [
+                "self_encoder",
+                "cross_encoder",
+            ], "model_type can be either 'self_encoder' or 'cross_encoder'"
+
+        model_type = "cross_encoder" if model_type is None else model_type
+
+        if model_type == "cross_encoder":
+            assert isinstance(
+                predictions, str
+            ), "When model_type is 'cross_encoder', you can compare with one prediction and one target."
+            answer_relevancy_model = CrossEncoderAnswerRelevancyModel(
+                model_name=model_name
+            )
+            score = answer_relevancy_model(predictions, target)
         else:
-            detoxify_model = Detoxify("original", device=device)
-        toxicity_score_dict = detoxify_model.predict(prediction)
-        mean_toxicity_score = sum(list(toxicity_score_dict.values())) / len(
-            toxicity_score_dict
-        )
-        return mean_toxicity_score, toxicity_score_dict
+            answer_relevancy_model = AnswerRelevancyModel(model_name=model_name)
+            docs = (
+                [predictions] if isinstance(predictions, str) else predictions
+            )
+            query_embedding = answer_relevancy_model(target)
+            document_embedding = answer_relevancy_model(docs)
+            scores = (
+                util.dot_score(query_embedding, document_embedding)[0]
+                .cpu()
+                .tolist()
+            )
+            score = scores[0]
+        return score
+
+    @classmethod
+    def factual_consistency_score(
+        cls,
+        contexts: Union[List[str], str],
+        prediction: str,
+        model: Optional[str] = None,
+    ) -> float:
+        try:
+            from deepeval.models import FactualConsistencyModel
+        except Exception as e:
+            print(f"Unable to load FactualConsistencyModel\n{e}")
+
+        scorer = FactualConsistencyModel(model)
+        contexts = [contexts] if isinstance(contexts, str) else contexts
+        max_score = 0
+        for context in contexts:
+            score = scorer.predict(context, prediction)
+            max_score = max(max_score, score)
+        return max_score
+
+    @classmethod
+    def neural_bias_score(cls, text: str, model: Optional[str] = None) -> float:
+        try:
+            from deepeval.models import UnBiasedModel
+        except Exception as e:
+            print(f"Unable to load UnBiasedModel.\n{e}")
+        scorer = UnBiasedModel(model_name=model)
+        return scorer(text)
