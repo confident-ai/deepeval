@@ -20,6 +20,7 @@ HTTP_RETRY_ALLOWED_METHODS = frozenset({"GET", "POST", "DELETE"})
 class Endpoints(Enum):
     CREATE_DATASET_ENDPOINT = "/v1/dataset"
     CREATE_TEST_RUN_ENDPOINT = "/v1/test-run"
+    CREATE_EVENT_ENDPOINT = "/v1/event"
 
 
 class Api:
