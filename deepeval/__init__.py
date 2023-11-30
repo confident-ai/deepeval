@@ -6,8 +6,9 @@ from .telemetry import *
 from ._version import __version__
 
 from .decorators.hyperparameters import set_hyperparameters
+from deepeval.event import track
 
-__all__ = ["set_hyperparameters"]
+__all__ = ["set_hyperparameters", "track"]
 
 
 def compare_versions(version1, version2):
