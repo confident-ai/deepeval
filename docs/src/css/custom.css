@@ -111,3 +111,7 @@ html[data-theme='dark'] .header-discord-link:before {
 html[data-theme='light'] #invertable-img {
   filter: invert(100%);
 }
+
+html[data-theme='dark'] #invertable-img-dark {
+  filter: invert(100%);
+}

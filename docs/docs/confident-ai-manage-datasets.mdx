@@ -1,0 +1,99 @@
+---
+id: confident-ai-manage-datasets
+title: Managing Datasets
+sidebar_label: Managing Datasets
+---
+
+## Quick Summary
+
+Confident AI provides your team a centralized place to create and edit evaluation datasets. You can manage evaluation datasets either using `deepeval` or directly on Confident AI.
+
+## Create Your Dataset Using DeepEval
+
+Creating an `EvaluationDataset` on Confident using `deepeval` is a two-step process:
+
+1. Create a dataset locally (same as how you would create a dataset as shown in the [datasets section](evaluation-datasets))
+2. Push the created dataset to Confident
+
+### Create A Dataset Locally
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
+
+original_dataset = [
+    {
+        "input": "What are your operating hours?",
+        # Replace with your LLM application output
+        "actual_output": "..."
+        "context": [
+            "Our company operates from 10 AM to 6 PM, Monday to Friday.",
+            "We are closed on weekends and public holidays.",
+            "Our customer service is available 24/7.",
+        ],
+    },
+    {
+        "input": "Do you offer free shipping?",
+        # Replace with your LLM application output
+        "actual_output": "..."
+        "expected_output": "Yes, we offer free shipping on orders over $50."
+    },
+    {
+        "input": "What is your return policy?",
+        # Replace with your LLM application output
+        "actual_output": "..."
+    },
+]
+test_cases = []
+for datapoint in original_dataset:
+    input = datapoint.get("input", None)
+    actual_output = datapoint.get("actual_output", None)
+    expected_output = datapoint.get("expected_output", None)
+    context = datapoint.get("context", None)
+
+    test_case = LLMTestCase(
+        input=input,
+        actual_output=actual_output,
+        expected_output=expected_output,
+        context=context
+    )
+    test_cases.append(test_case)
+
+dataset = EvaluationDataset(test_cases=test_cases)
+```
+
+### Push Dataset to Confident AI
+
+After creating your `EvaluationDataset`, all you have to do is push it to Confident by providing an `alias` as an unique identifier:
+
+```python
+# Provide an alias when pushing a dataset
+dataset.push(alias="My Confident Dataset")
+```
+
+:::danger
+Pushing a dataset to Confident overwrites existing datasets with the same `alias`
+:::
+
+## Create Your Dataset on Confident AI
+
+You can alternatively create an evaluation dataset directly on Confident.
+
+1. [Login to Confident.](https://app.confident-ai.com)
+2. Find "Datasets" on the left navigation bar to go to the "Datasets" page.
+3. Click on the "Create Dataset" button.
+4. Enter an "alias", and click "Create". Click on the newly created dataset to create your first golden.
+5. In the "Edit Dataset" page, click on the "Actions" button.
+6. On the dropdown menu, click on the "Create Golden" button.
+7. Create your "Golden", click "Save", and repeat steps 6-8 until youo're done building your dataset.
+
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/edit-dataset.png)
+
+## What is a Golden?
+
+A "Golden" is what makes up an evaluation dataset and is very similar to a test case in `deepeval`, but they:
+
+- do not require an `actual_output`, so whilst test cases are always ready for evaluation, a golden isn't.
+- only exists within an `EvaluationDataset()`, while test cases can be defined anywhere.
+
+We introduced the concept of goldens because it allows you to create evaluation datasets on Confident without needing to pre-computed `actual_output`s. This is especially helpful if you are looking to generate responses from your LLM application at evaluation time.

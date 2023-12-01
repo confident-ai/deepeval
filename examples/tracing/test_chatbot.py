@@ -1,5 +1,7 @@
 from deepeval.tracing import trace, TraceType
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 
 
 class Chatbot:
@@ -8,7 +10,7 @@ class Chatbot:
 
     @trace(type=TraceType.LLM, name="OpenAI", model="gpt-4")
     def llm(self, input):
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {
@@ -26,10 +28,14 @@ class Chatbot:
         model="text-embedding-ada-002",
     )
     def get_embedding(self, input):
-        response = openai.Embedding.create(
-            input=input, model="text-embedding-ada-002"
+        response = (
+            client.embeddings.create(
+                input=input, model="text-embedding-ada-002"
+            )
+            .data[0]
+            .embedding
         )
-        return response["data"][0]["embedding"]
+        return response
 
     @trace(type=TraceType.RETRIEVER, name="Retriever")
     def retriever(self, input=input):

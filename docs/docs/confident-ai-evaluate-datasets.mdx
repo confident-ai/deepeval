@@ -1,0 +1,68 @@
+---
+id: confident-ai-evaluate-datasets
+title: Evaluating Datasets
+sidebar_label: Evaluating Datasets
+---
+
+## Quick Summary
+
+You can pull evaluation datasets from Confident AI and run evaluations using `deepeval` as described in the [datasets seciton.](evaluation-datasets)
+
+## Pull Your Dataset From Confident AI
+
+Pull datasets from Confident by specifying its `alias`:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+# Initialize empty dataset object
+dataset = EvaluationDataset()
+dataset.pull(alias="My Confident Dataset")
+```
+
+## Evaluate Your Dataset
+
+You can start running evaluations as usual once you have your dataset pulled from Confident AI. Remember, a dataset is simply a list of test cases, so what you previously learned on [evaluating test cases](evaluation-test-cases#assert-test-cases) still applies.
+
+:::note
+The term "evaluations" and "test run" means the same and is often used interchangebly throughout this documentation.
+:::
+
+### With Pytest (highly recommended)
+
+```python title="test_example.py"
+from deepeval.metrics import HallucinationMetric
+from deepeval.evaluator import assert_test
+
+...
+
+@pytest.mark.parametrize(
+    "test_case",
+    dataset,
+)
+def test_customer_chatbot(test_case: LLMTestCase):
+    hallucination_metric = HallucinationMetric(minimum_score=0.3)
+    assert_test(test_case, [hallucination_metric])
+```
+
+Don't forget to run `deepeval test run` in the CLI:
+
+```console
+deepeval test run test_example.py
+```
+
+### Without Pytest
+
+```python
+from deepeval.metrics import HallucinationMetric
+from deepeval.evaluator import evaluate
+
+...
+
+hallucination_metric = HallucinationMetric(minimum_score=0.3)
+
+dataset.evaluate([hallucination_metric])
+
+# You can also call the evaluate() function directly
+evaluate(dataset, [hallucination_metric, answer_relevancy_metric])
+```

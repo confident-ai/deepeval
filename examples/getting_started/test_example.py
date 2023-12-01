@@ -104,7 +104,7 @@ def test_everything():
 @deepeval.set_hyperparameters
 def hyperparameters():
     return {
-        "model": "GPT-4",
+        "model": "GPT-3",
         "prompt_template": """You are a helpful assistant, answer the following question in a non-judgemental tone.
 
         Question:
