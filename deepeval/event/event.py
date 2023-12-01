@@ -1,25 +1,9 @@
 from typing import Optional, List, Dict
 from deepeval.api import Api, Endpoints
-from pydantic import BaseModel, Field
+import asyncio
+from .api import APIEvent
 
-
-class APIEvent(BaseModel):
-    name: str = Field(..., alias="name")
-    model: str
-    input: str
-    output: str
-    retrieval_context: Optional[List[str]] = Field(
-        None, alias="retrievalContext"
-    )
-    completion_time: Optional[float] = Field(None, alias="completionTime")
-    token_usage: Optional[float] = Field(None, alias="tokenUsage")
-    token_cost: Optional[float] = Field(None, alias="tokenCost")
-    distinct_id: Optional[str] = Field(None, alias="distinctId")
-    conversation_id: Optional[str] = Field(None, alias="conversationId")
-    additional_data: Optional[Dict] = Field(None, alias="additionalData")
-
-
-def track(
+async def track_async(
     event_name: str,
     model: str,
     input: str,
@@ -55,3 +39,7 @@ def track(
     except Exception as e:
         if not fail_silently:
             raise (e)
+
+
+def track(*args, **kwargs):
+    return asyncio.run(track_async(*args, **kwargs))

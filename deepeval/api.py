@@ -7,6 +7,8 @@ from requests.adapters import HTTPAdapter, Response, Retry
 from deepeval.constants import API_KEY_ENV
 from deepeval.key_handler import KEY_FILE_HANDLER
 from enum import Enum
+# import aiohttp
+# from aiohttp_retry import RetryClient, ExponentialRetry
 
 API_BASE_URL = "https://app.confident-ai.com/api"
 
@@ -110,6 +112,49 @@ class Api:
             return res
         except Exception as err:
             raise Exception(err) from err
+        
+    # @staticmethod
+    # async def _async_http_request(
+    #     method,
+    #     url,
+    #     headers=None,
+    #     auth=None,
+    #     params=None,
+    #     body=None,
+    #     files=None,
+    #     data=None,
+    #     verify=True,
+    #     proxies=None,
+    #     cert=None,
+    # ):
+    #     # Configure retry strategy
+    #     retry_options = ExponentialRetry(
+    #         attempts=HTTP_TOTAL_RETRIES,
+    #         factor=HTTP_RETRY_BACKOFF_FACTOR,
+    #         statuses=HTTP_STATUS_FORCE_LIST,
+    #         methods=HTTP_RETRY_ALLOWED_METHODS,
+    #     )
+
+    #     # Use aiohttp's RetryClient
+    #     async with RetryClient(raise_for_status=False, retry_options=retry_options) as client:
+    #         try:
+    #             # aiohttp handles data, json, and files differently than requests
+    #             # For example, 'json' argument is directly passed as json=body
+    #             async with client.request(
+    #                 method=method,
+    #                 url=url,
+    #                 headers=headers,
+    #                 auth=auth,
+    #                 params=params or {},
+    #                 json=body,  # Assuming 'body' is meant to be JSON
+    #                 data=data,  # For form data
+    #                 ssl=cert if cert else verify,  # Handling SSL certification
+    #                 proxy=proxies
+    #             ) as response:
+    #                 # You can process the response as required here
+    #                 return await response.text()  # Or response.json() if JSON response is expected
+    #         except Exception as err:
+    #             raise Exception(err) from err
 
     @staticmethod
     def _raise_on_response(res: Response):

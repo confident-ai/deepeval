@@ -267,7 +267,7 @@ class TestRunManager:
                 )
         print(table)
 
-    def post_test_run(self, test_run: TestRun):
+    async def post_test_run(self, test_run: TestRun):
         console = Console()
 
         for test_case in test_run.test_cases:
@@ -280,7 +280,7 @@ class TestRunManager:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
             api = Api()
-            result = api.post_request(
+            result = await api.post_request(
                 endpoint=Endpoints.CREATE_TEST_RUN_ENDPOINT.value,
                 body=body,
             )
@@ -321,7 +321,7 @@ class TestRunManager:
                 print(f"Results saved in {local_folder} as {new_test_filename}")
             os.remove(new_test_filename)
 
-    def wrap_up_test_run(self, display_table: bool = True):
+    async def wrap_up_test_run(self, display_table: bool = True):
         test_run = test_run_manager.get_test_run()
         test_run.cleanup()
         if test_run is None:

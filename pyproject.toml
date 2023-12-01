@@ -40,6 +40,8 @@ black = "*"
 portalocker = "*"
 openai = "*"
 langchain = "*"
+aiohttp = "*"
+aiohttp_retry = "*"
 
 [tool.black]
 line-length = 80
