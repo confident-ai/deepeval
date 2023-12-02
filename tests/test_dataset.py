@@ -8,6 +8,7 @@ from deepeval.test_case import LLMTestCase
 
 dataset = EvaluationDataset()
 
+
 def test_create_dataset():
     module_b_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -33,7 +34,9 @@ def test_create_dataset():
 
     dataset.push("alias")
 
-dataset.pull("alias")
+
+# dataset.pull("alias")
+
 
 @pytest.mark.parametrize(
     "test_case",

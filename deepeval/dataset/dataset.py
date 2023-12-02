@@ -9,8 +9,16 @@ import os
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.api import Api, Endpoints
-from deepeval.dataset.utils import convert_test_cases_to_goldens, convert_goldens_to_test_cases
-from deepeval.dataset.api import APIDataset, CreateDatasetHttpResponse, Golden, DatasetHttpResponse
+from deepeval.dataset.utils import (
+    convert_test_cases_to_goldens,
+    convert_goldens_to_test_cases,
+)
+from deepeval.dataset.api import (
+    APIDataset,
+    CreateDatasetHttpResponse,
+    Golden,
+    DatasetHttpResponse,
+)
 
 
 @dataclass
@@ -262,7 +270,8 @@ class EvaluationDataset:
         if os.path.exists(".deepeval"):
             api = Api()
             result = api.get_request(
-                endpoint=Endpoints.DATASET_ENDPOINT.value, params={"alias": alias}
+                endpoint=Endpoints.DATASET_ENDPOINT.value,
+                params={"alias": alias},
             )
             response = DatasetHttpResponse(
                 goldens=result["goldens"],
