@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Union
 
 
 class Golden(BaseModel):
@@ -11,6 +11,7 @@ class Golden(BaseModel):
 
 class APIDataset(BaseModel):
     alias: str
+    overwrite: bool
     goldens: Optional[List[Golden]] = Field(default=None)
 
 
