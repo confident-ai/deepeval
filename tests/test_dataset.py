@@ -2,6 +2,9 @@ import os
 
 import pytest
 from deepeval.dataset import EvaluationDataset
+from deepeval.metrics import HallucinationMetric
+from deepeval.evaluator import assert_test
+from deepeval.test_case import LLMTestCase
 
 dataset = EvaluationDataset()
 
@@ -28,3 +31,15 @@ def test_create_dataset():
         context_key_name="context",
     )
     assert len(dataset.test_cases) == 10, "Test Cases not loaded from JSON"
+
+    # dataset.push("alias")
+
+
+# dataset.pull("alias")
+# @pytest.mark.parametrize(
+#     "test_case",
+#     dataset,
+# )
+# def test_customer_chatbot(test_case: LLMTestCase):
+#     hallucination_metric = HallucinationMetric(minimum_score=0.3)
+#     assert_test(test_case, [hallucination_metric])

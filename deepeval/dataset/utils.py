@@ -17,3 +17,16 @@ def convert_test_cases_to_goldens(
         }
         goldens.append(Golden(**golden))
     return goldens
+
+
+def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
+    test_cases = []
+    for golden in goldens:
+        test_case = LLMTestCase(
+            input=golden.input,
+            actual_output=golden.actual_output,
+            expected_output=golden.expected_output,
+            context=golden.context,
+        )
+        test_cases.append(test_case)
+    return test_cases
