@@ -49,7 +49,7 @@ def track(
     api = Api()
     try:
         _ = api.post_request(
-            endpoint=Endpoints.CREATE_EVENT_ENDPOINT.value,
+            endpoint=Endpoints.EVENT_ENDPOINT.value,
             body=event.dict(by_alias=True, exclude_none=True),
         )
     except Exception as e:

@@ -16,3 +16,7 @@ class APIDataset(BaseModel):
 
 class CreateDatasetHttpResponse(BaseModel):
     link: str
+
+
+class DatasetHttpResponse(BaseModel):
+    goldens: List[Golden]
