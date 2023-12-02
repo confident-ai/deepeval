@@ -36,6 +36,7 @@ The term "evaluations" and "test run" means the same and is often used interchan
 from deepeval.metrics import HallucinationMetric
 from deepeval.evaluator import assert_test
 from deepeval.dataset import EvaluationDataset
+from deepeval.test_case import LLMTestCase
 
 # Initialize empty dataset object
 dataset = EvaluationDataset()
@@ -65,13 +66,11 @@ from deepeval.metrics import HallucinationMetric
 from deepeval.evaluator import evaluate
 from deepeval.dataset import EvaluationDataset
 
-# Initialize empty dataset object
-dataset = EvaluationDataset()
-
-# Pull from Confident
-dataset.pull(alias="My Confident Dataset")
-
 hallucination_metric = HallucinationMetric(minimum_score=0.3)
+
+# Initialize empty dataset object and pull from Confident
+dataset = EvaluationDataset()
+dataset.pull(alias="My Confident Dataset")
 
 dataset.evaluate([hallucination_metric])
 
