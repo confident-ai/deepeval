@@ -112,6 +112,16 @@ html[data-theme='light'] #invertable-img {
   filter: invert(100%);
 }
 
-html[data-theme='dark'] #invertable-img-dark {
+#confident-workflow {
+  width: 70%;
+}
+
+html[data-theme='dark'] #confident-workflow {
   filter: invert(100%);
+}
+
+@media (max-width: 600px) {
+  #confident-workflow {
+    width: 100%!important
+  }
 }
