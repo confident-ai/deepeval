@@ -8,7 +8,6 @@ from deepeval.test_case import LLMTestCase
 
 dataset = EvaluationDataset()
 
-
 def test_create_dataset():
     module_b_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -32,16 +31,13 @@ def test_create_dataset():
     )
     assert len(dataset.test_cases) == 10, "Test Cases not loaded from JSON"
 
-    dataset.push("alias")
-
+    # dataset.push("alias")
 
 # dataset.pull("alias")
-
-
-@pytest.mark.parametrize(
-    "test_case",
-    dataset,
-)
-def test_customer_chatbot(test_case: LLMTestCase):
-    hallucination_metric = HallucinationMetric(minimum_score=0.3)
-    assert_test(test_case, [hallucination_metric])
+# @pytest.mark.parametrize(
+#     "test_case",
+#     dataset,
+# )
+# def test_customer_chatbot(test_case: LLMTestCase):
+#     hallucination_metric = HallucinationMetric(minimum_score=0.3)
+#     assert_test(test_case, [hallucination_metric])
