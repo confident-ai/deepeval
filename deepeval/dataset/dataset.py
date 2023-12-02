@@ -243,24 +243,25 @@ class EvaluationDataset:
             )
         if os.path.exists(".deepeval"):
             goldens = convert_test_cases_to_goldens(self.test_cases)
-            body = APIDataset(alias=alias, goldens=goldens).model_dump(
-                by_alias=True, exclude_none=True
-            )
+            body = APIDataset(
+                alias=alias, overwrite=False, goldens=goldens
+            ).model_dump(by_alias=True, exclude_none=True)
             api = Api()
             result = api.post_request(
                 endpoint=Endpoints.DATASET_ENDPOINT.value,
                 body=body,
             )
-            response = CreateDatasetHttpResponse(
-                link=result["link"],
-            )
-            link = response.link
-            console = Console()
-            console.print(
-                "✅ Dataset successfully pushed to Confidnet AI! View at "
-                f"[link={link}]{link}[/link]"
-            )
-            webbrowser.open(link)
+            if result:
+                response = CreateDatasetHttpResponse(
+                    link=result["link"],
+                )
+                link = response.link
+                console = Console()
+                console.print(
+                    "✅ Dataset successfully pushed to Confidnet AI! View at "
+                    f"[link={link}]{link}[/link]"
+                )
+                webbrowser.open(link)
         else:
             raise Exception(
                 "To push dataset to Confident AI, run `deepeval login`"

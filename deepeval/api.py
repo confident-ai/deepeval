@@ -133,7 +133,6 @@ class Api:
         data=None,
     ):
         """Generic HTTP request method with error handling."""
-
         url = f"{self.base_api_url}/{endpoint}"
         res = self._http_request(
             method,
@@ -155,30 +154,19 @@ class Api:
             except ValueError:
                 # Some endpoints only return 'OK' message without JSON
                 return json
-        elif (
-            res.status_code == 409
-            and "task" in endpoint
-            and body.get("unique_id")
-        ):
-            retry_history = res.raw.retries.history
-            # Example RequestHistory tuple
-            # RequestHistory(method='POST',
-            #   url='/v1/task/imageannotation',
-            #   error=None,
-            #   status=409,
-            #   redirect_location=None)
-            if retry_history != ():
-                # See if the first retry was a 500 or 503 error
-                if retry_history[0][3] >= 500:
-                    uuid = body["unique_id"]
-                    newUrl = f"{self.base_api_url}/tasks?unique_id={uuid}"
-                    # grab task from api
-                    newRes = self._http_request(
-                        "GET", newUrl, headers=headers, auth=auth
-                    )
-                    json = newRes.json()["docs"][0]
+        elif res.status_code == 409:
+            message = res.json().get("message", "Conflict occurred.")
+
+            # Prompt user for input
+            user_input = input(f"{message} [y/N]: ").strip().lower()
+            if user_input == "y":
+                body["overwrite"] = True
+                return self._api_request(
+                    method, endpoint, headers, auth, params, body, files, data
+                )
             else:
-                self._raise_on_response(res)
+                print("Aborted.")
+                return None
         else:
             self._raise_on_response(res)
         return json
