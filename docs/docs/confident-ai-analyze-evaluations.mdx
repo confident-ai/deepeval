@@ -26,7 +26,7 @@ import deepeval
 from deepeval.metrics import HallucinationMetric
 from deepeval.evaluator import assert_test
 
-def test_hallucination:
+def test_hallucination():
     metric = HallucinationMetric()
     test_case = LLMTestCase(...)
     assert_test(test_case, [metric])
