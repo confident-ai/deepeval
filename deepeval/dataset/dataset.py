@@ -243,9 +243,9 @@ class EvaluationDataset:
             )
         if os.path.exists(".deepeval"):
             goldens = convert_test_cases_to_goldens(self.test_cases)
-            body = APIDataset(alias=alias, overwrite=False, goldens=goldens).model_dump(
-                by_alias=True, exclude_none=True
-            )
+            body = APIDataset(
+                alias=alias, overwrite=False, goldens=goldens
+            ).model_dump(by_alias=True, exclude_none=True)
             api = Api()
             result = api.post_request(
                 endpoint=Endpoints.DATASET_ENDPOINT.value,

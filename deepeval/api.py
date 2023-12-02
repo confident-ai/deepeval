@@ -159,9 +159,11 @@ class Api:
 
             # Prompt user for input
             user_input = input(f"{message} [y/N]: ").strip().lower()
-            if user_input == 'y':
-                body['overwrite'] = True
-                return self._api_request(method, endpoint, headers, auth, params, body, files, data)
+            if user_input == "y":
+                body["overwrite"] = True
+                return self._api_request(
+                    method, endpoint, headers, auth, params, body, files, data
+                )
             else:
                 print("Aborted.")
                 return None
