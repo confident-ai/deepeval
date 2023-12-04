@@ -24,8 +24,7 @@ from deepeval.dataset import EvaluationDataset
 original_dataset = [
     {
         "input": "What are your operating hours?",
-        # Replace with your LLM application output
-        "actual_output": "..."
+        "actual_output": "...",
         "context": [
             "Our company operates from 10 AM to 6 PM, Monday to Friday.",
             "We are closed on weekends and public holidays.",
@@ -34,16 +33,15 @@ original_dataset = [
     },
     {
         "input": "Do you offer free shipping?",
-        # Replace with your LLM application output
-        "actual_output": "..."
-        "expected_output": "Yes, we offer free shipping on orders over $50."
+        "actual_output": "...",
+        "expected_output": "Yes, we offer free shipping on orders over $50.",
     },
     {
         "input": "What is your return policy?",
-        # Replace with your LLM application output
-        "actual_output": "..."
+        "actual_output": "...",
     },
 ]
+
 test_cases = []
 for datapoint in original_dataset:
     input = datapoint.get("input", None)
