@@ -35,7 +35,7 @@ setup(
         "rouge_score==0.1.2",
         "nltk==3.8.1",
         "ragas",
-        "detoxify"
+        "detoxify",
     ],
     extras_require={
         "bias": [
