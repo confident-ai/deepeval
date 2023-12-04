@@ -18,7 +18,7 @@
     </a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval evaluates performance based on metrics such as factual consistency, accuracy, answer relevancy, etc., using LLMs and various other NLP models. It's a production-ready alternative to RAGAS .
+**DeepEval** is a simple-to-use, open-source evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval evaluates performance based on metrics such as hallucination, accuracy, answer relevancy, etc., using LLMs and various other NLP models. It's a production-ready alternative to RAGAS .
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama2 with confidence.
 
@@ -26,10 +26,23 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 # Features
 
-- Large variety of ready-to-use evaluation metrics, ranging from LLM evaluated (G-Eval) to metrics computed via statistical methods or NLP models.
+- Large variety of ready-to-use evaluation metrics powered by LLMs, statistical methods, or NLP models that runs **locally on your machine**:
+  - Hallucination
+  - Answer Relevancy
+  - RAGAS
+  - G-Eval
+  - Toxicity
+  - Bias
+  - etc.
 - Easily create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
-- Evaluate your entire dataset in bulk using fewer than 20 lines of Python code.
-- [Integrated with Confident AI](https://confident-ai.com) for instant observability into evaluation results and hyperparameter comparisons (such as prompt templates and model version used).
+- Evaluate your entire dataset in bulk using fewer than 20 lines of Python code **in parallel**.
+- [Automatically integrated with Confident AI](https://confident-ai.com) for continous evaluation throughout the lifetime of your LLM (app):
+  - log evaluation results and analyze metrics pass / fails
+  - compare and pick the optimal hyperparameters (eg. prompt templates, chunk size, models used, etc.) based on evaluation results
+  - debug evaluation results via LLM traces
+  - manage evaluation test cases / datasets in one place
+  - track events to identify live LLM responses in production
+  - add production events to existing evaluation datasets to strength evals over time
 
 <br />
 
