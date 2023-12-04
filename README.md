@@ -43,9 +43,9 @@ Let's pretend your LLM application is a customer support chatbot; here's how Dee
 pip install -U deepeval
 ```
 
-## [Optional] Create an account
+## Create an account (highly recommended)
 
-Creating an account on our platform will allow you to log test results, enabling easy tracking of changes and performances over iterations. This step is optional, and you can run test cases even without logging in, but we highly recommend giving it a try.
+Although optional, creating an account on our platform will allow you to log test results, enabling easy tracking of changes and performances over iterations. This step is optional, and you can run test cases even without logging in, but we highly recommend giving it a try.
 
 To login, run:
 
@@ -98,9 +98,58 @@ deepeval test run test_chatbot.py
 
 <br />
 
-# View results on our platform
+## Evaluting a Dataset / Test Cases in Bulk
 
-We offer a [free web platform](https://app.confident-ai.com) for you to log and view all test results from DeepEval test runs. Our platform allows you to quickly draw insights on how your metrics are improving with each test run and to determine the optimal parameters (such as prompt templates, models, retrieval pipeline) for your specific LLM application.
+In DeepEval, a dataset is simply a collection of test cases. Here is how you can evaluate things in bulk:
+
+```python
+import pytest
+from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.evaluator import assert_test
+from deepeval.dataset import EvaluationDataset
+
+first_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
+second_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
+
+dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
+
+@pytest.mark.parametrize(
+    "test_case",
+    dataset,
+)
+def test_customer_chatbot(test_case: LLMTestCase):
+    hallucination_metric = HallucinationMetric(minimum_score=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+    assert_test(test_case, [hallucination_metric, answer_relevancy_metric])
+```
+```bash
+# Run this in the CLI, you can also add an optional -n flag to run tests in parallel
+deepeval test run test_<filename>.py -n 4
+```
+<br/>
+
+Alternatively, although we recommend using `deepeval test run`, you can evaluate a dataset/test cases without using pytest:
+```python
+from deepeval.evaluator import evaluate
+...
+
+evaluate(dataset, [hallucination_metric])
+# or
+dataset.evaluate([hallucination_metric])
+```
+
+# View results on Confident AI
+
+We offer a [free web platform](https://app.confident-ai.com) for you to:
+
+1. Log and view all test results / metrics data from DeepEval's test runs.
+2. Debug evaluation results via LLM traces
+3. Compare and pick the optimal hyperparameteres (prompt templates, models, chunk size, etc.).
+4. Create, manage, and centralize your evaluation datasets.
+5. Track events in production and augment your evaluation dataset for continous evaluation in production.
+
+Everything on Confident AI, including how to use Confident is available [here](https://docs.confident-ai.com/docs/confident-ai-introduction).
 
 To begin, login from the CLI:
 
@@ -133,9 +182,9 @@ Please read [CONTRIBUTING.md](https://github.com/confident-ai/deepeval/blob/main
 Features:
 
 - [x] Implement G-Eval
-- [ ] Referenceless Evaluation
-- [ ] Production Evaluation & Logging
-- [ ] Evaluation Dataset Creation
+- [x] Referenceless Evaluation
+- [x] Production Evaluation & Logging
+- [x] Evaluation Dataset Creation
 
 Integrations:
 
