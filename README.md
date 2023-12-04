@@ -46,7 +46,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 <br />
 
-# Getting Started 🚀
+# 🚀 Getting Started 🚀
 
 Let's pretend your LLM application is a customer support chatbot; here's how DeepEval can help test what you've built.
 
