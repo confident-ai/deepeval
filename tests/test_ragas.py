@@ -12,7 +12,7 @@ from deepeval.metrics import (
     MaliciousnessMetric,
 )
 from deepeval.metrics.ragas_metric import AnswerRelevancyMetric
-from deepeval.evaluator import assert_test
+from deepeval import assert_test
 
 query = "Who won the FIFA World Cup in 2018?"
 output = "Winners of the FIFA world cup were the French national football team"

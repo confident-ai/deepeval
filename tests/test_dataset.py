@@ -3,7 +3,7 @@ import os
 import pytest
 from deepeval.dataset import EvaluationDataset
 from deepeval.metrics import HallucinationMetric
-from deepeval.evaluator import assert_test
+from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 
 dataset = EvaluationDataset()

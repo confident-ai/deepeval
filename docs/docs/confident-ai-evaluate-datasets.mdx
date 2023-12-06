@@ -33,8 +33,8 @@ The term "evaluations" and "test run" means the same and is often used interchan
 ### With Pytest (highly recommended)
 
 ```python title="test_example.py"
+from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
-from deepeval.evaluator import assert_test
 from deepeval.dataset import EvaluationDataset
 from deepeval.test_case import LLMTestCase
 
@@ -62,8 +62,8 @@ deepeval test run test_example.py
 ### Without Pytest
 
 ```python
+from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric
-from deepeval.evaluator import evaluate
 from deepeval.dataset import EvaluationDataset
 
 hallucination_metric = HallucinationMetric(minimum_score=0.3)

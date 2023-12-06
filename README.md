@@ -80,9 +80,9 @@ Open `test_chatbot.py` and write your first test case using DeepEval:
 
 ```python
 import pytest
+from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import assert_test
 
 def test_case():
     input = "What if these shoes don't fit?"
@@ -117,9 +117,9 @@ In DeepEval, a dataset is simply a collection of test cases. Here is how you can
 
 ```python
 import pytest
+from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import assert_test
 from deepeval.dataset import EvaluationDataset
 
 first_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
@@ -136,15 +136,18 @@ def test_customer_chatbot(test_case: LLMTestCase):
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
     assert_test(test_case, [hallucination_metric, answer_relevancy_metric])
 ```
+
 ```bash
 # Run this in the CLI, you can also add an optional -n flag to run tests in parallel
 deepeval test run test_<filename>.py -n 4
 ```
+
 <br/>
 
 Alternatively, although we recommend using `deepeval test run`, you can evaluate a dataset/test cases without using pytest:
+
 ```python
-from deepeval.evaluator import evaluate
+from deepeval import evaluate
 ...
 
 evaluate(dataset, [hallucination_metric])

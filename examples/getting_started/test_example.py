@@ -1,8 +1,8 @@
 import pytest
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.evaluator import assert_test
-from deepeval.metrics import BaseMetric, LLMEvalMetric, HallucinationMetric
 import deepeval
+from deepeval import assert_test
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import BaseMetric, LLMEvalMetric, HallucinationMetric
 
 # To run this file: deepeval test run <file_name>.py
 

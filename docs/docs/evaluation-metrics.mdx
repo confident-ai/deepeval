@@ -37,9 +37,9 @@ Hallucination determines whether your LLM application outputs factually correct 
 
 ```python
 import pytest
+from deepeval import run_test
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import run_test
 
 # Replace this with the actual documents that you are passing as input to your LLM.
 context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."]
@@ -94,9 +94,9 @@ Answer Relevancy measures how relevant the `actual_output` of your LLM applicati
 
 ```python
 import pytest
+from deepeval import run_test
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"
@@ -175,8 +175,8 @@ pip install detoxify
 Being a referenceless metric means `NonToxicMetric` requires an extra parameter named `evaluation_params`. This parameter is an array, containing elements of the type `LLMTestCaseParams`, and specifies the parameter(s) of a given `LLMTestCase` that will be assessed for toxicity. The `NonToxicMetric` will then compute a score based on the average toxicity levels of each individual component being evaluated.
 
 ```python
+from deepeval import run_test
 from deepeval.metrics import NonToxicMetric
-from deepeval.evaluator import run_test
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 
@@ -216,9 +216,9 @@ pip install Dbias
 `UnBiasedMetric` is similar to `NonToxicMetric` because it is also a referenceless metric.
 
 ```python
+from deepeval import run_test
 from deepeval.metrics import UnBiasedMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"
