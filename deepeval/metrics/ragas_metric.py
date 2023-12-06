@@ -2,7 +2,7 @@
 """
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-from typing import List
+import warnings
 
 
 class ContextualPrecisionMetric(BaseMetric):
@@ -503,15 +503,22 @@ class RagasMetric(BaseMetric):
             FaithfulnessMetric(),
             AnswerRelevancyMetric(),
         ]
+
+        warnings_list = []
+
         for metric in metrics:
             score = metric.measure(test_case)
+            if score == 0:
+                warnings_list.append(
+                    f"The RAGAS score will be 0 since {metric.__name__} has a score of 0"
+                )
             scores.append(score)
 
-        # ragas score is harmonic mean of all the scores
-        if len(scores) > 0:
-            ragas_score = len(scores) / sum(
-                1.0 / score for score in scores if score != 0
-            )
+        for warning in warnings_list:
+            print(warning)
+
+        if scores and all(score != 0 for score in scores):
+            ragas_score = len(scores) / sum(1.0 / score for score in scores)
         else:
             ragas_score = 0
 
