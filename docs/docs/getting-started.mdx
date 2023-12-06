@@ -50,9 +50,9 @@ Run `touch test_example.py` to create a test file in your root directory. Open `
 
 ```python title="test_example.py"
 import pytest
+from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import assert_test
 
 def test_hallucination():
     input = "What if these shoes don't fit?"
@@ -96,8 +96,8 @@ export DEEPEVAL_RESULTS_FOLDER="./data"
 An LLM evaluated metric, is one where evaluation is carried out by an LLM. Here's how you can create a custom, LLM evaluated metric.
 
 ```python title="test_example.py"
+from deepeval import assert_test
 from deepeval.metrics import LLMEvalMetric
-from deepeval.evaluator import assert_test
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 ...
@@ -221,9 +221,9 @@ Utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate yo
 
 ```python title="test_bulk.py"
 import pytest
+from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import assert_test
 
 dataset = [
     {

@@ -70,7 +70,7 @@ deepeval login
 `deepeval` utilizes the `@pytest.mark.parametrize` decorator to loop through entire datasets.
 
 ```python title="test_bulk.py"
-from deepeval.evaluator import assert_test
+from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
@@ -98,7 +98,7 @@ deepeval test run test_bulk.py -n 3
 Alternately, you can use deepeval's `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
 
 ```python
-from deepeval.evaluator import evaluate
+from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
 

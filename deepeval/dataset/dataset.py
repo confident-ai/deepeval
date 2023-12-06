@@ -37,7 +37,7 @@ class EvaluationDataset:
         return iter(self.test_cases)
 
     def evaluate(self, metrics: List[BaseMetric]):
-        from deepeval.evaluator import evaluate
+        from deepeval import evaluate
 
         return evaluate(self.test_cases, metrics)
 

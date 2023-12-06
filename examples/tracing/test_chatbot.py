@@ -68,9 +68,9 @@ class Chatbot:
 
 
 import pytest
+from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric
-from deepeval.evaluator import assert_test
 
 chatbot = Chatbot()
 

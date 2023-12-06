@@ -23,8 +23,8 @@ Begin by associating hyperparameters with each test run:
 
 ```python title=test_example.py
 import deepeval
+from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
-from deepeval.evaluator import assert_test
 
 def test_hallucination():
     metric = HallucinationMetric()

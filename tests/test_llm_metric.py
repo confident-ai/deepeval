@@ -2,7 +2,7 @@ import pytest
 import openai
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import LLMEvalMetric
-from deepeval.evaluator import assert_test
+from deepeval import assert_test
 
 
 def test_chat_completion():
