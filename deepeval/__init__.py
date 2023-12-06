@@ -7,7 +7,7 @@ from ._version import __version__
 
 from .decorators.hyperparameters import set_hyperparameters
 from deepeval.event import track
-from deepeval import evaluate, run_test, assert_test
+from deepeval.evaluate import evaluate, run_test, assert_test
 
 __all__ = [
     "set_hyperparameters",
