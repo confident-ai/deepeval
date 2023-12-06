@@ -3,10 +3,10 @@ from typing import Union
 from .benchmarks import BenchmarkType
 
 
-def check(alias: Union[str, BenchmarkType]):
-    if alias == BenchmarkType.HELM:
+def check(benchmark: Union[str, BenchmarkType]):
+    if benchmark == BenchmarkType.HELM:
         handleHELMCheck()
-    if alias == BenchmarkType.LM_HARNESS:
+    if benchmark == BenchmarkType.LM_HARNESS:
         handleLMHarnessCheck()
     else:
         # catch all for custom benchmark checks
