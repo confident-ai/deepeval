@@ -2,6 +2,7 @@ from typing import Union
 
 from .benchmarks import BenchmarkType
 
+
 def check(alias: Union[str, BenchmarkType]):
     if alias == BenchmarkType.HELM:
         handleHELMCheck()
@@ -14,6 +15,7 @@ def check(alias: Union[str, BenchmarkType]):
 
 def handleHELMCheck():
     pass
+
 
 def handleLMHarnessCheck():
     pass
