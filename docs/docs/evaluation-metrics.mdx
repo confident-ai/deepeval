@@ -162,6 +162,9 @@ test_case = LLMTestCase(
 ragas_metric.measure(test_case)
 print(ragas_metric.score)
 
+# You can also print out the 5 scores that make up the RAGAS score.
+print(ragas_metric.score_metadata)
+
 # or
 # evaluate([test_case], [ragas_metric])
 ```
