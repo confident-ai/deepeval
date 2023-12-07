@@ -130,6 +130,9 @@ def print_test_result(test_result: TestResult):
             print(
                 f"  - ✅ {metric.__name__} (score: {metric.score}, minimum_score: {metric.minimum_score})"
             )
+        if metric.score_metadata:
+            for metric_name, score in metric.score_metadata.items():
+                print(f"      - {metric_name} (score: {score})")
 
     print("\nFor test case:\n")
     print(f"  - input: {test_result.input}")
