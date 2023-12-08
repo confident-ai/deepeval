@@ -181,8 +181,8 @@ Remember, `context` is the ideal retrieval results for a given input and typical
 ```python
 # A hypothetical LLM application example
 import chatbot
+from deepeval import run_test
 from deepeval.metrics import HallucinationMetric
-from deepeval.evaluator import run_test
 from deepeval.test_case import LLMTestCase
 
 prompt_template = """
@@ -224,8 +224,8 @@ A test case passes only if all metrics meet their respective evaluation criterio
 ```python title="test_assert_example.py"
 # A hypothetical LLM application example
 import chatbot
+from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
-from deepeval.evaluator import assert_test
 from deepeval.test_case import LLMTestCase
 
 prompt_template = """
@@ -276,8 +276,8 @@ Lastly, `deepeval` offers an `evaluate` function to evaluate multiple test cases
 ```python
 # A hypothetical LLM application example
 import chatbot
+from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric
-from deepeval.evaluator import evaluate
 from deepeval.test_case import LLMTestCase
 
 prompt_template = """
@@ -305,10 +305,10 @@ second_test_case = LLMTestCase(
     context=context
 )
 
-dataset = [first_test_case, second_test_case]
+test_cases = [first_test_case, second_test_case]
 
 metric = HallucinationMetric(minimum_score=0.7)
-evaluate(dataset, [metric])
+evaluate(test_cases, [metric])
 ```
 
 Similar to `assert_test`, `evaluate` allows you to log and view test results on Confident AI. For more examples of `evalute`, visit the [datasets section](evaluation-datasets).

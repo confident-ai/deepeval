@@ -1,0 +1,41 @@
+---
+id: confident-ai-introduction
+title: Introduction
+sidebar_label: Introduction
+---
+
+## Quick Summary
+
+Confident AI was designed for teams to bring LLM evaluations from development to production. It is an all-in-one platform that unlocks `deepeval`'s full potential by allowing you to:
+
+- evaluate LLM applications continously in production
+- centralize and standardize evaluation datasets on the cloud
+- trace and debug LLM applications during evaluation
+- keep track of the evaluation history of your LLM application
+- generate evaluation-based summary reports for relevant stakeholders
+
+## Continuous Evaluation
+
+Continuous evaluation refers to the process of evaluating LLM applications in not just development, but also in production and throughout the lifetime of your LLM application. Here's a quick diagram outlining how Confident AI enables this process:
+
+<div
+  style={{
+    marginTop: "80px",
+    marginBottom: "70px",
+    display: "flex",
+    justifyContent: "center",
+  }}
+>
+  <img
+    id="confident-workflow"
+    src="https://d2lsxfc3p6r9rv.cloudfront.net/confident-ai-workflow.png"
+  />
+</div>
+
+Everything in `deepeval` is already automatically integrated with Confident AI, including `deepeval`'s [custom metrics](evaluation-metrics#custom-metrics). To start using Confident AI with `deepeval`, simply login in the CLI:
+
+```
+deepeval login
+```
+
+Follow the instructions displayed on the CLI (to create an account, get your Confident API key, paste it in the CLI), and you're good to go.

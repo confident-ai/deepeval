@@ -1,12 +1,13 @@
 from abc import abstractmethod
 
 from deepeval.test_case import LLMTestCase
-from typing import Optional
+from typing import Optional, Dict
 
 
 class BaseMetric:
     # set an arbitrary minimum score that will get over-ridden later
     score: float = 0
+    score_metadata: Dict = None
     reason: Optional[str] = None
 
     @property

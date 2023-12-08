@@ -4,7 +4,7 @@ import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
-from deepeval.evaluator import assert_test, run_test
+from deepeval import assert_test, run_test
 
 query = "What is Python?"
 answer = "Python is a programming language?"

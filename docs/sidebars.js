@@ -16,7 +16,19 @@ module.exports = {
         'evaluation-test-cases',
         'evaluation-metrics',
         'evaluation-datasets',
-        'evaluation-tracing',
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: 'Confident AI',
+      items: [
+        'confident-ai-introduction',
+        'confident-ai-manage-datasets',
+        'confident-ai-evaluate-datasets',
+        'confident-ai-analyze-evaluations',
+        'confident-ai-debug-evaluations',
+        'confident-ai-track-events'
       ],
       collapsed: false,
     },

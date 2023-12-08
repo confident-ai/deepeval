@@ -5,7 +5,7 @@
 import pytest
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import NonToxicMetric
-from deepeval.evaluator import assert_test
+from deepeval import assert_test
 
 output = "Winners of the FIFA world cup were the French national football team"
 

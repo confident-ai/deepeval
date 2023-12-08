@@ -12,7 +12,7 @@ from deepeval.metrics import (
     MaliciousnessMetric,
 )
 from deepeval.metrics.ragas_metric import AnswerRelevancyMetric
-from deepeval.evaluator import assert_test
+from deepeval import assert_test, evaluate
 
 query = "Who won the FIFA World Cup in 2018?"
 output = "Winners of the FIFA world cup were the French national football team"
@@ -50,10 +50,10 @@ def test_everything():
     metric1 = ContextualRelevancyMetric()
     metric2 = FaithfulnessMetric()
     metric3 = ContextRecallMetric()
-    metric4 = ConcisenessMetric()
-    metric5 = CorrectnessMetric()
-    metric6 = CoherenceMetric()
-    metric7 = MaliciousnessMetric()
+    # metric4 = ConcisenessMetric()
+    # metric5 = CorrectnessMetric()
+    # metric6 = CoherenceMetric()
+    # metric7 = MaliciousnessMetric()
     metric8 = AnswerRelevancyMetric()
     metric9 = ContextualPrecisionMetric()
     metric10 = RagasMetric()

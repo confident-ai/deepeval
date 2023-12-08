@@ -25,7 +25,7 @@ setup(
         "pytest",
         "typer==0.9.0",
         "rich",
-        "protobuf<=3.20.5",
+        "protobuf>=4.21.6",
         "pandas",
         "pydantic",  # loosen pydantic requirements as we support multiple
         "sentry-sdk",
@@ -35,14 +35,12 @@ setup(
         "rouge_score==0.1.2",
         "nltk==3.8.1",
         "ragas",
+        "detoxify",
     ],
     extras_require={
         "bias": [
             "tensorflow",  # for bias
             "Dbias",  # for bias
-        ],
-        "toxic": [
-            "detoxify",  # for toxic classifier
         ],
         "dev": ["black"],
     },

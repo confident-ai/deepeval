@@ -1,8 +1,8 @@
 import pytest
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.evaluator import assert_test
-from deepeval.metrics import BaseMetric, LLMEvalMetric, HallucinationMetric
 import deepeval
+from deepeval import assert_test
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import BaseMetric, LLMEvalMetric, HallucinationMetric
 
 # To run this file: deepeval test run <file_name>.py
 
@@ -104,7 +104,7 @@ def test_everything():
 @deepeval.set_hyperparameters
 def hyperparameters():
     return {
-        "model": "GPT-4",
+        "model": "GPT-3",
         "prompt_template": """You are a helpful assistant, answer the following question in a non-judgemental tone.
 
         Question:

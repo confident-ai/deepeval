@@ -111,3 +111,17 @@ html[data-theme='dark'] .header-discord-link:before {
 html[data-theme='light'] #invertable-img {
   filter: invert(100%);
 }
+
+#confident-workflow {
+  width: 70%;
+}
+
+html[data-theme='dark'] #confident-workflow {
+  filter: invert(100%);
+}
+
+@media (max-width: 600px) {
+  #confident-workflow {
+    width: 100%!important
+  }
+}

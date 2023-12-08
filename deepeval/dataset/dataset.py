@@ -8,18 +8,27 @@ import os
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import evaluate
 from deepeval.api import Api, Endpoints
-from deepeval.dataset.utils import convert_test_cases_to_goldens
-from deepeval.dataset.api import APIDataset, CreateDatasetHttpResponse
+from deepeval.dataset.utils import (
+    convert_test_cases_to_goldens,
+    convert_goldens_to_test_cases,
+)
+from deepeval.dataset.api import (
+    APIDataset,
+    CreateDatasetHttpResponse,
+    Golden,
+    DatasetHttpResponse,
+)
 
 
 @dataclass
 class EvaluationDataset:
     test_cases: List[LLMTestCase]
+    goldens: List[Golden]
 
     def __init__(self, test_cases: List[LLMTestCase] = []):
         self.test_cases = test_cases
+        self.goldens = []
 
     def add_test_case(self, test_case: LLMTestCase):
         self.test_cases.append(test_case)
@@ -28,7 +37,7 @@ class EvaluationDataset:
         return iter(self.test_cases)
 
     def evaluate(self, metrics: List[BaseMetric]):
-        from deepeval.evaluator import evaluate
+        from deepeval import evaluate
 
         return evaluate(self.test_cases, metrics)
 
@@ -234,29 +243,45 @@ class EvaluationDataset:
             )
         if os.path.exists(".deepeval"):
             goldens = convert_test_cases_to_goldens(self.test_cases)
-            body = APIDataset(alias=alias, goldens=goldens).model_dump(
-                by_alias=True, exclude_none=True
-            )
+            body = APIDataset(
+                alias=alias, overwrite=False, goldens=goldens
+            ).model_dump(by_alias=True, exclude_none=True)
             api = Api()
             result = api.post_request(
-                endpoint=Endpoints.CREATE_DATASET_ENDPOINT.value,
+                endpoint=Endpoints.DATASET_ENDPOINT.value,
                 body=body,
             )
-            response = CreateDatasetHttpResponse(
-                link=result["link"],
-            )
-            link = response.link
-            console = Console()
-            console.print(
-                "✅ Dataset pushed to Confidnet AI! View on "
-                f"[link={link}]{link}[/link]"
-            )
-            # webbrowser.open(link)
+            if result:
+                response = CreateDatasetHttpResponse(
+                    link=result["link"],
+                )
+                link = response.link
+                console = Console()
+                console.print(
+                    "✅ Dataset successfully pushed to Confidnet AI! View at "
+                    f"[link={link}]{link}[/link]"
+                )
+                webbrowser.open(link)
         else:
             raise Exception(
                 "To push dataset to Confident AI, run `deepeval login`"
             )
 
-    # TODO
     def pull(self, alias: str):
-        pass
+        if os.path.exists(".deepeval"):
+            api = Api()
+            result = api.get_request(
+                endpoint=Endpoints.DATASET_ENDPOINT.value,
+                params={"alias": alias},
+            )
+            response = DatasetHttpResponse(
+                goldens=result["goldens"],
+            )
+            self.goldens.extend(response.goldens)
+
+            # TODO: make this conversion at evaluation time instead
+            self.test_cases.extend(convert_goldens_to_test_cases(self.goldens))
+        else:
+            raise Exception(
+                "Run `deepeval login` to pull dataset from Confident AI"
+            )

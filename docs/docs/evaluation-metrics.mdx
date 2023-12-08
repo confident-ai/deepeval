@@ -37,9 +37,9 @@ Hallucination determines whether your LLM application outputs factually correct 
 
 ```python
 import pytest
+from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import run_test
 
 # Replace this with the actual documents that you are passing as input to your LLM.
 context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."]
@@ -49,7 +49,12 @@ actual_output="A blond drinking water in public.",
 
 test_case = LLMTestCase(input="placeholder", actual_output=actual_output, context=context)
 metric = HallucinationMetric(minimum_score=0.5)
-run_test(test_case, [metric])
+
+metric.measure(test_case)
+print(metric.score)
+
+# or
+# evaluate([test_case], [metric])
 ```
 
 :::info
@@ -94,9 +99,9 @@ Answer Relevancy measures how relevant the `actual_output` of your LLM applicati
 
 ```python
 import pytest
+from deepeval import evaluate
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"
@@ -107,26 +112,33 @@ actual_output = "We offer a 30-day full refund at no extra cost."
 answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.7)
 test_case = LLMTestCase(input=input, actual_output=actual_output)
 
-run_test(test_case, [answer_relevancy_metric])
+metric.measure(test_case)
+print(metric.score)
+
+# or
+# evaluate([test_case], [metric])
 ```
 
 ## RAGAS
 
-`deepeval` offers the RAGAS metric, which is useful for evaluating RAG pipelines (ie. LLM applications built with RAG). The RAGAS score is calculated by taking an unweighted harmonic mean of four distinct metrics.
+`deepeval` offers the RAGAS metric, which is useful for evaluating RAG pipelines (ie. LLM applications built with RAG). The RAGAS score is calculated by taking an unweighted harmonic mean of five distinct metrics.
 
-1. **Faithfulness Metric**: measures hallucination to ensure output align with context. Calculated using the `actual_output` and `retrieval_context`.
+1. **Faithfulness Metric**: measures hallucination to ensure output align with context. Calculated using `actual_output` and `retrieval_context`.
 
-2. **Answer Relevancy Metric**: measures how relevant an answer is relative to the question. Penalizes redundancy or incompleteness. Derived from the `input` and `actual_output`.
+2. **Contextual Precision Metric**: determines whether more relevant retrieved contexts are ranked higher than less relevant ones. Calculated using `input` and `retrieval_context`.
 
-3. **Contextual Relevancy Metric**: assesses the relevance of retrieved contexts to input. Penalizes redundant information. Based on the `input` and `retrieval_context`.
+3. **Answer Relevancy Metric**: measures how relevant an answer is relative to the question. Penalizes redundancy or incompleteness. Derived from the `input` and `actual_output`.
 
-4. **Context Recall Metric**: gauges the recall of the retrieved context using the annotated answer as a reference. Based on the `expected_output` and `retrieval_context`.
+4. **Contextual Relevancy Metric**: assesses the relevance of retrieved contexts to input. Penalizes redundant information. Based on the `input` and `retrieval_context`.
 
-The Faithfulness and Answer Relevancy metric assess the quality of the generator in your RAG pipeline, while the Contextual Relevancy and Recall metric evaluate the performance of your retriever.
+5. **Context Recall Metric**: gauges the recall of the retrieved context using the annotated answer as a reference. Based on the `expected_output` and `retrieval_context`.
+
+The Faithfulness and Answer Relevancy metric assess the quality of the generator in your RAG pipeline, while the Contextual Relevancy, Precision, and Recall metric evaluate the performance of your retriever.
 
 Create an `LLMTestCase` and supply all parameters to calculate the RAGAS score:
 
 ```python
+from deepeval import evaluate
 from deepeval.metrics import RagasMetric
 from deepeval.test_case import LLMTestCase
 
@@ -147,8 +159,19 @@ test_case = LLMTestCase(
     retrieval_context=retrieval_context,
 )
 
-run_test(test_case, [ragas_metric])
+ragas_metric.measure(test_case)
+print(ragas_metric.score)
+
+# You can also print out the 5 scores that make up the RAGAS score.
+print(ragas_metric.score_metadata)
+
+# or
+# evaluate([test_case], [ragas_metric])
 ```
+
+:::info
+Since the RAGAS score is the harmonic mean of 5 different scores, a zero value for either one of the scores will yield a final score of 0 for the RAGAS metric.
+:::
 
 As mentioned earlier, the RAGAS score is the harmonic mean of five different metrics. You can however import these metrics individually and utilize them in exactly the same way as all other metrics offered by `deepeval`.
 
@@ -175,8 +198,8 @@ pip install detoxify
 Being a referenceless metric means `NonToxicMetric` requires an extra parameter named `evaluation_params`. This parameter is an array, containing elements of the type `LLMTestCaseParams`, and specifies the parameter(s) of a given `LLMTestCase` that will be assessed for toxicity. The `NonToxicMetric` will then compute a score based on the average toxicity levels of each individual component being evaluated.
 
 ```python
+from deepeval import run_test
 from deepeval.metrics import NonToxicMetric
-from deepeval.evaluator import run_test
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 
@@ -196,7 +219,11 @@ test_case = LLMTestCase(
     actual_output=actual_output
 )
 
-run_test(test_case, metrics=[non_toxic_metric])
+non_toxic_metric.measure(test_case)
+print(non_toxic_metric.score)
+
+# or
+# evaluate([test_case], [metric])
 ```
 
 Notice that `expected_output` or `context` are not required as `NonToxicMetric` is a referenceless metric.
@@ -216,9 +243,9 @@ pip install Dbias
 `UnBiasedMetric` is similar to `NonToxicMetric` because it is also a referenceless metric.
 
 ```python
+from deepeval import run_test
 from deepeval.metrics import UnBiasedMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.evaluator import run_test
 
 
 input = "What if these shoes don't fit?"
@@ -236,7 +263,11 @@ test_case = LLMTestCase(
     actual_output=actual_output
 )
 
-run_test(test_case, [unbias_metric])
+unbias_metric.measure(test_case)
+print(unbias_metric.score)
+
+# or
+# evaluate([test_case], [unbias_metric])
 ```
 
 ## Custom Metrics
@@ -259,6 +290,10 @@ class LengthMetric(BaseMetric):
             self.score = 1
         else:
             self.score = 0
+
+        # You can also set a reason for the score returned.
+        # This is particularly useful for a score computed using LLMs
+        self.reason = "..."
         return self.score
 
     def is_successful(self):

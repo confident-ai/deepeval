@@ -59,6 +59,67 @@ for datapoint in original_dataset:
     dataset.add_test_case(test_case)
 ```
 
+## Load an Existing Dataset
+
+`deepeval` offers support for loading datasetes stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as test cases.
+
+### From JSON
+
+You can add test cases into your `EvaluationDataset` by supplying a `file_path` to your `.json` file. Your `.json` file should contain an array of objects (or list of dictionaries).
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_test_cases_from_json_file(
+    # file_path is the absolute path to you .json file
+    file_path="example.json",
+    input_key_name="query",
+    actual_output_key_name="actual_output",
+    expected_output_key_name="expected_output",
+    context_key_name="context",
+)
+```
+
+### From CSV
+
+You can add test cases into your `EvaluationDataset` by supplying a `file_path` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `LLMTestCase`s through their column names. Remember, `context` should be a list of strings and in the context of CSV files, it means you have to supply a `context_col_delimiter` argument to tell `deepeval` how to split your context cells into a list of strings.
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_test_cases_from_csv_file(
+    # file_path is the absolute path to you .csv file
+    file_path="example.csv",
+    input_col_name="query",
+    actual_output_col_name="actual_output",
+    expected_output_col_name="expected_output",
+    context_col_name="context",
+    context_col_delimiter= ";"
+)
+```
+
+### From Hugging Face
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.add_test_cases_from_hf_dataset(
+        dataset_name="Example HF dataset name",
+        input_field_name="query",
+        actual_output_field_name="actual_output",
+        expected_output_field_name="expected_output",
+        context_field_name="context",
+        split="train",
+)
+```
+
+:::note
+Since `expected_output` and `context` are optional parameters for an `LLMTestCase`, expected output and context fields are similarily **optional** parameters when adding test cases from an existing dataset.
+:::
+
 ## Evaluate Your Dataset With Pytest
 
 Before we begin, we highly recommend [logging into Confident AI](https://app.confident-ai.com) to keep track of all evaluation results on the cloud:
@@ -70,7 +131,7 @@ deepeval login
 `deepeval` utilizes the `@pytest.mark.parametrize` decorator to loop through entire datasets.
 
 ```python title="test_bulk.py"
-from deepeval.evaluator import assert_test
+from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
@@ -98,7 +159,7 @@ deepeval test run test_bulk.py -n 3
 Alternately, you can use deepeval's `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
 
 ```python
-from deepeval.evaluator import evaluate
+from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
 
