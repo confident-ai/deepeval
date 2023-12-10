@@ -29,10 +29,9 @@ def login(
         None,
         "--confident-api-key",
         "-c",
-        help="Optional confident API key to bypass login."
-    )
+        help="Optional confident API key to bypass login.",
+    ),
 ):
-
     # Use the confident_api_key if it is provided, otherwise proceed with existing logic
     if confident_api_key:
         api_key = confident_api_key
@@ -57,6 +56,7 @@ def login(
     print(
         "If you are new to DeepEval, follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/docs/getting-started]https://docs.confident-ai.com/docs/getting-started[/link][/bold]"
     )
+
 
 if __name__ == "__main__":
     app()
