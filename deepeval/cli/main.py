@@ -9,6 +9,7 @@ except Exception as e:
 from deepeval.api import Api
 from deepeval.key_handler import KEY_FILE_HANDLER
 from deepeval.cli.test import app as test_app
+from typing import Optional
 import webbrowser
 
 app = typer.Typer(name="deepeval")
@@ -23,28 +24,39 @@ def login(
         typer.Option(
             help="API key to get from https://app.confident-ai.com. Required if you want to log events to the server."
         ),
-    ] = ""
-):
-    """Login to the DeepEval platform."""
-    print("Welcome to [bold]DeepEval[/bold]!")
-    print(
-        "Grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
+    ] = "",
+    confident_api_key: Optional[str] = typer.Option(
+        None,
+        "--confident-api-key",
+        "-c",
+        help="Optional confident API key to bypass login."
     )
-    webbrowser.open("https://app.confident-ai.com")
-    if api_key == "":
-        while True:
-            api_key = input("Paste your API Key: ").strip()
-            if api_key:
-                break
-            else:
-                print("API Key cannot be empty. Please try again.\n")
+):
+
+    # Use the confident_api_key if it is provided, otherwise proceed with existing logic
+    if confident_api_key:
+        api_key = confident_api_key
+    else:
+        """Login to the DeepEval platform."""
+        print("Welcome to [bold]DeepEval[/bold]!")
+        print(
+            "Login and grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
+        )
+        webbrowser.open("https://app.confident-ai.com")
+        if api_key == "":
+            while True:
+                api_key = input("Paste your API Key: ").strip()
+                if api_key:
+                    break
+                else:
+                    print("API Key cannot be empty. Please try again.\n")
+
     KEY_FILE_HANDLER.write_api_key(api_key)
     client = Api(api_key=api_key)
     print("Congratulations! Login successful :raising_hands: ")
     print(
         "If you are new to DeepEval, follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/docs/getting-started]https://docs.confident-ai.com/docs/getting-started[/link][/bold]"
     )
-
 
 if __name__ == "__main__":
     app()
