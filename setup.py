@@ -25,7 +25,7 @@ setup(
         "pytest",
         "typer==0.9.0",
         "rich",
-        "protobuf>=4.21.6",
+        "protobuf==4.21.6",
         "pandas",
         "pydantic",  # loosen pydantic requirements as we support multiple
         "sentry-sdk",
@@ -33,6 +33,7 @@ setup(
         "portalocker",
         "langchain",
         "rouge_score==0.1.2",
+        "dbias==0.1.5",
         "nltk==3.8.1",
         "ragas",
         "detoxify",
