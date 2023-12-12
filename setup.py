@@ -37,7 +37,7 @@ setup(
         "nltk==3.8.1",
         "ragas",
         "detoxify",
-        "tensorflow==2.14.1"
+        "tensorflow==2.14.1",
     ],
     extras_require={
         "dev": ["black"],
