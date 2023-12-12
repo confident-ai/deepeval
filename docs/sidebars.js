@@ -34,7 +34,7 @@ module.exports = {
               'metrics-custom',
               'metrics-others',
           ],
-          collapsed: false,
+          collapsed: true,
         },
       ],
       collapsed: false,
