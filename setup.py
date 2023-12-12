@@ -37,12 +37,9 @@ setup(
         "nltk==3.8.1",
         "ragas",
         "detoxify",
+        "tensorflow==2.14.1"
     ],
     extras_require={
-        "bias": [
-            "tensorflow",  # for bias
-            "Dbias",  # for bias
-        ],
         "dev": ["black"],
     },
     entry_points={
