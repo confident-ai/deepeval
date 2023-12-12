@@ -1,0 +1,58 @@
+---
+id: metrics-ragas
+title: RAGAS
+sidebar_label: RAGAS
+---
+
+The RAGAS metric is the harmonic mean of five distinct metrics:
+
+1. `AnswerRelevancyMetric`
+2. `FaithfulnessMetric`
+3. `ContextualPrecisionMetric`
+4. `ContextualRelevancyMetric`
+5. `ContextRecallMetric`
+
+It provides a score to holistically evaluate of your RAG pipeline's generator and retriever.
+
+:::note
+Since RAGAS is the harmonic mean of these five distinct metrics, a value of 0 in either one of these metrics will result in a final 0 value for RAGAS.
+:::
+
+## Required Parameters
+
+To use the `RAGASMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+- `expected_output`
+- `retrieval_context`
+
+## Example
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import RAGASMetric
+from deepeval.test_case import LLMTestCase
+
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+# Replace this with the expected output from your RAG generator
+expected_output = "You are eligible for a 30 day full refund at no extra cost."
+
+# Replace this with the actual retrieved context from your RAG pipeline
+retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
+
+metric = RAGASMetric(minimum_score=0.5)
+test_case = LLMTestCase(
+    input="What if these shoes don't fit?",
+    actual_output=actual_output,
+    retrieval_context=retrieval_context
+)
+
+metric.measure(test_case)
+print(metric.score)
+
+# or evaluate test cases in bulk
+evaluate([test_case], [metric])
+```

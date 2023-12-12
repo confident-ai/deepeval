@@ -1,0 +1,48 @@
+---
+id: metrics-llm-evals
+title: LLM Evals
+sidebar_label: LLM Evals
+---
+
+LLM Evals is a custom, LLM evaluated metric. This means its score is calculated using an LLM. An `LLMEvalMetric` is the most verstile type of metric `deepeval` has to offer, and is capable of evaluating almost any use cases.
+
+## Required Parameters
+
+To use the `LLMEvalMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+
+You'll also need to supply any additional arguments such as `expected_output` and `context` if your evaluation criteria depends on these parameters.
+
+## Example
+
+To create a custom metric that uses LLMs for evaluation, simply instantiate an `LLMEvalMetric` class and **define an evaluation criteria in everyday language**:
+
+```python
+from deepeval.metrics import LLMEvalMetric
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
+summarization_metric = LLMEvalMetric(
+    name="Summarization",
+    criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    minimum_score=0.5,
+    model="gpt-4"
+)
+```
+
+There are three mandatory and two optional parameters required when instantiating an `LLMEvalMetric` class:
+
+- `name`: name of metric
+- `criteria`: a description outlining the specific evaluation aspects for each test case.
+- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
+- [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from (Azure) OpenAI.
+- [Optional] `deployment_id`: the deployment name you chose when you deployed Azure OpenAI. Only required if you're using Azure OpenAI.
+
+As mentioned in the [metrics introduction section](metrics-introduction), all of `deepeval`'s metrics return a score ranging from 0 - 1, and a metric is only successful if the evaluation score is equal to or greater than `minimum_score`. An `LLMEvalMetric` is no exception.
+
+:::danger
+For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
+:::

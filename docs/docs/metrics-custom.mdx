@@ -1,0 +1,63 @@
+---
+id: metrics-custom
+title: Custom Metrics
+sidebar_label: Custom Metrics
+---
+
+`deepeval` allows you to implement your own evaluator (for example, your own GPT evaluator) by creating a custom metric. All custom metrics are automatically integrated with the deepeval ecosystem, which includes Confident AI.
+
+## Required Parameters
+
+To use a custom metric, you'll have to provide the following parameters when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+
+You'll also need to supply any additional arguments such as `expected_output` and `context` if your custom metric's `measure()` method is dependent on these parameters.
+
+## Implementation
+
+To create a custom metric, you'll need to inherite `deepeval`'s `BaseMetric` class, and implement abstract methods and properties such as `measure()`, `is_successful()`, and `name()`. Here's an example:
+
+```python
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCase
+
+# Inherit BaseMetric
+class LengthMetric(BaseMetric):
+    # This metric checks if the output length is greater than 10 characters
+    def __init__(self, max_length: int=10):
+        self.minimum_score = max_length
+
+    def measure(self, test_case: LLMTestCase):
+        # Set self.success and self.score in the "measure" method
+        self.success = len(test_case.actual_output) > self.minimum_score
+        if self.success:
+            self.score = 1
+        else:
+            self.score = 0
+
+        # You can also set a reason for the score returned.
+        # This is particularly useful for a score computed using LLMs
+        self.reason = "..."
+        return self.score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def name(self):
+        return "Length"
+```
+
+Notice that a few things has happened:
+
+- `self.minimum_score` was set in `__init__()`
+- `self.success`, `self.score`, and `self.reason` was set in `measure()`
+- `measure()` takes in an `LLMTestCase`
+- `self.is_successful()` simply returns the success status
+- `name()` simply returns a string representing the metric name
+
+To create a custom metric without unexpected errors, we recommend you set the appropriate class variables in the appropriate methods as outlined above.
+
+You should also note that `self.reason` is **optional**. `self.reason` should be a string representing the rationale behind an LLM computed score. This is only applicable if you're using LLMs as an evaluator in the `measure()` method, and has implemented a way to generate a score reasoning.

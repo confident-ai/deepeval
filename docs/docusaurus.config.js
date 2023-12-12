@@ -135,7 +135,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Twilix Inc. Built with ❤️ and confidence.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Confident AI Inc. Built with ❤️ and confidence.`,
       },
       prism: {
         additionalLanguages: ['python'],
