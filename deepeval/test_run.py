@@ -72,6 +72,7 @@ class APITestCase(BaseModel):
     run_duration: float = Field(..., alias="runDuration")
     traceStack: Optional[dict] = Field(None)
     context: Optional[list] = Field(None)
+    retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
     id: Optional[str] = None
 
 
@@ -133,6 +134,7 @@ class TestRun(BaseModel):
                 metricsMetadata=[metrics_metadata],
                 runDuration=run_duration,
                 context=test_case.context,
+                retrievalContext=test_case.retrieval_context,
                 traceStack=get_trace_stack(),
                 id=test_case.id,
             )
