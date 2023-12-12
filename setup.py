@@ -33,13 +33,15 @@ setup(
         "portalocker",
         "langchain",
         "rouge_score==0.1.2",
-        "dbias==0.1.5",
         "nltk==3.8.1",
         "ragas",
         "detoxify",
-        "tensorflow==2.14.1",
     ],
     extras_require={
+        "bias": [
+            "tensorflow",  # for bias
+            "Dbias",  # for bias
+        ],
         "dev": ["black"],
     },
     entry_points={
