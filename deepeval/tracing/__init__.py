@@ -1,1 +1,12 @@
-from .tracing import trace, TraceType, get_trace_stack
+from .tracing import (
+    trace,
+    trace_manager,
+    get_trace_stack,
+    TraceType,
+    TraceStatus,
+    LlmTrace,
+    EmbeddingTrace,
+    GenericTrace,
+    LlmMetadata,
+    EmbeddingMetadata,
+)
