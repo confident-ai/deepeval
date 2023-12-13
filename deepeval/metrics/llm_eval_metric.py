@@ -1,10 +1,13 @@
-from typing import Optional, List
+import json
+from typing import Optional, List, Tuple
+
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.templates import (
     evaluation_steps_template,
     evaluation_results_template,
 )
+from deepeval.utils import trimToJson
 from deepeval.chat_completion.retry import call_openai_with_retry
 from pydantic import BaseModel
 from langchain.chat_models import ChatOpenAI
@@ -18,18 +21,35 @@ class LLMEvalMetric(BaseMetric):
     def __init__(
         self,
         name: str,
-        criteria: str,
         evaluation_params: List[LLMTestCaseParams],
-        evaluation_steps: str = "",
+        criteria: Optional[str] = None,
+        evaluation_steps: Optional[List[str]] = None,
         model: Optional[str] = "gpt-4-1106-preview",
         minimum_score: float = 0.5,
         **kwargs,
     ):
-        self.criteria = criteria
         self.name = name
+        self.evaluation_params = evaluation_params
+
+        # Check if both criteria and evaluation_steps are not None at the same time
+        if criteria is None and evaluation_steps is None:
+            raise ValueError(
+                "Either 'criteria' or 'evaluation_steps' must be provided, but not both None."
+            )
+
+        # Check if criteria is provided, it cannot be an empty string
+        if criteria is not None and not criteria.strip():
+            raise ValueError("Criteria provided cannot be an empty string.")
+
+        # Check if evaluation_steps is provided, it cannot be an empty list
+        if evaluation_steps is not None and len(evaluation_steps) == 0:
+            raise ValueError(
+                "Evaluation steps must not be an empty list. Either omit evaluation steps or include a non-empty list of steps."
+            )
+
+        self.criteria = criteria
         self.model = model
         self.evaluation_steps = evaluation_steps
-        self.evaluation_params = evaluation_params
         self.minimum_score = minimum_score
         self.deployment_id = None
         if "deployment_id" in kwargs:
@@ -48,11 +68,14 @@ class LLMEvalMetric(BaseMetric):
                     f"Test case is missing the required attribute: {param.value}"
                 )
 
-        if self.evaluation_steps == "":
-            self.evaluation_steps = self.generate_evaluation_steps()
+        if self.evaluation_steps is None:
+            json_output = trimToJson(self.generate_evaluation_steps())
+            data = json.loads(json_output)
+            self.evaluation_steps = data["steps"]
 
-        score = self.evaluate(test_case)
-        self.score = float(score) * 2 / 10
+        score, reason = self.evaluate(test_case)
+        self.reason = reason
+        self.score = float(score) / 10
         self.success = score >= self.minimum_score
         return self.score
 
@@ -73,7 +96,7 @@ class LLMEvalMetric(BaseMetric):
         res = call_openai_with_retry(lambda: chat_completion.invoke(prompt))
         return res.content
 
-    def evaluate(self, test_case: LLMTestCase):
+    def evaluate(self, test_case: LLMTestCase) -> Tuple[int, str]:
         text = """"""
 
         for param in self.evaluation_params:
@@ -81,7 +104,7 @@ class LLMEvalMetric(BaseMetric):
             text += f"{param.value}: {value} \n\n"
 
         prompt: dict = evaluation_results_template.format(
-            evaluation_steps=self.evaluation_steps,
+            evaluation_steps=self.numbered_evaluation_steps(),
             text=text,
         )
 
@@ -95,7 +118,7 @@ class LLMEvalMetric(BaseMetric):
             model_kwargs["deployment_id"] = self.deployment_id
 
         chat_completion = ChatOpenAI(
-            model_name=self.model, max_tokens=5, n=20, model_kwargs=model_kwargs
+            model_name=self.model, model_kwargs=model_kwargs
         )
 
         res = call_openai_with_retry(
@@ -104,17 +127,17 @@ class LLMEvalMetric(BaseMetric):
             )
         )
 
-        total_scores = 0
-        count = 0
+        json_output = trimToJson(res.generations[0][0].message.content)
+        data = json.loads(json_output)
 
-        for content in res.generations[0]:
-            try:
-                total_scores += float(content.message.content)
-                count += 1
-            except:
-                pass
+        return data["score"], data["reason"]
 
-        return total_scores / count
+    def numbered_evaluation_steps(self):
+        evaluation_steps = """"""
+        for index, string in enumerate(self.evaluation_steps, start=1):
+            evaluation_steps += f"{index}. {string}\n"
+
+        return evaluation_steps
 
     @property
     def __name__(self):
