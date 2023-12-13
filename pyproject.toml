@@ -41,6 +41,7 @@ portalocker = "*"
 openai = "*"
 langchain = "*"
 protobuf = "^4.21.6"
+llama-index = {path = "/Users/jeffreyip/mrgpt/repos/llama_index"}
 
 [tool.black]
 line-length = 80
