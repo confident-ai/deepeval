@@ -63,3 +63,7 @@ class HarnessTasks:
                     f"Tasks {missing} were not found. Try `lm-eval --tasks list` for list of available tasks."
                 )
         return task_names
+
+    @classmethod
+    def group_tasks(task_names: Union[str, List[str]]) -> None:
+        raise NotImplementedError()
