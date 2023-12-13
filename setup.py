@@ -25,7 +25,7 @@ setup(
         "pytest",
         "typer==0.9.0",
         "rich",
-        "protobuf>=4.21.6",
+        "protobuf==4.21.6",
         "pandas",
         "pydantic",  # loosen pydantic requirements as we support multiple
         "sentry-sdk",

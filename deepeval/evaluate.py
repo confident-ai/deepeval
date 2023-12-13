@@ -22,6 +22,7 @@ class TestResult:
     actual_output: str
     expected_output: str
     context: List[str]
+    retrieval_context: List[str]
 
 
 def create_test_result(
@@ -37,6 +38,7 @@ def create_test_result(
             actual_output=test_case.actual_output,
             expected_output=test_case.expected_output,
             context=test_case.context,
+            retrieval_context=test_case.retrieval_context,
         )
     else:
         raise ValueError("TestCase not supported yet.")
@@ -139,3 +141,4 @@ def print_test_result(test_result: TestResult):
     print(f"  - actual output: {test_result.actual_output}")
     print(f"  - expected output: {test_result.expected_output}")
     print(f"  - context: {test_result.context}")
+    print(f"  - retrieval context: {test_result.retrieval_context}")
