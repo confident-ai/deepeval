@@ -5,7 +5,7 @@ from typing_extensions import Annotated
 from typing import Optional
 from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
 from deepeval.utils import delete_file_if_exists
-from deepeval.test_run import invoke_test_run_end_callback
+from deepeval.test_run import invoke_test_run_end_hook
 
 app = typer.Typer(name="test")
 
@@ -74,6 +74,6 @@ def run(
 
     retcode = pytest.main(pytest_args)
     test_run_manager.wrap_up_test_run()
-    invoke_test_run_end_callback()
+    invoke_test_run_end_hook()
 
     return retcode
