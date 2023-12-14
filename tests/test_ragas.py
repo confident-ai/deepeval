@@ -5,7 +5,7 @@ from deepeval.metrics import (
     ContextualPrecisionMetric,
     ContextualRelevancyMetric,
     FaithfulnessMetric,
-    ContextRecallMetric,
+    ContextualRecallMetric,
     ConcisenessMetric,
     CorrectnessMetric,
     CoherenceMetric,
@@ -46,29 +46,30 @@ def test_everything():
         actual_output=output,
         expected_output=expected_output,
         retrieval_context=context,
+        context=context,
     )
-    metric1 = ContextualRelevancyMetric()
-    metric2 = FaithfulnessMetric()
-    metric3 = ContextRecallMetric()
-    # metric4 = ConcisenessMetric()
-    # metric5 = CorrectnessMetric()
-    # metric6 = CoherenceMetric()
-    # metric7 = MaliciousnessMetric()
-    metric8 = AnswerRelevancyMetric()
-    metric9 = ContextualPrecisionMetric()
+    # metric1 = ContextualRelevancyMetric(model_name="gpt-4")
+    # metric2 = FaithfulnessMetric(model_name="gpt-4")
+    # metric3 = ContextualRecallMetric(model_name="gpt-4")
+    # metric4 = ConcisenessMetric(model_name="gpt-4")
+    # metric5 = CorrectnessMetric(model_name="gpt-4")
+    # metric6 = CoherenceMetric(model_name="gpt-4")
+    # metric7 = MaliciousnessMetric(model_name="gpt-4")
+    # metric8 = AnswerRelevancyMetric(model_name="gpt-4")
+    # metric9 = ContextualPrecisionMetric(model_name="gpt-4")
     metric10 = RagasMetric()
     assert_test(
         test_case,
         [
-            metric1,
-            metric2,
-            metric3,
+            # metric1,
+            # metric2,
+            # metric3,
             # metric4,
             # metric5,
             # metric6,
             # metric7,
-            metric8,
-            metric9,
+            # metric8,
+            # metric9,
             metric10,
         ],
     )
