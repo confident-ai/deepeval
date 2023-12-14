@@ -8,7 +8,7 @@ from .ragas_metric import (
     ContextualPrecisionMetric,
     ContextualRelevancyMetric,
     FaithfulnessMetric,
-    ContextRecallMetric,
+    ContextualRecallMetric,
     ConcisenessMetric,
     CorrectnessMetric,
     CoherenceMetric,

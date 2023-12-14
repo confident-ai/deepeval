@@ -207,7 +207,7 @@ class TestRunManager:
                 test_case_name += f" ({test_case.id})"
 
             for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.score >= metric_metadata.score:
+                if metric_metadata.score >= metric_metadata.minimum_score:
                     pass_count += 1
                 else:
                     fail_count += 1

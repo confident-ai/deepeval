@@ -8,13 +8,14 @@ from deepeval.templates import (
     evaluation_results_template,
 )
 from deepeval.utils import trimToJson
-from deepeval.chat_completion.retry import call_openai_with_retry
+from deepeval.models import GPTModel
+
 from pydantic import BaseModel
-from langchain.chat_models import ChatOpenAI
 
 
 class LLMEvalMetricResponse(BaseModel):
     score: float
+    reason: str
 
 
 class LLMEvalMetric(BaseMetric):
@@ -24,7 +25,7 @@ class LLMEvalMetric(BaseMetric):
         evaluation_params: List[LLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
-        model: Optional[str] = "gpt-4-1106-preview",
+        model: Optional[str] = None,
         minimum_score: float = 0.5,
         **kwargs,
     ):
@@ -89,11 +90,9 @@ class LLMEvalMetric(BaseMetric):
         if self.deployment_id is not None:
             model_kwargs["deployment_id"] = self.deployment_id
 
-        chat_completion = ChatOpenAI(
-            model_name=self.model, model_kwargs=model_kwargs
-        )
+        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
+        res = chat_model(prompt)
 
-        res = call_openai_with_retry(lambda: chat_completion.invoke(prompt))
         return res.content
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[int, str]:
@@ -117,17 +116,10 @@ class LLMEvalMetric(BaseMetric):
         if self.deployment_id is not None:
             model_kwargs["deployment_id"] = self.deployment_id
 
-        chat_completion = ChatOpenAI(
-            model_name=self.model, model_kwargs=model_kwargs
-        )
+        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
+        res = chat_model(prompt)
 
-        res = call_openai_with_retry(
-            lambda: chat_completion.generate_prompt(
-                [chat_completion._convert_input(prompt)]
-            )
-        )
-
-        json_output = trimToJson(res.generations[0][0].message.content)
+        json_output = trimToJson(res.content)
         data = json.loads(json_output)
 
         return data["score"], data["reason"]
