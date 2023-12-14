@@ -5,6 +5,7 @@ from deepeval.types import Languages
 from deepeval import assert_test
 
 
+@pytest.mark.skip(reason="openai is expensive")
 def test_judgemntal():
     test_case = LLMTestCase(
         input="I am a plant",
