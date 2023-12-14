@@ -30,20 +30,40 @@ deepeval login
 Then paste in the following code to define a metric powered by `JudgementalGPT`:
 
 ```python
+from deepeval.types import Languages
 from deepeval.metrics import JudgementalGPT
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCaseParams
 
 code_correctness_metric = JudgementalGPT(
     name="Code Correctness",
-    criteria="Code Correctness - determine whether the python code in the 'actual output' produces a valid JSON.",
+    criteria="Code Correctness - determine whether the code in the 'actual output' produces a valid JSON.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    language=Languages.SPANISH,
     minimum_score=0.5,
 )
 ```
 
-Under the hood, `JudgementalGPT(...)` sends a request to Confident AI's servers that hosts `JudgementalGPT`. `JudgementalGPT` accepts four arguments:
+Under the hood, `JudgementalGPT` sends a request to Confident AI's servers that hosts `JudgementalGPT`. `JudgementalGPT` accepts four arguments:
 
 - `name`: name of metric
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `language`: type `Language`, specifies what language to return the reasoning in.
 - [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
+
+Similar to `LLMEvalMetric`, you can access the judgemental `score` and `reason` for `JudgementalGPT`:
+
+```python
+from deepeval.test_case import LLMTestCase
+
+...
+
+test_case = LLMTestCase(
+    input="Show me a valid json",
+    actual_output="{'valid': 'json'}"
+)
+
+code_correctness_metric.measure(test_case)
+print(code_correctness_metric.score)
+print(code_correctness_metric.reason)
+```
