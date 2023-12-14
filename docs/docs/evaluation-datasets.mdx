@@ -131,10 +131,12 @@ deepeval login
 `deepeval` utilizes the `@pytest.mark.parametrize` decorator to loop through entire datasets.
 
 ```python title="test_bulk.py"
+import deepeval
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
+
 
 dataset = EvaluationDataset(test_cases=[...])
 
@@ -146,7 +148,14 @@ def test_customer_chatbot(test_case: LLMTestCase):
     hallucination_metric = HallucinationMetric(minimum_score=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
     assert_test(test_case, [hallucination_metric, answer_relevancy_metric])
+
+
+@deepeval.on_test_run_end
+def function_to_be_called_after_test_run():
+    print("Test finished!")
 ```
+
+You can also use the `@deepeval.on_test_run_end` decorator to define a hook that will be executed after the `deepeval test run` has completed.
 
 To run several tests cases at once in parallel, use the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 

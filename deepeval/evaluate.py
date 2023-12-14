@@ -84,6 +84,9 @@ def run_test(
     test_case: LLMTestCase,
     metrics: List[BaseMetric],
 ) -> List[TestResult]:
+    if not isinstance(test_case, LLMTestCase):
+        raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
+
     with progress_context("Executing run_test()..."):
         test_result = execute_test([test_case], metrics, False)[0]
         print_test_result(test_result)
@@ -92,7 +95,9 @@ def run_test(
 
 
 def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
-    # len(execute_test(...)) is always 1 for assert_test
+    if not isinstance(test_case, LLMTestCase):
+        raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
+
     test_result = execute_test([test_case], metrics, True)[0]
     if not test_result.success:
         failed_metrics = [
