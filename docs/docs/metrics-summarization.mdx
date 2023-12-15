@@ -1,0 +1,100 @@
+---
+id: metrics-summarization
+title: Summarization
+sidebar_label: Summarization
+---
+
+The summarization metric uses LLMs to determine whether your LLM (application) is able to generate factually correct summaries while including the neccessary details from source documents. In this case, source document refers to the `input`, and the summary as the `actual_output`.
+
+## Required Parameters
+
+To use the `SummarizationMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+
+## Example
+
+Let's take this `input` and `actual_output` as an example:
+
+```python
+# This is the source document to be summarized
+input = """
+The 'inclusion score' is calculated as the percentage of assessment questions
+for which both the summary and the source document provide a 'yes' answer. This
+method ensures that the summary not only includes key information from the source
+document but also accurately represents it. A higher inclusion score indicates a
+more comprehensive and faithful summary, signifying that the summary effectively
+encapsulates the crucial points and details from the original content.
+"""
+
+# This is the summary, replace this with the actual output from your LLM application
+actual_output="""
+The inclusion score quantifies how well a summary captures and
+accurately represents key information from the source document,
+with a higher score indicating greater comprehensiveness.
+"""
+```
+
+You can use the `SummarizationMetric` as follows:
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import SummarizationMetric
+from deepeval.test_case import LLMTestCase
+...
+
+test_case = LLMTestCase(
+    input=input,
+    actual_output=actual_output,
+    assessment_questions=[
+        "Is the inclusion score based on a percentage of 'yes' answers?",
+        "Does the score ensure the summary's accuracy with the source?",
+        "Does a higher score mean a more comprehensive summary?"
+    ]
+)
+metric = SummarizationMetric(minimum_score=0.5, model="gpt-4")
+
+metric.measure(test_case)
+print(metric.score)
+
+# or evaluate test cases in bulk
+evaluate([test_case], [metric])
+```
+
+There are five optional parameters when instantiating an `SummarizationMetric` class:
+
+- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
+- [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from (Azure) OpenAI.
+- [Optional] `assessment_questions`: a list of **close-ended questions that can be answered with either a 'yes' or a 'no'**. These are questions you want your summary to be able to ideally answer, and is especially helpful if you already know what a good summary for your use case looks like. If `assessment_questions` is not provided, we will generate a set of `assessment_questions` for you at evaluation time. The `assessment_questions` are used to calculate the `inclusion_score`.
+- [Optional] `n`: the number of questions to generate when calculating the `alignment_score` and `inclusion_score`. Defaulted to 5.
+- [Optional] `azure_deployment_name`: the deployment name for Azure OpenAI. Only required if you're using Azure OpenAI.
+
+## How is it calculated?
+
+In `deepeval`, we judge summarization by taking the harmonic mean of two distinct scores:
+
+- `alignment_score`: determines whether the summary contains hallucinated or contradictory information to the source document.
+- `inclusion_score`: determines whether the summary contains the neccessary information from the source document.
+
+These scores are calculated by generating `n` of closed-ended questions that can only be answered with a 'yes or a 'no', and seeing whether the source document and summary yields the same answer.
+
+You can access the `alignment_score` and `inclusion_score` from a `SummarizationMetric` as follows:
+
+```python
+from deepeval.metrics import SummarizationMetric
+from deepeval.test_case import LLMTestCase
+...
+
+test_case = LLMTestCase(...)
+metric = SummarizationMetric(...)
+
+metric.measure(test_case)
+print(metric.score)
+print(metric.alignment_score)
+print(metric.inclusion_score)
+```
+
+:::note
+Since the summarization score is the harmonic mean of the `alignment_score` and `inclusion_score`, a 0 value for either one of these scores will result in a final summarization score of 0.
+:::
