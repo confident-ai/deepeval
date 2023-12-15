@@ -89,7 +89,6 @@ class SummarizationMetric(BaseMetric):
         score = 0
         interval = 1 / len(questions)
         for question in questions:
-            # TODO: await get answer
             with ThreadPoolExecutor() as executor:
                 future_source_answer = executor.submit(
                     self.get_answer, question, source_document
@@ -111,7 +110,6 @@ class SummarizationMetric(BaseMetric):
         source_document: str,
         summary: str,
     ) -> List[str]:
-        # generate n questions
         if score_type == ScoreType.ALIGNMENT:
             prompt: dict = closed_end_questions_template.format(
                 n=self.n, text=summary
