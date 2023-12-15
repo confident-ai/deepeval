@@ -21,6 +21,7 @@ module.exports = {
           items: [
               'metrics-introduction',
               'metrics-llm-evals',
+              'metrics-summarization',
               'metrics-hallucination',
               'metrics-answer-relevancy',
               'metrics-faithfulness',

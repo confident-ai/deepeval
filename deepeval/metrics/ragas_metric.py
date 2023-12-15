@@ -154,6 +154,7 @@ class AnswerRelevancyMetric(BaseMetric):
         data = {
             "question": [test_case.input],
             "answer": [test_case.actual_output],
+            "contexts": [test_case.retrieval_context],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -563,7 +564,6 @@ class RagasMetric(BaseMetric):
         score_metadata = {}
         metrics = [
             ContextualPrecisionMetric(model=self.model),
-            ContextualRelevancyMetric(model=self.model),
             ContextualRecallMetric(model=self.model),
             FaithfulnessMetric(model=self.model),
             AnswerRelevancyMetric(model=self.model),
