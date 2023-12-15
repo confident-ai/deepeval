@@ -50,6 +50,7 @@ def run(
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
     check_if_valid_file(test_file_or_directory)
+    test_run_manager.reset()
     pytest_args = [test_file_or_directory]
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
