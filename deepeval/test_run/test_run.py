@@ -167,14 +167,13 @@ class TestRunManager:
         if self.test_run is None or not self.save_to_disk:
             self.create_test_run()
 
+        print(self.test_run)
         if self.save_to_disk:
             try:
-                with portalocker.Lock(
-                    self.temp_file_name, mode="r", timeout=5
-                ) as file:
+                with portalocker.Lock(self.temp_file_name, mode="r", timeout=5) as file:
                     self.test_run = self.test_run.load(file)
-            except (FileNotFoundError, portalocker.exceptions.LockException):
-                print("Error loading test run from disk", file=sys.stderr)
+            except (FileNotFoundError, portalocker.exceptions.LockException) as e:
+                print(f"Error loading test run from disk: {e}", file=sys.stderr)
                 self.test_run = None
         return self.test_run
 

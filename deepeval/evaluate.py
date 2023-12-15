@@ -90,7 +90,8 @@ def run_test(
     with progress_context("Executing run_test()..."):
         test_result = execute_test([test_case], metrics, False)[0]
         print_test_result(test_result)
-        print("\n" + "-" * 70)
+        print("")
+        print("-" * 70)
         return test_result
 
 
@@ -119,7 +120,8 @@ def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
         test_results = execute_test(test_cases, metrics, True)
         for test_result in test_results:
             print_test_result(test_result)
-        print("\n" + "-" * 70)
+        print("")
+        print("-" * 70)
 
         test_run_manager.wrap_up_test_run(display_table=False)
         return test_results
