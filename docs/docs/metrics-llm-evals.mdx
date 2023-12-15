@@ -29,8 +29,6 @@ summarization_metric = LLMEvalMetric(
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
     evaluation_steps=["Check whether the 'actual output' has omitted any detail from 'input'"],
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-    minimum_score=0.5,
-    model="gpt-4"
 )
 ```
 
@@ -42,7 +40,7 @@ There are three mandatory and two optional parameters required when instantiatin
 - [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. You can only provide either `evaluation_steps` or `criteria`, and not both.
 - [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from (Azure) OpenAI.
-- [Optional] `deployment_id`: the deployment name you chose when you deployed Azure OpenAI. Only required if you're using Azure OpenAI.
+- [Optional] `azure_deployment_name`: the deployment name for Azure OpenAI. Only required if you're using Azure OpenAI.
 
 :::danger
 For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
@@ -52,7 +50,6 @@ As mentioned in the [metrics introduction section](metrics-introduction), all of
 
 ```python
 from deepeval.test_case import LLMTestCase
-
 ...
 
 test_case = LLMTestCase(
@@ -63,4 +60,22 @@ test_case = LLMTestCase(
 summarization_metric.measure(test_case)
 print(summarization_metric.score)
 print(summarization_metric.reason)
+```
+
+## Using Azure OpenAI
+
+`deepeval` also allows you to use Azure OpenAI by setting the following enviornment variables in the terminal **and** providing an `azure_deployment_name` as an additional parameter when creating an `LLMEvalMetric`.
+
+```console
+export OPENAI_API_TYPE="azure"
+export OPENAI_API_VERSION="2023-05-15"
+export OPENAI_API_BASE="https://your-resource-name.openai.azure.com"
+export OPENAI_API_KEY="your-azure-openai-api-key"
+```
+
+```python
+summarization_metric = LLMEvalMetric(
+    # Provide a your 'azure_deployment_name'
+    azure_deployment_name="your-azure-deployment-name",
+)
 ```
