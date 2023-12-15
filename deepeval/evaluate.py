@@ -87,6 +87,7 @@ def run_test(
     if not isinstance(test_case, LLMTestCase):
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
 
+    test_run_manager.reset()
     with progress_context("Executing run_test()..."):
         test_result = execute_test([test_case], metrics, False)[0]
         print_test_result(test_result)
@@ -116,6 +117,7 @@ def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
 
 
 def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
+    test_run_manager.reset()
     with progress_context("Evaluating testcases..."):
         test_results = execute_test(test_cases, metrics, True)
         for test_result in test_results:
