@@ -77,7 +77,7 @@ In `deepeval`, we judge summarization by taking the harmonic mean of two distinc
 - `alignment_score`: determines whether the summary contains hallucinated or contradictory information to the source document.
 - `inclusion_score`: determines whether the summary contains the neccessary information from the source document.
 
-These scores are calculated by generating `n` of closed-ended questions that can only be answered with a 'yes or a 'no', and seeing whether the source document and summary yields the same answer.
+These scores are calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', and seeing whether the source document and summary yields the same answer.
 
 You can access the `alignment_score` and `inclusion_score` from a `SummarizationMetric` as follows:
 
