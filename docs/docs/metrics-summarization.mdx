@@ -4,7 +4,7 @@ title: Summarization
 sidebar_label: Summarization
 ---
 
-The summarization metric uses LLMs to determine whether your LLM (application) is able to generate factually correct summaries while including the neccessary details from source documents. In this case, source document refers to the `input`, and the summary as the `actual_output`.
+The summarization metric uses LLMs to determine whether your LLM (application) is generating factually correct summaries while including the neccessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `actual_output`.
 
 ## Required Parameters
 
@@ -18,12 +18,12 @@ To use the `SummarizationMetric`, you'll have to provide the following parameter
 Let's take this `input` and `actual_output` as an example:
 
 ```python
-# This is the source document to be summarized
+# This is the original text to be summarized
 input = """
 The 'inclusion score' is calculated as the percentage of assessment questions
-for which both the summary and the source document provide a 'yes' answer. This
-method ensures that the summary not only includes key information from the source
-document but also accurately represents it. A higher inclusion score indicates a
+for which both the summary and the original document provide a 'yes' answer. This
+method ensures that the summary not only includes key information from the original
+text but also accurately represents it. A higher inclusion score indicates a
 more comprehensive and faithful summary, signifying that the summary effectively
 encapsulates the crucial points and details from the original content.
 """
@@ -31,7 +31,7 @@ encapsulates the crucial points and details from the original content.
 # This is the summary, replace this with the actual output from your LLM application
 actual_output="""
 The inclusion score quantifies how well a summary captures and
-accurately represents key information from the source document,
+accurately represents key information from the original text,
 with a higher score indicating greater comprehensiveness.
 """
 ```
@@ -67,17 +67,17 @@ There are five optional parameters when instantiating an `SummarizationMetric` c
 - [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from (Azure) OpenAI.
 - [Optional] `assessment_questions`: a list of **close-ended questions that can be answered with either a 'yes' or a 'no'**. These are questions you want your summary to be able to ideally answer, and is especially helpful if you already know what a good summary for your use case looks like. If `assessment_questions` is not provided, we will generate a set of `assessment_questions` for you at evaluation time. The `assessment_questions` are used to calculate the `inclusion_score`.
-- [Optional] `n`: the number of questions to generate when calculating the `alignment_score` and `inclusion_score`. Defaulted to 5.
+- [Optional] `n`: the number of questions to generate when calculating the `alignment_score` and `inclusion_score`, defaulted to 5.
 - [Optional] `azure_deployment_name`: the deployment name for Azure OpenAI. Only required if you're using Azure OpenAI.
 
 ## How is it calculated?
 
 In `deepeval`, we judge summarization by taking the harmonic mean of two distinct scores:
 
-- `alignment_score`: determines whether the summary contains hallucinated or contradictory information to the source document.
-- `inclusion_score`: determines whether the summary contains the neccessary information from the source document.
+- `alignment_score`: determines whether the summary contains hallucinated or contradictory information to the original text.
+- `inclusion_score`: determines whether the summary contains the neccessary information from the original text.
 
-These scores are calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', and calculating the ratio of which the source document and summary yields the same answer.
+These scores are calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', and calculating the ratio of which the original text and summary yields the same answer.
 
 You can access the `alignment_score` and `inclusion_score` from a `SummarizationMetric` as follows:
 
