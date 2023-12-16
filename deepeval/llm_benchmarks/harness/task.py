@@ -1,7 +1,7 @@
-import os 
-import glob 
-import logging 
-from typing import Union, List, Any 
+import os
+import glob
+import logging
+from typing import Union, List, Any
 
 from lm_eval.api.registry import ALL_TASKS
 from lm_eval import utils
@@ -14,25 +14,30 @@ eval_logger.setLevel(getattr(logging, "INFO"))
 eval_logger.info("Verbosity set to INFO")
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# Todo: 
-# For everytask, we need to save a task descriptor. This can be done by going through each task and use gpt to summarize 
-# and store it. 
+# Todo:
+# For everytask, we need to save a task descriptor. This can be done by going through each task and use gpt to summarize
+# and store it.
+
 
 class HarnessTasks:
     @classmethod
     @property
     def list_all_main_tasks(cls) -> set:
-        return set([task.split('_')[0].split('-')[0] for task in ALL_TASKS])
-    
+        return set([task.split("_")[0].split("-")[0] for task in ALL_TASKS])
+
     @classmethod
     def get_subtasks(cls, main_task: str):
-        assert main_task in cls.list_all_main_tasks, ValueError(f'Task {main_task} not found')
-        return sorted([task for task in ALL_TASKS if task.startswith(main_task)])
-    
+        assert main_task in cls.list_all_main_tasks, ValueError(
+            f"Task {main_task} not found"
+        )
+        return sorted(
+            [task for task in ALL_TASKS if task.startswith(main_task)]
+        )
+
     @classmethod
     def describe_task(cls, task_name: str) -> str:
         raise NotImplementedError()
-    
+
     @classmethod
     def load_task(cls, tasks: Union[List[str], str]) -> List[Any]:
         if isinstance(tasks, str):
