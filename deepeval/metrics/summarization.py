@@ -32,6 +32,8 @@ class SummarizationMetric(BaseMetric):
         self.assessment_questions = assessment_questions
         self.azure_deployment_name = azure_deployment_name
         self.n = n
+        self.alignment_score = None
+        self.inclusion_score = None
 
     def measure(self, test_case: LLMTestCase):
         if test_case.input is None or test_case.actual_output is None:
@@ -64,7 +66,8 @@ class SummarizationMetric(BaseMetric):
             "Alignment": alignment_score,
             "Inclusion": inclusion_score,
         }
-
+        self.alignment_score = alignment_score
+        self.inclusion_score = inclusion_score
         self.score = summarization_score
         return self.score
 
