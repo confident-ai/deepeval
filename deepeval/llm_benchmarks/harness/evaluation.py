@@ -1,8 +1,8 @@
 import os
 import re
-import sys
 import json
 import logging
+import numpy as np 
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Optional, List, Union
@@ -155,7 +155,7 @@ class HarnessEvaluate:
         results = evaluator.simple_evaluate(
             model=self.harness_config.model,
             model_args=self.harness_config.model_args,
-            tasks=self.task_names,
+            tasks=self.harness_config.tasks,
             num_fewshot=self.harness_config.num_fewshot,
             batch_size=self.harness_config.batch_size,
             max_batch_size=self.harness_config.max_batch_size,
@@ -214,13 +214,14 @@ if __name__ == '__main__':
         model='hf',
         model_args='pretrained=gpt2',
         device='cpu',
-        limit=3,
+        limit=5,
+        tasks=['babi'],
         batch_size=1,
         log_samples=False # if true need to specify output paths 
     )
-    
-    tasks = 'hellaswag'
-    evaluator = HarnessEvaluate(harness_config=config)
-    results = evaluator.evaluate(tasks=tasks)
-    
+
+    tasks = ['hellaswag', 'babi']
+    eval_ = HarnessEvaluate(harness_config=config)
+    results = eval_.evaluate(tasks=tasks)
+
     print(results)
