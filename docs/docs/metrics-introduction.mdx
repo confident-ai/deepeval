@@ -1,0 +1,89 @@
+---
+id: metrics-introduction
+title: Metrics
+sidebar_label: Introduction
+---
+
+## Quick Summary
+
+In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, a test case represents the thing you're trying to measure. `deepeval` offers a range of default metrics for you to quickly get started with, which includes:
+
+- Hallucination
+- Answer Relevancy
+- Ragas
+- Toxicity
+- Bias
+
+`deepeval` also offers you a straightforward way to develop your own custom LLM-based evaluation metrics. This is noteworthy because all default metrics in `deepeval` are derived from traditional NLP models, not LLMs. All metrics are measured on a test case. Visit the [test cases section](evaluation-test-cases) to learn how to apply any metric on test cases for evaluation.
+
+## Types of Metrics
+
+A **_custom_** metric is a type of metric you can easily create by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versitle and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an **_LLM evaluated_** or **_classic_** metric. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
+
+`deepeval` also offer **_default_** metrics. All default metrics offered by `deepeval` are classic metrics. This means all default metrics in `deepeval` does not use LLMs for evaluation. This is delibrate for two main reasons:
+
+- LLM evaluated metrics are versitle in nature and it's better if you create one using `deepeval`'s build-ins
+- Classic metrics are much harder to compute and requires extensive research
+
+All of `deepeval`'s default metrics output a score between 0-1, and require a `minimum_score` argument to instantiate. A default metric is only successful if the evaluation score is equal to or greater than `minimum_score`.
+
+:::info
+All GPT models from OpenAI are available for metrics that use LLMs for evaluation. You can switch between models by providing a string corresponding to OpenAI's model names via the `model` argument.
+:::
+
+## Measuring a Metric
+
+All metrics in `deepeval`, including [custom metrics that you create](metrics-custom):
+
+- can be executed via the `metric.measure()` method
+- can have its score accessed via `metric.score`
+- can have its status accessed via `metric.is_successful()`
+- can be used to evaluate test cases or entire datasets, with or without Pytest.
+- has a `minimum_score` that acts as the threshold for success. `metric.is_successful()` is only true if `metric.score` >= `minimum_score`.
+
+Here's a quick example.
+
+```python
+from deepeval.metrics import HallucinationMetric
+from deepeval.test_case import LLMTestCase
+
+# Initialize a test case
+test_case = LLMTestCase(input="...", actual_output="...")
+
+# Initialize metric with minimum_score
+metric = HallucinationMetric(minimum_score=0.5)
+```
+
+Using this metric, you can either evaluate a test case using `deepeval test run`:
+
+```python title="test_file.py"
+from deepeval import evaluate
+...
+
+def test_hallucination():
+    assert_test(test_case, metric)
+```
+
+```console
+deepeval test run test_file.py
+```
+
+The `evaluate` function:
+
+```python
+from deepeval import assert_test
+...
+
+evaluate([test_case], [metric])
+```
+
+Or execute the metric directly and get its score:
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score)
+```
+
+For more details on how a metric evaluates a test case, refer to the [test cases section.](evaluation-test-cases#assert-test-cases)

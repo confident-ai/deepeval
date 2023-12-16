@@ -22,6 +22,7 @@ class TestResult:
     actual_output: str
     expected_output: str
     context: List[str]
+    retrieval_context: List[str]
 
 
 def create_test_result(
@@ -37,6 +38,7 @@ def create_test_result(
             actual_output=test_case.actual_output,
             expected_output=test_case.expected_output,
             context=test_case.context,
+            retrieval_context=test_case.retrieval_context,
         )
     else:
         raise ValueError("TestCase not supported yet.")
@@ -82,15 +84,22 @@ def run_test(
     test_case: LLMTestCase,
     metrics: List[BaseMetric],
 ) -> List[TestResult]:
+    if not isinstance(test_case, LLMTestCase):
+        raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
+
+    test_run_manager.reset()
     with progress_context("Executing run_test()..."):
         test_result = execute_test([test_case], metrics, False)[0]
         print_test_result(test_result)
-        print("\n" + "-" * 70)
+        print("")
+        print("-" * 70)
         return test_result
 
 
 def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
-    # len(execute_test(...)) is always 1 for assert_test
+    if not isinstance(test_case, LLMTestCase):
+        raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
+
     test_result = execute_test([test_case], metrics, True)[0]
     if not test_result.success:
         failed_metrics = [
@@ -108,11 +117,13 @@ def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
 
 
 def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
+    test_run_manager.reset()
     with progress_context("Evaluating testcases..."):
         test_results = execute_test(test_cases, metrics, True)
         for test_result in test_results:
             print_test_result(test_result)
-        print("\n" + "-" * 70)
+        print("")
+        print("-" * 70)
 
         test_run_manager.wrap_up_test_run(display_table=False)
         return test_results
@@ -139,3 +150,4 @@ def print_test_result(test_result: TestResult):
     print(f"  - actual output: {test_result.actual_output}")
     print(f"  - expected output: {test_result.expected_output}")
     print(f"  - context: {test_result.context}")
+    print(f"  - retrieval context: {test_result.retrieval_context}")

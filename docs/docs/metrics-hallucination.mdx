@@ -1,0 +1,50 @@
+---
+id: metrics-hallucination
+title: Hallucination
+sidebar_label: Hallucination
+---
+
+The hallucination metric determines whether your LLM generates factually correct information by comparing the `actual_output` to the provided `context`.
+
+## Required Parameters
+
+To use the `HallucinationMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+- `context`
+
+:::note
+Remember, `input` and `actual_output` are **mandatory** arguments to an `LLMTestCase` and so are always required even if not used for evaluation.
+:::
+
+## Example
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import HallucinationMetric
+from deepeval.test_case import LLMTestCase
+
+# Replace this with the actual documents that you are passing as input to your LLM.
+context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."]
+
+# Replace this with the actual output from your LLM application
+actual_output="A blond drinking water in public."
+
+test_case = LLMTestCase(
+    input="What was the blond doing?",
+    actual_output=actual_output,
+    context=context
+)
+metric = HallucinationMetric(minimum_score=0.5)
+
+metric.measure(test_case)
+print(metric.score)
+
+# or evaluate test cases in bulk
+evaluate([test_case], [metric])
+```
+
+:::info
+This metric uses vectara's hallucination evaluation model.
+:::

@@ -24,6 +24,12 @@ def dataclass_to_dict(instance: Any) -> Any:
         return instance
 
 
+def trimToJson(input_string: str) -> str:
+    start = input_string.find("{")
+    end = input_string.rfind("}") + 1
+    return input_string[start:end] if start != -1 and end != 0 else ""
+
+
 def delete_file_if_exists(file_path):
     try:
         if os.path.exists(file_path):

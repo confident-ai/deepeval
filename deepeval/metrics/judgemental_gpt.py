@@ -3,6 +3,7 @@ from deepeval.test_case import LLMTestCaseParams, LLMTestCase
 from typing import List
 from pydantic import BaseModel
 from deepeval.api import Api
+from deepeval.types import Languages
 
 
 class JudgementalGPTResponse(BaseModel):
@@ -13,6 +14,7 @@ class JudgementalGPTResponse(BaseModel):
 class JudgementalGPTRequest(BaseModel):
     text: str
     criteria: str
+    language: str
 
 
 class JudgementalGPT(BaseMetric):
@@ -21,11 +23,16 @@ class JudgementalGPT(BaseMetric):
         name: str,
         criteria: str,
         evaluation_params: List[LLMTestCaseParams],
+        language: Languages = Languages.ENGLISH,
         minimum_score: float = 0.5,
     ):
+        if not isinstance(language, Languages):
+            raise TypeError("'language' must be an instance of Languages.")
+
         self.criteria = criteria
         self.name = name
         self.evaluation_params = evaluation_params
+        self.language = language.value
         self.minimum_score = minimum_score
         self.success = None
         self.reason = None
@@ -41,7 +48,7 @@ class JudgementalGPT(BaseMetric):
             text += f"{param.value}: {value} \n\n"
 
         judgemental_gpt_request_data = JudgementalGPTRequest(
-            text=text, criteria=self.criteria
+            text=text, criteria=self.criteria, language=self.language
         )
 
         try:

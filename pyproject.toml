@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "0.20.29"
+version = "0.20.39"
 description = "The Evaluation Framework for LLMs"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -40,7 +40,7 @@ black = "*"
 portalocker = "*"
 openai = "*"
 langchain = "*"
-protobuf = "^4.21.6"
+protobuf = "3.20.3"
 
 [tool.black]
 line-length = 80

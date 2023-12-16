@@ -1,8 +1,11 @@
 """An implementation of the Ragas metric
 """
+from typing import Optional
+
+from ragas.llms import LangchainLLM
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-import warnings
+from deepeval.models import GPTModel
 
 
 class ContextualPrecisionMetric(BaseMetric):
@@ -11,8 +14,10 @@ class ContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -29,6 +34,10 @@ class ContextualPrecisionMetric(BaseMetric):
             from datasets import Dataset
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
+
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        context_precision.llm = LangchainLLM(llm=chat_model)
 
         # Create a dataset from the test case
         data = {
@@ -61,8 +70,10 @@ class ContextualRelevancyMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -79,6 +90,10 @@ class ContextualRelevancyMetric(BaseMetric):
             from datasets import Dataset
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
+
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        context_relevancy.llm = LangchainLLM(llm=chat_model)
 
         # Create a dataset from the test case
         data = {
@@ -111,8 +126,10 @@ class AnswerRelevancyMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -130,9 +147,14 @@ class AnswerRelevancyMetric(BaseMetric):
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
 
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        answer_relevancy.llm = LangchainLLM(llm=chat_model)
+
         data = {
             "question": [test_case.input],
             "answer": [test_case.actual_output],
+            "contexts": [test_case.retrieval_context],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -154,8 +176,10 @@ class FaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -172,6 +196,10 @@ class FaithfulnessMetric(BaseMetric):
             from datasets import Dataset
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
+
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        faithfulness.llm = LangchainLLM(llm=chat_model)
 
         data = {
             "contexts": [test_case.retrieval_context],
@@ -194,14 +222,16 @@ class FaithfulnessMetric(BaseMetric):
         return "Faithfulness"
 
 
-class ContextRecallMetric(BaseMetric):
+class ContextualRecallMetric(BaseMetric):
     """This metric checks the context recall using Ragas"""
 
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -218,6 +248,10 @@ class ContextRecallMetric(BaseMetric):
             from datasets import Dataset
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
+
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        context_recall.llm = LangchainLLM(llm=chat_model)
 
         data = {
             "question": [test_case.input],
@@ -246,8 +280,10 @@ class HarmfulnessMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -264,6 +300,10 @@ class HarmfulnessMetric(BaseMetric):
             from datasets import Dataset
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
+
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        harmfulness.llm = LangchainLLM(llm=chat_model)
 
         data = {
             "ground_truths": [[test_case.expected_output]],
@@ -293,8 +333,10 @@ class CoherenceMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         try:
@@ -309,6 +351,10 @@ class CoherenceMetric(BaseMetric):
             from datasets import Dataset
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
+
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        coherence.llm = LangchainLLM(llm=chat_model)
 
         data = {
             "ground_truths": [[test_case.expected_output]],
@@ -338,8 +384,10 @@ class MaliciousnessMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         try:
@@ -355,6 +403,10 @@ class MaliciousnessMetric(BaseMetric):
             from datasets import Dataset
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
+
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        maliciousness.llm = LangchainLLM(llm=chat_model)
 
         data = {
             "ground_truths": [[test_case.expected_output]],
@@ -384,8 +436,10 @@ class CorrectnessMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         try:
@@ -401,6 +455,10 @@ class CorrectnessMetric(BaseMetric):
             from datasets import Dataset
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
+
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        correctness.llm = LangchainLLM(llm=chat_model)
 
         data = {
             "ground_truths": [[test_case.expected_output]],
@@ -430,8 +488,10 @@ class ConcisenessMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         try:
@@ -446,6 +506,10 @@ class ConcisenessMetric(BaseMetric):
             from datasets import Dataset
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
+
+        # Set LLM model
+        chat_model = GPTModel(self.model).load_model()
+        conciseness.llm = LangchainLLM(llm=chat_model)
 
         data = {
             "ground_truths": [[test_case.expected_output]],
@@ -475,8 +539,10 @@ class RagasMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
+        model: Optional[str] = "gpt-3.5-turbo",
     ):
         self.minimum_score = minimum_score
+        self.model = model
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -497,11 +563,10 @@ class RagasMetric(BaseMetric):
         # Convert the LLMTestCase to a format compatible with Dataset
         score_metadata = {}
         metrics = [
-            ContextualPrecisionMetric(),
-            ContextualRelevancyMetric(),
-            ContextRecallMetric(),
-            FaithfulnessMetric(),
-            AnswerRelevancyMetric(),
+            ContextualPrecisionMetric(model=self.model),
+            ContextualRecallMetric(model=self.model),
+            FaithfulnessMetric(model=self.model),
+            AnswerRelevancyMetric(model=self.model),
         ]
 
         warnings_list = []

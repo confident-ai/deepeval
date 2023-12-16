@@ -5,12 +5,7 @@ from typing_extensions import Annotated
 from typing import Optional
 from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
 from deepeval.utils import delete_file_if_exists
-
-try:
-    from rich import print
-except Exception as e:
-    pass
-
+from deepeval.test_run import invoke_test_run_end_hook
 
 app = typer.Typer(name="test")
 
@@ -55,6 +50,7 @@ def run(
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
     check_if_valid_file(test_file_or_directory)
+    test_run_manager.reset()
     pytest_args = [test_file_or_directory]
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
@@ -78,6 +74,7 @@ def run(
     pytest_args.extend(["-p", "plugins"])
 
     retcode = pytest.main(pytest_args)
-
     test_run_manager.wrap_up_test_run()
+    invoke_test_run_end_hook()
+
     return retcode
