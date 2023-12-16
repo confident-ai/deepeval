@@ -4,9 +4,14 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import SummarizationMetric
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_summarization():
-    metric = SummarizationMetric(n=6)
+    metric = SummarizationMetric(
+        n=6,
+        assessment_questions=[
+            "Is AI significantly influencing numberous industries?"
+        ],
+    )
 
     input = """
     In the rapidly evolving digital landscape, the proliferation of artificial intelligence (AI) technologies has been a game-changer in various industries, ranging from healthcare to finance. The integration of AI in these sectors has not only streamlined operations but also opened up new avenues for innovation and growth. In healthcare, AI algorithms are increasingly being used for diagnostic purposes, analyzing medical images, and providing personalized medicine solutions. This has significantly improved patient outcomes and has the potential to revolutionize healthcare delivery systems globally. For example, AI-driven tools can now detect anomalies in medical images with greater accuracy and speed than traditional methods, aiding in early diagnosis and treatment of diseases like cancer.
