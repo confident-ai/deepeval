@@ -1,4 +1,5 @@
 import torch
+import nltk
 from rouge_score import rouge_scorer
 from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
@@ -366,3 +367,21 @@ class Scorer:
             print(f"Unable to load UnBiasedModel.\n{e}")
         scorer = UnBiasedModel(model_name=model)
         return scorer(text)
+
+    @classmethod 
+    def ner_score(true_labels, prediction, model: Optional[str] = None) -> float:
+        """ Calculates Message Understanding Conference score.
+
+        Args:
+            prediction(str): The entity predicted by the model
+        """
+        try:
+            from deepeval.models import NERModel
+        except Exception as e:
+            print(f"Unable to load NERModel.\n{e}")
+        scorer = NERModel(model_name=model)
+        predicted_labels = scorer(prediction)
+        tagger_scorer = nltk.tag.CRFTaggerScorer(tagset='bio')
+        scores = tagger_scorer.score(true_labels, predicted_labels)
+        return scores.f1_score
+

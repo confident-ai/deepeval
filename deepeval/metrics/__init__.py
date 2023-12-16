@@ -17,3 +17,4 @@ from .ragas_metric import (
 from .unbias_metric import UnBiasedMetric
 from .non_toxic_metric import NonToxicMetric
 from .hallucination_metric import HallucinationMetric
+from .ner_metric import NERMetric
