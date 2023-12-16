@@ -4,7 +4,7 @@ title: Contextual Relevancy
 sidebar_label: Contextual Relevancy
 ---
 
-Contextual Relevancy assesses the relevance of the retrieved contexts to input, and penalizes redundant information. It evaluates the performance of your RAG pipeline's retriever and is calculated using `input` and `retrieval_context`.
+The contextual relevancy metric assesses the relevance of the retrieved contexts to input, and penalizes redundant information. It evaluates the performance of your RAG pipeline's retriever and is calculated using `input` and `retrieval_context`.
 
 ## Required Parameters
 
@@ -31,7 +31,7 @@ actual_output = "We offer a 30-day full refund at no extra cost."
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
-metric = ContextualRelevancyMetric(minimum_score=0.7)
+metric = ContextualRelevancyMetric(minimum_score=0.7, model="gpt-3.5-turbo")
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     actual_output=actual_output,

@@ -8,6 +8,11 @@ from deepeval.tracing import get_trace_stack
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.decorators.hyperparameters import get_hyperparameters
 from deepeval.api import Api, Endpoints
+from deepeval.test_run.api import (
+    APITestCase,
+    MetricsMetadata,
+    TestRunHttpResponse,
+)
 import shutil
 import webbrowser
 from deepeval.utils import delete_file_if_exists
@@ -19,13 +24,6 @@ from rich.console import Console
 from rich import print
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
-
-
-class MetricsMetadata(BaseModel):
-    metric: str
-    score: float
-    minimum_score: float = Field(None, alias="minimumScore")
-    reason: Optional[str] = None
 
 
 class MetricScoreType(BaseModel):
@@ -58,22 +56,6 @@ class MetricsAverageDict:
             )
             for metric in self.metric_dict
         ]
-
-
-class APITestCase(BaseModel):
-    name: str
-    input: str
-    actual_output: str = Field(..., alias="actualOutput")
-    expected_output: Optional[str] = Field(None, alias="expectedOutput")
-    success: bool
-    metrics_metadata: List[MetricsMetadata] = Field(
-        ..., alias="metricsMetadata"
-    )
-    run_duration: float = Field(..., alias="runDuration")
-    traceStack: Optional[dict] = Field(None)
-    context: Optional[list] = Field(None)
-    retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
-    id: Optional[str] = None
 
 
 class TestRun(BaseModel):
@@ -160,14 +142,13 @@ class TestRun(BaseModel):
         return cls(**json.load(f))
 
 
-class TestRunHttpResponse(BaseModel):
-    testRunId: str
-    projectId: str
-    link: str
-
-
 class TestRunManager:
     def __init__(self):
+        self.test_run = None
+        self.temp_file_name = TEMP_FILE_NAME
+        self.save_to_disk = False
+
+    def reset(self):
         self.test_run = None
         self.temp_file_name = TEMP_FILE_NAME
         self.save_to_disk = False
@@ -197,8 +178,11 @@ class TestRunManager:
                     self.temp_file_name, mode="r", timeout=5
                 ) as file:
                     self.test_run = self.test_run.load(file)
-            except (FileNotFoundError, portalocker.exceptions.LockException):
-                print("Error loading test run from disk", file=sys.stderr)
+            except (
+                FileNotFoundError,
+                portalocker.exceptions.LockException,
+            ) as e:
+                print(f"Error loading test run from disk: {e}", file=sys.stderr)
                 self.test_run = None
         return self.test_run
 
@@ -231,7 +215,7 @@ class TestRunManager:
                 test_case_name += f" ({test_case.id})"
 
             for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.score >= metric_metadata.score:
+                if metric_metadata.score >= metric_metadata.minimum_score:
                     pass_count += 1
                 else:
                     fail_count += 1
@@ -323,15 +307,15 @@ class TestRunManager:
             os.remove(new_test_filename)
 
     def wrap_up_test_run(self, display_table: bool = True):
-        test_run = test_run_manager.get_test_run()
+        test_run = self.get_test_run()
         test_run.cleanup()
         if test_run is None:
             print("Test Run is empty, please try again.")
-            delete_file_if_exists(test_run_manager.temp_file_name)
+            delete_file_if_exists(self.temp_file_name)
             return
         elif len(test_run.test_cases) == 0:
             print("No test cases found, please try again.")
-            delete_file_if_exists(test_run_manager.temp_file_name)
+            delete_file_if_exists(self.temp_file_name)
             return
 
         if display_table:

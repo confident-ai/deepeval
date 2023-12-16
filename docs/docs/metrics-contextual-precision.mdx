@@ -4,7 +4,7 @@ title: Contextual Precision
 sidebar_label: Contextual Precision
 ---
 
-Contextual Precision determines whether more relevant retrieved contexts in your RAG pipeline are ranked higher than less relevant ones. It assesses your RAG pipeline's retriever and is calculated using `input` and `retrieval_context`.
+The contextual precision metric determines whether more relevant retrieved contexts in your RAG pipeline are ranked higher than less relevant ones. It assesses your RAG pipeline's retriever and is calculated using `input` and `retrieval_context`.
 
 ## Required Parameters
 
@@ -13,10 +13,6 @@ To use the `ContextualPrecisionMetric`, you'll have to provide the following par
 - `input`
 - `actual_output`
 - `retrieval_context`
-
-:::note
-Remember, `input` and `actual_output` are **mandatory** arguments to an `LLMTestCase` and so are always required even if not used for evaluation.
-:::
 
 ## Example
 
@@ -31,7 +27,7 @@ actual_output = "We offer a 30-day full refund at no extra cost."
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
-metric = ContextualPrecisionMetric(minimum_score=0.7)
+metric = ContextualPrecisionMetric(minimum_score=0.7, model="gpt-3.5-turbo")
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     actual_output=actual_output,
