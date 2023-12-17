@@ -21,7 +21,6 @@ class HarnessExperiment(BaseEvaluationExperiment):
             experiment_name=experiment_name, experiment_desc=experiment_desc
         )
 
-        self.results = {}
         self.tasks = []
         self.config, self.experiment = None, None
         
