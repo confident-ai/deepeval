@@ -1,10 +1,10 @@
 from typing import List
 from pydantic import BaseModel
-from deepeval.llm_benchmarks.harness.evaluation import (
+from deepeval.experimental.harness.evaluation import (
     HarnessEvaluate,
     HarnessConfig,
 )
-from deepeval.llm_benchmarks.base_experiment import BaseEvaluationExperiment
+from deepeval.experimental.base_experiment import BaseEvaluationExperiment
 
 
 class HarnessExperiment(BaseEvaluationExperiment):
