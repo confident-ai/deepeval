@@ -1,12 +1,12 @@
 import pytest
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.metrics import LLMEvalMetric
+from deepeval.metrics import NERMetric
 from deepeval import assert_test
 
 
 def test_chat_completion():
     """Test Chat Completion"""
-    metric = LLMEvalMetric(
+    metric = NERMetric(
         name="NER",
         criteria="The response is a valid response to the prompt.",
         minimum_score=0.5,

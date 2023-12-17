@@ -16,7 +16,7 @@ class NERMetric(BaseMetric, metaclass=Singleton):
             raise ValueError("Output cannot be None")
         score = Scorer.ner_score(c, test_case.actual_output)
 
-        self.success = score > self.minimum_score
+        self.success = score >= self.minimum_score
         self.score = score
         return score
 
