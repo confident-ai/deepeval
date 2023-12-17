@@ -6,7 +6,7 @@ from typing import Union, List, Any, Optional
 
 class BaseEvaluationExperiment(ABC):
     def __init__(
-        self, experiment_name: str, *args, **kwargs
+        self, experiment_name: str, experiment_desc: str, *args, **kwargs
     ) -> None:
         """
         An experiment name / alias should be witten like: <experiment-group> / <experiment-name>
@@ -17,6 +17,8 @@ class BaseEvaluationExperiment(ABC):
         For Harness based experiments: harness/<experiment-name>
         """
         self.experiment_name = experiment_name
+        self.experiment_desc = experiment_desc
+        
         deep_eval_cache_path = Path.home() / ".cache" / "deepeval"
 
         if not deep_eval_cache_path.exists():
