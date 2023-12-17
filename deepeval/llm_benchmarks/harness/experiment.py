@@ -1,6 +1,5 @@
-from typing import List, Union
+from typing import List
 from pydantic import BaseModel
-from deepeval.llm_benchmarks.harness.task import HarnessTasks
 from deepeval.llm_benchmarks.harness.evaluation import (
     HarnessEvaluate,
     HarnessConfig,
