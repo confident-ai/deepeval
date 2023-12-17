@@ -18,6 +18,10 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # For everytask, we need to save a task descriptor. This can be done by going through each task and use gpt to summarize
 # and store it.
 
+# Todo:
+# For every sub task or so, we should have an option to download that very task and use it under deepeval seperately
+# or may be outside of deepeval.
+
 
 class HarnessTasks:
     @classmethod
@@ -72,3 +76,8 @@ class HarnessTasks:
     @classmethod
     def group_tasks(task_names: Union[str, List[str]]) -> None:
         raise NotImplementedError()
+    
+    @classmethod
+    def download_task(cls, task_name: str) -> None:
+        raise NotImplementedError()
+    
