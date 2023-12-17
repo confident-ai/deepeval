@@ -10,7 +10,7 @@ from typing import Optional, List, Union
 from lm_eval import evaluator, utils
 from lm_eval.api.registry import ALL_TASKS
 from lm_eval.tasks import initialize_tasks, include_path
-from deepeval.llm_benchmarks.harness.task import HarnessTasks
+from deepeval.experimental.harness.task import HarnessTasks
 
 # Todo:
 # Bring a concept of Grouped evaluations
