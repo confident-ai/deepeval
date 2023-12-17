@@ -32,11 +32,6 @@ class BaseEvaluationExperiment(ABC):
             self.experiment_folder.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
-    def create(self, config: BaseModel, *args, **kwargs):
-        """Create an experiment by giving certain configs."""
-        pass
-
-    @abstractmethod
     def update(self, updated_config: BaseModel, *args, **kwargs):
         """Update an experiment with a new updated config."""
         pass
