@@ -76,8 +76,7 @@ class HarnessTasks:
     @classmethod
     def group_tasks(task_names: Union[str, List[str]]) -> None:
         raise NotImplementedError()
-    
+
     @classmethod
     def download_task(cls, task_name: str) -> None:
         raise NotImplementedError()
-    

@@ -4,6 +4,7 @@ from pathlib import Path
 from pydantic import BaseModel
 from typing import Union, List, Any, Optional
 
+
 class BaseEvaluationExperiment(ABC):
     def __init__(
         self, experiment_name: str, experiment_desc: str, *args, **kwargs
@@ -12,22 +13,20 @@ class BaseEvaluationExperiment(ABC):
         An experiment name / alias should be witten like: <experiment-group> / <experiment-name>
         For custom experiments there can be custom experiment groups. However, for helm and harness
         the experiment group should be written in this format:
-        
+
         For HELM based experiments: helm/<experiment-name>
         For Harness based experiments: harness/<experiment-name>
         """
         self.experiment_name = experiment_name
         self.experiment_desc = experiment_desc
-        
+
         deep_eval_cache_path = Path.home() / ".cache" / "deepeval"
 
         if not deep_eval_cache_path.exists():
             deep_eval_cache_path.mkdir(parents=True, exist_ok=True)
 
         self._experiment_root_folder = deep_eval_cache_path
-        self.experiment_folder = (
-            deep_eval_cache_path / experiment_name
-        )
+        self.experiment_folder = deep_eval_cache_path / experiment_name
 
         if not self.experiment_folder.exists():
             self.experiment_folder.mkdir(parents=True, exist_ok=True)
