@@ -2,7 +2,7 @@ import os
 import re
 import json
 import logging
-import numpy as np 
+import numpy as np
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Optional, List, Union
@@ -209,18 +209,18 @@ class HarnessEvaluate:
             return results
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     config = HarnessConfig(
-        model='hf',
-        model_args='pretrained=gpt2',
-        device='cpu',
+        model="hf",
+        model_args="pretrained=gpt2",
+        device="cpu",
         limit=5,
-        tasks=['babi'],
+        tasks=["babi"],
         batch_size=1,
-        log_samples=False # if true need to specify output paths 
+        log_samples=False,  # if true need to specify output paths
     )
 
-    tasks = ['hellaswag', 'babi']
+    tasks = ["hellaswag", "babi"]
     eval_ = HarnessEvaluate(harness_config=config)
     results = eval_.evaluate(tasks=tasks)
 

@@ -1,5 +1,5 @@
 from deepeval.llm_benchmarks.harness.task import HarnessTasks
-from deepeval.llm_benchmarks.harness.evaluate import (
+from deepeval.llm_benchmarks.harness.evaluation import (
     HarnessEvaluate,
     HarnessConfig,
 )
