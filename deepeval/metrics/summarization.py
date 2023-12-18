@@ -54,12 +54,7 @@ class SummarizationMetric(BaseMetric):
             alignment_score = future_alignment.result()
             inclusion_score = future_inclusion.result()
 
-        if alignment_score == 0 or inclusion_score == 0:
-            summarization_score = 0
-        else:
-            summarization_score = 2 / (
-                (1 / alignment_score) + (1 / inclusion_score)
-            )
+        summarization_score = min(alignment_score, inclusion_score)
 
         self.success = summarization_score >= self.minimum_score
         self.score_metadata = {
