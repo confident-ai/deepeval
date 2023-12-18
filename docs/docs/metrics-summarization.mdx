@@ -44,16 +44,16 @@ from deepeval.metrics import SummarizationMetric
 from deepeval.test_case import LLMTestCase
 ...
 
-test_case = LLMTestCase(
-    input=input,
-    actual_output=actual_output,
+test_case = LLMTestCase(input=input, actual_output=actual_output)
+metric = SummarizationMetric(
+    minimum_score=0.5,
+    model="gpt-4",
     assessment_questions=[
         "Is the inclusion score based on a percentage of 'yes' answers?",
         "Does the score ensure the summary's accuracy with the source?",
         "Does a higher score mean a more comprehensive summary?"
     ]
 )
-metric = SummarizationMetric(minimum_score=0.5, model="gpt-4")
 
 metric.measure(test_case)
 print(metric.score)
@@ -72,7 +72,7 @@ There are five optional parameters when instantiating an `SummarizationMetric` c
 
 ## How is it calculated?
 
-In `deepeval`, we judge summarization by taking the harmonic mean of two distinct scores:
+In `deepeval`, we judge summarization by taking the minimum of the two distinct scores:
 
 - `alignment_score`: determines whether the summary contains hallucinated or contradictory information to the original text.
 - `inclusion_score`: determines whether the summary contains the neccessary information from the original text.
@@ -96,5 +96,5 @@ print(metric.inclusion_score)
 ```
 
 :::note
-Since the summarization score is the harmonic mean of the `alignment_score` and `inclusion_score`, a 0 value for either one of these scores will result in a final summarization score of 0.
+Since the summarization score is the minimum of the `alignment_score` and `inclusion_score`, a 0 value for either one of these scores will result in a final summarization score of 0.
 :::
