@@ -29,14 +29,14 @@ An `EvaluationDataset` accepts one mandatory and one optional argument:
 
 :::info
 
-Essentially, `auto_convert_goldens_to_test_cases` is convenient if you have a complete, pre-computed dataset on Confident ready for evaluation. However, this might not always be the case. To disable the automatic conversion of goldens to test cases within your dataset, set `auto_convert_goldens_to_test_cases` to `False`. You might find this useful if you:
+Essentially, `auto_convert_goldens_to_test_cases` is convenient if you have a complete, pre-gcomputed dataset on Confident ready for evaluation. However, this might not always be the case. To disable the automatic conversion of goldens to test cases within your dataset, set `auto_convert_goldens_to_test_cases` to `False`. You might find this useful if you:
 
 - have goldens in your `EvaluationDataset` that are missing essential components, such as the `actual_output`, to be converted to test cases for evaluation. This may be the case if you're looking to generate `actual_output`s at evaluation time. Remember, a golden does not require an `actual_output`, but a test case does.
 - have extra data preprocessing to do before converting goldens to test cases. Remember, goldens have an extra `additional_metadata` field, which is a dictionary that contains additional metadata for you to generate custom outputs.
 
 :::
 
-Here is an example of how you can use goldens as an intermediary variable to generate `actual_output`s before converting them to test cases for evaluation:
+Here is an example of how you can use goldens as an intermediary variable to generate an `actual_output before converting them to test cases for evaluation:
 
 ```python
 # Pull from Confident
@@ -74,7 +74,7 @@ def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
 dataset.test_cases = convert_goldens_to_test_cases(dataset.goldens)
 ```
 
-Finally, define metric(s) like in previous examples in this documentation and evaluate
+Finally, define metric(s) like in previous examples in this documentation and evaluate:
 
 ```python
 from deepeval.metrics import HallucinationMetric
