@@ -1,7 +1,6 @@
 from typing import List
 from deepeval.dataset.api import Golden
 from deepeval.test_case import LLMTestCase
-from dataclasses import asdict
 
 
 def convert_test_cases_to_goldens(

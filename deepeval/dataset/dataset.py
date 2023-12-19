@@ -267,20 +267,22 @@ class EvaluationDataset:
                 "To push dataset to Confident AI, run `deepeval login`"
             )
 
-    def pull(self, alias: str):
+    def pull(self, alias: str, auto_convert_goldens_to_test_cases: bool = True):
         if os.path.exists(".deepeval"):
             api = Api()
             result = api.get_request(
                 endpoint=Endpoints.DATASET_ENDPOINT.value,
                 params={"alias": alias},
             )
+
             response = DatasetHttpResponse(
                 goldens=result["goldens"],
             )
-            self.goldens.extend(response.goldens)
 
-            # TODO: make this conversion at evaluation time instead
-            self.test_cases.extend(convert_goldens_to_test_cases(self.goldens))
+            self.goldens = response.goldens
+
+            if auto_convert_goldens_to_test_cases:
+                self.test_cases = convert_goldens_to_test_cases(self.goldens)
         else:
             raise Exception(
                 "Run `deepeval login` to pull dataset from Confident AI"
