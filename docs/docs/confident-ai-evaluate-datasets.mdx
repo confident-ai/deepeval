@@ -22,6 +22,68 @@ dataset = EvaluationDataset()
 dataset.pull(alias="My Confident Dataset")
 ```
 
+An `EvaluationDataset` accepts one mandatory and one optional argument:
+
+- `alias`: the alias of your dataset on Confident. A dataset alias is unique for each project.
+- [Optional] `auto_convert_goldens_to_test_cases`: Defaulted to `True`. When set to `True`, `dataset.pull()` will automatically convert all goldens that were fetched from Confident into test cases and override all test cases you currently have in your `EvaluationDataset` instance.
+
+:::info
+
+Essentially, `auto_convert_goldens_to_test_cases` is convenient if you have a complete, pre-gcomputed dataset on Confident ready for evaluation. However, this might not always be the case. To disable the automatic conversion of goldens to test cases within your dataset, set `auto_convert_goldens_to_test_cases` to `False`. You might find this useful if you:
+
+- have goldens in your `EvaluationDataset` that are missing essential components, such as the `actual_output`, to be converted to test cases for evaluation. This may be the case if you're looking to generate `actual_output`s at evaluation time. Remember, a golden does not require an `actual_output`, but a test case does.
+- have extra data preprocessing to do before converting goldens to test cases. Remember, goldens have an extra `additional_metadata` field, which is a dictionary that contains additional metadata for you to generate custom outputs.
+
+:::
+
+Here is an example of how you can use goldens as an intermediary variable to generate an `actual_output before converting them to test cases for evaluation:
+
+```python
+# Pull from Confident
+dataset.pull(
+    alias="My Confident Dataset",
+    # Don't convert goldens to test cases yet
+    auto_convert_goldens_to_test_cases=False
+)
+```
+
+Then, process the goldens and convert them into test cases:
+
+```python
+# A hypothetical LLM application example
+from chatbot import query
+from typing import List
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import Golden
+...
+
+def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
+    test_cases = []
+    for golden in goldens:
+        test_case = LLMTestCase(
+            input=golden.input,
+            # Generate actual output using the 'input' and 'additional_metadata'
+            actual_output=query(golden.input, golden.additional_metadata),
+            expected_output=golden.expected_output,
+            context=golden.context,
+        )
+        test_cases.append(test_case)
+    return test_cases
+
+# Data preprocessing before setting the dataset test cases
+dataset.test_cases = convert_goldens_to_test_cases(dataset.goldens)
+```
+
+Finally, define metric(s) like in previous examples in this documentation and evaluate:
+
+```python
+from deepeval.metrics import HallucinationMetric
+...
+
+metric = HallucinationMetric()
+dataset.evaluate([metric])
+```
+
 ## Evaluate Your Dataset
 
 You can start running evaluations as usual once you have your dataset pulled from Confident AI. Remember, a dataset is simply a list of test cases, so what you previously learned on [evaluating test cases](evaluation-test-cases#assert-test-cases) still applies.
