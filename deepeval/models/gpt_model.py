@@ -37,6 +37,8 @@ class GPTModel(DeepEvalBaseModel):
 
         self.model_kwargs = model_kwargs
 
+        # TODO: you should set the self.model here instead of loading it everytime
+
         super().__init__(model_name, *args, **kwargs)
 
     def load_model(self):

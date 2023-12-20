@@ -49,8 +49,11 @@ Text:
 Answer:
 """
 
-generate_truths_template = """
-Based on the given text, please generate a comphrensive list of undisputed "truths" that can inferred from the provided text. You should NOT incorporate any knowledge you have, and take each truth at face value.
+
+class FaithfulnessTemplate:
+    @staticmethod
+    def generate_truths(text):
+        return f"""Based on the given text, please generate a comphrensive list of undisputed "truths" that can inferred from the provided text. You should NOT incorporate any knowledge you have, and take each truth at face value.
 
 Example text: "Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
 Example truths: ["Einstein won the noble prize for his discovery of the photoelectric effect.", "Einstein won the noble prize in 1968."]
@@ -65,8 +68,9 @@ Text:
 JSON:
 """
 
-generate_verdicts_template = """
-Based on a list of strings, called contexts, please generate a list of JSON objects to indicate whether the given 'actual output' agrees with EACH context. The JSON will have 2 fields: 'verdict' and 'reason'.
+    @staticmethod
+    def generate_verdicts(truths, text):
+        return f"""Based on a list of strings, called contexts, please generate a list of JSON objects to indicate whether the given 'actual output' agrees with EACH context. The JSON will have 2 fields: 'verdict' and 'reason'.
 The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', and states whether the given text agrees with the context. 
 The 'reason' is the reason for the verdict. When the answer is 'no' or 'idk', try to provide a correction in the reason. Also include the original context in the JSON. 
 
@@ -78,12 +82,12 @@ Example text: "Einstein won the Nobel Prize in 1969 for his discovery of the pho
 Example:
 "verdicts": [
     {{
-      "verdict": "yes",
-      "reason": "The context states that Einstein won the Nobel Prize for his discovery of the photoelectric effect."
+    "verdict": "yes",
+    "reason": "The context states that Einstein won the Nobel Prize for his discovery of the photoelectric effect."
     }},
     {{
-      "verdict": "no",
-      "reason": "The context states that Einstein won the Nobel Prize in 1968, not 1969."
+    "verdict": "no",
+    "reason": "The context states that Einstein won the Nobel Prize in 1968, not 1969."
     }}
 ]  
 
@@ -98,9 +102,9 @@ Actual Output:
 JSON:
 """
 
-
-faithfulness_reason_template = """
-Below is a list of Contradictions. It explains why the 'actual output' does not align with the 'retrieval context'.
+    @staticmethod
+    def generate_reason(score, contradiction_reasons):
+        return f"""Below is a list of Contradictions. It explains why the 'actual output' does not align with the 'retrieval context'.
 Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is the context (higher the better), concisely summarize the contradictions to justify the score. If there are no contradictions, just say something positive with an upbeat tone (but don't overdo it otherwise it gets annoying).
 
 Faithfulness Score:
@@ -114,3 +118,21 @@ The score is <faithfulness_score> because <your_reason>.
 
 Justification:
 """
+
+
+class AnswerRelevancyTemplate:
+    @staticmethod
+    def generate_reason(reaons_for_irrelevancy, reaons_for_ambiguity, score):
+        pass
+
+    @staticmethod
+    def generate_verdicts(meta_questions):
+        pass
+
+    @staticmethod
+    def generate_mock_questions(answer, retrieval_context):
+        pass
+
+    @staticmethod
+    def generate_meta_questions(original_question, mock_questions):
+        pass
