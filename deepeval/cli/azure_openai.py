@@ -14,19 +14,19 @@ app = typer.Typer(name="azure-openai")
 @app.command(name="set")
 def set_azure_openai_env(
     azure_openai_api_key: str = typer.Option(
-        ..., "--azure-openai-api-key", help="Azure OpenAI API key"
+        ..., "--openai-api-key", help="Azure OpenAI API key"
     ),
     azure_openai_endpoint: str = typer.Option(
-        ..., "--azure-openai-endpoint", help="Azure OpenAI endpoint"
+        ..., "--openai-endpoint", help="Azure OpenAI endpoint"
     ),
     openai_api_version: str = typer.Option(
         ..., "--openai-api-version", help="OpenAI API version"
     ),
     azure_deployment_name: str = typer.Option(
-        ..., "--azure-deployment-name", help="Azure deployment name"
+        ..., "--deployment-name", help="Azure deployment name"
     ),
     azure_model_version: Optional[str] = typer.Option(
-        None, "--azure-model-version", help="Azure model version (optional)"
+        None, "--model-version", help="Azure model version (optional)"
     ),
 ):
     KEY_FILE_HANDLER.write_key(
