@@ -1,7 +1,7 @@
 from typing import List, Optional
 from enum import Enum
 import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -25,12 +25,10 @@ class SummarizationMetric(BaseMetric):
         model: Optional[str] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
-        azure_deployment_name: Optional[str] = None,
     ):
         self.minimum_score = minimum_score
         self.model = model
         self.assessment_questions = assessment_questions
-        self.azure_deployment_name = azure_deployment_name
         self.n = n
         self.alignment_score = None
         self.inclusion_score = None
@@ -117,11 +115,7 @@ class SummarizationMetric(BaseMetric):
                 n=self.n, text=source_document
             )
 
-        model_kwargs = {}
-        if self.azure_deployment_name is not None:
-            model_kwargs["deployment_id"] = self.azure_deployment_name
-
-        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
+        chat_model = GPTModel(model_name=self.model)
         res = chat_model(prompt)
 
         json_output = trimToJson(res.content)
@@ -134,11 +128,7 @@ class SummarizationMetric(BaseMetric):
             question=question, text=text
         )
 
-        model_kwargs = {}
-        if self.azure_deployment_name is not None:
-            model_kwargs["deployment_id"] = self.azure_deployment_name
-
-        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
+        chat_model = GPTModel(model_name=self.model)
         res = chat_model(prompt)
 
         return res.content

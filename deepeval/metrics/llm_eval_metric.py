@@ -27,7 +27,6 @@ class LLMEvalMetric(BaseMetric):
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[str] = None,
         minimum_score: float = 0.5,
-        azure_deployment_name: Optional[str] = None,
     ):
         self.name = name
         self.evaluation_params = evaluation_params
@@ -52,7 +51,6 @@ class LLMEvalMetric(BaseMetric):
         self.model = model
         self.evaluation_steps = evaluation_steps
         self.minimum_score = minimum_score
-        self.azure_deployment_name = azure_deployment_name
 
     def measure(self, test_case: LLMTestCase):
         """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
@@ -84,11 +82,7 @@ class LLMEvalMetric(BaseMetric):
     def generate_evaluation_steps(self):
         prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
 
-        model_kwargs = {}
-        if self.azure_deployment_name is not None:
-            model_kwargs["deployment_id"] = self.azure_deployment_name
-
-        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
+        chat_model = GPTModel(model_name=self.model)
         res = chat_model(prompt)
 
         return res.content
@@ -111,8 +105,6 @@ class LLMEvalMetric(BaseMetric):
             "stop": None,
             "presence_penalty": 0,
         }
-        if self.azure_deployment_name is not None:
-            model_kwargs["deployment_id"] = self.azure_deployment_name
 
         chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
         res = chat_model(prompt)
