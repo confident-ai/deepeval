@@ -1,6 +1,8 @@
+import os
 from typing import Dict, Optional
 
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOpenAI, AzureChatOpenAI
+from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.base import DeepEvalBaseModel
 from deepeval.chat_completion.retry import call_openai_with_retry
 
@@ -38,6 +40,33 @@ class GPTModel(DeepEvalBaseModel):
         super().__init__(model_name, *args, **kwargs)
 
     def load_model(self):
+        if self.should_use_azure_openai():
+            os.environ[
+                KeyValues.AZURE_OPENAI_API_KEY.value
+            ] = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_OPENAI_API_KEY)
+            os.environ[
+                KeyValues.AZURE_OPENAI_ENDPOINT.value
+            ] = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_OPENAI_ENDPOINT)
+
+            model_version = KEY_FILE_HANDLER.fetch_data(
+                KeyValues.AZURE_MODEL_VERSION
+            )
+            model_kwargs = {}
+            if model_version is not None:
+                model_kwargs["model_version"] = model_version
+
+            openai_api_version = KEY_FILE_HANDLER.fetch_data(
+                KeyValues.OPENAI_API_VERSION
+            )
+            azure_deployment = KEY_FILE_HANDLER.fetch_data(
+                KeyValues.AZURE_DEPLOYMENT_NAME
+            )
+
+            return AzureChatOpenAI(
+                openai_api_version=openai_api_version,
+                azure_deployment=azure_deployment,
+                model_kwargs=model_kwargs,
+            )
         return ChatOpenAI(
             model_name=self.model_name, model_kwargs=self.model_kwargs
         )
@@ -45,3 +74,8 @@ class GPTModel(DeepEvalBaseModel):
     def _call(self, prompt: str):
         chat_model = self.load_model()
         return call_openai_with_retry(lambda: chat_model.invoke(prompt))
+
+    def should_use_azure_openai(self):
+        value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
+        print(value)
+        return value.lower() == "yes" if value is not None else False
