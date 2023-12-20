@@ -41,13 +41,6 @@ class GPTModel(DeepEvalBaseModel):
 
     def load_model(self):
         if self.should_use_azure_openai():
-            os.environ[
-                KeyValues.AZURE_OPENAI_API_KEY.value
-            ] = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_OPENAI_API_KEY)
-            os.environ[
-                KeyValues.AZURE_OPENAI_ENDPOINT.value
-            ] = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_OPENAI_ENDPOINT)
-
             model_version = KEY_FILE_HANDLER.fetch_data(
                 KeyValues.AZURE_MODEL_VERSION
             )
@@ -55,16 +48,24 @@ class GPTModel(DeepEvalBaseModel):
             if model_version is not None:
                 model_kwargs["model_version"] = model_version
 
+            openai_api_key = KEY_FILE_HANDLER.fetch_data(
+                KeyValues.AZURE_OPENAI_API_KEY
+            )
+
             openai_api_version = KEY_FILE_HANDLER.fetch_data(
                 KeyValues.OPENAI_API_VERSION
             )
             azure_deployment = KEY_FILE_HANDLER.fetch_data(
                 KeyValues.AZURE_DEPLOYMENT_NAME
             )
-
+            azure_endpoint = KEY_FILE_HANDLER.fetch_data(
+                KeyValues.AZURE_OPENAI_ENDPOINT
+            )
             return AzureChatOpenAI(
                 openai_api_version=openai_api_version,
                 azure_deployment=azure_deployment,
+                azure_endpoint=azure_endpoint,
+                openai_api_key=openai_api_key,
                 model_kwargs=model_kwargs,
             )
         return ChatOpenAI(
@@ -77,5 +78,4 @@ class GPTModel(DeepEvalBaseModel):
 
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
-        print(value)
         return value.lower() == "yes" if value is not None else False
