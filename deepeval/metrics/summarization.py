@@ -1,7 +1,7 @@
 from typing import List, Optional
 from enum import Enum
 import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
