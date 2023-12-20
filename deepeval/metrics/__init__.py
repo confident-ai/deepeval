@@ -4,11 +4,11 @@ from .base_metric import BaseMetric
 from .summarization import SummarizationMetric
 from .judgemental_gpt import JudgementalGPT
 from .llm_eval_metric import LLMEvalMetric
+from .faithfulness import FaithfulnessMetric
 from .ragas_metric import (
     RagasMetric,
     ContextualPrecisionMetric,
     ContextualRelevancyMetric,
-    FaithfulnessMetric,
     ContextualRecallMetric,
     ConcisenessMetric,
     CorrectnessMetric,

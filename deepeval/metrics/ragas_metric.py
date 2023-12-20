@@ -219,7 +219,7 @@ class FaithfulnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Faithfulness"
+        return "Faithfulness (RAGAS)"
 
 
 class ContextualRecallMetric(BaseMetric):
