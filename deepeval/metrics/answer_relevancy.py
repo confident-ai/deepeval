@@ -1,5 +1,5 @@
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import json
 
 from deepeval.utils import trimToJson
@@ -11,7 +11,7 @@ from deepeval.templates import AnswerRelevancyTemplate
 
 class AnswerRelvancyVerdict(BaseModel):
     verdict: str
-    reason: str
+    mock_question: str = Field(default=None)
 
 
 class AnswerRelevancyMetric(BaseMetric):
@@ -37,7 +37,9 @@ class AnswerRelevancyMetric(BaseMetric):
         self.mock_questions: List[str] = self._generate_mock_questions(
             test_case.actual_output, "\n".join(test_case.retrieval_context)
         )
-        self.meta_questions: List[str] = self._generate_meta_questions()
+        self.meta_questions: List[str] = self._generate_meta_questions(
+            test_case.input
+        )
         self.verdicts: List[AnswerRelvancyVerdict] = self._generate_verdicts()
 
         answer_relevancy_score = self._generate_score()
@@ -47,9 +49,10 @@ class AnswerRelevancyMetric(BaseMetric):
         # generate close ended answers to meta questions and a reason to it. The reason should focus on the potential answer to the question being relevant or not to the actual question
         # single out 'no' and 'idk' answers and generate a final reason eg while there are ambigity from idk, it could work. however, .... (talk about no)
         # final score is num(yes or idk)/total
-
+        self.reason = self._generate_reason(
+            test_case.input, answer_relevancy_score
+        )
         self.success = answer_relevancy_score >= self.minimum_score
-        self.reason = self._generate_reason(answer_relevancy_score)
         self.score = answer_relevancy_score
 
         return self.score
@@ -62,19 +65,21 @@ class AnswerRelevancyMetric(BaseMetric):
 
         return relevant_count / len(self.verdicts)
 
-    def _generate_reason(self, score: float) -> str:
-        reaons_for_irrelevancy = []
-        reaons_for_ambiguity = []
+    def _generate_reason(self, original_question: str, score: float) -> str:
+        # for each ireelevancy and ambiguity, suggest a point being made that might not be relevant to the original question
+        irrelevant_questions = []
+        ambiguous_questions = []
 
         for verdict in self.verdicts:
             if verdict.verdict.lower() == "no":
-                reaons_for_irrelevancy.append(verdict.reason)
+                irrelevant_questions.append(verdict.mock_question)
             elif verdict.verdict.lower == "idk":
-                reaons_for_ambiguity.append(verdict.reason)
+                ambiguous_questions.append(verdict.mock_question)
 
         prompt = AnswerRelevancyTemplate.generate_reason(
-            reaons_for_irrelevancy=reaons_for_irrelevancy,
-            reaons_for_ambiguity=reaons_for_ambiguity,
+            irrelevant_questions=irrelevant_questions,
+            ambiguous_questions=ambiguous_questions,
+            original_question=original_question,
             score=format(score, ".2f"),
         )
 
@@ -92,16 +97,22 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(verdicts) != len(self.meta_questions):
             raise ValueError("Number of verdicts generated does not equal.")
 
+        for i in range(len(verdicts)):
+            verdicts[i].mock_question = self.mock_questions[i]
+
         return verdicts
 
     def _generate_meta_questions(self, original_question: str) -> List[str]:
         # TODO: create
-        prompt = AnswerRelevancyTemplate.generate_meta_questions(
-            original_question=original_question,
-            mock_questions=self.mock_questions,
-        )
-        res = self.chat_model(prompt)
-        return res.content
+        meta_questions = []
+        for mock_question in self.mock_questions:
+            meta_question = AnswerRelevancyTemplate.generate_meta_question(
+                original_question=original_question,
+                mock_questions=mock_question,
+            )
+            meta_questions.append(meta_question)
+
+        return meta_questions
 
     def _generate_mock_questions(
         self, answer: str, retrieval_context: str
