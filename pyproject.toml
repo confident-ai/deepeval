@@ -38,6 +38,7 @@ portalocker = "*"
 openai = "*"
 langchain = "*"
 protobuf = "3.20.3"
+typer = "*"
 
 [tool.black]
 line-length = 80
