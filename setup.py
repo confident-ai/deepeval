@@ -2,10 +2,6 @@ from setuptools import find_packages, setup
 
 from deepeval._version import __version__
 
-with open("requirements.txt", "r") as f:
-    requirements = f.read().splitlines()
-
-
 setup(
     name="deepeval",
     version=__version__,
@@ -22,9 +18,9 @@ setup(
         "tabulate",
         "sentence-transformers",  # for similarity
         "pytest",
-        "typer==0.9.0",
+        "typer",
         "rich",
-        "protobuf==3.20.3",
+        "protobuf==4.25.1",
         "pydantic",  # loosen pydantic requirements as we support multiple
         "sentry-sdk",
         "pytest-xdist",
