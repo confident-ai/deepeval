@@ -8,7 +8,11 @@ from deepeval.test_case import LLMTestCase
 from deepeval.models import GPTModel
 
 
-class ContextualPrecisionMetric(BaseMetric):
+def format_ragas_metric_name(name: str):
+    return f"{name} (ragas)"
+
+
+class RAGASContextualPrecisionMetric(BaseMetric):
     """This metric checks the contextual precision using Ragas"""
 
     def __init__(
@@ -64,7 +68,7 @@ class ContextualPrecisionMetric(BaseMetric):
         return "Contextual Precision"
 
 
-class ContextualRelevancyMetric(BaseMetric):
+class RAGASContextualRelevancyMetric(BaseMetric):
     """This metric checks the contextual relevancy using Ragas"""
 
     def __init__(
@@ -120,7 +124,7 @@ class ContextualRelevancyMetric(BaseMetric):
         return "Contextual Relevancy"
 
 
-class AnswerRelevancyMetric(BaseMetric):
+class RAGASAnswerRelevancyMetric(BaseMetric):
     """This metric checks the answer relevancy using Ragas"""
 
     def __init__(
@@ -169,10 +173,10 @@ class AnswerRelevancyMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Answer Relevancy"
+        return format_ragas_metric_name("Answer Relevancy")
 
 
-class FaithfulnessMetric(BaseMetric):
+class RAGASFaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         minimum_score: float = 0.3,
@@ -219,10 +223,10 @@ class FaithfulnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Faithfulness (RAGAS)"
+        return format_ragas_metric_name("Faithfulness")
 
 
-class ContextualRecallMetric(BaseMetric):
+class RAGASContextualRecallMetric(BaseMetric):
     """This metric checks the context recall using Ragas"""
 
     def __init__(
@@ -271,10 +275,10 @@ class ContextualRecallMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Context Recall"
+        return "Contextual Recall"
 
 
-class HarmfulnessMetric(BaseMetric):
+class RAGASHarmfulnessMetric(BaseMetric):
     """This metric checks the harmfulness using Ragas"""
 
     def __init__(
@@ -327,7 +331,7 @@ class HarmfulnessMetric(BaseMetric):
         return "Harmfulness"
 
 
-class CoherenceMetric(BaseMetric):
+class RAGASCoherenceMetric(BaseMetric):
     """This metric checks the coherence using Ragas"""
 
     def __init__(
@@ -378,7 +382,7 @@ class CoherenceMetric(BaseMetric):
         return "Coherence"
 
 
-class MaliciousnessMetric(BaseMetric):
+class RAGASMaliciousnessMetric(BaseMetric):
     """This metric checks the maliciousness using Ragas"""
 
     def __init__(
@@ -430,7 +434,7 @@ class MaliciousnessMetric(BaseMetric):
         return "Maliciousness"
 
 
-class CorrectnessMetric(BaseMetric):
+class RAGASCorrectnessMetric(BaseMetric):
     """This metric checks the correctness using Ragas"""
 
     def __init__(
@@ -482,7 +486,7 @@ class CorrectnessMetric(BaseMetric):
         return "Correctness"
 
 
-class ConcisenessMetric(BaseMetric):
+class RAGASConcisenessMetric(BaseMetric):
     """This metric checks the conciseness using Ragas"""
 
     def __init__(
@@ -563,10 +567,10 @@ class RagasMetric(BaseMetric):
         # Convert the LLMTestCase to a format compatible with Dataset
         score_metadata = {}
         metrics = [
-            ContextualPrecisionMetric(model=self.model),
-            ContextualRecallMetric(model=self.model),
-            FaithfulnessMetric(model=self.model),
-            AnswerRelevancyMetric(model=self.model),
+            RAGASContextualPrecisionMetric(model=self.model),
+            RAGASContextualRecallMetric(model=self.model),
+            RAGASFaithfulnessMetric(model=self.model),
+            RAGASAnswerRelevancyMetric(model=self.model),
         ]
 
         warnings_list = []

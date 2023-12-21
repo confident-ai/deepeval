@@ -124,8 +124,8 @@ Justification:
 
 class AnswerRelevancyTemplate:
     @staticmethod
-    def generate_mock_questions(answer, retrieval_context):
-        return f"""Given the answer and retrieval context, generate a list of possible questions that could lead to such as answer. The generated question should revolve around the answer, retrieval contexts are just there for additional information, in case you need it. Make these questions concise.
+    def generate_key_points(answer, retrieval_context):
+        return f"""Given the answer text, breakdown and generate a list of key points presented in the answer. In case the answer is ambigious to what it is talking about, you can use the retrieval contexts as additional information for more comphrensive key points. Make the key points concise.
 
 Answer:
 {answer}
@@ -133,42 +133,72 @@ Answer:
 Retrieval Context:
 {retrieval_context}
 
-Questions:
-"""
-
-    @staticmethod
-    def generate_meta_question(original_question, mock_question):
-        return f"""Could the following mock question: {mock_question}, be be seeking the same information as the original question '{original_question}'?
-"""
-
-    @staticmethod
-    def generate_verdicts(meta_questions):
-        return f"""For each question in the provided list of questions, please generate and list of JSON with two keys: `verdict` and `reason`.
-The 'verdict' key should STRICTLY be either a 'yes', 'no', or 'idk' answer to the question presented.  Only answer 'idk' IF the the answer cannot be reliably from the given text.
-The 'reason' is the reason for the verdict.
-
 **
-IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
-Example questions: ["Could the following question: 'Describe the journey of the protagonist in the first book in discovering his magical background' be addressing a similar point as 'Who discovers he is a wizard in the first book'?"]
-
-Example:
-"verdicts": [
-    {{
-        "verdict": "idk",
-    }},
-]  
-
-Since you are going to generate a verdict for each question, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of questions.
+IMPORTANT: Please make sure to only return in JSON format, with the "key_points" key as a list of strings. No words or explaination is needed.
 **
-           
-Questions:
-{meta_questions}
 
 JSON:
 """
 
     @staticmethod
-    def generate_reason(
-        irrelevant_questions, ambiguous_questions, original_question, score
-    ):
-        pass
+    def generate_verdicts(original_question, key_points):
+        return f"""For the provided list of key points, compare each key point with the question. Please generate and list of JSON with two keys: `verdict` and `reason`.
+The 'verdict' key should STRICTLY be either a 'yes', 'no', or 'idk'. Answer 'yes' if it makes sense for the key point is relevant as an answer to the question, 'no' if the key point is irrelevant, and 'idk' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to answer the question).
+The 'reason' is the reason for the verdict.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
+Example key points: ["Meditation offers a rich tapestry of benefits that touch upon various aspects of well-being.", "The practice of meditation has been around for centuries, evolving through various cultures and traditions, which underscores its timeless relevance.", "Improved sleep quality is another significant benefit, aiding in overall physical restoration."]
+
+Example:
+Question:
+What are the primary benefits of meditation?
+
+"verdicts": [
+    {{
+        "verdict": "yes",
+        "reason": "Addresses the question directly, stating benefits of meditation.",
+    }},
+    {{
+        "verdict": "no",
+        "reason": "The historical and cultural origins of meditation is not relevant to the question.",   
+    }},
+    {{
+        "verdict": "yes",
+        "reason": "Improved sleep quality is relevant a benefit of meditation.",   
+    }}
+]  
+
+Since you are going to generate a verdict for each question, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of `key points`.
+**
+           
+Question:
+{original_question}
+
+Key Points:
+{key_points}
+
+JSON:
+"""
+
+    @staticmethod
+    def generate_reason(irrelevant_points, original_question, score):
+        return f"""
+Given the answer relevancy score, the list of irrelevant points, the list of ambiguous point, and the original question, summarize a reason for the score.
+The irrelevant points represent things in the original answer to the original question that is irrelevant to the question.
+If there are nothing irrelevant, just say something positive with an upbeat tone (but don't overdo it otherwise it gets annoying).
+
+Answer Relevancy Score:
+{score}
+
+Irrelevant Points:
+{irrelevant_points}
+
+Original Question:
+{original_question}
+
+Example:
+The score is <answer_relevancy_score> because <your_reason>.
+
+Reason:
+"""
