@@ -39,6 +39,8 @@ openai = "*"
 langchain = "*"
 protobuf = "*"
 typer = "*"
+setuptools = "*"
+wheel = "*"
 
 [tool.black]
 line-length = 80
