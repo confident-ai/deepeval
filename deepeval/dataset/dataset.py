@@ -1,6 +1,5 @@
 from typing import List, Optional
 from dataclasses import dataclass
-import pandas as pd
 from rich.console import Console
 import json
 import webbrowser
@@ -74,18 +73,30 @@ class EvaluationDataset:
         Note:
             The CSV file is expected to contain columns as specified in the arguments. Each row in the file represents a single test case. The method assumes the file is properly formatted and the specified columns exist. For context data represented as lists in the CSV, ensure the correct delimiter is specified.
         """
+        try:
+            import pandas as pd
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install pandas to use this method. 'pip install pandas'"
+            )
+
+        def get_column_data(df: pd.DataFrame, col_name: str, default=None):
+            return (
+                df[col_name].values
+                if col_name in df.columns
+                else [default] * len(df)
+            )
+
         df = pd.read_csv(file_path)
 
-        inputs = self._get_column_data(df, input_col_name)
-        actual_outputs = self._get_column_data(df, actual_output_col_name)
-        expected_outputs = self._get_column_data(
+        inputs = get_column_data(df, input_col_name)
+        actual_outputs = get_column_data(df, actual_output_col_name)
+        expected_outputs = get_column_data(
             df, expected_output_col_name, default=None
         )
         contexts = [
             context.split(context_col_delimiter) if context else []
-            for context in self._get_column_data(
-                df, context_col_name, default=""
-            )
+            for context in get_column_data(df, context_col_name, default="")
         ]
 
         for input, actual_output, expected_output, context in zip(
@@ -99,13 +110,6 @@ class EvaluationDataset:
                     context=context,
                 )
             )
-
-    def _get_column_data(self, df: pd.DataFrame, col_name: str, default=None):
-        return (
-            df[col_name].values
-            if col_name in df.columns
-            else [default] * len(df)
-        )
 
     def add_test_cases_from_json_file(
         self,
