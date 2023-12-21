@@ -44,7 +44,7 @@ class AnswerRelevancyMetric(BaseMetric):
         answer_relevancy_score = self._generate_score()
 
         self.reason = self._generate_reason(
-            test_case.input, answer_relevancy_score
+            test_case.input, test_case.actual_output, answer_relevancy_score
         )
         self.success = answer_relevancy_score >= self.minimum_score
         self.score = answer_relevancy_score
@@ -58,7 +58,9 @@ class AnswerRelevancyMetric(BaseMetric):
 
         return relevant_count / len(self.verdicts)
 
-    def _generate_reason(self, original_question: str, score: float) -> str:
+    def _generate_reason(
+        self, original_question: str, answer: str, score: float
+    ) -> str:
         irrelevant_points = []
         for verdict in self.verdicts:
             if verdict.verdict.lower() == "no":
@@ -67,6 +69,7 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = AnswerRelevancyTemplate.generate_reason(
             irrelevant_points=irrelevant_points,
             original_question=original_question,
+            answer=answer,
             score=format(score, ".2f"),
         )
         chat_model = GPTModel(model_name=self.model)

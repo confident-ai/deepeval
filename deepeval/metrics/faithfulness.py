@@ -127,7 +127,9 @@ class FaithfulnessMetric(BaseMetric):
         prompt = FaithfulnessTemplate.generate_verdicts(
             truths=truths, text=text
         )
+
         res = chat_model(prompt)
+
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
         verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]

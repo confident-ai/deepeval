@@ -8,6 +8,7 @@ from .llm_eval_metric import LLMEvalMetric
 from .faithfulness import FaithfulnessMetric
 from .ragas_metric import (
     RagasMetric,
+    RAGASFaithfulnessMetric,
     RAGASContextualPrecisionMetric as ContextualPrecisionMetric,
     RAGASContextualRelevancyMetric as ContextualRelevancyMetric,
     RAGASContextualRecallMetric as ContextualRecallMetric,

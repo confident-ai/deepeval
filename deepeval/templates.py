@@ -81,16 +81,18 @@ Example contexts: ["Einstein won the Nobel Prize for his discovery of the photoe
 Example text: "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect."
 
 Example:
-"verdicts": [
-    {{
-        "verdict": "yes",
-        "reason": "The context states that Einstein won the Nobel Prize for his discovery of the photoelectric effect."
-    }},
-    {{
-        "verdict": "no",
-        "reason": "The context states that Einstein won the Nobel Prize in 1968, not 1969."
-    }}
-]  
+{{
+    "verdicts": [
+        {{
+            "verdict": "yes",
+            "reason": "The context states that Einstein won the Nobel Prize for his discovery of the photoelectric effect."
+        }},
+        {{
+            "verdict": "no",
+            "reason": "The context states that Einstein won the Nobel Prize in 1968, not 1969."
+        }}
+    ]  
+}}
 
 You should NOT incorporate any prior knowledge you have and take each context at face value. Since you are going to generate a verdict for each context, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of contexts.
 **
@@ -154,20 +156,22 @@ Example:
 Question:
 What are the primary benefits of meditation?
 
-"verdicts": [
-    {{
-        "verdict": "yes",
-        "reason": "Addresses the question directly, stating benefits of meditation.",
-    }},
-    {{
-        "verdict": "no",
-        "reason": "The historical and cultural origins of meditation is not relevant to the question.",   
-    }},
-    {{
-        "verdict": "yes",
-        "reason": "Improved sleep quality is relevant a benefit of meditation.",   
-    }}
-]  
+{{
+    "verdicts": [
+        {{
+            "verdict": "yes",
+            "reason": "Addresses the question directly, stating benefits of meditation.",
+        }},
+        {{
+            "verdict": "no",
+            "reason": "The historical and cultural origins of meditation is not relevant to the question.",   
+        }},
+        {{
+            "verdict": "yes",
+            "reason": "Improved sleep quality is relevant a benefit of meditation.",   
+        }}
+    ]  
+}}
 
 Since you are going to generate a verdict for each question, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of `key points`.
 **
@@ -182,9 +186,9 @@ JSON:
 """
 
     @staticmethod
-    def generate_reason(irrelevant_points, original_question, score):
+    def generate_reason(irrelevant_points, original_question, answer, score):
         return f"""
-Given the answer relevancy score, the list of irrelevant points, the list of ambiguous point, and the original question, summarize a reason for the score.
+Given the answer relevancy score, the list of irrelevant points, the list of ambiguous point, and the original question, summarize a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
 The irrelevant points represent things in the original answer to the original question that is irrelevant to the question.
 If there are nothing irrelevant, just say something positive with an upbeat tone (but don't overdo it otherwise it gets annoying).
 
@@ -196,6 +200,9 @@ Irrelevant Points:
 
 Original Question:
 {original_question}
+
+Original Answer:
+{answer}
 
 Example:
 The score is <answer_relevancy_score> because <your_reason>.

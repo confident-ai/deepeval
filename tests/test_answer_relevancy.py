@@ -44,6 +44,7 @@ attention span, and improve memory. It's particularly beneficial in slowing down
 enhancing brain functions related to concentration and attention.
 """
 
+
 @pytest.mark.skip(reason="openai is expensive")
 def test_answer_relevancy():
     metric = AnswerRelevancyMetric(minimum_score=0.5)
