@@ -33,7 +33,9 @@ class AnswerRelevancyMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-
+        print(
+            "✨ 🍰 ✨ You're using DeepEval's newest Answer Relevancy Metric! This may take a minute."
+        )
         self.key_points: List[str] = self._generate_key_points(
             test_case.actual_output, "\n".join(test_case.retrieval_context)
         )

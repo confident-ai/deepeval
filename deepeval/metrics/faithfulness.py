@@ -37,7 +37,9 @@ class FaithfulnessMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-
+        print(
+            "✨ 🍰 ✨ You're using DeepEval's newest Faithfulness Metric! This may take a minute."
+        )
         self.truths_list: List[List[str]] = self._generate_truths_list(
             test_case.retrieval_context
         )
