@@ -1,30 +1,114 @@
-from deepeval.singleton import Singleton
+from typing import Optional, List
+from pydantic import BaseModel, Field
+import json
+
+from deepeval.utils import trimToJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.scorer import Scorer
+from deepeval.models import GPTModel
+from deepeval.templates import AnswerRelevancyTemplate
 
 
-class AnswerRelevancyMetric(BaseMetric, metaclass=Singleton):
+class AnswerRelvancyVerdict(BaseModel):
+    verdict: str
+    key_point: str = Field(default=None)
+
+
+class AnswerRelevancyMetric(BaseMetric):
     def __init__(
-        self, minimum_score: float = 0.5, model_type: str = "cross_encoder"
+        self,
+        minimum_score: float = 0.5,
+        model: Optional[str] = None,
     ):
-        self.minimum_score, self.model_type = minimum_score, model_type
-
-    def __call__(self, test_case: LLMTestCase):
-        score = self.measure(test_case.input, test_case.actual_output)
-        self.success = score > self.minimum_score
-        return score
+        self.minimum_score = minimum_score
+        self.model = model
+        self.n = 5
 
     def measure(self, test_case: LLMTestCase) -> float:
-        answer_relevancy_score = Scorer.answer_relevancy_score(
-            predictions=test_case.input,
-            target=test_case.actual_output,
-            model_type=self.model_type,
+        if (
+            test_case.input is None
+            or test_case.actual_output is None
+            or test_case.retrieval_context is None
+        ):
+            raise ValueError(
+                "Input, actual output, or retrieval context cannot be None"
+            )
+        print(
+            "✨ 🍰 ✨ You're using DeepEval's newest Answer Relevancy Metric! This may take a minute."
+        )
+        self.key_points: List[str] = self._generate_key_points(
+            test_case.actual_output, "\n".join(test_case.retrieval_context)
+        )
+        self.verdicts: List[AnswerRelvancyVerdict] = self._generate_verdicts(
+            test_case.input
         )
 
-        self.success = answer_relevancy_score > self.minimum_score
+        answer_relevancy_score = self._generate_score()
+
+        self.reason = self._generate_reason(
+            test_case.input, test_case.actual_output, answer_relevancy_score
+        )
+        self.success = answer_relevancy_score >= self.minimum_score
         self.score = answer_relevancy_score
-        return answer_relevancy_score
+        return self.score
+
+    def _generate_score(self):
+        relevant_count = 0
+        for verdict in self.verdicts:
+            if verdict.verdict.lower() != "no":
+                relevant_count += 1
+
+        return relevant_count / len(self.verdicts)
+
+    def _generate_reason(
+        self, original_question: str, answer: str, score: float
+    ) -> str:
+        irrelevant_points = []
+        for verdict in self.verdicts:
+            if verdict.verdict.lower() == "no":
+                irrelevant_points.append(verdict.key_point)
+
+        prompt = AnswerRelevancyTemplate.generate_reason(
+            irrelevant_points=irrelevant_points,
+            original_question=original_question,
+            answer=answer,
+            score=format(score, ".2f"),
+        )
+        chat_model = GPTModel(model_name=self.model)
+        res = chat_model(prompt)
+        return res.content
+
+    def _generate_verdicts(
+        self, original_question: str
+    ) -> List[AnswerRelvancyVerdict]:
+        prompt = AnswerRelevancyTemplate.generate_verdicts(
+            original_question=original_question, key_points=self.key_points
+        )
+        chat_model = GPTModel(model_name=self.model)
+        res = chat_model(prompt)
+        json_output = trimToJson(res.content)
+        data = json.loads(json_output)
+        verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+
+        if len(verdicts) != len(self.key_points):
+            raise ValueError("Number of verdicts generated does not equal.")
+
+        for i in range(len(verdicts)):
+            verdicts[i].key_point = self.key_points[i]
+
+        return verdicts
+
+    def _generate_key_points(
+        self, answer: str, retrieval_context: str
+    ) -> List[str]:
+        prompt = AnswerRelevancyTemplate.generate_key_points(
+            answer=answer, retrieval_context=retrieval_context
+        )
+        chat_model = GPTModel(model_name=self.model)
+        res = chat_model(prompt)
+        json_output = trimToJson(res.content)
+        data = json.loads(json_output)
+        return data["key_points"]
 
     def is_successful(self) -> bool:
         return self.success
