@@ -74,3 +74,6 @@ class BaseEvaluationExperiment(ABC):
     @classmethod
     def delete_multiple_experiments(cls, *args, **kwargs):
         raise NotImplementedError
+    
+    def push_to_hub(self):
+        raise NotImplementedError('Will be using parser right now.')
