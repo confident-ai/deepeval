@@ -1,10 +1,14 @@
+import json
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
 from typing import List
-from pydantic import BaseModel
 from deepeval.experimental.harness.evaluation import (
     HarnessEvaluate,
     HarnessConfig,
+    HarnessTasks
 )
 from deepeval.experimental.base_experiment import BaseEvaluationExperiment
+from deepeval.metrics import ExactMatchAccuracyMetric
 
 
 class HarnessExperiment(BaseEvaluationExperiment):
@@ -35,8 +39,11 @@ class HarnessExperiment(BaseEvaluationExperiment):
         with open(desc_file_path, 'w') as desc_file:
             desc_file.write(experiment_desc)
 
-    def update(self, updated_config: BaseModel, *args, **kwargs):
-        self.create(config=updated_config)
+    def update(self, updated_config: HarnessConfig, *args, **kwargs):
+        self.config = updated_config
+        self.config.log_samples = True
+        self.config.output_path = self.experiment_folder
+        self.experiment = HarnessEvaluate(harness_config=self.config)
 
     def run(self, tasks: str | List[str], *args, **kwargs):
         assert self.config is not None, ValueError(
@@ -54,3 +61,22 @@ class HarnessExperiment(BaseEvaluationExperiment):
         
         results = self.experiment.evaluate(tasks=self.tasks)
         return results
+
+    def collect_results_and_push(self):
+        # todo: for now just passing string, need to figure out how to pass list
+        all_task_data = HarnessTasks.get_dataset_from_task(task_names=self.tasks[0], task_limit=self.config.limit)
+        all_datasets = {}
+        for task_name, task_data in all_task_data.items():
+            test_cases = [] 
+            for doc_id, prompt, target in zip(task_data['doc_id'], task_data['prompt'], task_data['target']):
+                # todo: change actual_output by parsing it from the output 
+                test_case = LLMTestCase(
+                    input = prompt,
+                    actual_output=target,
+                    expected_output=target
+                )
+                test_cases.append(test_case)
+            
+            dataset = EvaluationDataset(test_cases=test_cases)
+            all_datasets[task_name] = dataset
+            dataset.evaluate(metrics=[ExactMatchAccuracyMetric])
