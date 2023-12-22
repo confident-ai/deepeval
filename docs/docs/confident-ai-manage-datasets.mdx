@@ -95,4 +95,4 @@ A "Golden" is what makes up an evaluation dataset and is very similar to a test 
 - only exists within an `EvaluationDataset()`, while test cases can be defined anywhere.
 - contains an extra `additional_metadata` field, which is a dictionary you can define on Confident. Allows you to do some extra preprocessing on your dataset (eg., generating a custom LLM `actual_output` based on some variables in `additional_metadata`) before evaluation.
 
-We introduced the concept of goldens because it allows you to create evaluation datasets on Confident without needing to pre-computed `actual_output`s. This is especially helpful if you are looking to generate responses from your LLM application at evaluation time.
+We introduced the concept of goldens because it allows you to create evaluation datasets on Confident without needing pre-computed `actual_output`s. This is especially helpful if you are looking to generate responses from your LLM application at evaluation time.
