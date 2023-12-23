@@ -41,15 +41,12 @@ class ContextualRecallMetric(BaseMetric):
             test_case.expected_output, test_case.retrieval_context
         )
 
-        print(self.verdicts)
-        print("============")
-
         contextual_recall_score = self._generate_score()
 
         self.reason = self._generate_reason(
             test_case.expected_output, contextual_recall_score
         )
-        print(self.reason)
+
         self.success = contextual_recall_score >= self.minimum_score
         self.score = contextual_recall_score
         return self.score
