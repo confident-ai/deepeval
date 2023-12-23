@@ -121,7 +121,7 @@ class RAGASContextualRelevancyMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Contextual Relevancy"
+        return format_ragas_metric_name("Contextual Relevancy")
 
 
 class RAGASAnswerRelevancyMetric(BaseMetric):

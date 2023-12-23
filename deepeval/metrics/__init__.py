@@ -7,12 +7,13 @@ from .judgemental_gpt import JudgementalGPT
 from .llm_eval_metric import LLMEvalMetric
 from .faithfulness import FaithfulnessMetric
 from .contextual_recall import ContextualRecallMetric
+from .contextual_relevancy import ContextualRelevancyMetric
 from .ragas_metric import (
     RagasMetric,
     RAGASFaithfulnessMetric,
     RAGASContextualRecallMetric,
+    RAGASContextualRelevancyMetric,
     RAGASContextualPrecisionMetric as ContextualPrecisionMetric,
-    RAGASContextualRelevancyMetric as ContextualRelevancyMetric,
     RAGASConcisenessMetric as ConcisenessMetric,
     RAGASCorrectnessMetric as CorrectnessMetric,
     RAGASCoherenceMetric as CoherenceMetric,

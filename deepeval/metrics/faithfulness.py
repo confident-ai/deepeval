@@ -150,7 +150,7 @@ class FaithfulnessMetric(BaseMetric):
     def _generate_verdicts_list(
         self, truths_list: List[List[str]], text: str
     ) -> List[List[FaithfulnessVerdict]]:
-        verdicts_list: List[List[Dict]] = []
+        verdicts_list: List[List[FaithfulnessVerdict]] = []
         chat_model = GPTModel(model_name=self.model)
         threads = []
         lock = Lock()
