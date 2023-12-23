@@ -220,7 +220,7 @@ class ContextualRecallTemplate:
 Given the original expected output, a list of supportive reasons, and a list of unsupportive reasons (which is deduced directly from the 'expected output'), and a contextual recall score (closer to 1 the better), summarize a CONCISE reason for the score.
 A supportive reason is the reason why a certain sentence in the original expected output can be attributed to the node in the retrieval context.
 An unsupportive reason is the reason why a certain sentence in the original expected output cannot be attributed to anything in the retrieval context.
-In your reason, you should include SOME, not all, information on the sentence number in expected output and node number in retrieval context to support your reason, especially for unsupportive reasons.
+In your reason, you should related suportive/unsupportive reasons to the sentence number in expected output, and info regarding the node number in retrieval context to support your final reason. The first mention of "node(s)" should specify "node(s) in retrieval context)".
 
 Contextual Recall Score:
 {score}
