@@ -275,7 +275,7 @@ class RAGASContextualRecallMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Contextual Recall"
+        return format_ragas_metric_name("Contextual Recall")
 
 
 class RAGASHarmfulnessMetric(BaseMetric):
