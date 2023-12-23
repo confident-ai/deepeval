@@ -68,12 +68,13 @@ class HarnessExperiment(BaseEvaluationExperiment):
         all_datasets = {}
         for task_name, task_data in all_task_data.items():
             test_cases = [] 
-            for doc_id, prompt, target in zip(task_data['doc_id'], task_data['prompt'], task_data['target']):
+            for _, prompt, target in zip(task_data['doc_id'], task_data['prompt'], task_data['target']):
                 # todo: change actual_output by parsing it from the output 
                 test_case = LLMTestCase(
                     input = prompt,
                     actual_output=str(target),
-                    expected_output=str(target)
+                    expected_output=str(target),
+                    context=task_name.capitalize()
                 )
                 test_cases.append(test_case)
             
