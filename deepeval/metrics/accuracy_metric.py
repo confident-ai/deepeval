@@ -8,10 +8,15 @@ class ExactMatchAccuracyMetric(BaseMetric, metaclass=Singleton):
         self.minimum_score = minimum_score
     
     def __call__(self, test_case: LLMTestCase) -> float:
-        score = Scorer.exact_match_score(target=test_case.expected_output, prediction=test_case.actual_output)
-        self.success = score > self.minimum_score
+        self.score = self.measure(test_case)
+        self.success = self.score > self.minimum_score
         return self.score 
     
+    def measure(self, test_case: LLMTestCase) -> float:
+        self.score = Scorer.exact_match_score(target=test_case.expected_output, prediction=test_case.actual_output)
+        self.success = self.score > self.minimum_score
+        return self.score 
+      
     def is_successful(self) -> bool:
         return self.success
     
