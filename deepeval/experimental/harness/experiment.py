@@ -72,11 +72,11 @@ class HarnessExperiment(BaseEvaluationExperiment):
                 # todo: change actual_output by parsing it from the output 
                 test_case = LLMTestCase(
                     input = prompt,
-                    actual_output=target,
-                    expected_output=target
+                    actual_output=str(target),
+                    expected_output=str(target)
                 )
                 test_cases.append(test_case)
             
             dataset = EvaluationDataset(test_cases=test_cases)
             all_datasets[task_name] = dataset
-            dataset.evaluate(metrics=[ExactMatchAccuracyMetric])
+            dataset.evaluate(metrics=[ExactMatchAccuracyMetric(minimum_score=0.5)])
