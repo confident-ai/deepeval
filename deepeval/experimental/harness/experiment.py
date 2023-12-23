@@ -73,11 +73,12 @@ class HarnessExperiment(BaseEvaluationExperiment):
                 test_case = LLMTestCase(
                     input = prompt,
                     actual_output=str(target),
-                    expected_output=str(target),
-                    context=task_name.capitalize()
+                    expected_output=str(target)
                 )
                 test_cases.append(test_case)
             
             dataset = EvaluationDataset(test_cases=test_cases)
             all_datasets[task_name] = dataset
             dataset.evaluate(metrics=[ExactMatchAccuracyMetric(minimum_score=0.5)])
+        # todo: also upload the overall thing metrics to harness
+        
