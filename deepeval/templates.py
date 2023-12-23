@@ -109,7 +109,7 @@ JSON:
     @staticmethod
     def generate_reason(score, contradiction_reasons):
         return f"""Below is a list of Contradictions. It explains why the 'actual output' does not align with the 'retrieval context'.
-Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is the context (higher the better), concisely summarize the contradictions to justify the score. If there are no contradictions, just say something positive with an upbeat tone (but don't overdo it otherwise it gets annoying).
+Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is the context (higher the better), concisely summarize the contradictions to justify the score. If there are no contradictions, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
 
 Faithfulness Score:
 {score}
@@ -120,7 +120,7 @@ Contradictions:
 Example:
 The score is <faithfulness_score> because <your_reason>.
 
-Justification:
+Reason:
 """
 
 
@@ -144,7 +144,7 @@ JSON:
 
     @staticmethod
     def generate_verdicts(original_question, key_points):
-        return f"""For the provided list of key points, compare each key point with the question. Please generate and list of JSON with two keys: `verdict` and `reason`.
+        return f"""For the provided list of key points, compare each key point with the question. Please generate a list of JSON with two keys: `verdict` and `reason`.
 The 'verdict' key should STRICTLY be either a 'yes', 'no', or 'idk'. Answer 'yes' if it makes sense for the key point is relevant as an answer to the question, 'no' if the key point is irrelevant, and 'idk' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to answer the question).
 The 'reason' is the reason for the verdict.
 
@@ -190,7 +190,7 @@ JSON:
         return f"""
 Given the answer relevancy score, the list of irrelevant points, the list of ambiguous point, and the original question, summarize a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
 The irrelevant points represent things in the original answer to the original question that is irrelevant to the question.
-If there are nothing irrelevant, just say something positive with an upbeat tone (but don't overdo it otherwise it gets annoying).
+If there are nothing irrelevant, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
 
 Answer Relevancy Score:
 {score}
@@ -208,4 +208,72 @@ Example:
 The score is <answer_relevancy_score> because <your_reason>.
 
 Reason:
+"""
+
+
+class ContextualRecallTemplate:
+    @staticmethod
+    def generate_reason(
+        expected_output, supportive_reasons, unsupportive_reasons, score
+    ):
+        return f"""
+Given the original expected output, a list of supportive reasons, and a list of unsupportive reasons (which is deduced directly from the 'expected output'), and a contextual recall score (closer to 1 the better), summarize a CONCISE reason for the score.
+A supportive reason is the reason why a certain sentence in the original expected output can be attributed to the node in the retrieval context.
+An unsupportive reason is the reason why a certain sentence in the original expected output cannot be attributed to anything in the retrieval context.
+In your reason, you should related suportive/unsupportive reasons to the sentence number in expected output, and info regarding the node number in retrieval context to support your final reason. The first mention of "node(s)" should specify "node(s) in retrieval context)".
+
+Contextual Recall Score:
+{score}
+
+Expected Output:
+{expected_output}
+
+Supportive Reasons:
+{supportive_reasons}
+
+Unsupportive Reasons:
+{unsupportive_reasons}
+
+Example:
+The score is <contextual_recall_score> because <your_reason>.
+
+**
+IMPORTANT: DO NOT mention 'supportive reasons' and 'unsupportive reasons' in your reason, these terms are just here for you to understand the broader scope of things.
+If the score is 1, keep it short and say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
+**
+
+Reason:
+"""
+
+    @staticmethod
+    def generate_verdicts(expected_output, retrieval_context):
+        return f"""
+For EACH sentence in the given expected output below, determine whether the sentence can be attributed to the nodes of retrieval contexts. Please generate a list of JSON with two keys: `verdict` and `reason`.
+The `verdict` key should STRICTLY be either a 'yes' or 'no'. Answer 'yes' if the sentence can be attributed to any parts of the retrieval context, else answer 'no'.
+The `reason` key should provide a reason why to the verdict. In the reason, you should aim to include the node(s) count in the retrieval context (eg., 1st node, and 2nd node in the retrieval context) that is attributed to said sentence. You should also aim to quote the specific part of the retrieval context to justify your verdict, but keep it extremely concise and cut short the quote with an ellipsis if possible. 
+
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects, each with two keys: `verdict` and `reason`.
+
+{{
+    "verdicts": [
+        {{
+            "verdict": "yes",
+            "reason": "...",
+        }},
+        ...
+    ]  
+}}
+
+Since you are going to generate a verdict for each sentence, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of sentences in of `expected output`.
+**
+
+Expected Output:
+{expected_output}
+
+Retrieval Context:
+{retrieval_context}
+
+JSON:
 """
