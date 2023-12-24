@@ -342,3 +342,18 @@ Context:
 
 JSON:
 """
+
+
+class ContextualPrecisionTemplate:
+    @staticmethod
+    def generate_verdicts(input, expected_output, retrieval_context):
+        # {
+        #     verdict: "yes",
+        #     verdict: "no"
+        # }
+        pass
+
+    @staticmethod
+    def generate_reason(input, verdicts, score):
+        # given the input and retrieval context for this input, where the verdict is whether ... and the node is the ..., give a reason for the score
+        pass

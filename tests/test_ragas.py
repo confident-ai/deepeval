@@ -14,11 +14,14 @@ from deepeval.metrics import (
 from deepeval.metrics.ragas_metric import RAGASAnswerRelevancyMetric
 from deepeval import assert_test, evaluate
 
-query = "Who won the FIFA World Cup in 2018?"
+query = "Who won the FIFA World Cup in 2018 and what was the score?"
 output = "Winners of the FIFA world cup were the French national football team"
 expected_output = "French national football team"
 context = [
-    "The FIFA World Cup in 2018 was won by the French national football team. They defeated Croatia 4-2 in the final match to claim the championship.",
+    "The FIFA World Cup in 2018 was won by the French national football team.",
+    "I am birdy",
+    "I am a froggy",
+    "The French defeated Croatia 4-2 in the final match to claim the championship.",
 ]
 
 
@@ -39,7 +42,7 @@ def test_ragas_score():
         )
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     test_case = LLMTestCase(
         input=query,
@@ -56,8 +59,8 @@ def test_everything():
     # metric6 = CoherenceMetric(model="gpt-4")
     # metric7 = MaliciousnessMetric(model="gpt-4")
     # metric8 = RAGASAnswerRelevancyMetric(model="gpt-4")
-    # metric9 = ContextualPrecisionMetric(model="gpt-4")
-    metric10 = RagasMetric()
+    metric9 = ContextualPrecisionMetric(model="gpt-4")
+    # metric10 = RagasMetric()
     assert_test(
         test_case,
         [
@@ -69,7 +72,7 @@ def test_everything():
             # metric6,
             # metric7,
             # metric8,
-            # metric9,
-            metric10,
+            metric9,
+            # metric10,
         ],
     )
