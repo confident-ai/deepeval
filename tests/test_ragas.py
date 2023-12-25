@@ -21,7 +21,7 @@ context = [
     "The FIFA World Cup in 2018 was won by the French national football team.",
     "I am birdy",
     "I am a froggy",
-    "The French defeated Croatia 4-2 in the final match to claim the championship.",
+    "The French defeated Croatia 4-2 in the final FIFA match to claim the championship.",
 ]
 
 
@@ -42,7 +42,7 @@ def test_ragas_score():
         )
 
 
-# @pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     test_case = LLMTestCase(
         input=query,
@@ -59,7 +59,7 @@ def test_everything():
     # metric6 = CoherenceMetric(model="gpt-4")
     # metric7 = MaliciousnessMetric(model="gpt-4")
     # metric8 = RAGASAnswerRelevancyMetric(model="gpt-4")
-    metric9 = ContextualPrecisionMetric(model="gpt-4")
+    metric9 = ContextualPrecisionMetric()
     # metric10 = RagasMetric()
     assert_test(
         test_case,
