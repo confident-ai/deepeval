@@ -55,7 +55,7 @@ class AnswerRelevancyMetric(BaseMetric):
     def _generate_score(self):
         relevant_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.lower() != "no":
+            if verdict.verdict.strip().lower() != "no":
                 relevant_count += 1
 
         return relevant_count / len(self.verdicts)
@@ -65,7 +65,7 @@ class AnswerRelevancyMetric(BaseMetric):
     ) -> str:
         irrelevant_points = []
         for verdict in self.verdicts:
-            if verdict.verdict.lower() == "no":
+            if verdict.verdict.strip().lower() == "no":
                 irrelevant_points.append(verdict.key_point)
 
         prompt = AnswerRelevancyTemplate.generate_reason(

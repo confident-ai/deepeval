@@ -8,12 +8,13 @@ from .llm_eval_metric import LLMEvalMetric
 from .faithfulness import FaithfulnessMetric
 from .contextual_recall import ContextualRecallMetric
 from .contextual_relevancy import ContextualRelevancyMetric
+from .contextual_precision import ContextualPrecisionMetric
 from .ragas_metric import (
     RagasMetric,
     RAGASFaithfulnessMetric,
     RAGASContextualRecallMetric,
     RAGASContextualRelevancyMetric,
-    RAGASContextualPrecisionMetric as ContextualPrecisionMetric,
+    RAGASContextualPrecisionMetric,
     RAGASConcisenessMetric as ConcisenessMetric,
     RAGASCorrectnessMetric as CorrectnessMetric,
     RAGASCoherenceMetric as CoherenceMetric,

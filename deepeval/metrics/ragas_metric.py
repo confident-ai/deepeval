@@ -47,6 +47,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         data = {
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
+            "ground_truths": [[test_case.expected_output]],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -65,7 +66,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Contextual Precision"
+        return format_ragas_metric_name("Contextual Precision")
 
 
 class RAGASContextualRelevancyMetric(BaseMetric):
