@@ -408,6 +408,7 @@ The score is <contextual_precision_score> because <your_reason>.
 
 **
 IMPORTANT: DO NOT mention 'verdict' in your reason, but instead phrase it as irrelevant nodes. The term 'verdict' are just here for you to understand the broader scope of things.
+Also DO NOT mention there are `reason` fields in the retrieval contexts you are presented with, instead just use the information in the `reason` field.
 In your reason, you MUST USE the `reason`, QUOTES in the 'reason', and the node RANK (starting from 1, eg. first node) to explain why the 'no' verdicts should be ranked lower than the 'yes' verdicts.
 When addressing nodes, make it explicit that it is nodes in retrieval context.
 If the score is 1, keep it short and say something positive with an upbeat tone (but don't overdo it otherwise it gets annoying).

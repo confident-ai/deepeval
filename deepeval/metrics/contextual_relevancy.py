@@ -20,9 +20,11 @@ class ContextualRelevancyMetric(BaseMetric):
         self,
         minimum_score: float = 0.5,
         model: Optional[str] = "gpt-4",
+        include_reason: bool = True,
     ):
         self.minimum_score = minimum_score
         self.model = model
+        self.include_reason = include_reason
 
     def measure(self, test_case: LLMTestCase) -> float:
         if (
@@ -34,7 +36,7 @@ class ContextualRelevancyMetric(BaseMetric):
                 "Input, actual output, or retrieval context cannot be None"
             )
         print(
-            "✨ 🍰 ✨ You're using DeepEval's newest Contextual Relevancy Metric! This may take a minute."
+            "✨ 🍰 ✨ You're using DeepEval's latest Contextual Relevancy Metric! This may take a minute..."
         )
         self.verdicts_list: List[
             List[ContextualRelevancyVerdict]
@@ -53,6 +55,9 @@ class ContextualRelevancyMetric(BaseMetric):
         return self.score
 
     def _generate_reason(self, input: str, score: float):
+        if self.include_reason is False:
+            return None
+
         irrelevant_sentences = []
         for index, verdicts in enumerate(self.verdicts_list):
             for verdict in verdicts:

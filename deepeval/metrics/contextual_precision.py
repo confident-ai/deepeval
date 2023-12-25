@@ -20,8 +20,10 @@ class ContextualPrecisionMetric(BaseMetric):
         self,
         minimum_score: float = 0.5,
         model: Optional[str] = None,
+        include_reason: bool = True,
     ):
         self.minimum_score = minimum_score
+        self.include_reason = include_reason
         self.model = model
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -35,7 +37,7 @@ class ContextualPrecisionMetric(BaseMetric):
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
         print(
-            "✨ 🍰 ✨ You're using DeepEval's newest Contextual Precision Metric! This may take a minute."
+            "✨ 🍰 ✨ You're using DeepEval's latest Contextual Precision Metric! This may take a minute..."
         )
         self.verdicts: List[
             ContextualPrecisionVerdict
@@ -55,6 +57,9 @@ class ContextualPrecisionMetric(BaseMetric):
         return self.score
 
     def _generate_reason(self, input: str, score: float):
+        if self.include_reason is False:
+            return None
+
         retrieval_contexts_verdicts = [
             {
                 "verdict": verdict.verdict,

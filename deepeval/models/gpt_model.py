@@ -4,7 +4,7 @@ from typing import Dict, Optional
 from langchain.chat_models import ChatOpenAI, AzureChatOpenAI
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.base import DeepEvalBaseModel
-from deepeval.chat_completion.retry import call_openai_with_retry
+from deepeval.chat_completion.retry import retry_with_exponential_backoff
 
 valid_gpt_models = [
     "gpt-4-1106-preview",
@@ -74,9 +74,10 @@ class GPTModel(DeepEvalBaseModel):
             model_name=self.model_name, model_kwargs=self.model_kwargs
         )
 
+    @retry_with_exponential_backoff
     def _call(self, prompt: str):
         chat_model = self.load_model()
-        return call_openai_with_retry(lambda: chat_model.invoke(prompt))
+        return chat_model.invoke(prompt)
 
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
