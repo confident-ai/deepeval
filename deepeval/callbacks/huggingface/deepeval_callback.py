@@ -1,5 +1,6 @@
 from typing import Union, List, Dict
 
+import tqdm
 from rich.console import Console
 from rich.table import Table
 from rich.live import Live
@@ -30,9 +31,12 @@ class DeepEvalCallback(TrainerCallback):
         evaluation_dataset: EvaluationDataset = None,
         tokenizer_args: Dict = None,
         aggregation_method: str = "avg",
-        trainer: Trainer = None
+        trainer: Trainer = None,
+        show_table: bool = False
     ) -> None:
         super().__init__()
+        
+        self.show_table = show_table
         self.metrics = metrics
         self.evaluation_dataset = evaluation_dataset
         self.tokenizer_args = tokenizer_args
@@ -42,13 +46,15 @@ class DeepEvalCallback(TrainerCallback):
         self.epoch_counter = 0
         self.log_history = []
         self._initiate_rich_console()
-        
+
     def _initiate_rich_console(self) -> None:
         """
         Initiate rich console for progress tracking.
         """
-        console = Console()
-        self.live = Live(auto_refresh=True, console=console)
+        if self.show_table:
+            self.console = Console()
+            self.live = Live(auto_refresh=True, console=self.console)
+            self.live.start()
         self.trainer.remove_callback(ProgressCallback)
 
     def _calculate_metric_scores(self) -> Dict[str, List[float]]:
@@ -68,7 +74,7 @@ class DeepEvalCallback(TrainerCallback):
                 metric_name = str(metric.__name__).lower().replace(" ", "_")
                 metric_score = metric.score
                 scores.setdefault(metric_name, []).append(metric_score)
-                
+        
         scores = self._aggregate_scores(scores)
         return scores
 
@@ -109,6 +115,7 @@ class DeepEvalCallback(TrainerCallback):
         self.epoch_counter += 1
         scores = self._calculate_metric_scores()
         self.log_history.append(scores)
+        self.progress.update(1)
         control.should_log = True
         
         return control
@@ -134,9 +141,8 @@ class DeepEvalCallback(TrainerCallback):
                 for row in log_history:
                     new_table.add_row(*[str(value) for value in row.values()])
                 return new_table
-
-            with self.live:
-                self.live.console.clear()
+            
+            if self.show_table:
                 self.live.update(generate_table(), refresh=True)
         else:
             pass
@@ -150,4 +156,20 @@ class DeepEvalCallback(TrainerCallback):
         """
         Event triggered at the end of model training.
         """
-        print("---------TRAIN END---------")
+        self.progress.stop()
+        
+    def on_train_begin(self,
+        args: TrainingArguments,
+        state: TrainerState,
+        control: TrainerControl,
+        **kwargs
+    ):
+        """
+        Event triggered at the begining of model training.
+        """
+        self.progress = tqdm(
+            total=self.trainer.args.num_train_epochs, 
+            desc="Epochs"
+        )
+        
+        
