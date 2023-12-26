@@ -272,7 +272,7 @@ class Scorer:
         If the model is 'multilingual', we get a dict same as the unbiasd one.
         """
         try:
-            from deepeval.models import DetoxifyModel
+            from deepeval.models.detoxify_model import DetoxifyModel
         except ImportError as e:
             print(f"Unable to import.\n {e}")
         scorer = DetoxifyModel(model_name=model)
@@ -339,29 +339,9 @@ class Scorer:
         return score
 
     @classmethod
-    def factual_consistency_score(
-        cls,
-        contexts: Union[List[str], str],
-        prediction: str,
-        model: Optional[str] = None,
-    ) -> float:
-        try:
-            from deepeval.models import FactualConsistencyModel
-        except Exception as e:
-            print(f"Unable to load FactualConsistencyModel\n{e}")
-
-        scorer = FactualConsistencyModel(model)
-        contexts = [contexts] if isinstance(contexts, str) else contexts
-        max_score = 0
-        for context in contexts:
-            score = scorer.predict(context, prediction)
-            max_score = max(max_score, score)
-        return max_score
-
-    @classmethod
     def neural_bias_score(cls, text: str, model: Optional[str] = None) -> float:
         try:
-            from deepeval.models import UnBiasedModel
+            from deepeval.models.unbias_model import UnBiasedModel
         except Exception as e:
             print(f"Unable to load UnBiasedModel.\n{e}")
         scorer = UnBiasedModel(model_name=model)

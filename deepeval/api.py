@@ -5,7 +5,7 @@ import requests
 import warnings
 from requests.adapters import HTTPAdapter, Response, Retry
 from deepeval.constants import API_KEY_ENV
-from deepeval.key_handler import KEY_FILE_HANDLER
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from enum import Enum
 
 API_BASE_URL = "https://app.confident-ai.com/api"
@@ -37,7 +37,7 @@ class Api:
     ):
         if api_key == "":
             # get API key if none is supplied after you log in
-            api_key = KEY_FILE_HANDLER.fetch_api_key()
+            api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
 
         if api_key == "" or api_key is None:
             raise ValueError("Please provide a valid API Key.")
