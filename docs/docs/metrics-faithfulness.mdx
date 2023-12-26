@@ -4,7 +4,7 @@ title: Faithfulness
 sidebar_label: Faithfulness
 ---
 
-The faithfulness metric measures hallucination in a RAG pipeline to ensure output aligns with the retrieved context. It evaluates the quality of your RAG pipeline's generator and is calculated using `actual_output` and `retrieval_context`.
+The faithfulness metric measures the quality of your RAG pipeline's generator by evaluating whether the `actual_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::info
 Although similar to the `HallucinationMetric`, the faithfulness metric in `deepeval` is more concerned with hallucination in RAG pipelines, rather than the actual LLM itself.
@@ -31,7 +31,11 @@ actual_output = "We offer a 30-day full refund at no extra cost."
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
-metric = FaithfulnessMetric(minimum_score=0.5, model="gpt-3.5-turbo")
+metric = FaithfulnessMetric(
+    minimum_score=0.7,
+    model="gpt-4",
+    include_reason=True
+)
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     actual_output=actual_output,
@@ -40,6 +44,7 @@ test_case = LLMTestCase(
 
 metric.measure(test_case)
 print(metric.score)
+print(metric.reason)
 
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])
