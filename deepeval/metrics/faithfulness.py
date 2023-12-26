@@ -12,7 +12,7 @@ from deepeval.templates import FaithfulnessTemplate
 
 class FaithfulnessVerdict(BaseModel):
     verdict: str
-    reason: str
+    reason: str = Field(default=None)
     truth: str = Field(default=None)
 
 
@@ -26,8 +26,6 @@ class FaithfulnessMetric(BaseMetric):
         self.minimum_score = minimum_score
         # Don't set self.chat_model when using threading
         self.model = model
-        self.truths_list = None
-        self.verdicts_list = None
         self.include_reason = include_reason
 
     def measure(self, test_case: LLMTestCase):
@@ -71,14 +69,15 @@ class FaithfulnessMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        contradiction_reasons = []
-        for verdicts in self.verdicts_list:
+        contradictions = []
+        for index, verdicts in enumerate(self.verdicts_list):
             for verdict in verdicts:
                 if verdict.verdict.strip().lower() == "no":
-                    contradiction_reasons.append(verdict.reason)
+                    data = {"contradiction": verdict.reason, "rank": index + 1}
+                    contradictions.append(data)
 
         prompt: dict = FaithfulnessTemplate.generate_reason(
-            contradiction_reasons=contradiction_reasons,
+            contradictions=contradictions,
             score=format(score, ".2f"),
         )
 
