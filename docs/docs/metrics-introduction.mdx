@@ -93,7 +93,7 @@ For more details on how a metric evaluates a test case, refer to the [test cases
 `deepeval` also allows you to use Azure OpenAI for metrics that are evaluated using an LLM. Run the following command in the CLI to configure your `deepeval` enviornment to use Azure OpenAI for **all** LLM-based metrics.
 
 ```console
-deepeval azure-openai set --openai-endpoint=<endpoint> \
+deepeval set-azure-openai --openai-endpoint=<endpoint> \
     --openai-api-key=<api_key> \
     --deployment-name=<deployment_name> \
     --openai-api-version=<openai_api_version> \
@@ -103,5 +103,5 @@ deepeval azure-openai set --openai-endpoint=<endpoint> \
 Note that the `model-version` is **optional**. If you ever wish to stop using Azure OpenAI and move back to regular OpenAI, simply run:
 
 ```console
-deepeval azure-openai unset
+deepeval unset-azure-openai
 ```
