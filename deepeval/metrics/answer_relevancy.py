@@ -19,9 +19,11 @@ class AnswerRelevancyMetric(BaseMetric):
         self,
         minimum_score: float = 0.5,
         model: Optional[str] = None,
+        include_reason: bool = True,
     ):
         self.minimum_score = minimum_score
         self.model = model
+        self.include_reason = include_reason
         self.n = 5
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -34,7 +36,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 "Input, actual output, or retrieval context cannot be None"
             )
         print(
-            "✨ 🍰 ✨ You're using DeepEval's newest Answer Relevancy Metric! This may take a minute."
+            "✨ 🍰 ✨ You're using DeepEval's latest Answer Relevancy Metric! This may take a minute..."
         )
         self.key_points: List[str] = self._generate_key_points(
             test_case.actual_output, "\n".join(test_case.retrieval_context)
@@ -63,6 +65,9 @@ class AnswerRelevancyMetric(BaseMetric):
     def _generate_reason(
         self, original_question: str, answer: str, score: float
     ) -> str:
+        if self.include_reason is False:
+            return None
+
         irrelevant_points = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":

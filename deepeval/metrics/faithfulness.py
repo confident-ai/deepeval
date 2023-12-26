@@ -12,7 +12,7 @@ from deepeval.templates import FaithfulnessTemplate
 
 class FaithfulnessVerdict(BaseModel):
     verdict: str
-    reason: str
+    reason: str = Field(default=None)
     truth: str = Field(default=None)
 
 
@@ -21,12 +21,12 @@ class FaithfulnessMetric(BaseMetric):
         self,
         minimum_score: float = 0.5,
         model: Optional[str] = None,
+        include_reason: bool = True,
     ):
         self.minimum_score = minimum_score
         # Don't set self.chat_model when using threading
         self.model = model
-        self.truths_list = None
-        self.verdicts_list = None
+        self.include_reason = include_reason
 
     def measure(self, test_case: LLMTestCase):
         if (
@@ -38,7 +38,7 @@ class FaithfulnessMetric(BaseMetric):
                 "Input, actual output, or retrieval context cannot be None"
             )
         print(
-            "✨ 🍰 ✨ You're using DeepEval's newest Faithfulness Metric! This may take a minute."
+            "✨ 🍰 ✨ You're using DeepEval's latest Faithfulness Metric! This may take a minute..."
         )
         self.truths_list: List[List[str]] = self._generate_truths_list(
             test_case.retrieval_context
@@ -66,14 +66,18 @@ class FaithfulnessMetric(BaseMetric):
         return faithful_count / total_verdicts
 
     def _generate_reason(self, score: float):
-        contradiction_reasons = []
-        for verdicts in self.verdicts_list:
+        if self.include_reason is False:
+            return None
+
+        contradictions = []
+        for index, verdicts in enumerate(self.verdicts_list):
             for verdict in verdicts:
                 if verdict.verdict.strip().lower() == "no":
-                    contradiction_reasons.append(verdict.reason)
+                    data = {"contradiction": verdict.reason, "rank": index + 1}
+                    contradictions.append(data)
 
         prompt: dict = FaithfulnessTemplate.generate_reason(
-            contradiction_reasons=contradiction_reasons,
+            contradictions=contradictions,
             score=format(score, ".2f"),
         )
 

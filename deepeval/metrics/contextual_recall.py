@@ -19,9 +19,11 @@ class ContextualRecallMetric(BaseMetric):
         self,
         minimum_score: float = 0.5,
         model: Optional[str] = None,
+        include_reason: bool = True,
     ):
         self.minimum_score = minimum_score
         self.model = model
+        self.include_reason = include_reason
         self.n = 5
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -35,7 +37,7 @@ class ContextualRecallMetric(BaseMetric):
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
         print(
-            "✨ 🍰 ✨ You're using DeepEval's newest Contextual Recall Metric! This may take a minute."
+            "✨ 🍰 ✨ You're using DeepEval's latest Contextual Recall Metric! This may take a minute..."
         )
         self.verdicts: List[ContextualRecallVerdict] = self._generate_verdicts(
             test_case.expected_output, test_case.retrieval_context
@@ -52,6 +54,9 @@ class ContextualRecallMetric(BaseMetric):
         return self.score
 
     def _generate_reason(self, expected_output: str, score: float):
+        if self.include_reason is False:
+            return None
+
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in self.verdicts:

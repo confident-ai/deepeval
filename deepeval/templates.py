@@ -73,7 +73,8 @@ JSON:
     def generate_verdicts(truths, text):
         return f"""Based on a list of strings, called contexts, please generate a list of JSON objects to indicate whether the given 'actual output' agrees with EACH context. The JSON will have 2 fields: 'verdict' and 'reason'.
 The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', and states whether the given text agrees with the context. 
-The 'reason' is the reason for the verdict. When the answer is 'no' or 'idk', try to provide a correction in the reason.
+The 'reason' is the reason for the verdict. When the answer is 'no' or 'idk', try to provide a correction in the reason. 
+You DON'T have to provide a reason if the answer is 'yes'.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
@@ -85,19 +86,20 @@ Example:
     "verdicts": [
         {{
             "verdict": "yes",
-            "reason": "The context states that Einstein won the Nobel Prize for his discovery of the photoelectric effect."
+            "reason": "The node in the retrieval context states that Einstein won the Nobel Prize for his discovery of the photoelectric effect."
         }},
         {{
             "verdict": "no",
-            "reason": "The context states that Einstein won the Nobel Prize in 1968, not 1969."
+            "reason": "The node in the retrieval context states that Einstein won the Nobel Prize in 1968, not 1969."
         }}
     ]  
 }}
 
 You should NOT incorporate any prior knowledge you have and take each context at face value. Since you are going to generate a verdict for each context, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of contexts.
+You DON'T have to provide a reason if the answer is 'yes'.
 **
 
-Contexts:
+Retrieval Contexts:
 {truths}
 
 Actual Output:
@@ -107,18 +109,26 @@ JSON:
 """
 
     @staticmethod
-    def generate_reason(score, contradiction_reasons):
-        return f"""Below is a list of Contradictions. It explains why the 'actual output' does not align with the 'retrieval context'.
-Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is the context (higher the better), concisely summarize the contradictions to justify the score. If there are no contradictions, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
+    def generate_reason(score, contradictions):
+        return f"""Below is a list of Contradictions. It is a list of JSON with the `contradiction` and `rank` key.
+The `contradiction` explains why the 'actual output' does not align with a certain node in the 'retrieval context'. Contradictions happen in the 'actual output', NOT the 'retrieval context'.
+The `rank` tells you which node in the 'retrieval context' the actual output contradicted with.
+Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is to the retrieval context (higher the better), concisely summarize the contradictions to justify the score. 
 
 Faithfulness Score:
 {score}
 
 Contradictions:
-{contradiction_reasons}
+{contradictions}
 
 Example:
 The score is <faithfulness_score> because <your_reason>.
+
+**
+IMPORTANT: 
+If there are no contradictions, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
+Your reason MUST use information in `contradiction` and the node RANK (eg., first node of the retrieval context) in your reason.
+**
 
 Reason:
 """
@@ -408,6 +418,7 @@ The score is <contextual_precision_score> because <your_reason>.
 
 **
 IMPORTANT: DO NOT mention 'verdict' in your reason, but instead phrase it as irrelevant nodes. The term 'verdict' are just here for you to understand the broader scope of things.
+Also DO NOT mention there are `reason` fields in the retrieval contexts you are presented with, instead just use the information in the `reason` field.
 In your reason, you MUST USE the `reason`, QUOTES in the 'reason', and the node RANK (starting from 1, eg. first node) to explain why the 'no' verdicts should be ranked lower than the 'yes' verdicts.
 When addressing nodes, make it explicit that it is nodes in retrieval context.
 If the score is 1, keep it short and say something positive with an upbeat tone (but don't overdo it otherwise it gets annoying).
