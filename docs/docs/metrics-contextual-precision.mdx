@@ -45,3 +45,9 @@ print(metric.reason)
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])
 ```
+
+You can also choose to fallback to Ragas' contextual precision metric (which has a similar implemention). This however is not capable of generating a reason.
+
+```python
+from deepeval.metrics import RAGASContextualPrecisionMetric
+```
