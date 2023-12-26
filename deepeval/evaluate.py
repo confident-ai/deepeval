@@ -135,11 +135,11 @@ def print_test_result(test_result: TestResult):
     for metric in test_result.metrics:
         if not metric.is_successful():
             print(
-                f"  - ❌ {metric.__name__} (score: {metric.score}, minimum_score: {metric.minimum_score})"
+                f"  - ❌ {metric.__name__} (score: {metric.score}, minimum_score: {metric.minimum_score}, reason: {metric.reason})"
             )
         else:
             print(
-                f"  - ✅ {metric.__name__} (score: {metric.score}, minimum_score: {metric.minimum_score})"
+                f"  - ✅ {metric.__name__} (score: {metric.score}, minimum_score: {metric.minimum_score}, reason: {metric.reason})"
             )
         if metric.score_metadata:
             for metric_name, score in metric.score_metadata.items():

@@ -6,15 +6,16 @@ try:
     from rich import print
 except Exception as e:
     pass
-from deepeval.api import Api
-from deepeval.key_handler import KEY_FILE_HANDLER
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.cli.test import app as test_app
+from deepeval.cli.azure_openai import app as azure_openai_app
 from typing import Optional
 import webbrowser
 
 app = typer.Typer(name="deepeval")
 
 app.add_typer(test_app, name="test")
+app.add_typer(azure_openai_app, name="azure-openai")
 
 
 @app.command()
@@ -50,8 +51,7 @@ def login(
                 else:
                     print("API Key cannot be empty. Please try again.\n")
 
-    KEY_FILE_HANDLER.write_api_key(api_key)
-    client = Api(api_key=api_key)
+    KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
     print("Congratulations! Login successful :raising_hands: ")
     print(
         "If you are new to DeepEval, follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/docs/getting-started]https://docs.confident-ai.com/docs/getting-started[/link][/bold]"

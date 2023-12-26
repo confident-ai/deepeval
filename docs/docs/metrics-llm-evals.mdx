@@ -40,7 +40,6 @@ There are three mandatory and two optional parameters required when instantiatin
 - [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. You can only provide either `evaluation_steps` or `criteria`, and not both.
 - [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from (Azure) OpenAI.
-- [Optional] `azure_deployment_name`: the deployment name for Azure OpenAI. Only required if you're using Azure OpenAI.
 
 :::danger
 For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
@@ -62,20 +61,6 @@ print(summarization_metric.score)
 print(summarization_metric.reason)
 ```
 
-## Using Azure OpenAI
-
-`deepeval` also allows you to use Azure OpenAI by setting the following enviornment variables in the terminal **and** providing an `azure_deployment_name` as an additional parameter when creating an `LLMEvalMetric`.
-
-```console
-export OPENAI_API_TYPE="azure"
-export OPENAI_API_VERSION="2023-05-15"
-export OPENAI_API_BASE="https://your-resource-name.openai.azure.com"
-export OPENAI_API_KEY="your-azure-openai-api-key"
-```
-
-```python
-summarization_metric = LLMEvalMetric(
-    # Provide a your 'azure_deployment_name'
-    azure_deployment_name="your-azure-deployment-name",
-)
-```
+:::note
+Remember, you can configure `deepeval` to [use Azure OpenAI for all LLM-based metrics.](metrics-introduction#using-azure-openai)
+:::
