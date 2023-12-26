@@ -30,6 +30,10 @@ class BaseEvaluationExperiment(ABC):
 
         if not self.experiment_folder.exists():
             self.experiment_folder.mkdir(parents=True, exist_ok=True)
+        
+        self.evaluation_csvs_folder = self.experiment_folder / 'eval_csvs'
+        if not self.evaluation_csvs_folder.exists():
+            self.evaluation_csvs_folder.mkdir(parents=True, exist_ok=True) 
 
     @abstractmethod
     def update(self, updated_config: BaseModel, *args, **kwargs):
