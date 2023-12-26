@@ -32,6 +32,9 @@ class EvaluationResult(BaseModel):
 class EvaluationResult(BaseEvaluationExperiment):
     def __init__(self, task_name: str, task_limit: int) -> None:
         self.task_name, self.task_limit = task_name, task_limit
+    
+    def visualize_result(self, sub_task: Optional[Union[str, List[str]]]=None) -> None:
+        raise NotImplementedError
 
     def collect_results_and_push(self, push_to_hub: Optional[bool] = False):
         all_task_data = HarnessTasks.get_dataset_from_task(
