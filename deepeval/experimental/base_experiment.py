@@ -30,16 +30,16 @@ class BaseEvaluationExperiment(ABC):
 
         if not self.experiment_folder.exists():
             self.experiment_folder.mkdir(parents=True, exist_ok=True)
-        
-        self.evaluation_csvs_folder = self.experiment_folder / 'eval_csvs'
+
+        self.evaluation_csvs_folder = self.experiment_folder / "eval_csvs"
         if not self.evaluation_csvs_folder.exists():
-            self.evaluation_csvs_folder.mkdir(parents=True, exist_ok=True) 
+            self.evaluation_csvs_folder.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
     def update(self, updated_config: BaseModel, *args, **kwargs):
         """Update an experiment with a new updated config."""
         pass
-    
+
     @property
     def delete(self):
         """Deletes the created experiment."""
@@ -78,6 +78,6 @@ class BaseEvaluationExperiment(ABC):
     @classmethod
     def delete_multiple_experiments(cls, *args, **kwargs):
         raise NotImplementedError
-    
+
     def push_to_hub(self):
-        raise NotImplementedError('Will be using parser right now.')
+        raise NotImplementedError("Will be using parser right now.")
