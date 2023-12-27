@@ -1,6 +1,6 @@
 from typing import Union, List, Dict
 
-import tqdm
+from tqdm import tqdm
 from rich.console import Console
 from rich.table import Table
 from rich.live import Live
@@ -32,11 +32,13 @@ class DeepEvalCallback(TrainerCallback):
         tokenizer_args: Dict = None,
         aggregation_method: str = "avg",
         trainer: Trainer = None,
-        show_table: bool = False
+        show_table: bool = False,
+        show_table_every: int = 1
     ) -> None:
         super().__init__()
         
         self.show_table = show_table
+        self.show_table_every = show_table_every
         self.metrics = metrics
         self.evaluation_dataset = evaluation_dataset
         self.tokenizer_args = tokenizer_args
@@ -44,7 +46,7 @@ class DeepEvalCallback(TrainerCallback):
         self.trainer = trainer
         
         self.epoch_counter = 0
-        self.log_history = []
+        self.deepeval_metric_history = []
         self._initiate_rich_console()
 
     def _initiate_rich_console(self) -> None:
@@ -102,6 +104,17 @@ class DeepEvalCallback(TrainerCallback):
             key: aggregation_functions[self.aggregation_method](value) \
                 for key, value in scores.items()
         }
+        
+    def on_epoch_begin(self, 
+        args: TrainingArguments,
+        state: TrainerState,
+        control: TrainerControl,
+        **kwargs
+    ):
+        """
+        Event triggered at the begining of each training epoch.
+        """
+        self.epoch_counter += 1
 
     def on_epoch_end(self, 
         args: TrainingArguments,
@@ -112,13 +125,9 @@ class DeepEvalCallback(TrainerCallback):
         """
         Event triggered at the end of each training epoch.
         """
-        self.epoch_counter += 1
-        scores = self._calculate_metric_scores()
-        self.log_history.append(scores)
         self.progress.update(1)
         control.should_log = True
-        
-        return control
+
 
     def on_log(self, 
         args: TrainingArguments,
@@ -129,23 +138,23 @@ class DeepEvalCallback(TrainerCallback):
         """
         Event triggered after logging the last logs.
         """
-        if not control.should_training_stop:
-            state.log_history[-1].update(self.log_history[-1])
-            log_history = state.log_history
+        if (
+            self.show_table 
+            and (self.epoch_counter % self.show_table_every == 0) 
+            and len(state.log_history) <= self.trainer.args.num_train_epochs
+        ):
+            scores = self._calculate_metric_scores()
+            self.deepeval_metric_history.append(scores)
+            self.deepeval_metric_history[-1].update(state.log_history[-1])
 
             def generate_table():
                 new_table = Table()
-                cols = log_history[-1].keys()
-                for key in cols:
+                for key in self.deepeval_metric_history[-1].keys():
                     new_table.add_column(key)
-                for row in log_history:
+                for row in self.deepeval_metric_history:
                     new_table.add_row(*[str(value) for value in row.values()])
                 return new_table
-            
-            if self.show_table:
-                self.live.update(generate_table(), refresh=True)
-        else:
-            pass
+            self.live.update(generate_table(), refresh=True)
 
     def on_train_end(self,
         args: TrainingArguments,
@@ -156,7 +165,7 @@ class DeepEvalCallback(TrainerCallback):
         """
         Event triggered at the end of model training.
         """
-        self.progress.stop()
+        self.progress.close()
         
     def on_train_begin(self,
         args: TrainingArguments,
