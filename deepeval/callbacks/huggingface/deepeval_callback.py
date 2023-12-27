@@ -11,6 +11,7 @@ from transformers import TrainerCallback, \
 from deepeval.metrics import BaseMetric
 from deepeval.dataset import EvaluationDataset
 from deepeval.evaluate import execute_test
+from deepeval.progress_context import progress_context
 
 
 class DeepEvalCallback(TrainerCallback):
@@ -143,9 +144,10 @@ class DeepEvalCallback(TrainerCallback):
             and (self.epoch_counter % self.show_table_every == 0) 
             and len(state.log_history) <= self.trainer.args.num_train_epochs
         ):
-            scores = self._calculate_metric_scores()
-            self.deepeval_metric_history.append(scores)
-            self.deepeval_metric_history[-1].update(state.log_history[-1])
+            with progress_context("Evaluating testcases..."):
+                scores = self._calculate_metric_scores()
+                self.deepeval_metric_history.append(scores)
+                self.deepeval_metric_history[-1].update(state.log_history[-1])
 
             def generate_table():
                 new_table = Table()
