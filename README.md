@@ -26,16 +26,20 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 # Features
 
-- Large variety of ready-to-use evaluation metrics powered by LLMs, statistical methods, or NLP models that runs **locally on your machine**:
+- Large variety of ready-to-use evaluation metrics powered by LLMs (all with explanations), statistical methods, or NLP models that runs **locally on your machine**:
   - Hallucination
+  - Summarization
   - Answer Relevancy
+  - Faithfulness
+  - Contextual Recall
+  - Contextual Precision
   - RAGAS
   - G-Eval
   - Toxicity
   - Bias
   - etc.
 - Easily create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
-- Evaluate your entire dataset in bulk using fewer than 20 lines of Python code **in parallel**.
+- Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**.
 - [Automatically integrated with Confident AI](https://app.confident-ai.com) for continous evaluation throughout the lifetime of your LLM (app):
   - log evaluation results and analyze metrics pass / fails
   - compare and pick the optimal hyperparameters (eg. prompt templates, chunk size, models used, etc.) based on evaluation results

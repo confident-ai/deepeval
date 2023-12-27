@@ -1,19 +1,47 @@
-from typing import Callable, Any
+import random
 import time
+import openai
 
 
-def call_openai_with_retry(
-    callable: Callable[[], Any], max_retries: int = 2
-) -> Any:
-    for _ in range(max_retries):
-        try:
-            response = callable()
-            return response
-        except Exception as e:
-            print(f"An error occurred: {e}. Retrying...")
-            time.sleep(2)
-            continue
+def retry_with_exponential_backoff(
+    func,
+    initial_delay: float = 1,
+    exponential_base: float = 2,
+    jitter: bool = True,
+    max_retries: int = 10,
+    errors: tuple = (openai.RateLimitError,),
+):
+    """Retry a function with exponential backoff."""
 
-    raise Exception(
-        "Max retries reached. Unable to make a successful API call to OpenAI."
-    )
+    def wrapper(*args, **kwargs):
+        # Initialize variables
+        num_retries = 0
+        delay = initial_delay
+
+        # Loop until a successful response or max_retries is hit or an exception is raised
+        while True:
+            try:
+                return func(*args, **kwargs)
+
+            # Retry on specified errors
+            except errors as e:
+                # Increment retries
+                num_retries += 1
+
+                # Check if max retries has been reached
+                if num_retries > max_retries:
+                    raise Exception(
+                        f"Maximum number of retries ({max_retries}) exceeded."
+                    )
+
+                # Increment the delay
+                delay *= exponential_base * (1 + jitter * random.random())
+
+                # Sleep for the delay
+                time.sleep(delay)
+
+            # Raise exceptions for any errors not specified
+            except Exception as e:
+                raise e
+
+    return wrapper

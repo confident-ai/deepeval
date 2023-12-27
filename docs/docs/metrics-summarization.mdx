@@ -76,7 +76,7 @@ In `deepeval`, we judge summarization by taking the minimum of the two distinct 
 - `alignment_score`: determines whether the summary contains hallucinated or contradictory information to the original text.
 - `inclusion_score`: determines whether the summary contains the neccessary information from the original text.
 
-These scores are calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', and calculating the ratio of which the original text and summary yields the same answer.
+These scores are calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', and calculating the ratio of which the original text and summary yields the same answer. [Here is a great article](https://www.confident-ai.com/blog/a-step-by-step-guide-to-evaluating-an-llm-text-summarization-task) on how `deepeval`'s summarization metric was build.
 
 You can access the `alignment_score` and `inclusion_score` from a `SummarizationMetric` as follows:
 

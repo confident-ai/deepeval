@@ -28,7 +28,7 @@ test_case = LLMTestCase(
 
 **Note that only `input` and `actual_output` is mandatory.**
 
-However, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating factual consistency you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
+However, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
 
 Let's go through the purpsoe of each parameter.
 
@@ -219,7 +219,7 @@ Similar to Pytest, `deepeval` allows you to assert any test case you create by c
 - `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics
 
-A test case passes only if all metrics meet their respective evaluation criterion. Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, and `context` is used to ascertain whether their criterion have been met.
+A test case passes only if all metrics meet their respective evaluation criterion. Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
 
 ```python title="test_assert_example.py"
 # A hypothetical LLM application example
@@ -271,7 +271,7 @@ deepeval test run test_assert_example.py -n 4
 
 ## Evaluate Test Cases in Bulk
 
-Lastly, `deepeval` offers an `evaluate` function to evaluate multiple test cases at once, which similar to assert_test but without needing pytest or the CLI.
+Lastly, `deepeval` offers an `evaluate` function to evaluate multiple test cases at once, which similar to `assert_test` but without the need for Pytest or the CLI.
 
 ```python
 # A hypothetical LLM application example
