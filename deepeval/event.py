@@ -34,7 +34,7 @@ def track(
     conversation_id: Optional[str] = None,
     additional_data: Optional[Dict] = None,
     fail_silently: Optional[bool] = True,
-    run_background_thread: Optional[bool] = True,
+    run_on_background_thread: Optional[bool] = True,
 ):
     def track_event(event: APIEvent, api: Api, fail_silently: bool):
         try:
@@ -60,7 +60,7 @@ def track(
         additionalData=additional_data,
     )
     api = Api()
-    if run_background_thread:
+    if run_on_background_thread:
         thread = threading.Thread(
             target=track_event, args=(event, api, fail_silently), daemon=True
         )
