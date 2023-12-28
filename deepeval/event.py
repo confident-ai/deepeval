@@ -1,5 +1,7 @@
 from typing import Optional, List, Dict
 from deepeval.api import Api, Endpoints
+import threading
+import asyncio
 from pydantic import BaseModel, Field
 
 
@@ -32,7 +34,18 @@ def track(
     conversation_id: Optional[str] = None,
     additional_data: Optional[Dict] = None,
     fail_silently: Optional[bool] = True,
+    run_background_thread: Optional[bool] = True,
 ):
+    def track_event(event: APIEvent, api: Api, fail_silently: bool):
+        try:
+            _ = api.post_request(
+                endpoint=Endpoints.EVENT_ENDPOINT.value,
+                body=event.dict(by_alias=True, exclude_none=True),
+            )
+        except Exception as e:
+            if not fail_silently:
+                raise e
+
     event = APIEvent(
         name=event_name,
         model=model,
@@ -47,11 +60,10 @@ def track(
         additionalData=additional_data,
     )
     api = Api()
-    try:
-        _ = api.post_request(
-            endpoint=Endpoints.EVENT_ENDPOINT.value,
-            body=event.dict(by_alias=True, exclude_none=True),
+    if run_background_thread:
+        thread = threading.Thread(
+            target=track_event, args=(event, api, fail_silently), daemon=True
         )
-    except Exception as e:
-        if not fail_silently:
-            raise (e)
+        thread.start()
+    else:
+        track_event(event, api, fail_silently)
