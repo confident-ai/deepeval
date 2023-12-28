@@ -41,6 +41,8 @@ protobuf = "*"
 typer = "*"
 setuptools = "*"
 wheel = "*"
+aiohttp = "*"
+
 
 [tool.black]
 line-length = 80
