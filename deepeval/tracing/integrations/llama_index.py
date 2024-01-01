@@ -15,6 +15,7 @@ from deepeval.tracing import (
     TraceStatus,
     LlmMetadata,
     EmbeddingMetadata,
+    TraceType,
 )
 from deepeval.utils import dataclass_to_dict
 
@@ -48,8 +49,6 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         trace_id: Optional[str] = None,
         trace_map: Optional[Dict[str, List[str]]] = None,
     ) -> None:
-        # TODO:
-        print(get_trace_stack())
         return
 
     def on_event_start(
@@ -76,8 +75,12 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         trace_instance.executionTime = (
             perf_counter() - trace_instance.executionTime
         )
-        print(trace_instance.executionTime)
-        # TODO: get inputs and outputs fron payload into kwargs based on CBEventType
+        input_kwargs = {}
+        if payload is not None:
+            for event in EventPayload:
+                value = payload.get(event.value)
+                if value is not None:
+                    input_kwargs[event.value] = value
 
         current_trace_stack = trace_manager.get_trace_stack()
         if len(current_trace_stack) > 1:
@@ -135,8 +138,15 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         return trace_instance
 
-    # TODO
     def convert_event_type_to_deepeval_trace_type(
         self, event_type: CBEventType
     ):
-        pass
+        # TODO: add more types
+        if event_type == CBEventType.LLM:
+            return TraceType.LLM
+        elif event_type == CBEventType.RETRIEVE:
+            return TraceType.RETRIEVER
+        elif event_type == CBEventType.EMBEDDING:
+            return TraceType.EMBEDDING
+
+        return event_type.value.capitalize()

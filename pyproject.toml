@@ -42,7 +42,6 @@ typer = "*"
 setuptools = "*"
 wheel = "*"
 aiohttp = "*"
-llama-index = {path = "/Users/jeffreyip/mrgpt/repos/llama_index"}
 
 [tool.black]
 line-length = 80
