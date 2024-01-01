@@ -42,6 +42,7 @@ typer = "*"
 setuptools = "*"
 wheel = "*"
 aiohttp = "*"
+llama-index = "*"
 
 [tool.black]
 line-length = 80
