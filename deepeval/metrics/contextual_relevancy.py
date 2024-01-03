@@ -8,6 +8,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel
 from deepeval.templates import ContextualRelevancyTemplate
+from deepeval.progress_context import metrics_progress_context
 
 
 class ContextualRelevancyVerdict(BaseModel):
@@ -35,24 +36,22 @@ class ContextualRelevancyMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        print(
-            "✨ 🍰 ✨ You're using DeepEval's latest Contextual Relevancy Metric! This may take a minute..."
-        )
-        self.verdicts_list: List[
-            List[ContextualRelevancyVerdict]
-        ] = self._generate_verdicts_list(
-            test_case.input, test_case.retrieval_context
-        )
-        contextual_recall_score = self._generate_score()
+        with metrics_progress_context(self.__name__):
+            self.verdicts_list: List[
+                List[ContextualRelevancyVerdict]
+            ] = self._generate_verdicts_list(
+                test_case.input, test_case.retrieval_context
+            )
+            contextual_recall_score = self._generate_score()
 
-        self.reason = self._generate_reason(
-            test_case.input, contextual_recall_score
-        )
+            self.reason = self._generate_reason(
+                test_case.input, contextual_recall_score
+            )
 
-        self.success = contextual_recall_score >= self.minimum_score
-        self.score = contextual_recall_score
+            self.success = contextual_recall_score >= self.minimum_score
+            self.score = contextual_recall_score
 
-        return self.score
+            return self.score
 
     def _generate_reason(self, input: str, score: float):
         if self.include_reason is False:
