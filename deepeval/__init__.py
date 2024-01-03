@@ -2,13 +2,13 @@ import warnings
 import re
 
 # Optionally add telemtry
-from .telemetry import *
 from ._version import __version__
 
 from .decorators.hyperparameters import set_hyperparameters
 from deepeval.event import track
 from deepeval.evaluate import evaluate, run_test, assert_test
 from deepeval.test_run import on_test_run_end
+from deepeval.telemetry import *
 
 __all__ = [
     "set_hyperparameters",

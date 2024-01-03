@@ -6,6 +6,7 @@ from typing import Optional
 from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
 from deepeval.utils import delete_file_if_exists
 from deepeval.test_run import invoke_test_run_end_hook
+from deepeval.telemetry import capture_evaluation_count
 
 app = typer.Typer(name="test")
 
@@ -74,6 +75,7 @@ def run(
     pytest_args.extend(["-p", "plugins"])
 
     retcode = pytest.main(pytest_args)
+    capture_evaluation_count()
     test_run_manager.wrap_up_test_run()
     invoke_test_run_end_hook()
 
