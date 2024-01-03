@@ -2,7 +2,7 @@
 """
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval import assert_test
 
 question = "What are the primary benefits of meditation?"
