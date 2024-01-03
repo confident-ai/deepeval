@@ -97,6 +97,7 @@ Example:
 
 You should NOT incorporate any prior knowledge you have and take each context at face value. Since you are going to generate a verdict for each context, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of contexts.
 You DON'T have to provide a reason if the answer is 'yes'.
+You should ONLY provide a 'no' answer if IT IS A CONTRADICTION.
 **
 
 Retrieval Contexts:
@@ -113,7 +114,7 @@ JSON:
         return f"""Below is a list of Contradictions. It is a list of JSON with the `contradiction` and `rank` key.
 The `contradiction` explains why the 'actual output' does not align with a certain node in the 'retrieval context'. Contradictions happen in the 'actual output', NOT the 'retrieval context'.
 The `rank` tells you which node in the 'retrieval context' the actual output contradicted with.
-Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is to the retrieval context (higher the better), concisely summarize the contradictions to justify the score. 
+Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is to the retrieval context (higher the better), CONCISELY summarize the contradictions to justify the score. 
 
 Faithfulness Score:
 {score}
@@ -128,6 +129,7 @@ The score is <faithfulness_score> because <your_reason>.
 IMPORTANT: 
 If there are no contradictions, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
 Your reason MUST use information in `contradiction` and the node RANK (eg., first node of the retrieval context) in your reason.
+Be sure in your reason, as if you know what the actual output is from the contradictions.
 **
 
 Reason:

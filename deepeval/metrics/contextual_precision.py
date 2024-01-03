@@ -7,6 +7,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel
 from deepeval.templates import ContextualPrecisionTemplate
+from deepeval.progress_context import metrics_progress_context
 
 
 class ContextualPrecisionVerdict(BaseModel):
@@ -36,25 +37,24 @@ class ContextualPrecisionMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
-        print(
-            "✨ 🍰 ✨ You're using DeepEval's latest Contextual Precision Metric! This may take a minute..."
-        )
-        self.verdicts: List[
-            ContextualPrecisionVerdict
-        ] = self._generate_verdicts(
-            test_case.input,
-            test_case.expected_output,
-            test_case.retrieval_context,
-        )
-        contextual_precision_score = self._generate_score()
 
-        self.reason = self._generate_reason(
-            test_case.input, contextual_precision_score
-        )
+        with metrics_progress_context(self.__name__):
+            self.verdicts: List[
+                ContextualPrecisionVerdict
+            ] = self._generate_verdicts(
+                test_case.input,
+                test_case.expected_output,
+                test_case.retrieval_context,
+            )
+            contextual_precision_score = self._generate_score()
 
-        self.success = contextual_precision_score >= self.minimum_score
-        self.score = contextual_precision_score
-        return self.score
+            self.reason = self._generate_reason(
+                test_case.input, contextual_precision_score
+            )
+
+            self.success = contextual_precision_score >= self.minimum_score
+            self.score = contextual_precision_score
+            return self.score
 
     def _generate_reason(self, input: str, score: float):
         if self.include_reason is False:
