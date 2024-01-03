@@ -23,7 +23,8 @@ Simply add `deepeval.track(...)` in your application to start tracking events. T
 - [Optional] `token_usage`: type `float`
 - [Optional] `token_cost`: type `float`
 - [Optional] `additional_data`: type `dict`
-- [Optional] `fail_silently`: type `bool`, defaults to True
+- [Optional] `fail_silently`: type `bool`, defaults to True. You should try setting this to `False` if your events are not logging properly.
+- [Optional] `run_on_background_thread`: type `bool`, defaults to True. You should try setting this to `False` if your events are not logging properly.
 
 :::note
 Please do **NOT** provide placeholder values for optional parameters. Leave it blank instead.
@@ -48,6 +49,7 @@ deepeval.track(
     token_cost=0.23,
     additional_data={"example": "example"},
     fail_silently=True
+    run_on_background_thread=True
 )
 
 ```
