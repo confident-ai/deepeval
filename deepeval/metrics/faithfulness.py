@@ -8,6 +8,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.utils import trimToJson
 from deepeval.models import GPTModel
 from deepeval.templates import FaithfulnessTemplate
+from deepeval.progress_context import metrics_progress_context
 
 
 class FaithfulnessVerdict(BaseModel):
@@ -37,22 +38,20 @@ class FaithfulnessMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        print(
-            "✨ 🍰 ✨ You're using DeepEval's latest Faithfulness Metric! This may take a minute..."
-        )
-        self.truths_list: List[List[str]] = self._generate_truths_list(
-            test_case.retrieval_context
-        )
-        self.verdicts_list: List[
-            List[FaithfulnessVerdict]
-        ] = self._generate_verdicts_list(
-            self.truths_list, test_case.actual_output
-        )
-        faithfulness_score = self._generate_score()
-        self.reason = self._generate_reason(faithfulness_score)
-        self.success = faithfulness_score >= self.minimum_score
-        self.score = faithfulness_score
-        return self.score
+        with metrics_progress_context(self.__name__):
+            self.truths_list: List[List[str]] = self._generate_truths_list(
+                test_case.retrieval_context
+            )
+            self.verdicts_list: List[
+                List[FaithfulnessVerdict]
+            ] = self._generate_verdicts_list(
+                self.truths_list, test_case.actual_output
+            )
+            faithfulness_score = self._generate_score()
+            self.reason = self._generate_reason(faithfulness_score)
+            self.success = faithfulness_score >= self.minimum_score
+            self.score = faithfulness_score
+            return self.score
 
     def _generate_score(self):
         total_verdicts = 0

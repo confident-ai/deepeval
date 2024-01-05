@@ -7,6 +7,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel
 from deepeval.templates import AnswerRelevancyTemplate
+from deepeval.progress_context import metrics_progress_context
 
 
 class AnswerRelvancyVerdict(BaseModel):
@@ -35,24 +36,22 @@ class AnswerRelevancyMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        print(
-            "✨ 🍰 ✨ You're using DeepEval's latest Answer Relevancy Metric! This may take a minute..."
-        )
-        self.key_points: List[str] = self._generate_key_points(
-            test_case.actual_output, "\n".join(test_case.retrieval_context)
-        )
-        self.verdicts: List[AnswerRelvancyVerdict] = self._generate_verdicts(
-            test_case.input
-        )
+        with metrics_progress_context(self.__name__):
+            self.key_points: List[str] = self._generate_key_points(
+                test_case.actual_output, "\n".join(test_case.retrieval_context)
+            )
+            self.verdicts: List[
+                AnswerRelvancyVerdict
+            ] = self._generate_verdicts(test_case.input)
 
-        answer_relevancy_score = self._generate_score()
+            answer_relevancy_score = self._generate_score()
 
-        self.reason = self._generate_reason(
-            test_case.input, test_case.actual_output, answer_relevancy_score
-        )
-        self.success = answer_relevancy_score >= self.minimum_score
-        self.score = answer_relevancy_score
-        return self.score
+            self.reason = self._generate_reason(
+                test_case.input, test_case.actual_output, answer_relevancy_score
+            )
+            self.success = answer_relevancy_score >= self.minimum_score
+            self.score = answer_relevancy_score
+            return self.score
 
     def _generate_score(self):
         relevant_count = 0

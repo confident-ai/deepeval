@@ -1,9 +1,10 @@
 import os
 import socket
 import sys
+import sentry_sdk
 
 
-def check_firewall():
+def blocked_by_firewall():
     try:
         socket.create_connection(("www.google.com", 80))
         return False
@@ -11,29 +12,24 @@ def check_firewall():
         return True
 
 
-if os.getenv("ERROR_REPORTING") == "YES" and not check_firewall():
-    try:
-        import sentry_sdk
+def capture_evaluation_count():
+    sentry_sdk.capture_message("evaluation ran!")
 
-        sentry_sdk.init(
-            dsn="https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
-            # Set traces_sample_rate to 1.0 to capture 100%
-            # of transactions for performance monitoring.
-            traces_sample_rate=1.0,
-            # Set profiles_sample_rate to 1.0 to profile 100%
-            # of sampled transactions.
-            # We recommend adjusting this value in production.
-            profiles_sample_rate=1.0,
-        )
 
-        # Add a global error handler
-        def handle_exception(exc_type, exc_value, exc_traceback):
-            print({"exc_type": exc_type, "exc_value": exc_value})
-            sentry_sdk.capture_exception(exc_value)
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+sentry_sdk.init(
+    dsn="https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
+    profiles_sample_rate=1.0,
+    traces_sample_rate=1.0,  # For performance monitoring
+    send_default_pii=False,  # Don't send personally identifiable information
+    attach_stacktrace=False,  # Don't attach stack traces to messages
+    default_integrations=False,  # Disable Sentry's default integrations
+)
 
-        sys.excepthook = handle_exception
+if os.getenv("ERROR_REPORTING") == "YES" and not blocked_by_firewall():
 
-    except ModuleNotFoundError:
-        # sentry_sdk not installed
-        pass
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        print({"exc_type": exc_type, "exc_value": exc_value})
+        sentry_sdk.capture_exception(exc_value)
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+
+    sys.excepthook = handle_exception

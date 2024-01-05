@@ -91,7 +91,7 @@ class TestRun(BaseModel):
         metrics_metadata = MetricsMetadata(
             metric=metric.__name__,
             score=metric.score,
-            minimumScore=0.5,
+            minimumScore=metric.minimum_score,
             reason=metric.reason,
         )
 

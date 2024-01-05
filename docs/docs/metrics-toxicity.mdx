@@ -6,6 +6,14 @@ sidebar_label: Toxicity
 
 The toxicity metric is another **referenceless** metric that evaluates toxicness in your LLM's outputs. This is particularly useful for a fine-tuning use case.
 
+## Installation
+
+Toxicity in `deepeval` requires an additional installation:
+
+```
+pip install detoxify
+```
+
 ## Required Parameters
 
 To use the `NonToxicMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
