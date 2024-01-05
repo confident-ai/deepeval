@@ -7,6 +7,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel
 from deepeval.templates import ContextualRecallTemplate
+from deepeval.progress_context import metrics_progress_context
 
 
 class ContextualRecallVerdict(BaseModel):
@@ -19,9 +20,11 @@ class ContextualRecallMetric(BaseMetric):
         self,
         minimum_score: float = 0.5,
         model: Optional[str] = None,
+        include_reason: bool = True,
     ):
         self.minimum_score = minimum_score
         self.model = model
+        self.include_reason = include_reason
         self.n = 5
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -34,24 +37,27 @@ class ContextualRecallMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
-        print(
-            "✨ 🍰 ✨ You're using DeepEval's newest Contextual Recall Metric! This may take a minute."
-        )
-        self.verdicts: List[ContextualRecallVerdict] = self._generate_verdicts(
-            test_case.expected_output, test_case.retrieval_context
-        )
+        with metrics_progress_context(self.__name__):
+            self.verdicts: List[
+                ContextualRecallVerdict
+            ] = self._generate_verdicts(
+                test_case.expected_output, test_case.retrieval_context
+            )
 
-        contextual_recall_score = self._generate_score()
+            contextual_recall_score = self._generate_score()
 
-        self.reason = self._generate_reason(
-            test_case.expected_output, contextual_recall_score
-        )
+            self.reason = self._generate_reason(
+                test_case.expected_output, contextual_recall_score
+            )
 
-        self.success = contextual_recall_score >= self.minimum_score
-        self.score = contextual_recall_score
-        return self.score
+            self.success = contextual_recall_score >= self.minimum_score
+            self.score = contextual_recall_score
+            return self.score
 
     def _generate_reason(self, expected_output: str, score: float):
+        if self.include_reason is False:
+            return None
+
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in self.verdicts:

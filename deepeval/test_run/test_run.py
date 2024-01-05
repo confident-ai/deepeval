@@ -91,7 +91,7 @@ class TestRun(BaseModel):
         metrics_metadata = MetricsMetadata(
             metric=metric.__name__,
             score=metric.score,
-            minimumScore=0.5,
+            minimumScore=metric.minimum_score,
             reason=metric.reason,
         )
 
@@ -201,11 +201,11 @@ class TestRunManager:
 
     def display_results_table(self, test_run: TestRun):
         table = Table(title="Test Results")
-        table.add_column("Test case", justify="right")
-        table.add_column("Metric", justify="right")
-        table.add_column("Score", justify="right")
-        table.add_column("Status", justify="right")
-        table.add_column("Overall Success Rate", justify="right")
+        table.add_column("Test case", justify="left")
+        table.add_column("Metric", justify="left")
+        table.add_column("Score", justify="left")
+        table.add_column("Status", justify="left")
+        table.add_column("Overall Success Rate", justify="left")
 
         for index, test_case in enumerate(test_run.test_cases):
             pass_count = 0
@@ -237,7 +237,7 @@ class TestRunManager:
                 table.add_row(
                     "",
                     str(metric_metadata.metric),
-                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.minimum_score})",
+                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.minimum_score}, reason={metric_metadata.reason})",
                     status,
                     "",
                 )

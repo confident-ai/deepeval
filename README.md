@@ -18,7 +18,7 @@
     </a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval evaluates performance based on metrics such as hallucination, answer relevancy, RAGAS, etc., using LLMs and various other NLP models **locally on your machine**.
+**DeepEval** is a simple-to-use, open-source LLM evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval evaluates performance based on metrics such as hallucination, answer relevancy, RAGAS, etc., using LLMs and various other NLP models that runs **locally on your machine**.
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama2 with confidence.
 
@@ -26,16 +26,20 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 # Features
 
-- Large variety of ready-to-use evaluation metrics powered by LLMs, statistical methods, or NLP models that runs **locally on your machine**:
+- Large variety of ready-to-use LLM evaluation metrics powered by LLMs (all with explanations), statistical methods, or NLP models that runs **locally on your machine**:
   - Hallucination
+  - Summarization
   - Answer Relevancy
+  - Faithfulness
+  - Contextual Recall
+  - Contextual Precision
   - RAGAS
   - G-Eval
   - Toxicity
   - Bias
   - etc.
+- Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**. Do this via the CLI in a Pytest-like manner, or through our `evaluate()` function.
 - Easily create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
-- Evaluate your entire dataset in bulk using fewer than 20 lines of Python code **in parallel**.
 - [Automatically integrated with Confident AI](https://app.confident-ai.com) for continous evaluation throughout the lifetime of your LLM (app):
   - log evaluation results and analyze metrics pass / fails
   - compare and pick the optimal hyperparameters (eg. prompt templates, chunk size, models used, etc.) based on evaluation results
@@ -111,6 +115,29 @@ deepeval test run test_chatbot.py
 
 <br />
 
+## Evaluating Without Pytest Integration
+
+Alternatively, you can evaluate without Pytest, which is more suited for a notebook environment.
+
+```python
+from deepeval import evalate
+from deepeval.metrics import HallucinationMetric
+from deepeval.test_case import LLMTestCase
+
+input = "What if these shoes don't fit?"
+context = ["All customers are eligible for a 30 day full refund at no extra costs."]
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra costs."
+
+hallucination_metric = HallucinationMetric(minimum_score=0.7)
+test_case = LLMTestCase(
+    input=input,
+    actual_output=actual_output,
+    context=context
+)
+evalate([test_case], [hallucination_metric])
+```
+
 ## Evaluting a Dataset / Test Cases in Bulk
 
 In DeepEval, a dataset is simply a collection of test cases. Here is how you can evaluate things in bulk:
@@ -144,7 +171,7 @@ deepeval test run test_<filename>.py -n 4
 
 <br/>
 
-Alternatively, although we recommend using `deepeval test run`, you can evaluate a dataset/test cases without using pytest:
+Alternatively, although we recommend using `deepeval test run`, you can evaluate a dataset/test cases without using our Pytest integration:
 
 ```python
 from deepeval import evaluate
@@ -164,6 +191,7 @@ We offer a [free web platform](https://app.confident-ai.com) for you to:
 3. Compare and pick the optimal hyperparameteres (prompt templates, models, chunk size, etc.).
 4. Create, manage, and centralize your evaluation datasets.
 5. Track events in production and augment your evaluation dataset for continous evaluation in production.
+6. Track events in production and view live evaluation results over time.
 
 Everything on Confident AI, including how to use Confident is available [here](https://docs.confident-ai.com/docs/confident-ai-introduction).
 
