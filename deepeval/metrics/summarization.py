@@ -134,6 +134,7 @@ class SummarizationMetric(BaseMetric):
         return res.content
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.minimum_score
         return self.success
 
     @property

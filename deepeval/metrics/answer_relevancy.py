@@ -115,6 +115,7 @@ class AnswerRelevancyMetric(BaseMetric):
         return data["key_points"]
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.minimum_score
         return self.success
 
     @property

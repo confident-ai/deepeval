@@ -76,7 +76,8 @@ class LLMEvalMetric(BaseMetric):
         self.success = score >= self.minimum_score
         return self.score
 
-    def is_successful(self):
+    def is_successful(self) -> bool:
+        self.success = self.score >= self.minimum_score
         return self.success
 
     def generate_evaluation_steps(self):

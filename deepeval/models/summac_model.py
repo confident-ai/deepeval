@@ -1,5 +1,5 @@
 import torch
-from typing import Union, List
+from typing import Union, List, Optional
 from typing import List, Union, get_origin
 from deepeval.models.base import DeepEvalBaseModel
 from deepeval.models._summac_model import _SummaCZS
@@ -8,9 +8,9 @@ from deepeval.models._summac_model import _SummaCZS
 class SummaCModels(DeepEvalBaseModel):
     def __init__(
         self,
-        model_name: str | None = None,
-        granularity: str | None = None,
-        device: str | None = None,
+        model_name: Optional[str] = None,
+        granularity: Optional[str] = None,
+        device: Optional[str] = None,
         *args,
         **kwargs
     ):
@@ -27,11 +27,11 @@ class SummaCModels(DeepEvalBaseModel):
 
     def load_model(
         self,
-        op1: str | None = "max",
-        op2: str | None = "mean",
-        use_ent: bool | None = True,
-        use_con: bool | None = True,
-        image_load_cache: bool | None = True,
+        op1: Optional[str] = "max",
+        op2: Optional[str] = "mean",
+        use_ent: Optional[bool] = True,
+        use_con: Optional[bool] = True,
+        image_load_cache: Optional[bool] = True,
         **kwargs
     ):
         return _SummaCZS(

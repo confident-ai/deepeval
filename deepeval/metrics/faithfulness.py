@@ -172,6 +172,7 @@ class FaithfulnessMetric(BaseMetric):
         return verdicts_list
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.minimum_score
         return self.success
 
     @property

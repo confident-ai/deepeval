@@ -102,6 +102,7 @@ class ContextualRecallMetric(BaseMetric):
         return verdicts
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.minimum_score
         return self.success
 
     @property

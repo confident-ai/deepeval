@@ -69,7 +69,8 @@ class UnBiasedMetric(BaseMetric):
 
         return average_score
 
-    def is_successful(self):
+    def is_successful(self) -> bool:
+        self.success = self.score >= self.minimum_score
         return self.success
 
     @property

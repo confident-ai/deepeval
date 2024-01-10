@@ -25,11 +25,12 @@ class HallucinationMetric(BaseMetric, metaclass=Singleton):
             if score > max_score:
                 max_score = score
 
-        self.success = max_score > self.minimum_score
+        self.success = max_score >= self.minimum_score
         self.score = max_score
         return max_score
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.minimum_score
         return self.success
 
     @property

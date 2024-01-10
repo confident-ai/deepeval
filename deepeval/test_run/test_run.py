@@ -100,7 +100,7 @@ class TestRun(BaseModel):
             existing_test_case.metrics_metadata.append(metrics_metadata)
             success = all(
                 [
-                    metric.score >= metric.minimum_score
+                    metric.is_successful()
                     for metric in existing_test_case.metrics_metadata
                 ]
             )

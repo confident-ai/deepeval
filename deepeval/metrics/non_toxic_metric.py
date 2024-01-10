@@ -62,7 +62,8 @@ class NonToxicMetric(BaseMetric):
         self.score = average_score
         return self.score
 
-    def is_successful(self):
+    def is_successful(self) -> bool:
+        self.success = self.score >= self.minimum_score
         return self.success
 
     @property
