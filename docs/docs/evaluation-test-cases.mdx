@@ -202,7 +202,7 @@ test_case = LLMTestCase(
     context=context
 )
 
-metric = HallucinationMetric(minimum_score=0.7)
+metric = HallucinationMetric(threshold=0.7)
 run_test(test_case, [metric])
 ```
 
@@ -245,7 +245,7 @@ def test_case_1():
         expected_output="Me, ruff!",
         context=context
     )
-    metric = HallucinationMetric(minimum_score=0.7)
+    metric = HallucinationMetric(threshold=0.7)
     assert_test(test_case, metrics=[metric])
 
 def test_case_2():
@@ -259,7 +259,7 @@ def test_case_2():
         expected_output="Me, ruff!",
         context=context
     )
-    metric = HallucinationMetric(minimum_score=0.7)
+    metric = HallucinationMetric(threshold=0.7)
     assert_test(test_case, metrics=[metric])
 ```
 
@@ -307,7 +307,7 @@ second_test_case = LLMTestCase(
 
 test_cases = [first_test_case, second_test_case]
 
-metric = HallucinationMetric(minimum_score=0.7)
+metric = HallucinationMetric(threshold=0.7)
 evaluate(test_cases, [metric])
 ```
 

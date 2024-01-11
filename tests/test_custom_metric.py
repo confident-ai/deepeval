@@ -9,14 +9,14 @@ from deepeval import assert_test
 class LengthMetric(BaseMetric):
     """This metric checks if the output is more than 3 letters"""
 
-    def __init__(self, minimum_score: int = 3):
-        self.minimum_score = minimum_score
+    def __init__(self, threshold: int = 3):
+        self.threshold = threshold
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
         text = test_case.actual_output
         score = len(text)
-        self.success = score > self.minimum_score
+        self.success = score > self.threshold
         # Optional: Logs it to the server
         return score
 

@@ -17,10 +17,10 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -57,7 +57,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 
         # Ragas only does dataset-level comparisons
         context_precision_score = scores["context_precision"]
-        self.success = context_precision_score >= self.minimum_score
+        self.success = context_precision_score >= self.threshold
         self.score = context_precision_score
         return self.score
 
@@ -74,10 +74,10 @@ class RAGASContextualRelevancyMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -113,7 +113,7 @@ class RAGASContextualRelevancyMetric(BaseMetric):
 
         # Ragas only does dataset-level comparisons
         context_relevancy_score = scores["context_relevancy"]
-        self.success = context_relevancy_score >= self.minimum_score
+        self.success = context_relevancy_score >= self.threshold
         self.score = context_relevancy_score
         return self.score
 
@@ -130,10 +130,10 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -165,7 +165,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[answer_relevancy])
         answer_relevancy_score = scores["answer_relevancy"]
-        self.success = answer_relevancy_score >= self.minimum_score
+        self.success = answer_relevancy_score >= self.threshold
         self.score = answer_relevancy_score
         return self.score
 
@@ -180,10 +180,10 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
 class RAGASFaithfulnessMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -215,7 +215,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[faithfulness])
         faithfulness_score = scores["faithfulness"]
-        self.success = faithfulness_score >= self.minimum_score
+        self.success = faithfulness_score >= self.threshold
         self.score = faithfulness_score
         return self.score
 
@@ -232,10 +232,10 @@ class RAGASContextualRecallMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -267,7 +267,7 @@ class RAGASContextualRecallMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [context_recall])
         context_recall_score = scores["context_recall"]
-        self.success = context_recall_score >= self.minimum_score
+        self.success = context_recall_score >= self.threshold
         self.score = context_recall_score
         return self.score
 
@@ -284,10 +284,10 @@ class RAGASHarmfulnessMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -320,7 +320,7 @@ class RAGASHarmfulnessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [harmfulness])
         harmfulness_score = scores["harmfulness"]
-        self.success = harmfulness_score >= self.minimum_score
+        self.success = harmfulness_score >= self.threshold
         self.score = harmfulness_score
         return self.score
 
@@ -337,10 +337,10 @@ class RAGASCoherenceMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -371,7 +371,7 @@ class RAGASCoherenceMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [coherence])
         coherence_score = scores["coherence"]
-        self.success = coherence_score >= self.minimum_score
+        self.success = coherence_score >= self.threshold
         self.score = coherence_score
         return self.score
 
@@ -388,10 +388,10 @@ class RAGASMaliciousnessMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -423,7 +423,7 @@ class RAGASMaliciousnessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [maliciousness])
         maliciousness_score = scores["maliciousness"]
-        self.success = maliciousness_score >= self.minimum_score
+        self.success = maliciousness_score >= self.threshold
         self.score = maliciousness_score
         return self.score
 
@@ -440,10 +440,10 @@ class RAGASCorrectnessMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -475,7 +475,7 @@ class RAGASCorrectnessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[correctness])
         correctness_score = scores["correctness"]
-        self.success = correctness_score >= self.minimum_score
+        self.success = correctness_score >= self.threshold
         self.score = correctness_score
         return self.score
 
@@ -492,10 +492,10 @@ class RAGASConcisenessMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -526,7 +526,7 @@ class RAGASConcisenessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[conciseness])
         conciseness_score = scores["conciseness"]
-        self.success = conciseness_score >= self.minimum_score
+        self.success = conciseness_score >= self.threshold
         self.score = conciseness_score
         return self.score
 
@@ -543,10 +543,10 @@ class RagasMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
+        threshold: float = 0.3,
         model: Optional[str] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -594,7 +594,7 @@ class RagasMetric(BaseMetric):
                 1.0 / score for score in score_metadata.values()
             )
 
-        self.success = ragas_score >= self.minimum_score
+        self.success = ragas_score >= self.threshold
         self.score = ragas_score
         self.score_metadata = score_metadata
         return self.score

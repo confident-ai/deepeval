@@ -5,7 +5,7 @@ from typing import Optional, List
 class MetricsMetadata(BaseModel):
     metric: str
     score: float
-    minimum_score: float = Field(None, alias="minimumScore")
+    threshold: float
     reason: Optional[str] = None
 
 
