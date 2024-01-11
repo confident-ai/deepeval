@@ -94,7 +94,7 @@ def test_case():
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra costs."
-    hallucination_metric = HallucinationMetric(minimum_score=0.7)
+    hallucination_metric = HallucinationMetric(threshold=0.7)
     test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
     assert_test(test_case, [hallucination_metric])
 ```
@@ -108,8 +108,8 @@ deepeval test run test_chatbot.py
 **Your test should have passed ✅** Let's breakdown what happened.
 
 - The variable `input` mimics user input, and `actual_output` is a placeholder for your chatbot's intended output based on this query.
-- The variable `context` contains the relevant information from your knowledge base, and `HallucinationMetric(minimum_score=0.7)` is an out-of-the-box metric provided by DeepEval. It helps you evaluate the factual accuracy of your chatbot's output based on the provided context.
-- The metric score ranges from 0 - 1. The `minimum_score=0.7` threshold ultimately determines whether your test has passed or not.
+- The variable `context` contains the relevant information from your knowledge base, and `HallucinationMetric(threshold=0.7)` is an out-of-the-box metric provided by DeepEval. It helps you evaluate the factual accuracy of your chatbot's output based on the provided context.
+- The metric score ranges from 0 - 1. The `threshold=0.7` threshold ultimately determines whether your test has passed or not.
 
 [Read our documentation](https://docs.confident-ai.com/docs/getting-started) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
 
@@ -129,7 +129,7 @@ context = ["All customers are eligible for a 30 day full refund at no extra cost
 # Replace this with the actual output from your LLM application
 actual_output = "We offer a 30-day full refund at no extra costs."
 
-hallucination_metric = HallucinationMetric(minimum_score=0.7)
+hallucination_metric = HallucinationMetric(threshold=0.7)
 test_case = LLMTestCase(
     input=input,
     actual_output=actual_output,
@@ -159,8 +159,8 @@ dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
     dataset,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
-    hallucination_metric = HallucinationMetric(minimum_score=0.3)
-    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+    hallucination_metric = HallucinationMetric(threshold=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
     assert_test(test_case, [hallucination_metric, answer_relevancy_metric])
 ```
 

@@ -10,12 +10,12 @@ class BaseMetric:
     reason: Optional[str] = None
 
     @property
-    def minimum_score(self) -> float:
-        return self._minimum_score
+    def threshold(self) -> float:
+        return self._threshold
 
-    @minimum_score.setter
-    def minimum_score(self, value: float):
-        self._minimum_score = value
+    @threshold.setter
+    def threshold(self, value: float):
+        self._threshold = value
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:

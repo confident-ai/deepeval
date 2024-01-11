@@ -18,11 +18,11 @@ class ContextualRecallVerdict(BaseModel):
 class ContextualRecallMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
         model: Optional[str] = None,
         include_reason: bool = True,
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
         self.include_reason = include_reason
         self.n = 5
@@ -50,7 +50,7 @@ class ContextualRecallMetric(BaseMetric):
                 test_case.expected_output, contextual_recall_score
             )
 
-            self.success = contextual_recall_score >= self.minimum_score
+            self.success = contextual_recall_score >= self.threshold
             self.score = contextual_recall_score
             return self.score
 
@@ -102,7 +102,7 @@ class ContextualRecallMetric(BaseMetric):
         return verdicts
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.minimum_score
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

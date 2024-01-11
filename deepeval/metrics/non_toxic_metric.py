@@ -13,13 +13,13 @@ class NonToxicMetric(BaseMetric):
         self,
         evaluation_params: List[LLMTestCaseParams],
         model_name: str = "original",
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
     ):
         if not evaluation_params:
             raise ValueError("evaluation_params cannot be empty or None")
 
         self.evaluation_params = evaluation_params
-        self.minimum_score, self.model_name = minimum_score, model_name
+        self.threshold, self.model_name = threshold, model_name
 
     def __call__(self, test_case: LLMTestCase):
         score = self.measure(test_case.actual_output)
@@ -58,12 +58,12 @@ class NonToxicMetric(BaseMetric):
         average_score = sum(total_scores) / len(total_scores)
 
         # Check if the average score meets the minimum requirement
-        self.success = average_score >= self.minimum_score
+        self.success = average_score >= self.threshold
         self.score = average_score
         return self.score
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.minimum_score
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

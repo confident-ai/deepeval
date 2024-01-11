@@ -27,11 +27,11 @@ from deepeval.test_case import LLMTestCase
 class LengthMetric(BaseMetric):
     # This metric checks if the output length is greater than 10 characters
     def __init__(self, max_length: int=10):
-        self.minimum_score = max_length
+        self.threshold = max_length
 
     def measure(self, test_case: LLMTestCase):
         # Set self.success and self.score in the "measure" method
-        self.success = len(test_case.actual_output) > self.minimum_score
+        self.success = len(test_case.actual_output) > self.threshold
         if self.success:
             self.score = 1
         else:
@@ -52,7 +52,7 @@ class LengthMetric(BaseMetric):
 
 Notice that a few things has happened:
 
-- `self.minimum_score` was set in `__init__()`
+- `self.threshold` was set in `__init__()`
 - `self.success`, `self.score`, and `self.reason` was set in `measure()`
 - `measure()` takes in an `LLMTestCase`
 - `self.is_successful()` simply returns the success status

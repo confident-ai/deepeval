@@ -15,18 +15,18 @@ class UnBiasedMetric(BaseMetric):
         self,
         evaluation_params: List[LLMTestCaseParams],
         model_name: str = "original",
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
     ):  # see paper for rationale https://arxiv.org/pdf/2208.05777.pdf
         if not evaluation_params:
             raise ValueError("evaluation_params cannot be empty or None")
 
         self.evaluation_params = evaluation_params
         self.model_name = model_name
-        self.minimum_score = minimum_score
+        self.threshold = threshold
 
     def __call__(self, output, expected_output, query: Optional[str] = "-"):
         score = self.measure(output, expected_output)
-        success = score >= self.minimum_score
+        success = score >= self.threshold
         return score
 
     def measure(self, test_case: LLMTestCase, return_all_scores: bool = False):
@@ -61,7 +61,7 @@ class UnBiasedMetric(BaseMetric):
         # Calculate the average score
         average_score = total_score / len(self.evaluation_params)
 
-        self.success = average_score > self.minimum_score
+        self.success = average_score > self.threshold
         self.score = average_score
 
         if return_all_scores:
@@ -70,7 +70,7 @@ class UnBiasedMetric(BaseMetric):
         return average_score
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.minimum_score
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

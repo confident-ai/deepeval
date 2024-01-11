@@ -15,6 +15,7 @@ from .ragas_metric import (
     RAGASContextualRecallMetric,
     RAGASContextualRelevancyMetric,
     RAGASContextualPrecisionMetric,
+    RAGASAnswerRelevancyMetric,
     RAGASConcisenessMetric as ConcisenessMetric,
     RAGASCorrectnessMetric as CorrectnessMetric,
     RAGASCoherenceMetric as CoherenceMetric,

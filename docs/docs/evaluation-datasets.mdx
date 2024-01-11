@@ -157,8 +157,8 @@ dataset = EvaluationDataset(test_cases=[...])
     dataset,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
-    hallucination_metric = HallucinationMetric(minimum_score=0.3)
-    answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+    hallucination_metric = HallucinationMetric(threshold=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
     assert_test(test_case, [hallucination_metric, answer_relevancy_metric])
 
 
@@ -186,8 +186,8 @@ from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(test_cases=[...])
 
-hallucination_metric = HallucinationMetric(minimum_score=0.3)
-answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
+hallucination_metric = HallucinationMetric(threshold=0.3)
+answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
 
 dataset.evaluate([hallucination_metric, answer_relevancy_metric])
 

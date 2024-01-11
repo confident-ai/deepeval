@@ -7,9 +7,9 @@ from deepeval.scorer import Scorer
 class HallucinationMetric(BaseMetric, metaclass=Singleton):
     def __init__(
         self,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
 
     def measure(self, test_case: LLMTestCase):
         if test_case.actual_output is None or test_case.context is None:
@@ -25,12 +25,12 @@ class HallucinationMetric(BaseMetric, metaclass=Singleton):
             if score > max_score:
                 max_score = score
 
-        self.success = max_score >= self.minimum_score
+        self.success = max_score >= self.threshold
         self.score = max_score
         return max_score
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.minimum_score
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

@@ -26,7 +26,7 @@ class LLMEvalMetric(BaseMetric):
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[str] = None,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
     ):
         self.name = name
         self.evaluation_params = evaluation_params
@@ -50,7 +50,7 @@ class LLMEvalMetric(BaseMetric):
         self.criteria = criteria
         self.model = model
         self.evaluation_steps = evaluation_steps
-        self.minimum_score = minimum_score
+        self.threshold = threshold
 
     def measure(self, test_case: LLMTestCase):
         """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
@@ -73,11 +73,11 @@ class LLMEvalMetric(BaseMetric):
         score, reason = self.evaluate(test_case)
         self.reason = reason
         self.score = float(score) / 10
-        self.success = score >= self.minimum_score
+        self.success = score >= self.threshold
         return self.score
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.minimum_score
+        self.success = self.score >= self.threshold
         return self.success
 
     def generate_evaluation_steps(self):

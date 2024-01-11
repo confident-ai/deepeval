@@ -10,7 +10,7 @@ def test_chat_completion():
     metric = LLMEvalMetric(
         name="Validity",
         criteria="The response is a valid response to the prompt.",
-        minimum_score=0.5,
+        threshold=0.5,
         evaluation_params=[
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -41,7 +41,7 @@ def test_chat_completion():
 #     metric = LLMEvalMetric(
 #         name="Validity",
 #         criteria="The response is a valid response to the prompt.",
-#         minimum_score=0.5,
+#         threshold=0.5,
 #         evaluation_params=[
 #             LLMTestCaseParams.INPUT,
 #             LLMTestCaseParams.ACTUAL_OUTPUT,

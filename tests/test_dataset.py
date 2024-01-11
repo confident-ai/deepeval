@@ -41,5 +41,5 @@ def test_create_dataset():
 #     dataset,
 # )
 # def test_customer_chatbot(test_case: LLMTestCase):
-#     hallucination_metric = HallucinationMetric(minimum_score=0.3)
+#     hallucination_metric = HallucinationMetric(threshold=0.3)
 #     assert_test(test_case, [hallucination_metric])
