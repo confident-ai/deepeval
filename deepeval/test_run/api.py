@@ -6,6 +6,7 @@ class MetricsMetadata(BaseModel):
     metric: str
     score: float
     threshold: float
+    success: bool
     reason: Optional[str] = None
 
 

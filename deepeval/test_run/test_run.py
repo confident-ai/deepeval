@@ -93,7 +93,7 @@ class TestRun(BaseModel):
             score=metric.score,
             threshold=metric.threshold,
             reason=metric.reason,
-            # success=metric.is_successful()
+            success=metric.is_successful(),
         )
 
         if existing_test_case:
