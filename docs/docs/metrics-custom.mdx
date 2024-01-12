@@ -39,14 +39,14 @@ class LatencyMetric(BaseMetric):
 
         # You can also set a reason for the score returned.
         # This is particularly useful for a score computed using LLMs
-        self.reason = "..."
+        # self.reason = "Too slow!"
         return self.score
 
     def is_successful(self):
         return self.success
 
     @property
-    def name(self):
+    def __name__(self):
         return "Latency"
 ```
 
