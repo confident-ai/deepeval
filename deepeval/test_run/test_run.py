@@ -88,7 +88,7 @@ class TestRun(BaseModel):
             test_case_id, None
         )
 
-        metrics_metadata = MetricsMetadata(
+        metric_metadata = MetricsMetadata(
             metric=metric.__name__,
             score=metric.score,
             threshold=metric.threshold,
@@ -98,7 +98,7 @@ class TestRun(BaseModel):
 
         if existing_test_case:
             # If it exists, append the metrics to the existing test case
-            existing_test_case.metrics_metadata.append(metrics_metadata)
+            existing_test_case.metrics_metadata.append(metric_metadata)
             if metric.is_successful() and existing_test_case.success == True:
                 success = True
             else:
@@ -112,7 +112,7 @@ class TestRun(BaseModel):
                 actualOutput=test_case.actual_output,
                 expectedOutput=test_case.expected_output,
                 success=metric.is_successful(),
-                metricsMetadata=[metrics_metadata],
+                metricsMetadata=[metric_metadata],
                 runDuration=run_duration,
                 context=test_case.context,
                 retrievalContext=test_case.retrieval_context,
@@ -214,7 +214,7 @@ class TestRunManager:
                 test_case_name += f" ({test_case.id})"
 
             for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.score >= metric_metadata.threshold:
+                if metric_metadata.success:
                     pass_count += 1
                 else:
                     fail_count += 1
@@ -228,7 +228,7 @@ class TestRunManager:
             )
 
             for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.score >= metric_metadata.threshold:
+                if metric_metadata.success:
                     status = "[green]PASSED[/green]"
                 else:
                     status = "[red]FAILED[/red]"
