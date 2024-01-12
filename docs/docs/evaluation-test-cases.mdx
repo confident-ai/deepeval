@@ -158,8 +158,6 @@ prompt_template = """
 
 prompt = prompt_template.format(text="Who's a good boy?")
 
-context = ["Rocky is a good boy."]
-
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["Rocky is a good cat."]
 
@@ -168,7 +166,6 @@ test_case = LLMTestCase(
     # Replace this with your actual LLM application
     actual_output=chatbot.run(prompt),
     expected_output="Me, ruff!",
-    context=context,
     retrieval_context=retrieval_context
 )
 ```
@@ -182,8 +179,6 @@ Remember, `context` is the ideal retrieval results for a given input and typical
 The `execution_time` is an **optional** parameter that represents how long it took your LLM application to finish executing. However, if you're trying to measure something else, like the execution time for only the retrieval part of your RAG pipeline, feel free to supply that number instead of the overall execution time.
 
 ```python
-...
-
 test_case = LLMTestCase(
     input="...",
     actual_output="...",
@@ -201,8 +196,6 @@ test_case = LLMTestCase(
 The `cost` is an **optional** parameter that represents the token cost for a given execution of your LLM application. However, similar to `execution_time`, the `cost` parameter does not strictly have to be the total completion cost (eg., it could be the embedding cost), nor does it have to be in any set currency.
 
 ```python
-...
-
 test_case = LLMTestCase(
     input="...",
     actual_output="...",
