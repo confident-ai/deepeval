@@ -24,14 +24,14 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 
 # Inherit BaseMetric
-class LengthMetric(BaseMetric):
-    # This metric checks if the output length is greater than 10 characters
-    def __init__(self, max_length: int=10):
-        self.threshold = max_length
+class LatencyMetric(BaseMetric):
+    # This metric by default checks if the latency is greater than 10 seconds
+    def __init__(self, max_seconds: int=10):
+        self.threshold = max_seconds
 
     def measure(self, test_case: LLMTestCase):
         # Set self.success and self.score in the "measure" method
-        self.success = len(test_case.actual_output) > self.threshold
+        self.success = len(test_case.execution_time) <= self.threshold
         if self.success:
             self.score = 1
         else:
@@ -47,7 +47,7 @@ class LengthMetric(BaseMetric):
 
     @property
     def name(self):
-        return "Length"
+        return "Latency"
 ```
 
 Notice that a few things has happened:
