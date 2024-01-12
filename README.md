@@ -120,7 +120,7 @@ deepeval test run test_chatbot.py
 Alternatively, you can evaluate without Pytest, which is more suited for a notebook environment.
 
 ```python
-from deepeval import evalate
+from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
 
@@ -135,7 +135,7 @@ test_case = LLMTestCase(
     actual_output=actual_output,
     context=context
 )
-evalate([test_case], [hallucination_metric])
+evaluate([test_case], [hallucination_metric])
 ```
 
 ## Evaluting a Dataset / Test Cases in Bulk
