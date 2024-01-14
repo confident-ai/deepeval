@@ -40,7 +40,7 @@ test_case = LLMTestCase(
     actual_output=actual_output,
     context=context
 )
-metric = HallucinationMetric(minimum_score=0.5)
+metric = HallucinationMetric(threshold=0.5)
 
 metric.measure(test_case)
 print(metric.score)

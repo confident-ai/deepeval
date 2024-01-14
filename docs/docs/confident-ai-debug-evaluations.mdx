@@ -152,7 +152,7 @@ def test_hallucination():
     ]
     input = "What are the requimrents to be president?"
 
-    metric = HallucinationMetric(minimum_score=0.8)
+    metric = HallucinationMetric(threshold=0.8)
     test_case = LLMTestCase(
         input=input,
         actual_output=chatbot.query(user_input=input),

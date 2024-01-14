@@ -24,40 +24,53 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 
 # Inherit BaseMetric
-class LengthMetric(BaseMetric):
-    # This metric checks if the output length is greater than 10 characters
-    def __init__(self, max_length: int=10):
-        self.minimum_score = max_length
+class LatencyMetric(BaseMetric):
+    # This metric by default checks if the latency is greater than 10 seconds
+    def __init__(self, max_seconds: int=10):
+        self.threshold = max_seconds
 
     def measure(self, test_case: LLMTestCase):
         # Set self.success and self.score in the "measure" method
-        self.success = len(test_case.actual_output) > self.minimum_score
+        self.success = test_case.execution_time <= self.threshold
         if self.success:
             self.score = 1
         else:
             self.score = 0
 
-        # You can also set a reason for the score returned.
+        # You can also optionally set a reason for the score returned.
         # This is particularly useful for a score computed using LLMs
-        self.reason = "..."
+        self.reason = "Too slow!"
         return self.score
 
     def is_successful(self):
         return self.success
 
     @property
-    def name(self):
-        return "Length"
+    def __name__(self):
+        return "Latency"
 ```
 
 Notice that a few things has happened:
 
-- `self.minimum_score` was set in `__init__()`
+- `self.threshold` was set in `__init__()`, and this can be either a minimum or maximum threshold
 - `self.success`, `self.score`, and `self.reason` was set in `measure()`
 - `measure()` takes in an `LLMTestCase`
-- `self.is_successful()` simply returns the success status
-- `name()` simply returns a string representing the metric name
+- `is_successful()` simply returns the success status
+- `__name()__` simply returns a string representing the metric name
 
-To create a custom metric without unexpected errors, we recommend you set the appropriate class variables in the appropriate methods as outlined above.
+To create a custom metric without unexpected errors, we recommend you set the appropriate class variables in the appropriate methods as outlined above. You should also note that `self.reason` is **optional**. `self.reason` should be a string representing the rationale behind an LLM computed score. This is only applicable if you're using LLMs as an evaluator in the `measure()` method, and has implemented a way to generate a score reasoning.
 
-You should also note that `self.reason` is **optional**. `self.reason` should be a string representing the rationale behind an LLM computed score. This is only applicable if you're using LLMs as an evaluator in the `measure()` method, and has implemented a way to generate a score reasoning.
+After creating a custom metric, you can use it in the same way as all of `deepeval`'s metrics:
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+
+...
+
+
+# Note that we pass in execution time since the measure method requires it for evaluation
+latency_metric = LatencyMetric(max_seconds=10.0)
+test_case = LLMTestCase(input="...", actual_output="...", execution_time=8.3)
+evaluate([test_case], [latency_metric])
+```
