@@ -566,7 +566,7 @@ class RagasMetric(BaseMetric):
 
         # Create a dataset from the test case
         # Convert the LLMTestCase to a format compatible with Dataset
-        score_metadata = {}
+        score_breakdown = {}
         metrics = [
             RAGASContextualPrecisionMetric(model=self.model),
             RAGASContextualRecallMetric(model=self.model),
@@ -578,7 +578,7 @@ class RagasMetric(BaseMetric):
 
         for metric in metrics:
             score = metric.measure(test_case)
-            score_metadata[metric.__name__] = score
+            score_breakdown[metric.__name__] = score
             if score == 0:
                 warnings_list.append(
                     f"The RAGAS score will be 0 since {metric.__name__} has a score of 0"
@@ -587,16 +587,16 @@ class RagasMetric(BaseMetric):
         for warning in warnings_list:
             print(warning)
 
-        if any(score == 0 for score in score_metadata.values()):
+        if any(score == 0 for score in score_breakdown.values()):
             ragas_score = 0
         else:
-            ragas_score = len(score_metadata) / sum(
-                1.0 / score for score in score_metadata.values()
+            ragas_score = len(score_breakdown) / sum(
+                1.0 / score for score in score_breakdown.values()
             )
 
         self.success = ragas_score >= self.threshold
         self.score = ragas_score
-        self.score_metadata = score_metadata
+        self.score_breakdown = score_breakdown
         return self.score
 
     def is_successful(self):

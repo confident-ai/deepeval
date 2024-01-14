@@ -1,7 +1,7 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 from enum import Enum
+from pydantic import BaseModel, Field
 import json
-from concurrent.futures import ThreadPoolExecutor
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -18,6 +18,17 @@ class ScoreType(Enum):
     ALIGNMENT = "alignment"
 
 
+class Verdict(BaseModel):
+    verdict: str
+    reason: str = Field(default=None)
+
+
+class SummarizationVerdict(BaseModel):
+    question: str = Field(default=None)
+    original_text: Verdict
+    summary: Verdict
+
+
 class SummarizationMetric(BaseMetric):
     def __init__(
         self,
@@ -25,37 +36,36 @@ class SummarizationMetric(BaseMetric):
         model: Optional[str] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
+        include_reason: bool = False,
     ):
         self.threshold = threshold
         self.model = model
-        self.assessment_questions = assessment_questions
+        self.inclusion_questions = assessment_questions
         self.n = n
         self.alignment_score = None
         self.inclusion_score = None
+        self.include_reason = include_reason
 
     def measure(self, test_case: LLMTestCase):
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
 
-        source_document = test_case.input
+        original_text = test_case.input
         summary = test_case.actual_output
 
-        with ThreadPoolExecutor() as executor:
-            future_alignment = executor.submit(
-                self.get_score, ScoreType.ALIGNMENT, source_document, summary
-            )
-            future_inclusion = executor.submit(
-                self.get_score, ScoreType.INCLUSION, source_document, summary
-            )
-
-            # Wait for the results
-            alignment_score = future_alignment.result()
-            inclusion_score = future_inclusion.result()
+        alignment_score = self._generate_score(
+            ScoreType.ALIGNMENT, original_text, summary
+        )
+        inclusion_score = self._generate_score(
+            ScoreType.INCLUSION, original_text, summary
+        )
 
         summarization_score = min(alignment_score, inclusion_score)
 
+        self.reason = self._generate_reason(summarization_score)
+
         self.success = summarization_score >= self.threshold
-        self.score_metadata = {
+        self.score_breakdown = {
             "Alignment": alignment_score,
             "Inclusion": inclusion_score,
         }
@@ -64,74 +74,74 @@ class SummarizationMetric(BaseMetric):
         self.score = summarization_score
         return self.score
 
-    def get_score(
-        self, score_type: ScoreType, source_document: str, summary: str
+    def _generate_reason(self, score: float):
+        if self.include_reason:
+            # TODO: construct verdicts and generate reason for both alignment and inclusion, pass in as json
+            pass
+        else:
+            return None
+
+    def _generate_score(
+        self, score_type: ScoreType, original_text: str, summary: str
     ):
-        questions = []
         if score_type == ScoreType.ALIGNMENT:
-            print("Calculating alignment score...")
-            questions = self.generate_questions(
-                score_type, source_document, summary
+            self.alignment_questions = self._generate_questions(
+                score_type, original_text, summary
             )
+            self.alignment_verdicts = self._generate_verdicts(
+                score_type, original_text, summary
+            )
+            # generate score for each verdict using subverdicts
+            count = 0
+            for verdict in self.alignment_verdicts:
+                if (
+                    verdict.original_text.verdict.strip().lower()
+                    == verdict.summary.verdict.strip().lower()
+                ):
+                    count += 1
+            return count / len(self.alignment_verdicts)
+
         elif score_type == ScoreType.INCLUSION:
-            print("Calculating inclusion score...")
-            if self.assessment_questions is None:
-                questions = self.generate_questions(
-                    score_type, source_document, summary
+            if self.inclusion_questions is None:
+                self.inclusion_questions = self._generate_questions(
+                    score_type, original_text, summary
                 )
-            else:
-                questions = self.assessment_questions
+            self.inclusion_verdicts = self._generate_verdicts(
+                score_type, original_text, summary
+            )
+            count = 0
+            for verdict in self.inclusion_verdicts:
+                if (
+                    verdict.original_text.verdict.strip().lower()
+                    == verdict.summary.verdict.strip().lower()
+                ):
+                    count += 1
+            return count / len(self.inclusion_verdicts)
+            # generate score for each verdict using subverdicts
 
-        score = 0
-        interval = 1 / len(questions)
-        for question in questions:
-            with ThreadPoolExecutor() as executor:
-                future_source_answer = executor.submit(
-                    self.get_answer, question, source_document
-                )
-                future_summary_answer = executor.submit(
-                    self.get_answer, question, summary
-                )
-                source_answer = future_source_answer.result()
-                summary_answer = future_summary_answer.result()
-
-            if source_answer.strip().lower() == summary_answer.strip().lower():
-                score += interval
-
-        return score
-
-    def generate_questions(
-        self,
-        score_type: ScoreType,
-        source_document: str,
-        summary: str,
-    ) -> List[str]:
+    def _generate_questions(
+        self, score_type: ScoreType, original_text: str, summary: str
+    ):
         if score_type == ScoreType.ALIGNMENT:
-            prompt: dict = closed_end_questions_template.format(
-                n=self.n, text=summary
-            )
+            reference_text = summary
         elif score_type == ScoreType.INCLUSION:
-            prompt: dict = closed_end_questions_template.format(
-                n=self.n, text=source_document
-            )
+            reference_text = original_text
 
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
+        # TODO: add generate questions template
 
-        json_output = trimToJson(res.content)
-        data = json.loads(json_output)
+        pass
 
-        return data["questions"]
+    def _generate_verdicts(
+        self, score_type: ScoreType, original_text: str, summary: str
+    ) -> List[SummarizationVerdict]:
+        if score_type == ScoreType.ALIGNMENT:
+            questions = self.alignment_questions
+        elif score_type == ScoreType.INCLUSION:
+            questions = self.inclusion_questions
 
-    def get_answer(self, question: str, text: str) -> str:
-        prompt: dict = closed_end_answers_template.format(
-            question=question, text=text
-        )
+        # TODO: generate verdicts based on questions
 
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
-
-        return res.content
+        pass
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

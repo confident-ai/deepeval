@@ -144,8 +144,8 @@ def print_test_result(test_result: TestResult):
             print(
                 f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, reason: {metric.reason})"
             )
-        if metric.score_metadata:
-            for metric_name, score in metric.score_metadata.items():
+        if metric.score_breakdown:
+            for metric_name, score in metric.score_breakdown.items():
                 print(f"      - {metric_name} (score: {score})")
 
     print("\nFor test case:\n")
