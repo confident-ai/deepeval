@@ -6,6 +6,7 @@ import time
 from dataclasses import dataclass
 import copy
 
+from deepeval.telemetry import capture_evaluation_count
 from deepeval.progress_context import progress_context
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
@@ -90,6 +91,7 @@ def run_test(
     test_run_manager.reset()
     with progress_context("Executing run_test()..."):
         test_result = execute_test([test_case], metrics, False)[0]
+        capture_evaluation_count()
         print_test_result(test_result)
         print("")
         print("-" * 70)
@@ -109,7 +111,7 @@ def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
         ]
         failed_metrics_str = ", ".join(
             [
-                f"{metric.__name__} (score: {metric.score}, minimum_score: {metric.minimum_score})"
+                f"{metric.__name__} (score: {metric.score}, threshold: {metric.threshold})"
                 for metric in failed_metrics
             ]
         )
@@ -120,6 +122,7 @@ def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
     test_run_manager.reset()
     with progress_context("Evaluating testcases..."):
         test_results = execute_test(test_cases, metrics, True)
+        capture_evaluation_count()
         for test_result in test_results:
             print_test_result(test_result)
         print("")
@@ -135,11 +138,11 @@ def print_test_result(test_result: TestResult):
     for metric in test_result.metrics:
         if not metric.is_successful():
             print(
-                f"  - ❌ {metric.__name__} (score: {metric.score}, minimum_score: {metric.minimum_score}, reason: {metric.reason})"
+                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, reason: {metric.reason})"
             )
         else:
             print(
-                f"  - ✅ {metric.__name__} (score: {metric.score}, minimum_score: {metric.minimum_score}, reason: {metric.reason})"
+                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, reason: {metric.reason})"
             )
         if metric.score_metadata:
             for metric_name, score in metric.score_metadata.items():

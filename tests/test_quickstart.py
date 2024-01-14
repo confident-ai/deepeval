@@ -19,7 +19,7 @@ def test_llm_output():
     test_case = LLMTestCase(
         input=input, actual_output=generate_llm_output(input), context=context
     )
-    assert_test(test_case, [HallucinationMetric(minimum_score=0.5)])
+    assert_test(test_case, [HallucinationMetric(threshold=0.5)])
 
 
 def test_llm_output_custom():
@@ -29,7 +29,7 @@ def test_llm_output_custom():
         input="Placerholder", actual_output=actual_output, context=context
     )
     with pytest.raises(AssertionError):
-        assert_test(test_case, [HallucinationMetric(minimum_score=0.5)])
+        assert_test(test_case, [HallucinationMetric(threshold=0.5)])
 
 
 def test_0():

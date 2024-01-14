@@ -24,7 +24,7 @@ class JudgementalGPT(BaseMetric):
         criteria: str,
         evaluation_params: List[LLMTestCaseParams],
         language: Languages = Languages.ENGLISH,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
     ):
         if not isinstance(language, Languages):
             raise TypeError("'language' must be an instance of Languages.")
@@ -33,7 +33,7 @@ class JudgementalGPT(BaseMetric):
         self.name = name
         self.evaluation_params = evaluation_params
         self.language = language.value
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.success = None
         self.reason = None
 
@@ -70,9 +70,10 @@ class JudgementalGPT(BaseMetric):
         )
         self.reason = response.reason
         self.score = response.score / 10
-        self.success = self.score >= self.minimum_score
+        self.success = self.score >= self.threshold
 
         return self.score
 
-    def is_successful(self):
+    def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
         return self.success

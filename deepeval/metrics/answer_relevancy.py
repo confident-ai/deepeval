@@ -7,6 +7,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel
 from deepeval.templates import AnswerRelevancyTemplate
+from deepeval.progress_context import metrics_progress_context
 
 
 class AnswerRelvancyVerdict(BaseModel):
@@ -17,11 +18,13 @@ class AnswerRelvancyVerdict(BaseModel):
 class AnswerRelevancyMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
         model: Optional[str] = None,
+        include_reason: bool = True,
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
+        self.include_reason = include_reason
         self.n = 5
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -33,24 +36,22 @@ class AnswerRelevancyMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        print(
-            "✨ 🍰 ✨ You're using DeepEval's newest Answer Relevancy Metric! This may take a minute."
-        )
-        self.key_points: List[str] = self._generate_key_points(
-            test_case.actual_output, "\n".join(test_case.retrieval_context)
-        )
-        self.verdicts: List[AnswerRelvancyVerdict] = self._generate_verdicts(
-            test_case.input
-        )
+        with metrics_progress_context(self.__name__):
+            self.key_points: List[str] = self._generate_key_points(
+                test_case.actual_output, "\n".join(test_case.retrieval_context)
+            )
+            self.verdicts: List[
+                AnswerRelvancyVerdict
+            ] = self._generate_verdicts(test_case.input)
 
-        answer_relevancy_score = self._generate_score()
+            answer_relevancy_score = self._generate_score()
 
-        self.reason = self._generate_reason(
-            test_case.input, test_case.actual_output, answer_relevancy_score
-        )
-        self.success = answer_relevancy_score >= self.minimum_score
-        self.score = answer_relevancy_score
-        return self.score
+            self.reason = self._generate_reason(
+                test_case.input, test_case.actual_output, answer_relevancy_score
+            )
+            self.success = answer_relevancy_score >= self.threshold
+            self.score = answer_relevancy_score
+            return self.score
 
     def _generate_score(self):
         relevant_count = 0
@@ -63,6 +64,9 @@ class AnswerRelevancyMetric(BaseMetric):
     def _generate_reason(
         self, original_question: str, answer: str, score: float
     ) -> str:
+        if self.include_reason is False:
+            return None
+
         irrelevant_points = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
@@ -111,6 +115,7 @@ class AnswerRelevancyMetric(BaseMetric):
         return data["key_points"]
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

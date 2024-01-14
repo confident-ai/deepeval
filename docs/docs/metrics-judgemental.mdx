@@ -1,7 +1,7 @@
 ---
 id: metrics-judgemental
-title: Judgemental GPT
-sidebar_label: Judgemental GPT
+title: JudgementalGPT
+sidebar_label: JudgementalGPT
 ---
 
 `JudgementalGPT` is an LLM agent developed in-house by [Confident AI](https://confident-ai.com) that's dedicated to evaluation and is superior to `LLMEvalMetric`. While it operates similarly to `LLMEvalMetric` by utilizing LLMs for scoring, it:
@@ -39,7 +39,7 @@ code_correctness_metric = JudgementalGPT(
     criteria="Code Correctness - determine whether the code in the 'actual output' produces a valid JSON.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     language=Languages.SPANISH,
-    minimum_score=0.5,
+    threshold=0.5,
 )
 ```
 
@@ -49,7 +49,7 @@ Under the hood, `JudgementalGPT` sends a request to Confident AI's servers that 
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
 - [Optional] `language`: type `Language`, specifies what language to return the reasoning in.
-- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
+- [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 
 Similar to `LLMEvalMetric`, you can access the judgemental `score` and `reason` for `JudgementalGPT`:
 

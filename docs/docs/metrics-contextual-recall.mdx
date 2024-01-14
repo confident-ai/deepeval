@@ -4,7 +4,7 @@ title: Contextual Recall
 sidebar_label: Contextual Recall
 ---
 
-The contextual recall metric determines the recall of the retrieved context using the annotated answer as a reference to evaluate the performance of your RAG pipeline's retriever. Calculated using `expected_output` and `retrieval_context`.
+The contextual recall metric measures the quality of your RAG pipeline's retriever by evaluating the extent of which the `retrieval_context` aligns with the `expected_output`. `deepeval`'s contextual recall metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 ## Required Parameters
 
@@ -31,7 +31,11 @@ expected_output = "You are eligible for a 30 day full refund at no extra cost."
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
-metric = ContextualRecallMetric(minimum_score=0.7, model="gpt-3.5-turbo")
+metric = ContextualRecallMetric(
+    threshold=0.7,
+    model="gpt-4",
+    include_reason=True
+)
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     actual_output=actual_output,
@@ -41,7 +45,14 @@ test_case = LLMTestCase(
 
 metric.measure(test_case)
 print(metric.score)
+print(metric.reason)
 
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])
+```
+
+You can also choose to fallback to Ragas' contextual recall metric (which has a similar implemention). This however is not capable of generating a reason.
+
+```python
+from deepeval.metrics import RAGASContextualRecallMetric
 ```

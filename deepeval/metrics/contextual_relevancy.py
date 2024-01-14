@@ -8,6 +8,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel
 from deepeval.templates import ContextualRelevancyTemplate
+from deepeval.progress_context import metrics_progress_context
 
 
 class ContextualRelevancyVerdict(BaseModel):
@@ -18,11 +19,13 @@ class ContextualRelevancyVerdict(BaseModel):
 class ContextualRelevancyMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
         model: Optional[str] = "gpt-4",
+        include_reason: bool = True,
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
+        self.include_reason = include_reason
 
     def measure(self, test_case: LLMTestCase) -> float:
         if (
@@ -33,26 +36,27 @@ class ContextualRelevancyMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        print(
-            "✨ 🍰 ✨ You're using DeepEval's newest Contextual Relevancy Metric! This may take a minute."
-        )
-        self.verdicts_list: List[
-            List[ContextualRelevancyVerdict]
-        ] = self._generate_verdicts_list(
-            test_case.input, test_case.retrieval_context
-        )
-        contextual_recall_score = self._generate_score()
+        with metrics_progress_context(self.__name__):
+            self.verdicts_list: List[
+                List[ContextualRelevancyVerdict]
+            ] = self._generate_verdicts_list(
+                test_case.input, test_case.retrieval_context
+            )
+            contextual_recall_score = self._generate_score()
 
-        self.reason = self._generate_reason(
-            test_case.input, contextual_recall_score
-        )
+            self.reason = self._generate_reason(
+                test_case.input, contextual_recall_score
+            )
 
-        self.success = contextual_recall_score >= self.minimum_score
-        self.score = contextual_recall_score
+            self.success = contextual_recall_score >= self.threshold
+            self.score = contextual_recall_score
 
-        return self.score
+            return self.score
 
     def _generate_reason(self, input: str, score: float):
+        if self.include_reason is False:
+            return None
+
         irrelevant_sentences = []
         for index, verdicts in enumerate(self.verdicts_list):
             for verdict in verdicts:
@@ -127,6 +131,7 @@ class ContextualRelevancyMetric(BaseMetric):
         return verdicts_list
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

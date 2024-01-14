@@ -1,8 +1,6 @@
-"""Tests for answer relevancy
-"""
 import pytest
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics import ContextualPrecisionMetric
 from deepeval import assert_test
 
 question = "What are the primary benefits of meditation?"
@@ -44,13 +42,30 @@ attention span, and improve memory. It's particularly beneficial in slowing down
 enhancing brain functions related to concentration and attention.
 """
 
+four = """
+Understanding comets and asteroids is crucial in studying the solar system's formation 
+and evolution. Comets, which are remnants from the outer solar system, can provide 
+insights into its icy and volatile components. Asteroids, primarily remnants of the 
+early solar system's formation, offer clues about the materials that didn't form into 
+planets, mostly located in the asteroid belt.
+"""
+
+five = """
+The physical characteristics and orbital paths of comets and asteroids vary significantly. 
+Comets often have highly elliptical orbits, taking them close to the Sun and then far into 
+the outer solar system. Their icy composition leads to distinctive features like tails and 
+comas. Asteroids, conversely, have more circular orbits and lack these visible features, 
+being composed mostly of rock and metal.
+"""
+
 
 @pytest.mark.skip(reason="openai is expensive")
-def test_answer_relevancy():
-    metric = AnswerRelevancyMetric(threshold=0.5)
+def test_contextual_precision():
+    metric = ContextualPrecisionMetric(threshold=0.5)
     test_case = LLMTestCase(
         input=question,
         actual_output=answer,
-        retrieval_context=[one, two, three],
+        expected_output=answer,
+        retrieval_context=[one, four, two, five, three],
     )
     assert_test(test_case, [metric])

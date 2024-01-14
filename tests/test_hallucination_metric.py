@@ -5,7 +5,7 @@ from deepeval import assert_test
 
 
 def test_hallucination_metric():
-    metric = HallucinationMetric(minimum_score=0.5)
+    metric = HallucinationMetric(threshold=0.5)
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="A blond drinking water in public.",
@@ -17,7 +17,7 @@ def test_hallucination_metric():
 
 
 def test_hallucination_metric_2():
-    metric = HallucinationMetric(minimum_score=0.6)
+    metric = HallucinationMetric(threshold=0.6)
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="Python is a programming language.",
@@ -28,7 +28,7 @@ def test_hallucination_metric_2():
 
 
 def test_hallucination_metric_3():
-    metric = HallucinationMetric(minimum_score=0.6)
+    metric = HallucinationMetric(threshold=0.6)
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="Python is a programming language.",

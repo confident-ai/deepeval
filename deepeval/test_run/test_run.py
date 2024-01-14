@@ -84,26 +84,25 @@ class TestRun(BaseModel):
     ):
         # Check if test case with the same ID already exists
         test_case_id = id(test_case)
-        existing_test_case: LLMTestCase = self.dict_test_cases.get(
+        existing_test_case: APITestCase = self.dict_test_cases.get(
             test_case_id, None
         )
 
-        metrics_metadata = MetricsMetadata(
+        metric_metadata = MetricsMetadata(
             metric=metric.__name__,
             score=metric.score,
-            minimumScore=0.5,
+            threshold=metric.threshold,
             reason=metric.reason,
+            success=metric.is_successful(),
         )
 
         if existing_test_case:
             # If it exists, append the metrics to the existing test case
-            existing_test_case.metrics_metadata.append(metrics_metadata)
-            success = all(
-                [
-                    metric.score >= metric.minimum_score
-                    for metric in existing_test_case.metrics_metadata
-                ]
-            )
+            existing_test_case.metrics_metadata.append(metric_metadata)
+            if metric.is_successful() and existing_test_case.success == True:
+                success = True
+            else:
+                success = False
             # Update the success status
             existing_test_case.success = success
         else:
@@ -113,7 +112,7 @@ class TestRun(BaseModel):
                 actualOutput=test_case.actual_output,
                 expectedOutput=test_case.expected_output,
                 success=metric.is_successful(),
-                metricsMetadata=[metrics_metadata],
+                metricsMetadata=[metric_metadata],
                 runDuration=run_duration,
                 context=test_case.context,
                 retrievalContext=test_case.retrieval_context,
@@ -201,11 +200,11 @@ class TestRunManager:
 
     def display_results_table(self, test_run: TestRun):
         table = Table(title="Test Results")
-        table.add_column("Test case", justify="right")
-        table.add_column("Metric", justify="right")
-        table.add_column("Score", justify="right")
-        table.add_column("Status", justify="right")
-        table.add_column("Overall Success Rate", justify="right")
+        table.add_column("Test case", justify="left")
+        table.add_column("Metric", justify="left")
+        table.add_column("Score", justify="left")
+        table.add_column("Status", justify="left")
+        table.add_column("Overall Success Rate", justify="left")
 
         for index, test_case in enumerate(test_run.test_cases):
             pass_count = 0
@@ -215,7 +214,7 @@ class TestRunManager:
                 test_case_name += f" ({test_case.id})"
 
             for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.score >= metric_metadata.minimum_score:
+                if metric_metadata.success:
                     pass_count += 1
                 else:
                     fail_count += 1
@@ -229,7 +228,7 @@ class TestRunManager:
             )
 
             for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.score >= metric_metadata.minimum_score:
+                if metric_metadata.success:
                     status = "[green]PASSED[/green]"
                 else:
                     status = "[red]FAILED[/red]"
@@ -237,7 +236,7 @@ class TestRunManager:
                 table.add_row(
                     "",
                     str(metric_metadata.metric),
-                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.minimum_score})",
+                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.threshold}, reason={metric_metadata.reason})",
                     status,
                     "",
                 )

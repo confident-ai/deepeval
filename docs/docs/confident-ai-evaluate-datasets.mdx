@@ -111,7 +111,7 @@ dataset.pull(alias="My Confident Dataset")
     dataset,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
-    hallucination_metric = HallucinationMetric(minimum_score=0.3)
+    hallucination_metric = HallucinationMetric(threshold=0.3)
     assert_test(test_case, [hallucination_metric])
 ```
 
@@ -128,7 +128,7 @@ from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric
 from deepeval.dataset import EvaluationDataset
 
-hallucination_metric = HallucinationMetric(minimum_score=0.3)
+hallucination_metric = HallucinationMetric(threshold=0.3)
 
 # Initialize empty dataset object and pull from Confident
 dataset = EvaluationDataset()
