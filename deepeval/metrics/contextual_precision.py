@@ -19,11 +19,11 @@ class ContextualPrecisionVerdict(BaseModel):
 class ContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
         model: Optional[str] = None,
         include_reason: bool = True,
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.include_reason = include_reason
         self.model = model
 
@@ -52,7 +52,7 @@ class ContextualPrecisionMetric(BaseMetric):
                 test_case.input, contextual_precision_score
             )
 
-            self.success = contextual_precision_score >= self.minimum_score
+            self.success = contextual_precision_score >= self.threshold
             self.score = contextual_precision_score
             return self.score
 
@@ -136,6 +136,7 @@ class ContextualPrecisionMetric(BaseMetric):
         return verdicts
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

@@ -20,11 +20,11 @@ class FaithfulnessVerdict(BaseModel):
 class FaithfulnessMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
         model: Optional[str] = None,
         include_reason: bool = True,
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         # Don't set self.chat_model when using threading
         self.model = model
         self.include_reason = include_reason
@@ -49,7 +49,7 @@ class FaithfulnessMetric(BaseMetric):
             )
             faithfulness_score = self._generate_score()
             self.reason = self._generate_reason(faithfulness_score)
-            self.success = faithfulness_score >= self.minimum_score
+            self.success = faithfulness_score >= self.threshold
             self.score = faithfulness_score
             return self.score
 
@@ -172,6 +172,7 @@ class FaithfulnessMetric(BaseMetric):
         return verdicts_list
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

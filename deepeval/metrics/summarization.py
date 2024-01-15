@@ -21,12 +21,12 @@ class ScoreType(Enum):
 class SummarizationMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
         model: Optional[str] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
         self.assessment_questions = assessment_questions
         self.n = n
@@ -54,7 +54,7 @@ class SummarizationMetric(BaseMetric):
 
         summarization_score = min(alignment_score, inclusion_score)
 
-        self.success = summarization_score >= self.minimum_score
+        self.success = summarization_score >= self.threshold
         self.score_metadata = {
             "Alignment": alignment_score,
             "Inclusion": inclusion_score,
@@ -134,6 +134,7 @@ class SummarizationMetric(BaseMetric):
         return res.content
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

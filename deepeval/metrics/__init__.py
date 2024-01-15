@@ -11,10 +11,12 @@ from .contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision import ContextualPrecisionMetric
 from .ragas_metric import (
     RagasMetric,
+    RAGASAnswerRelevancyMetric,
     RAGASFaithfulnessMetric,
     RAGASContextualRecallMetric,
     RAGASContextualRelevancyMetric,
     RAGASContextualPrecisionMetric,
+    RAGASAnswerRelevancyMetric,
     RAGASConcisenessMetric as ConcisenessMetric,
     RAGASCorrectnessMetric as CorrectnessMetric,
     RAGASCoherenceMetric as CoherenceMetric,

@@ -18,11 +18,11 @@ class AnswerRelvancyVerdict(BaseModel):
 class AnswerRelevancyMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.5,
+        threshold: float = 0.5,
         model: Optional[str] = None,
         include_reason: bool = True,
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
         self.include_reason = include_reason
         self.n = 5
@@ -49,7 +49,7 @@ class AnswerRelevancyMetric(BaseMetric):
             self.reason = self._generate_reason(
                 test_case.input, test_case.actual_output, answer_relevancy_score
             )
-            self.success = answer_relevancy_score >= self.minimum_score
+            self.success = answer_relevancy_score >= self.threshold
             self.score = answer_relevancy_score
             return self.score
 
@@ -115,6 +115,7 @@ class AnswerRelevancyMetric(BaseMetric):
         return data["key_points"]
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

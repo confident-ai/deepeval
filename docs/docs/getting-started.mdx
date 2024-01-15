@@ -60,7 +60,7 @@ def test_hallucination():
 
     # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(minimum_score=0.7)
+    hallucination_metric = HallucinationMetric(threshold=0.7)
     test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
     assert_test(test_case, [hallucination_metric])
 ```
@@ -74,8 +74,8 @@ deepeval test run test_example.py
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
 - The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
-- The variable `context` contains the relevant information from your knowledge base, and `HallucinationMetric(minimum_score=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context.
-- All metric scores range from 0 - 1, which the `minimum_score=0.7` threshold ultimately determines if your test have passed or not.
+- The variable `context` contains the relevant information from your knowledge base, and `HallucinationMetric(threshold=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context.
+- All metric scores range from 0 - 1, which the `threshold=0.7` threshold ultimately determines if your test have passed or not.
 
 :::note
 `deepeval`'s default metrics are not evaluated using LLMs. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
@@ -112,7 +112,7 @@ def test_summarization():
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
         evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-        minimum_score=0.5
+        threshold=0.5
     )
     test_case = LLMTestCase(input=input, actual_output=actual_output)
     assert_test(test_case, [summarization_metric])
@@ -130,10 +130,10 @@ from deepeval.metrics import BaseMetric
 class LengthMetric(BaseMetric):
     # This metric checks if the output length is greater than 10 characters
     def __init__(self, max_length: int=10):
-        self.minimum_score = max_length
+        self.threshold = max_length
 
     def measure(self, test_case: LLMTestCase):
-        self.success = len(test_case.actual_output) > self.minimum_score
+        self.success = len(test_case.actual_output) > self.threshold
         if self.success:
             score = 1
         else:
@@ -184,13 +184,13 @@ def test_everything():
 
     # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(minimum_score=0.7)
+    hallucination_metric = HallucinationMetric(threshold=0.7)
     length_metric = LengthMetric(max_length=10)
     summarization_metric = LLMEvalMetric(
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
         evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-        minimum_score=0.5
+        threshold=0.5
     )
 
     test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
@@ -262,7 +262,7 @@ def test_hallucination(test_case: dict):
     # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
 
-    hallucination_metric = HallucinationMetric(minimum_score=0.7)
+    hallucination_metric = HallucinationMetric(threshold=0.7)
     test_case = LLMTestCase(
         input=input,
         actual_output=actual_output,
