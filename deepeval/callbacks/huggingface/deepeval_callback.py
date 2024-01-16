@@ -16,6 +16,8 @@ from deepeval.metrics import BaseMetric
 from deepeval.dataset import EvaluationDataset
 from deepeval.evaluate import execute_test
 
+from .utils import reorder
+
 
 class DeepEvalCallback(TrainerCallback):
     """
@@ -154,21 +156,22 @@ class DeepEvalCallback(TrainerCallback):
         ):
             self.progress.update(self.progress_task, advance=1)
             if self.epoch_counter % self.show_table_every == 0:
-                self.spinner.reset(self.spinner_task, description="[STATUS] Evaluating test-cases (might take up few minutes) ...")
+                self.spinner.reset(self.spinner_task, description="[STATUS] Evaluating test-cases (might take up few minutes)")
                 
                 scores = self._calculate_metric_scores()
                 self.deepeval_metric_history.append(scores)
                 self.deepeval_metric_history[-1].update(state.log_history[-1])
                 
-                self.spinner.reset(self.spinner_task, description="[STATUS] Training in Progress ...")
+                self.spinner.reset(self.spinner_task, description="[STATUS] Training in Progress")
 
                 def generate_table():
                     new_table = Table()
                     cols = Columns([new_table,  self.spinner, self.progress], equal=True, expand=True)
-                    for key in self.deepeval_metric_history[-1].keys():
+                    order = reorder(self.deepeval_metric_history[-1], )
+                    for key in order:
                         new_table.add_column(key)
                     for row in self.deepeval_metric_history:
-                        new_table.add_row(*[str(value) for value in row.values()])
+                        new_table.add_row(*[str(row[value]) for value in order])
                     return cols
                 
                 self.live.update(generate_table(), refresh=True)
@@ -194,15 +197,17 @@ class DeepEvalCallback(TrainerCallback):
         Event triggered at the begining of model training.
         """
         self.progress = Progress(
-            TextColumn("{task.description} [progress.percentage][{task.percentage:>3.1f}%]:", justify="right"),
+            TextColumn("{task.description} [progress.percentage][green][{task.percentage:>3.1f}%]:", justify="right"),
             BarColumn(),
             TextColumn("[green][ {task.completed}/{task.total} epochs ]", justify="right"),
         )
         self.progress_task = self.progress.add_task("Train Progress", total=self.trainer.args.num_train_epochs)
         
         self.spinner = Progress(
-            SpinnerColumn(),
             TextColumn("{task.description}", justify="right"),
-            transient=True
+            SpinnerColumn(spinner_name="simpleDotsScrolling")
         )
-        self.spinner_task = self.spinner.add_task("[STATUS] Training in Progress ...", total=9999)
+        self.spinner_task = self.spinner.add_task("[blue][STATUS] [white]Training in Progress")
+        
+        initial_columns = Columns([Table(), self.spinner, self.progress], equal=True, expand=True)
+        self.live.update(initial_columns, refresh=True)
