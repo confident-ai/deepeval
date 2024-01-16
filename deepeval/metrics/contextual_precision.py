@@ -1,6 +1,7 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import json
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.utils import trimToJson
 from deepeval.test_case import LLMTestCase
@@ -20,7 +21,7 @@ class ContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[str] = None,
+        model: Optional[Union[str, BaseChatModel]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
@@ -78,7 +79,7 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(score, ".2f"),
         )
-        chat_model = GPTModel(model_name=self.model)
+        chat_model = GPTModel(model=self.model)
         res = chat_model(prompt)
 
         return res.content
@@ -117,7 +118,7 @@ class ContextualPrecisionMetric(BaseMetric):
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
-        chat_model = GPTModel(model_name=self.model)
+        chat_model = GPTModel(model=self.model)
         res = chat_model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)

@@ -1,7 +1,8 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 from threading import Thread, Lock
 import json
 from pydantic import BaseModel, Field
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -21,7 +22,7 @@ class FaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[str] = None,
+        model: Optional[Union[str, BaseChatModel]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
@@ -80,7 +81,7 @@ class FaithfulnessMetric(BaseMetric):
             score=format(score, ".2f"),
         )
 
-        chat_model = GPTModel(model_name=self.model)
+        chat_model = GPTModel(model=self.model)
         res = chat_model(prompt)
         return res.content
 
@@ -104,7 +105,7 @@ class FaithfulnessMetric(BaseMetric):
         self, retrieval_context: List[str]
     ) -> List[List[str]]:
         truths_list: List[List[str]] = []
-        chat_model = GPTModel(model_name=self.model)
+        chat_model = GPTModel(model=self.model)
         threads = []
         lock = Lock()
 
@@ -154,7 +155,7 @@ class FaithfulnessMetric(BaseMetric):
         self, truths_list: List[List[str]], text: str
     ) -> List[List[FaithfulnessVerdict]]:
         verdicts_list: List[List[FaithfulnessVerdict]] = []
-        chat_model = GPTModel(model_name=self.model)
+        chat_model = GPTModel(model=self.model)
         threads = []
         lock = Lock()
 
