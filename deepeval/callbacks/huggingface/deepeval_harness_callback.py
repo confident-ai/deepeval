@@ -12,3 +12,5 @@ class DeepEvalHarnessCallback(TrainerCallback):
     def __init__(self, experiments: Union[BaseEvaluationExperiment, List[BaseEvaluationExperiment]]):
         super().__init__()
         self.experiments = experiments
+        
+        raise NotImplementedError("DeepEvalHarnessCallback is WIP")
