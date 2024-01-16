@@ -1,6 +1,5 @@
 from typing import Union, List, Dict
 
-from tqdm import tqdm
 from rich.console import Console
 from rich.table import Table
 from rich.live import Live
@@ -16,7 +15,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.dataset import EvaluationDataset
 from deepeval.evaluate import execute_test
 
-from .utils import reorder
+from .utils import get_column_order
 
 
 class DeepEvalCallback(TrainerCallback):
@@ -50,6 +49,21 @@ class DeepEvalCallback(TrainerCallback):
         self.tokenizer_args = tokenizer_args
         self.aggregation_method = aggregation_method
         self.trainer = trainer
+        
+        self.task_descriptions = {
+            "training": "[blue][STATUS] [white]Training in Progress",
+            "evaluate": "[blue][STATUS] [white]Evaluating test-cases (might take up few minutes)",
+            "training_end": "[blue][STATUS] [white]Training Ended",
+        }
+        self.progress_bar_columns = [
+            TextColumn("{task.description} [progress.percentage][green][{task.percentage:>3.1f}%]:", justify="right"),
+            BarColumn(),
+            TextColumn("[green][ {task.completed}/{task.total} epochs ]", justify="right"),
+        ]
+        self.spinner_columns = [
+            TextColumn("{task.description}", justify="right"),
+            SpinnerColumn(spinner_name="simpleDotsScrolling")
+        ]
         
         self.train_bar_started = False
         self.epoch_counter = 0
@@ -132,9 +146,7 @@ class DeepEvalCallback(TrainerCallback):
         """
         Event triggered at the end of each training epoch.
         """
-        
         control.should_log = True
-
 
     def on_log(self, 
         args: TrainingArguments,
@@ -145,36 +157,41 @@ class DeepEvalCallback(TrainerCallback):
         """
         Event triggered after logging the last logs.
         """
-        
         if not self.train_bar_started:
             self.progress.start()
             self.train_bar_started = True
             
-        if (
-            self.show_table
-            and len(state.log_history) <= self.trainer.args.num_train_epochs
-        ):
+        if (self.show_table and len(state.log_history) <= self.trainer.args.num_train_epochs):
             self.progress.update(self.progress_task, advance=1)
+            
             if self.epoch_counter % self.show_table_every == 0:
-                self.spinner.reset(self.spinner_task, description="[STATUS] Evaluating test-cases (might take up few minutes)")
+                self.spinner.reset(self.spinner_task, description=self.task_descriptions["evaluate"])
                 
                 scores = self._calculate_metric_scores()
                 self.deepeval_metric_history.append(scores)
                 self.deepeval_metric_history[-1].update(state.log_history[-1])
                 
-                self.spinner.reset(self.spinner_task, description="[STATUS] Training in Progress")
-
-                def generate_table():
-                    new_table = Table()
-                    cols = Columns([new_table,  self.spinner, self.progress], equal=True, expand=True)
-                    order = reorder(self.deepeval_metric_history[-1], )
-                    for key in order:
-                        new_table.add_column(key)
-                    for row in self.deepeval_metric_history:
-                        new_table.add_row(*[str(row[value]) for value in order])
-                    return cols
+                self.spinner.reset(self.spinner_task, description=self.task_descriptions["training"])
+                self.live.update(self._generate_table(), refresh=True)
                 
-                self.live.update(generate_table(), refresh=True)
+    def _generate_table(self):
+        """
+        Generates table, along with progress bars
+
+        Returns:
+            rich.Columns: contains table and 2 progress bars
+        """
+        new_table = Table()
+        cols = Columns([new_table,  self.spinner, self.progress], equal=True, expand=True)
+        order = get_column_order(self.deepeval_metric_history[-1])
+        
+        for key in order:
+            new_table.add_column(key)
+            
+        for row in self.deepeval_metric_history:
+            new_table.add_row(*[str(row[value]) for value in order])
+            
+        return cols
 
     def on_train_end(self,
         args: TrainingArguments,
@@ -185,7 +202,8 @@ class DeepEvalCallback(TrainerCallback):
         """
         Event triggered at the end of model training.
         """
-        self.progress.stop()
+        self.spinner.reset(self.spinner_task, description=self.task_descriptions["training_end"])
+        self.live.stop()
         
     def on_train_begin(self,
         args: TrainingArguments,
@@ -196,18 +214,11 @@ class DeepEvalCallback(TrainerCallback):
         """
         Event triggered at the begining of model training.
         """
-        self.progress = Progress(
-            TextColumn("{task.description} [progress.percentage][green][{task.percentage:>3.1f}%]:", justify="right"),
-            BarColumn(),
-            TextColumn("[green][ {task.completed}/{task.total} epochs ]", justify="right"),
-        )
-        self.progress_task = self.progress.add_task("Train Progress", total=self.trainer.args.num_train_epochs)
+        self.progress = Progress(*self.progress_bar_columns)
+        self.spinner = Progress(*self.spinner_columns)
         
-        self.spinner = Progress(
-            TextColumn("{task.description}", justify="right"),
-            SpinnerColumn(spinner_name="simpleDotsScrolling")
-        )
-        self.spinner_task = self.spinner.add_task("[blue][STATUS] [white]Training in Progress")
+        self.progress_task = self.progress.add_task("Train Progress", total=self.trainer.args.num_train_epochs)
+        self.spinner_task = self.spinner.add_task(self.task_descriptions["training"])
         
         initial_columns = Columns([Table(), self.spinner, self.progress], equal=True, expand=True)
         self.live.update(initial_columns, refresh=True)
