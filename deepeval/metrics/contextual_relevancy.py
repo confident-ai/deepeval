@@ -70,7 +70,7 @@ class ContextualRelevancyMetric(BaseMetric):
             score=format(score, ".2f"),
         )
 
-        chat_model = GPTModel(model_name=self.model)
+        chat_model = GPTModel(model=self.model)
         res = chat_model(prompt)
         return res.content
 
@@ -114,7 +114,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self, text: str, retrieval_context: List[str]
     ) -> List[List[ContextualRelevancyVerdict]]:
         verdicts_list: List[List[ContextualRelevancyVerdict]] = []
-        chat_model = GPTModel(model_name=self.model)
+        chat_model = GPTModel(model=self.model)
         threads = []
         lock = Lock()
         for context in retrieval_context:

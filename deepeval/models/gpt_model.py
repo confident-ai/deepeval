@@ -1,7 +1,8 @@
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
+from langchain_core.language_models import BaseChatModel
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.base import DeepEvalBaseModel
 from deepeval.chat_completion.retry import retry_with_exponential_backoff
@@ -23,25 +24,32 @@ default_gpt_model = "gpt-4-1106-preview"
 class GPTModel(DeepEvalBaseModel):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[Union[str, BaseChatModel]] = None,
         model_kwargs: Dict = {},
         *args,
         **kwargs,
     ):
-        if model_name is not None:
-            assert (
-                model_name in valid_gpt_models
-            ), f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
-        else:
-            model_name = default_gpt_model
+        model_name = None
+        custom_model = None
+        if isinstance(model, str):
+            model_name = model
+            if model_name not in valid_gpt_models:
+                raise ValueError(
+                    f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
+                )
+            else:
+                model_name = default_gpt_model
+        elif isinstance(model, BaseChatModel):
+            custom_model = model
 
+        self.custom_model = custom_model
         self.model_kwargs = model_kwargs
-
-        # TODO: you should set the self.model here instead of loading it everytime
-
         super().__init__(model_name, *args, **kwargs)
 
     def load_model(self):
+        if self.custom_model:
+            return self.custom_model
+
         if self.should_use_azure_openai():
             openai_api_key = KEY_FILE_HANDLER.fetch_data(
                 KeyValues.AZURE_OPENAI_API_KEY

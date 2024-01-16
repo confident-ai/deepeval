@@ -4,8 +4,8 @@
 from typing import List
 import time
 from dataclasses import dataclass
-import copy
 
+from deepeval.utils import drop_and_copy
 from deepeval.telemetry import capture_evaluation_count
 from deepeval.progress_context import progress_context
 from deepeval.metrics import BaseMetric
@@ -74,7 +74,7 @@ def execute_test(
 
         count += 1
         test_result = create_test_result(
-            test_case, success, copy.deepcopy(metrics)
+            test_case, success, drop_and_copy(metrics, ["model"])
         )
         test_results.append(test_result)
 

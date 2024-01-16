@@ -1,7 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from enum import Enum
 import json
 from concurrent.futures import ThreadPoolExecutor
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -22,7 +23,7 @@ class SummarizationMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[str] = None,
+        model: Optional[Union[str, BaseChatModel]] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
     ):
@@ -115,7 +116,7 @@ class SummarizationMetric(BaseMetric):
                 n=self.n, text=source_document
             )
 
-        chat_model = GPTModel(model_name=self.model)
+        chat_model = GPTModel(model=self.model)
         res = chat_model(prompt)
 
         json_output = trimToJson(res.content)
@@ -128,7 +129,7 @@ class SummarizationMetric(BaseMetric):
             question=question, text=text
         )
 
-        chat_model = GPTModel(model_name=self.model)
+        chat_model = GPTModel(model=self.model)
         res = chat_model(prompt)
 
         return res.content
