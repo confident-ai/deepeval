@@ -253,7 +253,7 @@ Similar to Pytest, `deepeval` allows you to assert any test case you create by c
 - `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics
 
-A test case passes only if all metrics meet their respective evaluation criterion. Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
+**A test case passes only if all metrics passess.** Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
 
 ```python title="test_assert_example.py"
 # A hypothetical LLM application example
