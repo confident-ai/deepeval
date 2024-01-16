@@ -1,8 +1,9 @@
 """An implementation of the Ragas metric
 """
-from typing import Optional
-
+from typing import Optional, Union
 from ragas.llms import LangchainLLM
+from langchain_core.language_models import BaseChatModel
+
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.models import GPTModel
@@ -18,7 +19,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -75,7 +76,7 @@ class RAGASContextualRelevancyMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -131,7 +132,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -181,7 +182,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -233,7 +234,7 @@ class RAGASContextualRecallMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -285,7 +286,7 @@ class RAGASHarmfulnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -338,7 +339,7 @@ class RAGASCoherenceMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -389,7 +390,7 @@ class RAGASMaliciousnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -441,7 +442,7 @@ class RAGASCorrectnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -493,7 +494,7 @@ class RAGASConcisenessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
@@ -544,7 +545,7 @@ class RagasMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = model
