@@ -10,25 +10,7 @@ sidebar_label: Evals in Production
 
 ## Setup Tracking
 
-Simply add `deepeval.track(...)` in your application to start tracking events. The `track()` function takes in the following arguments:
-
-- `event_name`: type `str` specifying the event tracked
-- `model`: type `str` specifying the name of the LLM model used
-- `input`: type `str`
-- `output`: type `str`
-- [Optional] `distinct_id`: type `str` to identify different users using your LLM application
-- [Optional] `conversation_id`: type `str` to group together multiple messages under a single conversation thread
-- [Optional] `completion_time`: type `float` that indicates how many **seconds** it took your LLM application to complete
-- [Optional] `retrieval_context`: type `list[str]` that indicates the context that were retrieved in your RAG pipeline
-- [Optional] `token_usage`: type `float`
-- [Optional] `token_cost`: type `float`
-- [Optional] `additional_data`: type `dict`
-- [Optional] `fail_silently`: type `bool`, defaults to True. You should try setting this to `False` if your events are not logging properly.
-- [Optional] `run_on_background_thread`: type `bool`, defaults to True. You should try setting this to `False` if your events are not logging properly.
-
-:::note
-Please do **NOT** provide placeholder values for optional parameters. Leave it blank instead.
-:::
+Simply add `deepeval.track(...)` in your application to start tracking events.
 
 ```python
 import deepeval
@@ -54,8 +36,38 @@ deepeval.track(
 
 ```
 
-## View Events on Confident AI
+The `track()` function takes in the following arguments:
 
-Lastly, go to Confident's observatory to view events and identify ones where you want to augment your evaluation dataset with.
+- `event_name`: type `str` specifying the event tracked
+- `model`: type `str` specifying the name of the LLM model used
+- `input`: type `str`
+- `output`: type `str`
+- [Optional] `distinct_id`: type `str` to identify different users using your LLM application
+- [Optional] `conversation_id`: type `str` to group together multiple messages under a single conversation thread
+- [Optional] `completion_time`: type `float` that indicates how many **seconds** it took your LLM application to complete
+- [Optional] `retrieval_context`: type `list[str]` that indicates the context that were retrieved in your RAG pipeline
+- [Optional] `token_usage`: type `float`
+- [Optional] `token_cost`: type `float`
+- [Optional] `additional_data`: type `dict`
+- [Optional] `fail_silently`: type `bool`, defaults to True. You should try setting this to `False` if your events are not logging properly.
+- [Optional] `run_on_background_thread`: type `bool`, defaults to True. You should try setting this to `False` if your events are not logging properly.
+
+:::note
+Please do **NOT** provide placeholder values for optional parameters. Leave it blank instead.
+:::
+
+## Track Events on Confident AI
+
+Confident offers an observatory to view events and identify ones where you want to augment your evaluation dataset with.
 
 ![ok](https://d2lsxfc3p6r9rv.cloudfront.net/observatory.png)
+
+If you're building an LLM chatbot, you can also view entire conversation threads via the `conversation_id`.
+
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/conversation.png)
+
+## Enable Real-Time Evals
+
+To monitor how your LLM application is performing over time, and be alerted of any unsatisfactory LLM responses in production, head to the "projects details" section via the left navigation drawer to turn on the metrics you wish to enable in production. Confident AI will automatically run evaluations for enabled metrics for all incoming events.
+
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/metrics-settings.png)

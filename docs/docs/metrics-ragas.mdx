@@ -56,7 +56,7 @@ print(metric.score)
 evaluate([test_case], [metric])
 ```
 
-There are three optional parameters when creating the `RAGASMetric`:
+There are three optional parameters when creating a `RAGASMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any one of langchain's [chat models](https://python.langchain.com/docs/integrations/chat/) of type `BaseChatModel`. Defaulted to 'gpt-3.5-turbo'.
