@@ -245,7 +245,7 @@ dataset = [
 def test_answer_relevancy(test_case: dict):
     input = test_case.get("input")
     expected_output = test_case.get("expected_output")
-    context = test_case.get("context")
+    retrieval_context = test_case.get("retrieval_context")
 
     # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
@@ -255,7 +255,7 @@ def test_answer_relevancy(test_case: dict):
         input=input,
         actual_output=actual_output,
         expected_output=expected_output,
-        context=context
+        retrieval_context=retrieval_context
     )
     assert_test(test_case, [answer_relevancy_metric])
 ```
