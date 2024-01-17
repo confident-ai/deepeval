@@ -8,24 +8,31 @@ from transformers import DataCollatorForLanguageModeling
 
 import datasets
 import json
+import os
 
 from deepeval.callbacks.huggingface import DeepEvalCallback
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset
 
+os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
+
 # load dataset
-f = open(r"D:\deepeval-callback\deepeval\build\ra_top_1000_data_set.json", 'r', encoding='utf-8').read()
+f = open(
+    r"D:\deepeval-callback\deepeval\build\ra_top_1000_data_set.json",
+    "r",
+    encoding="utf-8",
+).read()
 data = json.loads(f)
-final_data = {'text': [x['bio'] for x in data][:200]}
+final_data = {"text": [x["bio"] for x in data][:200]}
 dataset = datasets.Dataset.from_dict(final_data)
 
 # initialize tokenizer
 tokenizer = AutoTokenizer.from_pretrained(
     "EleutherAI/gpt-neo-125M",
-    bos_token='<|startoftext|>', 
-    eos_token='<|endoftext|>', 
-    pad_token='<|pad|>'
+    bos_token="<|startoftext|>",
+    eos_token="<|endoftext|>",
+    pad_token="<|pad|>",
 )
 
 # initalize model
@@ -34,31 +41,35 @@ model.resize_token_embeddings(len(tokenizer))
 
 # create tokenized dataset
 tokenizer_args = {
-    "return_tensors":"pt", 
-    "max_length": 64, 
-    "padding": "max_length", 
-    "truncation": True
+    "return_tensors": "pt",
+    "max_length": 64,
+    "padding": "max_length",
+    "truncation": True,
 }
+
 
 def tokenize_function(examples):
     return tokenizer(examples["text"], **tokenizer_args)
+
+
 tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
-data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer,
-    mlm=False
-)
+data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
 # create LLMTestCases
 first_test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output="We offer a 30-day full refund at no extra costs.", 
-    context=["All customers are eligible for a 30 day full refund at no extra costs."]
+    actual_output="We offer a 30-day full refund at no extra costs.",
+    context=[
+        "All customers are eligible for a 30 day full refund at no extra costs."
+    ],
 )
 second_test_case = LLMTestCase(
-    input="What if these shoes don't fit?", 
-    actual_output="We also sell 20 gallons of pepsi", 
-    context=["All customers are eligible for a 30 day full refund at no extra costs."]
+    input="What if these shoes don't fit?",
+    actual_output="We also sell 20 gallons of pepsi",
+    context=[
+        "All customers are eligible for a 30 day full refund at no extra costs."
+    ],
 )
 
 # create deepeval metrics list
@@ -72,7 +83,7 @@ training_args = TrainingArguments(
     output_dir="./gpt2-fine-tuned",
     overwrite_output_dir=True,
     num_train_epochs=10,
-    per_device_train_batch_size=8
+    per_device_train_batch_size=8,
 )
 
 # initalize trainer
@@ -80,17 +91,17 @@ trainer = Trainer(
     model=model,
     args=training_args,
     data_collator=data_collator,
-    train_dataset=tokenized_datasets
+    train_dataset=tokenized_datasets,
 )
 
 # initalize DeepEvalCallback
 callback = DeepEvalCallback(
-    metrics=metrics, 
-    evaluation_dataset=dataset, 
+    metrics=metrics,
+    evaluation_dataset=dataset,
     tokenizer_args=tokenizer_args,
     trainer=trainer,
     show_table=True,
-    show_table_every=1
+    show_table_every=1,
 )
 trainer.add_callback(callback)
 trainer.train()
