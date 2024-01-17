@@ -31,12 +31,11 @@ class ContextualPrecisionMetric(BaseMetric):
     def measure(self, test_case: LLMTestCase) -> float:
         if (
             test_case.input is None
-            or test_case.actual_output is None
             or test_case.retrieval_context is None
             or test_case.expected_output is None
         ):
             raise ValueError(
-                "Input, actual output, expected output, or retrieval context cannot be None"
+                "Input, expected output, or retrieval context cannot be None"
             )
 
         with metrics_progress_context(self.__name__):
