@@ -38,7 +38,7 @@ planets, mostly located in the asteroid belt.
 """
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_faithfulness():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",
