@@ -6,32 +6,37 @@ from deepeval.metrics import BaseMetric
 from deepeval import assert_test
 
 
-class LengthMetric(BaseMetric):
-    """This metric checks if the output is more than 3 letters"""
-
-    def __init__(self, minimum_score: int = 3):
-        self.minimum_score = minimum_score
+class LatencyMetric(BaseMetric):
+    # This metric by default checks if the latency is greater than 10 seconds
+    def __init__(self, max_seconds: float = 10):
+        self.threshold = max_seconds
 
     def measure(self, test_case: LLMTestCase):
-        # sends to server
-        text = test_case.actual_output
-        score = len(text)
-        self.success = score > self.minimum_score
-        # Optional: Logs it to the server
-        return score
+        # Set self.success and self.score in the "measure" method
+        self.success = test_case.execution_time <= self.threshold
+        if self.success:
+            self.score = 1
+        else:
+            self.score = 0
+
+        # You can also set a reason for the score returned.
+        # This is particularly useful for a score computed using LLMs
+        self.reason = None
+        return self.score
 
     def is_successful(self):
         return self.success
 
     @property
     def __name__(self):
-        return "Length"
+        return "Latency"
 
 
 def test_length_metric():
-    metric = LengthMetric()
+    metric = LatencyMetric()
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="This is a long sentence that is more than 3 letters",
+        execution_time=8.3,
     )
     assert_test(test_case, [metric])

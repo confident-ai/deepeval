@@ -20,7 +20,7 @@ def test_judgemntal():
             LLMTestCaseParams.INPUT,
         ],
         language=Languages.SPANISH,
-        minimum_score=0.5,
+        threshold=0.5,
     )
 
     assert_test(test_case, [metric])

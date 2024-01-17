@@ -2,10 +2,6 @@ from setuptools import find_packages, setup
 
 from deepeval._version import __version__
 
-with open("requirements.txt", "r") as f:
-    requirements = f.read().splitlines()
-
-
 setup(
     name="deepeval",
     version=__version__,
@@ -14,7 +10,6 @@ setup(
     author_email="jeffreyip@confident-ai.com",
     description="The open-source evaluation framework for LLMs.",
     packages=find_packages(),
-    # TODO - make pandas an 'extra' requirement in the future
     install_requires=[
         "requests",
         "tqdm",
@@ -23,25 +18,21 @@ setup(
         "tabulate",
         "sentence-transformers",  # for similarity
         "pytest",
-        "typer==0.9.0",
+        "typer",
         "rich",
-        "protobuf==3.20.3",
-        "pandas",
+        "protobuf==4.25.1",
         "pydantic",  # loosen pydantic requirements as we support multiple
         "sentry-sdk",
         "pytest-xdist",
         "portalocker",
         "langchain",
+        "langchain-core",
+        "langchain_openai",
         "rouge_score==0.1.2",
         "nltk==3.8.1",
         "ragas",
-        "detoxify",
     ],
     extras_require={
-        "bias": [
-            "tensorflow",  # for bias
-            "Dbias",  # for bias
-        ],
         "dev": ["black"],
     },
     entry_points={

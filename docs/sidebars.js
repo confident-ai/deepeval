@@ -35,7 +35,7 @@ module.exports = {
               'metrics-custom',
               'metrics-others',
           ],
-          collapsed: true,
+          collapsed: false,
         },
       ],
       collapsed: false,
@@ -49,7 +49,7 @@ module.exports = {
         'confident-ai-evaluate-datasets',
         'confident-ai-analyze-evaluations',
         'confident-ai-debug-evaluations',
-        'confident-ai-track-events'
+        'confident-ai-evals-in-production'
       ],
       collapsed: false,
     },

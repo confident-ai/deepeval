@@ -2,23 +2,26 @@ import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import (
     RagasMetric,
-    ContextualPrecisionMetric,
-    ContextualRelevancyMetric,
-    FaithfulnessMetric,
-    ContextualRecallMetric,
+    RAGASContextualPrecisionMetric,
+    RAGASContextualRelevancyMetric,
+    RAGASFaithfulnessMetric,
+    RAGASContextualRecallMetric,
     ConcisenessMetric,
     CorrectnessMetric,
     CoherenceMetric,
     MaliciousnessMetric,
+    RAGASAnswerRelevancyMetric,
 )
-from deepeval.metrics.ragas_metric import AnswerRelevancyMetric
-from deepeval import assert_test, evaluate
+from deepeval import assert_test
 
-query = "Who won the FIFA World Cup in 2018?"
+query = "Who won the FIFA World Cup in 2018 and what was the score?"
 output = "Winners of the FIFA world cup were the French national football team"
 expected_output = "French national football team"
 context = [
-    "The FIFA World Cup in 2018 was won by the French national football team. They defeated Croatia 4-2 in the final match to claim the championship."
+    "The FIFA World Cup in 2018 was won by the French national football team.",
+    "I am birdy",
+    "I am a froggy",
+    "The French defeated Croatia 4-2 in the final FIFA match to claim the championship.",
 ]
 
 
@@ -48,28 +51,28 @@ def test_everything():
         retrieval_context=context,
         context=context,
     )
-    # metric1 = ContextualRelevancyMetric(model_name="gpt-4")
-    # metric2 = FaithfulnessMetric(model_name="gpt-4")
-    # metric3 = ContextualRecallMetric(model_name="gpt-4")
-    # metric4 = ConcisenessMetric(model_name="gpt-4")
-    # metric5 = CorrectnessMetric(model_name="gpt-4")
-    # metric6 = CoherenceMetric(model_name="gpt-4")
-    # metric7 = MaliciousnessMetric(model_name="gpt-4")
-    # metric8 = AnswerRelevancyMetric(model_name="gpt-4")
-    # metric9 = ContextualPrecisionMetric(model_name="gpt-4")
+    metric1 = RAGASContextualRelevancyMetric(model="gpt-4")
+    metric2 = RAGASFaithfulnessMetric(model="gpt-4")
+    metric3 = RAGASContextualRecallMetric(model="gpt-4")
+    metric4 = ConcisenessMetric(model="gpt-4")
+    metric5 = CorrectnessMetric(model="gpt-4")
+    metric6 = CoherenceMetric(model="gpt-4")
+    metric7 = MaliciousnessMetric(model="gpt-4")
+    metric8 = RAGASAnswerRelevancyMetric(model="gpt-4")
+    metric9 = RAGASContextualPrecisionMetric()
     metric10 = RagasMetric()
     assert_test(
         test_case,
         [
-            # metric1,
-            # metric2,
-            # metric3,
-            # metric4,
-            # metric5,
-            # metric6,
-            # metric7,
-            # metric8,
-            # metric9,
+            metric1,
+            metric2,
+            metric3,
+            metric4,
+            metric5,
+            metric6,
+            metric7,
+            metric8,
+            metric9,
             metric10,
         ],
     )

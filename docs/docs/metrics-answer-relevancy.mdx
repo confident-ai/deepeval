@@ -4,14 +4,15 @@ title: Answer Relevancy
 sidebar_label: Answer Relevancy
 ---
 
-Answer Relevancy measures how relevant the `actual_output` of your LLM application is compared to the provided `input`. You don't have to supply `context` or `expected_output` when creating an `LLMTestCase` if you're just evaluating answer relevancy.
+The answer relevancy metric measures the quality of your RAG pipeline's generator by evaluating how relevant the `actual_output` of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
-## Required Parameters
+## Required Arguments
 
-To use the `AnswerRelevancyMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+To use the `AnswerRelevancyMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
 - `input`
 - `actual_output`
+- `retrieval_context`
 
 ## Example
 
@@ -23,15 +24,36 @@ from deepeval.test_case import LLMTestCase
 # Replace this with the actual output from your LLM application
 actual_output = "We offer a 30-day full refund at no extra cost."
 
-metric = AnswerRelevancyMetric(minimum_score=0.7)
+# Replace this with the actual retrieved context from your RAG pipeline
+retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
+
+metric = AnswerRelevancyMetric(
+    threshold=0.7,
+    model="gpt-4",
+    include_reason=True
+)
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output
+    actual_output=actual_output,
+    retrieval_context=retrieval_context
 )
 
 metric.measure(test_case)
 print(metric.score)
+print(metric.reason)
 
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])
+```
+
+There are three optional parameters when creating the `AnswerRelevancyMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any one of langchain's [chat models](https://python.langchain.com/docs/integrations/chat/) of type `BaseChatModel`. Defaulted to 'gpt-4-1106-preview'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+
+You can also choose to fallback to Ragas' answer relevancy metric (which has a similar implemention). This however is not capable of generating a reason.
+
+```python
+from deepeval.metrics import RAGASAnswerRelevancyMetric
 ```

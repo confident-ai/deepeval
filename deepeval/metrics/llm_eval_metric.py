@@ -1,5 +1,6 @@
 import json
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -25,9 +26,8 @@ class LLMEvalMetric(BaseMetric):
         evaluation_params: List[LLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
-        model: Optional[str] = None,
-        minimum_score: float = 0.5,
-        azure_deployment_name: Optional[str] = None,
+        model: Optional[Union[str, BaseChatModel]] = None,
+        threshold: float = 0.5,
     ):
         self.name = name
         self.evaluation_params = evaluation_params
@@ -51,8 +51,7 @@ class LLMEvalMetric(BaseMetric):
         self.criteria = criteria
         self.model = model
         self.evaluation_steps = evaluation_steps
-        self.minimum_score = minimum_score
-        self.azure_deployment_name = azure_deployment_name
+        self.threshold = threshold
 
     def measure(self, test_case: LLMTestCase):
         """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
@@ -75,20 +74,17 @@ class LLMEvalMetric(BaseMetric):
         score, reason = self.evaluate(test_case)
         self.reason = reason
         self.score = float(score) / 10
-        self.success = score >= self.minimum_score
+        self.success = score >= self.threshold
         return self.score
 
-    def is_successful(self):
+    def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
         return self.success
 
     def generate_evaluation_steps(self):
         prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
 
-        model_kwargs = {}
-        if self.azure_deployment_name is not None:
-            model_kwargs["deployment_id"] = self.azure_deployment_name
-
-        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
+        chat_model = GPTModel(model=self.model)
         res = chat_model(prompt)
 
         return res.content
@@ -111,10 +107,8 @@ class LLMEvalMetric(BaseMetric):
             "stop": None,
             "presence_penalty": 0,
         }
-        if self.azure_deployment_name is not None:
-            model_kwargs["deployment_id"] = self.azure_deployment_name
 
-        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
+        chat_model = GPTModel(model=self.model, model_kwargs=model_kwargs)
         res = chat_model(prompt)
 
         json_output = trimToJson(res.content)

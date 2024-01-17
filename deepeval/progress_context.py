@@ -17,3 +17,19 @@ def progress_context(
     ) as progress:
         progress.add_task(description=description, total=total)
         yield
+
+
+@contextmanager
+def metrics_progress_context(
+    metric_name: str, total: int = 9999, transient: bool = True
+):
+    description = f"✨ 🍰 ✨ You're using DeepEval's latest {metric_name} Metric! This may take a minute..."
+    console = Console(file=sys.stderr)  # Direct output to standard error
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,  # Use the custom console
+        transient=transient,
+    ) as progress:
+        progress.add_task(description=description, total=total)
+        yield

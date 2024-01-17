@@ -6,9 +6,9 @@ sidebar_label: Summarization
 
 The summarization metric uses LLMs to determine whether your LLM (application) is generating factually correct summaries while including the neccessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `actual_output`.
 
-## Required Parameters
+## Required Arguments
 
-To use the `SummarizationMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+To use the `SummarizationMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -44,16 +44,16 @@ from deepeval.metrics import SummarizationMetric
 from deepeval.test_case import LLMTestCase
 ...
 
-test_case = LLMTestCase(
-    input=input,
-    actual_output=actual_output,
+test_case = LLMTestCase(input=input, actual_output=actual_output)
+metric = SummarizationMetric(
+    threshold=0.5,
+    model="gpt-4",
     assessment_questions=[
         "Is the inclusion score based on a percentage of 'yes' answers?",
         "Does the score ensure the summary's accuracy with the source?",
         "Does a higher score mean a more comprehensive summary?"
     ]
 )
-metric = SummarizationMetric(minimum_score=0.5, model="gpt-4")
 
 metric.measure(test_case)
 print(metric.score)
@@ -64,20 +64,19 @@ evaluate([test_case], [metric])
 
 There are five optional parameters when instantiating an `SummarizationMetric` class:
 
-- [Optional] `minimum_score`: the passing threshold, defaulted to 0.5.
-- [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from (Azure) OpenAI.
+- [Optional] `threshold`: the passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any one of langchain's [chat models](https://python.langchain.com/docs/integrations/chat/) of type `BaseChatModel`. Defaulted to 'gpt-4-1106-preview'.
 - [Optional] `assessment_questions`: a list of **close-ended questions that can be answered with either a 'yes' or a 'no'**. These are questions you want your summary to be able to ideally answer, and is especially helpful if you already know what a good summary for your use case looks like. If `assessment_questions` is not provided, we will generate a set of `assessment_questions` for you at evaluation time. The `assessment_questions` are used to calculate the `inclusion_score`.
 - [Optional] `n`: the number of questions to generate when calculating the `alignment_score` and `inclusion_score`, defaulted to 5.
-- [Optional] `azure_deployment_name`: the deployment name for Azure OpenAI. Only required if you're using Azure OpenAI.
 
 ## How is it calculated?
 
-In `deepeval`, we judge summarization by taking the harmonic mean of two distinct scores:
+In `deepeval`, we judge summarization by taking the minimum of the two distinct scores:
 
 - `alignment_score`: determines whether the summary contains hallucinated or contradictory information to the original text.
 - `inclusion_score`: determines whether the summary contains the neccessary information from the original text.
 
-These scores are calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', and calculating the ratio of which the original text and summary yields the same answer.
+These scores are calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', and calculating the ratio of which the original text and summary yields the same answer. [Here is a great article](https://www.confident-ai.com/blog/a-step-by-step-guide-to-evaluating-an-llm-text-summarization-task) on how `deepeval`'s summarization metric was build.
 
 You can access the `alignment_score` and `inclusion_score` from a `SummarizationMetric` as follows:
 
@@ -96,5 +95,5 @@ print(metric.inclusion_score)
 ```
 
 :::note
-Since the summarization score is the harmonic mean of the `alignment_score` and `inclusion_score`, a 0 value for either one of these scores will result in a final summarization score of 0.
+Since the summarization score is the minimum of the `alignment_score` and `inclusion_score`, a 0 value for either one of these scores will result in a final summarization score of 0.
 :::

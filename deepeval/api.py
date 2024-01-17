@@ -4,9 +4,13 @@ import urllib.parse
 import requests
 import warnings
 from requests.adapters import HTTPAdapter, Response, Retry
-from deepeval.constants import API_KEY_ENV
-from deepeval.key_handler import KEY_FILE_HANDLER
+import aiohttp
+from aiohttp import ClientSession
+from requests.adapters import HTTPAdapter
 from enum import Enum
+
+from deepeval.constants import API_KEY_ENV
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 
 API_BASE_URL = "https://app.confident-ai.com/api"
 
@@ -37,7 +41,7 @@ class Api:
     ):
         if api_key == "":
             # get API key if none is supplied after you log in
-            api_key = KEY_FILE_HANDLER.fetch_api_key()
+            api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
 
         if api_key == "" or api_key is None:
             raise ValueError("Please provide a valid API Key.")
@@ -259,3 +263,77 @@ class Api:
             str: Quoted text in return
         """
         return urllib.parse.quote(text, safe="")
+
+    async def _api_request_async(
+        self,
+        method,
+        endpoint,
+        headers=None,
+        auth=None,
+        params=None,
+        body=None,
+        files=None,
+        data=None,
+    ):
+        """Generic asynchronous HTTP request method with error handling."""
+        url = f"{self.base_api_url}/{endpoint}"
+        async with ClientSession() as session:
+            try:
+                # Preparing the request body for file uploads if files are present
+                if files:
+                    data = aiohttp.FormData()
+                    for file_name, file_content in files.items():
+                        data.add_field(
+                            file_name, file_content, filename=file_name
+                        )
+
+                # Sending the request
+                res = await session.request(
+                    method=method,
+                    url=url,
+                    headers=headers,
+                    params=params,
+                    json=body,
+                )
+
+                # Check response status
+                if res.status == 200:
+                    try:
+                        json = await res.json()
+                        return json
+                    except ValueError:
+                        return await res.text()
+                else:
+                    # Determine how to process the response based on Content-Type
+                    content_type = res.headers.get("Content-Type", "")
+                    if "application/json" in content_type:
+                        error_response = await res.json()
+                    else:
+                        error_response = await res.text()
+
+                    # Specifically handle status code 400
+                    if res.status == 400:
+                        print(f"Error 400: Bad Request - {error_response}")
+
+                    print(f"Error {res.status}: {error_response}")
+                    return None
+
+            except Exception as err:
+                raise Exception(f"HTTP request failed: {err}") from err
+
+    async def post_request_async(
+        self, endpoint, body=None, files=None, data=None
+    ):
+        """Generic asynchronous POST Request Wrapper"""
+        print("hi")
+        return await self._api_request_async(
+            "POST",
+            endpoint,
+            headers=self._headers
+            if files is None
+            else self._headers_multipart_form_data,
+            auth=self._auth,
+            body=body,
+            files=files,
+            data=data,
+        )

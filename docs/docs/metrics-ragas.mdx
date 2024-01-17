@@ -6,10 +6,10 @@ sidebar_label: RAGAS
 
 The RAGAS metric is the harmonic mean of four distinct metrics:
 
-- `AnswerRelevancyMetric`
-- `FaithfulnessMetric`
-- `ContextualPrecisionMetric`
-- `ContextualRecallMetric`
+- `RAGASAnswerRelevancyMetric`
+- `RAGASFaithfulnessMetric`
+- `RAGASContextualPrecisionMetric`
+- `RAGASContextualRecallMetric`
 
 It provides a score to holistically evaluate of your RAG pipeline's generator and retriever.
 
@@ -17,9 +17,9 @@ It provides a score to holistically evaluate of your RAG pipeline's generator an
 Since RAGAS is the harmonic mean of these four distinct metrics, a value of 0 in either one of these metrics will result in a final 0 value for RAGAS.
 :::
 
-## Required Parameters
+## Required Arguments
 
-To use the `RagasMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+To use the `RagasMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -42,7 +42,7 @@ expected_output = "You are eligible for a 30 day full refund at no extra cost."
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
-metric = RagasMetric(minimum_score=0.5, model="gpt-3.5-turbo")
+metric = RagasMetric(threshold=0.5, model="gpt-3.5-turbo")
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     actual_output=actual_output,
@@ -55,3 +55,8 @@ print(metric.score)
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])
 ```
+
+There are three optional parameters when creating the `RAGASMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any one of langchain's [chat models](https://python.langchain.com/docs/integrations/chat/) of type `BaseChatModel`. Defaulted to 'gpt-3.5-turbo'.

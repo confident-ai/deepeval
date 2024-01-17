@@ -29,3 +29,140 @@ deepeval test run test_example.py
 :::note
 We understand preparing a comprehensive evaluation dataset can be a challenging task, especially if you're doing it for the first time. **[Contact us](https://calendly.com/jeffreyip-cno/sales-call)** if you want a custom evaluation dataset prepared for you.
 :::
+
+## Metrics
+
+`deepeval` offers 14+ evaluation metrics, most of which are evaluated using LLMs (visit the [metrics section](metrics-introduction#types-of-metrics) to learn why).
+
+```
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy_metric = AnswerRelevancyMetric()
+```
+
+You'll need to create a test case to run `deepeval`'s metrics.
+
+## Test Cases
+
+In `deepeval`, a test case allows you to use evaluation metrics you have defined to unit test LLM applications.
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(
+  input="Who is the current president of the United States of America?",
+  actual_output="Joe Biden",
+  retrieval_context=["Joe Biden serves as the current president of America."]
+)
+```
+
+In this example, `input` mimics an user interaction with a RAG-based LLM application, where `actual_output` is the output of your LLM application and `retrieval_context` is the retrieved nodes in your RAG pipeline. Creating a test case allows you to evaluate using `deepeval`'s default metrics:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy_metric = AnswerRelevancyMetric()
+test_case = LLMTestCase(
+  input="Who is the current president of the United States of America?",
+  actual_output="Joe Biden",
+  retrieval_context=["Joe Biden serves as the current president of America."]
+)
+
+answer_relevancy_metric.measure(test_case)
+print(answer_relevancy_metric.score)
+```
+
+## Datasets
+
+Datasets in `deepeval` is a collection of test cases. It provides a centralized interface for you to evaluate a collection of test cases using one or multiple metrics.
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy_metric = AnswerRelevancyMetric()
+test_case = LLMTestCase(
+  input="Who is the current president of the United States of America?",
+  actual_output="Joe Biden",
+  retrieval_context=["Joe Biden serves as the current president of America."]
+)
+
+dataset = EvaluationDataset(test_cases=[test_case])
+dataset.evaluate([answer_relevancy_metric])
+```
+
+:::note
+You don't need to create an evaluation dataset to evaluate test cases. Visit the [test cases section](evaluation-test-cases#assert-test-cases) to learn how to assert inidividual test cases.
+:::
+
+## Evaluating With Pytest
+
+`deepeval` allows you to run evaluations as if you're using Pytest via our Pytest integration. Simply create a test file:
+
+```python titile="test_example.py"
+from deepeval import assert_test
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+
+dataset = EvaluationDataset(test_cases=[...])
+
+@pytest.mark.parametrize(
+    "test_case",
+    dataset,
+)
+def test_customer_chatbot(test_case: LLMTestCase):
+    answer_relevancy_metric = AnswerRelevancyMetric()
+    assert_test(test_case, [answer_relevancy_metric])
+```
+
+And run the test file in the CLI:
+
+```python
+deepeval test run test_example.py
+```
+
+:::info
+@pytest.mark.parametrize is a decorator offered by Pytest. It simply loops through your `EvaluationDataset` to evaluate each test case individually.
+:::
+
+### Parallelization
+
+Evaluate each test case in parallel by specifying a `-n` parameter following by a number to specify how many processes to use.
+
+```
+deepeval test run test_example.py -n 4
+```
+
+### Hooks
+
+`deepeval`'s Pytest integration allosw you to run custom code each time an evaluation ends through the `@deepeval.on_test_run_end` decorator:
+
+```python title="test_example.py"
+...
+
+@deepeval.on_test_run_end
+def function_to_be_called_after_test_run():
+    print("Test finished!")
+```
+
+## Evaluating Without Pytest
+
+Alternately, you can use deepeval's `evaluate` function. This approach avoids the CLI (if you're in a notebook environment), but does not allow for parallel test execution.
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(test_cases=[...])
+
+answer_relevancy_metric = AnswerRelevancyMetric()
+
+evaluate(dataset, [answer_relevancy_metric])
+```
+
+:::note
+You can also replace `dataset` with a list of test cases, as shown in the [test cases section.](evaluation-test-cases#evaluate-test-cases-in-bulk)
+:::

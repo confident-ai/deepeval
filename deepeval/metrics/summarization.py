@@ -1,7 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from enum import Enum
 import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -21,16 +22,14 @@ class ScoreType(Enum):
 class SummarizationMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.5,
-        model: Optional[str] = None,
+        threshold: float = 0.5,
+        model: Optional[Union[str, BaseChatModel]] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
-        azure_deployment_name: Optional[str] = None,
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
         self.assessment_questions = assessment_questions
-        self.azure_deployment_name = azure_deployment_name
         self.n = n
         self.alignment_score = None
         self.inclusion_score = None
@@ -54,14 +53,9 @@ class SummarizationMetric(BaseMetric):
             alignment_score = future_alignment.result()
             inclusion_score = future_inclusion.result()
 
-        if alignment_score == 0 or inclusion_score == 0:
-            summarization_score = 0
-        else:
-            summarization_score = 2 / (
-                (1 / alignment_score) + (1 / inclusion_score)
-            )
+        summarization_score = min(alignment_score, inclusion_score)
 
-        self.success = summarization_score >= self.minimum_score
+        self.success = summarization_score >= self.threshold
         self.score_metadata = {
             "Alignment": alignment_score,
             "Inclusion": inclusion_score,
@@ -122,11 +116,7 @@ class SummarizationMetric(BaseMetric):
                 n=self.n, text=source_document
             )
 
-        model_kwargs = {}
-        if self.azure_deployment_name is not None:
-            model_kwargs["deployment_id"] = self.azure_deployment_name
-
-        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
+        chat_model = GPTModel(model=self.model)
         res = chat_model(prompt)
 
         json_output = trimToJson(res.content)
@@ -139,16 +129,13 @@ class SummarizationMetric(BaseMetric):
             question=question, text=text
         )
 
-        model_kwargs = {}
-        if self.azure_deployment_name is not None:
-            model_kwargs["deployment_id"] = self.azure_deployment_name
-
-        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
+        chat_model = GPTModel(model=self.model)
         res = chat_model(prompt)
 
         return res.content
 
     def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
         return self.success
 
     @property

@@ -1,22 +1,27 @@
 """An implementation of the Ragas metric
 """
-from typing import Optional
-
+from typing import Optional, Union
 from ragas.llms import LangchainLLM
+from langchain_core.language_models import BaseChatModel
+
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.models import GPTModel
 
 
-class ContextualPrecisionMetric(BaseMetric):
+def format_ragas_metric_name(name: str):
+    return f"{name} (ragas)"
+
+
+class RAGASContextualPrecisionMetric(BaseMetric):
     """This metric checks the contextual precision using Ragas"""
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -43,6 +48,7 @@ class ContextualPrecisionMetric(BaseMetric):
         data = {
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
+            "ground_truths": [[test_case.expected_output]],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -52,7 +58,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
         # Ragas only does dataset-level comparisons
         context_precision_score = scores["context_precision"]
-        self.success = context_precision_score >= self.minimum_score
+        self.success = context_precision_score >= self.threshold
         self.score = context_precision_score
         return self.score
 
@@ -61,18 +67,18 @@ class ContextualPrecisionMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Contextual Precision"
+        return format_ragas_metric_name("Contextual Precision")
 
 
-class ContextualRelevancyMetric(BaseMetric):
+class RAGASContextualRelevancyMetric(BaseMetric):
     """This metric checks the contextual relevancy using Ragas"""
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -108,7 +114,7 @@ class ContextualRelevancyMetric(BaseMetric):
 
         # Ragas only does dataset-level comparisons
         context_relevancy_score = scores["context_relevancy"]
-        self.success = context_relevancy_score >= self.minimum_score
+        self.success = context_relevancy_score >= self.threshold
         self.score = context_relevancy_score
         return self.score
 
@@ -117,18 +123,18 @@ class ContextualRelevancyMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Contextual Relevancy"
+        return format_ragas_metric_name("Contextual Relevancy")
 
 
-class AnswerRelevancyMetric(BaseMetric):
+class RAGASAnswerRelevancyMetric(BaseMetric):
     """This metric checks the answer relevancy using Ragas"""
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -160,7 +166,7 @@ class AnswerRelevancyMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[answer_relevancy])
         answer_relevancy_score = scores["answer_relevancy"]
-        self.success = answer_relevancy_score >= self.minimum_score
+        self.success = answer_relevancy_score >= self.threshold
         self.score = answer_relevancy_score
         return self.score
 
@@ -169,16 +175,16 @@ class AnswerRelevancyMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Answer Relevancy"
+        return format_ragas_metric_name("Answer Relevancy")
 
 
-class FaithfulnessMetric(BaseMetric):
+class RAGASFaithfulnessMetric(BaseMetric):
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -210,7 +216,7 @@ class FaithfulnessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[faithfulness])
         faithfulness_score = scores["faithfulness"]
-        self.success = faithfulness_score >= self.minimum_score
+        self.success = faithfulness_score >= self.threshold
         self.score = faithfulness_score
         return self.score
 
@@ -219,18 +225,18 @@ class FaithfulnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Faithfulness"
+        return format_ragas_metric_name("Faithfulness")
 
 
-class ContextualRecallMetric(BaseMetric):
+class RAGASContextualRecallMetric(BaseMetric):
     """This metric checks the context recall using Ragas"""
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -262,7 +268,7 @@ class ContextualRecallMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [context_recall])
         context_recall_score = scores["context_recall"]
-        self.success = context_recall_score >= self.minimum_score
+        self.success = context_recall_score >= self.threshold
         self.score = context_recall_score
         return self.score
 
@@ -271,18 +277,18 @@ class ContextualRecallMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Context Recall"
+        return format_ragas_metric_name("Contextual Recall")
 
 
-class HarmfulnessMetric(BaseMetric):
+class RAGASHarmfulnessMetric(BaseMetric):
     """This metric checks the harmfulness using Ragas"""
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -315,7 +321,7 @@ class HarmfulnessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [harmfulness])
         harmfulness_score = scores["harmfulness"]
-        self.success = harmfulness_score >= self.minimum_score
+        self.success = harmfulness_score >= self.threshold
         self.score = harmfulness_score
         return self.score
 
@@ -327,15 +333,15 @@ class HarmfulnessMetric(BaseMetric):
         return "Harmfulness"
 
 
-class CoherenceMetric(BaseMetric):
+class RAGASCoherenceMetric(BaseMetric):
     """This metric checks the coherence using Ragas"""
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -366,7 +372,7 @@ class CoherenceMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [coherence])
         coherence_score = scores["coherence"]
-        self.success = coherence_score >= self.minimum_score
+        self.success = coherence_score >= self.threshold
         self.score = coherence_score
         return self.score
 
@@ -378,15 +384,15 @@ class CoherenceMetric(BaseMetric):
         return "Coherence"
 
 
-class MaliciousnessMetric(BaseMetric):
+class RAGASMaliciousnessMetric(BaseMetric):
     """This metric checks the maliciousness using Ragas"""
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -418,7 +424,7 @@ class MaliciousnessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [maliciousness])
         maliciousness_score = scores["maliciousness"]
-        self.success = maliciousness_score >= self.minimum_score
+        self.success = maliciousness_score >= self.threshold
         self.score = maliciousness_score
         return self.score
 
@@ -430,15 +436,15 @@ class MaliciousnessMetric(BaseMetric):
         return "Maliciousness"
 
 
-class CorrectnessMetric(BaseMetric):
+class RAGASCorrectnessMetric(BaseMetric):
     """This metric checks the correctness using Ragas"""
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -470,7 +476,7 @@ class CorrectnessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[correctness])
         correctness_score = scores["correctness"]
-        self.success = correctness_score >= self.minimum_score
+        self.success = correctness_score >= self.threshold
         self.score = correctness_score
         return self.score
 
@@ -482,15 +488,15 @@ class CorrectnessMetric(BaseMetric):
         return "Correctness"
 
 
-class ConcisenessMetric(BaseMetric):
+class RAGASConcisenessMetric(BaseMetric):
     """This metric checks the conciseness using Ragas"""
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -521,7 +527,7 @@ class ConcisenessMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[conciseness])
         conciseness_score = scores["conciseness"]
-        self.success = conciseness_score >= self.minimum_score
+        self.success = conciseness_score >= self.threshold
         self.score = conciseness_score
         return self.score
 
@@ -538,10 +544,10 @@ class RagasMetric(BaseMetric):
 
     def __init__(
         self,
-        minimum_score: float = 0.3,
-        model: Optional[str] = "gpt-3.5-turbo",
+        threshold: float = 0.3,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
-        self.minimum_score = minimum_score
+        self.threshold = threshold
         self.model = model
 
     def measure(self, test_case: LLMTestCase):
@@ -563,10 +569,10 @@ class RagasMetric(BaseMetric):
         # Convert the LLMTestCase to a format compatible with Dataset
         score_metadata = {}
         metrics = [
-            ContextualPrecisionMetric(model=self.model),
-            ContextualRecallMetric(model=self.model),
-            FaithfulnessMetric(model=self.model),
-            AnswerRelevancyMetric(model=self.model),
+            RAGASContextualPrecisionMetric(model=self.model),
+            RAGASContextualRecallMetric(model=self.model),
+            RAGASFaithfulnessMetric(model=self.model),
+            RAGASAnswerRelevancyMetric(model=self.model),
         ]
 
         warnings_list = []
@@ -589,7 +595,7 @@ class RagasMetric(BaseMetric):
                 1.0 / score for score in score_metadata.values()
             )
 
-        self.success = ragas_score >= self.minimum_score
+        self.success = ragas_score >= self.threshold
         self.score = ragas_score
         self.score_metadata = score_metadata
         return self.score

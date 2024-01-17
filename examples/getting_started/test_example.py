@@ -15,7 +15,7 @@ def test_hallucination():
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(minimum_score=0.7)
+    hallucination_metric = HallucinationMetric(threshold=0.7)
     test_case = LLMTestCase(
         input=input, actual_output=actual_output, context=context
     )
@@ -35,7 +35,7 @@ def test_summarization():
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
         ],
-        minimum_score=0.5,
+        threshold=0.5,
     )
     test_case = LLMTestCase(input=input, actual_output=actual_output)
     assert_test(test_case, [summarization_metric])
@@ -44,10 +44,10 @@ def test_summarization():
 class LengthMetric(BaseMetric):
     # This metric checks if the output length is greater than 10 characters
     def __init__(self, max_length: int = 10):
-        self.minimum_score = max_length
+        self.threshold = max_length
 
     def measure(self, test_case: LLMTestCase):
-        self.success = len(test_case.actual_output) > self.minimum_score
+        self.success = len(test_case.actual_output) > self.threshold
         if self.success:
             self.score = 1
         else:
@@ -80,7 +80,7 @@ def test_everything():
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(minimum_score=0.7)
+    hallucination_metric = HallucinationMetric(threshold=0.7)
     length_metric = LengthMetric(max_length=10)
     summarization_metric = LLMEvalMetric(
         name="Summarization",
@@ -89,7 +89,7 @@ def test_everything():
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
         ],
-        minimum_score=0.5,
+        threshold=0.5,
     )
 
     test_case = LLMTestCase(

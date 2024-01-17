@@ -3,7 +3,6 @@
 # Source: https://github.com/tingofurro/summac
 ###############################################
 
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import nltk
 import numpy as np
 import torch
@@ -131,6 +130,15 @@ class _SummaCImager:
             )
 
         else:
+            try:
+                from transformers import (
+                    AutoTokenizer,
+                    AutoModelForSequenceClassification,
+                )
+            except ModuleNotFoundError:
+                print(
+                    "transformers library is not installed. Run 'pip install transformers'"
+                )
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_card)
             self.model = AutoModelForSequenceClassification.from_pretrained(
                 self.model_card

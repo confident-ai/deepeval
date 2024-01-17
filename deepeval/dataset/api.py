@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Union
+from typing import Optional, List, Dict
 
 
 class Golden(BaseModel):
@@ -7,6 +7,9 @@ class Golden(BaseModel):
     actual_output: Optional[str] = Field(None, alias="actualOutput")
     expected_output: Optional[str] = Field(None, alias="expectedOutput")
     context: Optional[list] = Field(None)
+    additional_metadata: Optional[Dict] = Field(
+        None, alias="additionalMetadata"
+    )
 
 
 class APIDataset(BaseModel):

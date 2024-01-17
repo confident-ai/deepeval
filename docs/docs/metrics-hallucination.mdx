@@ -6,9 +6,13 @@ sidebar_label: Hallucination
 
 The hallucination metric determines whether your LLM generates factually correct information by comparing the `actual_output` to the provided `context`.
 
-## Required Parameters
+:::info
+If you're looking to evaluate hallucination for a RAG system, please refer to the [faithfulness metric](metrics-faithfulness) instead.
+:::
 
-To use the `HallucinationMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+## Required Arguments
+
+To use the `HallucinationMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -36,7 +40,7 @@ test_case = LLMTestCase(
     actual_output=actual_output,
     context=context
 )
-metric = HallucinationMetric(minimum_score=0.5)
+metric = HallucinationMetric(threshold=0.5)
 
 metric.measure(test_case)
 print(metric.score)
