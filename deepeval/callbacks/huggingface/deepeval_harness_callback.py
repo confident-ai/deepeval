@@ -1,7 +1,8 @@
 from typing import List, Union
 
 from transformers.trainer_callback import TrainerCallback
-from deepeval.experimental import BaseEvaluationExperiment
+
+# from deepeval.experimental import BaseEvaluationExperiment
 
 
 class DeepEvalHarnessCallback(TrainerCallback):
@@ -9,12 +10,7 @@ class DeepEvalHarnessCallback(TrainerCallback):
     A [transformers.TrainerCallback] that logs various harness LLM evaluation metrics to DeepEval
     """
 
-    def __init__(
-        self,
-        experiments: Union[
-            BaseEvaluationExperiment, List[BaseEvaluationExperiment]
-        ],
-    ):
+    def __init__(self, experiments):
         super().__init__()
         self.experiments = experiments
 

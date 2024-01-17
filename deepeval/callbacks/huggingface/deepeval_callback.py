@@ -5,6 +5,7 @@ from rich.table import Table
 from rich.live import Live
 from rich.columns import Columns
 from rich.progress import Progress, BarColumn, SpinnerColumn, TextColumn
+from rich.text import Text
 
 from transformers import (
     TrainerCallback,
@@ -74,6 +75,8 @@ class DeepEvalCallback(TrainerCallback):
             TextColumn("{task.description}", justify="right"),
             SpinnerColumn(spinner_name="simpleDotsScrolling"),
         ]
+
+        self.empty_column = Text("\n")
 
         self.train_bar_started = False
         self.epoch_counter = 0
@@ -206,7 +209,9 @@ class DeepEvalCallback(TrainerCallback):
         """
         new_table = Table()
         cols = Columns(
-            [new_table, self.spinner, self.progress], equal=True, expand=True
+            [new_table, self.spinner, self.progress, self.empty_column],
+            equal=True,
+            expand=True,
         )
         order = get_column_order(self.deepeval_metric_history[-1])
 
@@ -244,7 +249,7 @@ class DeepEvalCallback(TrainerCallback):
         """
         Event triggered at the begining of model training.
         """
-        self.progress = Progress(*self.progress_bar_columns)
+        self.progress = Progress(*self.progress_bar_columns, auto_refresh=False)
         self.spinner = Progress(*self.spinner_columns)
 
         self.progress_task = self.progress.add_task(
@@ -255,6 +260,8 @@ class DeepEvalCallback(TrainerCallback):
         )
 
         initial_columns = Columns(
-            [Table(), self.spinner, self.progress], equal=True, expand=True
+            [Table(), self.spinner, self.progress, self.empty_column],
+            equal=True,
+            expand=True,
         )
         self.live.update(initial_columns, refresh=True)
