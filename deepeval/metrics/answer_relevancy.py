@@ -24,7 +24,8 @@ class AnswerRelevancyMetric(BaseMetric):
         include_reason: bool = True,
     ):
         self.threshold = threshold
-        self.model = model
+        self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.n = 5
 
@@ -37,7 +38,7 @@ class AnswerRelevancyMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__):
+        with metrics_progress_context(self.__name__, self.evaluation_model):
             self.key_points: List[str] = self._generate_key_points(
                 test_case.actual_output, "\n".join(test_case.retrieval_context)
             )
@@ -79,8 +80,8 @@ class AnswerRelevancyMetric(BaseMetric):
             answer=answer,
             score=format(score, ".2f"),
         )
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
+
+        res = self.model(prompt)
         return res.content
 
     def _generate_verdicts(
@@ -89,8 +90,8 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = AnswerRelevancyTemplate.generate_verdicts(
             original_question=original_question, key_points=self.key_points
         )
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
+
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
         verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
@@ -109,8 +110,8 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = AnswerRelevancyTemplate.generate_key_points(
             answer=answer, retrieval_context=retrieval_context
         )
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
+
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
         return data["key_points"]

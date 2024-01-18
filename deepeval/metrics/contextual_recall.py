@@ -24,7 +24,8 @@ class ContextualRecallMetric(BaseMetric):
         include_reason: bool = True,
     ):
         self.threshold = threshold
-        self.model = model
+        self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.n = 5
 
@@ -38,7 +39,7 @@ class ContextualRecallMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__):
+        with metrics_progress_context(self.__name__, self.evaluation_model):
             self.verdicts: List[
                 ContextualRecallVerdict
             ] = self._generate_verdicts(
@@ -73,9 +74,8 @@ class ContextualRecallMetric(BaseMetric):
             unsupportive_reasons=unsupportive_reasons,
             score=format(score, ".2f"),
         )
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
 
+        res = self.model(prompt)
         return res.content
 
     def _generate_score(self):
@@ -92,8 +92,7 @@ class ContextualRecallMetric(BaseMetric):
         prompt = ContextualRecallTemplate.generate_verdicts(
             expected_output=expected_output, retrieval_context=retrieval_context
         )
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
         verdicts = [

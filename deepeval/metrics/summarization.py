@@ -28,7 +28,8 @@ class SummarizationMetric(BaseMetric):
         assessment_questions: Optional[List[str]] = None,
     ):
         self.threshold = threshold
-        self.model = model
+        self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.assessment_questions = assessment_questions
         self.n = n
         self.alignment_score = None
@@ -116,9 +117,7 @@ class SummarizationMetric(BaseMetric):
                 n=self.n, text=source_document
             )
 
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
-
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
 
@@ -129,9 +128,7 @@ class SummarizationMetric(BaseMetric):
             question=question, text=text
         )
 
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
-
+        res = self.model(prompt)
         return res.content
 
     def is_successful(self) -> bool:

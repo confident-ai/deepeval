@@ -49,7 +49,8 @@ class GEval(BaseMetric):
             )
 
         self.criteria = criteria
-        self.model = model
+        self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
         self.threshold = threshold
 
@@ -84,8 +85,7 @@ class GEval(BaseMetric):
     def generate_evaluation_steps(self):
         prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
 
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
+        res = self.model(prompt)
 
         return res.content
 
@@ -101,16 +101,7 @@ class GEval(BaseMetric):
             text=text,
         )
 
-        model_kwargs = {
-            "top_p": 1,
-            "frequency_penalty": 0,
-            "stop": None,
-            "presence_penalty": 0,
-        }
-
-        chat_model = GPTModel(model=self.model, model_kwargs=model_kwargs)
-        res = chat_model(prompt)
-
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
 

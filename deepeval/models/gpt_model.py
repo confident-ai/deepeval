@@ -25,7 +25,6 @@ class GPTModel(DeepEvalBaseModel):
     def __init__(
         self,
         model: Optional[Union[str, BaseChatModel]] = None,
-        model_kwargs: Dict = {},
         *args,
         **kwargs,
     ):
@@ -37,13 +36,12 @@ class GPTModel(DeepEvalBaseModel):
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
-            else:
-                model_name = default_gpt_model
         elif isinstance(model, BaseChatModel):
             custom_model = model
+        elif model is None:
+            model_name = default_gpt_model
 
         self.custom_model = custom_model
-        self.model_kwargs = model_kwargs
         super().__init__(model_name, *args, **kwargs)
 
     def load_model(self):
@@ -80,9 +78,7 @@ class GPTModel(DeepEvalBaseModel):
                 model_version=model_version,
             )
 
-        return ChatOpenAI(
-            model_name=self.model_name, model_kwargs=self.model_kwargs
-        )
+        return ChatOpenAI(model_name=self.model_name)
 
     @retry_with_exponential_backoff
     def _call(self, prompt: str):
@@ -92,3 +88,12 @@ class GPTModel(DeepEvalBaseModel):
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
         return value.lower() == "yes" if value is not None else False
+
+    def get_model_name(self):
+        if self.custom_model:
+            return self.custom_model._llm_type
+
+        if self.should_use_azure_openai():
+            return "azure openai"
+        elif self.model_name:
+            return self.model_name
