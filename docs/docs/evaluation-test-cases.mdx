@@ -174,15 +174,15 @@ test_case = LLMTestCase(
 Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results.
 :::
 
-## Execution Time
+## Latency
 
-The `latency` is an **optional** parameter that represents how long it took your LLM application to finish executing. However, if you're trying to measure something else, like the execution time for only the retrieval part of your RAG pipeline, feel free to supply that number instead of the overall execution time.
+The `latency` is an **optional** parameter that represents how long it took your LLM application to finish executing. However, if you're trying to measure something else, like the latency for only the retrieval part of your RAG pipeline, feel free to supply that number instead of the overall latency.
 
 ```python
 test_case = LLMTestCase(
     input="...",
     actual_output="...",
-    # Replace this with the actual execution time of your LLM application
+    # Replace this with the actual latency of your LLM application
     latency=10.4
 )
 ```
@@ -199,7 +199,7 @@ The `cost` is an **optional** parameter that represents the token cost for a giv
 test_case = LLMTestCase(
     input="...",
     actual_output="...",
-    # Replace this with the actual execution time of your LLM application
+    # Replace this with the actual latency of your LLM application
     cost=0.78
 )
 ```

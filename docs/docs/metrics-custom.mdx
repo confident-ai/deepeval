@@ -69,7 +69,7 @@ from deepeval.test_case import LLMTestCase
 ...
 
 
-# Note that we pass in execution time since the measure method requires it for evaluation
+# Note that we pass in latency since the measure method requires it for evaluation
 latency_metric = LatencyMetric(max_seconds=10.0)
 test_case = LLMTestCase(input="...", actual_output="...", latency=8.3)
 evaluate([test_case], [latency_metric])
