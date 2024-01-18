@@ -9,6 +9,8 @@ from .faithfulness import FaithfulnessMetric
 from .contextual_recall import ContextualRecallMetric
 from .contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision import ContextualPrecisionMetric
+from .latency import LatencyMetric
+from .cost import CostMetric
 from .ragas_metric import (
     RagasMetric,
     RAGASAnswerRelevancyMetric,
