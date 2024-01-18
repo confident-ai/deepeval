@@ -138,11 +138,11 @@ def print_test_result(test_result: TestResult):
     for metric in test_result.metrics:
         if not metric.is_successful():
             print(
-                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, reason: {metric.reason})"
+                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
             )
         else:
             print(
-                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, reason: {metric.reason})"
+                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
             )
         if metric.score_metadata:
             for metric_name, score in metric.score_metadata.items():

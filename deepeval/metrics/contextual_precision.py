@@ -26,7 +26,8 @@ class ContextualPrecisionMetric(BaseMetric):
     ):
         self.threshold = threshold
         self.include_reason = include_reason
-        self.model = model
+        self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
 
     def measure(self, test_case: LLMTestCase) -> float:
         if (
@@ -39,7 +40,7 @@ class ContextualPrecisionMetric(BaseMetric):
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
 
-        with metrics_progress_context(self.__name__):
+        with metrics_progress_context(self.__name__, self.evaluation_model):
             self.verdicts: List[
                 ContextualPrecisionVerdict
             ] = self._generate_verdicts(
@@ -79,9 +80,8 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(score, ".2f"),
         )
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
 
+        res = self.model(prompt)
         return res.content
 
     def _generate_score(self):
@@ -118,8 +118,8 @@ class ContextualPrecisionMetric(BaseMetric):
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
-        chat_model = GPTModel(model=self.model)
-        res = chat_model(prompt)
+
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
         verdicts = [
