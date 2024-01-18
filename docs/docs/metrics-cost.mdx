@@ -1,0 +1,38 @@
+---
+id: metrics-cost
+title: Cost
+sidebar_label: Cost
+---
+
+The cost metric is another performance metric offered by `deepeval`, and measures whether the token cost of your LLM (application) is economically acceptable.
+
+## Required Arguments
+
+To use the `CostMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+- `cost`
+
+## Example
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import CostMetric
+from deepeval.test_case import LLMTestCase
+
+metric = CostMetric(threshold=0.4)
+test_case = LLMTestCase(
+    input="...",
+    actual_output="...",
+    cost=0.34
+)
+
+metric.measure(test_case)
+# True if cost <= threshold
+print(metric.is_successful())
+```
+
+:::note
+Similar to `LatencyMetric`, the `CostMetric` threshold does **NOT** have any standard units. However, you need to make sure the monetary units you provide in the `cost` argument when creating an `LLMTestCase` matches that of the cost `threshold`.
+:::

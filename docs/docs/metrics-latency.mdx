@@ -1,0 +1,40 @@
+---
+id: metrics-latency
+title: Latency
+sidebar_label: Latency
+---
+
+The latency metric measures whether the completion time of your LLM (application) is efficient and meets the expected time limits. It is one of the two performance metrics offered by `deepeval`.
+
+:::info
+Performance metrics in `deepeval` are metrics that evaluate aspects such as latency and cost, rather than the outputs of LLM (applications).
+:::
+
+## Required Arguments
+
+To use the `LatencyMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+- `latency`
+
+## Example
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import LatencyMetric
+from deepeval.test_case import LLMTestCase
+
+metric = LatencyMetric(threshold=10.0)
+test_case = LLMTestCase(
+    input="...",
+    actual_output="...",
+    latency=9.9
+)
+
+metric.measure(test_case)
+# True if latency <= threshold
+print(metric.is_successful())
+```
+
+It does not matter what unit of time you provide the `threshold` argument with, it only has to match the unit of `latency` when creating an `LLMTestCase`.
