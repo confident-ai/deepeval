@@ -20,7 +20,7 @@ class LLMTestCase:
         expected_output: Optional[str] = None,
         context: Optional[List[str]] = None,
         retrieval_context: Optional[List[str]] = None,
-        execution_time: Optional[float] = None,
+        latency: Optional[float] = None,
         cost: Optional[float] = None,
         id: Optional[str] = None,
     ):
@@ -30,5 +30,5 @@ class LLMTestCase:
         self.expected_output = expected_output
         self.context = context
         self.retrieval_context = retrieval_context
-        self.execution_time = execution_time
+        self.latency = latency
         self.cost = cost
