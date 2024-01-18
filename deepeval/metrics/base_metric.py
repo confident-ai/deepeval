@@ -8,6 +8,7 @@ class BaseMetric:
     score: float = 0
     score_metadata: Dict = None
     reason: Optional[str] = None
+    evaluation_model: Optional[str] = None
 
     @property
     def threshold(self) -> float:

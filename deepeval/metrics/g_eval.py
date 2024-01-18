@@ -14,12 +14,12 @@ from deepeval.models import GPTModel
 from pydantic import BaseModel
 
 
-class LLMEvalMetricResponse(BaseModel):
+class GEvalResponse(BaseModel):
     score: float
     reason: str
 
 
-class LLMEvalMetric(BaseMetric):
+class GEval(BaseMetric):
     def __init__(
         self,
         name: str,

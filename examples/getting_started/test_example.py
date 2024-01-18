@@ -2,7 +2,7 @@ import pytest
 import deepeval
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.metrics import BaseMetric, LLMEvalMetric, HallucinationMetric
+from deepeval.metrics import BaseMetric, GEval, HallucinationMetric
 
 # To run this file: deepeval test run <file_name>.py
 
@@ -28,7 +28,7 @@ def test_summarization():
     # Replace this with the actual output from your LLM application
     actual_output = "If the shoes don't fit, the customer wants a full refund."
 
-    summarization_metric = LLMEvalMetric(
+    summarization_metric = GEval(
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
         evaluation_params=[
@@ -82,7 +82,7 @@ def test_everything():
     actual_output = "We offer a 30-day full refund at no extra cost."
     hallucination_metric = HallucinationMetric(threshold=0.7)
     length_metric = LengthMetric(max_length=10)
-    summarization_metric = LLMEvalMetric(
+    summarization_metric = GEval(
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
         evaluation_params=[
