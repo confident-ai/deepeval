@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/confident-ai/deepeval/blob/main/docs/static/img/deepeval-github.png" alt="DeepEval Logo" width="100%">
+    <img src="https://github.com/confident-ai/deepeval/blob/main/docs/static/img/deepeval-2.png" alt="DeepEval Logo" width="100%">
 </p>
 
 <p align="center">
