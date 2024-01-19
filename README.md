@@ -39,6 +39,8 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - Toxicity
   - Bias
   - etc.
+Note that while some metrics are for RAG, others are better for a fine-tuning use case. Make sure to consult our docs to pick the right metric.
+
 - Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**. Do this via the CLI in a Pytest-like manner, or through our `evaluate()` function.
 - Easily create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
 - [Automatically integrated with Confident AI](https://app.confident-ai.com) for continous evaluation throughout the lifetime of your LLM (app):
@@ -54,7 +56,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 # 🚀 Getting Started 🚀
 
-Let's pretend your LLM application is a customer support chatbot; here's how DeepEval can help test what you've built.
+Let's pretend your LLM application is a RAG based customer support chatbot; here's how DeepEval can help test what you've built.
 
 ## Installation
 
@@ -117,8 +119,6 @@ deepeval test run test_chatbot.py
 - The variable `input` mimics user input, and `actual_output` is a placeholder for your chatbot's intended output based on this query.
 - The variable `retrieval_context` contains the relevant information from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an out-of-the-box metric provided by DeepEval. It helps evaluate the relevancy of your LLM output based on the provided context.
 - The metric score ranges from 0 - 1. The `threshold=0.5` threshold ultimately determines whether your test has passed or not.
-
-(note that some metrics are more suited for LLM applications (RAG), while others for a fine-tuning use case. In the case of the `AnswerRelevancyMetric`, it is a RAG metric.)
 
 [Read our documentation](https://docs.confident-ai.com/docs/getting-started) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
 
