@@ -63,6 +63,9 @@ class FaithfulnessMetric(BaseMetric):
                 if verdict.verdict.strip().lower() != "no":
                     faithful_count += 1
 
+        if total_verdicts == 0:
+            return 0
+
         return faithful_count / total_verdicts
 
     def _generate_reason(self, score: float):

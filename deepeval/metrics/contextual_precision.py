@@ -103,11 +103,13 @@ class ContextualPrecisionMetric(BaseMetric):
                 sum_weighted_precision_at_k += precision_at_k * is_relevant
 
         # Calculate weighted cumulative precision
+        if relevant_nodes_count == 0:
+            return 0
+
         weighted_cumulative_precision = (
             sum_weighted_precision_at_k / relevant_nodes_count
-            if relevant_nodes_count > 0
-            else 0
         )
+
         return weighted_cumulative_precision
 
     def _generate_verdicts(
