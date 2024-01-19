@@ -8,6 +8,7 @@ class MetricsMetadata(BaseModel):
     threshold: float
     success: bool
     reason: Optional[str] = None
+    evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
 
 
 class APITestCase(BaseModel):

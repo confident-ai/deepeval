@@ -94,6 +94,7 @@ class TestRun(BaseModel):
             threshold=metric.threshold,
             reason=metric.reason,
             success=metric.is_successful(),
+            evaluationModel=metric.evaluation_model,
         )
 
         if existing_test_case:
@@ -233,10 +234,14 @@ class TestRunManager:
                 else:
                     status = "[red]FAILED[/red]"
 
+                evaluation_model = metric_metadata.evaluation_model
+                if evaluation_model is None:
+                    evaluation_model = "n/a"
+
                 table.add_row(
                     "",
                     str(metric_metadata.metric),
-                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.threshold}, reason={metric_metadata.reason})",
+                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason})",
                     status,
                     "",
                 )
