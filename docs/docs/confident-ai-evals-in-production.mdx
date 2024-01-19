@@ -14,7 +14,6 @@ Simply add `deepeval.track(...)` in your application to start tracking events.
 
 ```python
 import deepeval
-
 ...
 
 # At the end of your LLM call
@@ -25,12 +24,12 @@ deepeval.track(
     output="output",
     distinct_id="a user Id",
     conversation_id="a conversation thread Id",
-    retrieval_context=["..."]
+    retrieval_context=["..."],
     completion_time=8.23,
     token_usage=134,
     token_cost=0.23,
     additional_data={"example": "example"},
-    fail_silently=True
+    fail_silently=True,
     run_on_background_thread=True
 )
 
