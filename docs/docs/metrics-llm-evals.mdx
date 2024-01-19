@@ -1,14 +1,14 @@
 ---
 id: metrics-llm-evals
-title: LLM-Eval
-sidebar_label: LLM-Eval
+title: G-Eval
+sidebar_label: G-Eval
 ---
 
-LLM-Eval is a custom, LLM evaluated metric. This means its score is calculated using an LLM. An `LLMEvalMetric` is the most verstile type of metric `deepeval` has to offer, and is capable of evaluating almost any use cases.
+G-Eval is a custom, LLM evaluated metric. This means its score is calculated using an LLM. G-Eval is the most verstile type of metric `deepeval` has to offer, and is capable of evaluating almost any use cases.
 
 ## Required Arguments
 
-To use the `LLMEvalMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
+To use the `GEval`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -17,13 +17,13 @@ You'll also need to supply any additional arguments such as `expected_output` an
 
 ## Example
 
-To create a custom metric that uses LLMs for evaluation, simply instantiate an `LLMEvalMetric` class and **define an evaluation criteria in everyday language**:
+To create a custom metric that uses LLMs for evaluation, simply instantiate an `GEval` class and **define an evaluation criteria in everyday language**:
 
 ```python
-from deepeval.metrics import LLMEvalMetric
+from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
-summarization_metric = LLMEvalMetric(
+summarization_metric = GEval(
     name="Summarization",
     criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
@@ -32,7 +32,7 @@ summarization_metric = LLMEvalMetric(
 )
 ```
 
-There are three mandatory and two optional parameters required when instantiating an `LLMEvalMetric` class:
+There are three mandatory and two optional parameters required when instantiating an `GEval` class:
 
 - `name`: name of metric
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
@@ -45,7 +45,7 @@ There are three mandatory and two optional parameters required when instantiatin
 For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
 :::
 
-As mentioned in the [metrics introduction section](metrics-introduction), all of `deepeval`'s metrics return a score ranging from 0 - 1, and a metric is only successful if the evaluation score is equal to or greater than `threshold`. An `LLMEvalMetric` is no exception. You can access the `score` and `reason` for each individual `LLMEvalMetric`:
+As mentioned in the [metrics introduction section](metrics-introduction), all of `deepeval`'s metrics return a score ranging from 0 - 1, and a metric is only successful if the evaluation score is equal to or greater than `threshold`. An `GEval` is no exception. You can access the `score` and `reason` for each individual `GEval`:
 
 ```python
 from deepeval.test_case import LLMTestCase

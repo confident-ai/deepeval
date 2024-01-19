@@ -4,10 +4,10 @@ title: JudgementalGPT
 sidebar_label: JudgementalGPT
 ---
 
-`JudgementalGPT` is an LLM agent developed in-house by [Confident AI](https://confident-ai.com) that's dedicated to evaluation and is superior to `LLMEvalMetric`. While it operates similarly to `LLMEvalMetric` by utilizing LLMs for scoring, it:
+`JudgementalGPT` is an LLM agent developed in-house by [Confident AI](https://confident-ai.com) that's dedicated to evaluation and is superior to `GEval`. While it operates similarly to `GEval` by utilizing LLMs for scoring, it:
 
-- offers enhanced accuracy and reliability.
-- is capable of generating justifications for its scores
+- offers enhanced accuracy and reliability
+- is capable of generating justifications in different languages
 - has the ability to conditionally execute code that helps detect logical fallacies during evaluations
 
 ## Required Arguments
@@ -17,7 +17,7 @@ To use `JudgementalGPT`, you'll have to provide the following arguments when cre
 - `input`
 - `actual_output`
 
-Similar to `LLMEvalMetric`, you'll also need to supply any additional arguments such as `expected_output` and `context` if your evaluation criteria depends on these parameters.
+Similar to `GEval`, you'll also need to supply any additional arguments such as `expected_output` and `context` if your evaluation criteria depends on these parameters.
 
 ## Example
 
@@ -51,7 +51,7 @@ Under the hood, `JudgementalGPT` sends a request to Confident AI's servers that 
 - [Optional] `language`: type `Language`, specifies what language to return the reasoning in.
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 
-Similar to `LLMEvalMetric`, you can access the judgemental `score` and `reason` for `JudgementalGPT`:
+Similar to `GEval`, you can access the judgemental `score` and `reason` for `JudgementalGPT`:
 
 ```python
 from deepeval.test_case import LLMTestCase
