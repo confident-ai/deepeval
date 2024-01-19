@@ -37,15 +37,15 @@ There are three mandatory and two optional parameters required when instantiatin
 - `name`: name of metric
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
-- [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. You can only provide either `evaluation_steps` or `criteria`, and not both.
+- [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
-- [Optional] `model`: the model name. This is defaulted to 'gpt-4-1106-preview' and we currently only support models from (Azure) OpenAI.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any one of langchain's [chat models](https://python.langchain.com/docs/integrations/chat/) of type `BaseChatModel`. Defaulted to 'gpt-4-1106-preview'.
 
 :::danger
 For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
 :::
 
-As mentioned in the [metrics introduction section](metrics-introduction), all of `deepeval`'s metrics return a score ranging from 0 - 1, and a metric is only successful if the evaluation score is equal to or greater than `threshold`. An `GEval` is no exception. You can access the `score` and `reason` for each individual `GEval`:
+As mentioned in the [metrics introduction section](metrics-introduction), all of `deepeval`'s metrics return a score ranging from 0 - 1, and a metric is only successful if the evaluation score is equal to or greater than `threshold`, and `GEval` is no exception. You can access the `score` and `reason` for each individual `GEval` metric:
 
 ```python
 from deepeval.test_case import LLMTestCase
