@@ -47,6 +47,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - debug evaluation results via LLM traces
   - manage evaluation test cases / datasets in one place
   - track events to identify live LLM responses in production
+  - real-time evaluation in production
   - add production events to existing evaluation datasets to strength evals over time
 
 <br />
