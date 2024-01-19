@@ -57,7 +57,7 @@ class SummarizationMetric(BaseMetric):
         summarization_score = min(alignment_score, inclusion_score)
 
         self.success = summarization_score >= self.threshold
-        self.score_metadata = {
+        self.score_breakdown = {
             "Alignment": alignment_score,
             "Inclusion": inclusion_score,
         }
