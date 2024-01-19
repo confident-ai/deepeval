@@ -18,7 +18,7 @@
     </a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source LLM evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval incorporates the latest research and evaluates performance based on metrics such as hallucination, answer relevancy, RAGAS, etc., using LLMs and various other NLP models that runs **locally on your machine**.
+**DeepEval** is a simple-to-use, open-source LLM evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval incorporates the latest research and LLM outputs based on metrics such as hallucination, answer relevancy, RAGAS, etc., using LLMs and various other NLP models that runs **locally on your machine**.
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama2 with confidence.
 
