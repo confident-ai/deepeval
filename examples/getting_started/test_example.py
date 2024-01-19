@@ -2,24 +2,26 @@ import pytest
 import deepeval
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.metrics import BaseMetric, GEval, HallucinationMetric
+from deepeval.metrics import BaseMetric, GEval, AnswerRelevancyMetric
 
 # To run this file: deepeval test run <file_name>.py
 
 
-def test_hallucination():
+def test_answer_relevancy():
     input = "What if these shoes don't fit?"
-    context = [
+    retrieval_context = [
         "All customers are eligible for a 30 day full refund at no extra cost."
     ]
 
-    # Replace this with the actual output from your LLM application
+    # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(threshold=0.7)
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
     test_case = LLMTestCase(
-        input=input, actual_output=actual_output, context=context
+        input=input,
+        actual_output=actual_output,
+        retrieval_context=retrieval_context,
     )
-    assert_test(test_case, [hallucination_metric])
+    assert_test(test_case, [answer_relevancy_metric])
 
 
 def test_summarization():
@@ -74,13 +76,13 @@ def test_length():
 
 def test_everything():
     input = "What if these shoes don't fit?"
-    context = [
+    retrieval_context = [
         "All customers are eligible for a 30 day full refund at no extra cost."
     ]
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(threshold=0.7)
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
     length_metric = LengthMetric(max_length=10)
     summarization_metric = GEval(
         name="Summarization",
@@ -93,11 +95,13 @@ def test_everything():
     )
 
     test_case = LLMTestCase(
-        input=input, actual_output=actual_output, context=context
+        input=input,
+        actual_output=actual_output,
+        retrieval_context=retrieval_context,
     )
     assert_test(
         test_case,
-        [hallucination_metric, length_metric, summarization_metric],
+        [answer_relevancy_metric, length_metric, summarization_metric],
     )
 
 
