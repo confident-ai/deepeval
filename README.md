@@ -18,7 +18,7 @@
     </a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source LLM evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval evaluates performance based on metrics such as hallucination, answer relevancy, RAGAS, etc., using LLMs and various other NLP models that runs **locally on your machine**.
+**DeepEval** is a simple-to-use, open-source LLM evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval incorporates the latest research and evaluates performance based on metrics such as hallucination, answer relevancy, RAGAS, etc., using LLMs and various other NLP models that runs **locally on your machine**.
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama2 with confidence.
 
@@ -27,14 +27,15 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 # Features
 
 - Large variety of ready-to-use LLM evaluation metrics powered by LLMs (all with explanations), statistical methods, or NLP models that runs **locally on your machine**:
-  - Hallucination
+  - G-Eval
   - Summarization
   - Answer Relevancy
   - Faithfulness
   - Contextual Recall
   - Contextual Precision
   - RAGAS
-  - G-Eval
+  - Toxicity
+  - Hallucination
   - Toxicity
   - Bias
   - etc.
@@ -85,21 +86,30 @@ Open `test_chatbot.py` and write your first test case using DeepEval:
 ```python
 import pytest
 from deepeval import assert_test
-from deepeval.metrics import HallucinationMetric
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
 def test_case():
     input = "What if these shoes don't fit?"
-    context = ["All customers are eligible for a 30 day full refund at no extra costs."]
+    retrieval_context = ["All customers are eligible for a 30 day full refund at no extra costs."]
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra costs."
-    hallucination_metric = HallucinationMetric(threshold=0.7)
-    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
-    assert_test(test_case, [hallucination_metric])
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
+    test_case = LLMTestCase(
+        input=input,
+        actual_output=actual_output,
+        retrieval_context=retrieval_context
+    )
+    assert_test(test_case, [answer_relevancy_metric])
+```
+Set your `OPENAI_API_KEY` as an enviornemnt variable (you can also evaluate using your own custom model, for more details visit [this part of our docs](https://docs.confident-ai.com/docs/metrics-introduction#using-a-custom-llm)):
+
+```
+export OPENAI_API_KEY="..."
 ```
 
-Run `test_chatbot.py` in the CLI:
+And finally, run `test_chatbot.py` in the CLI:
 
 ```
 deepeval test run test_chatbot.py
@@ -108,8 +118,8 @@ deepeval test run test_chatbot.py
 **Your test should have passed ✅** Let's breakdown what happened.
 
 - The variable `input` mimics user input, and `actual_output` is a placeholder for your chatbot's intended output based on this query.
-- The variable `context` contains the relevant information from your knowledge base, and `HallucinationMetric(threshold=0.7)` is an out-of-the-box metric provided by DeepEval. It helps you evaluate the factual accuracy of your chatbot's output based on the provided context.
-- The metric score ranges from 0 - 1. The `threshold=0.7` threshold ultimately determines whether your test has passed or not.
+- The variable `context` contains the relevant information from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an out-of-the-box metric provided by DeepEval. It helps you evaluate the relevancy of your LLM's output based on the provided context.
+- The metric score ranges from 0 - 1. The `threshold=0.5` threshold ultimately determines whether your test has passed or not.
 
 [Read our documentation](https://docs.confident-ai.com/docs/getting-started) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
 
