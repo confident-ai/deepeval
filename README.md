@@ -91,16 +91,12 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
 def test_case():
-    input = "What if these shoes don't fit?"
-    retrieval_context = ["All customers are eligible for a 30 day full refund at no extra costs."]
-
-    # Replace this with the actual output from your LLM application
-    actual_output = "We offer a 30-day full refund at no extra costs."
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
     test_case = LLMTestCase(
-        input=input,
-        actual_output=actual_output,
-        retrieval_context=retrieval_context
+        input="What if these shoes don't fit?",
+        # Replace this with the actual output from your LLM application
+        actual_output="We offer a 30-day full refund at no extra costs.",
+        retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
     )
     assert_test(test_case, [answer_relevancy_metric])
 ```
@@ -119,8 +115,10 @@ deepeval test run test_chatbot.py
 **Your test should have passed ✅** Let's breakdown what happened.
 
 - The variable `input` mimics user input, and `actual_output` is a placeholder for your chatbot's intended output based on this query.
-- The variable `context` contains the relevant information from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an out-of-the-box metric provided by DeepEval. It helps you evaluate the relevancy of your LLM's output based on the provided context.
+- The variable `retrieval_context` contains the relevant information from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an out-of-the-box metric provided by DeepEval. It helps evaluate the relevancy of your LLM output based on the provided context.
 - The metric score ranges from 0 - 1. The `threshold=0.5` threshold ultimately determines whether your test has passed or not.
+
+(note that some metrics are more suited for LLM applications (RAG), while others for a fine-tuning use case. In the case of the `AnswerRelevancyMetric`, it is a RAG metric.)
 
 [Read our documentation](https://docs.confident-ai.com/docs/getting-started) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
 
@@ -132,22 +130,42 @@ Alternatively, you can evaluate without Pytest, which is more suited for a noteb
 
 ```python
 from deepeval import evaluate
-from deepeval.metrics import HallucinationMetric
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
-input = "What if these shoes don't fit?"
-context = ["All customers are eligible for a 30 day full refund at no extra costs."]
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra costs."
-
-hallucination_metric = HallucinationMetric(threshold=0.7)
+answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
 test_case = LLMTestCase(
-    input=input,
-    actual_output=actual_output,
-    context=context
+    input="What if these shoes don't fit?",
+    # Replace this with the actual output from your LLM application
+    actual_output="We offer a 30-day full refund at no extra costs.",
+    retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
 )
-evaluate([test_case], [hallucination_metric])
+evaluate([test_case], [answer_relevancy_metric])
 ```
+
+## Using Standalone Metrics
+
+DeepEval is extremely modular which makes it extremely easy for anyone to use any of our metrics. Continuing with the previous example:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
+test_case = LLMTestCase(
+    input="What if these shoes don't fit?",
+    # Replace this with the actual output from your LLM application
+    actual_output="We offer a 30-day full refund at no extra costs.",
+    retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
+)
+
+answer_relevancy_metric.measure(test_case)
+print(answer_relevancy_metric.score)
+# Most metrics also offer an explanation
+print(answer_relevancy_metric.reason)
+```
+
+Note that some metrics are for RAG pipelines, while others are for fine-tuning. Make sure to use our docs to pick the right one for your use case.
 
 ## Evaluting a Dataset / Test Cases in Bulk
 
@@ -188,9 +206,9 @@ Alternatively, although we recommend using `deepeval test run`, you can evaluate
 from deepeval import evaluate
 ...
 
-evaluate(dataset, [hallucination_metric])
+evaluate(dataset, [answer_relevancy_metric])
 # or
-dataset.evaluate([hallucination_metric])
+dataset.evaluate([answer_relevancy_metric])
 ```
 
 # View results on Confident AI
