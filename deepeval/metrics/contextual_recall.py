@@ -79,6 +79,9 @@ class ContextualRecallMetric(BaseMetric):
         return res.content
 
     def _generate_score(self):
+        if len(self.verdicts) == 0:
+            return 0
+
         justified_sentences = 0
         for verdict in self.verdicts:
             if verdict.verdict.lower() == "yes":

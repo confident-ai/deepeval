@@ -56,6 +56,9 @@ class AnswerRelevancyMetric(BaseMetric):
             return self.score
 
     def _generate_score(self):
+        if len(self.verdicts) == 0:
+            return 0
+
         relevant_count = 0
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() != "no":

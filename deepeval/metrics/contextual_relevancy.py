@@ -84,6 +84,9 @@ class ContextualRelevancyMetric(BaseMetric):
                 if verdict.verdict.lower() == "no":
                     irrelevant_sentences += 1
 
+        if total_sentence_count == 0:
+            return 0
+
         return (
             total_sentence_count - irrelevant_sentences
         ) / total_sentence_count
