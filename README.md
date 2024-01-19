@@ -39,8 +39,6 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - Toxicity
   - Bias
   - etc.
-Note that while some metrics are for RAG, others are better for a fine-tuning use case. Make sure to consult our docs to pick the right metric.
-
 - Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**. Do this via the CLI in a Pytest-like manner, or through our `evaluate()` function.
 - Easily create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
 - [Automatically integrated with Confident AI](https://app.confident-ai.com) for continous evaluation throughout the lifetime of your LLM (app):
@@ -51,6 +49,8 @@ Note that while some metrics are for RAG, others are better for a fine-tuning us
   - track events to identify live LLM responses in production
   - real-time evaluation in production
   - add production events to existing evaluation datasets to strength evals over time
+
+(Note that while some metrics are for RAG, others are better for a fine-tuning use case. Make sure to consult our docs to pick the right metric.)
 
 <br />
 
