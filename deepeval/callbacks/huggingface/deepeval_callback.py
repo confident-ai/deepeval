@@ -18,6 +18,7 @@ from transformers import (
 
 from deepeval.metrics import BaseMetric
 from deepeval.dataset import EvaluationDataset
+from deepeval.dataset.utils import convert_goldens_to_test_cases
 from deepeval.evaluate import execute_test
 
 from .utils import get_column_order
@@ -56,6 +57,7 @@ class DeepEvalCallback(TrainerCallback):
         self.trainer = trainer
 
         self.task_descriptions = {
+            "generating": "[blue][STATUS] [white]Generating output from model (might take up few minutes)",
             "training": "[blue][STATUS] [white]Training in Progress",
             "evaluate": "[blue][STATUS] [white]Evaluating test-cases (might take up few minutes)",
             "training_end": "[blue][STATUS] [white]Training Ended",
@@ -145,7 +147,7 @@ class DeepEvalCallback(TrainerCallback):
         args: TrainingArguments,
         state: TrainerState,
         control: TrainerControl,
-        **kwargs
+        **kwargs,
     ):
         """
         Event triggered at the begining of each training epoch.
@@ -157,19 +159,46 @@ class DeepEvalCallback(TrainerCallback):
         args: TrainingArguments,
         state: TrainerState,
         control: TrainerControl,
-        **kwargs
+        **kwargs,
     ):
         """
         Event triggered at the end of each training epoch.
         """
         control.should_log = True
+        test_cases = self.generate_test_cases()
+        self.evaluation_dataset.test_cases = test_cases
+
+    def generate_test_cases(self):
+        model = self.trainer.model
+        tokenizer = self.trainer.tokenizer
+        self.spinner.reset(
+            self.spinner_task,
+            description=self.task_descriptions["generating"],
+        )
+        for golden in self.evaluation_dataset.goldens:
+            prompt = f"""{'CONTEXT: ' + str("; ".join(golden.context)) if golden.context else ''}
+                QUESTION: {golden.input}
+                ANSWER:"""
+
+            tokenized_output = tokenizer(prompt, **self.tokenizer_args)
+            input_ids = tokenized_output.input_ids
+            outputs = model.generate(input_ids)
+            decoded_output = tokenizer.decode(
+                outputs[0], skip_special_tokens=True
+            )
+            golden.actual_output = decoded_output
+
+        test_cases = convert_goldens_to_test_cases(
+            self.evaluation_dataset.goldens
+        )
+        return test_cases
 
     def on_log(
         self,
         args: TrainingArguments,
         state: TrainerState,
         control: TrainerControl,
-        **kwargs
+        **kwargs,
     ):
         """
         Event triggered after logging the last logs.
@@ -228,7 +257,7 @@ class DeepEvalCallback(TrainerCallback):
         args: TrainingArguments,
         state: TrainerState,
         control: TrainerControl,
-        **kwargs
+        **kwargs,
     ):
         """
         Event triggered at the end of model training.
@@ -244,7 +273,7 @@ class DeepEvalCallback(TrainerCallback):
         args: TrainingArguments,
         state: TrainerState,
         control: TrainerControl,
-        **kwargs
+        **kwargs,
     ):
         """
         Event triggered at the begining of model training.
