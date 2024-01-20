@@ -3,18 +3,29 @@
 </p>
 
 <p align="center">
-    <a href="https://discord.gg/a3K9c8GRGt" target="_blank">
-        <img src="https://img.shields.io/static/v1?label=Discord&message=Join%20Us&color=1f2937&logo=discord&logoColor=white&labelColor=1d4ed8&style=for-the-badge" alt="Join Discord">
+    <a href="https://discord.com/invite/a3K9c8GRGt">
+        <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/a3K9c8GRGt?style=flat">
     </a>
 </p>
 
+<h4 align="center">
+    <p>
+        <a href="https://docs.confident-ai.com/docs/getting-started">Documentation</a> |
+        <a href="#metrics-and-features">Metrics and Features</a> |
+        <a href="#-getting-started-">Getting Started</a> |
+        <a href="https://confident-ai.com">Confident AI</a>
+    <p>
+</h4>
+
 <p align="center">
-    <a href="https://docs.confident-ai.com/docs/getting-started" target="_blank">
-        Read The Docs
+    <a href="https://github.com/confident-ai/deepeval/releases">
+        <img alt="GitHub release" src="https://img.shields.io/github/release/confident-ai/deepeval.svg?color=violet">
     </a>
-    &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
-    <a href="https://confident-ai.com" target="_blank">
-        Website
+    <a href="https://colab.research.google.com/drive/1PPxYEBa6eu__LquGoFFJZkhYgWVYE6kh?usp=sharing">
+        <img alt="Try Quickstart in Colab" src="https://colab.research.google.com/assets/colab-badge.svg">
+    </a>
+    <a href="https://github.com/confident-ai/deepeval/blob/master/LICENSE">
+        <img alt="License" src="https://img.shields.io/github/license/confident-ai/deepeval.svg?color=yellow">
     </a>
 </p>
 
@@ -22,9 +33,11 @@
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama2 with confidence.
 
+Want to talk evaluation? [Come join our discord.](https://discord.com/invite/a3K9c8GRGt)
+
 <br />
 
-# Features
+# Metrics and Features
 
 - Large variety of ready-to-use LLM evaluation metrics powered by LLMs (all with explanations), statistical methods, or NLP models that runs **locally on your machine**:
   - G-Eval
