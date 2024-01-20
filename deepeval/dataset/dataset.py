@@ -25,9 +25,13 @@ class EvaluationDataset:
     test_cases: List[LLMTestCase]
     goldens: List[Golden]
 
-    def __init__(self, test_cases: List[LLMTestCase] = []):
+    def __init__(
+        self,
+        goldens: Optional[List[Golden]],
+        test_cases: List[LLMTestCase] = [],
+    ):
         self.test_cases = test_cases
-        self.goldens = []
+        self.goldens = goldens
 
     def add_test_case(self, test_case: LLMTestCase):
         self.test_cases.append(test_case)
