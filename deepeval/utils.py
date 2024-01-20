@@ -9,7 +9,14 @@ import re
 import string
 import numpy as np
 from dataclasses import asdict, is_dataclass
-import re
+import red
+
+from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+
+
+def is_confident():
+    confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
+    return confident_api_key is not None
 
 
 def drop_and_copy(obj, drop_attrs):
