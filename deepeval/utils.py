@@ -9,7 +9,7 @@ import re
 import string
 import numpy as np
 from dataclasses import asdict, is_dataclass
-import red
+import re
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
