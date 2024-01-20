@@ -2,6 +2,15 @@ import os
 import json
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict
+import shutil
+import webbrowser
+import sys
+import datetime
+import portalocker
+from rich.table import Table
+from rich.console import Console
+from rich import print
+
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import get_trace_stack
@@ -13,15 +22,7 @@ from deepeval.test_run.api import (
     MetricsMetadata,
     TestRunHttpResponse,
 )
-import shutil
-import webbrowser
-from deepeval.utils import delete_file_if_exists
-import sys
-import datetime
-import portalocker
-from rich.table import Table
-from rich.console import Console
-from rich import print
+from deepeval.utils import delete_file_if_exists, is_confident
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
 
@@ -262,7 +263,7 @@ class TestRunManager:
         for test_case in test_run.test_cases:
             test_case.id = None
 
-        if os.path.exists(".deepeval"):
+        if is_confident():
             try:
                 body = test_run.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
@@ -278,7 +279,7 @@ class TestRunManager:
                 projectId=result["projectId"],
                 link=result["link"],
             )
-            if response and os.path.exists(".deepeval"):
+            if response:
                 link = response.link
                 console.print(
                     "✅ Tests finished! View results on "

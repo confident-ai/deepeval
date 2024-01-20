@@ -18,6 +18,7 @@ from deepeval.dataset.api import (
     Golden,
     DatasetHttpResponse,
 )
+from deepeval.utils import is_confident
 
 
 @dataclass
@@ -245,7 +246,7 @@ class EvaluationDataset:
             raise ValueError(
                 "Unable to push empty dataset to Confident AI, there must be at least one test case in dataset"
             )
-        if os.path.exists(".deepeval"):
+        if is_confident():
             goldens = convert_test_cases_to_goldens(self.test_cases)
             body = APIDataset(
                 alias=alias, overwrite=False, goldens=goldens
@@ -272,7 +273,7 @@ class EvaluationDataset:
             )
 
     def pull(self, alias: str, auto_convert_goldens_to_test_cases: bool = True):
-        if os.path.exists(".deepeval"):
+        if is_confident():
             api = Api()
             result = api.get_request(
                 endpoint=Endpoints.DATASET_ENDPOINT.value,
