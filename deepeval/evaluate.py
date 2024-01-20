@@ -133,7 +133,8 @@ def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
 
 
 def print_test_result(test_result: TestResult):
-    print("\n" + "=" * 70 + "\n")
+    print("")
+    print("=" * 70 + "\n")
     print("Metrics Summary\n")
     for metric in test_result.metrics:
         if not metric.is_successful():
@@ -148,7 +149,8 @@ def print_test_result(test_result: TestResult):
             for metric_name, score in metric.score_breakdown.items():
                 print(f"      - {metric_name} (score: {score})")
 
-    print("\nFor test case:\n")
+    print("")
+    print("For test case:\n")
     print(f"  - input: {test_result.input}")
     print(f"  - actual output: {test_result.actual_output}")
     print(f"  - expected output: {test_result.expected_output}")
