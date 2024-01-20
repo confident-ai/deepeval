@@ -24,7 +24,7 @@
     <a href="https://colab.research.google.com/drive/1PPxYEBa6eu__LquGoFFJZkhYgWVYE6kh?usp=sharing">
         <img alt="Try Quickstart in Colab" src="https://colab.research.google.com/assets/colab-badge.svg">
     </a>
-    <a href="https://github.com/confident-ai/deepeval/blob/master/LICENSE">
+    <a href="https://github.com/confident-ai/deepeval/blob/master/LICENSE.md">
         <img alt="License" src="https://img.shields.io/github/license/confident-ai/deepeval.svg?color=yellow">
     </a>
 </p>
