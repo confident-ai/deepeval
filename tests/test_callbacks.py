@@ -1,107 +1,153 @@
 """Test for callbacks
 """
 
-from transformers import Trainer, TrainingArguments
-from transformers import AutoTokenizer
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers import DataCollatorForLanguageModeling
+from transformers import (
+    Seq2SeqTrainer,
+    Seq2SeqTrainingArguments,
+    T5Tokenizer,
+    T5ForConditionalGeneration,
+    DataCollatorForSeq2Seq,
+)
 
-import datasets
-import json
-import os
+from datasets import load_dataset
 
 from deepeval.callbacks.huggingface import DeepEvalCallback
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.dataset import EvaluationDataset
+from deepeval.dataset import EvaluationDataset, Golden
+
+import os
 
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
-
-# load dataset
-f = open(
-    r"D:\deepeval-callback\deepeval\build\ra_top_1000_data_set.json",
-    "r",
-    encoding="utf-8",
-).read()
-data = json.loads(f)
-final_data = {"text": [x["bio"] for x in data][:200]}
-dataset = datasets.Dataset.from_dict(final_data)
-
-# initialize tokenizer
-tokenizer = AutoTokenizer.from_pretrained(
-    "EleutherAI/gpt-neo-125M",
-    bos_token="<|startoftext|>",
-    eos_token="<|endoftext|>",
-    pad_token="<|pad|>",
-)
-
-# initalize model
-model = AutoModelForCausalLM.from_pretrained("roneneldan/TinyStories-1M")
-model.resize_token_embeddings(len(tokenizer))
-
-# create tokenized dataset
-tokenizer_args = {
-    "return_tensors": "pt",
-    "max_length": 64,
-    "padding": "max_length",
-    "truncation": True,
-}
+os.environ["OPENAI_API_KEY"] = "API-KEY"
 
 
-def tokenize_function(examples):
-    return tokenizer(examples["text"], **tokenizer_args)
+def create_prompt(row):
+    """Merge Context and Question into a single string"""
+    contexts = row["context"]["contexts"]
+    question = row["question"]
+    prompt = f"""{'CONTEXT: ' + str("; ".join(contexts)) if contexts else ''}
+            QUESTION: {question}
+            ANSWER:"""
+    return {"input": prompt, "response": row["long_answer"]}
 
 
-tokenized_datasets = dataset.map(tokenize_function, batched=True)
+def prepare_dataset(tokenizer, tokenizer_args):
+    dataset = load_dataset("pubmed_qa", "pqa_labeled")
+    merged_dataset = dataset.map(
+        create_prompt,
+        remove_columns=[
+            "question",
+            "context",
+            "long_answer",
+            "pubid",
+            "final_decision",
+        ],
+    )
 
-data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+    def tokenize_text(dataset, padding="max_length"):
+        model_input = tokenizer(dataset["input"], **tokenizer_args)
+        response = tokenizer(dataset["response"], **tokenizer_args)
 
-# create LLMTestCases
-first_test_case = LLMTestCase(
-    input="What if these shoes don't fit?",
-    actual_output="We offer a 30-day full refund at no extra costs.",
-    context=[
-        "All customers are eligible for a 30 day full refund at no extra costs."
-    ],
-)
-second_test_case = LLMTestCase(
-    input="What if these shoes don't fit?",
-    actual_output="We also sell 20 gallons of pepsi",
-    context=[
-        "All customers are eligible for a 30 day full refund at no extra costs."
-    ],
-)
+        if padding == "max_length":
+            response["input_ids"] = [
+                [(l if l != tokenizer.pad_token_id else -100) for l in label]
+                for label in response["input_ids"]
+            ]
 
-# create deepeval metrics list
-dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
-hallucination_metric = HallucinationMetric(minimum_score=0.3)
-answer_relevancy_metric = AnswerRelevancyMetric(minimum_score=0.5)
-metrics = [hallucination_metric, answer_relevancy_metric]
+        model_input["labels"] = response["input_ids"]
+        return model_input
 
-# initalize training_args
-training_args = TrainingArguments(
-    output_dir="./gpt2-fine-tuned",
-    overwrite_output_dir=True,
-    num_train_epochs=10,
-    per_device_train_batch_size=8,
-)
+    tokenized_dataset = merged_dataset.map(
+        tokenize_text, remove_columns=["input", "response"]
+    )
+    tokenized_dataset = tokenized_dataset.map(
+        lambda x: {
+            "input_ids": x["input_ids"][0],
+            "labels": x["labels"][0],
+            "attention_mask": x["attention_mask"][0],
+        }
+    )
+    return dataset, merged_dataset, tokenized_dataset
 
-# initalize trainer
-trainer = Trainer(
-    model=model,
-    args=training_args,
-    data_collator=data_collator,
-    train_dataset=tokenized_datasets,
-)
 
-# initalize DeepEvalCallback
-callback = DeepEvalCallback(
-    metrics=metrics,
-    evaluation_dataset=dataset,
-    tokenizer_args=tokenizer_args,
-    trainer=trainer,
-    show_table=True,
-    show_table_every=1,
-)
-trainer.add_callback(callback)
-trainer.train()
+def create_deepeval_dataset(dataset, sample_size):
+    eval_dataset = [dataset[row] for row in range(5, 10)]
+    goldens = []
+    for row in eval_dataset:
+        golden = Golden(
+            input=row["question"],
+            expectedOutput=row["long_answer"],
+            context=row["context"]["contexts"],
+            retrieval_context=row["context"]["contexts"],
+        )
+        goldens.append(golden)
+
+    return EvaluationDataset(goldens=goldens)
+
+
+if __name__ == "__main__":
+    # initialize tokenizer
+    tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-small")
+
+    # initalize model
+    model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-small")
+    model.resize_token_embeddings(len(tokenizer))
+
+    # create tokenized dataset
+    tokenizer_args = {
+        "return_tensors": "pt",
+        "max_length": 128,
+        "padding": "max_length",
+        "truncation": True,
+        "padding": True,
+    }
+
+    dataset, merged_dataset, tokenized_dataset = prepare_dataset(
+        tokenizer, tokenizer_args
+    )
+
+    label_pad_token_id = -100
+    data_collator = DataCollatorForSeq2Seq(
+        tokenizer,
+        model=model,
+        label_pad_token_id=label_pad_token_id,
+        pad_to_multiple_of=8,
+    )
+
+    repository_id = f"flan-t5-small"
+
+    # Define training args
+    training_args = Seq2SeqTrainingArguments(
+        output_dir=repository_id,
+        overwrite_output_dir=True,
+        num_train_epochs=50,
+        per_device_train_batch_size=8,
+    )
+
+    # Create Trainer instance
+    trainer = Seq2SeqTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        args=training_args,
+        data_collator=data_collator,
+        train_dataset=tokenized_dataset["train"],
+    )
+
+    eval_dataset = create_deepeval_dataset(dataset["train"], sample_size=5)
+    hallucination_metric = HallucinationMetric(threshold=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(
+        threshold=0.5, model="gpt-3.5-turbo"
+    )
+    metrics = [hallucination_metric, answer_relevancy_metric]
+
+    # initalize DeepEvalCallback
+    callback = DeepEvalCallback(
+        metrics=metrics,
+        evaluation_dataset=eval_dataset,
+        tokenizer_args=tokenizer_args,
+        trainer=trainer,
+        show_table=True,
+        show_table_every=1,
+    )
+    trainer.add_callback(callback)
+    trainer.train()
