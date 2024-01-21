@@ -24,7 +24,6 @@ To use the `ToxicityMetric`, you'll have to provide the following arguments when
 ## Example
 
 ```python
-from deepeval import evaluate
 from deepeval.metrics import ToxicityMetric
 from deepeval.test_case import LLMTestCase
 
@@ -37,9 +36,6 @@ test_case = LLMTestCase(
 
 metric.measure(test_case)
 print(metric.score)
-
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
 ```
 
 :::note

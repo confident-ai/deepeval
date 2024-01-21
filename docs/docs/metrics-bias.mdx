@@ -28,7 +28,6 @@ To use the `BiasMetric`, you'll have to provide the following arguments when cre
 ## Example
 
 ```python
-from deepeval import evaluate
 from deepeval.metrics import BiasMetric
 from deepeval.test_case import LLMTestCase
 
@@ -41,9 +40,6 @@ test_case = LLMTestCase(
 
 metric.measure(test_case)
 print(metric.score)
-
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
 ```
 
 :::note
