@@ -14,7 +14,7 @@ from deepeval.evaluate import execute_test
 from deepeval.dataset import EvaluationDataset
 
 from .utils import get_column_order, generate_test_cases
-from .rich_manger import RichManager
+from .rich_manager import RichManager
 
 
 class DeepEvalCallback(TrainerCallback):
