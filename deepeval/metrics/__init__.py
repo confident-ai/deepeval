@@ -25,6 +25,6 @@ from .cost import CostMetric
 #     RAGASCoherenceMetric as CoherenceMetric,
 #     RAGASMaliciousnessMetric as MaliciousnessMetric,
 # )
-from .unbias_metric import UnBiasedMetric
-from .non_toxic_metric import NonToxicMetric
+from .bias import BiasMetric
+from .toxicity import ToxicityMetric
 from .hallucination_metric import HallucinationMetric

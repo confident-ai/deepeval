@@ -4,7 +4,7 @@ title: Bias
 sidebar_label: Bias
 ---
 
-The bias metric determines whether your LLM has gender, racial, or political bias in whatever parameters you want to evaluate it on. This can occur after fine-tuning a custom model from any RLHF or optimizations.
+The bias metric determines whether your LLM output contains gender, racial, or political bias. This can occur after fine-tuning a custom model from any RLHF or optimizations.
 
 :::info
 Bias in `deepeval` is a **referenceless** metric. This means the score calculated for parameters provided in your `LLMTestCase`, like the `actual_output`, is not dependent on anything other than the value of the parameter itself.
@@ -20,30 +20,23 @@ pip install Dbias
 
 ## Required Arguments
 
-To use the `UnBiasedMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
+To use the `BiasMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
 - `input`
 - `actual_output`
 
 ## Example
 
-Unlike other metrics you've encountered to far, the `UnBiasedMetric` requires an extra parameter named evaluation_params. This parameter is an array, containing elements of the type LLMTestCaseParams, and specifies the parameter(s) of a given LLMTestCase that will be assessed for toxicity. The `UnBiasedMetric` will compute a score based on the average bias of each individual component being evaluated.
-
 ```python
 from deepeval import evaluate
-from deepeval.metrics import UnBiasedMetric
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import BiasMetric
+from deepeval.test_case import LLMTestCase
 
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
-
-metric = UnBiasedMetric(
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-    threshold=0.5
-)
+metric = BiasMetric(threshold=0.5)
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output,
+    # Replace this with the actual output from your LLM application
+    actual_output = "We offer a 30-day full refund at no extra cost."
 )
 
 metric.measure(test_case)
