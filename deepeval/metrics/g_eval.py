@@ -1,5 +1,6 @@
 import json
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -13,19 +14,19 @@ from deepeval.models import GPTModel
 from pydantic import BaseModel
 
 
-class LLMEvalMetricResponse(BaseModel):
+class GEvalResponse(BaseModel):
     score: float
     reason: str
 
 
-class LLMEvalMetric(BaseMetric):
+class GEval(BaseMetric):
     def __init__(
         self,
         name: str,
         evaluation_params: List[LLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
-        model: Optional[str] = None,
+        model: Optional[Union[str, BaseChatModel]] = None,
         threshold: float = 0.5,
     ):
         self.name = name
@@ -48,7 +49,8 @@ class LLMEvalMetric(BaseMetric):
             )
 
         self.criteria = criteria
-        self.model = model
+        self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
         self.threshold = threshold
 
@@ -83,8 +85,7 @@ class LLMEvalMetric(BaseMetric):
     def generate_evaluation_steps(self):
         prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
 
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
+        res = self.model(prompt)
 
         return res.content
 
@@ -100,16 +101,7 @@ class LLMEvalMetric(BaseMetric):
             text=text,
         )
 
-        model_kwargs = {
-            "top_p": 1,
-            "frequency_penalty": 0,
-            "stop": None,
-            "presence_penalty": 0,
-        }
-
-        chat_model = GPTModel(model_name=self.model, model_kwargs=model_kwargs)
-        res = chat_model(prompt)
-
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
 

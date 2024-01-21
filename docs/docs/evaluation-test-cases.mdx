@@ -13,7 +13,7 @@ A test case is a blueprint provided by `deepeval` to unit test LLM outputs based
 - [Optional] `expected_output`
 - [Optional] `context`
 - [Optional] `retrieval_context`
-- [Optional] `execution_time` (`float`)
+- [Optional] `latency` (`float`)
 - [Optional] `cost` (`float`)
 
 Except for `actual_output`, all parameters should originate from your evaluation dataset (if you have one). Here's an example implementation of a test case:
@@ -25,7 +25,7 @@ test_case = LLMTestCase(
     actual_output="We offer a 30-day full refund at no extra cost.",
     context=["All customers are eligible for a 30 day full refund at no extra cost."],
     retrieval_context=["Only shoes can be refunded."],
-    execution_time=10.0
+    latency=10.0
 )
 ```
 
@@ -174,32 +174,32 @@ test_case = LLMTestCase(
 Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results.
 :::
 
-## Execution Time
+## Latency
 
-The `execution_time` is an **optional** parameter that represents how long it took your LLM application to finish executing. However, if you're trying to measure something else, like the execution time for only the retrieval part of your RAG pipeline, feel free to supply that number instead of the overall execution time.
+The `latency` is an **optional** parameter that represents how long it took your LLM application to finish executing. However, if you're trying to measure something else, like the latency for only the retrieval part of your RAG pipeline, feel free to supply that number instead of the overall latency.
 
 ```python
 test_case = LLMTestCase(
     input="...",
     actual_output="...",
-    # Replace this with the actual execution time of your LLM application
-    execution_time=10.4
+    # Replace this with the actual latency of your LLM application
+    latency=10.4
 )
 ```
 
 :::note
-`deepeval` does not offer metrics that evaluate on latency and cost, so feel free to supply the `execution_time` in either seconds, miliseconds, or even nanoseconds. That being said, [here is a full working example](metrics-custom#implementation) of how you can build your own `LatencyMetric` using the `execution_time` parameter.
+`deepeval` does not offer metrics that evaluate on latency and cost, so feel free to supply the `latency` in either seconds, miliseconds, or even nanoseconds. That being said, [here is a full working example](metrics-custom#implementation) of how you can build your own `LatencyMetric` using the `latency` parameter.
 :::
 
 ## Cost
 
-The `cost` is an **optional** parameter that represents the token cost for a given execution of your LLM application. However, similar to `execution_time`, the `cost` parameter does not strictly have to be the total completion cost (eg., it could be the embedding cost), nor does it have to be in any set currency.
+The `cost` is an **optional** parameter that represents the token cost for a given execution of your LLM application. However, similar to `latency`, the `cost` parameter does not strictly have to be the total completion cost (eg., it could be the embedding cost), nor does it have to be in any set currency.
 
 ```python
 test_case = LLMTestCase(
     input="...",
     actual_output="...",
-    # Replace this with the actual execution time of your LLM application
+    # Replace this with the actual latency of your LLM application
     cost=0.78
 )
 ```
@@ -253,7 +253,7 @@ Similar to Pytest, `deepeval` allows you to assert any test case you create by c
 - `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics
 
-A test case passes only if all metrics meet their respective evaluation criterion. Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
+**A test case passes only if all metrics passess.** Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
 
 ```python title="test_assert_example.py"
 # A hypothetical LLM application example

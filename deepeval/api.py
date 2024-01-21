@@ -119,7 +119,8 @@ class Api:
     def _raise_on_response(res: Response):
         try:
             message = res.json().get("error", res.text)
-        except ValueError:
+        except ValueError as e:
+            print(e)
             message = res.text
         if res.status_code == 410:
             warnings.warn(f"Deprecation Warning: {message}", DeprecationWarning)
@@ -155,7 +156,7 @@ class Api:
         if res.status_code == 200:
             try:
                 json = res.json()
-            except ValueError:
+            except ValueError as e:
                 # Some endpoints only return 'OK' message without JSON
                 return json
         elif res.status_code == 409:
@@ -325,7 +326,6 @@ class Api:
         self, endpoint, body=None, files=None, data=None
     ):
         """Generic asynchronous POST Request Wrapper"""
-        print("hi")
         return await self._api_request_async(
             "POST",
             endpoint,

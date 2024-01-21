@@ -1,40 +1,54 @@
 <p align="center">
-    <img src="https://github.com/confident-ai/deepeval/blob/main/docs/static/img/DeepEval.png" alt="DeepEval Logo" width="100%">
+    <img src="https://github.com/confident-ai/deepeval/blob/main/docs/static/img/deepeval.png" alt="DeepEval Logo" width="100%">
 </p>
 
 <p align="center">
-    <a href="https://discord.gg/a3K9c8GRGt" target="_blank">
-        <img src="https://img.shields.io/static/v1?label=Discord&message=Join%20Us&color=1f2937&logo=discord&logoColor=white&labelColor=1d4ed8&style=for-the-badge" alt="Join Discord">
+    <a href="https://discord.com/invite/a3K9c8GRGt">
+        <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/a3K9c8GRGt?style=flat">
     </a>
 </p>
+
+<h4 align="center">
+    <p>
+        <a href="https://docs.confident-ai.com/docs/getting-started">Documentation</a> |
+        <a href="#metrics-and-features">Metrics and Features</a> |
+        <a href="#-getting-started-">Getting Started</a> |
+        <a href="https://confident-ai.com">Confident AI</a>
+    <p>
+</h4>
 
 <p align="center">
-    <a href="https://docs.confident-ai.com/docs/getting-started" target="_blank">
-        Read The Docs
+    <a href="https://github.com/confident-ai/deepeval/releases">
+        <img alt="GitHub release" src="https://img.shields.io/github/release/confident-ai/deepeval.svg?color=violet">
     </a>
-    &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
-    <a href="https://confident-ai.com" target="_blank">
-        Website
+    <a href="https://colab.research.google.com/drive/1PPxYEBa6eu__LquGoFFJZkhYgWVYE6kh?usp=sharing">
+        <img alt="Try Quickstart in Colab" src="https://colab.research.google.com/assets/colab-badge.svg">
+    </a>
+    <a href="https://github.com/confident-ai/deepeval/blob/master/LICENSE.md">
+        <img alt="License" src="https://img.shields.io/github/license/confident-ai/deepeval.svg?color=yellow">
     </a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source LLM evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval evaluates performance based on metrics such as hallucination, answer relevancy, RAGAS, etc., using LLMs and various other NLP models that runs **locally on your machine**.
+**DeepEval** is a simple-to-use, open-source LLM evaluation framework for LLM applications. It is similar to Pytest but specialized for unit testing LLM applications. DeepEval incorporates the latest research to evaluate LLM outputs based on metrics such as hallucination, answer relevancy, RAGAS, etc., which uses LLMs and various other NLP models that runs **locally on your machine** for evaluation.
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama2 with confidence.
 
+> Want to talk LLM evaluation? [Come join our discord.](https://discord.com/invite/a3K9c8GRGt)
+
 <br />
 
-# Features
+# Metrics and Features
 
 - Large variety of ready-to-use LLM evaluation metrics powered by LLMs (all with explanations), statistical methods, or NLP models that runs **locally on your machine**:
-  - Hallucination
+  - G-Eval
   - Summarization
   - Answer Relevancy
   - Faithfulness
   - Contextual Recall
   - Contextual Precision
   - RAGAS
-  - G-Eval
+  - Toxicity
+  - Hallucination
   - Toxicity
   - Bias
   - etc.
@@ -46,13 +60,16 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - debug evaluation results via LLM traces
   - manage evaluation test cases / datasets in one place
   - track events to identify live LLM responses in production
+  - real-time evaluation in production
   - add production events to existing evaluation datasets to strength evals over time
+
+(Note that while some metrics are for RAG, others are better for a fine-tuning use case. Make sure to consult our docs to pick the right metric.)
 
 <br />
 
 # 🚀 Getting Started 🚀
 
-Let's pretend your LLM application is a customer support chatbot; here's how DeepEval can help test what you've built.
+Let's pretend your LLM application is a RAG based customer support chatbot; here's how DeepEval can help test what you've built.
 
 ## Installation
 
@@ -85,21 +102,26 @@ Open `test_chatbot.py` and write your first test case using DeepEval:
 ```python
 import pytest
 from deepeval import assert_test
-from deepeval.metrics import HallucinationMetric
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
 def test_case():
-    input = "What if these shoes don't fit?"
-    context = ["All customers are eligible for a 30 day full refund at no extra costs."]
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
+    test_case = LLMTestCase(
+        input="What if these shoes don't fit?",
+        # Replace this with the actual output from your LLM application
+        actual_output="We offer a 30-day full refund at no extra costs.",
+        retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
+    )
+    assert_test(test_case, [answer_relevancy_metric])
+```
+Set your `OPENAI_API_KEY` as an enviornemnt variable (you can also evaluate using your own custom model, for more details visit [this part of our docs](https://docs.confident-ai.com/docs/metrics-introduction#using-a-custom-llm)):
 
-    # Replace this with the actual output from your LLM application
-    actual_output = "We offer a 30-day full refund at no extra costs."
-    hallucination_metric = HallucinationMetric(threshold=0.7)
-    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
-    assert_test(test_case, [hallucination_metric])
+```
+export OPENAI_API_KEY="..."
 ```
 
-Run `test_chatbot.py` in the CLI:
+And finally, run `test_chatbot.py` in the CLI:
 
 ```
 deepeval test run test_chatbot.py
@@ -108,8 +130,8 @@ deepeval test run test_chatbot.py
 **Your test should have passed ✅** Let's breakdown what happened.
 
 - The variable `input` mimics user input, and `actual_output` is a placeholder for your chatbot's intended output based on this query.
-- The variable `context` contains the relevant information from your knowledge base, and `HallucinationMetric(threshold=0.7)` is an out-of-the-box metric provided by DeepEval. It helps you evaluate the factual accuracy of your chatbot's output based on the provided context.
-- The metric score ranges from 0 - 1. The `threshold=0.7` threshold ultimately determines whether your test has passed or not.
+- The variable `retrieval_context` contains the relevant information from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an out-of-the-box metric provided by DeepEval. It helps evaluate the relevancy of your LLM output based on the provided context.
+- The metric score ranges from 0 - 1. The `threshold=0.5` threshold ultimately determines whether your test has passed or not.
 
 [Read our documentation](https://docs.confident-ai.com/docs/getting-started) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
 
@@ -121,22 +143,42 @@ Alternatively, you can evaluate without Pytest, which is more suited for a noteb
 
 ```python
 from deepeval import evaluate
-from deepeval.metrics import HallucinationMetric
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
-input = "What if these shoes don't fit?"
-context = ["All customers are eligible for a 30 day full refund at no extra costs."]
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra costs."
-
-hallucination_metric = HallucinationMetric(threshold=0.7)
+answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
 test_case = LLMTestCase(
-    input=input,
-    actual_output=actual_output,
-    context=context
+    input="What if these shoes don't fit?",
+    # Replace this with the actual output from your LLM application
+    actual_output="We offer a 30-day full refund at no extra costs.",
+    retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
 )
-evaluate([test_case], [hallucination_metric])
+evaluate([test_case], [answer_relevancy_metric])
 ```
+
+## Using Standalone Metrics
+
+DeepEval is extremely modular which makes it extremely easy for anyone to use any of our metrics. Continuing with the previous example:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
+test_case = LLMTestCase(
+    input="What if these shoes don't fit?",
+    # Replace this with the actual output from your LLM application
+    actual_output="We offer a 30-day full refund at no extra costs.",
+    retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
+)
+
+answer_relevancy_metric.measure(test_case)
+print(answer_relevancy_metric.score)
+# Most metrics also offer an explanation
+print(answer_relevancy_metric.reason)
+```
+
+Note that some metrics are for RAG pipelines, while others are for fine-tuning. Make sure to use our docs to pick the right one for your use case.
 
 ## Evaluting a Dataset / Test Cases in Bulk
 
@@ -177,9 +219,9 @@ Alternatively, although we recommend using `deepeval test run`, you can evaluate
 from deepeval import evaluate
 ...
 
-evaluate(dataset, [hallucination_metric])
+evaluate(dataset, [answer_relevancy_metric])
 # or
-dataset.evaluate([hallucination_metric])
+dataset.evaluate([answer_relevancy_metric])
 ```
 
 # View results on Confident AI

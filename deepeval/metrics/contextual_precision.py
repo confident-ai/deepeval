@@ -1,6 +1,7 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import json
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.utils import trimToJson
 from deepeval.test_case import LLMTestCase
@@ -20,12 +21,13 @@ class ContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[str] = None,
+        model: Optional[Union[str, BaseChatModel]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
         self.include_reason = include_reason
-        self.model = model
+        self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
 
     def measure(self, test_case: LLMTestCase) -> float:
         if (
@@ -38,7 +40,7 @@ class ContextualPrecisionMetric(BaseMetric):
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
 
-        with metrics_progress_context(self.__name__):
+        with metrics_progress_context(self.__name__, self.evaluation_model):
             self.verdicts: List[
                 ContextualPrecisionVerdict
             ] = self._generate_verdicts(
@@ -78,9 +80,8 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(score, ".2f"),
         )
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
 
+        res = self.model(prompt)
         return res.content
 
     def _generate_score(self):
@@ -102,11 +103,13 @@ class ContextualPrecisionMetric(BaseMetric):
                 sum_weighted_precision_at_k += precision_at_k * is_relevant
 
         # Calculate weighted cumulative precision
+        if relevant_nodes_count == 0:
+            return 0
+
         weighted_cumulative_precision = (
             sum_weighted_precision_at_k / relevant_nodes_count
-            if relevant_nodes_count > 0
-            else 0
         )
+
         return weighted_cumulative_precision
 
     def _generate_verdicts(
@@ -117,8 +120,8 @@ class ContextualPrecisionMetric(BaseMetric):
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
+
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
         verdicts = [

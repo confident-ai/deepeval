@@ -1,6 +1,7 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import json
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.utils import trimToJson
 from deepeval.test_case import LLMTestCase
@@ -19,11 +20,12 @@ class ContextualRecallMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[str] = None,
+        model: Optional[Union[str, BaseChatModel]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
-        self.model = model
+        self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.n = 5
 
@@ -37,7 +39,7 @@ class ContextualRecallMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__):
+        with metrics_progress_context(self.__name__, self.evaluation_model):
             self.verdicts: List[
                 ContextualRecallVerdict
             ] = self._generate_verdicts(
@@ -72,12 +74,14 @@ class ContextualRecallMetric(BaseMetric):
             unsupportive_reasons=unsupportive_reasons,
             score=format(score, ".2f"),
         )
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
 
+        res = self.model(prompt)
         return res.content
 
     def _generate_score(self):
+        if len(self.verdicts) == 0:
+            return 0
+
         justified_sentences = 0
         for verdict in self.verdicts:
             if verdict.verdict.lower() == "yes":
@@ -91,8 +95,7 @@ class ContextualRecallMetric(BaseMetric):
         prompt = ContextualRecallTemplate.generate_verdicts(
             expected_output=expected_output, retrieval_context=retrieval_context
         )
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
         verdicts = [

@@ -26,6 +26,7 @@ setup(
         "pytest-xdist",
         "portalocker",
         "langchain",
+        "langchain-core",
         "langchain_openai",
         "rouge_score==0.1.2",
         "nltk==3.8.1",

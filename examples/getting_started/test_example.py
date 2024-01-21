@@ -2,24 +2,26 @@ import pytest
 import deepeval
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.metrics import BaseMetric, LLMEvalMetric, HallucinationMetric
+from deepeval.metrics import BaseMetric, GEval, AnswerRelevancyMetric
 
 # To run this file: deepeval test run <file_name>.py
 
 
-def test_hallucination():
+def test_answer_relevancy():
     input = "What if these shoes don't fit?"
-    context = [
+    retrieval_context = [
         "All customers are eligible for a 30 day full refund at no extra cost."
     ]
 
-    # Replace this with the actual output from your LLM application
+    # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(threshold=0.7)
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
     test_case = LLMTestCase(
-        input=input, actual_output=actual_output, context=context
+        input=input,
+        actual_output=actual_output,
+        retrieval_context=retrieval_context,
     )
-    assert_test(test_case, [hallucination_metric])
+    assert_test(test_case, [answer_relevancy_metric])
 
 
 def test_summarization():
@@ -28,7 +30,7 @@ def test_summarization():
     # Replace this with the actual output from your LLM application
     actual_output = "If the shoes don't fit, the customer wants a full refund."
 
-    summarization_metric = LLMEvalMetric(
+    summarization_metric = GEval(
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
         evaluation_params=[
@@ -74,15 +76,15 @@ def test_length():
 
 def test_everything():
     input = "What if these shoes don't fit?"
-    context = [
+    retrieval_context = [
         "All customers are eligible for a 30 day full refund at no extra cost."
     ]
 
     # Replace this with the actual output from your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(threshold=0.7)
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
     length_metric = LengthMetric(max_length=10)
-    summarization_metric = LLMEvalMetric(
+    summarization_metric = GEval(
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
         evaluation_params=[
@@ -93,18 +95,20 @@ def test_everything():
     )
 
     test_case = LLMTestCase(
-        input=input, actual_output=actual_output, context=context
+        input=input,
+        actual_output=actual_output,
+        retrieval_context=retrieval_context,
     )
     assert_test(
         test_case,
-        [hallucination_metric, length_metric, summarization_metric],
+        [answer_relevancy_metric, length_metric, summarization_metric],
     )
 
 
 @deepeval.set_hyperparameters
 def hyperparameters():
     return {
-        "model": "GPT-3",
+        "model": "Azure GPT-5",
         "prompt_template": """You are a helpful assistant, answer the following question in a non-judgemental tone.
 
         Question:

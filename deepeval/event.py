@@ -1,7 +1,6 @@
 from typing import Optional, List, Dict
 from deepeval.api import Api, Endpoints
 import threading
-import asyncio
 from pydantic import BaseModel, Field
 
 

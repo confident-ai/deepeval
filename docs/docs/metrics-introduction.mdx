@@ -8,7 +8,7 @@ sidebar_label: Introduction
 
 In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, a test case represents the thing you're trying to measure. `deepeval` offers a range of default metrics for you to quickly get started with, such as:
 
-- Hallucination
+- G-Eval
 - Summarization
 - Faithfulness
 - Answer Relevancy
@@ -16,6 +16,7 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
 - Contextual Precision
 - Contextual Recall
 - Ragas
+- Hallucination
 - Toxicity
 - Bias
 
@@ -73,6 +74,29 @@ Note that the `model-version` is **optional**. If you ever wish to stop using Az
 ```console
 deepeval unset-azure-openai
 ```
+
+## Using a Custom LLM
+
+We highly discourage the use of custom LLMs since evaluation requires a high level of reasoning capabilities that we find are generally not reachable apart from (Azure) OpenAI's GPT models.
+
+But to use a custom LLM for evaluation, `deepeval` metrics currently supports all of langchain's [Chat Models](https://python.langchain.com/docs/integrations/chat/), which you can provide through the `model` argument when instantiating an LLM-based metric:
+
+```python
+from langchain_openai import AzureChatOpenAI
+
+custom_azure_openai_model = AzureChatOpenAI(
+    openai_api_version=openai_api_version,
+    azure_deployment=azure_deployment,
+    azure_endpoint=azure_endpoint,
+    openai_api_key=openai_api_key,
+)
+
+answer_relevancy_metric = AnswerRelevancyMetric(model=custom_azure_openai_model)
+```
+
+:::note
+While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globally for all LLM-Evals, a custom LLM has to be set each time you instantiate a metric. Remember to provide your custom LLM instance through the `model` parameter for metrics you wish to use it for.
+:::
 
 ## Measuring a Metric
 

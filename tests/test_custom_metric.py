@@ -13,7 +13,7 @@ class LatencyMetric(BaseMetric):
 
     def measure(self, test_case: LLMTestCase):
         # Set self.success and self.score in the "measure" method
-        self.success = test_case.execution_time <= self.threshold
+        self.success = test_case.latency <= self.threshold
         if self.success:
             self.score = 1
         else:
@@ -37,6 +37,6 @@ def test_length_metric():
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="This is a long sentence that is more than 3 letters",
-        execution_time=8.3,
+        latency=8.3,
     )
     assert_test(test_case, [metric])

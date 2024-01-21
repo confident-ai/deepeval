@@ -1,7 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from enum import Enum
 import json
 from concurrent.futures import ThreadPoolExecutor
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -22,12 +23,13 @@ class SummarizationMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[str] = None,
+        model: Optional[Union[str, BaseChatModel]] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
     ):
         self.threshold = threshold
-        self.model = model
+        self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.assessment_questions = assessment_questions
         self.n = n
         self.alignment_score = None
@@ -55,7 +57,7 @@ class SummarizationMetric(BaseMetric):
         summarization_score = min(alignment_score, inclusion_score)
 
         self.success = summarization_score >= self.threshold
-        self.score_metadata = {
+        self.score_breakdown = {
             "Alignment": alignment_score,
             "Inclusion": inclusion_score,
         }
@@ -115,9 +117,7 @@ class SummarizationMetric(BaseMetric):
                 n=self.n, text=source_document
             )
 
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
-
+        res = self.model(prompt)
         json_output = trimToJson(res.content)
         data = json.loads(json_output)
 
@@ -128,9 +128,7 @@ class SummarizationMetric(BaseMetric):
             question=question, text=text
         )
 
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
-
+        res = self.model(prompt)
         return res.content
 
     def is_successful(self) -> bool:

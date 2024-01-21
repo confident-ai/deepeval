@@ -1,7 +1,7 @@
 ---
 id: integrations-llamaindex
-title: Evaluting lLamaIndex
-sidebar_label: lLamaIndex
+title: Evaluating LlamaIndex
+sidebar_label: LlamaIndex
 ---
 
 ## Quick Summary
@@ -81,7 +81,6 @@ class HallucinationResponseEvaluator:
         answer = str(response)
         metric = HallucinationMetric()
         context = self.get_context(response)
-        context = " ".join([d.text for d in context])
         test_case = LLMTestCase(input="This is an example input", context=context, actual_output=answer)
         score = metric.measure(test_case=test_case)
         if metric.is_successful():
