@@ -13,7 +13,7 @@ class ToxicityMetric(BaseMetric):
         self.threshold, self.model_name = threshold, model_name
 
     def measure(self, test_case: LLMTestCase):
-        if test_case.input is None or test_case.actual_output:
+        if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
         _, results = Scorer.neural_toxic_score(
             prediction=test_case.actual_output, model=self.model_name
