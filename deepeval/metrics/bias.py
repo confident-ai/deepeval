@@ -20,7 +20,7 @@ class BiasMetric(BaseMetric):
         self.threshold = threshold
 
     def measure(self, test_case: LLMTestCase):
-        if test_case.input is None or test_case.actual_output:
+        if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
 
         result = Scorer.neural_bias_score(
