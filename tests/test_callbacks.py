@@ -16,6 +16,7 @@ from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
 
 import os
+import random
 
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
 os.environ["OPENAI_API_KEY"] = "API-KEY"
@@ -71,14 +72,20 @@ def prepare_dataset(tokenizer, tokenizer_args):
 
 
 def create_deepeval_dataset(dataset, sample_size):
-    eval_dataset = [dataset[row] for row in range(5, 10)]
+    total_length = len(dataset)
+    random_index_list = [
+        random.randint(0, total_length) for _ in range(sample_size)
+    ]
+    print(random_index_list)
+    eval_dataset = [dataset[row] for row in random_index_list]
     goldens = []
     for row in eval_dataset:
+        context = ["; ".join(row["context"]["contexts"])]
         golden = Golden(
             input=row["question"],
             expectedOutput=row["long_answer"],
-            context=row["context"]["contexts"],
-            retrieval_context=row["context"]["contexts"],
+            context=context,
+            retrieval_context=context,
         )
         goldens.append(golden)
 
