@@ -1,4 +1,5 @@
 import pytest
+import deepeval
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric
 from deepeval import assert_test
@@ -36,3 +37,7 @@ def test_hallucination_metric_3():
     )
     with pytest.raises(AssertionError):
         assert_test(test_case, [metric])
+
+@deepeval.on_test_run_end
+def function_to_be_called_after_test_run():
+    print("Test @@@@@@@@ finished!")

@@ -64,13 +64,13 @@ class TestRun(BaseModel):
         None,
         alias="testFile",
     )
+    deployment: Optional[bool] = Field(True)
     dict_test_cases: Dict[int, APITestCase] = Field(
         default_factory=dict,
     )
     test_cases: List[APITestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
-
     metric_scores: List[MetricScoreType] = Field(
         default_factory=lambda: [], alias="metricScores"
     )
@@ -162,7 +162,9 @@ class TestRunManager:
             testFile=file_name,
             testCases=[],
             metricScores=[],
-            configurations={},
+            configurations={}
+            # TODO: make this a flag
+            # deployment=True
         )
         self.set_test_run(test_run)
 
