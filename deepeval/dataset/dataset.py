@@ -28,8 +28,8 @@ class EvaluationDataset:
 
     def __init__(
         self,
-        goldens: Optional[List[Golden]],
-        test_cases: List[LLMTestCase] = [],
+        goldens: Optional[List[Golden]] = [],
+        test_cases: Optional[List[LLMTestCase]] = [],
     ):
         self.test_cases = test_cases
         self.goldens = goldens
