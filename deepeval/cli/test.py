@@ -61,7 +61,6 @@ def run(
 
     if deployment:
         pytest_args.append("--deployment")
-    print(pytest_args)
 
     pytest_args.extend(
         [
