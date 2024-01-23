@@ -10,10 +10,20 @@ def pytest_sessionstart(session: pytest.Session):
     test_run_manager.save_to_disk = True
     try:
         test_run_manager.create_test_run(
-            session.config.getoption("file_or_dir")[0]
+            deployment=session.config.getoption("--deployment"),
+            file_name=session.config.getoption("file_or_dir")[0],
         )
     except:
         test_run_manager.create_test_run()
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--deployment",
+        action="store_true",
+        default=False,
+        help="Enable deployment mode",
+    )
 
 
 @pytest.hookimpl(tryfirst=True)

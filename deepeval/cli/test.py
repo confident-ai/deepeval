@@ -47,6 +47,9 @@ def run(
         "-n",
         help="Number of processes to use with pytest",
     ),
+    deployment: bool = typer.Option(
+        False, "-d", "--deployment", help="Flag to indicate deployment"
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
@@ -55,6 +58,9 @@ def run(
     pytest_args = [test_file_or_directory]
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
+
+    if deployment:
+        pytest_args.append("--deployment")
 
     pytest_args.extend(
         [
