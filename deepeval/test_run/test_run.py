@@ -158,7 +158,9 @@ class TestRunManager:
         self.test_run = test_run
 
     def create_test_run(
-        self, deployment: bool, file_name: Optional[str] = None
+        self,
+        deployment: Optional[bool] = False,
+        file_name: Optional[str] = None,
     ):
         test_run = TestRun(
             testFile=file_name,
