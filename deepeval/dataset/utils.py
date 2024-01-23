@@ -26,6 +26,7 @@ def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
             actual_output=golden.actual_output,
             expected_output=golden.expected_output,
             context=golden.context,
+            retrieval_context=golden.retrieval_context,
         )
         test_cases.append(test_case)
     return test_cases
