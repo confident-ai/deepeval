@@ -157,14 +157,15 @@ class TestRunManager:
     def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
 
-    def create_test_run(self, file_name: Optional[str] = None):
+    def create_test_run(
+        self, deployment: bool, file_name: Optional[str] = None
+    ):
         test_run = TestRun(
             testFile=file_name,
             testCases=[],
             metricScores=[],
-            configurations={}
-            # TODO: make this a flag
-            # deployment=True
+            configurations={},
+            deployment=deployment,
         )
         self.set_test_run(test_run)
 
