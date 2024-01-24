@@ -90,6 +90,12 @@ const config = {
           },
         ],
       },
+      algolia: {
+        appId: '7U9PQIW1ZA',
+        apiKey: 'fb799aeac8bcd0f6b9e0e233a385ad33',
+        indexName: 'confident-ai',
+        contextualSearch: true,
+      },
       colorMode: {
         defaultMode: 'dark',
         disableSwitch: false,
