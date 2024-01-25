@@ -42,7 +42,7 @@ class AnswerRelevancyModel(DeepEvalBaseModel):
 
 
 class CrossEncoderAnswerRelevancyModel(DeepEvalBaseModel):
-    def __init__(self, model_name: str | None = None):
+    def __init__(self, model_name: Optional[str] = None):
         model_name = (
             "cross-encoder/nli-deberta-v3-base"
             if model_name is None
