@@ -12,6 +12,7 @@ from deepeval.templates import (
     closed_end_questions_template,
     closed_end_answers_template,
 )
+from deepeval.progress_context import metrics_progress_context
 
 
 class ScoreType(Enum):
@@ -39,44 +40,51 @@ class SummarizationMetric(BaseMetric):
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
 
-        source_document = test_case.input
-        summary = test_case.actual_output
+        with metrics_progress_context(self.__name__, self.evaluation_model):
+            source_document = test_case.input
+            summary = test_case.actual_output
 
-        with ThreadPoolExecutor() as executor:
-            future_alignment = executor.submit(
-                self.get_score, ScoreType.ALIGNMENT, source_document, summary
-            )
-            future_inclusion = executor.submit(
-                self.get_score, ScoreType.INCLUSION, source_document, summary
-            )
+            with ThreadPoolExecutor() as executor:
+                future_alignment = executor.submit(
+                    self.get_score,
+                    ScoreType.ALIGNMENT,
+                    source_document,
+                    summary,
+                )
+                future_inclusion = executor.submit(
+                    self.get_score,
+                    ScoreType.INCLUSION,
+                    source_document,
+                    summary,
+                )
 
-            # Wait for the results
-            alignment_score = future_alignment.result()
-            inclusion_score = future_inclusion.result()
+                # Wait for the results
+                alignment_score = future_alignment.result()
+                inclusion_score = future_inclusion.result()
 
-        summarization_score = min(alignment_score, inclusion_score)
+            summarization_score = min(alignment_score, inclusion_score)
 
-        self.success = summarization_score >= self.threshold
-        self.score_breakdown = {
-            "Alignment": alignment_score,
-            "Inclusion": inclusion_score,
-        }
-        self.alignment_score = alignment_score
-        self.inclusion_score = inclusion_score
-        self.score = summarization_score
-        return self.score
+            self.success = summarization_score >= self.threshold
+            self.score_breakdown = {
+                "Alignment": alignment_score,
+                "Inclusion": inclusion_score,
+            }
+            self.alignment_score = alignment_score
+            self.inclusion_score = inclusion_score
+            self.score = summarization_score
+            return self.score
 
     def get_score(
         self, score_type: ScoreType, source_document: str, summary: str
     ):
         questions = []
         if score_type == ScoreType.ALIGNMENT:
-            print("Calculating alignment score...")
+            # print("Calculating alignment score...")
             questions = self.generate_questions(
                 score_type, source_document, summary
             )
         elif score_type == ScoreType.INCLUSION:
-            print("Calculating inclusion score...")
+            # print("Calculating inclusion score...")
             if self.assessment_questions is None:
                 questions = self.generate_questions(
                     score_type, source_document, summary
