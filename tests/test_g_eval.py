@@ -3,6 +3,7 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import GEval
 from deepeval import assert_test
 
+
 @pytest.mark.skip(reason="openai is expensive")
 def test_g_eval():
     metric = GEval(
