@@ -47,7 +47,6 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - Contextual Recall
   - Contextual Precision
   - RAGAS
-  - Toxicity
   - Hallucination
   - Toxicity
   - Bias
