@@ -9,8 +9,10 @@ from deepeval.test_run import test_run_manager
 def pytest_sessionstart(session: pytest.Session):
     test_run_manager.save_to_disk = True
     try:
+        deployment = session.config.getoption("--deployment")
         test_run_manager.create_test_run(
-            deployment=session.config.getoption("--deployment"),
+            # TODO: change to deployment
+            deployment=False,
             file_name=session.config.getoption("file_or_dir")[0],
         )
     except:
@@ -20,9 +22,9 @@ def pytest_sessionstart(session: pytest.Session):
 def pytest_addoption(parser):
     parser.addoption(
         "--deployment",
-        action="store_true",
-        default=False,
-        help="Enable deployment mode",
+        action="store",
+        default=None,
+        help="Set deployment mode (optionally provide a string value)",
     )
 
 

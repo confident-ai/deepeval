@@ -64,6 +64,7 @@ class TestRun(BaseModel):
         None,
         alias="testFile",
     )
+    # TODO: change to Optional[str]
     deployment: Optional[bool] = Field(True)
     dict_test_cases: Dict[int, APITestCase] = Field(
         default_factory=dict,
@@ -159,6 +160,7 @@ class TestRunManager:
 
     def create_test_run(
         self,
+        # TODO: change to Optional[str]
         deployment: Optional[bool] = False,
         file_name: Optional[str] = None,
     ):
