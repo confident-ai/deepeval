@@ -17,7 +17,7 @@ from .utils import get_column_order, generate_test_cases
 from .rich_manager import RichManager
 
 
-class DeepEvalCallback(TrainerCallback):
+class DeepEvalHuggingFaceCallback(TrainerCallback):
     """
     Custom callback for deep evaluation during model training.
 

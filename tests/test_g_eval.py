@@ -1,12 +1,11 @@
 import pytest
-import openai
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import GEval
 from deepeval import assert_test
 
 
-def test_chat_completion():
-    """Test Chat Completion"""
+@pytest.mark.skip(reason="openai is expensive")
+def test_g_eval():
     metric = GEval(
         name="Validity",
         criteria="The response is a valid response to the prompt.",

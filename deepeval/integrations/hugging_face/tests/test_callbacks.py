@@ -11,7 +11,7 @@ from transformers import (
 
 from datasets import load_dataset
 
-from deepeval.callbacks.huggingface import DeepEvalCallback
+from deepeval.integrations.hugging_face import DeepEvalHuggingFaceCallback
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
 
@@ -147,8 +147,8 @@ if __name__ == "__main__":
     )
     metrics = [hallucination_metric, answer_relevancy_metric]
 
-    # initalize DeepEvalCallback
-    callback = DeepEvalCallback(
+    # initalize DeepEvalHuggingFaceCallback
+    callback = DeepEvalHuggingFaceCallback(
         metrics=metrics,
         evaluation_dataset=eval_dataset,
         tokenizer_args=tokenizer_args,
