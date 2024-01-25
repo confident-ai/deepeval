@@ -1,39 +1,39 @@
 import pytest
 from deepeval.integrations.llama_index import (
-    AnswerRelevancyEvaluator,
-    FaithfulnessEvaluator,
-    ContextualRelevancyEvaluator,
-    SummarizationEvaluator,
-    BiasEvaluator,
-    ToxicityEvaluator,
+    DeepEvalAnswerRelevancyEvaluator,
+    DeepEvalFaithfulnessEvaluator,
+    DeepEvalContextualRelevancyEvaluator,
+    DeepEvalSummarizationEvaluator,
+    DeepEvalBiasEvaluator,
+    DeepEvalToxicityEvaluator,
 )
 
 
 def test_answer_relevancy():
-    evaluator = AnswerRelevancyEvaluator()
+    evaluator = DeepEvalAnswerRelevancyEvaluator()
     assert evaluator is not None
 
 
 def test_faithfulness():
-    evaluator = FaithfulnessEvaluator()
+    evaluator = DeepEvalFaithfulnessEvaluator()
     assert evaluator is not None
 
 
 def test_contextual_relevancy():
-    evaluator = ContextualRelevancyEvaluator()
+    evaluator = DeepEvalContextualRelevancyEvaluator()
     assert evaluator is not None
 
 
 def test_summarization():
-    evaluator = SummarizationEvaluator()
+    evaluator = DeepEvalSummarizationEvaluator()
     assert evaluator is not None
 
 
 def test_bias():
-    evaluator = BiasEvaluator()
+    evaluator = DeepEvalBiasEvaluator()
     assert evaluator is not None
 
 
 def test_toxicity():
-    evaluator = ToxicityEvaluator()
+    evaluator = DeepEvalToxicityEvaluator()
     assert evaluator is not None
