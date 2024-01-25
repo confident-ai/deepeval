@@ -74,8 +74,8 @@ user_input = "What is LlamaIndex?"
 # both the output string and retrieved nodes
 response_object = rag_application.query(user_input)
 
-answer_relevancy_evaluator = DeepEvalAnswerRelevancyEvaluator()
-evaluation_result = answer_relevancy_evaluator.evaluate_response(
+evaluator = DeepEvalAnswerRelevancyEvaluator()
+evaluation_result = evaluator.evaluate_response(
     query=user_input,
     response=response_object
 )
