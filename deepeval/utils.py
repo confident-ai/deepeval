@@ -14,6 +14,43 @@ import re
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 
+def get_ci_env():
+    # CircleCI
+    if os.getenv("CIRCLECI") == "true":
+        return "CircleCI"
+
+    # Travis CI
+    if os.getenv("TRAVIS") == "true":
+        return "Travis CI"
+
+    # GitLab CI
+    if os.getenv("GITLAB_CI") == "true":
+        return "GitLab CI"
+
+    # GitHub Actions
+    if os.getenv("GITHUB_ACTIONS") == "true":
+        return "GitHub Actions"
+
+    # Jenkins
+    if os.getenv("JENKINS_URL"):
+        return "Jenkins"
+
+    # Bitbucket Pipelines
+    if os.getenv("BITBUCKET_COMMIT"):
+        return "Bitbucket Pipelines"
+
+    # AppVeyor
+    if os.getenv("APPVEYOR") == "True":
+        return "AppVeyor"
+
+    # Azure Pipelines
+    if os.getenv("AZURE_PIPELINES"):
+        return "Azure Pipelines"
+
+    # Default to None if none of the CI variables are set
+    return None
+
+
 def is_confident():
     confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
     return confident_api_key is not None

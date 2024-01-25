@@ -4,7 +4,7 @@ import os
 from typing_extensions import Annotated
 from typing import Optional
 from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
-from deepeval.utils import delete_file_if_exists
+from deepeval.utils import delete_file_if_exists, get_ci_env
 from deepeval.test_run import invoke_test_run_end_hook
 from deepeval.telemetry import capture_evaluation_count
 
@@ -59,8 +59,11 @@ def run(
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
 
-    if deployment:
-        pytest_args.append("--deployment")
+    ci_env = get_ci_env()
+    if ci_env is not None:
+        pytest_args.extend(["--deployment", ci_env])
+    elif deployment:
+        pytest_args.extend(["--deployment", ""])
 
     pytest_args.extend(
         [
