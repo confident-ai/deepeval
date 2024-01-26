@@ -29,6 +29,17 @@ def get_ci_env():
 
     # GitHub Actions
     if os.getenv("GITHUB_ACTIONS") == "true":
+        actor = os.getenv("GITHUB_ACTOR")
+        branch_ref = os.getenv("GITHUB_REF")
+        commit_sha = os.getenv("GITHUB_SHA")
+        repo_slug = os.getenv("GITHUB_REPOSITORY")
+
+        # For branch name, especially for pull requests
+        if branch_ref.startswith("refs/pull/"):
+            pr_number = branch_ref.split("/")[2]
+            branch_name = f"PR-{pr_number}"
+        else:
+            branch_name = branch_ref.replace("refs/heads/", "")
         return "GitHub Actions"
 
     # Jenkins
