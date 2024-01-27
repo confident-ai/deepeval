@@ -58,7 +58,9 @@ def run(
         pytest_args.insert(0, "-x")
 
     ci_env = get_ci_env()
+    print(ci_env, "@@@@@@@@@@@@@@@@@@@@@@")
     if ci_env is not None:
+        print(ci_env, "CI ENV SHOULD BE NONE")
         ci_env_json = json.dumps(ci_env)
         pytest_args.extend(["--deployment", ci_env_json])
 

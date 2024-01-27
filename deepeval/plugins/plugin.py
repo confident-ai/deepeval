@@ -11,6 +11,7 @@ def pytest_sessionstart(session: pytest.Session):
     test_run_manager.save_to_disk = True
     try:
         deployment_configs = session.config.getoption("--deployment")
+        print(deployment_configs, "LAST CHECK @@@@@@@@@@")
         if deployment_configs is None:
             deployment = False
         else:
