@@ -21,10 +21,6 @@ def pytest_sessionstart(session: pytest.Session):
             disable_request = deployment_configs.pop("is_pull_request", False)
             deployment_configs = DeploymentConfigs(**deployment_configs)
 
-        print("@@@@@@@@@@@")
-        print(deployment_configs)
-        print(disable_request)
-
         test_run_manager.create_test_run(
             deployment=deployment,
             deployment_configs=deployment_configs,
