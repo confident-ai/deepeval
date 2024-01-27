@@ -36,6 +36,14 @@ class MetricScoreType(BaseModel):
         return cls(metric=metric.__name__, score=metric.score)
 
 
+class DeploymentConfigs(BaseModel):
+    env: str
+    actor: Optional[str]
+    branch: Optional[str]
+    sha: Optional[str]
+    repo: Optional[str]
+
+
 class MetricsAverageDict:
     def __init__(self):
         self.metric_dict = {}
@@ -64,8 +72,10 @@ class TestRun(BaseModel):
         None,
         alias="testFile",
     )
-    # TODO: change to Optional[str]
     deployment: Optional[bool] = Field(True)
+    deployment_configs: Optional[DeploymentConfigs] = Field(
+        None, alias="deploymentConfigs"
+    )
     dict_test_cases: Dict[int, APITestCase] = Field(
         default_factory=dict,
     )
@@ -149,27 +159,32 @@ class TestRunManager:
         self.test_run = None
         self.temp_file_name = TEMP_FILE_NAME
         self.save_to_disk = False
+        self.disable_request = False
 
     def reset(self):
         self.test_run = None
         self.temp_file_name = TEMP_FILE_NAME
         self.save_to_disk = False
+        self.disable_request = False
 
     def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
 
     def create_test_run(
         self,
-        # TODO: change to Optional[str]
         deployment: Optional[bool] = False,
+        deployment_configs: Optional[DeploymentConfigs] = False,
         file_name: Optional[str] = None,
+        disable_request: Optional[bool] = False,
     ):
+        self.disable_request = disable_request
         test_run = TestRun(
             testFile=file_name,
             testCases=[],
             metricScores=[],
             configurations={},
             deployment=deployment,
+            deploymentConfigs=deployment_configs,
         )
         self.set_test_run(test_run)
 
@@ -270,7 +285,7 @@ class TestRunManager:
         for test_case in test_run.test_cases:
             test_case.id = None
 
-        if is_confident():
+        if is_confident() and self.disable_request is False:
             try:
                 body = test_run.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
@@ -292,7 +307,8 @@ class TestRunManager:
                     "✅ Tests finished! View results on "
                     f"[link={link}]{link}[/link]"
                 )
-                webbrowser.open(link)
+                if test_run.deployment == False:
+                    webbrowser.open(link)
         else:
             console.print(
                 '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'

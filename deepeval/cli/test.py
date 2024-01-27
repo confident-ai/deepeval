@@ -1,10 +1,11 @@
 import pytest
 import typer
 import os
+import json
 from typing_extensions import Annotated
 from typing import Optional
 from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
-from deepeval.utils import delete_file_if_exists, get_ci_env
+from deepeval.utils import delete_file_if_exists, get_deployment_configs
 from deepeval.test_run import invoke_test_run_end_hook
 from deepeval.telemetry import capture_evaluation_count
 
@@ -47,9 +48,6 @@ def run(
         "-n",
         help="Number of processes to use with pytest",
     ),
-    deployment: bool = typer.Option(
-        False, "-d", "--deployment", help="Flag to indicate deployment"
-    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
@@ -59,11 +57,10 @@ def run(
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
 
-    ci_env = get_ci_env()
-    if ci_env is not None:
-        pytest_args.extend(["--deployment", ci_env])
-    elif deployment:
-        pytest_args.extend(["--deployment", ""])
+    deployment_configs = get_deployment_configs()
+    if deployment_configs is not None:
+        deployment_configs_json = json.dumps(deployment_configs)
+        pytest_args.extend(["--deployment", deployment_configs_json])
 
     pytest_args.extend(
         [

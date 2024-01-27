@@ -1,19 +1,31 @@
 import pytest
 import os
+import json
 from rich import print
 from typing import Optional, Any
 from deepeval.constants import PYTEST_RUN_TEST_NAME
-from deepeval.test_run import test_run_manager
+from deepeval.test_run import test_run_manager, DeploymentConfigs
 
 
 def pytest_sessionstart(session: pytest.Session):
     test_run_manager.save_to_disk = True
     try:
-        deployment = session.config.getoption("--deployment")
+        deployment_configs = session.config.getoption("--deployment")
+        disable_request = False
+
+        if deployment_configs is None:
+            deployment = False
+        else:
+            deployment = True
+            deployment_configs = json.loads(deployment_configs)
+            disable_request = deployment_configs.pop("is_pull_request", False)
+            deployment_configs = DeploymentConfigs(**deployment_configs)
+
         test_run_manager.create_test_run(
-            # TODO: change to deployment
-            deployment=False,
+            deployment=deployment,
+            deployment_configs=deployment_configs,
             file_name=session.config.getoption("file_or_dir")[0],
+            disable_request=disable_request,
         )
     except:
         test_run_manager.create_test_run()
@@ -24,7 +36,7 @@ def pytest_addoption(parser):
         "--deployment",
         action="store",
         default=None,
-        help="Set deployment mode (optionally provide a string value)",
+        help="Set deployment configs",
     )
 
 
