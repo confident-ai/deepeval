@@ -66,6 +66,7 @@ class TestRun(BaseModel):
     )
     # TODO: change to Optional[str]
     deployment: Optional[bool] = Field(True)
+    deployment_configs: Optional[Dict] = Field(None, alias="deploymentConfigs")
     dict_test_cases: Dict[int, APITestCase] = Field(
         default_factory=dict,
     )
@@ -160,8 +161,8 @@ class TestRunManager:
 
     def create_test_run(
         self,
-        # TODO: change to Optional[str]
         deployment: Optional[bool] = False,
+        deployment_configs: Optional[Dict] = False,
         file_name: Optional[str] = None,
     ):
         test_run = TestRun(
@@ -170,6 +171,7 @@ class TestRunManager:
             metricScores=[],
             configurations={},
             deployment=deployment,
+            deploymentConfigs=deployment_configs,
         )
         self.set_test_run(test_run)
 
@@ -292,7 +294,8 @@ class TestRunManager:
                     "✅ Tests finished! View results on "
                     f"[link={link}]{link}[/link]"
                 )
-                webbrowser.open(link)
+                if test_run.deployment == False:
+                    webbrowser.open(link)
         else:
             console.print(
                 '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'

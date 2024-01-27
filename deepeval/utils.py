@@ -2,7 +2,7 @@ from enum import Enum
 import copy
 import os
 import time
-from typing import Any
+from typing import Any, Optional, Dict
 from collections.abc import Iterable
 import tqdm
 import re
@@ -14,51 +14,24 @@ import re
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 
-def get_ci_env():
-    # CircleCI
-    if os.getenv("CIRCLECI") == "true":
-        return "CircleCI"
-
-    # Travis CI
-    if os.getenv("TRAVIS") == "true":
-        return "Travis CI"
-
-    # GitLab CI
-    if os.getenv("GITLAB_CI") == "true":
-        return "GitLab CI"
-
-    # GitHub Actions
+def get_ci_env() -> Optional[Dict]:
     if os.getenv("GITHUB_ACTIONS") == "true":
-        actor = os.getenv("GITHUB_ACTOR")
-        branch_ref = os.getenv("GITHUB_REF")
-        commit_sha = os.getenv("GITHUB_SHA")
-        repo_slug = os.getenv("GITHUB_REPOSITORY")
+        env_info = {
+            "env": "GitHub Actions",
+            "actor": os.getenv("GITHUB_ACTOR", None),
+            "sha": os.getenv("GITHUB_SHA", None),
+            "repo": os.getenv("GITHUB_REPOSITORY", None),
+        }
 
-        # For branch name, especially for pull requests
+        branch_ref = os.getenv("GITHUB_REF", "")
         if branch_ref.startswith("refs/pull/"):
-            pr_number = branch_ref.split("/")[2]
-            branch_name = f"PR-{pr_number}"
-        else:
-            branch_name = branch_ref.replace("refs/heads/", "")
-        return "GitHub Actions"
+            return None
 
-    # Jenkins
-    if os.getenv("JENKINS_URL"):
-        return "Jenkins"
+        env_info["branch"] = (
+            branch_ref.replace("refs/heads/", "") if branch_ref else None
+        )
+        return env_info
 
-    # Bitbucket Pipelines
-    if os.getenv("BITBUCKET_COMMIT"):
-        return "Bitbucket Pipelines"
-
-    # AppVeyor
-    if os.getenv("APPVEYOR") == "True":
-        return "AppVeyor"
-
-    # Azure Pipelines
-    if os.getenv("AZURE_PIPELINES"):
-        return "Azure Pipelines"
-
-    # Default to None if none of the CI variables are set
     return None
 
 
