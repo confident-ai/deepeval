@@ -288,8 +288,6 @@ class EvaluationDataset:
                 goldens=result["goldens"],
             )
 
-            self.goldens = response.goldens
-
             if auto_convert_goldens_to_test_cases:
                 self.test_cases = convert_goldens_to_test_cases(self.goldens)
         else:
