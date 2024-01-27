@@ -24,6 +24,7 @@ def get_ci_env() -> Optional[Dict]:
         }
 
         branch_ref = os.getenv("GITHUB_REF", "")
+        print(branch_ref, "@@@@@@@@@@@@@@@@@@@@@@")
         if branch_ref.startswith("refs/pull/"):
             return None
 

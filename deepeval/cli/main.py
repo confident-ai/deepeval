@@ -32,6 +32,7 @@ def login(
     ),
 ):
     # Use the confident_api_key if it is provided, otherwise proceed with existing logic
+    print(confident_api_key)
     if confident_api_key:
         api_key = confident_api_key
     else:
