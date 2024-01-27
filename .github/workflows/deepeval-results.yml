@@ -43,6 +43,11 @@ jobs:
       - name: Check if 'deepeval' script is available
         run: ls -l $(poetry env info --path)/bin/deepeval || echo "deepeval script not found"
 
+      - name: Run deepeval login
+        env:
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+        run: poetry run deepeval login --confident-api-key "$CONFIDENT_API_KEY"
+
       - name: Run deepeval tests and capture output
         run: poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
 
