@@ -14,7 +14,7 @@ import re
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 
-def get_ci_env() -> Optional[Dict]:
+def get_deployment_configs() -> Optional[Dict]:
     if os.getenv("GITHUB_ACTIONS") == "true":
         env_info = {
             "env": "GitHub Actions",
@@ -24,11 +24,12 @@ def get_ci_env() -> Optional[Dict]:
         }
 
         branch_ref = os.getenv("GITHUB_REF", "")
-        print(branch_ref, "@@@@@@@@@@@@@@@@@@@@@@")
         if branch_ref.startswith("refs/pull/"):
-            print(branch_ref, "!!!!!!!!!!!!!!!!!!")
-            return None
+            is_pull_request = True
+        else:
+            is_pull_request = False
 
+        env_info["is_pull_request"] = is_pull_request
         env_info["branch"] = (
             branch_ref.replace("refs/heads/", "") if branch_ref else None
         )
