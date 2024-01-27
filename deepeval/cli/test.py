@@ -58,6 +58,7 @@ def run(
         pytest_args.insert(0, "-x")
 
     deployment_configs = get_deployment_configs()
+    print(deployment_configs)
     if deployment_configs is not None:
         deployment_configs_json = json.dumps(deployment_configs)
         pytest_args.extend(["--deployment", deployment_configs_json])
