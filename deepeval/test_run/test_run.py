@@ -72,9 +72,10 @@ class TestRun(BaseModel):
         None,
         alias="testFile",
     )
-    # TODO: change to Optional[str]
     deployment: Optional[bool] = Field(True)
-    deployment_configs: Optional[Dict] = Field(None, alias="deploymentConfigs")
+    deployment_configs: Optional[DeploymentConfigs] = Field(
+        None, alias="deploymentConfigs"
+    )
     dict_test_cases: Dict[int, APITestCase] = Field(
         default_factory=dict,
     )
