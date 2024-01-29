@@ -173,7 +173,7 @@ class TestRunManager:
     def create_test_run(
         self,
         deployment: Optional[bool] = False,
-        deployment_configs: Optional[DeploymentConfigs] = False,
+        deployment_configs: Optional[DeploymentConfigs] = None,
         file_name: Optional[str] = None,
         disable_request: Optional[bool] = False,
     ):
