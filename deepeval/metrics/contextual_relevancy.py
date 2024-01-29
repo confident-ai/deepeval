@@ -7,7 +7,7 @@ from langchain_core.language_models import BaseChatModel
 from deepeval.utils import trimToJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.models import GPTModel
+from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.templates import ContextualRelevancyTemplate
 from deepeval.progress_context import metrics_progress_context
 
@@ -21,11 +21,14 @@ class ContextualRelevancyMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[Union[str, BaseChatModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
+        if isinstance(model, DeepEvalBaseModel):
+            self.model = model
+        else:
+            self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
 
@@ -73,7 +76,7 @@ class ContextualRelevancyMetric(BaseMetric):
         )
 
         res = self.model(prompt)
-        return res.content
+        return res
 
     def _generate_score(self):
         irrelevant_sentences = 0
@@ -103,7 +106,7 @@ class ContextualRelevancyMetric(BaseMetric):
         )
 
         res = self.model(prompt)
-        json_output = trimToJson(res.content)
+        json_output = trimToJson(res)
         data = json.loads(json_output)
         verdicts = [
             ContextualRelevancyVerdict(**item) for item in data["verdicts"]

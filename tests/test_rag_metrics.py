@@ -18,4 +18,4 @@ def test_answer_relevancy_again():
     )
     relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
     faithfulness_metric = FaithfulnessMetric(threshold=0.5)
-    assert_test(test_case, [faithfulness_metric])
+    assert_test(test_case, [faithfulness_metric, relevancy_metric])

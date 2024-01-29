@@ -1,12 +1,12 @@
 ---
-# id: integrations-hugginface
-title: DeepEvalCallback
-sidebar_label: DeepEvalCallback
+# id: integrations-huggingface
+title: Hugging Face
+sidebar_label: Hugging Face
 ---
 
 ## Quick Summary
 
-`DeepEvalHuggingFaceCallback` is a custom huggingface's `transformers.TrainerCallback` for in-depth evaluation of LLM/LM models during training/fine-tuning using `transformers.Trainer`. 
+`DeepEvalHuggingFaceCallback` is a custom huggingface's `transformers.TrainerCallback` for in-depth evaluation of LLM/LM models during training/fine-tuning using `transformers.Trainer`.
 
 ## Usage
 
@@ -42,6 +42,7 @@ eval_dataset = EvaluationDataset(goldens=goldens)
 ```
 
 ### Initialize `transformers` Trainer and Tokenizer
+
 ```python
 
 # Load training Dataset
@@ -53,7 +54,9 @@ model = T5ForConditionalGeneration.from_pretrained("MODEL-ID")
 
 tokenizer_args = {...}
 ```
+
 ### Initalize `transformers.Trainer`
+
 ```python
 # Define training args
 training_args = Seq2SeqTrainingArguments(
@@ -73,6 +76,7 @@ trainer = Seq2SeqTrainer(
 ```
 
 ### Initalize `DeepeEvalCallback` and begin Training
+
 ```python
 callback = DeepEvalHuggingFaceCallback(
     metrics=metrics,
@@ -102,7 +106,7 @@ trainer.train()
 - **`evaluation_dataset`**: Dataset for evaluation.
 - **`tokenizer_args`**: Arguments for the tokenizer.
 - **`aggregation_method`**: Method for aggregating metric scores for multiple Goldens.
-- **`trainer`**:  transformers.trainer instance.
+- **`trainer`**: transformers.trainer instance.
 
 #### Methods
 

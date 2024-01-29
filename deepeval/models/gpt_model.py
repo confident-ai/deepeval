@@ -1,10 +1,9 @@
-import os
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_core.language_models import BaseChatModel
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
-from deepeval.models.base import DeepEvalBaseModel
+from deepeval.models import DeepEvalBaseModel
 from deepeval.chat_completion.retry import retry_with_exponential_backoff
 
 valid_gpt_models = [
@@ -81,9 +80,9 @@ class GPTModel(DeepEvalBaseModel):
         return ChatOpenAI(model_name=self.model_name)
 
     @retry_with_exponential_backoff
-    def _call(self, prompt: str):
+    def _call(self, prompt: str) -> str:
         chat_model = self.load_model()
-        return chat_model.invoke(prompt)
+        return chat_model.invoke(prompt).content
 
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
