@@ -6,7 +6,7 @@ from langchain_core.language_models import BaseChatModel
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.models import GPTModel
+from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.utils import trimToJson
 from deepeval.templates import (
     closed_end_questions_template,
@@ -24,12 +24,15 @@ class SummarizationMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[Union[str, BaseChatModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
+        if isinstance(model, DeepEvalBaseModel):
+            self.model = model
+        else:
+            self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.assessment_questions = assessment_questions
         self.n = n
@@ -126,7 +129,7 @@ class SummarizationMetric(BaseMetric):
             )
 
         res = self.model(prompt)
-        json_output = trimToJson(res.content)
+        json_output = trimToJson(res)
         data = json.loads(json_output)
 
         return data["questions"]
@@ -137,7 +140,7 @@ class SummarizationMetric(BaseMetric):
         )
 
         res = self.model(prompt)
-        return res.content
+        return res
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

@@ -9,7 +9,7 @@ from deepeval.templates import (
     evaluation_results_template,
 )
 from deepeval.utils import trimToJson
-from deepeval.models import GPTModel
+from deepeval.models import GPTModel, DeepEvalBaseModel
 
 from pydantic import BaseModel
 
@@ -26,7 +26,7 @@ class GEval(BaseMetric):
         evaluation_params: List[LLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
-        model: Optional[Union[str, BaseChatModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
         threshold: float = 0.5,
     ):
         self.name = name
@@ -49,7 +49,10 @@ class GEval(BaseMetric):
             )
 
         self.criteria = criteria
-        self.model = GPTModel(model=model)
+        if isinstance(model, DeepEvalBaseModel):
+            self.model = model
+        else:
+            self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
         self.threshold = threshold
@@ -87,7 +90,7 @@ class GEval(BaseMetric):
 
         res = self.model(prompt)
 
-        return res.content
+        return res
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[int, str]:
         text = """"""
@@ -102,7 +105,7 @@ class GEval(BaseMetric):
         )
 
         res = self.model(prompt)
-        json_output = trimToJson(res.content)
+        json_output = trimToJson(res)
         data = json.loads(json_output)
 
         return data["score"], data["reason"]
