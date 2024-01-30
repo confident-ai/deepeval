@@ -127,6 +127,8 @@ class TestRun(BaseModel):
                 success=metric.is_successful(),
                 metricsMetadata=[metric_metadata],
                 runDuration=run_duration,
+                latency=test_case.latency,
+                cost=test_case.cost,
                 context=test_case.context,
                 retrievalContext=test_case.retrieval_context,
                 traceStack=get_trace_stack(),

@@ -21,6 +21,8 @@ class APITestCase(BaseModel):
         ..., alias="metricsMetadata"
     )
     run_duration: float = Field(..., alias="runDuration")
+    latency: Optional[float] = Field(None)
+    cost: Optional[float] = Field(None)
     traceStack: Optional[dict] = Field(None)
     context: Optional[list] = Field(None)
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
