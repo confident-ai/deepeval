@@ -72,6 +72,7 @@ class TestRun(BaseModel):
         None,
         alias="testFile",
     )
+    dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
     deployment: Optional[bool] = Field(True)
     deployment_configs: Optional[DeploymentConfigs] = Field(
         None, alias="deploymentConfigs"
@@ -94,6 +95,9 @@ class TestRun(BaseModel):
         run_duration: float,
         index: int,
     ):
+        # Set database alias if exists on test case
+        self.dataset_alias = test_case.dataset_alias
+
         # Check if test case with the same ID already exists
         test_case_id = id(test_case)
         existing_test_case: APITestCase = self.dict_test_cases.get(

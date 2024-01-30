@@ -22,6 +22,7 @@ class LLMTestCase:
         retrieval_context: Optional[List[str]] = None,
         latency: Optional[float] = None,
         cost: Optional[float] = None,
+        dataset_alias: Optional[str] = None,
         id: Optional[str] = None,
     ):
         self.id = id
@@ -32,3 +33,4 @@ class LLMTestCase:
         self.retrieval_context = retrieval_context
         self.latency = latency
         self.cost = cost
+        self.dataset_alias = dataset_alias
