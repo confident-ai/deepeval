@@ -3,8 +3,8 @@ from deepeval.test_case import LLMTestCase
 
 
 class LatencyMetric(BaseMetric):
-    def __init__(self, threshold: float):
-        self.threshold = threshold
+    def __init__(self, max_latency: float):
+        self.threshold = max_latency
 
     def measure(self, test_case: LLMTestCase):
         self.success = test_case.latency <= self.threshold
