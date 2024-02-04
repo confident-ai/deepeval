@@ -4,21 +4,12 @@ from deepeval.metrics import NERMetric
 from deepeval import assert_test
 
 
-def test_chat_completion():
+def test_ner_metric():
     """Test Chat Completion"""
-    metric = NERMetric(
-        name="NER",
-        criteria="The response is a valid response to the prompt.",
-        minimum_score=0.5,
-        evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
-        ],
-    )
+    metric = NERMetric(minimum_score=0.5)
+    actual_output_str = " ".join(["B-PER", "I-PER", "B-LOC"])
     test_case = LLMTestCase(
-        input="Do the NER of the following sentence: George H.W. Bush visited China in 1989.",
-        actual_output=["PER","LOC"],
-        expected_output=["PER","LOC"],
+        input="George Bush visited China in 2006.",
+        actual_output=actual_output_str
     )
-
     assert_test(test_case, [metric])

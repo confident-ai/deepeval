@@ -5,7 +5,7 @@ from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional, Any
 from deepeval.utils import normalize_text
-
+from sklearn.metrics import f1_score
 
 # TODO: More scores are to be added
 class Scorer:
@@ -369,8 +369,8 @@ class Scorer:
         return scorer(text)
 
     @classmethod 
-    def ner_score(true_labels, prediction, model: Optional[str] = None) -> float:
-        """ Calculates Message Understanding Conference score.
+    def ner_score(cls, text:str, true_labels:list,model_name:[Optional] = None) -> float:
+        """ Calculates NER Score.
 
         Args:
             prediction(str): The entity predicted by the model
@@ -379,9 +379,14 @@ class Scorer:
             from deepeval.models import NERModel
         except Exception as e:
             print(f"Unable to load NERModel.\n{e}")
-        scorer = NERModel(model_name=model)
-        predicted_labels = scorer(prediction)
-        tagger_scorer = nltk.tag.CRFTaggerScorer(tagset='bio')
-        scores = tagger_scorer.score(true_labels, predicted_labels)
-        return scores.f1_score
+        ner_model = NERModel()
+        results = ner_model._call(str(text))
+        predicted_labels = [result["entity"] for result in results]
+        # tagger_scorer = nltk.tag.CRFTagger(tagset='bio')
+        # scores = tagger_scorer.accuracy(true_labels, predicted_labels)
+        correct_labels = 0
+        for i,j in zip(true_labels,predicted_labels):
+            if i != j:
+                correct_labels += 1
+        return correct_labels / len(predicted_labels)
 

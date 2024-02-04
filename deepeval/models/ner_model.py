@@ -1,20 +1,24 @@
 import os 
 import numpy as np
 from deepeval.models.base import DeepEvalBaseModel
+from transformers import AutoTokenizer, AutoModelForTokenClassification
 from transformers import pipeline
 
 class NERModel(DeepEvalBaseModel):
     def __init__(self, model_name: str | None = None, *args, **kwargs):
-        super().__init__(model_name, *args, **kwargs)
+        model_name = "dslim/bert-base-NER" if model_name is None else model_name
+        super().__init__(model_name=model_name, *args, **kwargs)
+        self.model = self.load_model()
+        self.tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
 
     def load_model(self):
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model_name = "huggingface-course/bert-finetuned-ner"
-        return pipeline(task="token-classification", model=model_name)
+        model = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER")
+        return model
+
 
     def _call(self, text: str):
-        ner_score_dict = self.model(text)
-        entity = []
-        for element in ner_score_dict:
-            entity.append(element['entity'])
-        return np.array(entity)
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        inputs = tokenizer(text, return_tensors="pt")
+        nlp = pipeline("ner",model = self.model,tokenizer = self.tokenizer)
+        outputs = nlp(text)
+        return outputs
