@@ -2,7 +2,7 @@ from enum import Enum
 import copy
 import os
 import time
-from typing import Any
+from typing import Any, Optional, Dict
 from collections.abc import Iterable
 import tqdm
 import re
@@ -12,6 +12,30 @@ from dataclasses import asdict, is_dataclass
 import re
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+
+
+def get_deployment_configs() -> Optional[Dict]:
+    if os.getenv("GITHUB_ACTIONS") == "true":
+        env_info = {
+            "env": "GitHub Actions",
+            "actor": os.getenv("GITHUB_ACTOR", None),
+            "sha": os.getenv("GITHUB_SHA", None),
+            "repo": os.getenv("GITHUB_REPOSITORY", None),
+        }
+
+        branch_ref = os.getenv("GITHUB_REF", "")
+        if branch_ref.startswith("refs/pull/"):
+            is_pull_request = True
+        else:
+            is_pull_request = False
+
+        env_info["is_pull_request"] = is_pull_request
+        env_info["branch"] = (
+            branch_ref.replace("refs/heads/", "") if branch_ref else None
+        )
+        return env_info
+
+    return None
 
 
 def is_confident():

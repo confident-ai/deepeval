@@ -1,0 +1,117 @@
+---
+# id: integrations-huggingface
+title: Hugging Face
+sidebar_label: Hugging Face
+---
+
+## Quick Summary
+
+`DeepEvalHuggingFaceCallback` is a custom huggingface's `transformers.TrainerCallback` for in-depth evaluation of LLM/LM models during training/fine-tuning using `transformers.Trainer`.
+
+## Usage
+
+### Importing the Necessary Components
+
+```python
+from transformers import (
+    Seq2SeqTrainer,
+    Seq2SeqTrainingArguments,
+    T5Tokenizer,
+    T5ForConditionalGeneration,
+    DataCollatorForSeq2Seq,
+)
+
+from datasets import load_dataset
+
+from deepeval.integrations import DeepEvalHuggingFaceCallback
+from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+```
+
+### Initializing Metrics and Evaluation Dataset
+
+```python
+# Define evaluation metrics
+hallucination_metric = HallucinationMetric(threshold=0.3)
+answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
+metrics = [hallucination_metric, answer_relevancy_metric]
+
+# Define goldens and eval_dataset
+goldens = [Golden(...), Golden(...), Golden(...)]
+eval_dataset = EvaluationDataset(goldens=goldens)
+```
+
+### Initialize `transformers` Trainer and Tokenizer
+
+```python
+
+# Load training Dataset
+training_dataset = load_dataset('DATASET')
+
+# Initalize tokenizer and model
+tokenizer = T5Tokenizer.from_pretrained("MODEL-ID")
+model = T5ForConditionalGeneration.from_pretrained("MODEL-ID")
+
+tokenizer_args = {...}
+```
+
+### Initalize `transformers.Trainer`
+
+```python
+# Define training args
+training_args = Seq2SeqTrainingArguments(
+    output_dir="OUTPUT-DIR",
+    overwrite_output_dir=True,
+    num_train_epochs=50,
+    per_device_train_batch_size=8,
+)
+
+# Create Trainer instance (Seq2SeqTrainer is a child of Trainer)
+trainer = Seq2SeqTrainer(
+    model=model,
+    tokenizer=tokenizer,
+    args=training_args,
+    train_dataset=training_dataset,
+)
+```
+
+### Initalize `DeepeEvalCallback` and begin Training
+
+```python
+callback = DeepEvalHuggingFaceCallback(
+    metrics=metrics,
+    evaluation_dataset=eval_dataset,
+    tokenizer_args=tokenizer_args,
+    trainer=trainer,
+    show_table=True,
+    show_table_every=1,
+)
+
+# Add the callback to the Trainer
+trainer.add_callback(callback)
+
+# Start model training
+trainer.train()
+```
+
+## Reference
+
+### `DeepEvalHuggingFaceCallback` Class
+
+#### Attributes
+
+- **`show_table`**: Flag indicating whether to display a table with evaluation metric scores.
+- **`show_table_every`**: Frequency of displaying the evaluation table.
+- **`metrics`**: Evaluation metrics used during training.
+- **`evaluation_dataset`**: Dataset for evaluation.
+- **`tokenizer_args`**: Arguments for the tokenizer.
+- **`aggregation_method`**: Method for aggregating metric scores for multiple Goldens.
+- **`trainer`**: transformers.trainer instance.
+
+#### Methods
+
+- **`on_epoch_begin`**: Triggered at the beginning of each training epoch.
+- **`on_epoch_end`**: Triggered at the end of each training epoch.
+- **`on_log`**: Triggered after logging the last logs.
+- **`on_train_end`**: Triggered at the end of model training.
+- **`on_train_begin`**: Triggered at the beginning of model training.

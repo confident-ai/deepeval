@@ -1,12 +1,17 @@
 import os
 from typing import Optional
 from deepeval.singleton import Singleton
-from sentence_transformers import CrossEncoder
 from deepeval.progress_context import progress_context
 
 
 class HallucinationModel(metaclass=Singleton):
     def __init__(self, model_name: Optional[str] = None):
+        try:
+            from sentence_transformers import CrossEncoder
+        except ImportError:
+            raise ImportError(
+                "The 'sentence_transformers' library is required to use the HallucinationMetric."
+            )
         # We use a smple cross encoder model
         model_name = (
             "vectara/hallucination_evaluation_model"

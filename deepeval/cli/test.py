@@ -1,10 +1,11 @@
 import pytest
 import typer
 import os
+import json
 from typing_extensions import Annotated
 from typing import Optional
 from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
-from deepeval.utils import delete_file_if_exists
+from deepeval.utils import delete_file_if_exists, get_deployment_configs
 from deepeval.test_run import invoke_test_run_end_hook
 from deepeval.telemetry import capture_evaluation_count
 
@@ -55,6 +56,11 @@ def run(
     pytest_args = [test_file_or_directory]
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
+
+    deployment_configs = get_deployment_configs()
+    if deployment_configs is not None:
+        deployment_configs_json = json.dumps(deployment_configs)
+        pytest_args.extend(["--deployment", deployment_configs_json])
 
     pytest_args.extend(
         [

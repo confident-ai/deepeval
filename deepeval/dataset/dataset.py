@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from rich.console import Console
 import json
 import webbrowser
-import os
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
@@ -26,9 +25,20 @@ class EvaluationDataset:
     test_cases: List[LLMTestCase]
     goldens: List[Golden]
 
-    def __init__(self, test_cases: List[LLMTestCase] = []):
-        self.test_cases = test_cases
-        self.goldens = []
+    def __init__(
+        self,
+        alias: Optional[str] = None,
+        goldens: Optional[List[Golden]] = None,
+        test_cases: Optional[List[LLMTestCase]] = None,
+    ):
+        if test_cases is not None:
+            for test_case in test_cases:
+                test_case.dataset_alias = alias
+            self.test_cases = test_cases
+        else:
+            self.test_cases = []
+        self.goldens = goldens or []
+        self.alias = alias
 
     def add_test_case(self, test_case: LLMTestCase):
         self.test_cases.append(test_case)
@@ -38,6 +48,11 @@ class EvaluationDataset:
 
     def evaluate(self, metrics: List[BaseMetric]):
         from deepeval import evaluate
+
+        if len(self.test_cases) == 0:
+            raise ValueError(
+                "No test cases found in evaluation dataset. Unable to evaluate empty dataset."
+            )
 
         return evaluate(self.test_cases, metrics)
 
@@ -109,6 +124,7 @@ class EvaluationDataset:
                     actual_output=actual_output,
                     expected_output=expected_output,
                     context=context,
+                    dataset_alias=self.alias,
                 )
             )
 
@@ -171,6 +187,7 @@ class EvaluationDataset:
                     actual_output=actual_output,
                     expected_output=expected_output,
                     context=context,
+                    dataset_alias=self.alias,
                 )
             )
 
@@ -238,6 +255,7 @@ class EvaluationDataset:
                     actual_output=actual_output,
                     expected_output=expected_output,
                     context=context,
+                    dataset_alias=self.alias,
                 )
             )
 
@@ -274,6 +292,7 @@ class EvaluationDataset:
 
     def pull(self, alias: str, auto_convert_goldens_to_test_cases: bool = True):
         if is_confident():
+            self.alias = alias
             api = Api()
             result = api.get_request(
                 endpoint=Endpoints.DATASET_ENDPOINT.value,
@@ -284,10 +303,10 @@ class EvaluationDataset:
                 goldens=result["goldens"],
             )
 
-            self.goldens = response.goldens
-
             if auto_convert_goldens_to_test_cases:
-                self.test_cases = convert_goldens_to_test_cases(self.goldens)
+                self.test_cases = convert_goldens_to_test_cases(
+                    response.goldens, alias
+                )
         else:
             raise Exception(
                 "Run `deepeval login` to pull dataset from Confident AI"

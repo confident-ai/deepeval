@@ -1,0 +1,1 @@
+from deepeval.integrations.hugging_face import DeepEvalHuggingFaceCallback

@@ -3,13 +3,12 @@ import os
 import pytest
 from deepeval.dataset import EvaluationDataset
 from deepeval.metrics import HallucinationMetric
-from deepeval import assert_test
+from deepeval import assert_test, evaluate
 from deepeval.test_case import LLMTestCase
-
-dataset = EvaluationDataset()
 
 
 def test_create_dataset():
+    dataset = EvaluationDataset()
     module_b_dir = os.path.dirname(os.path.realpath(__file__))
 
     file_path = os.path.join(module_b_dir, "data", "dataset.csv")
@@ -32,10 +31,27 @@ def test_create_dataset():
     )
     assert len(dataset.test_cases) == 10, "Test Cases not loaded from JSON"
 
-    # dataset.push("alias")
+
+# test_case = LLMTestCase(
+#     input="What if these shoes don't fit?",
+#     # Replace this with the actual output from your LLM application
+#     actual_output="We offer a 30-day full refund at no extra costs.",
+#     context=["All customers are eligible for a 30 day full refund at no extra costs."]
+# )
+# dataset = EvaluationDataset(alias="123", test_cases=[test_case])
+
+# @pytest.mark.parametrize(
+#     "test_case",
+#     dataset,
+# )
+# def test_test_dataset(test_case: LLMTestCase):
+#     metric = HallucinationMetric(threshold=0.5)
+#     assert_test(test_case, [metric])
 
 
-# dataset.pull("alias")
+# dataset = EvaluationDataset()
+# dataset.pull("Testa")
+# print(dataset.test_cases)
 # @pytest.mark.parametrize(
 #     "test_case",
 #     dataset,

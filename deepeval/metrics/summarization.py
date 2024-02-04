@@ -6,12 +6,13 @@ from langchain_core.language_models import BaseChatModel
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.models import GPTModel
+from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.utils import trimToJson
 from deepeval.templates import (
     closed_end_questions_template,
     closed_end_answers_template,
 )
+from deepeval.progress_context import metrics_progress_context
 
 
 class ScoreType(Enum):
@@ -23,12 +24,15 @@ class SummarizationMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[Union[str, BaseChatModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
+        if isinstance(model, DeepEvalBaseModel):
+            self.model = model
+        else:
+            self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.assessment_questions = assessment_questions
         self.n = n
@@ -39,44 +43,51 @@ class SummarizationMetric(BaseMetric):
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
 
-        source_document = test_case.input
-        summary = test_case.actual_output
+        with metrics_progress_context(self.__name__, self.evaluation_model):
+            source_document = test_case.input
+            summary = test_case.actual_output
 
-        with ThreadPoolExecutor() as executor:
-            future_alignment = executor.submit(
-                self.get_score, ScoreType.ALIGNMENT, source_document, summary
-            )
-            future_inclusion = executor.submit(
-                self.get_score, ScoreType.INCLUSION, source_document, summary
-            )
+            with ThreadPoolExecutor() as executor:
+                future_alignment = executor.submit(
+                    self.get_score,
+                    ScoreType.ALIGNMENT,
+                    source_document,
+                    summary,
+                )
+                future_inclusion = executor.submit(
+                    self.get_score,
+                    ScoreType.INCLUSION,
+                    source_document,
+                    summary,
+                )
 
-            # Wait for the results
-            alignment_score = future_alignment.result()
-            inclusion_score = future_inclusion.result()
+                # Wait for the results
+                alignment_score = future_alignment.result()
+                inclusion_score = future_inclusion.result()
 
-        summarization_score = min(alignment_score, inclusion_score)
+            summarization_score = min(alignment_score, inclusion_score)
 
-        self.success = summarization_score >= self.threshold
-        self.score_breakdown = {
-            "Alignment": alignment_score,
-            "Inclusion": inclusion_score,
-        }
-        self.alignment_score = alignment_score
-        self.inclusion_score = inclusion_score
-        self.score = summarization_score
-        return self.score
+            self.success = summarization_score >= self.threshold
+            self.score_breakdown = {
+                "Alignment": alignment_score,
+                "Inclusion": inclusion_score,
+            }
+            self.alignment_score = alignment_score
+            self.inclusion_score = inclusion_score
+            self.score = summarization_score
+            return self.score
 
     def get_score(
         self, score_type: ScoreType, source_document: str, summary: str
     ):
         questions = []
         if score_type == ScoreType.ALIGNMENT:
-            print("Calculating alignment score...")
+            # print("Calculating alignment score...")
             questions = self.generate_questions(
                 score_type, source_document, summary
             )
         elif score_type == ScoreType.INCLUSION:
-            print("Calculating inclusion score...")
+            # print("Calculating inclusion score...")
             if self.assessment_questions is None:
                 questions = self.generate_questions(
                     score_type, source_document, summary
@@ -118,7 +129,7 @@ class SummarizationMetric(BaseMetric):
             )
 
         res = self.model(prompt)
-        json_output = trimToJson(res.content)
+        json_output = trimToJson(res)
         data = json.loads(json_output)
 
         return data["questions"]
@@ -129,7 +140,7 @@ class SummarizationMetric(BaseMetric):
         )
 
         res = self.model(prompt)
-        return res.content
+        return res
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

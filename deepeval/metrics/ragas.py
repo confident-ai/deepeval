@@ -19,7 +19,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, BaseChatModel]] = None,
     ):
         self.threshold = threshold
         self.model = GPTModel(model=model)

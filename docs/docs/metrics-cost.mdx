@@ -21,7 +21,7 @@ from deepeval import evaluate
 from deepeval.metrics import CostMetric
 from deepeval.test_case import LLMTestCase
 
-metric = CostMetric(threshold=0.4)
+metric = CostMetric(max_cost=0.4)
 test_case = LLMTestCase(
     input="...",
     actual_output="...",
@@ -29,10 +29,10 @@ test_case = LLMTestCase(
 )
 
 metric.measure(test_case)
-# True if cost <= threshold
+# True if cost <= max_cost
 print(metric.is_successful())
 ```
 
 :::note
-Similar to `LatencyMetric`, the `CostMetric` threshold does **NOT** have any standard units. However, you need to make sure the monetary units you provide in the `cost` argument when creating an `LLMTestCase` matches that of the cost `threshold`.
+Similar to `LatencyMetric`, the `CostMetric` threshold, `max_cost`, does **NOT** have any standard units. However, you need to make sure the monetary units you provide in the `cost` argument when creating an `LLMTestCase` matches that of the cost `max_cost`.
 :::

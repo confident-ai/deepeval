@@ -182,13 +182,14 @@ The `latency` is an **optional** parameter that represents how long it took your
 test_case = LLMTestCase(
     input="...",
     actual_output="...",
-    # Replace this with the actual latency of your LLM application
+    # Replace this with the actual latency it took your
+    # LLM (application) to generate the actual output
     latency=10.4
 )
 ```
 
-:::note
-`deepeval` does not offer metrics that evaluate on latency and cost, so feel free to supply the `latency` in either seconds, miliseconds, or even nanoseconds. That being said, [here is a full working example](metrics-custom#implementation) of how you can build your own `LatencyMetric` using the `latency` parameter.
+:::info
+The only `deepeval` metric that uses the `latency` parameter is the [`LatencyMetric`.](metrics-latency)
 :::
 
 ## Cost
@@ -199,13 +200,14 @@ The `cost` is an **optional** parameter that represents the token cost for a giv
 test_case = LLMTestCase(
     input="...",
     actual_output="...",
-    # Replace this with the actual latency of your LLM application
+    # Replace this with the actual cost it took your
+    # LLM (application) to generate the actual output
     cost=0.78
 )
 ```
 
 :::info
-`deepeval` does not offer cost and latency metrics because it is difficult to account for all different units and currencies available. We highly encourage you to look at the [custom metrics section](metrics-custom#implementation) for a full example on how to create your own metric if you are looking to evaluate cost and latency.
+Similar to the `LatencyMetric`, the [`CostMetric`](metrics-cost) is the only `deepeval` metric that uses the `cost` parameter.
 :::
 
 ## Run A Test Case
@@ -345,4 +347,4 @@ metric = HallucinationMetric(threshold=0.7)
 evaluate(test_cases, [metric])
 ```
 
-Similar to `assert_test`, `evaluate` allows you to log and view test results on Confident AI. For more examples of `evalute`, visit the [datasets section](evaluation-datasets).
+Similar to `assert_test`, `evaluate` allows you to log and view test results on Confident AI. For more examples of `evaluate`, visit the [datasets section](evaluation-datasets).
