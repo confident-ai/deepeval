@@ -42,6 +42,7 @@ metric = RagasMetric(threshold=0.5, model="gpt-3.5-turbo")
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     actual_output=actual_output,
+    expected_output=expected_output,
     retrieval_context=retrieval_context
 )
 
