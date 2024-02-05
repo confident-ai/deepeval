@@ -1,12 +1,13 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 from threading import Thread, Lock
 import json
 from pydantic import BaseModel, Field
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.utils import trimToJson
-from deepeval.models import GPTModel
+from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.templates import FaithfulnessTemplate
 from deepeval.progress_context import metrics_progress_context
 
@@ -21,12 +22,15 @@ class FaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[str] = None,
+        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
-        # Don't set self.chat_model when using threading
-        self.model = model
+        if isinstance(model, DeepEvalBaseModel):
+            self.model = model
+        else:
+            self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
 
     def measure(self, test_case: LLMTestCase):
@@ -38,7 +42,7 @@ class FaithfulnessMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__):
+        with metrics_progress_context(self.__name__, self.evaluation_model):
             self.truths_list: List[List[str]] = self._generate_truths_list(
                 test_case.retrieval_context
             )
@@ -62,6 +66,9 @@ class FaithfulnessMetric(BaseMetric):
                 if verdict.verdict.strip().lower() != "no":
                     faithful_count += 1
 
+        if total_verdicts == 0:
+            return 0
+
         return faithful_count / total_verdicts
 
     def _generate_reason(self, score: float):
@@ -80,20 +87,18 @@ class FaithfulnessMetric(BaseMetric):
             score=format(score, ".2f"),
         )
 
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
-        return res.content
+        res = self.model(prompt)
+        return res
 
     def _generate_truths(
         self,
         context: str,
-        chat_model: GPTModel,
         truths_list: List[str],
         lock: Lock,
     ):
         prompt = FaithfulnessTemplate.generate_truths(text=context)
-        res = chat_model(prompt)
-        json_output = trimToJson(res.content)
+        res = self.model(prompt)
+        json_output = trimToJson(res)
         data = json.loads(json_output)
         truths = data["truths"]
 
@@ -104,14 +109,13 @@ class FaithfulnessMetric(BaseMetric):
         self, retrieval_context: List[str]
     ) -> List[List[str]]:
         truths_list: List[List[str]] = []
-        chat_model = GPTModel(model_name=self.model)
         threads = []
         lock = Lock()
 
         for context in retrieval_context:
             thread = Thread(
                 target=self._generate_truths,
-                args=(context, chat_model, truths_list, lock),
+                args=(context, truths_list, lock),
             )
             threads.append(thread)
             thread.start()
@@ -125,7 +129,6 @@ class FaithfulnessMetric(BaseMetric):
         self,
         truths: List[str],
         text: str,
-        chat_model: GPTModel,
         verdicts_list: List[List[FaithfulnessVerdict]],
         lock: Lock,
     ):
@@ -133,9 +136,8 @@ class FaithfulnessMetric(BaseMetric):
             truths=truths, text=text
         )
 
-        res = chat_model(prompt)
-
-        json_output = trimToJson(res.content)
+        res = self.model(prompt)
+        json_output = trimToJson(res)
         data = json.loads(json_output)
         verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
 
@@ -154,14 +156,13 @@ class FaithfulnessMetric(BaseMetric):
         self, truths_list: List[List[str]], text: str
     ) -> List[List[FaithfulnessVerdict]]:
         verdicts_list: List[List[FaithfulnessVerdict]] = []
-        chat_model = GPTModel(model_name=self.model)
         threads = []
         lock = Lock()
 
         for truths in truths_list:
             thread = Thread(
                 target=self._generate_verdicts,
-                args=(truths, text, chat_model, verdicts_list, lock),
+                args=(truths, text, verdicts_list, lock),
             )
             threads.append(thread)
             thread.start()

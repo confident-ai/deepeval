@@ -1,11 +1,12 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import json
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.utils import trimToJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.models import GPTModel
+from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.templates import AnswerRelevancyTemplate
 from deepeval.progress_context import metrics_progress_context
 
@@ -19,11 +20,15 @@ class AnswerRelevancyMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[str] = None,
+        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
-        self.model = model
+        if isinstance(model, DeepEvalBaseModel):
+            self.model = model
+        else:
+            self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.n = 5
 
@@ -36,7 +41,7 @@ class AnswerRelevancyMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__):
+        with metrics_progress_context(self.__name__, self.evaluation_model):
             self.key_points: List[str] = self._generate_key_points(
                 test_case.actual_output, "\n".join(test_case.retrieval_context)
             )
@@ -54,6 +59,9 @@ class AnswerRelevancyMetric(BaseMetric):
             return self.score
 
     def _generate_score(self):
+        if len(self.verdicts) == 0:
+            return 0
+
         relevant_count = 0
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() != "no":
@@ -78,9 +86,9 @@ class AnswerRelevancyMetric(BaseMetric):
             answer=answer,
             score=format(score, ".2f"),
         )
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
-        return res.content
+
+        res = self.model(prompt)
+        return res
 
     def _generate_verdicts(
         self, original_question: str
@@ -88,9 +96,9 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = AnswerRelevancyTemplate.generate_verdicts(
             original_question=original_question, key_points=self.key_points
         )
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
-        json_output = trimToJson(res.content)
+
+        res = self.model(prompt)
+        json_output = trimToJson(res)
         data = json.loads(json_output)
         verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
 
@@ -108,9 +116,9 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = AnswerRelevancyTemplate.generate_key_points(
             answer=answer, retrieval_context=retrieval_context
         )
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
-        json_output = trimToJson(res.content)
+
+        res = self.model(prompt)
+        json_output = trimToJson(res)
         data = json.loads(json_output)
         return data["key_points"]
 

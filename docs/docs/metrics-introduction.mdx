@@ -8,7 +8,7 @@ sidebar_label: Introduction
 
 In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, a test case represents the thing you're trying to measure. `deepeval` offers a range of default metrics for you to quickly get started with, such as:
 
-- Hallucination
+- G-Eval
 - Summarization
 - Faithfulness
 - Answer Relevancy
@@ -16,6 +16,7 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
 - Contextual Precision
 - Contextual Recall
 - Ragas
+- Hallucination
 - Toxicity
 - Bias
 
@@ -73,6 +74,65 @@ Note that the `model-version` is **optional**. If you ever wish to stop using Az
 ```console
 deepeval unset-azure-openai
 ```
+
+## Using a Custom LLM
+
+We highly discourage the use of custom LLMs since evaluation requires a high level of reasoning capabilities that we find are generally not reachable apart from (Azure) OpenAI's GPT models.
+
+That being said,`deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs through langchain's [Chat Models](https://python.langchain.com/docs/integrations/chat/), or even LLMs in GGML format, which you can specify through the `model` argument when instantiating an LLM-based metric. Here is an example of using a custom Azure OpenAI model through langchain's `AzureChatOpenAI` interface for evaluation:
+
+```python
+from langchain_openai import AzureChatOpenAI
+from deepeval.models.base import DeepEvalBaseModel
+
+class CustomEvaluationModel(DeepEvalBaseModel):
+    def __init__(
+        self,
+        model
+    ):
+        self.model = model
+
+    def load_model(self):
+        return self.model
+
+    def _call(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        return chat_model.invoke(prompt)
+
+    def get_model_name(self):
+        return "Custom Azure OpenAI Model"
+
+# Replace these with real values
+custom_azure_openai_model = AzureChatOpenAI(
+    openai_api_version=openai_api_version,
+    azure_deployment=azure_deployment,
+    azure_endpoint=azure_endpoint,
+    openai_api_key=openai_api_key,
+)
+custom_evaluation_model = CustomEvaluationModel(model=chat_model)
+print(custom_model("Write me a joke"))
+```
+
+Remember, when creating a custom LLM evaluation model you should always:
+
+- inherit `DeepEvalBaseModel`.
+- implement the `load_model()` method, which will be responsible for returning a model object.
+- implement the `_call()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
+- the `_call()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt)` in this particular example, but this could be different depending on the implementation of your custom LLM object.
+- the `get_model_name()` method simply returns a string representing the name of your LLM model.
+
+Note that the `model` argument in the `__init__()` method can accept any type (the model string or object itself). Lastly, to use it for evaluation in LLM-based metrics:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+metric = AnswerRelevancyMetric(model=custom_evaluation_model)
+```
+
+:::note
+While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globally for all LLM-Evals, a custom LLM has to be set each time you instantiate a metric. Remember to provide your custom LLM instance through the `model` parameter for metrics you wish to use it for.
+:::
 
 ## Measuring a Metric
 

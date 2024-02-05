@@ -1,0 +1,46 @@
+---
+id: confident-ai-github-actions
+title: Evals in GitHub Actions
+sidebar_label: Evals in GitHub Actions
+---
+
+## Quick Summary
+
+Confident AI allows you to monitor evaluation results in CI/CD pipelines using GitHub Actions, specifically on pushes to the repository. To set this up, simply execute `deepeval test run` within your workflow defined in a YAML file located in the `.github/workflows/` directory of your GitHub repository.
+
+:::info
+Confident is currently integrated with GitHub Actions.
+:::
+
+## Setup Evals for GitHub Actions
+
+`deepeval` tracks evaluations ran in GitHub Actions for push events only. To begin, define an evaluation dataset/test cases in a test file and execute it via `deepeval test run` in a GitHub workflow YAML file:
+
+```yaml title=".github/workflows/llm-evaluations.yml"
+name: LLM Deployment Evaluations
+
+# Make sure to include push events
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+        # Some extra steps to setup and install dependencies
+        ...
+
+      - name: Login to Confident
+        env:
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+        run: poetry run deepeval login --confident-api-key "$CONFIDENT_API_KEY"
+
+      - name: Run deepeval tests
+        run: poetry run deepeval test run test_file.py
+```
+
+:::note
+Your workflow file does **NOT** have to be same as the example shown above. In the example, we used poetry and GitHub secrets to store and access our API key, which is not a strict requirement.
+:::
+
+**Congratulations!** With this setup, `deepeval` will automatically log evaluation results to your project's deployments page on Confident AI.

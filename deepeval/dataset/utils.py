@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from deepeval.dataset.api import Golden
 from deepeval.test_case import LLMTestCase
 
@@ -18,7 +18,9 @@ def convert_test_cases_to_goldens(
     return goldens
 
 
-def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
+def convert_goldens_to_test_cases(
+    goldens: List[Golden], dataset_alias: Optional[str] = None
+) -> List[LLMTestCase]:
     test_cases = []
     for golden in goldens:
         test_case = LLMTestCase(
@@ -26,6 +28,8 @@ def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
             actual_output=golden.actual_output,
             expected_output=golden.expected_output,
             context=golden.context,
+            retrieval_context=golden.retrieval_context,
+            dataset_alias=dataset_alias,
         )
         test_cases.append(test_case)
     return test_cases

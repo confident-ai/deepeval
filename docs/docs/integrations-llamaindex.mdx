@@ -1,101 +1,211 @@
 ---
 id: integrations-llamaindex
-title: Evaluting lLamaIndex
-sidebar_label: lLamaIndex
+title: LlamaIndex
+sidebar_label: LlamaIndex
 ---
 
 ## Quick Summary
 
-DeepEval integrates nicely with LlamaIndex's `ResponseEvaluator` class. Below is an example of the factual consistency documentation.
+LlamaIndex is a data framework for LLMs that facilitates the ingestion of data from various sources such as APIs, databases, and PDFs, and indexes it for later retrieval in RAG-based LLM applications.
+
+## Evaluating LlamaIndex (RAG) Applications
+
+RAG applications built using LlamaIndex can be easily evaluated within `deepeval`. Lets use this RAG application built using Llamaindex as an example:
 
 ```python
-from llama_index.response.schema import Response
-from typing import List
-from llama_index.schema import Document
-from deepeval.metrics import HallucinationMetric
-from llama_index import (
-    TreeIndex,
-    VectorStoreIndex,
-    SimpleDirectoryReader,
-    LLMPredictor,
-    ServiceContext,
-    Response,
-)
-from llama_index.llms import OpenAI
-from llama_index.evaluation import ResponseEvaluator
+from llama_index import VectorStoreIndex, SimpleDirectoryReader
 
-import os
-import openai
-
-api_key = "sk-XXX"
-openai.api_key = api_key
-
-gpt4 = OpenAI(temperature=0, model="gpt-4", api_key=api_key)
-service_context_gpt4 = ServiceContext.from_defaults(llm=gpt4)
-evaluator_gpt4 = ResponseEvaluator(service_context=service_context_gpt4)
+# Consult the LlamaIndex docs if you're unsure what this does
+documents = SimpleDirectoryReader("YOUR_DATA_DIRECTORY").load_data()
+index = VectorStoreIndex.from_documents(documents)
+rag_application = index.as_query_engine()
 ```
 
-Getting a lLamaHub Loader
+You can then query your RAG application and evaluate each response using `deepeval`'s metrics:
 
 ```python
-from llama_index import download_loader
-
-WikipediaReader = download_loader("WikipediaReader")
-
-loader = WikipediaReader()
-documents = loader.load_data(pages=['Tokyo'])
-tree_index = TreeIndex.from_documents(documents=documents)
-vector_index = VectorStoreIndex.from_documents(
-    documents, service_context=service_context_gpt4
-)
-```
-
-We then build an evaluator based on the BaseEvaluator class that requires an evaluate method.
-
-In this example, we show you how to write a factual consistency check.
-
-```python
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import HallucinationMetric
+...
 
-class HallucinationResponseEvaluator:
-    def get_context(self, response: Response) -> List[Document]:
-        """Get context information from given Response object using source nodes.
+# An example input to your RAG application
+user_input = "What is LlamaIndex?"
 
-        Args:
-            response (Response): Response object from an index based on the query.
+# LlamaIndex returns a response object that contains
+# both the output string and retrieved nodes
+response_object = rag_application.query(user_input)
 
-        Returns:
-            List of Documents of source nodes information as context information.
-        """
-        context = []
+# Process the response object to get the output string
+# and retrieved nodes
+if response_object is not None:
+    actual_output = response_object.response
+    retrieval_context = [node.get_content() for node in response.source_nodes]
 
-        for context_info in response.source_nodes:
-            context.append(Document(text=context_info.node.get_content()))
+# Create a test case and metric as usual
+test_case = LLMTestCase(
+    input=user_input,
+    actual_output=actual_output,
+    retrieval_context=retrieval_context
+)
+answer_relevancy_metric = AnswerRelevancyMetric()
 
-        return context
-
-    def evaluate(self, response: Response) -> str:
-
-        # Evaluate factual consistency metrics
-        answer = str(response)
-        metric = HallucinationMetric()
-        context = self.get_context(response)
-        context = " ".join([d.text for d in context])
-        test_case = LLMTestCase(input="This is an example input", context=context, actual_output=answer)
-        score = metric.measure(test_case=test_case)
-        if metric.is_successful():
-            return "YES"
-        else:
-            return "NO"
-
-evaluator = HallucinationResponseEvaluator()
+# Evaluate
+answer_relevancy_metric.measure(test_case)
+print(answer_relevancy_metric.score)
+print(answer_relevancy_metric.reason)
 ```
 
-You can then evaluate as such:
+:::info
+You can also extract all necessary outputs and retrieval contexts for each given input to your LlamaIndex application to [create an `EvaluationDataset` to evaluate test cases in bulk.](evaluation-datasets)
+:::
+
+## Using DeepEval for LlamaIndex
+
+In LlamaIndex, there are entities known as evaluators that evaluates the responses of LlamaIndex applications. Continuing from the previous example, here's an alternative way to make use of the `AnswerRelevancyMetric` through `deepeval`'s LlamaIndex evaluators:
 
 ```python
-query_engine = tree_index.as_query_engine()
-response = query_engine.query("How did Tokyo get its name?")
-eval_result = evaluator.evaluate(response)
+from deepeval.integrations.llamaindex import DeepEvalAnswerRelevancyEvaluator
+...
+
+# An example input to your RAG application
+user_input = "What is LlamaIndex?"
+
+# LlamaIndex returns a response object that contains
+# both the output string and retrieved nodes
+response_object = rag_application.query(user_input)
+
+evaluator = DeepEvalAnswerRelevancyEvaluator()
+evaluation_result = evaluator.evaluate_response(
+    query=user_input,
+    response=response_object
+)
+print(evaluation_result)
 ```
+
+:::note
+In LlamaIndex's documentation, you might see examples where the `evaluate()` method is called on an evaluator instead of the `evaluate_response()` method. While both is correct, you should **ALWAYS** use the `evaluate_response()` methods when using `deepeval`'s LlamaIndex evaluators.
+:::
+
+### Answer Relevancy
+
+The `DeepEvalAnswerRelevancyEvaluator` uses `deepeval`'s `AnswerRelevancyMetric` for evaluation.
+
+```python
+from deepeval.integrations.llamaindex import DeepEvalAnswerRelevancyEvaluator
+
+evaluator = DeepEvalAnswerRelevancyEvaluator(
+    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
+    threshold=0.5,
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
+    model="gpt-4-1106-preview",
+    # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
+    include_reason=True
+)
+```
+
+### Faithfulness
+
+The `DeepEvalFaithfulnessEvaluator` uses `deepeval`'s `FaithfulnessMetric` for evaluation.
+
+```python
+from deepeval.integrations.llamaindex import DeepEvalFaithfulnessEvaluator
+
+evaluator = DeepEvalFaithfulnessEvaluator(
+    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
+    threshold=0.5,
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
+    model="gpt-4-1106-preview",
+    # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
+    include_reason=True
+)
+```
+
+### Contextual Relevancy
+
+The `DeepEvalContextualRelevancyEvaluator` uses `deepeval`'s `ContextualRelevancyMetric` for evaluation.
+
+```python
+from deepeval.integrations.llamaindex import DeepEvalContextualRelevancyEvaluator
+
+evaluator = DeepEvalContextualRelevancyEvaluator(
+    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
+    threshold=0.5,
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
+    model="gpt-4-1106-preview",
+    # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
+    include_reason=True
+)
+```
+
+### Summarization
+
+The `DeepEvalSummarizationEvaluator` uses `deepeval`'s `SummarizationMetric` for evaluation.
+
+```python
+from deepeval.integrations.llamaindex import DeepEvalSummarizationEvaluator
+
+evaluator = DeepEvalSummarizationEvaluator(
+    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
+    threshold=0.5,
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
+    model="gpt-4-1106-preview"
+)
+```
+
+### Bias
+
+The `DeepEvalBiasEvaluator` uses `deepeval`'s `BiasMetric` for evaluation.
+
+```python
+from deepeval.integrations.llamaindex import DeepEvalBiasEvaluator
+
+evaluator = DeepEvalBiasEvaluator(
+    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
+    threshold=0.5
+)
+```
+
+### Toxicity
+
+The `DeepEvalToxicityEvaluator` uses `deepeval`'s `ToxicityMetric` for evaluation.
+
+```python
+from deepeval.integrations.llamaindex import DeepEvalToxicityEvaluator
+
+evaluator = DeepEvalToxicityEvaluator(
+    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
+    threshold=0.5
+)
+```
+
+## Metrics vs Evaluators
+
+While both `deepeval`'s metrics and evaluators yield the same result, `deepeval` is a full evaluation suite built specifically for LLM evaluation. Naturally, `deepeval` forces you to follow evaluation best practices, something not accomplishable through the use of the evaluators abstraction.
+
+So while both metrics and evaluators can be used for a one-off, standalone evaluation, metrics:
+
+- can be combined to evaluate multiple criteria asynchronously
+- can be used to evaluate entire `EvaluationDataset`s
+- can leverage `deepeval`'s native Pytest integration to unit test LlamaIndex applications in CI/CD pipelines
+- can be used with any framework, meaning you are not vendor locked-in into LlamaIndex
+- covers a wider range of evaluation criteria/use cases
+- automatically integrates with [Confident AI](confident-ai-introduction), which offers evaluation analysis, evaluation debugging, dataset management, and real-time evaluations in production
+
+:::note
+The only upside of using `deepeval`'s LlamaIndex evaluators instead of metrics, is an evaluator automatically extracts the `retrieval_context` from a LlamaIndex response. However, as shown in previous examples, manually extracting the `retrieval_context` from a LlamaIndex response is extremely straightforward:
+
+```python
+...
+
+# LlamaIndex returns a response object that contains
+# both the output string and retrieved nodes
+response_object = rag_application.query(user_input)
+
+# Process the response object to get the output string
+# and retrieved nodes
+if response_object is not None:
+    actual_output = response_object.response
+    retrieval_context = [node.get_content() for node in response.source_nodes]
+```
+
+:::

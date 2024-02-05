@@ -10,9 +10,9 @@ The faithfulness metric measures the quality of your RAG pipeline's generator by
 Although similar to the `HallucinationMetric`, the faithfulness metric in `deepeval` is more concerned with hallucination in RAG pipelines, rather than the actual LLM itself.
 :::
 
-## Required Parameters
+## Required Arguments
 
-To use the `FaithfulnessMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+To use the `FaithfulnessMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -50,8 +50,14 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
+There are three optional parameters when creating a `FaithfulnessMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any one of langchain's [chat models](https://python.langchain.com/docs/integrations/chat/) of type `BaseChatModel`. Defaulted to 'gpt-4-1106-preview'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+
 You can also choose to fallback to Ragas' faithfulness metric (which has a similar implemention). This however is not capable of generating a reason.
 
 ```python
-from deepeval.metrics import RAGASFaithfulnessMetric
+from deepeval.metrics.ragas import RAGASFaithfulnessMetric
 ```

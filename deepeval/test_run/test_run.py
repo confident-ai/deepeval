@@ -2,6 +2,15 @@ import os
 import json
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict
+import shutil
+import webbrowser
+import sys
+import datetime
+import portalocker
+from rich.table import Table
+from rich.console import Console
+from rich import print
+
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import get_trace_stack
@@ -13,15 +22,7 @@ from deepeval.test_run.api import (
     MetricsMetadata,
     TestRunHttpResponse,
 )
-import shutil
-import webbrowser
-from deepeval.utils import delete_file_if_exists
-import sys
-import datetime
-import portalocker
-from rich.table import Table
-from rich.console import Console
-from rich import print
+from deepeval.utils import delete_file_if_exists, is_confident
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
 
@@ -33,6 +34,14 @@ class MetricScoreType(BaseModel):
     @classmethod
     def from_metric(cls, metric: BaseMetric):
         return cls(metric=metric.__name__, score=metric.score)
+
+
+class DeploymentConfigs(BaseModel):
+    env: str
+    actor: Optional[str]
+    branch: Optional[str]
+    sha: Optional[str]
+    repo: Optional[str]
 
 
 class MetricsAverageDict:
@@ -63,13 +72,17 @@ class TestRun(BaseModel):
         None,
         alias="testFile",
     )
+    dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
+    deployment: Optional[bool] = Field(True)
+    deployment_configs: Optional[DeploymentConfigs] = Field(
+        None, alias="deploymentConfigs"
+    )
     dict_test_cases: Dict[int, APITestCase] = Field(
         default_factory=dict,
     )
     test_cases: List[APITestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
-
     metric_scores: List[MetricScoreType] = Field(
         default_factory=lambda: [], alias="metricScores"
     )
@@ -82,6 +95,9 @@ class TestRun(BaseModel):
         run_duration: float,
         index: int,
     ):
+        # Set database alias if exists on test case
+        self.dataset_alias = test_case.dataset_alias
+
         # Check if test case with the same ID already exists
         test_case_id = id(test_case)
         existing_test_case: APITestCase = self.dict_test_cases.get(
@@ -94,6 +110,7 @@ class TestRun(BaseModel):
             threshold=metric.threshold,
             reason=metric.reason,
             success=metric.is_successful(),
+            evaluationModel=metric.evaluation_model,
         )
 
         if existing_test_case:
@@ -114,6 +131,8 @@ class TestRun(BaseModel):
                 success=metric.is_successful(),
                 metricsMetadata=[metric_metadata],
                 runDuration=run_duration,
+                latency=test_case.latency,
+                cost=test_case.cost,
                 context=test_case.context,
                 retrievalContext=test_case.retrieval_context,
                 traceStack=get_trace_stack(),
@@ -146,21 +165,32 @@ class TestRunManager:
         self.test_run = None
         self.temp_file_name = TEMP_FILE_NAME
         self.save_to_disk = False
+        self.disable_request = False
 
     def reset(self):
         self.test_run = None
         self.temp_file_name = TEMP_FILE_NAME
         self.save_to_disk = False
+        self.disable_request = False
 
     def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
 
-    def create_test_run(self, file_name: Optional[str] = None):
+    def create_test_run(
+        self,
+        deployment: Optional[bool] = False,
+        deployment_configs: Optional[DeploymentConfigs] = None,
+        file_name: Optional[str] = None,
+        disable_request: Optional[bool] = False,
+    ):
+        self.disable_request = disable_request
         test_run = TestRun(
             testFile=file_name,
             testCases=[],
             metricScores=[],
             configurations={},
+            deployment=deployment,
+            deploymentConfigs=deployment_configs,
         )
         self.set_test_run(test_run)
 
@@ -233,10 +263,14 @@ class TestRunManager:
                 else:
                     status = "[red]FAILED[/red]"
 
+                evaluation_model = metric_metadata.evaluation_model
+                if evaluation_model is None:
+                    evaluation_model = "n/a"
+
                 table.add_row(
                     "",
                     str(metric_metadata.metric),
-                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.threshold}, reason={metric_metadata.reason})",
+                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason})",
                     status,
                     "",
                 )
@@ -257,7 +291,7 @@ class TestRunManager:
         for test_case in test_run.test_cases:
             test_case.id = None
 
-        if os.path.exists(".deepeval"):
+        if is_confident() and self.disable_request is False:
             try:
                 body = test_run.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
@@ -273,13 +307,14 @@ class TestRunManager:
                 projectId=result["projectId"],
                 link=result["link"],
             )
-            if response and os.path.exists(".deepeval"):
+            if response:
                 link = response.link
                 console.print(
                     "✅ Tests finished! View results on "
                     f"[link={link}]{link}[/link]"
                 )
-                webbrowser.open(link)
+                if test_run.deployment == False:
+                    webbrowser.open(link)
         else:
             console.print(
                 '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'

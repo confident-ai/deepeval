@@ -10,7 +10,30 @@ sidebar_label: Evals in Production
 
 ## Setup Tracking
 
-Simply add `deepeval.track(...)` in your application to start tracking events. The `track()` function takes in the following arguments:
+Simply add `deepeval.track(...)` in your application to start tracking events.
+
+```python
+import deepeval
+
+# At the end of your LLM call
+deepeval.track(
+    event_name="Chatbot",
+    model="gpt-4",
+    input="input",
+    output="output",
+    distinct_id="a user Id",
+    conversation_id="a conversation thread Id",
+    retrieval_context=["..."],
+    completion_time=8.23,
+    token_usage=134,
+    token_cost=0.23,
+    additional_data={"example": "example"},
+    fail_silently=True,
+    run_on_background_thread=True
+)
+```
+
+The `track()` function takes in the following arguments:
 
 - `event_name`: type `str` specifying the event tracked
 - `model`: type `str` specifying the name of the LLM model used
@@ -30,32 +53,18 @@ Simply add `deepeval.track(...)` in your application to start tracking events. T
 Please do **NOT** provide placeholder values for optional parameters. Leave it blank instead.
 :::
 
-```python
-import deepeval
+## Track Events on Confident AI
 
-...
-
-# At the end of your LLM call
-deepeval.track(
-    event_name="Chatbot",
-    model="gpt-4",
-    input="input",
-    output="output",
-    distinct_id="a user Id",
-    conversation_id="a conversation thread Id",
-    retrieval_context=["..."]
-    completion_time=8.23,
-    token_usage=134,
-    token_cost=0.23,
-    additional_data={"example": "example"},
-    fail_silently=True
-    run_on_background_thread=True
-)
-
-```
-
-## View Events on Confident AI
-
-Lastly, go to Confident's observatory to view events and identify ones where you want to augment your evaluation dataset with.
+Confident offers an observatory to view events and identify ones where you want to augment your evaluation dataset with.
 
 ![ok](https://d2lsxfc3p6r9rv.cloudfront.net/observatory.png)
+
+If you're building an LLM chatbot, you can also view entire conversation threads via the `conversation_id`.
+
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/conversation.png)
+
+## Enable Real-Time Evals
+
+To monitor how your LLM application is performing over time, and be alerted of any unsatisfactory LLM responses in production, head to the "projects details" section via the left navigation drawer to turn on the metrics you wish to enable in production. Confident AI will automatically run evaluations for enabled metrics for all incoming events.
+
+![ok](https://d2lsxfc3p6r9rv.cloudfront.net/metrics-settings.png)

@@ -51,18 +51,18 @@ Run `touch test_example.py` to create a test file in your root directory. Open `
 ```python title="test_example.py"
 import pytest
 from deepeval import assert_test
-from deepeval.metrics import HallucinationMetric
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
-def test_hallucination():
+def test_answer_relevancy():
     input = "What if these shoes don't fit?"
-    context = ["All customers are eligible for a 30 day full refund at no extra cost."]
+    retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
     # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(threshold=0.7)
-    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
-    assert_test(test_case, [hallucination_metric])
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
+    test_case = LLMTestCase(input=input, actual_output=actual_output, retrieval_context=retrieval_context)
+    assert_test(test_case, [answer_relevancy_metric])
 ```
 
 Run `deepeval test run` from the root directory of your project:
@@ -74,11 +74,11 @@ deepeval test run test_example.py
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
 - The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
-- The variable `context` contains the relevant information from your knowledge base, and `HallucinationMetric(threshold=0.7)` is an default metric provided by DeepEval for you to evaluate how factually correct your application's output is based on the provided context.
-- All metric scores range from 0 - 1, which the `threshold=0.7` threshold ultimately determines if your test have passed or not.
+- The variable `retrieval_context` contains the retrieved context from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an default metric provided by `deepeval` for you to evaluate your LLM output's relevancy based on the provided retrieval context.
+- All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
 :::note
-`deepeval`'s default metrics are not evaluated using LLMs. Keep reading this tutorial to learn how to create an LLM based evaluation metric.
+You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running the `AnswerRelevancyMetric`, since the `AnswerRelevancyMetric` is an LLM-evaluated metric. You use a custom LLM instead of OpenAI, [check out this part of the docs](evaluation-introduction).
 :::
 
 To save the test results locally for each test run, set the `DEEPEVAL_RESULTS_FOLDER` environement variable to your relative path of choice:
@@ -93,11 +93,11 @@ export DEEPEVAL_RESULTS_FOLDER="./data"
 
 ### LLM Evaluated Metrics
 
-An LLM evaluated metric, is one where evaluation is carried out by an LLM. Here's how you can create a custom, LLM evaluated metric.
+An LLM evaluated metric, is one where evaluation is carried out by an LLM. `deepeval` offers G-Eval, a state-of-the-art framework to create an LLM evaluated metric.
 
 ```python title="test_example.py"
 from deepeval import assert_test
-from deepeval.metrics import LLMEvalMetric
+from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 ...
@@ -108,7 +108,7 @@ def test_summarization():
     # Replace this with the actual output from your LLM application
     actual_output = "If the shoes don't fit, the customer wants a full refund."
 
-    summarization_metric = LLMEvalMetric(
+    summarization_metric = GEval(
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
         evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
@@ -164,37 +164,37 @@ Run `deepeval test run` from the root directory of your project again:
 deepeval test run test_example.py
 ```
 
-You should see both `test_hallucination` and `test_length` passing.
+You should see both `test_answer_relevancy` and `test_length` passing.
 
 **Two things to note:**
 
 - Custom metrics does requires a `mimimum_score` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `actual_output` is greater than 10.
-- We removed `context` in `test_length` since it was irrelevant to evaluating output length. All you need is `input` and `actual_output` to create a valid `LLMTestCase`.
+- We removed `retrieval_context` in `test_length` since it was irrelevant to evaluating output length. However `input` and `actual_output` to always mandatory to create a valid `LLMTestCase`.
 
 ## Combine Your Metrics
 
-You might've noticed we have duplicated test cases for both `test_hallucination` and `test_length` (ie. they have the same input and expected output). To avoid this redundancy, `deepeval` offers an easy way to apply as many metrics as you wish on a single test case.
+You might've noticed we have duplicated test cases for both `test_answer_relevancy` and `test_length` (ie. they have the same input and expected output). To avoid this redundancy, `deepeval` offers an easy way to apply as many metrics as you wish on a single test case.
 
 ```python title="test_example.py"
 ...
 
 def test_everything():
     input = "What if these shoes don't fit?"
-    context = ["All customers are eligible for a 30 day full refund at no extra cost."]
+    retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
     # Replace this with the actual output of your LLM application
     actual_output = "We offer a 30-day full refund at no extra cost."
-    hallucination_metric = HallucinationMetric(threshold=0.7)
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
     length_metric = LengthMetric(max_length=10)
-    summarization_metric = LLMEvalMetric(
+    summarization_metric = GEval(
         name="Summarization",
         criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
         evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
         threshold=0.5
     )
 
-    test_case = LLMTestCase(input=input, actual_output=actual_output, context=context)
-    assert_test(test_case, [hallucination_metric, length_metric, summarization_metric])
+    test_case = LLMTestCase(input=input, actual_output=actual_output, retrieval_context=retrieval_context)
+    assert_test(test_case, [answer_relevancy_metric, length_metric, summarization_metric])
 ```
 
 In this scenario, `test_everything` only passes if all metrics are passing. Run `deepeval test run` again to see the results:
@@ -205,78 +205,49 @@ deepeval test run test_example.py
 
 ## Evaluate Your Dataset in Bulk
 
-First, parse your evaluation dataset into the following format:
+An evaluation dataset in `deepeval` is a collection of test cases. Using `deepeval`'s Pytest integration, you can utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate your evaluation dataset.
 
-```python
-class DataPoint:
-    input: str
-    expected_output: Optional[str]
-    context: Optional[List[str]]
-
-class Dataset:
-   data_points: List[DataPoint]
-```
-
-Utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate your entire evaluation dataset.
-
-```python title="test_bulk.py"
+```python title="test_dataset.py"
 import pytest
 from deepeval import assert_test
-from deepeval.metrics import HallucinationMetric
+from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
 
-dataset = [
-    {
-        "input": "What are your operating hours?",
-        "context": [
-            "Our company operates from 10 AM to 6 PM, Monday to Friday.",
-            "We are closed on weekends and public holidays.",
-            "Our customer service is available 24/7.",
-        ],
-    },
-    {
-        "input": "Do you offer free shipping?",
-        "expected_output": "Yes, we offer free shipping on orders over $50.",
-        "context": [
-            "We offer free shipping on all orders over $50.",
-        ],
-    },
-    {
-        "input": "What is your return policy?",
-        "context": [
-            "Free returns within the first 30 days of purchase."
-        ],
-    },
-]
+first_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
+second_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
 
+# Initialize an evaluation dataset by supplying a list of test cases
+dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
 
+# Loop through test cases using Pytest
 @pytest.mark.parametrize(
     "test_case",
     dataset,
 )
-def test_hallucination(test_case: dict):
-    input = test_case.get("input")
-    expected_output = test_case.get("expected_output")
-    context = test_case.get("context")
-
-    # Replace this with the actual output of your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
-
-    hallucination_metric = HallucinationMetric(threshold=0.7)
-    test_case = LLMTestCase(
-        input=input,
-        actual_output=actual_output,
-        expected_output=expected_output,
-        context=context
-    )
-    assert_test(test_case, [hallucination_metric])
+def test_customer_chatbot(test_case: LLMTestCase):
+    faithfulness_metric = FaithfulnessMetric(threshold=0.3)
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
+    assert_test(test_case, [faithfulness_metric, answer_relevancy_metric])
 ```
 
-To run test cases at once in parallel, use the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
+You can also run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 
 ```
-deepeval test run test_bulk.py -n 2
+deepeval test run test_dataset.py -n 2
 ```
+
+Alternatively, you can evaluate entire datasets without going through the CLI (if you're in a notebook environment):
+
+```python
+...
+
+evaluate(test_cases, [faithfulness_metric, answer_relevancy_metric])
+```
+
+:::info
+To learn more about the additional features an `EvaluationDataset` offers, visit the [dataset section.](evaluation-datasets)
+:::
 
 ## Visualize Your Results
 

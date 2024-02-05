@@ -4,7 +4,7 @@ title: RAGAS
 sidebar_label: RAGAS
 ---
 
-The RAGAS metric is the harmonic mean of four distinct metrics:
+The RAGAS metric is the average of four distinct metrics:
 
 - `RAGASAnswerRelevancyMetric`
 - `RAGASFaithfulnessMetric`
@@ -13,13 +13,9 @@ The RAGAS metric is the harmonic mean of four distinct metrics:
 
 It provides a score to holistically evaluate of your RAG pipeline's generator and retriever.
 
-:::note
-Since RAGAS is the harmonic mean of these four distinct metrics, a value of 0 in either one of these metrics will result in a final 0 value for RAGAS.
-:::
+## Required Arguments
 
-## Required Parameters
-
-To use the `RagasMetric`, you'll have to provide the following parameters when creating an `LLMTestCase`:
+To use the `RagasMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -30,7 +26,7 @@ To use the `RagasMetric`, you'll have to provide the following parameters when c
 
 ```python
 from deepeval import evaluate
-from deepeval.metrics import RagasMetric
+from deepeval.metrics.ragas import RagasMetric
 from deepeval.test_case import LLMTestCase
 
 # Replace this with the actual output from your LLM application
@@ -55,3 +51,21 @@ print(metric.score)
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])
 ```
+
+There are three optional parameters when creating a `RagasMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any one of langchain's [chat models](https://python.langchain.com/docs/integrations/chat/) of type `BaseChatModel`. Defaulted to 'gpt-3.5-turbo'.
+
+:::note
+You can also choose to import and evaluate using each metric individually:
+
+```python
+from deepeval.metrics.ragas import RAGASAnswerRelevancyMetric
+from deepeval.metrics.ragas import RAGASFaithfulnessMetric
+from deepeval.metrics.ragas import RAGASContextualRecallMetric
+from deepeval.metrics.ragas import RAGASContextualPrecisionMetric
+```
+
+These metrics accept the same arguments as the `RagasMetric`.
+:::

@@ -4,8 +4,8 @@
 from typing import List
 import time
 from dataclasses import dataclass
-import copy
 
+from deepeval.utils import drop_and_copy
 from deepeval.telemetry import capture_evaluation_count
 from deepeval.progress_context import progress_context
 from deepeval.metrics import BaseMetric
@@ -74,7 +74,7 @@ def execute_test(
 
         count += 1
         test_result = create_test_result(
-            test_case, success, copy.deepcopy(metrics)
+            test_case, success, drop_and_copy(metrics, ["model"])
         )
         test_results.append(test_result)
 
@@ -133,22 +133,24 @@ def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
 
 
 def print_test_result(test_result: TestResult):
-    print("\n" + "=" * 70 + "\n")
+    print("")
+    print("=" * 70 + "\n")
     print("Metrics Summary\n")
     for metric in test_result.metrics:
         if not metric.is_successful():
             print(
-                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, reason: {metric.reason})"
+                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
             )
         else:
             print(
-                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, reason: {metric.reason})"
+                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
             )
-        if metric.score_metadata:
-            for metric_name, score in metric.score_metadata.items():
+        if metric.score_breakdown:
+            for metric_name, score in metric.score_breakdown.items():
                 print(f"      - {metric_name} (score: {score})")
 
-    print("\nFor test case:\n")
+    print("")
+    print("For test case:\n")
     print(f"  - input: {test_result.input}")
     print(f"  - actual output: {test_result.actual_output}")
     print(f"  - expected output: {test_result.expected_output}")

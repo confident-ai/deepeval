@@ -1,12 +1,13 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 from threading import Thread, Lock
 import json
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.utils import trimToJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.models import GPTModel
+from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.templates import ContextualRelevancyTemplate
 from deepeval.progress_context import metrics_progress_context
 
@@ -20,11 +21,15 @@ class ContextualRelevancyMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[str] = "gpt-4",
+        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
-        self.model = model
+        if isinstance(model, DeepEvalBaseModel):
+            self.model = model
+        else:
+            self.model = GPTModel(model=model)
+        self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -36,7 +41,7 @@ class ContextualRelevancyMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__):
+        with metrics_progress_context(self.__name__, self.evaluation_model):
             self.verdicts_list: List[
                 List[ContextualRelevancyVerdict]
             ] = self._generate_verdicts_list(
@@ -70,9 +75,8 @@ class ContextualRelevancyMetric(BaseMetric):
             score=format(score, ".2f"),
         )
 
-        chat_model = GPTModel(model_name=self.model)
-        res = chat_model(prompt)
-        return res.content
+        res = self.model(prompt)
+        return res
 
     def _generate_score(self):
         irrelevant_sentences = 0
@@ -83,6 +87,9 @@ class ContextualRelevancyMetric(BaseMetric):
                 if verdict.verdict.lower() == "no":
                     irrelevant_sentences += 1
 
+        if total_sentence_count == 0:
+            return 0
+
         return (
             total_sentence_count - irrelevant_sentences
         ) / total_sentence_count
@@ -91,7 +98,6 @@ class ContextualRelevancyMetric(BaseMetric):
         self,
         text: str,
         context: str,
-        chat_model: GPTModel,
         verdicts_list: List[List[ContextualRelevancyVerdict]],
         lock: Lock,
     ):
@@ -99,9 +105,8 @@ class ContextualRelevancyMetric(BaseMetric):
             text=text, context=context
         )
 
-        res = chat_model(prompt)
-
-        json_output = trimToJson(res.content)
+        res = self.model(prompt)
+        json_output = trimToJson(res)
         data = json.loads(json_output)
         verdicts = [
             ContextualRelevancyVerdict(**item) for item in data["verdicts"]
@@ -114,13 +119,12 @@ class ContextualRelevancyMetric(BaseMetric):
         self, text: str, retrieval_context: List[str]
     ) -> List[List[ContextualRelevancyVerdict]]:
         verdicts_list: List[List[ContextualRelevancyVerdict]] = []
-        chat_model = GPTModel(model_name=self.model)
         threads = []
         lock = Lock()
         for context in retrieval_context:
             thread = Thread(
                 target=self._generate_verdicts,
-                args=(text, context, chat_model, verdicts_list, lock),
+                args=(text, context, verdicts_list, lock),
             )
             threads.append(thread)
             thread.start()
