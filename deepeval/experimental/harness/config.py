@@ -33,6 +33,7 @@ class GeneralConfig(BaseModel, metaclass=GeneralConfigMeta):
     
     # information about the tokenizer
     tokenizer_name_or_path: str 
+    model_name: str = None 
     
 class APIEndpointConfig(GeneralConfig, metaclass=APIEndpointConfigMeta):
     """Config for APIs. Right now this follows only OpenAI and Endpoints with OpenAI Spec"""
