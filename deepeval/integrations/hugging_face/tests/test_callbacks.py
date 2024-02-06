@@ -154,7 +154,6 @@ if __name__ == "__main__":
         tokenizer_args=tokenizer_args,
         trainer=trainer,
         show_table=True,
-        show_table_every=1,
     )
     trainer.add_callback(callback)
     trainer.train()
