@@ -8,7 +8,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.utils import trimToJson
-from deepeval.templates import (
+from deepeval.metrics.templates import (
     closed_end_questions_template,
     closed_end_answers_template,
 )

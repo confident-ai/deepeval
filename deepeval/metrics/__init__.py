@@ -27,4 +27,4 @@ from .cost import CostMetric
 # )
 from .bias import BiasMetric
 from .toxicity import ToxicityMetric
-from .hallucination_metric import HallucinationMetric
+from .hallucination import HallucinationMetric
