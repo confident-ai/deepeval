@@ -103,8 +103,44 @@ class DeepEvalBaseHarnessWrapper(BaseLM):
     def tok_decode(self, tokens: List[int]) -> str:
         return self.tokenizer.decode(tokens)
     
-    def run_eval(self):
-        pass 
+    def run_eval(
+        self, eval_tasks: List[str], bootstrap_iters: int, 
+        num_fewshot: Optional[int] = None, 
+        limit: Optional[int] = None, no_cache: bool = True 
+    ):
+        # todo: Caching is not available in the current version
+
+        import fnmatch
+        def pattern_match(patterns, source_list):
+            task_names = set()
+            for pattern in patterns:
+                for matching in fnmatch.filter(source_list, pattern):
+                    task_names.add(matching)
+            return list(task_names)
+
+        eval_tasks = pattern_match(eval_tasks, lm_eval_tasks.ALL_TASKS)
+        lm_eval_tasks.get_task_dict(eval_tasks)
+        
+        lm = self 
+        
+        results = evaluator.evaluate(
+            lm=lm,
+            task_dict=eval_tasks.get_task_dict(eval_tasks),
+            num_fewshot=num_fewshot,
+            limit=limit,
+            bootstrap_iters=bootstrap_iters
+        )
+        
+        results["config"] = dict(
+            model=self.config.model if self._model_type == 'openai' else self.config.model_name,
+            batch_size = self.batch_size,
+            device=str(self.device),
+            num_fewshot=self.config.n_samples if num_fewshot is None else num_fewshot,
+            limit=self.config.limit if limit is None else limit,
+            bootstrap_iters=bootstrap_iters,
+            no_cache=no_cache
+        )
+        return results 
     
     def deep_evaluate():
         pass 
