@@ -5,7 +5,6 @@ import json
 import webbrowser
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
 from deepeval.api import Api, Endpoints
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
@@ -14,9 +13,10 @@ from deepeval.dataset.utils import (
 from deepeval.dataset.api import (
     APIDataset,
     CreateDatasetHttpResponse,
-    Golden,
     DatasetHttpResponse,
 )
+from deepeval.dataset.golden import Golden
+from deepeval.test_case import LLMTestCase
 from deepeval.utils import is_confident
 
 

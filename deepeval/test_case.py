@@ -13,24 +13,29 @@ class LLMTestCaseParams(Enum):
 
 @dataclass
 class LLMTestCase:
-    def __init__(
-        self,
-        input: str,
-        actual_output: str,
-        expected_output: Optional[str] = None,
-        context: Optional[List[str]] = None,
-        retrieval_context: Optional[List[str]] = None,
-        latency: Optional[float] = None,
-        cost: Optional[float] = None,
-        dataset_alias: Optional[str] = None,
-        id: Optional[str] = None,
-    ):
-        self.id = id
-        self.input = input
-        self.actual_output = actual_output
-        self.expected_output = expected_output
-        self.context = context
-        self.retrieval_context = retrieval_context
-        self.latency = latency
-        self.cost = cost
-        self.dataset_alias = dataset_alias
+    input: str
+    actual_output: str
+    expected_output: Optional[str] = None
+    context: Optional[List[str]] = None
+    retrieval_context: Optional[List[str]] = None
+    latency: Optional[float] = None
+    cost: Optional[float] = None
+    dataset_alias: Optional[str] = None
+    id: Optional[str] = None
+
+    def __post_init__(self):
+        # Ensure `context` is None or a list of strings
+        if self.context is not None:
+            if not isinstance(self.context, list) or not all(
+                isinstance(item, str) for item in self.context
+            ):
+                raise TypeError("context must be None or a list of strings")
+
+        # Ensure `retrieval_context` is None or a list of strings
+        if self.retrieval_context is not None:
+            if not isinstance(self.retrieval_context, list) or not all(
+                isinstance(item, str) for item in self.retrieval_context
+            ):
+                raise TypeError(
+                    "retrieval_context must be None or a list of strings"
+                )

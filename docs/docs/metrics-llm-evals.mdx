@@ -24,10 +24,10 @@ from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
 summarization_metric = GEval(
-    name="Summarization",
-    criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
+    name="Coherence",
+    criteria="Coherence - determine if the actual output is coherent with the input.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
-    evaluation_steps=["Check whether the 'actual output' has omitted any detail from 'input'"],
+    evaluation_steps=["Check whether the sentences in 'actual output' aligns with that in 'input'"],
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 ```
