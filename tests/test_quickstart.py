@@ -7,4 +7,4 @@ from deepeval import assert_test
 
 def test_cost():
     test_case = LLMTestCase(input="...", actual_output="...", cost=0.4)
-    assert_test(test_case, [CostMetric()])
+    assert_test(test_case, [CostMetric(max_cost=5)])
