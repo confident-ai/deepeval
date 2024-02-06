@@ -111,7 +111,6 @@ class HallucinationMetric(BaseMetric):
             verdicts = [
                 HallucinationVerdict(**item) for item in data["verdicts"]
             ]
-            print("okokok")
 
         return verdicts
 
@@ -132,7 +131,6 @@ class HallucinationMetric(BaseMetric):
         json_output = trimToJson(res)
         data = json.loads(json_output)
 
-        print("okokok")
         # verdicts length will always be 1
         final_verdicts = [
             HallucinationVerdict(**item) for item in data["verdicts"]
