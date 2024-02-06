@@ -1,1 +1,3 @@
-from deepeval.integrations.hugging_face import DeepEvalHuggingFaceCallback
+from deepeval.integrations.hugging_face.callback import (
+    DeepEvalHuggingFaceCallback,
+)
