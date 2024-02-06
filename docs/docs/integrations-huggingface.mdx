@@ -25,11 +25,77 @@ tokenizer.batch_decode(generated_ids)[0]
 # "The expected output"
 ```
 
-## Evaluation During Fine-Tuning
+## Evals During Fine-Tuning
 
-`deepeval` integrates with Hugging Face's `transformers.Trainer` module, enabling real-time evaluation of LLM outputs during model fine-tuning.
+`deepeval` integrates with Hugging Face's `transformers.Trainer` module through the `DeepEvalHuggingFaceCallback`, enabling real-time evaluation of LLM outputs during model fine-tuning for each epoch.
 
-To begin, define an `EvaluationDataset` and the metrics you want to evaluate your LLM on:
+:::info
+In this section, we'll walkthrough an example of fine-tuning Mistral's 7B model.
+:::
+
+### Prepare Dataset for Fine-tuning
+
+```python
+from transformers import AutoTokenizer
+from datasets import load_dataset
+
+####################
+### Load dataset ###
+####################
+training_dataset = load_dataset("text", data_files={"train": "train.txt"})
+
+########################
+### Tokenize dataset ###
+########################
+def tokenize_function(examples):
+    return tokenizer(examples["text"], padding="max_length", truncation=True)
+
+tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
+tokenized_dataset = training_dataset.map(tokenize_function, batched=True)
+```
+
+### Setup Training Arguments
+
+```python
+from transformers import TrainingArguments
+...
+
+training_args = TrainingArguments(
+    output_dir="./results",
+    num_train_epochs=5,
+    per_device_train_batch_size=4,
+    warmup_steps=500,
+    weight_decay=0.01,
+    logging_dir="./logs",
+    logging_steps=10,
+)
+```
+
+### Initialize LLM and Trainer for Fine-Tuning
+
+```python
+from transformers import AutoModelForCausalLM
+...
+
+######################
+### Initialize LLM ###
+######################
+llm = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
+
+
+##########################
+### Initialize Trainer ###
+##########################
+trainer = Trainer(
+    model=llm,
+    args=training_args,
+    train_dataset=tokenized_datasets["train"],
+)
+```
+
+### Define Evaluation Criteria
+
+Use `deepeval` to define an `EvaluationDataset` and the metrics you want to evaluate your LLM on:
 
 ```python
 from deepeval.test_case import LLMTestCaseParams
@@ -46,6 +112,12 @@ coherence_metric = GEval(
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 ```
+
+:::info
+We initialize an `EvaluationDataset` with [goldens instead of test cases](evaluation-datasets#with-goldens) since we're running inference at evaluation time.
+:::
+
+### Fine-tune and Evaluate
 
 Then, create a `DeepEvalHuggingFaceCallback`:
 
@@ -67,125 +139,19 @@ The `DeepEvalHuggingFaceCallback` accepts the following arguements:
 - trainer: a `transformers.trainer` instance.
 - tokenizer_args: Arguments for the tokenizer.
 
-### Importing the Necessary Components
+Lastly, add `deepeval_hugging_face_callback` to your `transformers.Trainer`, and begin fine-tuning:
 
 ```python
-from transformers import (
-    Seq2SeqTrainer,
-    Seq2SeqTrainingArguments,
-    T5Tokenizer,
-    T5ForConditionalGeneration,
-    DataCollatorForSeq2Seq,
-)
-
-from datasets import load_dataset
-
-from deepeval.integrations import DeepEvalHuggingFaceCallback
-from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
-```
-
-### Initializing Metrics and Evaluation Dataset
-
-```python
-# Define evaluation metrics
-hallucination_metric = HallucinationMetric(threshold=0.3)
-answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-metrics = [hallucination_metric, answer_relevancy_metric]
-
-# Define goldens and eval_dataset
-goldens = [Golden(...), Golden(...), Golden(...)]
-eval_dataset = EvaluationDataset(goldens=goldens)
-```
-
-### Initialize `transformers` Trainer and Tokenizer
-
-```python
-
-# Load training Dataset
-training_dataset = load_dataset('DATASET')
-
-# Initalize tokenizer and model
-tokenizer = T5Tokenizer.from_pretrained("MODEL-ID")
-model = T5ForConditionalGeneration.from_pretrained("MODEL-ID")
-
-tokenizer_args = {...}
-```
-
-### Initalize `transformers.Trainer`
-
-```python
-# Define training args
-training_args = Seq2SeqTrainingArguments(
-    output_dir="OUTPUT-DIR",
-    overwrite_output_dir=True,
-    num_train_epochs=50,
-    per_device_train_batch_size=8,
-)
-
-# Create Trainer instance (Seq2SeqTrainer is a child of Trainer)
-trainer = Seq2SeqTrainer(
-    model=model,
-    tokenizer=tokenizer,
-    args=training_args,
-    train_dataset=training_dataset,
-)
-```
-
-### Initalize `DeepeEvalCallback` and begin Training
-
-```python
-callback = DeepEvalHuggingFaceCallback(
-    metrics=metrics,
-    evaluation_dataset=eval_dataset,
-    tokenizer_args=tokenizer_args,
-    trainer=trainer,
-    show_table=True,
-    show_table_every=1,
-)
-
-# Add the callback to the Trainer
+...
+#############################
+### Add DeepEval Callback ###
+#############################
 trainer.add_callback(callback)
 
-# Start model training
+#########################
+### Start Fine-tuning ###
+#########################
 trainer.train()
 ```
 
-## Reference
-
-### `DeepEvalHuggingFaceCallback` Class
-
-#### Attributes
-
-- **`show_table`**: Flag indicating whether to display a table with evaluation metric scores.
-- **`show_table_every`**: Frequency of displaying the evaluation table.
-- **`metrics`**: Evaluation metrics used during training.
-- **`evaluation_dataset`**: Dataset for evaluation.
-- **`tokenizer_args`**: Arguments for the tokenizer.
-- **`aggregation_method`**: Method for aggregating metric scores for multiple Goldens.
-- **`trainer`**: transformers.trainer instance.
-
-#### Methods
-
-- **`on_epoch_begin`**: Triggered at the beginning of each training epoch.
-- **`on_epoch_end`**: Triggered at the end of each training epoch.
-- **`on_log`**: Triggered after logging the last logs.
-- **`on_train_end`**: Triggered at the end of model training.
-- **`on_train_begin`**: Triggered at the beginning of model training.
-
-```python
-from transformers import AutoModelForCausalLM, AutoTokenizer
-device = "cuda" # the device to load the model onto
-
-model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
-tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
-
-prompt = "My favourite condiment is"
-
-model_inputs = tokenizer([prompt], return_tensors="pt").to(device)
-model.to(device)
-
-generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
-tokenizer.batch_decode(generated_ids)[0]
-"The expected output"
-```
+With this setup, evaluations will be ran on the entirety of your `EvaluationDataset` according to the metrics you defined at the end of each `epoch`.

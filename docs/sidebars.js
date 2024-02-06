@@ -62,7 +62,7 @@ module.exports = {
       items: [
         'integrations-introduction',
         'integrations-llamaindex',
-        // 'integrations-huggingface'
+        'integrations-huggingface'
       ],
       collapsed: false,
     },
