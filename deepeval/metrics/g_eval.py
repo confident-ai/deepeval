@@ -4,7 +4,7 @@ from langchain_core.language_models import BaseChatModel
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.templates import (
+from deepeval.metrics.templates import (
     evaluation_steps_template,
     evaluation_results_template,
 )

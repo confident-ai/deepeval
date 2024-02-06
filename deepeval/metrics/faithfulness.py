@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Union
 from threading import Thread, Lock
 import json
 from pydantic import BaseModel, Field
@@ -8,7 +8,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.utils import trimToJson
 from deepeval.models import GPTModel, DeepEvalBaseModel
-from deepeval.templates import FaithfulnessTemplate
+from deepeval.metrics.templates import FaithfulnessTemplate
 from deepeval.progress_context import metrics_progress_context
 
 
