@@ -112,14 +112,26 @@ Reason:
 
 class FaithfulnessTemplate:
     @staticmethod
-    def generate_truths(text):
-        return f"""Based on the given text, please generate a comphrensive list of undisputed "truths" that can inferred from the provided text. You should NOT incorporate any knowledge you have, and take each truth at face value.
+    def generate_claims(text):
+        return f"""Based on the given text, please generate a comphrensive list of FACTUAL claims that can inferred from the provided text.
 
-Example text: "Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
-Example truths: ["Einstein won the noble prize for his discovery of the photoelectric effect.", "Einstein won the noble prize in 1968."]
+Example:
+Example Text: 
+"Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
+
+Example JSON: 
+{{
+    "claims": [
+        "Einstein won the noble prize for his discovery of the photoelectric effect.",
+        "Einstein won the noble prize in 1968."
+    ]  
+}}
+===== END OF EXAMPLE ======
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "truths" key as a list of strings. No words or explaination is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the "claims" key as a list of strings. No words or explaination is needed.
+Only include claims that are factual, and the claims you extract should include the full context it was presented in, NOT cherry picked facts.
+You should NOT include any prior knowledge, and take the text at face value when extracting claims.
 **
 
 Text:
@@ -129,50 +141,85 @@ JSON:
 """
 
     @staticmethod
-    def generate_verdicts(truths, text):
-        return f"""Based on a list of strings, called contexts, please generate a list of JSON objects to indicate whether the given 'actual output' agrees with EACH context. The JSON will have 2 fields: 'verdict' and 'reason'.
-The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', and states whether the given text agrees with the context. 
-The 'reason' is the reason for the verdict. When the answer is 'no' or 'idk', try to provide a correction in the reason. 
-You DON'T have to provide a reason if the answer is 'yes'.
-
-**
-IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
-Example retrieval contexts: ["Einstein won the Nobel Prize for his discovery of the photoelectric effect.", "Einstein won the Nobel Prize in 1968."]
-Example actual output: "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect."
+    def generate_truths(text):
+        return f"""Based on the given text, please generate a comphrensive list of FACTUAL, undisputed truths that can inferred from the provided text.
 
 Example:
+Example Text: 
+"Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
+
+Example JSON: 
 {{
-    "verdicts": [
-        {{
-            "verdict": "yes",
-            "reason": "The node in the retrieval context states that Einstein won the Nobel Prize for his discovery of the photoelectric effect."
-        }},
-        {{
-            "verdict": "no",
-            "reason": "The node in the retrieval context states that Einstein won the Nobel Prize in 1968, not 1969."
-        }}
+    "truths": [
+        "Einstein won the noble prize for his discovery of the photoelectric effect.",
+        "Einstein won the noble prize in 1968."
     ]  
 }}
+===== END OF EXAMPLE ======
 
-You should NOT incorporate any prior knowledge you have and take each context at face value. Since you are going to generate a verdict for each context, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to that of contexts.
-You DON'T have to provide a reason if the answer is 'yes'.
-You should ONLY provide a 'no' answer if IT IS A CONTRADICTION.
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "truths" key as a list of strings. No words or explaination is needed.
+Only include truths that are factual.
 **
 
-Retrieval Contexts:
-{truths}
-
-Actual Output:
+Text:
 {text}
 
 JSON:
 """
 
     @staticmethod
+    def generate_verdicts(claims, retrieval_context):
+        return f"""Based on the given claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH claim contradicts any information in the retrieval context. The JSON will have 2 fields: 'verdict' and 'reason'.
+The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given claim agrees with the context. 
+Provide a 'reason' ONLY if the answer is 'no'. 
+The provided claim is drawn from the actual output. Try to provide a correction in the reason using the information in the retrieval context.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
+Example retrieval contexts: "Einstein won the Nobel Prize for his discovery of the photoelectric effect. Einstein won the Nobel Prize in 1968. Einstein is a German Scientist."
+Example claims: ["Einstein is handsome.", "Einstein won the Nobel Prize for the discovery of the photoelectric effect which may have contributed to his fame.", "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect.", "Einstein was a Germen chef."]
+
+Example:
+{{
+    "verdicts": [
+        {{
+            "verdict": "idk"
+        }},
+        {{
+            "verdict": "yes"
+        }},
+        {{
+            "verdict": "no",
+            "reason": "The actual output claims Einstein won the Nobel Prize in 1969, which is untrue as the retrieval context states it is 1968 instead."
+        }},
+        {{
+            "verdict": "no",
+            "reason": "The actual output claims Einstein is a Germen chef, which is not correct as the retrieval context states he was a German scientist instead."
+        }},
+    ]  
+}}
+===== END OF EXAMPLE ======
+
+The length of 'verdicts' SHOULD BE STRICTLY EQUAL to that of retrieval context.
+You DON'T have to provide a reason if the answer is 'yes' or 'idk'.
+ONLY provide a 'no' answer if the retrieval context DIRECTLY CONTRADICTS the claims. 
+Claims made using vague, suggestive, speculative language such as 'may have', 'possibility due to', does NOT count as a contradiction.
+If there is not enough / a lack of information in the retrieval contexts to to back up the claim,  answer 'idk'.
+**
+
+Retrieval Contexts:
+{retrieval_context}
+
+Claims:
+{claims}
+
+JSON:
+"""
+
+    @staticmethod
     def generate_reason(score, contradictions):
-        return f"""Below is a list of Contradictions. It is a list of JSON with the `contradiction` and `rank` key.
-The `contradiction` explains why the 'actual output' does not align with a certain node in the 'retrieval context'. Contradictions happen in the 'actual output', NOT the 'retrieval context'.
-The `rank` tells you which node in the 'retrieval context' the actual output contradicted with.
+        return f"""Below is a list of Contradictions. It is a list of strings explaining why the 'actual output' does not align with the information presented in the 'retrieval context'. Contradictions happen in the 'actual output', NOT the 'retrieval context'.
 Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is to the retrieval context (higher the better), CONCISELY summarize the contradictions to justify the score. 
 
 Faithfulness Score:
@@ -187,7 +234,7 @@ The score is <faithfulness_score> because <your_reason>.
 **
 IMPORTANT: 
 If there are no contradictions, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
-Your reason MUST use information in `contradiction` and the node RANK (eg., first node of the retrieval context) in your reason.
+Your reason MUST use information in `contradiction` in your reason.
 Be sure in your reason, as if you know what the actual output is from the contradictions.
 **
 
