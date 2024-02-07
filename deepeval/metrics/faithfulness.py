@@ -92,17 +92,10 @@ class FaithfulnessMetric(BaseMetric):
         total = len(self.verdicts)
         if total == 0:
             return 0
-
-        print("@@@@@@@@@")
-        print(total)
-        print("@@@@@@@@@@@@")
-
         faithfulness_count = 0
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() != "no":
                 faithfulness_count += 1
-
-        print(faithfulness_count)
 
         return faithfulness_count / total
 
@@ -117,10 +110,6 @@ class FaithfulnessMetric(BaseMetric):
         data = json.loads(json_output)
         verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
 
-        print("@@@@@@@@@@@@@@")
-        print(verdicts)
-        print("@@@@@@@@@@@@@@")
-
         return verdicts
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
@@ -131,7 +120,6 @@ class FaithfulnessMetric(BaseMetric):
         json_output = trimToJson(res)
         data = json.loads(json_output)
 
-        print(data["truths"], "truths")
         return data["truths"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
@@ -140,7 +128,6 @@ class FaithfulnessMetric(BaseMetric):
         json_output = trimToJson(res)
         data = json.loads(json_output)
 
-        print(data["claims"], "claims")
         return data["claims"]
 
     def is_successful(self) -> bool:
