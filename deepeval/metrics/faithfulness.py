@@ -1,8 +1,8 @@
 from typing import List, Optional, Union
-from threading import Thread, Lock
 import json
 from pydantic import BaseModel, Field
 from langchain_core.language_models import BaseChatModel
+from concurrent.futures import ThreadPoolExecutor
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -15,7 +15,6 @@ from deepeval.progress_context import metrics_progress_context
 class FaithfulnessVerdict(BaseModel):
     verdict: str
     reason: str = Field(default=None)
-    truth: str = Field(default=None)
 
 
 class FaithfulnessMetric(BaseMetric):
@@ -24,6 +23,7 @@ class FaithfulnessMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
         include_reason: bool = True,
+        multithreading: bool = True,
     ):
         self.threshold = threshold
         if isinstance(model, DeepEvalBaseModel):
@@ -32,6 +32,7 @@ class FaithfulnessMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
+        self.multithreading = multithreading
 
     def measure(self, test_case: LLMTestCase):
         if (
@@ -43,44 +44,41 @@ class FaithfulnessMetric(BaseMetric):
                 "Input, actual output, or retrieval context cannot be None"
             )
         with metrics_progress_context(self.__name__, self.evaluation_model):
-            self.truths_list: List[List[str]] = self._generate_truths_list(
-                test_case.retrieval_context
-            )
-            self.verdicts_list: List[
-                List[FaithfulnessVerdict]
-            ] = self._generate_verdicts_list(
-                self.truths_list, test_case.actual_output
-            )
+            if self.multithreading:
+                # Use multithreading to generate truths and claims in parallel
+                with ThreadPoolExecutor() as executor:
+                    future_truths = executor.submit(
+                        self._generate_truths, test_case.retrieval_context
+                    )
+                    future_claims = executor.submit(
+                        self._generate_claims, test_case.actual_output
+                    )
+                    self.truths: List[str] = future_truths.result()
+                    self.claims: List[str] = future_claims.result()
+            else:
+                # Sequential execution
+                self.truths: List[str] = self._generate_truths(
+                    test_case.retrieval_context
+                )
+                self.claims: List[str] = self._generate_claims(
+                    test_case.actual_output
+                )
+
+            self.verdicts: List[FaithfulnessVerdict] = self._generate_verdicts()
             faithfulness_score = self._generate_score()
             self.reason = self._generate_reason(faithfulness_score)
             self.success = faithfulness_score >= self.threshold
             self.score = faithfulness_score
             return self.score
 
-    def _generate_score(self):
-        total_verdicts = 0
-        faithful_count = 0
-        for verdicts in self.verdicts_list:
-            total_verdicts += len(verdicts)
-            for verdict in verdicts:
-                if verdict.verdict.strip().lower() != "no":
-                    faithful_count += 1
-
-        if total_verdicts == 0:
-            return 0
-
-        return faithful_count / total_verdicts
-
-    def _generate_reason(self, score: float):
+    def _generate_reason(self, score) -> str:
         if self.include_reason is False:
             return None
 
         contradictions = []
-        for index, verdicts in enumerate(self.verdicts_list):
-            for verdict in verdicts:
-                if verdict.verdict.strip().lower() == "no":
-                    data = {"contradiction": verdict.reason, "rank": index + 1}
-                    contradictions.append(data)
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() == "no":
+                contradictions.append(verdict.reason)
 
         prompt: dict = FaithfulnessTemplate.generate_reason(
             contradictions=contradictions,
@@ -90,87 +88,60 @@ class FaithfulnessMetric(BaseMetric):
         res = self.model(prompt)
         return res
 
-    def _generate_truths(
-        self,
-        context: str,
-        truths_list: List[str],
-        lock: Lock,
-    ):
-        prompt = FaithfulnessTemplate.generate_truths(text=context)
-        res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
-        truths = data["truths"]
+    def _generate_score(self) -> float:
+        total = len(self.verdicts)
+        if total == 0:
+            return 0
 
-        with lock:
-            truths_list.append(truths)
+        print("@@@@@@@@@")
+        print(total)
+        print("@@@@@@@@@@@@")
 
-    def _generate_truths_list(
-        self, retrieval_context: List[str]
-    ) -> List[List[str]]:
-        truths_list: List[List[str]] = []
-        threads = []
-        lock = Lock()
+        faithfulness_count = 0
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() != "no":
+                faithfulness_count += 1
 
-        for context in retrieval_context:
-            thread = Thread(
-                target=self._generate_truths,
-                args=(context, truths_list, lock),
-            )
-            threads.append(thread)
-            thread.start()
+        print(faithfulness_count)
 
-        for thread in threads:
-            thread.join()
+        return faithfulness_count / total
 
-        return truths_list
+    def _generate_verdicts(self) -> List[FaithfulnessVerdict]:
+        verdicts: List[FaithfulnessVerdict] = []
 
-    def _generate_verdicts(
-        self,
-        truths: List[str],
-        text: str,
-        verdicts_list: List[List[FaithfulnessVerdict]],
-        lock: Lock,
-    ):
         prompt = FaithfulnessTemplate.generate_verdicts(
-            truths=truths, text=text
+            claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
-
         res = self.model(prompt)
         json_output = trimToJson(res)
         data = json.loads(json_output)
         verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
 
-        if len(verdicts) != len(truths):
-            raise ValueError(
-                "Number of verdicts generated does not equal truths."
-            )
+        print("@@@@@@@@@@@@@@")
+        print(verdicts)
+        print("@@@@@@@@@@@@@@")
 
-        for i in range(len(verdicts)):
-            verdicts[i].truth = truths[i]
+        return verdicts
 
-        with lock:
-            verdicts_list.append(verdicts)
+    def _generate_truths(self, retrieval_context: str) -> List[str]:
+        prompt = FaithfulnessTemplate.generate_truths(
+            text="\n\n".join(retrieval_context)
+        )
+        res = self.model(prompt)
+        json_output = trimToJson(res)
+        data = json.loads(json_output)
 
-    def _generate_verdicts_list(
-        self, truths_list: List[List[str]], text: str
-    ) -> List[List[FaithfulnessVerdict]]:
-        verdicts_list: List[List[FaithfulnessVerdict]] = []
-        threads = []
-        lock = Lock()
+        print(data["truths"], "truths")
+        return data["truths"]
 
-        for truths in truths_list:
-            thread = Thread(
-                target=self._generate_verdicts,
-                args=(truths, text, verdicts_list, lock),
-            )
-            threads.append(thread)
-            thread.start()
+    def _generate_claims(self, actual_output: str) -> List[str]:
+        prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
+        res = self.model(prompt)
+        json_output = trimToJson(res)
+        data = json.loads(json_output)
 
-        for thread in threads:
-            thread.join()
-
-        return verdicts_list
+        print(data["claims"], "claims")
+        return data["claims"]
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

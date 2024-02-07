@@ -161,3 +161,7 @@ cython_debug/
 docs/.docusaurus
 node_modules
 .deepeval
+
+
+# deepeval tests
+secrets

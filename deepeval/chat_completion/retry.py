@@ -25,6 +25,7 @@ def retry_with_exponential_backoff(
 
             # Retry on specified errors
             except errors as e:
+                print(e)
                 # Increment retries
                 num_retries += 1
 
