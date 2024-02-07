@@ -165,3 +165,6 @@ node_modules
 
 # deepeval tests
 secrets
+
+# Mac OS system files
+**/.DS_Store
