@@ -9,6 +9,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.metrics.templates import ContextualRecallTemplate
 from deepeval.progress_context import metrics_progress_context
+from deepeval.telemetry import capture_metric_type
 
 
 class ContextualRecallVerdict(BaseModel):
@@ -57,6 +58,7 @@ class ContextualRecallMetric(BaseMetric):
 
             self.success = contextual_recall_score >= self.threshold
             self.score = contextual_recall_score
+            capture_metric_type(self.__name__)
             return self.score
 
     def _generate_reason(self, expected_output: str, score: float):

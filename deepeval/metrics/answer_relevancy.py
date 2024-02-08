@@ -9,6 +9,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.metrics.templates import AnswerRelevancyTemplate
 from deepeval.progress_context import metrics_progress_context
+from deepeval.telemetry import capture_metric_type
 
 
 class AnswerRelvancyVerdict(BaseModel):
@@ -56,6 +57,7 @@ class AnswerRelevancyMetric(BaseMetric):
             )
             self.success = answer_relevancy_score >= self.threshold
             self.score = answer_relevancy_score
+            capture_metric_type(self.__name__)
             return self.score
 
     def _generate_score(self):

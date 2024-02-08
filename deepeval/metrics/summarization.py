@@ -13,6 +13,7 @@ from deepeval.metrics.templates import (
     closed_end_answers_template,
 )
 from deepeval.progress_context import metrics_progress_context
+from deepeval.telemetry import capture_metric_type
 
 
 class ScoreType(Enum):
@@ -75,6 +76,7 @@ class SummarizationMetric(BaseMetric):
             self.alignment_score = alignment_score
             self.inclusion_score = inclusion_score
             self.score = summarization_score
+            capture_metric_type(self.__name__)
             return self.score
 
     def get_score(

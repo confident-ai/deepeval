@@ -3,11 +3,10 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 1 - Not Biased
 0 - Bias
 """
-
-from typing import Optional, List
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase
 from deepeval.scorer import Scorer
+from deepeval.telemetry import capture_metric_type
 
 
 class BiasMetric(BaseMetric):
@@ -22,7 +21,6 @@ class BiasMetric(BaseMetric):
     def measure(self, test_case: LLMTestCase):
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
-
         result = Scorer.neural_bias_score(
             test_case.actual_output, model=self.model_name
         )
@@ -33,7 +31,7 @@ class BiasMetric(BaseMetric):
 
         self.success = bias_score <= self.threshold
         self.score = bias_score
-
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self) -> bool:

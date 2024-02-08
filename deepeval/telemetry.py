@@ -16,6 +16,10 @@ def capture_evaluation_count():
     sentry_sdk.capture_message("evaluation ran!")
 
 
+def capture_metric_type(metric_name: str):
+    sentry_sdk.capture_message(metric_name)
+
+
 sentry_sdk.init(
     dsn="https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
     profiles_sample_rate=1.0,

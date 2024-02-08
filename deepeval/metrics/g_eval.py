@@ -1,5 +1,6 @@
 import json
 from typing import Optional, List, Tuple, Union
+from pydantic import BaseModel
 from langchain_core.language_models import BaseChatModel
 
 from deepeval.metrics import BaseMetric
@@ -10,8 +11,7 @@ from deepeval.metrics.templates import (
 )
 from deepeval.utils import trimToJson
 from deepeval.models import GPTModel, DeepEvalBaseModel
-
-from pydantic import BaseModel
+from deepeval.telemetry import capture_metric_type
 
 
 class GEvalResponse(BaseModel):
@@ -79,6 +79,7 @@ class GEval(BaseMetric):
         self.reason = reason
         self.score = float(score) / 10
         self.success = score >= self.threshold
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self) -> bool:
