@@ -162,7 +162,11 @@ class Mistral7B(DeepEvalBaseModel):
 
     def _call(self, prompt: str) -> str:
         chat_model = self.load_model()
-        generated_ids = chat_model.generate(max_new_tokens=100, do_sample=True)
+        device = "cuda"
+
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        chat_model.to(device)
+        generated_ids = chat_model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
         return self.tokenizer.batch_decode(generated_ids)[0]
 
     def get_model_name(self):
@@ -170,9 +174,6 @@ class Mistral7B(DeepEvalBaseModel):
 
 model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
 tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
-
-model_inputs = tokenizer([prompt], return_tensors="pt").to(device)
-model.to(device)
 
 mistral_7b = Mistral7B(model=model, tokenizer=tokenizer)
 print(mistral_7b("Write me a joke"))
