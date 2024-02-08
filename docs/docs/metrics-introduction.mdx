@@ -161,12 +161,14 @@ class Mistral7B(DeepEvalBaseModel):
         return self.model
 
     def _call(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        device = "cuda"
+        model = self.load_model()
+
+        device = "cuda" # the device to load the model onto
 
         model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
-        chat_model.to(device)
-        generated_ids = chat_model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
+        model.to(device)
+
+        generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
         return self.tokenizer.batch_decode(generated_ids)[0]
 
     def get_model_name(self):
