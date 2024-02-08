@@ -115,14 +115,14 @@ class FaithfulnessMetric(BaseMetric):
         return verdicts
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_truths(
+        prompt = FaithfulnessTemplate.generate_claims(
             text="\n\n".join(retrieval_context)
         )
         res = self.model(prompt)
         json_output = trimToJson(res)
         data = json.loads(json_output)
 
-        return data["truths"]
+        return data["claims"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
