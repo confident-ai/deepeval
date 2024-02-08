@@ -77,15 +77,21 @@ deepeval unset-azure-openai
 
 ## Using a Custom LLM
 
-We highly discourage the use of custom LLMs since evaluation requires a high level of reasoning capabilities that we find are generally not reachable apart from (Azure) OpenAI's GPT models.
+`deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
 
-That being said,`deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs through langchain's [Chat Models](https://python.langchain.com/docs/integrations/chat/), or even LLMs in GGML format, which you can specify through the `model` argument when instantiating an LLM-based metric. Here is an example of using a custom Azure OpenAI model through langchain's `AzureChatOpenAI` interface for evaluation:
+:::note
+You need to specify the custom evaluation model you would like to use through the `model` argument when instantiating an LLM-based metric.
+:::
+
+### Azure OpenAI Example
+
+Here is an example of creating a custom Azure OpenAI model through langchain's `AzureChatOpenAI` module for evaluation:
 
 ```python
 from langchain_openai import AzureChatOpenAI
 from deepeval.models.base import DeepEvalBaseModel
 
-class CustomEvaluationModel(DeepEvalBaseModel):
+class AzureOpenAI(DeepEvalBaseModel):
     def __init__(
         self,
         model
@@ -103,17 +109,17 @@ class CustomEvaluationModel(DeepEvalBaseModel):
         return "Custom Azure OpenAI Model"
 
 # Replace these with real values
-custom_azure_openai_model = AzureChatOpenAI(
+custom_model = AzureChatOpenAI(
     openai_api_version=openai_api_version,
     azure_deployment=azure_deployment,
     azure_endpoint=azure_endpoint,
     openai_api_key=openai_api_key,
 )
-custom_evaluation_model = CustomEvaluationModel(model=chat_model)
-print(custom_model("Write me a joke"))
+azure_openai = AzureOpenAI(model=custom_model)
+print(azure_openai("Write me a joke"))
 ```
 
-Remember, when creating a custom LLM evaluation model you should always:
+When creating a custom LLM evaluation model you should **ALWAYS**:
 
 - inherit `DeepEvalBaseModel`.
 - implement the `load_model()` method, which will be responsible for returning a model object.
@@ -127,12 +133,59 @@ Note that the `model` argument in the `__init__()` method can accept any type (t
 from deepeval.metrics import AnswerRelevancyMetric
 ...
 
-metric = AnswerRelevancyMetric(model=custom_evaluation_model)
+metric = AnswerRelevancyMetric(model=azure_openai)
 ```
 
 :::note
 While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globally for all LLM-Evals, a custom LLM has to be set each time you instantiate a metric. Remember to provide your custom LLM instance through the `model` parameter for metrics you wish to use it for.
 :::
+
+### Mistral 7B Example
+
+Here is an example of creating a custom [Mistral 7B model](https://huggingface.co/docs/transformers/model_doc/mistral) through Hugging Face's `transformers` library for evaluation:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from deepeval.models.base import DeepEvalBaseModel
+
+class Mistral7B(DeepEvalBaseModel):
+    def __init__(
+        self,
+        model,
+        tokenizer
+    ):
+        self.model = model
+        self.tokenizer = tokenizer
+
+    def load_model(self):
+        return self.model
+
+    def _call(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        generated_ids = chat_model.generate(max_new_tokens=100, do_sample=True)
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def get_model_name(self):
+        return "Mistral 7B"
+
+model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
+tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
+
+model_inputs = tokenizer([prompt], return_tensors="pt").to(device)
+model.to(device)
+
+mistral_7b = Mistral7B(model=model, tokenizer=tokenizer)
+print(mistral_7b("Write me a joke"))
+```
+
+Note that for this particular implementation, we initialized our `Mistral7B` model with an additional `tokenizer` parameter, as this is required in the decoding step of the `_call()` method, unlike the `AzureOpenAI` example above. Lastly, to use it for evaluation in LLM-based metrics:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+metric = AnswerRelevancyMetric(model=mistral_7b)
+```
 
 ## Measuring a Metric
 
