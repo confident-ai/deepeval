@@ -11,8 +11,9 @@
 <h4 align="center">
     <p>
         <a href="https://docs.confident-ai.com/docs/getting-started">Documentation</a> |
-        <a href="#metrics-and-features">Metrics and Features</a> |
-        <a href="#-getting-started-">Getting Started</a> |
+        <a href="#-metrics-and-features">Metrics and Features</a> |
+        <a href="#-quickstart">Getting Started</a> |
+        <a href="#-integrations">Integrations</a> |
         <a href="https://confident-ai.com">Confident AI</a>
     <p>
 </h4>
@@ -37,7 +38,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 <br />
 
-# Metrics and Features
+# 🔥 Metrics and Features
 
 - Large variety of ready-to-use LLM evaluation metrics powered by LLMs (all with explanations), statistical methods, or NLP models that runs **locally on your machine**:
   - G-Eval
@@ -50,7 +51,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - Hallucination
   - Toxicity
   - Bias
-  - etc.
+  - etc. 
 - Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**. Do this via the CLI in a Pytest-like manner, or through our `evaluate()` function.
 - Easily create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
 - [Automatically integrated with Confident AI](https://app.confident-ai.com) for continous evaluation throughout the lifetime of your LLM (app):
@@ -66,7 +67,14 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 <br />
 
-# 🚀 Getting Started 🚀
+# 🔌 Integrations
+
+- 🦄 LlamaIndex, to [**unit test RAG applications in CI/CD**](https://docs.confident-ai.com/docs/integrations-llamaindex)
+- 🤗 Hugging Face, to [**run real-time evaluations during LLM fine-tuning**](https://docs.confident-ai.com/docs/integrations-huggingface)
+
+<br />
+
+# 🚀 QuickStart
 
 Let's pretend your LLM application is a RAG based customer support chatbot; here's how DeepEval can help test what you've built.
 
@@ -223,7 +231,7 @@ evaluate(dataset, [answer_relevancy_metric])
 dataset.evaluate([answer_relevancy_metric])
 ```
 
-# View results on Confident AI
+# Evaluations on Confident AI
 
 We offer a [free web platform](https://app.confident-ai.com) for you to:
 
