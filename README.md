@@ -70,7 +70,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 # 🔌 Integrations
 
 - 🦄 LlamaIndex, to [**unit test RAG applications in CI/CD**](https://docs.confident-ai.com/docs/integrations-llamaindex)
-- 🤗 Hugging Face, to [**run real-time evaluations during LLM fine-tuning**](https://docs.confident-ai.com/docs/integrations-huggingface)
+- 🤗 Hugging Face, to [**enable real-time evaluations during LLM fine-tuning**](https://docs.confident-ai.com/docs/integrations-huggingface)
 
 <br />
 
