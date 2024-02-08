@@ -187,6 +187,10 @@ from deepeval.metrics import AnswerRelevancyMetric
 metric = AnswerRelevancyMetric(model=mistral_7b)
 ```
 
+:::info
+Evaluations may not always work as expected when using a custom model, simply because evaluations require high levels of reasoning that are generally hard to achieve.
+:::
+
 ## Measuring a Metric
 
 All metrics in `deepeval`, including [custom metrics that you create](metrics-custom):
