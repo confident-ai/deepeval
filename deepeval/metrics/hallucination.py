@@ -9,6 +9,7 @@ from deepeval.utils import trimToJson
 from deepeval.metrics.templates import HallucinationTemplate
 from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.progress_context import metrics_progress_context
+from deepeval.telemetry import capture_metric_type
 
 
 class HallucinationVerdict(BaseModel):
@@ -48,6 +49,7 @@ class HallucinationMetric(BaseMetric):
             self.reason = self._generate_reason(hallucination_score)
             self.success = hallucination_score <= self.threshold
             self.score = hallucination_score
+            capture_metric_type(self.__name__)
             return self.score
 
     def _generate_reason(self, score):

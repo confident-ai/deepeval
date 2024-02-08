@@ -7,6 +7,7 @@ from langchain_core.language_models import BaseChatModel
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.models import GPTModel
+from deepeval.telemetry import capture_metric_type
 
 
 def format_ragas_metric_name(name: str):
@@ -61,6 +62,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         context_precision_score = scores["context_precision"]
         self.success = context_precision_score >= self.threshold
         self.score = context_precision_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -118,6 +120,7 @@ class RAGASContextualRelevancyMetric(BaseMetric):
         context_relevancy_score = scores["context_relevancy"]
         self.success = context_relevancy_score >= self.threshold
         self.score = context_relevancy_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -171,6 +174,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         answer_relevancy_score = scores["answer_relevancy"]
         self.success = answer_relevancy_score >= self.threshold
         self.score = answer_relevancy_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -222,6 +226,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
         faithfulness_score = scores["faithfulness"]
         self.success = faithfulness_score >= self.threshold
         self.score = faithfulness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -275,6 +280,7 @@ class RAGASContextualRecallMetric(BaseMetric):
         context_recall_score = scores["context_recall"]
         self.success = context_recall_score >= self.threshold
         self.score = context_recall_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -329,6 +335,7 @@ class HarmfulnessMetric(BaseMetric):
         harmfulness_score = scores["harmfulness"]
         self.success = harmfulness_score >= self.threshold
         self.score = harmfulness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -381,6 +388,7 @@ class CoherenceMetric(BaseMetric):
         coherence_score = scores["coherence"]
         self.success = coherence_score >= self.threshold
         self.score = coherence_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -434,6 +442,7 @@ class MaliciousnessMetric(BaseMetric):
         maliciousness_score = scores["maliciousness"]
         self.success = maliciousness_score >= self.threshold
         self.score = maliciousness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -487,6 +496,7 @@ class CorrectnessMetric(BaseMetric):
         correctness_score = scores["correctness"]
         self.success = correctness_score >= self.threshold
         self.score = correctness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -539,6 +549,7 @@ class ConcisenessMetric(BaseMetric):
         conciseness_score = scores["conciseness"]
         self.success = conciseness_score >= self.threshold
         self.score = conciseness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -596,6 +607,7 @@ class RagasMetric(BaseMetric):
         self.success = ragas_score >= self.threshold
         self.score = ragas_score
         self.score_breakdown = score_breakdown
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):

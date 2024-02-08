@@ -1,7 +1,8 @@
 from typing import List
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.scorer import Scorer
+from deepeval.telemetry import capture_metric_type
 
 
 class ToxicityMetric(BaseMetric):
@@ -29,6 +30,7 @@ class ToxicityMetric(BaseMetric):
 
         self.success = toxicity_score <= self.threshold
         self.score = toxicity_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self) -> bool:

@@ -9,6 +9,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.metrics.templates import ContextualPrecisionTemplate
 from deepeval.progress_context import metrics_progress_context
+from deepeval.telemetry import capture_metric_type
 
 
 class ContextualPrecisionVerdict(BaseModel):
@@ -59,6 +60,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
             self.success = contextual_precision_score >= self.threshold
             self.score = contextual_precision_score
+            capture_metric_type(self.__name__)
             return self.score
 
     def _generate_reason(self, input: str, score: float):

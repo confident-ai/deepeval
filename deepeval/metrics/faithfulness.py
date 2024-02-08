@@ -10,6 +10,7 @@ from deepeval.utils import trimToJson
 from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.metrics.templates import FaithfulnessTemplate
 from deepeval.progress_context import metrics_progress_context
+from deepeval.telemetry import capture_metric_type
 
 
 class FaithfulnessVerdict(BaseModel):
@@ -69,6 +70,7 @@ class FaithfulnessMetric(BaseMetric):
             self.reason = self._generate_reason(faithfulness_score)
             self.success = faithfulness_score >= self.threshold
             self.score = faithfulness_score
+            capture_metric_type(self.__name__)
             return self.score
 
     def _generate_reason(self, score) -> str:
