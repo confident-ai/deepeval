@@ -178,7 +178,7 @@ The provided claim is drawn from the actual output. Try to provide a correction 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
 Example retrieval contexts: "Einstein won the Nobel Prize for his discovery of the photoelectric effect. Einstein won the Nobel Prize in 1968. Einstein is a German Scientist."
-Example claims: ["Einstein is handsome.", "Einstein won the Nobel Prize for the discovery of the photoelectric effect which may have contributed to his fame.", "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect.", "Einstein was a Germen chef."]
+Example claims: ["DeepEval is the open source evaluation framework for LLMs.", "Einstein won the Nobel Prize for the discovery of the photoelectric effect which may have contributed to his fame.", "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect.", "Einstein was a Germen chef."]
 
 Example:
 {{
@@ -203,9 +203,9 @@ Example:
 
 The length of 'verdicts' SHOULD BE STRICTLY EQUAL to that of retrieval context.
 You DON'T have to provide a reason if the answer is 'yes' or 'idk'.
-ONLY provide a 'no' answer if the retrieval context DIRECTLY CONTRADICTS the claims. 
+ONLY provide a 'no' answer if the retrieval context DIRECTLY CONTRADICTS the claims. YOU SHOULD NEVER USE YOUR PRIOR KNOWLEDGE IN YOUR JUDGEMENT.
 Claims made using vague, suggestive, speculative language such as 'may have', 'possibility due to', does NOT count as a contradiction.
-If there is not enough / a lack of information in the retrieval contexts to to back up the claim,  answer 'idk'.
+Claims that is not backed up due to a lack of information/is not mentioned in the retrieval contexts MUST be answered 'idk', otherwise I WILL DIE.
 **
 
 Retrieval Contexts:
