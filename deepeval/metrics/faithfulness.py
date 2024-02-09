@@ -1,7 +1,6 @@
 from typing import List, Optional, Union
 import json
 from pydantic import BaseModel, Field
-from langchain_core.language_models import BaseChatModel
 from concurrent.futures import ThreadPoolExecutor
 
 from deepeval.test_case import LLMTestCase
@@ -22,7 +21,7 @@ class FaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseModel]] = None,
         include_reason: bool = True,
         multithreading: bool = True,
     ):

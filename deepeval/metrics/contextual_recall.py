@@ -1,7 +1,6 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import json
-from langchain_core.language_models import BaseChatModel
 
 from deepeval.utils import trimToJson
 from deepeval.test_case import LLMTestCase
@@ -21,7 +20,7 @@ class ContextualRecallMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseModel]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
