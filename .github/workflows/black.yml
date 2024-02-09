@@ -15,4 +15,3 @@ jobs:
           options: "--check --verbose"
           src: "."
           jupyter: true
-          version: 22.10.0
