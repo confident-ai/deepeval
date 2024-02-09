@@ -28,26 +28,58 @@ IMPORTANT: Please make sure to only return in JSON format, with the "score" and 
 JSON:
 """
 
-# TODO: summarization template
-closed_end_questions_template = """
-Based on the text below, please generate {n} closed-ended questions that can be answered with either a 'yes' or 'no'. Only return a JSON with a 'questions' key, which is a list of strings. The questions have to be STRICTLY closed ended.
 
-Text:
-{text}
+class SummarizationTemplate:
+    @staticmethod
+    def generate_alignment_verdicts(input, actual_output):
+        return f"""Based on the given summary claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH piece of info contradicts any facts in the original text. The JSON will have 2 fields: 'verdict' and 'reason'.
+The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given summary claim agrees with the original text. 
+Provide a 'reason' ONLY if the answer is 'no'. 
+The provided summary claims is drawn from the summary. Try to provide a correction in the reason using the facts in the original text.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
+Example Original Text: "Einstein won the Nobel Prize for his discovery of the photoelectric effect. Einstein won the Nobel Prize in 1968. Einstein is a German Scientist."
+Example Summary Information: ["Barack Obama is a caucasian male.", "Zurich is a city in London", "Einstein won the Nobel Prize for the discovery of the photoelectric effect which may have contributed to his fame.", "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect.", "Einstein was a Germen chef."]
+
+Example:
+{{
+    "verdicts": [
+        {{
+            "verdict": "idk"
+        }},
+        {{
+            "verdict": "idk"
+        }},
+        {{
+            "verdict": "yes"
+        }},
+        {{
+            "verdict": "no",
+            "reason": "The summary claims Einstein won the Nobel Prize in 1969, which is untrue as the original text states it is 1968 instead."
+        }},
+        {{
+            "verdict": "no",
+            "reason": "The summary claims Einstein is a Germen chef, which is not correct as the original text states he was a German scientist instead."
+        }},
+    ]  
+}}
+===== END OF EXAMPLE ======
+
+The length of 'verdicts' SHOULD BE STRICTLY EQUAL to that of summary claims.
+You DON'T have to provide a reason if the answer is 'yes' or 'idk'.
+ONLY provide a 'no' answer if the retrieval context DIRECTLY CONTRADICTS the claims. YOU SHOULD NEVER USE YOUR PRIOR KNOWLEDGE IN YOUR JUDGEMENT.
+Claims made using vague, suggestive, speculative language such as 'may have', 'possibility due to', does NOT count as a contradiction.
+Claims that is not backed up due to a lack of information/is not mentioned in the retrieval contexts MUST be answered 'idk', otherwise I WILL DIE.
+**
+
+Original Text:
+{input}
+
+Summary Claims:
+{actual_output}
 
 JSON:
-"""
-
-closed_end_answers_template = """
-Based on the given text, please provide either a 'yes', 'no', or 'idk' answer to the question presented. Only answer 'idk' IF the the answer cannot be deduced from the given text.
-
-Question:
-{question}
-
-Text:
-{text}
-
-Answer:
 """
 
 
@@ -170,10 +202,10 @@ JSON:
 
     @staticmethod
     def generate_verdicts(claims, retrieval_context):
-        return f"""Based on the given claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH claim contradicts any information in the retrieval context. The JSON will have 2 fields: 'verdict' and 'reason'.
+        return f"""Based on the given claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH claim contradicts any facts in the retrieval context. The JSON will have 2 fields: 'verdict' and 'reason'.
 The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given claim agrees with the context. 
 Provide a 'reason' ONLY if the answer is 'no'. 
-The provided claim is drawn from the actual output. Try to provide a correction in the reason using the information in the retrieval context.
+The provided claim is drawn from the actual output. Try to provide a correction in the reason using the facts in the retrieval context.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
@@ -204,7 +236,7 @@ Example:
 }}
 ===== END OF EXAMPLE ======
 
-The length of 'verdicts' SHOULD BE STRICTLY EQUAL to that of retrieval context.
+The length of 'verdicts' SHOULD BE STRICTLY EQUAL to that of claims.
 You DON'T have to provide a reason if the answer is 'yes' or 'idk'.
 ONLY provide a 'no' answer if the retrieval context DIRECTLY CONTRADICTS the claims. YOU SHOULD NEVER USE YOUR PRIOR KNOWLEDGE IN YOUR JUDGEMENT.
 Claims made using vague, suggestive, speculative language such as 'may have', 'possibility due to', does NOT count as a contradiction.

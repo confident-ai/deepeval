@@ -41,7 +41,7 @@ class FaithfulnessMetric(BaseMetric):
             or test_case.retrieval_context is None
         ):
             raise ValueError(
-                "Input, actual output, or retrieval context cannot be None"
+                "Input, actual output, and retrieval context cannot be None"
             )
         with metrics_progress_context(self.__name__, self.evaluation_model):
             if self.multithreading:

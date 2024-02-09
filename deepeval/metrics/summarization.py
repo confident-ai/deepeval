@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
 from enum import Enum
 import json
+from pydantic import BaseModel, Field
 from concurrent.futures import ThreadPoolExecutor
 
 from deepeval.test_case import LLMTestCase
@@ -8,16 +9,22 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseModel
 from deepeval.utils import trimToJson
 from deepeval.metrics.templates import (
-    closed_end_questions_template,
-    closed_end_answers_template,
+    FaithfulnessTemplate,
+    SummarizationTemplate,
 )
+
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
 
 
+class SummarizationVerdict(BaseModel):
+    verdict: str
+    reason: str = Field(default=None)
+
+
 class ScoreType(Enum):
-    INCLUSION = "inclusion"
-    ALIGNMENT = "alignment"
+    INCLUSION = "Inclusion"
+    ALIGNMENT = "Alignment"
 
 
 class SummarizationMetric(BaseMetric):
@@ -27,6 +34,7 @@ class SummarizationMetric(BaseMetric):
         model: Optional[Union[str, DeepEvalBaseModel]] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
+        multithreading=True,
     ):
         self.threshold = threshold
         if isinstance(model, DeepEvalBaseModel):
@@ -38,39 +46,53 @@ class SummarizationMetric(BaseMetric):
         self.n = n
         self.alignment_score = None
         self.inclusion_score = None
+        self.multithreading = multithreading
 
     def measure(self, test_case: LLMTestCase):
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
 
         with metrics_progress_context(self.__name__, self.evaluation_model):
-            source_document = test_case.input
-            summary = test_case.actual_output
+            if test_case.input is None or test_case.actual_output is None:
+                raise ValueError("Input and actual output cannot be None")
 
-            with ThreadPoolExecutor() as executor:
-                future_alignment = executor.submit(
-                    self.get_score,
-                    ScoreType.ALIGNMENT,
-                    source_document,
-                    summary,
-                )
-                future_inclusion = executor.submit(
-                    self.get_score,
-                    ScoreType.INCLUSION,
-                    source_document,
-                    summary,
+            if self.multithreading:
+                # Use multithreading to generate truths and claims in parallel
+                with ThreadPoolExecutor() as executor:
+                    future_truths = executor.submit(
+                        # Claims made in the original text === truths
+                        self._generate_claims,
+                        test_case.input,
+                    )
+                    future_claims = executor.submit(
+                        self._generate_claims, test_case.actual_output
+                    )
+                    self.truths: List[str] = future_truths.result()
+                    self.claims: List[str] = future_claims.result()
+            else:
+                # Sequential execution
+                self.truths: List[str] = self._generate_claims(test_case.input)
+                self.claims: List[str] = self._generate_claims(
+                    test_case.actual_output
                 )
 
-                # Wait for the results
-                alignment_score = future_alignment.result()
-                inclusion_score = future_inclusion.result()
+            self.alignment_verdicts: List[SummarizationVerdict] = (
+                self._generate_verdicts(ScoreType.ALIGNMENT)
+            )
+            alignment_score = self._generate_score(ScoreType.ALIGNMENT)
+
+            if self.assessment_questions:
+                self.inclusion_verdicts: List[SummarizationVerdict] = (
+                    self._generate_verdicts
+                )
+            inclusion_score = self._generate_score(ScoreType.INCLUSION)
 
             summarization_score = min(alignment_score, inclusion_score)
 
             self.success = summarization_score >= self.threshold
             self.score_breakdown = {
-                "Alignment": alignment_score,
-                "Inclusion": inclusion_score,
+                ScoreType.ALIGNMENT.value: alignment_score,
+                ScoreType.INCLUSION.value: inclusion_score,
             }
             self.alignment_score = alignment_score
             self.inclusion_score = inclusion_score
@@ -78,70 +100,33 @@ class SummarizationMetric(BaseMetric):
             capture_metric_type(self.__name__)
             return self.score
 
-    def get_score(
-        self, score_type: ScoreType, source_document: str, summary: str
-    ):
-        questions = []
+    def _generate_verdicts(
+        self, score_type: ScoreType
+    ) -> List[SummarizationVerdict]:
+        verdicts: List[SummarizationVerdict] = []
         if score_type == ScoreType.ALIGNMENT:
-            # print("Calculating alignment score...")
-            questions = self.generate_questions(
-                score_type, source_document, summary
+            prompt = SummarizationTemplate.generate_alignment_verdicts(
+                actual_output=self.claims, input="\n\n".join(self.truths)
             )
-        elif score_type == ScoreType.INCLUSION:
-            # print("Calculating inclusion score...")
-            if self.assessment_questions is None:
-                questions = self.generate_questions(
-                    score_type, source_document, summary
-                )
-            else:
-                questions = self.assessment_questions
-
-        score = 0
-        interval = 1 / len(questions)
-        for question in questions:
-            with ThreadPoolExecutor() as executor:
-                future_source_answer = executor.submit(
-                    self.get_answer, question, source_document
-                )
-                future_summary_answer = executor.submit(
-                    self.get_answer, question, summary
-                )
-                source_answer = future_source_answer.result()
-                summary_answer = future_summary_answer.result()
-
-            if source_answer.strip().lower() == summary_answer.strip().lower():
-                score += interval
-
-        return score
-
-    def generate_questions(
-        self,
-        score_type: ScoreType,
-        source_document: str,
-        summary: str,
-    ) -> List[str]:
-        if score_type == ScoreType.ALIGNMENT:
-            prompt: dict = closed_end_questions_template.format(
-                n=self.n, text=summary
+        else:
+            prompt = SummarizationTemplate.generate_inclusion_verdicts(
+                actual_output=self.claims, input="\n\n".join(self.truths)
             )
-        elif score_type == ScoreType.INCLUSION:
-            prompt: dict = closed_end_questions_template.format(
-                n=self.n, text=source_document
-            )
+        res = self.model(prompt)
+        json_output = trimToJson(res)
+        data = json.loads(json_output)
+        verdicts = [SummarizationVerdict(**item) for item in data["verdicts"]]
 
+        return verdicts
+
+    def _generate_claims(self, text: str) -> List[str]:
+        # Borrow faithfulness template
+        prompt = FaithfulnessTemplate.generate_claims(text=text)
         res = self.model(prompt)
         json_output = trimToJson(res)
         data = json.loads(json_output)
 
-        return data["questions"]
-
-    def get_answer(self, question: str, text: str) -> str:
-        prompt: dict = closed_end_answers_template.format(
-            question=question, text=text
-        )
-
-        res = self.model(prompt)
-        return res
+        return data["claims"]
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold
