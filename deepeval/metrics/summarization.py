@@ -2,7 +2,6 @@ from typing import List, Optional, Union
 from enum import Enum
 import json
 from concurrent.futures import ThreadPoolExecutor
-from langchain_core.language_models import BaseChatModel
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -25,7 +24,7 @@ class SummarizationMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseModel]] = None,
         n: Optional[int] = 5,
         assessment_questions: Optional[List[str]] = None,
     ):

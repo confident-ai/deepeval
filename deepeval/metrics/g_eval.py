@@ -1,7 +1,6 @@
 import json
 from typing import Optional, List, Tuple, Union
 from pydantic import BaseModel
-from langchain_core.language_models import BaseChatModel
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -26,7 +25,7 @@ class GEval(BaseMetric):
         evaluation_params: List[LLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
-        model: Optional[Union[str, DeepEvalBaseModel, BaseChatModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseModel]] = None,
         threshold: float = 0.5,
     ):
         self.name = name
