@@ -133,11 +133,11 @@ deepeval_hugging_face_callback = DeepEvalHuggingFaceCallback(
 
 The `DeepEvalHuggingFaceCallback` accepts the following arguements:
 
-- metrics: the `deepeval` evaluation metrics you wish to leverage.
-- evaluation_dataset: a `deepeval` `EvaluationDataset`.
-- aggregation_method: a string of either 'avg', 'min', or 'max' to determine how metric scores are aggregated.
-- trainer: a `transformers.trainer` instance.
-- tokenizer_args: Arguments for the tokenizer.
+- `metrics`: the `deepeval` evaluation metrics you wish to leverage.
+- `evaluation_dataset`: a `deepeval` `EvaluationDataset`.
+- `aggregation_method`: a string of either 'avg', 'min', or 'max' to determine how metric scores are aggregated.
+- `trainer`: a `transformers.trainer` instance.
+- `tokenizer_args`: Arguments for the tokenizer.
 
 Lastly, add `deepeval_hugging_face_callback` to your `transformers.Trainer`, and begin fine-tuning:
 
