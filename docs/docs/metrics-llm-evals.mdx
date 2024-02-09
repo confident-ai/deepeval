@@ -23,7 +23,7 @@ To create a custom metric that uses LLMs for evaluation, simply instantiate an `
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
-summarization_metric = GEval(
+coherence_metric = GEval(
     name="Coherence",
     criteria="Coherence - determine if the actual output is coherent with the input.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
@@ -56,9 +56,9 @@ test_case = LLMTestCase(
     actual_output="The weather's getting really hot."
 )
 
-summarization_metric.measure(test_case)
-print(summarization_metric.score)
-print(summarization_metric.reason)
+coherence_metric.measure(test_case)
+print(coherence_metric.score)
+print(coherence_metric.reason)
 ```
 
 :::note
