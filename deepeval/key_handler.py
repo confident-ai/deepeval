@@ -1,5 +1,6 @@
 """File for handling API key
 """
+
 import json
 from enum import Enum
 

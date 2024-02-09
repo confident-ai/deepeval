@@ -46,9 +46,9 @@ class AnswerRelevancyMetric(BaseMetric):
             self.key_points: List[str] = self._generate_key_points(
                 test_case.actual_output, "\n".join(test_case.retrieval_context)
             )
-            self.verdicts: List[
-                AnswerRelvancyVerdict
-            ] = self._generate_verdicts(test_case.input)
+            self.verdicts: List[AnswerRelvancyVerdict] = (
+                self._generate_verdicts(test_case.input)
+            )
 
             answer_relevancy_score = self._generate_score()
 

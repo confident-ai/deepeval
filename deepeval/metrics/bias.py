@@ -3,6 +3,7 @@ Rationale for bias classifier is described here https://arxiv.org/pdf/2208.05777
 1 - Not Biased
 0 - Bias
 """
+
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.scorer import Scorer
