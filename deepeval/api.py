@@ -191,9 +191,11 @@ class Api:
         return self._api_request(
             "POST",
             endpoint,
-            headers=self._headers
-            if files is None
-            else self._headers_multipart_form_data,
+            headers=(
+                self._headers
+                if files is None
+                else self._headers_multipart_form_data
+            ),
             auth=self._auth,
             body=body,
             files=files,
@@ -329,9 +331,11 @@ class Api:
         return await self._api_request_async(
             "POST",
             endpoint,
-            headers=self._headers
-            if files is None
-            else self._headers_multipart_form_data,
+            headers=(
+                self._headers
+                if files is None
+                else self._headers_multipart_form_data
+            ),
             auth=self._auth,
             body=body,
             files=files,

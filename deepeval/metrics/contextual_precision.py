@@ -45,12 +45,12 @@ class ContextualPrecisionMetric(BaseMetric):
             )
 
         with metrics_progress_context(self.__name__, self.evaluation_model):
-            self.verdicts: List[
-                ContextualPrecisionVerdict
-            ] = self._generate_verdicts(
-                test_case.input,
-                test_case.expected_output,
-                test_case.retrieval_context,
+            self.verdicts: List[ContextualPrecisionVerdict] = (
+                self._generate_verdicts(
+                    test_case.input,
+                    test_case.expected_output,
+                    test_case.retrieval_context,
+                )
             )
             contextual_precision_score = self._generate_score()
 

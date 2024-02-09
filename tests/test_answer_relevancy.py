@@ -1,5 +1,6 @@
 """Tests for answer relevancy
 """
+
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric

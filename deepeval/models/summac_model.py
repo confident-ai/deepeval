@@ -19,9 +19,7 @@ class SummaCModels(DeepEvalBaseModel):
         self.device = (
             device
             if device is not None
-            else "cuda"
-            if torch.cuda.is_available()
-            else "cpu"
+            else "cuda" if torch.cuda.is_available() else "cpu"
         )
         super().__init__(model_name, *args, **kwargs)
 

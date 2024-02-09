@@ -43,10 +43,10 @@ class ContextualRelevancyMetric(BaseMetric):
                 "Input, actual output, or retrieval context cannot be None"
             )
         with metrics_progress_context(self.__name__, self.evaluation_model):
-            self.verdicts_list: List[
-                List[ContextualRelevancyVerdict]
-            ] = self._generate_verdicts_list(
-                test_case.input, test_case.retrieval_context
+            self.verdicts_list: List[List[ContextualRelevancyVerdict]] = (
+                self._generate_verdicts_list(
+                    test_case.input, test_case.retrieval_context
+                )
             )
             contextual_recall_score = self._generate_score()
 
