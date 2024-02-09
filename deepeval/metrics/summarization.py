@@ -17,15 +17,18 @@ from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
 
 
-class SummarizationVerdict(BaseModel):
+class SummarizationAlignmentVerdict(BaseModel):
     verdict: str
     reason: str = Field(default=None)
 
+class SummarizationInclusionVerdict(BaseModel):
+    summary_verdict: str
+    original_verdict: str
+    question: str = Field(default=None)
 
 class ScoreType(Enum):
     INCLUSION = "Inclusion"
     ALIGNMENT = "Alignment"
-
 
 class SummarizationMetric(BaseMetric):
     def __init__(
@@ -76,13 +79,13 @@ class SummarizationMetric(BaseMetric):
                     test_case.actual_output
                 )
 
-            self.alignment_verdicts: List[SummarizationVerdict] = (
-                self._generate_verdicts(ScoreType.ALIGNMENT)
+            self.alignment_verdicts: List[SummarizationAlignmentVerdict] = (
+                self._generate_alignment_verdicts(ScoreType.ALIGNMENT)
             )
             alignment_score = self._generate_score(ScoreType.ALIGNMENT)
 
             if self.assessment_questions:
-                self.inclusion_verdicts: List[SummarizationVerdict] = (
+                self.inclusion_verdicts: List[SummarizationAlignmentVerdict] = (
                     self._generate_verdicts
                 )
             inclusion_score = self._generate_score(ScoreType.INCLUSION)
@@ -99,11 +102,42 @@ class SummarizationMetric(BaseMetric):
             self.score = summarization_score
             capture_metric_type(self.__name__)
             return self.score
+    
+    def _generate_answers(self) -> List[str]:
+        
+    
+    def _generate_inclusion_verdicts(self, test_case: LLMTestCase) -> List[SummarizationInclusionVerdict]:
+        if self.multithreading:
+            with ThreadPoolExecutor() as executor:
+                future_original_answers: List[str] = executor.submit(
+                    self._generate_answers, test_case.input
+                )
+                future_summary_answers: List[str] = executor.submit(
+                    self._generate_answers, test_case.actual_output
+                )
+                original_answers = future_original_answers.result()
+                summary_answers = future_summary_answers.result()
+        
+        else:
+            original_answers = self._generate_answers(test_case.input)
+            summary_answers = self._generate_answers(test_case.actual_output)
 
-    def _generate_verdicts(
+        if len(original_answers) != len(summary_answers):
+            raise ValueError("Number of verdicts generated does not equal.")
+
+        inclusion_veridcts : List[SummarizationInclusionVerdict]= []
+        for i in range(len(original_answers)):
+            inclusion_veridcts.append(SummarizationInclusionVerdict(summary_verdict=summary_answers[i], original_verdict=original_answers[i], question=self.assessment_questions[i]))
+
+        return inclusion_veridcts
+        
+
+
+
+    def _generate_alignment_verdicts(
         self, score_type: ScoreType
-    ) -> List[SummarizationVerdict]:
-        verdicts: List[SummarizationVerdict] = []
+    ) -> List[SummarizationAlignmentVerdict]:
+        verdicts: List[SummarizationAlignmentVerdict] = []
         if score_type == ScoreType.ALIGNMENT:
             prompt = SummarizationTemplate.generate_alignment_verdicts(
                 actual_output=self.claims, input="\n\n".join(self.truths)
@@ -115,7 +149,7 @@ class SummarizationMetric(BaseMetric):
         res = self.model(prompt)
         json_output = trimToJson(res)
         data = json.loads(json_output)
-        verdicts = [SummarizationVerdict(**item) for item in data["verdicts"]]
+        verdicts = [SummarizationAlignmentVerdict(**item) for item in data["verdicts"]]
 
         return verdicts
 
