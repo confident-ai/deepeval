@@ -1,6 +1,6 @@
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'DeepEval',
+  title: 'DeepEval - The Open-Source LLM Evaluation Framework',
   tagline: 'Evaluation Framework for LLMs',
   favicon: 'img/fav.ico',
 
