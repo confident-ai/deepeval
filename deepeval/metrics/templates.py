@@ -178,11 +178,14 @@ The provided claim is drawn from the actual output. Try to provide a correction 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
 Example retrieval contexts: "Einstein won the Nobel Prize for his discovery of the photoelectric effect. Einstein won the Nobel Prize in 1968. Einstein is a German Scientist."
-Example claims: ["DeepEval is the open source evaluation framework for LLMs.", "Einstein won the Nobel Prize for the discovery of the photoelectric effect which may have contributed to his fame.", "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect.", "Einstein was a Germen chef."]
+Example claims: ["Barack Obama is a caucasian male.", "Zurich is a city in London", "Einstein won the Nobel Prize for the discovery of the photoelectric effect which may have contributed to his fame.", "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect.", "Einstein was a Germen chef."]
 
 Example:
 {{
     "verdicts": [
+        {{
+            "verdict": "idk"
+        }},
         {{
             "verdict": "idk"
         }},
