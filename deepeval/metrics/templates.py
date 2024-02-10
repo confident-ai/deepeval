@@ -66,10 +66,10 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'answers' ke
 
 Example:
 Example Text: Mario and Luigi were best buds but since Luigi had a crush on Peach Mario ended up killing him.
-Example Questions: ["Are there enough information about "]
+Example Questions: ["Are there enough information about Luigi and Mario?"]
 Example Answers:
 {{
-    "answers": ["adsf"]
+    "answers": ["yes"]
 }}
 
 The length of 'answers' SHOULD BE STRICTLY EQUAL to that of questions.
