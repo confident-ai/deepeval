@@ -122,7 +122,7 @@ def test_case():
     )
     assert_test(test_case, [answer_relevancy_metric])
 ```
-Set your `OPENAI_API_KEY` as an enviornemnt variable (you can also evaluate using your own custom model, for more details visit [this part of our docs](https://docs.confident-ai.com/docs/metrics-introduction#using-a-custom-llm)):
+Set your `OPENAI_API_KEY` as an environment variable (you can also evaluate using your own custom model, for more details visit [this part of our docs](https://docs.confident-ai.com/docs/metrics-introduction#using-a-custom-llm)):
 
 ```
 export OPENAI_API_KEY="..."
@@ -165,7 +165,7 @@ evaluate([test_case], [answer_relevancy_metric])
 
 ## Using Standalone Metrics
 
-DeepEval is extremely modular which makes it extremely easy for anyone to use any of our metrics. Continuing with the previous example:
+DeepEval is extremely modular, making it easy for anyone to use any of our metrics. Continuing from the previous example:
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
@@ -189,7 +189,7 @@ Note that some metrics are for RAG pipelines, while others are for fine-tuning. 
 
 ## Evaluting a Dataset / Test Cases in Bulk
 
-In DeepEval, a dataset is simply a collection of test cases. Here is how you can evaluate things in bulk:
+In DeepEval, a dataset is simply a collection of test cases. Here is how you can evaluate these in bulk:
 
 ```python
 import pytest
@@ -235,12 +235,12 @@ dataset.evaluate([answer_relevancy_metric])
 
 We offer a [free web platform](https://app.confident-ai.com) for you to:
 
-1. Log and view all test results / metrics data from DeepEval's test runs.
-2. Debug evaluation results via LLM traces
+1. Log and view all the test results / metrics data from DeepEval's test runs.
+2. Debug evaluation results via LLM traces.
 3. Compare and pick the optimal hyperparameteres (prompt templates, models, chunk size, etc.).
 4. Create, manage, and centralize your evaluation datasets.
-5. Track events in production and augment your evaluation dataset for continous evaluation in production.
-6. Track events in production and view live evaluation results over time.
+5. Track events in production and augment your evaluation dataset for continous evaluation.
+6. Track events in production, view evaluation results and historical insights.
 
 Everything on Confident AI, including how to use Confident is available [here](https://docs.confident-ai.com/docs/confident-ai-introduction).
 
