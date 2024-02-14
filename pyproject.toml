@@ -5,7 +5,7 @@ description = "The Evaluation Framework for LLMs"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/confident-ai.com/deepeval"
+repository = "https://github.com/confident-ai/deepeval"
 documentation = "https://docs.confident-ai.com"
 
 [tool.poetry.scripts]
