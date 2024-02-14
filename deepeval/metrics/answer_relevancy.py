@@ -13,7 +13,7 @@ from deepeval.telemetry import capture_metric_type
 
 class AnswerRelvancyVerdict(BaseModel):
     verdict: str
-    key_point: str = Field(default=None)
+    reason: str = Field(default=None)
 
 
 class AnswerRelevancyMetric(BaseMetric):
@@ -42,17 +42,22 @@ class AnswerRelevancyMetric(BaseMetric):
                 "Input, actual output, or retrieval context cannot be None"
             )
         with metrics_progress_context(self.__name__, self.evaluation_model):
-            self.key_points: List[str] = self._generate_key_points(
-                test_case.actual_output, "\n".join(test_case.retrieval_context)
+            # generate statements
+            self.statements: List[str] = self._generate_statements(
+                test_case.actual_output
             )
+
+            # generate verdicts based on statements, and retrieval context
             self.verdicts: List[AnswerRelvancyVerdict] = (
-                self._generate_verdicts(test_case.input)
+                self._generate_verdicts(
+                    test_case.input, test_case.retrieval_context
+                )
             )
 
             answer_relevancy_score = self._generate_score()
 
             self.reason = self._generate_reason(
-                test_case.input, test_case.actual_output, answer_relevancy_score
+                test_case.input, answer_relevancy_score
             )
             self.success = answer_relevancy_score >= self.threshold
             self.score = answer_relevancy_score
@@ -70,21 +75,18 @@ class AnswerRelevancyMetric(BaseMetric):
 
         return relevant_count / len(self.verdicts)
 
-    def _generate_reason(
-        self, original_question: str, answer: str, score: float
-    ) -> str:
+    def _generate_reason(self, input: str, score: float) -> str:
         if self.include_reason is False:
             return None
 
-        irrelevant_points = []
+        irrelevant_statements = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
-                irrelevant_points.append(verdict.key_point)
+                irrelevant_statements.append(verdict.reason)
 
         prompt = AnswerRelevancyTemplate.generate_reason(
-            irrelevant_points=irrelevant_points,
-            original_question=original_question,
-            answer=answer,
+            irrelevant_statements=irrelevant_statements,
+            input=input,
             score=format(score, ".2f"),
         )
 
@@ -92,36 +94,32 @@ class AnswerRelevancyMetric(BaseMetric):
         return res
 
     def _generate_verdicts(
-        self, original_question: str
+        self, input: str, retrieval_context=List[str]
     ) -> List[AnswerRelvancyVerdict]:
         prompt = AnswerRelevancyTemplate.generate_verdicts(
-            original_question=original_question, key_points=self.key_points
+            input=input,
+            actual_output=self.statements,
+            retrieval_context="\n\n".join(retrieval_context),
         )
 
         res = self.model(prompt)
         json_output = trimToJson(res)
         data = json.loads(json_output)
         verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
-
-        if len(verdicts) != len(self.key_points):
-            raise ValueError("Number of verdicts generated does not equal.")
-
-        for i in range(len(verdicts)):
-            verdicts[i].key_point = self.key_points[i]
-
         return verdicts
 
-    def _generate_key_points(
-        self, answer: str, retrieval_context: str
+    def _generate_statements(
+        self,
+        actual_output: str,
     ) -> List[str]:
-        prompt = AnswerRelevancyTemplate.generate_key_points(
-            answer=answer, retrieval_context=retrieval_context
+        prompt = AnswerRelevancyTemplate.generate_statements(
+            actual_output=actual_output,
         )
 
         res = self.model(prompt)
         json_output = trimToJson(res)
         data = json.loads(json_output)
-        return data["key_points"]
+        return data["statements"]
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold
