@@ -44,6 +44,12 @@ deepeval login
 **[Contact us](https://calendly.com/jeffreyip-cno/sales-call)** if you're dealing with sensitive data that has to reside in your private VPCs.
 :::
 
+By default, we use `Sentry` to track very basic telemetry data (number of evaluations run and which metric is used). Personally identifiable information is explicitly excluded. We also provide the option of opting out of the telemtry data collection through an environment variable:
+
+```console
+export DEEPEVAL_TELEMETRY_OPT_OUT=1
+```
+
 ## Create Your First Test Case
 
 Run `touch test_example.py` to create a test file in your root directory. Open `test_example.py` and paste in your first test case:
