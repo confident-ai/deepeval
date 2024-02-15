@@ -74,7 +74,7 @@ training_args = TrainingArguments(
 ### Initialize LLM and Trainer for Fine-Tuning
 
 ```python
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, Trainer
 ...
 
 ######################
@@ -89,7 +89,7 @@ llm = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
 trainer = Trainer(
     model=llm,
     args=training_args,
-    train_dataset=tokenized_datasets["train"],
+    train_dataset=tokenized_dataset["train"],
 )
 ```
 
@@ -127,7 +127,8 @@ from deepeval.integrations.hugging_face import DeepEvalHuggingFaceCallback
 
 deepeval_hugging_face_callback = DeepEvalHuggingFaceCallback(
     evaluation_dataset=dataset,
-    metrics=[coherence_metric]
+    metrics=[coherence_metric],
+    trainer=trainer
 )
 ```
 
@@ -146,7 +147,7 @@ Lastly, add `deepeval_hugging_face_callback` to your `transformers.Trainer`, and
 #############################
 ### Add DeepEval Callback ###
 #############################
-trainer.add_callback(callback)
+trainer.add_callback(deepeval_hugging_face_callback)
 
 #########################
 ### Start Fine-tuning ###
