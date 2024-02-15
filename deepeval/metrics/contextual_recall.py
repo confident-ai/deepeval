@@ -5,7 +5,7 @@ import json
 from deepeval.utils import trimToJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.models import GPTModel, DeepEvalBaseModel
+from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.templates import ContextualRecallTemplate
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
@@ -20,11 +20,11 @@ class ContextualRecallMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[Union[str, DeepEvalBaseModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
     ):
         self.threshold = threshold
-        if isinstance(model, DeepEvalBaseModel):
+        if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)

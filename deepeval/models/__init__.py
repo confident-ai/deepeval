@@ -1,4 +1,4 @@
-from deepeval.models.base import DeepEvalBaseModel
+from deepeval.models.base import DeepEvalBaseModel, DeepEvalBaseLLM
 from deepeval.models.summac_model import SummaCModels
 
 # TODO: uncomment out once fixed

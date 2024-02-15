@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.utils import trimToJson
-from deepeval.models import GPTModel, DeepEvalBaseModel
+from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.templates import FaithfulnessTemplate
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
@@ -21,12 +21,12 @@ class FaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        model: Optional[Union[str, DeepEvalBaseModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         multithreading: bool = True,
     ):
         self.threshold = threshold
-        if isinstance(model, DeepEvalBaseModel):
+        if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)

@@ -89,9 +89,9 @@ Here is an example of creating a custom Azure OpenAI model through langchain's `
 
 ```python
 from langchain_openai import AzureChatOpenAI
-from deepeval.models.base import DeepEvalBaseModel
+from deepeval.models.base import DeepEvalBaseLLM
 
-class AzureOpenAI(DeepEvalBaseModel):
+class AzureOpenAI(DeepEvalBaseLLM):
     def __init__(
         self,
         model
@@ -121,7 +121,7 @@ print(azure_openai("Write me a joke"))
 
 When creating a custom LLM evaluation model you should **ALWAYS**:
 
-- inherit `DeepEvalBaseModel`.
+- inherit `DeepEvalBaseLLM`.
 - implement the `load_model()` method, which will be responsible for returning a model object.
 - implement the `_call()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
 - the `_call()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt)` in this particular example, but this could be different depending on the implementation of your custom LLM object.
@@ -146,9 +146,9 @@ Here is an example of creating a custom [Mistral 7B model](https://huggingface.c
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from deepeval.models.base import DeepEvalBaseModel
+from deepeval.models.base import DeepEvalBaseLLM
 
-class Mistral7B(DeepEvalBaseModel):
+class Mistral7B(DeepEvalBaseLLM):
     def __init__(
         self,
         model,
