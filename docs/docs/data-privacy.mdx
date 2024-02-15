@@ -12,6 +12,12 @@ If at any point you think you might have acceidentally sent us sensitive data, *
 
 ## Your Privacy Using DeepEval
 
+By default, we use `Sentry` to track only very basic telemetry data (number of evaluations run and which metric is used). Personally identifiable information is explicitly excluded. We also provide the option of opting out of the telemtry data collection through an environment variable:
+
+```console
+export DEEPEVAL_TELEMETRY_OPT_OUT="YES"
+```
+
 `deepeval` only tracks errors and exceptions raised within the package for the purpose of improving the package. This happens **only if you have explicitly opted in to it** and **does not collect any user or company data in any way**. To help us catch bugs for future releases, set the `ERROR_REPORTING` environment variable to "YES".
 
 ```console

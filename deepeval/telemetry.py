@@ -5,7 +5,7 @@ import sentry_sdk
 
 
 def telemetry_opt_out():
-    return os.getenv("DEEPEVAL_TELEMETRY_OPT_OUT")
+    return os.getenv("DEEPEVAL_TELEMETRY_OPT_OUT") == "YES"
 
 
 def blocked_by_firewall():
