@@ -55,13 +55,13 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
 def test_answer_relevancy():
-    input = "What if these shoes don't fit?"
-    retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
-
-    # Replace this with the actual output of your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-    test_case = LLMTestCase(input=input, actual_output=actual_output, retrieval_context=retrieval_context)
+    test_case = LLMTestCase(
+        input="What if these shoes don't fit?",
+        # Replace this with the actual output of your LLM application
+        actual_output="We offer a 30-day full refund at no extra cost.",
+        retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
+    )
     assert_test(test_case, [answer_relevancy_metric])
 ```
 
@@ -93,29 +93,27 @@ export DEEPEVAL_RESULTS_FOLDER="./data"
 
 ### LLM Evaluated Metrics
 
-An LLM evaluated metric, is one where evaluation is carried out by an LLM. `deepeval` offers G-Eval, a state-of-the-art framework to create an LLM evaluated metric.
+An LLM evaluated metric (aka. LLM-Evals), is one where evaluation is carried out by an LLM. `deepeval` offers G-Eval, a state-of-the-art framework to create LLM-Evals.
 
 ```python title="test_example.py"
 from deepeval import assert_test
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-
 ...
 
-def test_summarization():
-    input = "What if these shoes don't fit? I want a full refund."
-
-    # Replace this with the actual output from your LLM application
-    actual_output = "If the shoes don't fit, the customer wants a full refund."
-
-    summarization_metric = GEval(
-        name="Summarization",
-        criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
-        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+def test_coherence():
+    coherence_metric = GEval(
+        name="Coherence",
+        criteria="Coherence - determine if the actual output is logical, has flow, and is easy to understand and follow.",
+        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
         threshold=0.5
     )
-    test_case = LLMTestCase(input=input, actual_output=actual_output)
-    assert_test(test_case, [summarization_metric])
+    test_case = LLMTestCase(
+        input="What if these shoes don't fit? I want a full refund.",
+        # Replace this with the actual output from your LLM application
+        actual_output="If the shoes don't fit, the customer wants a full refund."
+    )
+    assert_test(test_case, [coherence_metric])
 ```
 
 ### Classic Metrics
@@ -124,7 +122,6 @@ A classic metric is a metric where evluation is not carried out by another LLM. 
 
 ```python title="test_example.py"
 from deepeval.metrics import BaseMetric
-
 ...
 
 class LengthMetric(BaseMetric):
@@ -149,12 +146,12 @@ class LengthMetric(BaseMetric):
 
 
 def test_length():
-    input = "What if these shoes don't fit?"
-
-    # Replace this with the actual output of your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
     length_metric = LengthMetric(max_length=10)
-    test_case = LLMTestCase(input=input, actual_output=actual_output)
+    test_case = LLMTestCase(
+        input="What if these shoes don't fit?",
+        # Replace this with the actual output of your LLM application
+        actual_output="We offer a 30-day full refund at no extra cost."
+    )
     assert_test(test_case, [length_metric])
 ```
 
@@ -168,8 +165,8 @@ You should see both `test_answer_relevancy` and `test_length` passing.
 
 **Two things to note:**
 
-- Custom metrics does requires a `mimimum_score` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `actual_output` is greater than 10.
-- We removed `retrieval_context` in `test_length` since it was irrelevant to evaluating output length. However `input` and `actual_output` to always mandatory to create a valid `LLMTestCase`.
+- Custom metrics requires a `threshsold` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `actual_output` is greater than 10.
+- We removed `retrieval_context` in `test_length` since it was irrelevant to evaluating output length. However `input` and `actual_output` is always mandatory when creating an `LLMTestCase`.
 
 ## Combine Your Metrics
 
@@ -179,22 +176,22 @@ You might've noticed we have duplicated test cases for both `test_answer_relevan
 ...
 
 def test_everything():
-    input = "What if these shoes don't fit?"
-    retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
-
-    # Replace this with the actual output of your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
     length_metric = LengthMetric(max_length=10)
-    summarization_metric = GEval(
-        name="Summarization",
-        criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
-        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    coherence_metric = GEval(
+        name="Coherence",
+        criteria="Coherence - determine if the actual output is logical, has flow, and is easy to understand and follow.",
+        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
         threshold=0.5
     )
 
-    test_case = LLMTestCase(input=input, actual_output=actual_output, retrieval_context=retrieval_context)
-    assert_test(test_case, [answer_relevancy_metric, length_metric, summarization_metric])
+    test_case = LLMTestCase(
+        input="What if these shoes don't fit?",
+        # Replace this with the actual output of your LLM application
+        actual_output="We offer a 30-day full refund at no extra cost.",
+        retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
+    )
+    assert_test(test_case, [answer_relevancy_metric, coherence_metric, length_metric])
 ```
 
 In this scenario, `test_everything` only passes if all metrics are passing. Run `deepeval test run` again to see the results:
