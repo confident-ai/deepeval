@@ -15,7 +15,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import get_trace_stack
 from deepeval.constants import PYTEST_RUN_TEST_NAME
-from deepeval.decorators.hyperparameters import get_hyperparameters
+from deepeval.decorators.hyperparameters import get_hyperparameters, get_model
 from deepeval.api import Api, Endpoints
 from deepeval.test_run.api import (
     APITestCase,
@@ -87,6 +87,7 @@ class TestRun(BaseModel):
         default_factory=lambda: [], alias="metricScores"
     )
     configurations: Optional[dict[Any, Any]] = Field(default_factory=dict)
+    model: Optional[str] = Field(None)
 
     def add_llm_test_case(
         self,
@@ -150,6 +151,7 @@ class TestRun(BaseModel):
                 all_metric_dict.add_metric(metric.metric, metric.score)
         self.metric_scores = all_metric_dict.get_average_metric_score()
         self.configurations = get_hyperparameters()
+        self.model = get_model()
 
     def save(self, f):
         json.dump(self.dict(by_alias=True, exclude_none=True), f)
