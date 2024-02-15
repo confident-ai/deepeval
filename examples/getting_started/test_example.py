@@ -105,10 +105,9 @@ def test_everything():
     )
 
 
-@deepeval.set_hyperparameters
+@deepeval.set_hyperparameters(model="gpt-4")
 def hyperparameters():
     return {
-        "model": "Azure GPT-5",
         "prompt_template": """You are a helpful assistant, answer the following question in a non-judgemental tone.
 
         Question:

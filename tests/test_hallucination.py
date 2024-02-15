@@ -1,4 +1,5 @@
 import pytest
+import deepeval
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric
 from deepeval import assert_test
