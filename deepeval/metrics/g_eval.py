@@ -9,7 +9,7 @@ from deepeval.metrics.templates import (
     evaluation_results_template,
 )
 from deepeval.utils import trimToJson
-from deepeval.models import GPTModel, DeepEvalBaseModel
+from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
 
 
@@ -25,7 +25,7 @@ class GEval(BaseMetric):
         evaluation_params: List[LLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
-        model: Optional[Union[str, DeepEvalBaseModel]] = None,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
     ):
         self.name = name
@@ -48,7 +48,7 @@ class GEval(BaseMetric):
             )
 
         self.criteria = criteria
-        if isinstance(model, DeepEvalBaseModel):
+        if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)

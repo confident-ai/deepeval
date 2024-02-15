@@ -3,7 +3,7 @@ from typing import Optional, Union
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_core.language_models import BaseChatModel
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
-from deepeval.models import DeepEvalBaseModel
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.chat_completion.retry import retry_with_exponential_backoff
 
 valid_gpt_models = [
@@ -20,7 +20,7 @@ valid_gpt_models = [
 default_gpt_model = "gpt-4-1106-preview"
 
 
-class GPTModel(DeepEvalBaseModel):
+class GPTModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model: Optional[Union[str, BaseChatModel]] = None,

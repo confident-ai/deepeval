@@ -39,7 +39,7 @@ There are three mandatory and two optional parameters required when instantiatin
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
 - [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseModel`. Defaulted to 'gpt-4-1106-preview'.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
 
 :::danger
 For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
