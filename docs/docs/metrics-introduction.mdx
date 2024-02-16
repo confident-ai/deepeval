@@ -190,6 +190,58 @@ from deepeval.metrics import AnswerRelevancyMetric
 metric = AnswerRelevancyMetric(model=mistral_7b)
 ```
 
+### AWS Bedrock Example
+
+```python
+from langchain_openai import AzureChatOpenAI
+from deepeval.models.base import DeepEvalBaseLLM
+
+class AWSBedrock(DeepEvalBaseLLM):
+    def __init__(
+        self,
+        model
+    ):
+        self.model = model
+
+    def load_model(self):
+        return self.model
+
+    def _call(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        return chat_model.invoke(prompt)
+
+    def get_model_name(self):
+        return "Custom Azure OpenAI Model"
+
+# Replace these with real values
+config = {
+    "credentials_profile_name": <your-profile-name>,  # E.g "default"
+    "region_name": <your-region-name>,  # E.g. "us-east-1"
+    "model_id": <your-model-id>,  # E.g "anthropic.claude-v2"
+    "model_kwargs": {"temperature": 0.4},
+}
+
+custom_model = BedrockChat(
+    credentials_profile_name=config["credentials_profile_name"],
+    region_name=config["region_name"],
+    endpoint_url=f"https://bedrock-runtime.{config['region_name']}.amazonaws.com",
+    model_id=config["model_id"],
+    model_kwargs=config["model_kwargs"],
+)
+
+aws_bedrock = AWSBedrock(model=custom_model)
+print(aws_bedrock("Write me a joke"))
+```
+
+Then, supply the `aws_bedrock` model to LLM-evaluated metrics:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+metric = AnswerRelevancyMetric(model=aws_bedrock)
+```
+
 :::info
 Evaluations may not always work as expected when using a custom model, simply because evaluations require high levels of reasoning that are generally hard to achieve.
 :::

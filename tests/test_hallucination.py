@@ -46,3 +46,15 @@ def test_hallucination_metric_3():
     )
     with pytest.raises(AssertionError):
         assert_test(test_case, [metric])
+
+
+# @deepeval.set_hyperparameters(model="gpt-4")
+# def hyperparameters():
+#     return {
+#         "prompt_template": """You are a helpful assistant, answer the following question without using any prior knowledge.
+
+#         Question:
+#         {question}
+#         """,
+#         "model": "gpt-4",
+#     }
