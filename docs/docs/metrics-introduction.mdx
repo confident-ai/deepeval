@@ -235,7 +235,7 @@ aws_bedrock = AWSBedrock(model=custom_model)
 print(aws_bedrock("Write me a joke"))
 ```
 
-Then, supply the `aws_bedrock` model to LLM-evaluated metrics:
+Finally, supply the newly created `aws_bedrock` model to LLM-Evals:
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
