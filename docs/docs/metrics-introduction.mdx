@@ -192,8 +192,10 @@ metric = AnswerRelevancyMetric(model=mistral_7b)
 
 ### AWS Bedrock Example
 
+Here is an example of creating a custom AWS Bedrock model through the `langchain_community.chat_models` module for evaluation:
+
 ```python
-from langchain_openai import AzureChatOpenAI
+from langchain_community.chat_models import BedrockChat
 from deepeval.models.base import DeepEvalBaseLLM
 
 class AWSBedrock(DeepEvalBaseLLM):
