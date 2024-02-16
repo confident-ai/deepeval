@@ -216,19 +216,12 @@ class AWSBedrock(DeepEvalBaseLLM):
         return "Custom Azure OpenAI Model"
 
 # Replace these with real values
-config = {
-    "credentials_profile_name": <your-profile-name>,  # E.g "default"
-    "region_name": <your-region-name>,  # E.g. "us-east-1"
-    "model_id": <your-model-id>,  # E.g "anthropic.claude-v2"
-    "model_kwargs": {"temperature": 0.4},
-}
-
 custom_model = BedrockChat(
-    credentials_profile_name=config["credentials_profile_name"],
-    region_name=config["region_name"],
-    endpoint_url=f"https://bedrock-runtime.{config['region_name']}.amazonaws.com",
-    model_id=config["model_id"],
-    model_kwargs=config["model_kwargs"],
+    credentials_profile_name=<your-profile-name>, # e.g. "default"
+    region_name=<your-region-name>, # e.g. "us-east-1"
+    endpoint_url=<your-bedrock-endpoint>, # e.g. "https://bedrock-runtime.us-east-1.amazonaws.com"
+    model_id=<your-model-id>, # e.g. "anthropic.claude-v2"
+    model_kwargs={"temperature": 0.4},
 )
 
 aws_bedrock = AWSBedrock(model=custom_model)
