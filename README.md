@@ -231,7 +231,7 @@ evaluate(dataset, [answer_relevancy_metric])
 dataset.evaluate([answer_relevancy_metric])
 ```
 
-# Evaluations on Confident AI
+# Real-time Evaluations on Confident AI
 
 We offer a [free web platform](https://app.confident-ai.com) for you to:
 
