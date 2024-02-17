@@ -246,7 +246,7 @@ evaluate(test_cases, [faithfulness_metric, answer_relevancy_metric])
 To learn more about the additional features an `EvaluationDataset` offers, visit the [dataset section.](evaluation-datasets)
 :::
 
-## Visualize Your Results
+## Using Confident AI
 
 If you have reached this point, you've likely ran `deepeval test run` multiple times. To keep track of all future evaluation results created by `deepeval`, login to **[Confident AI](https://app.confident-ai.com/auth/signup)** by running the following command:
 
@@ -254,15 +254,26 @@ If you have reached this point, you've likely ran `deepeval test run` multiple t
 deepeval login
 ```
 
-**Confident AI** is the platform powering `deepeval`, and offer deep insights to help you quickly figure out how to best implement your LLM application. Follow the instructions displayed on the CLI to create an account, get your Confident API key, and paste it in the CLI.
+**Confident AI** is the platform powering `deepeval`, and allows anyone to:
 
-Once you've pasted your Confident API key in the CLI, run:
+- safeguard against breaking changes in CI/CD pipelines
+- compare hyperparameters, such as model and prompt templates used
+- centralize evaluation datasets on the cloud
+- run real-time evaluations in production
+
+:::tip
+[Click here](confident-ai-introduction) for the full documentation on using Confident AI with `deepeval`.
+:::
+
+Follow the instructions displayed on the CLI to create an account, get your Confident API key, and paste it in the CLI.
+
+Once you've pasted your Confident API key in the CLI, execute the previously created test file once more:
 
 ```console
 deepeval test run test_example.py
 ```
 
-### View Test Run
+### Analyze Test Runs
 
 You should now see a link being returned upon test completion. Paste it in your browser to view results.
 
