@@ -280,15 +280,13 @@ To log hyperparameters (such as prompt templates used) for your LLM application,
 
 ```python title="test_example.py"
 import deepeval
-
 ...
 
-@deepeval.set_hyperparameters
+@deepeval.set_hyperparameters(model="gpt-4")
 def hyperparameters():
     return {
         "chunk_size": 500,
         "temperature": 0,
-        "model": "GPT-4",
         "prompt_template": """You are a helpful assistant, answer the following question in a non-judgemental tone.
 
         Question:

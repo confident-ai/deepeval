@@ -8,39 +8,31 @@ from deepeval.metrics import BaseMetric, GEval, AnswerRelevancyMetric
 
 
 def test_answer_relevancy():
-    input = "What if these shoes don't fit?"
-    retrieval_context = [
-        "All customers are eligible for a 30 day full refund at no extra cost."
-    ]
-
-    # Replace this with the actual output of your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
     test_case = LLMTestCase(
-        input=input,
-        actual_output=actual_output,
-        retrieval_context=retrieval_context,
+        input="What if these shoes don't fit?",
+        # Replace this with the actual output of your LLM application
+        actual_output="We offer a 30-day full refund at no extra cost.",
+        retrieval_context=[
+            "All customers are eligible for a 30 day full refund at no extra cost."
+        ],
     )
     assert_test(test_case, [answer_relevancy_metric])
 
 
-def test_summarization():
-    input = "What if these shoes don't fit? I want a full refund."
-
-    # Replace this with the actual output from your LLM application
-    actual_output = "If the shoes don't fit, the customer wants a full refund."
-
-    summarization_metric = GEval(
-        name="Summarization",
-        criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
-        evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
-        ],
+def test_coherence():
+    coherence_metric = GEval(
+        name="Coherence",
+        criteria="Coherence - determine if the actual output is logical, has flow, and is easy to understand and follow.",
+        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
         threshold=0.5,
     )
-    test_case = LLMTestCase(input=input, actual_output=actual_output)
-    assert_test(test_case, [summarization_metric])
+    test_case = LLMTestCase(
+        input="What if these shoes don't fit? I want a full refund.",
+        # Replace this with the actual output from your LLM application
+        actual_output="If the shoes don't fit, the customer wants a full refund.",
+    )
+    assert_test(test_case, [coherence_metric])
 
 
 class LengthMetric(BaseMetric):
@@ -65,43 +57,35 @@ class LengthMetric(BaseMetric):
 
 
 def test_length():
-    input = "What if these shoes don't fit?"
-
-    # Replace this with the actual output from your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
     length_metric = LengthMetric(max_length=10)
-    test_case = LLMTestCase(input=input, actual_output=actual_output)
+    test_case = LLMTestCase(
+        input="What if these shoes don't fit?",
+        # Replace this with the actual output of your LLM application
+        actual_output="We offer a 30-day full refund at no extra cost.",
+    )
     assert_test(test_case, [length_metric])
 
 
 def test_everything():
-    input = "What if these shoes don't fit?"
-    retrieval_context = [
-        "All customers are eligible for a 30 day full refund at no extra cost."
-    ]
-
-    # Replace this with the actual output from your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
     length_metric = LengthMetric(max_length=10)
-    summarization_metric = GEval(
-        name="Summarization",
-        criteria="Summarization - determine if the actual output is an accurate and concise summarization of the input.",
-        evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
-        ],
+    coherence_metric = GEval(
+        name="Coherence",
+        criteria="Coherence - determine if the actual output is logical, has flow, and is easy to understand and follow.",
+        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
         threshold=0.5,
     )
 
     test_case = LLMTestCase(
-        input=input,
-        actual_output=actual_output,
-        retrieval_context=retrieval_context,
+        input="What if these shoes don't fit?",
+        # Replace this with the actual output of your LLM application
+        actual_output="We offer a 30-day full refund at no extra cost.",
+        retrieval_context=[
+            "All customers are eligible for a 30 day full refund at no extra cost."
+        ],
     )
     assert_test(
-        test_case,
-        [answer_relevancy_metric, length_metric, summarization_metric],
+        test_case, [answer_relevancy_metric, coherence_metric, length_metric]
     )
 
 
