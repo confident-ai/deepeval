@@ -103,7 +103,7 @@ class AzureOpenAI(DeepEvalBaseLLM):
 
     def _call(self, prompt: str) -> str:
         chat_model = self.load_model()
-        return chat_model.invoke(prompt)
+        return chat_model.invoke(prompt).content
 
     def get_model_name(self):
         return "Custom Azure OpenAI Model"
@@ -124,7 +124,7 @@ When creating a custom LLM evaluation model you should **ALWAYS**:
 - inherit `DeepEvalBaseLLM`.
 - implement the `load_model()` method, which will be responsible for returning a model object.
 - implement the `_call()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
-- the `_call()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt)` in this particular example, but this could be different depending on the implementation of your custom LLM object.
+- the `_call()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt).content` to access the model output in this particular example, but this could be different depending on the implementation of your custom LLM object.
 - the `get_model_name()` method simply returns a string representing the name of your LLM model.
 
 Note that the `model` argument in the `__init__()` method can accept any type (the model string or object itself). Lastly, to use it for evaluation in LLM-based metrics:
@@ -210,7 +210,7 @@ class AWSBedrock(DeepEvalBaseLLM):
 
     def _call(self, prompt: str) -> str:
         chat_model = self.load_model()
-        return chat_model.invoke(prompt)
+        return chat_model.invoke(prompt).content
 
     def get_model_name(self):
         return "Custom Azure OpenAI Model"
