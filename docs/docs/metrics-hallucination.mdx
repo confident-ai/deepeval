@@ -49,7 +49,7 @@ print(metric.score)
 evaluate([test_case], [metric])
 ```
 
-There are three optional parameters when creating a `HallucinationMetric`:
+There are four optional parameters when creating a `HallucinationMetric`:
 
 - [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
