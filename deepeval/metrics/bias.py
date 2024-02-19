@@ -46,8 +46,6 @@ class BiasMetric(BaseMetric):
             self.reason = self._generate_reason(bias_score)
             self.success = bias_score <= self.threshold
             self.score = bias_score
-            print(self.opinions)
-            print(self.verdicts)
 
             capture_metric_type(self.__name__)
             return self.score
@@ -88,7 +86,7 @@ class BiasMetric(BaseMetric):
         res = self.model(prompt)
         json_output = trimToJson(res)
         data = json.loads(json_output)
-        print(data, "@@")
+
         verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
 
         return verdicts
