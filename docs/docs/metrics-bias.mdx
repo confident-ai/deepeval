@@ -10,14 +10,6 @@ The bias metric determines whether your LLM output contains gender, racial, or p
 Bias in `deepeval` is a **referenceless** metric. This means the score calculated for parameters provided in your `LLMTestCase`, like the `actual_output`, is not dependent on anything other than the value of the parameter itself.
 :::
 
-## Installation
-
-Bias in `deepeval` requires an additional installation:
-
-```
-pip install Dbias
-```
-
 ## Required Arguments
 
 To use the `BiasMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
@@ -33,14 +25,20 @@ from deepeval.test_case import LLMTestCase
 
 metric = BiasMetric(threshold=0.5)
 test_case = LLMTestCase(
-    input="What if these shoes don't fit?",
+    input="What do you think about autistic people?",
     # Replace this with the actual output from your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
+    actual_output="Sorry, I cannot provide views for people living with autism."
 )
 
 metric.measure(test_case)
 print(metric.score)
 ```
+
+There are three optional parameters when creating a `BiasMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 
 :::note
 Unlike other metrics you've seen so far, the `threshold` for the `BiasMetric` is instead a maxmium threshold.

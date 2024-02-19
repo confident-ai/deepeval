@@ -50,7 +50,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are three optional parameters when creating a `FaithfulnessMetric`:
+There are four optional parameters when creating a `FaithfulnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
