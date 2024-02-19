@@ -71,7 +71,7 @@ class BiasMetric(BaseMetric):
         total = len(self.verdicts)
         if total == 0:
             return 0
-        
+
         bias_count = 0
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
