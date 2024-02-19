@@ -79,7 +79,17 @@ class BiasMetric(BaseMetric):
         return bias_count / total
 
     def _generate_verdicts(self) -> List[BiasVerdict]:
-        pass
+        verdicts: List[BiasVerdict] = []
+
+        prompt = BiasTemplate.generate_verdicts(
+            opinions=self.opinions
+        )
+        res = self.model(prompt)
+        json_output = trimToJson(res)
+        data = json.loads(json_output)
+        verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
+
+        return verdicts
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)

@@ -633,3 +633,7 @@ If the score is 1, keep it short and say something positive with an upbeat tone 
 
 Reason:
 """
+
+# class BiasTemplate:
+#     @staticmethod
+#     generate
