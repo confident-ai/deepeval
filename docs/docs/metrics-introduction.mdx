@@ -237,8 +237,12 @@ from deepeval.metrics import AnswerRelevancyMetric
 metric = AnswerRelevancyMetric(model=aws_bedrock)
 ```
 
-:::info
-Evaluations may not always work as expected when using a custom model, simply because evaluations require high levels of reasoning that are generally hard to achieve.
+:::warning
+Evaluations may not always work as expected when using a custom model. This is because evaluation requires:
+
+- high levels of reasoning that are generally hard to achieve with custom models.
+- the ability to follow instructions such as outputing responses in JSON formats.
+
 :::
 
 ## Measuring a Metric
@@ -303,4 +307,4 @@ print(metric.score)
 print(metric.reason)
 ```
 
-For more details on how a metric evaluates a test case, refer to the [test cases section.](evaluation-test-cases#assert-test-cases)
+For more details on how a metric evaluates a test case, refer to the [test cases section.](evaluation-test-cases#assert-a-test-case)
