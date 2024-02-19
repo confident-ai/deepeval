@@ -81,9 +81,7 @@ class BiasMetric(BaseMetric):
     def _generate_verdicts(self) -> List[BiasVerdict]:
         verdicts: List[BiasVerdict] = []
 
-        prompt = BiasTemplate.generate_verdicts(
-            opinions=self.opinions
-        )
+        prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
         res = self.model(prompt)
         json_output = trimToJson(res)
         data = json.loads(json_output)
