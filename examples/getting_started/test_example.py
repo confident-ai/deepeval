@@ -89,12 +89,8 @@ def test_everything():
     )
 
 
-@deepeval.set_hyperparameters(model="gpt-4")
+@deepeval.set_hyperparameters(model=None)
 def hyperparameters():
     return {
-        "prompt_template": """You are a helpful assistant, answer the following question in a non-judgemental tone.
-
-        Question:
-        {question}
-        """,
+        "model": None,
     }
