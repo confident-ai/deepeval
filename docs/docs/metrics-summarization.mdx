@@ -67,7 +67,7 @@ There are five optional parameters when instantiating an `SummarizationMetric` c
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
 - [Optional] `assessment_questions`: a list of **close-ended questions that can be answered with either a 'yes' or a 'no'**. These are questions you want your summary to be able to ideally answer, and is especially helpful if you already know what a good summary for your use case looks like. If `assessment_questions` is not provided, we will generate a set of `assessment_questions` for you at evaluation time. The `assessment_questions` are used to calculate the `inclusion_score`.
-- [Optional] `n`: the number of questions to generate when calculating the `alignment_score` and `inclusion_score`, defaulted to 5.
+- [Optional] `n`: the number of assessment questions to generate when `assessment_questions` is not provided. Defaulted to 5.
 
 ## How is it calculated?
 
