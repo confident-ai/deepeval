@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from threading import Thread, Lock
 import json
 
-from deepeval.utils import trimToJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
@@ -106,8 +106,7 @@ class ContextualRelevancyMetric(BaseMetric):
         )
 
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
         verdicts = [
             ContextualRelevancyVerdict(**item) for item in data["verdicts"]
         ]

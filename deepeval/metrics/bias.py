@@ -7,7 +7,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
 from deepeval.models import GPTModel, DeepEvalBaseLLM
-from deepeval.utils import trimToJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.metrics.templates import BiasTemplate
 
 
@@ -84,8 +84,7 @@ class BiasMetric(BaseMetric):
 
         prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
 
         verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
 
@@ -94,8 +93,7 @@ class BiasMetric(BaseMetric):
     def _generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
 
         return data["opinions"]
 

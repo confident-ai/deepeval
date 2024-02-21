@@ -2,7 +2,7 @@ from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import json
 
-from deepeval.utils import trimToJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
@@ -100,8 +100,7 @@ class ContextualRecallMetric(BaseMetric):
             expected_output=expected_output, retrieval_context=retrieval_context
         )
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
         verdicts = [
             ContextualRecallVerdict(**item) for item in data["verdicts"]
         ]

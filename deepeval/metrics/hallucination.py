@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.utils import trimToJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.metrics.templates import HallucinationTemplate
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.progress_context import metrics_progress_context
@@ -108,8 +108,7 @@ class HallucinationMetric(BaseMetric):
                 actual_output=actual_output, contexts=contexts
             )
             res = self.model(prompt)
-            json_output = trimToJson(res)
-            data = json.loads(json_output)
+            data = trimAndLoadJson(res)
             verdicts = [
                 HallucinationVerdict(**item) for item in data["verdicts"]
             ]
@@ -130,8 +129,7 @@ class HallucinationMetric(BaseMetric):
             actual_output=actual_output, contexts=[context]
         )
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
 
         # verdicts length will always be 1
         final_verdicts = [
