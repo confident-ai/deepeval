@@ -43,7 +43,7 @@ class DeepEvalBaseLLM(ABC):
         """
         pass
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: Any, **kwargs: Any) -> str:
         return self._call(*args, **kwargs)
 
     @abstractmethod

@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
-from deepeval.utils import trimToJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.metrics.templates import (
     FaithfulnessTemplate,
     SummarizationTemplate,
@@ -180,8 +180,7 @@ class SummarizationMetric(BaseMetric):
             questions=self.assessment_questions, text=text
         )
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
         return data["answers"]
 
     def _generate_inclusion_verdicts(
@@ -228,8 +227,7 @@ class SummarizationMetric(BaseMetric):
             summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
         )
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
         verdicts = [
             SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
         ]
@@ -240,8 +238,7 @@ class SummarizationMetric(BaseMetric):
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
 
         return data["claims"]
 

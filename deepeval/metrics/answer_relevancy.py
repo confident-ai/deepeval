@@ -2,7 +2,7 @@ from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import json
 
-from deepeval.utils import trimToJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
@@ -103,8 +103,7 @@ class AnswerRelevancyMetric(BaseMetric):
         )
 
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
         verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
@@ -117,8 +116,7 @@ class AnswerRelevancyMetric(BaseMetric):
         )
 
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
         return data["statements"]
 
     def is_successful(self) -> bool:

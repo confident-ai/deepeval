@@ -8,7 +8,7 @@ from deepeval.metrics.templates import (
     evaluation_steps_template,
     evaluation_results_template,
 )
-from deepeval.utils import trimToJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
 
@@ -70,8 +70,7 @@ class GEval(BaseMetric):
                 )
 
         if self.evaluation_steps is None:
-            json_output = trimToJson(self.generate_evaluation_steps())
-            data = json.loads(json_output)
+            data = trimAndLoadJson(self.generate_evaluation_steps())
             self.evaluation_steps = data["steps"]
 
         score, reason = self.evaluate(test_case)
@@ -105,8 +104,7 @@ class GEval(BaseMetric):
         )
 
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
 
         return data["score"], data["reason"]
 

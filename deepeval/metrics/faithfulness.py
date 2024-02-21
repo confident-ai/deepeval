@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.utils import trimToJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.templates import FaithfulnessTemplate
 from deepeval.progress_context import metrics_progress_context
@@ -107,8 +107,7 @@ class FaithfulnessMetric(BaseMetric):
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
         verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
 
         return verdicts
@@ -118,16 +117,14 @@ class FaithfulnessMetric(BaseMetric):
             text="\n\n".join(retrieval_context)
         )
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
 
         return data["claims"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
         res = self.model(prompt)
-        json_output = trimToJson(res)
-        data = json.loads(json_output)
+        data = trimAndLoadJson(res)
 
         return data["claims"]
 
