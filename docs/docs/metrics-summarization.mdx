@@ -68,6 +68,8 @@ There are five optional parameters when instantiating an `SummarizationMetric` c
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
 - [Optional] `assessment_questions`: a list of **close-ended questions that can be answered with either a 'yes' or a 'no'**. These are questions you want your summary to be able to ideally answer, and is especially helpful if you already know what a good summary for your use case looks like. If `assessment_questions` is not provided, we will generate a set of `assessment_questions` for you at evaluation time. The `assessment_questions` are used to calculate the `inclusion_score`.
 - [Optional] `n`: the number of assessment questions to generate when `assessment_questions` is not provided. Defaulted to 5.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `multithreading`: a boolean which when set to `True`, enables concurrent evaluation of said metric. Defaulted to `True`.
 
 ## How is it calculated?
 
@@ -76,7 +78,7 @@ In `deepeval`, we judge summarization by taking the minimum of the two distinct 
 - `alignment_score`: determines whether the summary contains hallucinated or contradictory information to the original text.
 - `inclusion_score`: determines whether the summary contains the neccessary information from the original text.
 
-These scores are calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', and calculating the ratio of which the original text and summary yields the same answer. [Here is a great article](https://www.confident-ai.com/blog/a-step-by-step-guide-to-evaluating-an-llm-text-summarization-task) on how `deepeval`'s summarization metric was build.
+While the `alignment_score` is similar to that of the [`HallucinationMetric`](metrics-hallucination), the `inclusion_score` is first calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', before calculating the ratio of which the original text and summary yields the same answer. [Here is a great article](https://www.confident-ai.com/blog/a-step-by-step-guide-to-evaluating-an-llm-text-summarization-task) on how `deepeval`'s summarization metric was build.
 
 You can access the `alignment_score` and `inclusion_score` from a `SummarizationMetric` as follows:
 
@@ -90,8 +92,8 @@ metric = SummarizationMetric(...)
 
 metric.measure(test_case)
 print(metric.score)
-print(metric.alignment_score)
-print(metric.inclusion_score)
+print(metric.reason)
+print(metric.score_breakdown)
 ```
 
 :::note
