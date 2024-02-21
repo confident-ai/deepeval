@@ -13,10 +13,8 @@ setup(
     install_requires=[
         "requests",
         "tqdm",
-        "transformers",
         "pytest",
         "tabulate",
-        "sentence-transformers",  # for similarity
         "pytest",
         "typer",
         "rich",
@@ -28,8 +26,6 @@ setup(
         "langchain",
         "langchain-core",
         "langchain_openai",
-        "rouge_score==0.1.2",
-        "nltk==3.8.1",
         "ragas",
     ],
     extras_require={
