@@ -136,13 +136,11 @@ class SummarizationMetric(BaseMetric):
         )
 
         if len(questions) > 0:
-            prompt += """Questions the original text can answer but not the summary:
+            prompt += f"""Questions the original text can answer but not the summary:
 {questions}
 
 """
         prompt += """Reason:"""
-
-        print(prompt)
 
         res = self.model(prompt)
         return res
