@@ -93,12 +93,15 @@ def trimAndLoadJson(input_string: str) -> Any:
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
     jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
+
     try:
         return json.loads(jsonStr)
-    except:
-        raise (
+    except json.JSONDecodeError:
+        raise ValueError(
             "Error: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
         )
+    except Exception as e:
+        raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
 def delete_file_if_exists(file_path):
