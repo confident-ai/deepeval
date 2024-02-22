@@ -1,6 +1,5 @@
 from .base_metric import BaseMetric
 
-from .base_metric import BaseMetric
 from .bias.bias import BiasMetric
 from .toxicity.toxicity import ToxicityMetric
 from .hallucination.hallucination import HallucinationMetric
