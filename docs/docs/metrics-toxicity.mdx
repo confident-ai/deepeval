@@ -35,12 +35,19 @@ metric = ToxicityMetric(threshold=0.5)
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     # Replace this with the actual output from your LLM application
-    actual_output = "We offer a 30-day full refund at no extra cost."
+    actual_output="Sarah always meant well, but you couldn't help but sigh when she volunteered for a project."
 )
 
 metric.measure(test_case)
 print(metric.score)
+print(metric.reason)
 ```
+
+There are three optional parameters when creating a `ToxicityMetric`:
+
+- [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 
 :::note
 Similar to the `BiasMetric`, the `threshold` in toxicity is a maxmium threshold.
