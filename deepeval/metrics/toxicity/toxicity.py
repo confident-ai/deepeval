@@ -40,8 +40,9 @@ class ToxicityMetric(BaseMetric):
             self.opinions: List[str] = self._generate_opinions(
                 test_case.actual_output
             )
-
+            print(self.opinions)
             self.verdicts: List[ToxicityVerdict] = self._generate_verdicts()
+            print(self.verdicts)
             toxicity_score = self._generate_score()
             self.reason = self._generate_reason(toxicity_score)
             self.success = toxicity_score <= self.threshold
