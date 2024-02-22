@@ -11,7 +11,7 @@ from deepeval.metrics.bias.template import BiasTemplate
 from deepeval.metrics.toxicity.template import ToxicityTemplate
 
 
-# BiasMetric runs a similar algorithm to Dbias: https://arxiv.org/pdf/2208.05777.pdf
+# ToxicMetric uses similar rubric to decoding trust: https://arxiv.org/abs/2306.11698
 class ToxicityVerdict(BaseModel):
     verdict: str
     reason: str = Field(default=None)
