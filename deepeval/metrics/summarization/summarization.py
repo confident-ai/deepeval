@@ -20,15 +20,15 @@ class SummarizationAlignmentVerdict(BaseModel):
     reason: str = Field(default=None)
 
 
-class SummarizationInclusionVerdict(BaseModel):
+class SummarizationCoverageVerdict(BaseModel):
     summary_verdict: str
     original_verdict: str
     question: str = Field(default=None)
 
 
 class ScoreType(Enum):
-    INCLUSION = "Inclusion"
     ALIGNMENT = "Alignment"
+    COVERAGE = "Coverage"
 
 
 class SummarizationMetric(BaseMetric):
@@ -69,36 +69,36 @@ class SummarizationMetric(BaseMetric):
                     future_claims = executor.submit(
                         self._generate_claims, test_case.actual_output
                     )
-                    future_inclusion_verdicts = executor.submit(
-                        self._generate_inclusion_verdicts, test_case
+                    future_coverage_verdicts = executor.submit(
+                        self._generate_coverage_verdicts, test_case
                     )
 
                     self.truths: List[str] = future_truths.result()
                     self.claims: List[str] = future_claims.result()
-                    self.inclusion_verdicts: List[
-                        SummarizationInclusionVerdict
-                    ] = future_inclusion_verdicts.result()
+                    self.coverage_verdicts: List[
+                        SummarizationCoverageVerdict
+                    ] = future_coverage_verdicts.result()
             else:
                 # Sequential execution
                 self.truths: List[str] = self._generate_claims(test_case.input)
                 self.claims: List[str] = self._generate_claims(
                     test_case.actual_output
                 )
-                self.inclusion_verdicts: List[SummarizationInclusionVerdict] = (
-                    self._generate_inclusion_verdicts(test_case)
+                self.coverage_verdicts: List[SummarizationCoverageVerdict] = (
+                    self._generate_coverage_verdicts(test_case)
                 )
 
             self.alignment_verdicts: List[SummarizationAlignmentVerdict] = (
                 self._generate_alignment_verdicts()
             )
             alignment_score = self._generate_score(ScoreType.ALIGNMENT)
-            inclusion_score = self._generate_score(ScoreType.INCLUSION)
+            coverage_score = self._generate_score(ScoreType.COVERAGE)
 
             self.score_breakdown = {
                 ScoreType.ALIGNMENT.value: alignment_score,
-                ScoreType.INCLUSION.value: inclusion_score,
+                ScoreType.COVERAGE.value: coverage_score,
             }
-            summarization_score = min(alignment_score, inclusion_score)
+            summarization_score = min(alignment_score, coverage_score)
             self.reason = self._generate_reason(summarization_score)
             self.success = summarization_score >= self.threshold
             self.score = summarization_score
@@ -118,8 +118,8 @@ class SummarizationMetric(BaseMetric):
                 redundancies.append(verdict.reason)
 
         questions = []
-        if self.inclusion_verdicts:
-            for verdict in self.inclusion_verdicts:
+        if self.coverage_verdicts:
+            for verdict in self.coverage_verdicts:
                 if (
                     verdict.original_verdict.strip().lower() == "yes"
                     and verdict.summary_verdict.strip().lower() == "no"
@@ -160,18 +160,18 @@ class SummarizationMetric(BaseMetric):
         else:
             if self.assessment_questions is None:
                 return 1
-            total = len(self.inclusion_verdicts)
+            total = len(self.coverage_verdicts)
             if total == 0:
                 return 0
-            inclusion_count = 0
-            for verdict in self.inclusion_verdicts:
+            coverage_count = 0
+            for verdict in self.coverage_verdicts:
                 if (
                     verdict.original_verdict.strip().lower() == "yes"
                     and verdict.summary_verdict.strip().lower() == "yes"
                 ):
-                    inclusion_count += 1
+                    coverage_count += 1
 
-            return inclusion_count / total
+            return coverage_count / total
 
     def _generate_answers(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_answers(
@@ -181,9 +181,9 @@ class SummarizationMetric(BaseMetric):
         data = trimAndLoadJson(res)
         return data["answers"]
 
-    def _generate_inclusion_verdicts(
+    def _generate_coverage_verdicts(
         self, test_case: LLMTestCase
-    ) -> List[SummarizationInclusionVerdict]:
+    ) -> List[SummarizationCoverageVerdict]:
         if self.assessment_questions is None:
             return None
 
@@ -205,17 +205,17 @@ class SummarizationMetric(BaseMetric):
         if len(original_answers) != len(summary_answers):
             raise ValueError("Number of verdicts generated does not equal.")
 
-        inclusion_veridcts: List[SummarizationInclusionVerdict] = []
+        coverage_veridcts: List[SummarizationCoverageVerdict] = []
         for i in range(len(original_answers)):
-            inclusion_veridcts.append(
-                SummarizationInclusionVerdict(
+            coverage_veridcts.append(
+                SummarizationCoverageVerdict(
                     summary_verdict=summary_answers[i],
                     original_verdict=original_answers[i],
                     question=self.assessment_questions[i],
                 )
             )
 
-        return inclusion_veridcts
+        return coverage_veridcts
 
     def _generate_alignment_verdicts(
         self,
