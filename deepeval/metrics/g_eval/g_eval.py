@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.metrics.templates import (
+from deepeval.metrics.g_eval.template import (
     evaluation_steps_template,
     evaluation_results_template,
 )
