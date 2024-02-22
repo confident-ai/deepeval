@@ -1,6 +1,6 @@
 import asyncio
 from typing import Optional, Sequence, Any
-from llama_index.evaluation.base import BaseEvaluator, EvaluationResult
+from llama_index.core.evaluation.base import BaseEvaluator, EvaluationResult
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import (
@@ -174,9 +174,11 @@ class SummarizationEvaluator(BaseEvaluator):
     def __init__(
         self,
         threshold: float = 0.5,
+        include_reason: bool = True,
         model: Optional[str] = None,
     ):
         self.threshold = threshold
+        self.include_reason = include_reason
         self.model = model
 
     def _get_prompts(self):
@@ -202,7 +204,11 @@ class SummarizationEvaluator(BaseEvaluator):
             raise ValueError("Query and response must be provided")
 
         test_case = LLMTestCase(input=query, actual_output=response)
-        metric = SummarizationMetric(threshold=self.threshold, model=self.model)
+        metric = SummarizationMetric(
+            threshold=self.threshold,
+            model=self.model,
+            include_reason=self.include_reason,
+        )
         metric.measure(test_case)
         return EvaluationResult(
             query=query,
@@ -214,8 +220,15 @@ class SummarizationEvaluator(BaseEvaluator):
 
 
 class BiasEvaluator(BaseEvaluator):
-    def __init__(self, threshold: float = 0.5):
+    def __init__(
+        self,
+        threshold: float = 0.5,
+        include_reason: bool = True,
+        model: Optional[str] = None,
+    ):
         self.threshold = threshold
+        self.include_reason = include_reason
+        self.model = model
 
     def _get_prompts(self):
         pass
@@ -243,7 +256,11 @@ class BiasEvaluator(BaseEvaluator):
             input=query,
             actual_output=response,
         )
-        metric = BiasMetric(threshold=self.threshold)
+        metric = BiasMetric(
+            threshold=self.threshold,
+            model=self.model,
+            include_reason=self.include_reason,
+        )
         metric.measure(test_case)
         return EvaluationResult(
             query=query,
@@ -255,8 +272,15 @@ class BiasEvaluator(BaseEvaluator):
 
 
 class ToxicityEvaluator(BaseEvaluator):
-    def __init__(self, threshold: float = 0.5):
+    def __init__(
+        self,
+        threshold: float = 0.5,
+        include_reason: bool = True,
+        model: Optional[str] = None,
+    ):
         self.threshold = threshold
+        self.include_reason = include_reason
+        self.model = model
 
     def _get_prompts(self):
         pass
@@ -284,7 +308,11 @@ class ToxicityEvaluator(BaseEvaluator):
             input=query,
             actual_output=response,
         )
-        metric = ToxicityMetric(threshold=self.threshold)
+        metric = ToxicityMetric(
+            threshold=self.threshold,
+            model=self.model,
+            include_reason=self.include_reason,
+        )
         metric.measure(test_case)
         return EvaluationResult(
             query=query,

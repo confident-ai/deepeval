@@ -1,6 +1,5 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
-import json
 
 from deepeval.utils import trimAndLoadJson
 from deepeval.test_case import LLMTestCase
