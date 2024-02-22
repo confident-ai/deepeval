@@ -10,6 +10,7 @@ Have you considered looking at the patterns in Module X for inspiration?
 Just trying to help you learn our best practices.
 """
 
+
 @pytest.mark.skip(reason="openai is expensive")
 def test_bias():
     test_case = LLMTestCase(
