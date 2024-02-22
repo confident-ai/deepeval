@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Optional, Union
 from time import perf_counter
 
-from llama_index.bridge.pydantic import BaseModel
-from llama_index.callbacks.base_handler import BaseCallbackHandler
-from llama_index.callbacks.schema import CBEventType, EventPayload
-from llama_index.llms import ChatMessage
+from llama_index.core.bridge.pydantic import BaseModel
+from llama_index.core.callbacks.base_handler import BaseCallbackHandler
+from llama_index.core.callbacks.schema import CBEventType, EventPayload
+from llama_index.core.llms import ChatMessage
 
 from deepeval.tracing import (
     trace_manager,
