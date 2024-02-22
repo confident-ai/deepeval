@@ -46,7 +46,7 @@ enhancing brain functions related to concentration and attention.
 """
 
 
-@pytest.mark.skip(rgeason="openai is very expensive")
+@pytest.mark.skip(reason="openai is very expensive")
 def test_answer_relevancy():
     metric = AnswerRelevancyMetric(threshold=0.5)
     test_case = LLMTestCase(
