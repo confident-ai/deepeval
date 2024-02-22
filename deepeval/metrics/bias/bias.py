@@ -8,7 +8,7 @@ from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.utils import trimAndLoadJson
-from deepeval.metrics.templates import BiasTemplate
+from deepeval.metrics.bias.template import BiasTemplate
 
 
 # BiasMetric runs a similar algorithm to Dbias: https://arxiv.org/pdf/2208.05777.pdf

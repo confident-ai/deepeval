@@ -7,7 +7,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.utils import trimAndLoadJson
 from deepeval.models import GPTModel, DeepEvalBaseLLM
-from deepeval.metrics.templates import FaithfulnessTemplate
+from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
 
