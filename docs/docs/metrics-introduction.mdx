@@ -79,8 +79,8 @@ deepeval unset-azure-openai
 
 `deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
 
-:::note
-You need to specify the custom evaluation model you would like to use through the `model` argument when instantiating an LLM-based metric.
+:::warning
+We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning that are generally hard to achieve with custom models, and the ability to follow instructions such as outputing responses in JSON formats, which we find only a small number of LLMs are able to replicate.
 :::
 
 ### Azure OpenAI Example
@@ -190,6 +190,10 @@ from deepeval.metrics import AnswerRelevancyMetric
 metric = AnswerRelevancyMetric(model=mistral_7b)
 ```
 
+:::tip
+You need to specify the custom evaluation model you would like to use through the `model` argument when instantiating an LLM-based metric.
+:::
+
 ### AWS Bedrock Example
 
 Here is an example of creating a custom AWS Bedrock model through the `langchain_community.chat_models` module for evaluation:
@@ -236,14 +240,6 @@ from deepeval.metrics import AnswerRelevancyMetric
 
 metric = AnswerRelevancyMetric(model=aws_bedrock)
 ```
-
-:::warning
-Evaluations may not always work as expected when using a custom model. This is because evaluation requires:
-
-- high levels of reasoning that are generally hard to achieve with custom models.
-- the ability to follow instructions such as outputing responses in JSON formats.
-
-:::
 
 ## Measuring a Metric
 
