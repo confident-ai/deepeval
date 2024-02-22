@@ -1,5 +1,4 @@
 from typing import List, Optional, Union
-import json
 from pydantic import BaseModel, Field
 
 from deepeval.metrics import BaseMetric
