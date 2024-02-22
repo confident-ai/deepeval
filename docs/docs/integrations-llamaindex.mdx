@@ -193,7 +193,9 @@ evaluator = DeepEvalSummarizationEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
     threshold=0.5,
     # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
-    model="gpt-4-1106-preview"
+    model="gpt-4-1106-preview",
+    # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
+    include_reason=True
 )
 ```
 
@@ -205,8 +207,12 @@ The `DeepEvalBiasEvaluator` uses `deepeval`'s `BiasMetric` for evaluation.
 from deepeval.integrations.llamaindex import DeepEvalBiasEvaluator
 
 evaluator = DeepEvalBiasEvaluator(
-    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
-    threshold=0.5
+    # Optional. A float representing the maximum passing threshold, defaulted to 0.5.
+    threshold=0.5,
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
+    model="gpt-4-1106-preview",
+    # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
+    include_reason=True
 )
 ```
 
@@ -218,8 +224,12 @@ The `DeepEvalToxicityEvaluator` uses `deepeval`'s `ToxicityMetric` for evaluatio
 from deepeval.integrations.llamaindex import DeepEvalToxicityEvaluator
 
 evaluator = DeepEvalToxicityEvaluator(
-    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
-    threshold=0.5
+    # Optional. A float representing the maximum passing threshold, defaulted to 0.5.
+    threshold=0.5,
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
+    model="gpt-4-1106-preview",
+    # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
+    include_reason=True
 )
 ```
 
