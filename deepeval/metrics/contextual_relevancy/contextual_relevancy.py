@@ -7,7 +7,9 @@ from deepeval.utils import trimAndLoadJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
-from deepeval.metrics.contextual_relevancy.template import ContextualRelevancyTemplate
+from deepeval.metrics.contextual_relevancy.template import (
+    ContextualRelevancyTemplate,
+)
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
 
