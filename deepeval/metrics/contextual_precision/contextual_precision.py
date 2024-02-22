@@ -16,7 +16,6 @@ from deepeval.telemetry import capture_metric_type
 class ContextualPrecisionVerdict(BaseModel):
     verdict: str
     reason: str
-    node: str = Field(default=None)
 
 
 class ContextualPrecisionMetric(BaseMetric):
@@ -69,11 +68,7 @@ class ContextualPrecisionMetric(BaseMetric):
             return None
 
         retrieval_contexts_verdicts = [
-            {
-                "verdict": verdict.verdict,
-                "reasons": verdict.reason,
-                "node": verdict.node,
-            }
+            {"verdict": verdict.verdict, "reasons": verdict.reason}
             for verdict in self.verdicts
         ]
 
@@ -91,6 +86,9 @@ class ContextualPrecisionMetric(BaseMetric):
         return res
 
     def _generate_score(self):
+        if len(self.verdicts) == 0:
+            return 0
+
         # Convert verdicts to a binary list where 'yes' is 1 and others are 0
         node_verdicts = [
             1 if v.verdict.strip().lower() == "yes" else 0
@@ -132,14 +130,6 @@ class ContextualPrecisionMetric(BaseMetric):
         verdicts = [
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
         ]
-
-        if len(verdicts) != len(retrieval_context):
-            raise ValueError(
-                "Number of verdicts generated does not equal length of retrieved nodes."
-            )
-
-        for i in range(len(verdicts)):
-            verdicts[i].node = retrieval_context[i]
 
         return verdicts
 
