@@ -7,15 +7,9 @@ assignees: ''
 
 ---
 
-<br/>
-
-<p align="center">
-<strong>❗ BEFORE YOU BEGIN ❗</strong>
-<br/>
+**❗BEFORE YOU BEGIN❗**
 Are you on discord? 🤗 We'd love to have you asking questions on discord instead: https://discord.com/invite/a3K9c8GRGt
-</p>
 
-<br/>
 
 **Describe the bug**
 A clear and concise description of what the bug is.
