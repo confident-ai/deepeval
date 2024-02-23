@@ -52,7 +52,7 @@ Questions:
 
 JSON:
 """
-    
+
     @staticmethod
     def generate_questions(text, n):
         return f"""Based on the given text, generate {n} closed-ended questions that can be answered with either a 'yes' or 'no'. 
