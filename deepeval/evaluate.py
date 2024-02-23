@@ -74,7 +74,7 @@ def execute_test(
 
         count += 1
         test_result = create_test_result(
-            test_case, success, drop_and_copy(metrics, ["model"])
+            test_case, success, drop_and_copy(metrics, ["model", "embeddings"])
         )
         test_results.append(test_result)
 

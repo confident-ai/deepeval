@@ -13,6 +13,7 @@ from deepeval.metrics.ragas import (
     RAGASAnswerRelevancyMetric,
 )
 from deepeval import assert_test
+from langchain_openai import OpenAIEmbeddings
 
 query = "Who won the FIFA World Cup in 2018 and what was the score?"
 output = "Winners of the FIFA world cup were the French national football team"
@@ -44,6 +45,7 @@ def test_ragas_score():
 
 @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
     test_case = LLMTestCase(
         input=query,
         actual_output=output,
@@ -58,9 +60,9 @@ def test_everything():
     metric5 = CorrectnessMetric(model="gpt-4")
     metric6 = CoherenceMetric(model="gpt-4")
     metric7 = MaliciousnessMetric(model="gpt-4")
-    metric8 = RAGASAnswerRelevancyMetric(model="gpt-4")
+    metric8 = RAGASAnswerRelevancyMetric(model="gpt-4", embeddings=embeddings)
     metric9 = RAGASContextualPrecisionMetric()
-    metric10 = RagasMetric()
+    metric10 = RagasMetric(embeddings=embeddings)
     assert_test(
         test_case,
         [
