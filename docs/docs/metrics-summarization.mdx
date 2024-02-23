@@ -57,6 +57,7 @@ metric = SummarizationMetric(
 
 metric.measure(test_case)
 print(metric.score)
+print(metric.reason)
 
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])
