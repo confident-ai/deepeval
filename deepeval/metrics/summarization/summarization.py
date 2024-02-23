@@ -35,6 +35,7 @@ class SummarizationMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
+        n: int = 5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         assessment_questions: Optional[List[str]] = None,
         include_reason: bool = True,
@@ -49,6 +50,7 @@ class SummarizationMetric(BaseMetric):
         self.assessment_questions = assessment_questions
         self.multithreading = multithreading
         self.include_reason = include_reason
+        self.n = n
 
     def measure(self, test_case: LLMTestCase):
         if test_case.input is None or test_case.actual_output is None:
@@ -181,11 +183,18 @@ class SummarizationMetric(BaseMetric):
         data = trimAndLoadJson(res)
         return data["answers"]
 
+    def _generate_assessment_questions(self, text: str):
+        prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
+        res = self.model(prompt)
+        data = trimAndLoadJson(res)
+        return data["questions"]
+
+
     def _generate_coverage_verdicts(
         self, test_case: LLMTestCase
     ) -> List[SummarizationCoverageVerdict]:
         if self.assessment_questions is None:
-            return None
+            self.assessment_questions = self._generate_assessment_questions()
 
         if self.multithreading:
             with ThreadPoolExecutor() as executor:
