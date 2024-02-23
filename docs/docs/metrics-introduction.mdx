@@ -270,10 +270,20 @@ test_case = LLMTestCase(input="...", actual_output="...")
 metric = AnswerRelevancyMetric(threshold=0.5)
 ```
 
-Using this metric, you can either evaluate a test case using `deepeval test run`:
+Using this metric, you can either execute it directly to get its score and reason:
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score)
+print(metric.reason)
+```
+
+Or you can either evaluate a test case using `deepeval test run`:
 
 ```python title="test_file.py"
-from deepeval import evaluate
+from deepeval import assert_test
 ...
 
 def test_answer_relevancy():
@@ -287,20 +297,10 @@ deepeval test run test_file.py
 Or using the `evaluate` function:
 
 ```python
-from deepeval import assert_test
+from deepeval import evaluate
 ...
 
 evaluate([test_case], [metric])
-```
-
-Or execute the metric directly and get its score:
-
-```python
-...
-
-metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
 ```
 
 For more details on how a metric evaluates a test case, refer to the [test cases section.](evaluation-test-cases#assert-a-test-case)
