@@ -52,6 +52,22 @@ Questions:
 
 JSON:
 """
+    
+    @staticmethod
+    def generate_questions(text, n):
+        return f"""Based on the given text, generate {n} closed-ended questions that can be answered with either a 'yes' or 'no'. 
+The questions generated should ALWAYS result in a 'yes' based on the given text. 
+        
+** IMPORTANT
+Only return a JSON with a 'questions' key, which is a list of strings. 
+The questions have to be STRICTLY closed ended.
+The given text should be able to answer 'yes' for each question.
+**
+Text:
+{text}
+
+JSON:
+"""
 
     @staticmethod
     def generate_alignment_verdicts(orignal_text, summary_claims):

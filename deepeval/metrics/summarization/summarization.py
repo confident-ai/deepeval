@@ -193,7 +193,9 @@ class SummarizationMetric(BaseMetric):
         self, test_case: LLMTestCase
     ) -> List[SummarizationCoverageVerdict]:
         if self.assessment_questions is None:
-            self.assessment_questions = self._generate_assessment_questions()
+            self.assessment_questions = self._generate_assessment_questions(test_case.input)
+
+        print(self.assessment_questions)
 
         if self.multithreading:
             with ThreadPoolExecutor() as executor:
