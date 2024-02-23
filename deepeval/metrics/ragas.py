@@ -1,8 +1,9 @@
 """An implementation of the Ragas metric
 """
 
-from typing import Optional, Union
+from typing import Optional, Union, Any
 from langchain_core.language_models import BaseChatModel
+from langchain_core.embeddings import Embeddings
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
@@ -136,10 +137,12 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         self,
         threshold: float = 0.3,
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
+        embeddings: Optional[Embeddings] = None,
     ):
         self.threshold = threshold
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
+        self.embeddings = embeddings
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -167,7 +170,12 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=[answer_relevancy], llm=chat_model)
+        scores = evaluate(
+            dataset,
+            metrics=[answer_relevancy],
+            llm=chat_model,
+            embeddings=self.embeddings,
+        )
         answer_relevancy_score = scores["answer_relevancy"]
         self.success = answer_relevancy_score >= self.threshold
         self.score = answer_relevancy_score
@@ -556,11 +564,13 @@ class RagasMetric(BaseMetric):
         self,
         threshold: float = 0.3,
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
+        embeddings: Optional[Embeddings] = None,
     ):
         self.threshold = threshold
         self.model_name = model
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
+        self.embeddings = embeddings
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -584,7 +594,9 @@ class RagasMetric(BaseMetric):
             RAGASContextualPrecisionMetric(model=self.model_name),
             RAGASContextualRecallMetric(model=self.model_name),
             RAGASFaithfulnessMetric(model=self.model_name),
-            RAGASAnswerRelevancyMetric(model=self.model_name),
+            RAGASAnswerRelevancyMetric(
+                model=self.model_name, embeddings=self.embeddings
+            ),
         ]
 
         for metric in metrics:
