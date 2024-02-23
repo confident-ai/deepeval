@@ -30,11 +30,11 @@ try:
 
         def __init__(
             self,
+            trainer: Trainer,
             evaluation_dataset: EvaluationDataset = None,
             metrics: List[BaseMetric] = None,
             tokenizer_args: Dict = None,
             aggregation_method: str = "avg",
-            trainer: Trainer = None,
             show_table: bool = False,
         ) -> None:
             super().__init__()
