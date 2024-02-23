@@ -189,7 +189,6 @@ class SummarizationMetric(BaseMetric):
         data = trimAndLoadJson(res)
         return data["questions"]
 
-
     def _generate_coverage_verdicts(
         self, test_case: LLMTestCase
     ) -> List[SummarizationCoverageVerdict]:
