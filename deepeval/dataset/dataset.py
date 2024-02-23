@@ -265,7 +265,8 @@ class EvaluationDataset:
                 "Unable to push empty dataset to Confident AI, there must be at least one test case in dataset"
             )
         if is_confident():
-            goldens = convert_test_cases_to_goldens(self.test_cases)
+            goldens = self.goldens
+            goldens.extend(convert_test_cases_to_goldens(self.test_cases))
             body = APIDataset(
                 alias=alias, overwrite=False, goldens=goldens
             ).model_dump(by_alias=True, exclude_none=True)
