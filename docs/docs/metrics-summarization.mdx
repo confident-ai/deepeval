@@ -4,6 +4,8 @@ title: Summarization
 sidebar_label: Summarization
 ---
 
+import Equation from "@site/src/components/equation";
+
 The summarization metric uses LLMs to determine whether your LLM (application) is generating factually correct summaries while including the neccessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `actual_output`.
 
 ## Required Arguments
@@ -74,10 +76,14 @@ There are six optional parameters when instantiating an `SummarizationMetric` cl
 
 ## How is it calculated?
 
-In `deepeval`, we judge summarization by taking the minimum of the two distinct scores:
+The `SummarizationMetric` score is calculated according to the following equation:
 
-- `alignment_score`: determines whether the summary contains hallucinated or contradictory information to the original text.
-- `coverage_score`: determines whether the summary contains the neccessary information from the original text.
+<Equation formula="\text{Summarization} = \min(\text{Alignment Score}, \text{Coverage Score})" />
+
+To break it down, the:
+
+- `alignment_score` determines whether the summary contains hallucinated or contradictory information to the original text.
+- `coverage_score` determines whether the summary contains the neccessary information from the original text.
 
 While the `alignment_score` is similar to that of the [`HallucinationMetric`](metrics-hallucination), the `coverage_score` is first calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', before calculating the ratio of which the original text and summary yields the same answer. [Here is a great article](https://www.confident-ai.com/blog/a-step-by-step-guide-to-evaluating-an-llm-text-summarization-task) on how `deepeval`'s summarization metric was build.
 

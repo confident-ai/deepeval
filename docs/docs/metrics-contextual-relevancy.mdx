@@ -4,6 +4,8 @@ title: Contextual Relevancy
 sidebar_label: Contextual Relevancy
 ---
 
+import Equation from "@site/src/components/equation";
+
 The contextual relevancy metric measures the quality of your RAG pipeline's retriever by evaluating the overall relevance of the information presented in your `retrieval_context` for a given `input`. `deepeval`'s contextual relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 ## Required Arguments
@@ -56,8 +58,10 @@ There are three optional parameters when creating a `ContextualRelevancyMetricMe
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 
-You can also choose to fallback to Ragas' contextual relevancy metric (which has a similar implemention). This however is not capable of generating a reason.
+## How Is It Calculated?
 
-```python
-from deepeval.metrics.ragas import RAGASContextualRelevancyMetric
-```
+The `ContextualRelevancyMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Contextual Relevancy} = \frac{\text{Number of Relevant Statements}}{\text{Total Number of Statements}}" />
+
+Although similar to how the `AnswerRelevancyMetric` is calculated, the `ContextualRelevancyMetric` first uses an LLM to extract all statements made in the `retrieval_context` instead, before using the same LLM to classify whether each statement is relevant to the `input`.

@@ -4,6 +4,8 @@ title: Contextual Recall
 sidebar_label: Contextual Recall
 ---
 
+import Equation from "@site/src/components/equation";
+
 The contextual recall metric measures the quality of your RAG pipeline's retriever by evaluating the extent of which the `retrieval_context` aligns with the `expected_output`. `deepeval`'s contextual recall metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 ## Required Arguments
@@ -57,8 +59,16 @@ There are three optional parameters when creating a `ContextualRecallMetric`:
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 
-You can also choose to fallback to Ragas' contextual recall metric (which has a similar implemention). This however is not capable of generating a reason.
+## How Is It Calculated?
 
-```python
-from deepeval.metrics.ragas import RAGASContextualRecallMetric
-```
+The `ContextualRecallMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Contextual Recall} = \frac{\text{Number of Attributable Statements}}{\text{Total Number of Statements}}" />
+
+The `ContextualRecallMetric` first uses an LLM to extract all **statements made in the `expected_output`**, before using the same LLM to classify whether each statement can be attributed to nodes in the `retrieval_context`.
+
+:::info
+We use the `expected_output` instead of the `actual_output` because we're measuring the quality of the RAG retriever for a given ideal output.
+:::
+
+A higher contextual recall score represents a greater ability of the retrieval system to capture all relevant information from the total available relevant set within your knowledge base.

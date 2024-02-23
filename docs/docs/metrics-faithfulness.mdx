@@ -4,6 +4,8 @@ title: Faithfulness
 sidebar_label: Faithfulness
 ---
 
+import Equation from "@site/src/components/equation";
+
 The faithfulness metric measures the quality of your RAG pipeline's generator by evaluating whether the `actual_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::info
@@ -57,8 +59,12 @@ There are four optional parameters when creating a `FaithfulnessMetric`:
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `multithreading`: a boolean which when set to `True`, enables concurrent evaluation of said metric. Defaulted to `True`.
 
-You can also choose to fallback to Ragas' faithfulness metric (which has a similar implemention). This however is not capable of generating a reason.
+## How Is It Calculated?
 
-```python
-from deepeval.metrics.ragas import RAGASFaithfulnessMetric
-```
+The `FaithfulnessMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Faithfulness} = \frac{\text{Number of Truthful Claims}}{\text{Total Number of Claims}}" />
+
+The `FaithfulnessMetric` first uses an LLM to extract all claims made in the `actual_output`, before using the same LLM to classify whether each claim is truthful based on the facts presented in the `retrieval_context`.
+
+**A claim is considered truthful if it does not contradict any facts** presented in the `retrieval_context`.

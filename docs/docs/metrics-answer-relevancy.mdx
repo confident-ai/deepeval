@@ -4,6 +4,8 @@ title: Answer Relevancy
 sidebar_label: Answer Relevancy
 ---
 
+import Equation from "@site/src/components/equation";
+
 The answer relevancy metric measures the quality of your RAG pipeline's generator by evaluating how relevant the `actual_output` of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::tip
@@ -55,9 +57,12 @@ There are three optional parameters when creating an `AnswerRelevancyMetric`:
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-1106-preview'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `multithreading`: a boolean which when set to `True`, enables concurrent evaluation of said metric. Defaulted to `True`.
 
-You can also choose to fallback to Ragas' answer relevancy metric (which has a similar implemention). This however is not capable of generating a reason.
+## How Is It Calculated?
 
-```python
-from deepeval.metrics.ragas import RAGASAnswerRelevancyMetric
-```
+The `AnswerRelevancyMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Answer Relevancy} = \frac{\text{Number of Relevant Statements}}{\text{Total Number of Statements}}" />
+
+The `AnswerRelevancyMetric` first uses an LLM to extract all statements made in the `actual_output`, before using the same LLM to classify whether each statement is relevant to the `input` using additional context from the `retrieval_context`.

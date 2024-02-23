@@ -13,6 +13,10 @@ The RAGAS metric is the average of four distinct metrics:
 
 It provides a score to holistically evaluate of your RAG pipeline's generator and retriever.
 
+:::note
+The `RAGASMetric`, although similar to `deepeval`'s default RAG metrics, is not capable of generating a reason.
+:::
+
 ## Required Arguments
 
 To use the `RagasMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
@@ -59,7 +63,7 @@ There are three optional parameters when creating a `RagasMetric`:
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any one of langchain's [chat models](https://python.langchain.com/docs/integrations/chat/) of type `BaseChatModel`. Defaulted to 'gpt-3.5-turbo'.
 - [Optional] `embeddings`: any one of langchain's [embeddings](https://python.langchain.com/docs/integrations/text_embedding) of type `Embeddings`. Custom `embeddings` provided to the `RagasMetric` will only be used in the `RAGASAnswerRelevancyMetric`, since it is the only metric that requires embeddings for calculating cosine similarity.
 
-:::note
+:::info
 You can also choose to import and evaluate using each metric individually:
 
 ```python

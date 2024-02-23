@@ -264,13 +264,17 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
 # Initialize a test case
-test_case = LLMTestCase(input="...", actual_output="...")
+test_case = LLMTestCase(
+    input="...",
+    actual_output="...",
+    retrieval_context=["..."]
+)
 
 # Initialize metric with threshold
 metric = AnswerRelevancyMetric(threshold=0.5)
 ```
 
-Using this metric, you can either execute it directly to get its score and reason:
+Using this metric, you can either execute it directly as a standalone to get its score and reason:
 
 ```python
 ...
