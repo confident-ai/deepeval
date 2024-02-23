@@ -137,7 +137,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         self,
         threshold: float = 0.3,
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
-        embeddings: Optional[Embeddings] = None
+        embeddings: Optional[Embeddings] = None,
     ):
         self.threshold = threshold
         self.model = GPTModel(model=model)
@@ -170,7 +170,12 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=[answer_relevancy], llm=chat_model, embeddings=self.embeddings)
+        scores = evaluate(
+            dataset,
+            metrics=[answer_relevancy],
+            llm=chat_model,
+            embeddings=self.embeddings,
+        )
         answer_relevancy_score = scores["answer_relevancy"]
         self.success = answer_relevancy_score >= self.threshold
         self.score = answer_relevancy_score
@@ -559,7 +564,7 @@ class RagasMetric(BaseMetric):
         self,
         threshold: float = 0.3,
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
-        embeddings: Optional[Embeddings] = None
+        embeddings: Optional[Embeddings] = None,
     ):
         self.threshold = threshold
         self.model_name = model
@@ -589,7 +594,9 @@ class RagasMetric(BaseMetric):
             RAGASContextualPrecisionMetric(model=self.model_name),
             RAGASContextualRecallMetric(model=self.model_name),
             RAGASFaithfulnessMetric(model=self.model_name),
-            RAGASAnswerRelevancyMetric(model=self.model_name, embeddings=self.embeddings),
+            RAGASAnswerRelevancyMetric(
+                model=self.model_name, embeddings=self.embeddings
+            ),
         ]
 
         for metric in metrics:
