@@ -32,7 +32,7 @@ def check_for_update():
         import requests
 
         try:
-            response = requests.get("https://pypi.org/pypi/deepeval/json")
+            response = requests.get("https://pypi.org/pypi/deepeval/json", timeout=5)
             latest_version = response.json()["info"]["version"]
 
             if compare_versions(latest_version, __version__):
