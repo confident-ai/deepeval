@@ -197,8 +197,6 @@ class SummarizationMetric(BaseMetric):
                 test_case.input
             )
 
-        print(self.assessment_questions)
-
         if self.multithreading:
             with ThreadPoolExecutor() as executor:
                 future_original_answers: List[str] = executor.submit(
