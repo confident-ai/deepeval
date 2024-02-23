@@ -10,7 +10,6 @@ assignees: ''
 **❗BEFORE YOU BEGIN❗**
 Are you on discord? 🤗 We'd love to have you asking questions on discord instead: https://discord.com/invite/a3K9c8GRGt
 
-
 **Describe the bug**
 A clear and concise description of what the bug is.
 
