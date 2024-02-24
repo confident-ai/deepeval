@@ -65,9 +65,7 @@ After creating a custom metric, you can use it in the same way as all of `deepev
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
-
 ...
-
 
 # Note that we pass in latency since the measure method requires it for evaluation
 latency_metric = LatencyMetric(max_seconds=10.0)

@@ -75,7 +75,7 @@ The `ContextualPrecisionMetric` score is calculated according to the following e
 
 The `ContextualPrecisionMetric` first uses an LLM to determine for each node in the `retrieval_context` whether it is relevant to the `input` based on information in the `expected_output`, before calculating the **weighted cumulative precision** as the contextual precision score. The weighted cumulative precision (WCP) is used because it:
 
-- **Emphasizes on Top Results**: WCP places a stronger emphasis on the relevance of top-ranked results. The ranking order is important are because LLMs tend to give more attention to earlier nodes in the `retrieval_context` (which may cause downstream hallucination if nodes are ranked incorrectly).
+- **Emphasis on Top Results**: WCP places a stronger emphasis on the relevance of top-ranked results. This emphasis is important are because LLMs tend to give more attention to earlier nodes in the `retrieval_context` (which may cause downstream hallucination if nodes are ranked incorrectly).
 - **Rewards Relevant Ordering**: WCP can handle varying degrees of relevance (e.g., "highly relevant", "somewhat relevant", "not relevant"). This is in contrast to metrics like precision, which treats all retrieved nodes as equally important.
 
 A higher contextual precision score represents a greater ability of the retrieval system to correctly rank relevant nodes higher in the `retrieval_context`.
