@@ -47,7 +47,12 @@ class SummarizationMetric(BaseMetric):
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
-        self.assessment_questions = assessment_questions
+
+        if assessment_questions is not None and len(assessment_questions) == 0:
+            self.assessment_questions = None
+        else:
+            self.assessment_questions = assessment_questions
+
         self.multithreading = multithreading
         self.include_reason = include_reason
         self.n = n
