@@ -61,7 +61,7 @@ def execute_test(
             expectedOutput=test_case.expected_output,
             success=success,
             metricsMetadata=[],
-            runDuration=run_duration,
+            runDuration=0,
             latency=test_case.latency,
             cost=test_case.cost,
             context=test_case.context,
@@ -95,7 +95,6 @@ def execute_test(
         test_run.test_cases.append(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
         test_run_manager.save_test_run()
-        print(test_run_manager.get_test_run())
 
         test_result = create_test_result(
             test_case, success, drop_and_copy(metrics, ["model", "embeddings"])
