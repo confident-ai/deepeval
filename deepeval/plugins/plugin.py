@@ -5,12 +5,12 @@ from rich import print
 from typing import Optional, Any
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import test_run_manager, DeploymentConfigs
-
+from deepeval.utils import is_running_deepeval
 
 def pytest_sessionstart(session: pytest.Session):
-    deepeval = session.config.getoption("--deepeval")
+    is_running_deepeval = is_running_deepeval()
 
-    if deepeval:
+    if is_running_deepeval:
         test_run_manager.save_to_disk = True
         try:
             deployment_configs = session.config.getoption("--deployment")
@@ -21,9 +21,7 @@ def pytest_sessionstart(session: pytest.Session):
             else:
                 deployment = True
                 deployment_configs = json.loads(deployment_configs)
-                disable_request = deployment_configs.pop(
-                    "is_pull_request", False
-                )
+                disable_request = deployment_configs.pop("is_pull_request", False)
                 deployment_configs = DeploymentConfigs(**deployment_configs)
 
             test_run_manager.create_test_run(
@@ -42,13 +40,6 @@ def pytest_addoption(parser):
         action="store",
         default=None,
         help="Set deployment configs",
-    )
-
-    parser.addoption(
-        "--deepeval",
-        action="store",
-        default=False,
-        help="Set deepeval env",
     )
 
 

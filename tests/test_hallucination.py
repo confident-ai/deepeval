@@ -20,7 +20,7 @@ def test_hallucination_metric():
     assert_test(test_case, [metric])
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_hallucination_metric_2():
     metric = HallucinationMetric(threshold=0.6)
     test_case = LLMTestCase(
@@ -34,7 +34,7 @@ def test_hallucination_metric_2():
         assert_test(test_case, [metric])
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_hallucination_metric_3():
     metric = HallucinationMetric(threshold=0.6)
     test_case = LLMTestCase(

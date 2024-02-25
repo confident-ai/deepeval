@@ -14,6 +14,14 @@ import re
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
+_is_running_deepeval = True
+
+def set_is_running_deepeval(flag: bool):
+    global _is_running_deepeval
+    _is_running_deepeval = flag
+
+def is_running_deepeval() -> bool:
+    return _is_running_deepeval
 
 def get_deployment_configs() -> Optional[Dict]:
     if os.getenv("GITHUB_ACTIONS") == "true":
