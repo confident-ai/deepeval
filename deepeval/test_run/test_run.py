@@ -77,9 +77,6 @@ class TestRun(BaseModel):
     deployment_configs: Optional[DeploymentConfigs] = Field(
         None, alias="deploymentConfigs"
     )
-    dict_test_cases: Dict[int, APITestCase] = Field(
-        default_factory=dict,
-    )
     test_cases: List[APITestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
@@ -89,62 +86,7 @@ class TestRun(BaseModel):
     configurations: Optional[dict[Any, Any]] = Field(default_factory=dict)
     model: Optional[str] = Field(None)
 
-    def add_llm_test_case(
-        self,
-        test_case: LLMTestCase,
-        metric: BaseMetric,
-        run_duration: float,
-        index: int,
-    ):
-        # Set database alias if exists on test case
-        self.dataset_alias = test_case.dataset_alias
-
-        # Check if test case with the same ID already exists
-        test_case_id = id(test_case)
-        existing_test_case: APITestCase = self.dict_test_cases.get(
-            test_case_id, None
-        )
-
-        metric_metadata = MetricsMetadata(
-            metric=metric.__name__,
-            score=metric.score,
-            threshold=metric.threshold,
-            reason=metric.reason,
-            success=metric.is_successful(),
-            evaluationModel=metric.evaluation_model,
-        )
-
-        if existing_test_case:
-            # If it exists, append the metrics to the existing test case
-            existing_test_case.metrics_metadata.append(metric_metadata)
-            if metric.is_successful() and existing_test_case.success == True:
-                success = True
-            else:
-                success = False
-            # Update the success status
-            existing_test_case.success = success
-        else:
-            api_test_case: APITestCase = APITestCase(
-                name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
-                input=test_case.input,
-                actualOutput=test_case.actual_output,
-                expectedOutput=test_case.expected_output,
-                success=metric.is_successful(),
-                metricsMetadata=[metric_metadata],
-                runDuration=run_duration,
-                latency=test_case.latency,
-                cost=test_case.cost,
-                context=test_case.context,
-                retrievalContext=test_case.retrieval_context,
-                traceStack=get_trace_stack(),
-                id=test_case.id,
-            )
-            self.dict_test_cases[test_case_id] = api_test_case
-
     def cleanup(self):
-        for _, test_case in self.dict_test_cases.items():
-            self.test_cases.append(test_case)
-        del self.dict_test_cases
         all_metric_dict = MetricsAverageDict()
         for test_case in self.test_cases:
             for metric in test_case.metrics_metadata:
