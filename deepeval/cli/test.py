@@ -8,6 +8,7 @@ from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
 from deepeval.utils import delete_file_if_exists, get_deployment_configs
 from deepeval.test_run import invoke_test_run_end_hook
 from deepeval.telemetry import capture_evaluation_count
+from deepeval.utils import set_is_running_deepeval
 
 app = typer.Typer(name="test")
 
@@ -78,7 +79,7 @@ def run(
     if num_processes is not None:
         pytest_args.extend(["-n", str(num_processes)])
 
-    pytest_args.append("--deepeval")
+    set_is_running_deepeval(True)
 
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])

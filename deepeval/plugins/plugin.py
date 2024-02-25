@@ -5,11 +5,11 @@ from rich import print
 from typing import Optional, Any
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import test_run_manager, DeploymentConfigs
-from deepeval.utils import is_running_deepeval
+from deepeval.utils import get_is_running_deepeval
 
 
 def pytest_sessionstart(session: pytest.Session):
-    is_running_deepeval = is_running_deepeval()
+    is_running_deepeval = get_is_running_deepeval()
 
     if is_running_deepeval:
         test_run_manager.save_to_disk = True
