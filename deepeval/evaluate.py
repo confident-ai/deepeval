@@ -63,7 +63,6 @@ def execute_test(
             test_end_time = time.perf_counter()
             run_duration = test_end_time - test_start_time
 
-
             api_test_case: APITestCase = APITestCase(
                 name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
                 input=test_case.input,

@@ -4,6 +4,6 @@ from .test_run import (
     TEMP_FILE_NAME,
     DeploymentConfigs,
     MetricsMetadata,
-    APITestCase
+    APITestCase,
 )
 from .hooks import on_test_run_end, invoke_test_run_end_hook
