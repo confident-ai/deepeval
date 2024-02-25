@@ -8,6 +8,7 @@ from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
 from deepeval.utils import delete_file_if_exists, get_deployment_configs
 from deepeval.test_run import invoke_test_run_end_hook
 from deepeval.telemetry import capture_evaluation_count
+from deepeval.utils import set_is_running_deepeval
 
 app = typer.Typer(name="test")
 
@@ -54,6 +55,7 @@ def run(
     check_if_valid_file(test_file_or_directory)
     test_run_manager.reset()
     pytest_args = [test_file_or_directory]
+
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
 
@@ -76,6 +78,8 @@ def run(
         pytest_args.append("--disable-warnings")
     if num_processes is not None:
         pytest_args.extend(["-n", str(num_processes)])
+
+    set_is_running_deepeval(True)
 
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])

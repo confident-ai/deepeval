@@ -11,6 +11,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.tracing import get_trace_stack
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
+from deepeval.utils import get_is_running_deepeval
 
 
 @dataclass
@@ -122,6 +123,9 @@ def run_test(
 
 
 def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
+    if get_is_running_deepeval() is False:
+        return
+
     if not isinstance(test_case, LLMTestCase):
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
 

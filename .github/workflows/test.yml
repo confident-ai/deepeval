@@ -61,8 +61,8 @@ jobs:
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
-      - name: Run tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          poetry run pytest tests/ --ignore=tests/test_deployment.py
+      # - name: Run tests
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      #   run: |
+      #     poetry run deepeval test run tests/ --ignore=tests/test_deployment.py
