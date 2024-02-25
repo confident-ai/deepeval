@@ -7,6 +7,8 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.chat_completion.retry import retry_with_exponential_backoff
 
 valid_gpt_models = [
+    "gpt-4-turbo-preview",
+    "gpt-4-0125-preview",
     "gpt-4-1106-preview",
     "gpt-4",
     "gpt-4-32k",
@@ -17,7 +19,7 @@ valid_gpt_models = [
     "gpt-3.5-turbo-16k",
 ]
 
-default_gpt_model = "gpt-4-1106-preview"
+default_gpt_model = "gpt-4-0125-preview"
 
 
 class GPTModel(DeepEvalBaseLLM):
