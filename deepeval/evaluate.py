@@ -1,6 +1,4 @@
-"""Function for running test
-"""
-
+import os
 from typing import List
 import time
 from dataclasses import dataclass
@@ -10,6 +8,8 @@ from deepeval.telemetry import capture_evaluation_count
 from deepeval.progress_context import progress_context
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.tracing import get_trace_stack
+from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
 
 
@@ -50,47 +50,53 @@ def execute_test(
     metrics: List[BaseMetric],
     save_to_disk: bool = False,
 ) -> List[TestResult]:
-    test_results: TestResult = []
+    test_results: List[TestResult] = []
     test_run_manager.save_to_disk = save_to_disk
-    count = 0
-    for test_case in test_cases:
-        success = True
+    success = True
+    for index, test_case in enumerate(test_cases):
+        api_test_case: APITestCase = APITestCase(
+            name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
+            input=test_case.input,
+            actualOutput=test_case.actual_output,
+            expectedOutput=test_case.expected_output,
+            success=success,
+            metricsMetadata=[],
+            runDuration=run_duration,
+            latency=test_case.latency,
+            cost=test_case.cost,
+            context=test_case.context,
+            retrievalContext=test_case.retrieval_context,
+            traceStack=get_trace_stack(),
+            id=test_case.id,
+        )
+
+        test_start_time = time.perf_counter()
         for metric in metrics:
-            test_start_time = time.perf_counter()
-
             metric.measure(test_case)
-
-            test_end_time = time.perf_counter()
-            run_duration = test_end_time - test_start_time
-
-            api_test_case: APITestCase = APITestCase(
-                name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
-                input=test_case.input,
-                actualOutput=test_case.actual_output,
-                expectedOutput=test_case.expected_output,
+            metric_metadata = MetricsMetadata(
+                metric=metric.__name__,
+                score=metric.score,
+                threshold=metric.threshold,
+                reason=metric.reason,
                 success=metric.is_successful(),
-                metricsMetadata=[metric_metadata],
-                runDuration=run_duration,
-                latency=test_case.latency,
-                cost=test_case.cost,
-                context=test_case.context,
-                retrievalContext=test_case.retrieval_context,
-                traceStack=get_trace_stack(),
-                id=test_case.id,
+                evaluationModel=metric.evaluation_model,
             )
+            api_test_case.metrics_metadata.append(metric_metadata)
 
-            test_run_manager.get_test_run().add_llm_test_case(
-                test_case=test_case,
-                metric=metric,
-                run_duration=run_duration,
-                index=count,
-            )
-            test_run_manager.save_test_run()
-
-            if not metric.is_successful():
+            if not metric.is_successful() and success is True:
                 success = False
 
-        count += 1
+        test_end_time = time.perf_counter()
+        run_duration = test_end_time - test_start_time
+        api_test_case.run_duration = run_duration
+        api_test_case.success = success
+
+        test_run = test_run_manager.get_test_run()
+        test_run.test_cases.append(api_test_case)
+        test_run.dataset_alias = test_case.dataset_alias
+        test_run_manager.save_test_run()
+        print(test_run_manager.get_test_run())
+
         test_result = create_test_result(
             test_case, success, drop_and_copy(metrics, ["model", "embeddings"])
         )
