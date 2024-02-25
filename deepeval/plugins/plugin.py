@@ -21,7 +21,9 @@ def pytest_sessionstart(session: pytest.Session):
             else:
                 deployment = True
                 deployment_configs = json.loads(deployment_configs)
-                disable_request = deployment_configs.pop("is_pull_request", False)
+                disable_request = deployment_configs.pop(
+                    "is_pull_request", False
+                )
                 deployment_configs = DeploymentConfigs(**deployment_configs)
 
             test_run_manager.create_test_run(
