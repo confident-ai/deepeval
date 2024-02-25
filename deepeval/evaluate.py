@@ -123,13 +123,15 @@ def run_test(
 
 
 def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
-    if get_is_running_deepeval() is False:
-        return
+    # if get_is_running_deepeval() is False:
+    #     return
 
     if not isinstance(test_case, LLMTestCase):
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
 
-    test_result = execute_test([test_case], metrics, True)[0]
+    test_result = execute_test([test_case], metrics, get_is_running_deepeval())[
+        0
+    ]
     if not test_result.success:
         failed_metrics = [
             metric
