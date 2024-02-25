@@ -99,6 +99,10 @@ You don't need to create an evaluation dataset to evaluate individual test cases
 
 ## Evaluating With Pytest
 
+:::caution
+Although `deepeval` integrates with Pytest, we highly recommend you to **AVOID** executing `LLMTestCase`s directly via the `pytest` command to avoid any unexpected errors.
+:::
+
 `deepeval` allows you to run evaluations as if you're using Pytest via our Pytest integration. Simply create a test file:
 
 ```python titile="test_example.py"
@@ -123,8 +127,8 @@ And run the test file in the CLI:
 deepeval test run test_example.py
 ```
 
-:::tip
-@pytest.mark.parametrize is a decorator offered by Pytest. It simply loops through your `EvaluationDataset` to evaluate each test case individually.
+:::info
+`@pytest.mark.parametrize` is a decorator offered by Pytest. It simply loops through your `EvaluationDataset` to evaluate each test case individually.
 :::
 
 ### Parallelization
@@ -147,10 +151,6 @@ def function_to_be_called_after_test_run():
     print("Test finished!")
 ```
 
-:::info
-Although `deepeval` is integrated with Pytest, to avoid any unexpected errors we highly recommend you to **AVOID** executing `deepeval`'s `LLMTestCase`s directly via the `pytest`.
-:::
-
 ## Evaluating Without Pytest
 
 Alternately, you can use deepeval's `evaluate` function. This approach avoids the CLI (if you're in a notebook environment), but does not allow for parallel test execution.
@@ -167,6 +167,6 @@ answer_relevancy_metric = AnswerRelevancyMetric()
 evaluate(dataset, [answer_relevancy_metric])
 ```
 
-:::note
+:::tip
 You can also replace `dataset` with a list of test cases, as shown in the [test cases section.](evaluation-test-cases#evaluate-test-cases-in-bulk)
 :::
