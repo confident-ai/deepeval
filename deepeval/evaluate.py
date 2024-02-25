@@ -10,7 +10,7 @@ from deepeval.telemetry import capture_evaluation_count
 from deepeval.progress_context import progress_context
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.test_run import test_run_manager
+from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
 
 
 @dataclass
@@ -57,9 +57,28 @@ def execute_test(
         success = True
         for metric in metrics:
             test_start_time = time.perf_counter()
+
             metric.measure(test_case)
+
             test_end_time = time.perf_counter()
             run_duration = test_end_time - test_start_time
+
+
+            api_test_case: APITestCase = APITestCase(
+                name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
+                input=test_case.input,
+                actualOutput=test_case.actual_output,
+                expectedOutput=test_case.expected_output,
+                success=metric.is_successful(),
+                metricsMetadata=[metric_metadata],
+                runDuration=run_duration,
+                latency=test_case.latency,
+                cost=test_case.cost,
+                context=test_case.context,
+                retrievalContext=test_case.retrieval_context,
+                traceStack=get_trace_stack(),
+                id=test_case.id,
+            )
 
             test_run_manager.get_test_run().add_llm_test_case(
                 test_case=test_case,

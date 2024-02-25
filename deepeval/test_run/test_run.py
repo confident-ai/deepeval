@@ -77,9 +77,6 @@ class TestRun(BaseModel):
     deployment_configs: Optional[DeploymentConfigs] = Field(
         None, alias="deploymentConfigs"
     )
-    dict_test_cases: Dict[int, APITestCase] = Field(
-        default_factory=dict,
-    )
     test_cases: List[APITestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
@@ -101,9 +98,6 @@ class TestRun(BaseModel):
 
         # Check if test case with the same ID already exists
         test_case_id = id(test_case)
-        existing_test_case: APITestCase = self.dict_test_cases.get(
-            test_case_id, None
-        )
 
         metric_metadata = MetricsMetadata(
             metric=metric.__name__,
@@ -139,12 +133,9 @@ class TestRun(BaseModel):
                 traceStack=get_trace_stack(),
                 id=test_case.id,
             )
-            self.dict_test_cases[test_case_id] = api_test_case
+            self.test_cases.append(api_test_case)
 
     def cleanup(self):
-        for _, test_case in self.dict_test_cases.items():
-            self.test_cases.append(test_case)
-        del self.dict_test_cases
         all_metric_dict = MetricsAverageDict()
         for test_case in self.test_cases:
             for metric in test_case.metrics_metadata:
