@@ -7,6 +7,7 @@ from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import test_run_manager, DeploymentConfigs
 from deepeval.utils import is_running_deepeval
 
+
 def pytest_sessionstart(session: pytest.Session):
     is_running_deepeval = is_running_deepeval()
 
@@ -21,7 +22,9 @@ def pytest_sessionstart(session: pytest.Session):
             else:
                 deployment = True
                 deployment_configs = json.loads(deployment_configs)
-                disable_request = deployment_configs.pop("is_pull_request", False)
+                disable_request = deployment_configs.pop(
+                    "is_pull_request", False
+                )
                 deployment_configs = DeploymentConfigs(**deployment_configs)
 
             test_run_manager.create_test_run(
