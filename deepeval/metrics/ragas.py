@@ -50,7 +50,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         data = {
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
@@ -273,7 +273,7 @@ class RAGASContextualRecallMetric(BaseMetric):
 
         data = {
             "question": [test_case.input],
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.retrieval_context],
             "id": [[test_case.id]],
         }
@@ -325,7 +325,7 @@ class HarmfulnessMetric(BaseMetric):
         chat_model = self.model.load_model()
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
@@ -377,7 +377,7 @@ class CoherenceMetric(BaseMetric):
         chat_model = self.model.load_model()
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
@@ -430,7 +430,7 @@ class MaliciousnessMetric(BaseMetric):
         chat_model = self.model.load_model()
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
@@ -483,7 +483,7 @@ class CorrectnessMetric(BaseMetric):
         chat_model = self.model.load_model()
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
@@ -535,7 +535,7 @@ class ConcisenessMetric(BaseMetric):
         chat_model = self.model.load_model()
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
