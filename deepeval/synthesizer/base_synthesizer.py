@@ -6,6 +6,5 @@ from deepeval.test_case import LLMTestCase
 
 class BaseSynthesizer:
     @abstractmethod
-    def synthesize(self, text:str, *args, **kwargs) -> List[LLMTestCase]:
+    def synthesize(self, text: str, *args, **kwargs) -> List[LLMTestCase]:
         raise NotImplementedError
-

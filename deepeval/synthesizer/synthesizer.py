@@ -1,2 +1,2 @@
-class Synthesizer():
+class Synthesizer:
     pass
