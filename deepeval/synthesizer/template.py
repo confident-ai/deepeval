@@ -19,7 +19,7 @@ The #Created Prompt# must be reasonable and must be understood and responded by 
 '#Given Prompt#', '#Created Prompt#', 'given prompt' and 'created prompt' are not allowed to appear in #Created Prompt#\r\n"
 
 
-class EvolInstructTemplate:
+class EvolutionTemplate:
     @staticmethod
     def generate_constraints_prompt(instruction):
         prompt = depth_base_instruction.format(
