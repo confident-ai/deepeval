@@ -10,7 +10,7 @@ class Synthesizer:
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         multithreading: bool = True,
-        batch_size: int = 50
+        batch_size: int = 50,
     ):
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
@@ -21,7 +21,9 @@ class Synthesizer:
         self.batch_size = batch_size
 
     # TODO
-    def synthesize(self, text: Union[str, List[str]], source_param: LLMTestCaseParams) -> List[LLMTestCase]:
+    def synthesize(
+        self, text: Union[str, List[str]], source_param: LLMTestCaseParams
+    ) -> List[LLMTestCase]:
         # text can ONLY be expected output, retrieval context, or context
         # (?) Optional evolution happens here
         # (?) Add option to generate n test cases based on a piece of text
