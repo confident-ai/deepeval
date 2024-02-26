@@ -2,6 +2,8 @@
 ##### Templates taken from https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py #####
 ######################################################################################################
 
+# TODO: Modify this
+
 depth_base_instruction = "I want you act as a Prompt Rewriter.\r\n \
 					Your objective is to rewrite a given prompt into a more complex version to make those famous AI systems (e.g., chatgpt and GPT4) a bit harder to handle.\r\n \
 					But the rewritten prompt must be reasonable and must be understood and responded by humans.\r\n \
