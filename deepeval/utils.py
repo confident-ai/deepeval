@@ -21,11 +21,12 @@ def set_is_running_deepeval(flag: bool):
     if flag:
         os.environ["DEEPEVAL"] = "YES"
     else:
-        os.environ["DEEPEVAL"] = "NO"   
+        os.environ["DEEPEVAL"] = "NO"
+
 
 def get_is_running_deepeval() -> bool:
     try:
-        return  os.environ["DEEPEVAL"] == "YES"
+        return os.environ["DEEPEVAL"] == "YES"
     except:
         return False
 
