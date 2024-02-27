@@ -123,9 +123,6 @@ def run_test(
 
 
 def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
-    # if get_is_running_deepeval() is False:
-    #     return
-
     if not isinstance(test_case, LLMTestCase):
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
 

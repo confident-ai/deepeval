@@ -14,16 +14,19 @@ import re
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
-_is_running_deepeval = False
-
 
 def set_is_running_deepeval(flag: bool):
-    global _is_running_deepeval
-    _is_running_deepeval = flag
+    if flag:
+        os.environ["DEEPEVAL"] = "YES"
+    else:
+        os.environ["DEEPEVAL"] = "NO"
 
 
 def get_is_running_deepeval() -> bool:
-    return _is_running_deepeval
+    try:
+        return os.environ["DEEPEVAL"] == "YES"
+    except:
+        return False
 
 
 def get_deployment_configs() -> Optional[Dict]:
