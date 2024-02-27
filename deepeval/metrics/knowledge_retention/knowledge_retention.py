@@ -7,7 +7,6 @@ from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
 
 
-
 class KnowledgeRetentionMetric(BaseConversationalMetric):
     def __init__(
         self,
@@ -30,7 +29,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
             capture_metric_type(self.__name__)
             return self.score
-
 
     def is_successful(self) -> bool:
         return self.success
