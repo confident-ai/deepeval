@@ -40,25 +40,20 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     def measure(self, test_case: ConversationalTestCase):
         if len(test_case.messages) == 0:
             raise ValueError("Messages cannot be empty")
-        # with metrics_progress_context(self.__name__, self.evaluation_model):
+        
+        with metrics_progress_context(self.__name__, self.evaluation_model):
+            self.knowledges: List[Knowledge] = self._generate_knowledges(test_case)
+            self.verdicts: List[KnowledgeRetentionVerdict] = (
+                self._generate_verdicts(test_case)
+            )
 
-        #     capture_metric_type(self.__name__)
-        #     return self.score
-        self.knowledges: List[Knowledge] = self._generate_knowledges(test_case)
-        self.verdicts: List[KnowledgeRetentionVerdict] = (
-            self._generate_verdicts(test_case)
-        )
+            knowledge_retention_score = self._generate_score()
+            self.reason = self._generate_reason(knowledge_retention_score)
 
-        knowledge_retention_score = self._generate_score()
-        self.reason = self._generate_reason(knowledge_retention_score)
-
-        self.success = knowledge_retention_score >= self.threshold
-        self.score = knowledge_retention_score
-
-        # print(self.reason)
-        # print(self.score)
-
-        return self.score
+            self.success = knowledge_retention_score >= self.threshold
+            self.score = knowledge_retention_score
+            capture_metric_type(self.__name__)
+            return self.score
 
     def _generate_reason(self, score: float) -> str:
         if self.include_reason is False:
@@ -94,21 +89,16 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     ) -> List[KnowledgeRetentionVerdict]:
         verdicts: List[KnowledgeRetentionVerdict] = []
         for index, message in enumerate(test_case.messages):
-            if index == 0:
-                previous_knowledge = {}
-            else:
-                previous_knowledge = self.knowledges[index - 1]
+            previous_knowledge = {} if index == 0 else self.knowledges[index - 1]
 
             prompt = KnowledgeRetentionTemplate.generate_verdict(
                 input=message.input,
-                response=message.response,
                 previous_knowledge=previous_knowledge,
             )
             res = self.model(prompt)
             data = trimAndLoadJson(res)
             verdict = KnowledgeRetentionVerdict(index=index, **data)
             verdicts.append(verdict)
-            # print(verdict)
 
         return verdicts
 
@@ -117,10 +107,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     ) -> List[Knowledge]:
         knowledges: List[Knowledge] = []
         for message in test_case.messages:
-            if len(knowledges) == 0:
-                previous_knowledge = {}
-            else:
-                previous_knowledge = knowledges[-1].data
+            previous_knowledge = knowledges[-1].data if knowledges else {}
+
             prompt = KnowledgeRetentionTemplate.extract_data(
                 input=message.input,
                 response=message.response,
@@ -131,7 +119,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             data = trimAndLoadJson(res)
             knowledge = Knowledge(data=data)
             knowledges.append(knowledge)
-            # print(knowledge)
 
         return knowledges
 
