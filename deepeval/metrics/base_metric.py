@@ -30,6 +30,7 @@ class BaseMetric:
     def __name__(self):
         return "Base Metric"
 
+
 class BaseConversationalMetric:
     score: float = 0
     score_breakdown: Dict = None
@@ -45,7 +46,9 @@ class BaseConversationalMetric:
         self._threshold = value
 
     @abstractmethod
-    def measure(self, test_case: ConversationalTestCase, *args, **kwargs) -> float:
+    def measure(
+        self, test_case: ConversationalTestCase, *args, **kwargs
+    ) -> float:
         raise NotImplementedError
 
     @abstractmethod
