@@ -14,6 +14,8 @@ from .judgemental_gpt import JudgementalGPT
 from .latency import LatencyMetric
 from .cost import CostMetric
 
+from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
+
 # from .ragas_metric import (
 #     RagasMetric,
 #     RAGASAnswerRelevancyMetric,

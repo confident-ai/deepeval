@@ -57,6 +57,9 @@ class Message:
                     "retrieval_context must be None or a list of strings"
                 )
 
+class ConversationalTestCaseParams(Enum):
+    INPUT = "input"
+    RESPONSE = "response"
 
 @dataclass
 class ConversationalTestCase:
