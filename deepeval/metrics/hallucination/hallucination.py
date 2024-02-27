@@ -1,11 +1,10 @@
-import json
 from typing import Optional, Union, List
 from threading import Thread, Lock
 from pydantic import BaseModel, Field
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.utils import trimAndLoadJson
+from deepeval.utils import thread_exception_handler, trimAndLoadJson
 from deepeval.metrics.hallucination.template import HallucinationTemplate
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.progress_context import metrics_progress_context
@@ -89,20 +88,31 @@ class HallucinationMetric(BaseMetric):
         self, actual_output: str, contexts: str
     ) -> List[HallucinationVerdict]:
         verdicts: List[HallucinationVerdict] = []
-        threads = []
-        lock = Lock()
 
         if self.multithreading:
+            threads = []
+            exceptions = []
+            lock = Lock()
             for context in contexts:
                 thread = Thread(
-                    target=self._generate_verdict,
-                    args=(actual_output, context, verdicts, lock),
+                    target=thread_exception_handler,
+                    args=(
+                        self._generate_verdict,
+                        (actual_output, context, verdicts, lock),
+                        exceptions,
+                        lock,
+                    ),
                 )
                 threads.append(thread)
                 thread.start()
 
             for thread in threads:
                 thread.join()
+
+            # Check if any of the threads raised an exception,
+            # If so, just raise the first.
+            if len(exceptions) > 0:
+                raise exceptions[0]
         else:
             prompt = HallucinationTemplate.generate_verdicts(
                 actual_output=actual_output, contexts=contexts

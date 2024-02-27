@@ -1,9 +1,8 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 from threading import Thread, Lock
-import json
 
-from deepeval.utils import trimAndLoadJson
+from deepeval.utils import thread_exception_handler, trimAndLoadJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
@@ -25,6 +24,7 @@ class ContextualRelevancyMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        multithreading: bool = True,
     ):
         self.threshold = threshold
         if isinstance(model, DeepEvalBaseLLM):
@@ -33,6 +33,7 @@ class ContextualRelevancyMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
+        self.multithreading = multithreading
 
     def measure(self, test_case: LLMTestCase) -> float:
         if (
@@ -120,18 +121,41 @@ class ContextualRelevancyMetric(BaseMetric):
         self, text: str, retrieval_context: List[str]
     ) -> List[List[ContextualRelevancyVerdict]]:
         verdicts_list: List[List[ContextualRelevancyVerdict]] = []
-        threads = []
-        lock = Lock()
-        for context in retrieval_context:
-            thread = Thread(
-                target=self._generate_verdicts,
-                args=(text, context, verdicts_list, lock),
-            )
-            threads.append(thread)
-            thread.start()
 
-        for thread in threads:
-            thread.join()
+        if self.multithreading:
+            threads = []
+            exceptions = []
+            lock = Lock()
+            for context in retrieval_context:
+                thread = Thread(
+                    target=thread_exception_handler,
+                    args=(
+                        self._generate_verdicts,
+                        (text, context, verdicts_list, lock),
+                        exceptions,
+                        lock,
+                    ),
+                )
+                threads.append(thread)
+                thread.start()
+
+            for thread in threads:
+                thread.join()
+
+            # Check if any of the threads raised an exception,
+            # If so, just raise the first.
+            if len(exceptions) > 0:
+                raise exceptions[0]
+        else:
+            prompt = ContextualRelevancyTemplate.generate_verdicts(
+                text=text, context=context
+            )
+
+            res = self.model(prompt)
+            data = trimAndLoadJson(res)
+            verdicts_list = [
+                ContextualRelevancyVerdict(**item) for item in data["verdicts"]
+            ]
 
         return verdicts_list
 
