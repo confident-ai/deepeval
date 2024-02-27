@@ -89,7 +89,7 @@ Here is an example of creating a custom Azure OpenAI model through langchain's `
 
 ```python
 from langchain_openai import AzureChatOpenAI
-from deepeval.models.base import DeepEvalBaseLLM
+from deepeval.models.base_model import DeepEvalBaseLLM
 
 class AzureOpenAI(DeepEvalBaseLLM):
     def __init__(
@@ -146,7 +146,7 @@ Here is an example of creating a custom [Mistral 7B model](https://huggingface.c
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from deepeval.models.base import DeepEvalBaseLLM
+from deepeval.models.base_model import DeepEvalBaseLLM
 
 class Mistral7B(DeepEvalBaseLLM):
     def __init__(
@@ -200,7 +200,7 @@ Here is an example of creating a custom AWS Bedrock model through the `langchain
 
 ```python
 from langchain_community.chat_models import BedrockChat
-from deepeval.models.base import DeepEvalBaseLLM
+from deepeval.models.base_model import DeepEvalBaseLLM
 
 class AWSBedrock(DeepEvalBaseLLM):
     def __init__(
