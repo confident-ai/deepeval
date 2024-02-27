@@ -40,6 +40,7 @@ class LLMTestCase:
                     "retrieval_context must be None or a list of strings"
                 )
 
+
 @dataclass
 class Message:
     input: str
@@ -55,6 +56,7 @@ class Message:
                 raise TypeError(
                     "retrieval_context must be None or a list of strings"
                 )
+
 
 @dataclass
 class ConversationTestCase:
