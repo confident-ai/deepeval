@@ -59,5 +59,5 @@ class Message:
 
 
 @dataclass
-class ConversationTestCase:
+class ConversationalTestCase:
     messages: List[Message]
