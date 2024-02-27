@@ -8,9 +8,11 @@ from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.utils import trimAndLoadJson
 
+
 class SyntheticData(BaseModel):
     input: str
     expected_output: str = Field(default=None)
+
 
 class Synthesizer:
     def __init__(
@@ -28,9 +30,7 @@ class Synthesizer:
         self.batch_size = batch_size
 
     # TODO
-    def synthesize(
-        self, context: List[str]
-    ) -> List[LLMTestCase]:
+    def synthesize(self, context: List[str]) -> List[LLMTestCase]:
         # text can ONLY be expected output, retrieval context, or context
         # (?) Optional evolution happens here
         # (?) Add option to generate n test cases based on a piece of text
@@ -39,14 +39,16 @@ class Synthesizer:
         )
         res = self.model(prompt)
         data = trimAndLoadJson(res)
-        synthetic_data = [
-            SyntheticData(**item) for item in data["pairs"]
-        ]
+        synthetic_data = [SyntheticData(**item) for item in data["pairs"]]
 
-        test_cases : List[LLMTestCase] = []
+        test_cases: List[LLMTestCase] = []
 
         for data in synthetic_data:
-            test_case = LLMTestCase(input=data.input, expected_output=data.expected_output, context=context)
+            test_case = LLMTestCase(
+                input=data.input,
+                expected_output=data.expected_output,
+                context=context,
+            )
             test_cases.append(test_case)
 
         return test_cases
