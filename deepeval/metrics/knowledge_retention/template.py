@@ -1,4 +1,4 @@
-class KnowledgeRetentionTemplate():
+class KnowledgeRetentionTemplate:
     @staticmethod
     def generate_reason(attritions, score):
         return f"""Given a list of attritions, which highlights forgetfulness/contradictions between the LLM response and knowledge established previously in the conversation, use it to CONCISELY provide a reason for the knowledge retention score. Note that The knowledge retention score ranges from 0 - 1, and the higher the better.
