@@ -4,7 +4,11 @@ from threading import Thread, Lock
 from pydantic import BaseModel, Field
 
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
-from deepeval.models import GPTModel, DeepEvalBaseLLM, DeepEvalBaseEmbeddingModel
+from deepeval.models import (
+    GPTModel,
+    DeepEvalBaseLLM,
+    DeepEvalBaseEmbeddingModel,
+)
 from deepeval.utils import trimAndLoadJson
 from deepeval.dataset import Golden
 

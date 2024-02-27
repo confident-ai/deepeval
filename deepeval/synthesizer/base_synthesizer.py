@@ -2,7 +2,10 @@ from abc import abstractmethod
 from typing import Optional, List, Union
 
 from deepeval.test_case import LLMTestCase
-from deepeval.models.base_model import DeepEvalBaseLLM, DeepEvalBaseEmbeddingModel
+from deepeval.models.base_model import (
+    DeepEvalBaseLLM,
+    DeepEvalBaseEmbeddingModel,
+)
 
 
 class BaseSynthesizer:
@@ -22,7 +25,9 @@ class BaseSynthesizer:
         return self._embedder
 
     @embedder.setter
-    def embedder(self, embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None):
+    def embedder(
+        self, embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None
+    ):
         self._embedder = embedder
 
     @abstractmethod

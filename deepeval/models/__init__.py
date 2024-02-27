@@ -1,4 +1,8 @@
-from deepeval.models.base_model import DeepEvalBaseModel, DeepEvalBaseLLM, DeepEvalBaseEmbeddingModel
+from deepeval.models.base_model import (
+    DeepEvalBaseModel,
+    DeepEvalBaseLLM,
+    DeepEvalBaseEmbeddingModel,
+)
 from deepeval.models.gpt_model import GPTModel
 
 # TODO: uncomment out once fixed
