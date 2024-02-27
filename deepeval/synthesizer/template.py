@@ -1,3 +1,9 @@
+class SynthesizerTemplate:
+    @staticmethod
+    def generate_synthetic_data(context):
+        pass
+
+
 ######################################################################################################
 ##### Templates taken from https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py #####
 ######################################################################################################

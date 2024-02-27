@@ -1,5 +1,5 @@
 import torch
-from deepeval.models.base import DeepEvalBaseModel
+from deepeval.models.base_model import DeepEvalBaseModel
 from detoxify import Detoxify
 
 

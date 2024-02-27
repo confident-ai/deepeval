@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import Optional, List, Union
 
 from deepeval.test_case import LLMTestCase
-from deepeval.models.base import DeepEvalBaseLLM
+from deepeval.models.base_model import DeepEvalBaseLLM
 
 
 class BaseSynthesizer:

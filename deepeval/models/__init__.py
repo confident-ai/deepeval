@@ -1,4 +1,4 @@
-from deepeval.models.base import DeepEvalBaseModel, DeepEvalBaseLLM
+from deepeval.models.base_model import DeepEvalBaseModel, DeepEvalBaseLLM
 from deepeval.models.gpt_model import GPTModel
 
 # TODO: uncomment out once fixed

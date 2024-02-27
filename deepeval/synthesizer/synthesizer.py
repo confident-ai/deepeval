@@ -31,15 +31,17 @@ class Synthesizer:
 
     # TODO
     def synthesize(self, context: List[str]) -> List[LLMTestCase]:
-        # text can ONLY be expected output, retrieval context, or context
-        # (?) Optional evolution happens here
-        # (?) Add option to generate n test cases based on a piece of text
-        prompt = SynthesizerTemplate.generate_input_output_pairs(
-            context=context
-        )
+        # 1. get embeddings for context eg., [1,2,3,4,5]
+        # 2. group randomly based on embedding similarity eg., [[1,2], [5,2], [4], [3,1,5]]
+        # 3. supply as context, generate for each List[str]
+        # 4. generation can happen in batches, and each batch can be processed in threads
+        # 5. optional evolution
+        # 6. return test cases
+
+        prompt = SynthesizerTemplate.generate_synthetic_data(context=context)
         res = self.model(prompt)
         data = trimAndLoadJson(res)
-        synthetic_data = [SyntheticData(**item) for item in data["pairs"]]
+        synthetic_data = [SyntheticData(**item) for item in data["data"]]
 
         test_cases: List[LLMTestCase] = []
 
