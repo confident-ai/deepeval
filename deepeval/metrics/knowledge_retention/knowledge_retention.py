@@ -40,9 +40,11 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     def measure(self, test_case: ConversationalTestCase):
         if len(test_case.messages) == 0:
             raise ValueError("Messages cannot be empty")
-        
+
         with metrics_progress_context(self.__name__, self.evaluation_model):
-            self.knowledges: List[Knowledge] = self._generate_knowledges(test_case)
+            self.knowledges: List[Knowledge] = self._generate_knowledges(
+                test_case
+            )
             self.verdicts: List[KnowledgeRetentionVerdict] = (
                 self._generate_verdicts(test_case)
             )
@@ -89,7 +91,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     ) -> List[KnowledgeRetentionVerdict]:
         verdicts: List[KnowledgeRetentionVerdict] = []
         for index, message in enumerate(test_case.messages):
-            previous_knowledge = {} if index == 0 else self.knowledges[index - 1]
+            previous_knowledge = (
+                {} if index == 0 else self.knowledges[index - 1]
+            )
 
             prompt = KnowledgeRetentionTemplate.generate_verdict(
                 input=message.input,
