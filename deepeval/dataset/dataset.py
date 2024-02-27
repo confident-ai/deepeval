@@ -260,9 +260,9 @@ class EvaluationDataset:
             )
 
     def push(self, alias: str):
-        if len(self.test_cases) == 0:
+        if len(self.test_cases) == 0 and len(self.goldens) == 0:
             raise ValueError(
-                "Unable to push empty dataset to Confident AI, there must be at least one test case in dataset"
+                "Unable to push empty dataset to Confident AI, there must be at least one test case or golden in dataset"
             )
         if is_confident():
             goldens = self.goldens
