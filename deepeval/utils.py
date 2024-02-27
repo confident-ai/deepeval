@@ -14,8 +14,6 @@ import re
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
-# _is_running_deepeval = False
-
 
 def set_is_running_deepeval(flag: bool):
     if flag:
