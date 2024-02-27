@@ -84,7 +84,7 @@ def execute_test(
             )
             api_test_case.metrics_metadata.append(metric_metadata)
 
-            if not metric.is_successful() and success is True:
+            if not metric_metadata.success:
                 success = False
 
         test_end_time = time.perf_counter()
