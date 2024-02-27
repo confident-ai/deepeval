@@ -1,9 +1,16 @@
 from typing import List, Optional, Union
+import json
+from threading import Thread, Lock
+from pydantic import BaseModel, Field
 
-from deepeval.synthesizer.template import EvolutionTemplate
+from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.utils import trimAndLoadJson
 
+class SyntheticData(BaseModel):
+    input: str
+    expected_output: str = Field(default=None)
 
 class Synthesizer:
     def __init__(
@@ -22,12 +29,27 @@ class Synthesizer:
 
     # TODO
     def synthesize(
-        self, text: Union[str, List[str]], source_param: LLMTestCaseParams
+        self, context: List[str]
     ) -> List[LLMTestCase]:
         # text can ONLY be expected output, retrieval context, or context
         # (?) Optional evolution happens here
         # (?) Add option to generate n test cases based on a piece of text
-        pass
+        prompt = SynthesizerTemplate.generate_input_output_pairs(
+            context=context
+        )
+        res = self.model(prompt)
+        data = trimAndLoadJson(res)
+        synthetic_data = [
+            SyntheticData(**item) for item in data["pairs"]
+        ]
+
+        test_cases : List[LLMTestCase] = []
+
+        for data in synthetic_data:
+            test_case = LLMTestCase(input=data.input, expected_output=data.expected_output, context=context)
+            test_cases.append(test_case)
+
+        return test_cases
 
     # TODO
     def synthesize_from_docs(self, path: str):
