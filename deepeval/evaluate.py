@@ -53,8 +53,8 @@ def execute_test(
 ) -> List[TestResult]:
     test_results: List[TestResult] = []
     test_run_manager.save_to_disk = save_to_disk
-    success = True
     for index, test_case in enumerate(test_cases):
+        success = True
         api_test_case: APITestCase = APITestCase(
             name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
             input=test_case.input,
@@ -84,7 +84,7 @@ def execute_test(
             )
             api_test_case.metrics_metadata.append(metric_metadata)
 
-            if not metric_metadata.success:
+            if metric_metadata.success is False:
                 success = False
 
         test_end_time = time.perf_counter()
