@@ -33,6 +33,12 @@ class EvaluationDataset:
     ):
         if test_cases is not None:
             for test_case in test_cases:
+                # TODO: refactor
+                if not isinstance(test_case, LLMTestCase):
+                    raise TypeError(
+                        "Provided `test_cases` must be of type 'List[LLMTestCase]'."
+                    )
+
                 test_case.dataset_alias = alias
             self.test_cases = test_cases
         else:
@@ -41,6 +47,12 @@ class EvaluationDataset:
         self.alias = alias
 
     def add_test_case(self, test_case: LLMTestCase):
+        # TODO: refactor
+        if not isinstance(test_case, LLMTestCase):
+            raise TypeError(
+                "Provided `test_cases` must be of type 'List[LLMTestCase]'."
+            )
+
         self.test_cases.append(test_case)
 
     def __iter__(self):
