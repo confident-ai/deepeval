@@ -91,12 +91,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     ) -> List[KnowledgeRetentionVerdict]:
         verdicts: List[KnowledgeRetentionVerdict] = []
         for index, message in enumerate(test_case.messages):
-            previous_knowledge = (
-                {} if index == 0 else self.knowledges[index - 1]
-            )
+            previous_knowledge = self.knowledges[index].data
 
             prompt = KnowledgeRetentionTemplate.generate_verdict(
-                input=message.input,
+                llm_message=message.llm_response,
                 previous_knowledge=previous_knowledge,
             )
             res = self.model(prompt)
@@ -110,12 +108,15 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self, test_case: ConversationalTestCase
     ) -> List[Knowledge]:
         knowledges: List[Knowledge] = []
-        for message in test_case.messages:
+        for index, message in enumerate(test_case.messages):
             previous_knowledge = knowledges[-1].data if knowledges else {}
+            llm_message = (
+                test_case.messages[index - 1].llm_response if index > 0 else ""
+            )
 
             prompt = KnowledgeRetentionTemplate.extract_data(
-                input=message.input,
-                response=message.response,
+                llm_message=llm_message,
+                user_message=message.user_input,
                 previous_knowledge=previous_knowledge,
             )
 
