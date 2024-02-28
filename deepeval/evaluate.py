@@ -112,8 +112,8 @@ def run_test(
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
-            raise TypeError("Provided 'metric' must be of type 'BaseMetric'.") 
-        
+            raise TypeError("Provided 'metric' must be of type 'BaseMetric'.")
+
     # TODO: refactor
     if not isinstance(test_case, LLMTestCase):
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
@@ -132,8 +132,8 @@ def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
-            raise TypeError("Provided 'metric' must be of type 'BaseMetric'.") 
-    
+            raise TypeError("Provided 'metric' must be of type 'BaseMetric'.")
+
     # TODO: refactor
     if not isinstance(test_case, LLMTestCase):
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
@@ -160,12 +160,14 @@ def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
-            raise TypeError("Provided 'metric' must be of type 'BaseMetric'.") 
-        
+            raise TypeError("Provided 'metric' must be of type 'BaseMetric'.")
+
     # TODO: refactor
     for test_case in test_cases:
         if not isinstance(test_case, LLMTestCase):
-            raise TypeError("Provided `test_cases` must be of type 'List[LLMTestCase]'.")
+            raise TypeError(
+                "Provided `test_cases` must be of type 'List[LLMTestCase]'."
+            )
 
     test_run_manager.reset()
     with progress_context("Evaluating testcases..."):
