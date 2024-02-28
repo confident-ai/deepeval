@@ -46,6 +46,7 @@ metric = HallucinationMetric(threshold=0.5)
 
 metric.measure(test_case)
 print(metric.score)
+print(metric.reason)
 
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])

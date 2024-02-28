@@ -31,6 +31,7 @@ module.exports = {
             'metrics-bias',
             'metrics-toxicity',
             'metrics-ragas',
+            'metrics-knowledge-retention',
             'metrics-custom',
             'metrics-performance',
             'metrics-others',
