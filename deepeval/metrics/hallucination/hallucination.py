@@ -55,7 +55,6 @@ class HallucinationMetric(BaseMetric):
     def _generate_reason(self, score):
         if self.include_reason is False:
             return None
-        
 
         factual_alignments = []
         contradictions = []

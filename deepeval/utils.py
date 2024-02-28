@@ -170,8 +170,6 @@ def normalize_text(text: str) -> str:
     return white_space_fix(remove_articles(remove_punc(lower(text))))
 
 
-
-
 ###############################################
 # Source: https://github.com/tingofurro/summac
 ###############################################
