@@ -20,7 +20,7 @@ two = """The physical characteristics and orbital paths of comets and asteroids 
 three = """Understanding comets and asteroids is crucial in studying the solar system's formation and evolution. Comets, which are remnants from the outer solar system, can provide insights into its icy and volatile components. Asteroids, primarily remnants of the early solar system's formation, offer clues about the materials that didn't form into planets, mostly located in the asteroid belt."""
 
 
-# @pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_contextual_relevancy():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",
