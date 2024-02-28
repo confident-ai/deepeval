@@ -1,10 +1,11 @@
 from typing import Optional, Union, List
-from threading import Thread, Lock
+from threading import Lock
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pydantic import BaseModel, Field
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.utils import thread_exception_handler, trimAndLoadJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.metrics.hallucination.template import HallucinationTemplate
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.progress_context import metrics_progress_context
@@ -54,6 +55,7 @@ class HallucinationMetric(BaseMetric):
     def _generate_reason(self, score):
         if self.include_reason is False:
             return None
+        
 
         factual_alignments = []
         contradictions = []
@@ -85,34 +87,29 @@ class HallucinationMetric(BaseMetric):
         return hallucination_count / total
 
     def _generate_verdicts(
-        self, actual_output: str, contexts: str
+        self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
         verdicts: List[HallucinationVerdict] = []
 
         if self.multithreading:
-            threads = []
-            exceptions = []
             lock = Lock()
-            for context in contexts:
-                thread = Thread(
-                    target=thread_exception_handler,
-                    args=(
+            with ThreadPoolExecutor() as executor:
+                futures = {
+                    executor.submit(
                         self._generate_verdict,
-                        (actual_output, context, verdicts, lock),
-                        exceptions,
+                        actual_output,
+                        context,
+                        verdicts,
                         lock,
-                    ),
-                )
-                threads.append(thread)
-                thread.start()
+                    ): context
+                    for context in contexts
+                }
 
-            for thread in threads:
-                thread.join()
-
-            # Check if any of the threads raised an exception,
-            # If so, just raise the first.
-            if len(exceptions) > 0:
-                raise exceptions[0]
+                for future in as_completed(futures):
+                    try:
+                        future.result()
+                    except Exception as exc:
+                        raise exc
         else:
             prompt = HallucinationTemplate.generate_verdicts(
                 actual_output=actual_output, contexts=contexts
