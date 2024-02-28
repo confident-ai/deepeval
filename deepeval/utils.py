@@ -2,9 +2,8 @@ from enum import Enum
 import copy
 import os
 import json
-from threading import Lock
 import time
-from typing import Any, Callable, Optional, Dict
+from typing import Any, Optional, Dict
 from collections.abc import Iterable
 import tqdm
 import re
@@ -168,21 +167,6 @@ def normalize_text(text: str) -> str:
         return text.lower()
 
     return white_space_fix(remove_articles(remove_punc(lower(text))))
-
-
-def thread_exception_handler(
-    func: Callable,
-    args,
-    exceptions: list[Exception],
-    lock: Lock,
-):
-    try:
-        func(*args)
-    except Exception as e:
-        # Lock is not strictly necessary here if you're only appending to a list,
-        # but is good practice if you modify the shared data structure in other ways
-        with lock:
-            exceptions.append(e)
 
 
 ###############################################

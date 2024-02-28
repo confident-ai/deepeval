@@ -1,8 +1,9 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
-from threading import Thread, Lock
+from threading import Lock
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from deepeval.utils import thread_exception_handler, trimAndLoadJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
@@ -123,39 +124,36 @@ class ContextualRelevancyMetric(BaseMetric):
         verdicts_list: List[List[ContextualRelevancyVerdict]] = []
 
         if self.multithreading:
-            threads = []
-            exceptions = []
             lock = Lock()
-            for context in retrieval_context:
-                thread = Thread(
-                    target=thread_exception_handler,
-                    args=(
+
+            with ThreadPoolExecutor() as executor:
+                futures = {
+                    executor.submit(
                         self._generate_verdicts,
-                        (text, context, verdicts_list, lock),
-                        exceptions,
+                        text,
+                        context,
+                        verdicts_list,
                         lock,
-                    ),
-                )
-                threads.append(thread)
-                thread.start()
+                    ): context
+                    for context in retrieval_context
+                }
 
-            for thread in threads:
-                thread.join()
+                for future in as_completed(futures):
+                    future.result()
 
-            # Check if any of the threads raised an exception,
-            # If so, just raise the first.
-            if len(exceptions) > 0:
-                raise exceptions[0]
         else:
-            prompt = ContextualRelevancyTemplate.generate_verdicts(
-                text=text, context=context
-            )
+            for context in retrieval_context:
+                prompt = ContextualRelevancyTemplate.generate_verdicts(
+                    text=text, context=context
+                )
 
-            res = self.model(prompt)
-            data = trimAndLoadJson(res)
-            verdicts_list = [
-                ContextualRelevancyVerdict(**item) for item in data["verdicts"]
-            ]
+                res = self.model(prompt)
+                data = trimAndLoadJson(res)
+                verdicts = [
+                    ContextualRelevancyVerdict(**item)
+                    for item in data["verdicts"]
+                ]
+                verdicts_list.append(verdicts)
 
         return verdicts_list
 
