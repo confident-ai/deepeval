@@ -52,7 +52,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             knowledge_retention_score = self._generate_score()
             self.reason = self._generate_reason(knowledge_retention_score)
 
-
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
             capture_metric_type(self.__name__)
@@ -111,8 +110,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         knowledges: List[Knowledge] = []
         for index, message in enumerate(test_case.messages):
             previous_knowledge = knowledges[-1].data if knowledges else {}
-            llm_message = test_case.messages[index-1].response if index > 0 else ""
-
+            llm_message = (
+                test_case.messages[index - 1].response if index > 0 else ""
+            )
 
             prompt = KnowledgeRetentionTemplate.extract_data(
                 llm_message=llm_message,
