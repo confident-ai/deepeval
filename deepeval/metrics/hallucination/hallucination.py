@@ -105,10 +105,7 @@ class HallucinationMetric(BaseMetric):
                 }
 
                 for future in as_completed(futures):
-                    try:
-                        future.result()
-                    except Exception as exc:
-                        raise exc
+                    future.result()
         else:
             prompt = HallucinationTemplate.generate_verdicts(
                 actual_output=actual_output, contexts=contexts

@@ -2,9 +2,8 @@ from enum import Enum
 import copy
 import os
 import json
-from threading import Lock
 import time
-from typing import Any, Callable, Optional, Dict, List
+from typing import Any, Optional, Dict
 from collections.abc import Iterable
 import tqdm
 import re
@@ -105,6 +104,9 @@ def dataclass_to_dict(instance: Any) -> Any:
 
 
 def trimAndLoadJson(input_string: str) -> Any:
+    raise ValueError(
+        "Error: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+    )
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
     jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
