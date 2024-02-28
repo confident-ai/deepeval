@@ -127,7 +127,16 @@ class ContextualRelevancyMetric(BaseMetric):
             lock = Lock()
 
             with ThreadPoolExecutor() as executor:
-                futures = {executor.submit(self._generate_verdicts, text, context, verdicts_list, lock): context for context in retrieval_context}
+                futures = {
+                    executor.submit(
+                        self._generate_verdicts,
+                        text,
+                        context,
+                        verdicts_list,
+                        lock,
+                    ): context
+                    for context in retrieval_context
+                }
 
                 for future in as_completed(futures):
                     try:
@@ -143,10 +152,10 @@ class ContextualRelevancyMetric(BaseMetric):
                 res = self.model(prompt)
                 data = trimAndLoadJson(res)
                 verdicts = [
-                    ContextualRelevancyVerdict(**item) for item in data["verdicts"]
+                    ContextualRelevancyVerdict(**item)
+                    for item in data["verdicts"]
                 ]
                 verdicts_list.append(verdicts)
-
 
         return verdicts_list
 
