@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from enum import Enum
 
+
 @dataclass
 class Message:
     user_input: str
