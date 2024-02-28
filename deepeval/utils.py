@@ -4,7 +4,7 @@ import os
 import json
 from threading import Lock
 import time
-from typing import Any, Callable, Optional, Dict
+from typing import Any, Callable, Optional, Dict, List
 from collections.abc import Iterable
 import tqdm
 import re
@@ -173,7 +173,7 @@ def normalize_text(text: str) -> str:
 def thread_exception_handler(
     func: Callable,
     args,
-    exceptions: list[Exception],
+    exceptions: List[Exception],
     lock: Lock,
 ):
     try:
