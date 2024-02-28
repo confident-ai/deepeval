@@ -43,8 +43,8 @@ class LLMTestCase:
 
 @dataclass
 class Message:
-    input: str
-    response: str
+    user_input: str
+    llm_response: str
     retrieval_context: Optional[List[str]] = None
 
     def __post_init__(self):
@@ -59,8 +59,8 @@ class Message:
 
 
 class ConversationalTestCaseParams(Enum):
-    INPUT = "input"
-    RESPONSE = "response"
+    USER_INPUT = "input"
+    LLM_RESPONSE = "response"
 
 
 @dataclass
