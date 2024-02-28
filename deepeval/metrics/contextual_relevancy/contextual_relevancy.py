@@ -1,9 +1,9 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
-from threading import Thread, Lock
+from threading import Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from deepeval.utils import thread_exception_handler, trimAndLoadJson
+from deepeval.utils import trimAndLoadJson
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM

@@ -170,19 +170,6 @@ def normalize_text(text: str) -> str:
     return white_space_fix(remove_articles(remove_punc(lower(text))))
 
 
-def thread_exception_handler(
-    func: Callable,
-    args,
-    exceptions: List[Exception],
-    lock: Lock,
-):
-    try:
-        func(*args)
-    except Exception as e:
-        # Lock is not strictly necessary here if you're only appending to a list,
-        # but is good practice if you modify the shared data structure in other ways
-        with lock:
-            exceptions.append(e)
 
 
 ###############################################
