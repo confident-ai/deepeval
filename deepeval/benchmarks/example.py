@@ -6,12 +6,12 @@ from deepeval.models import DeepEvalBaseLLM
 
 
 class ExampleBenchmark(DeepEvalBaseBenchmark):
-    def __init__(self, model : DeepEvalBaseLLM):
+    def __init__(self, model: DeepEvalBaseLLM):
         super().__init__()
         # Now call the method to load the benchmark dataset and set test cases.
         self.goldens = self.load_benchmark_dataset()
         self.model = model
 
-    def load_benchmark_dataset(self)  -> List[Golden]:
+    def load_benchmark_dataset(self) -> List[Golden]:
         # load from hugging face
         pass
