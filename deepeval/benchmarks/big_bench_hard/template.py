@@ -1,5 +1,6 @@
 from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 
+
 class BigBenchHardTemplate:
 
     @staticmethod

@@ -5,7 +5,8 @@ from deepeval.dataset import Golden
 from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 
 
-T = TypeVar('T', BigBenchHardTask)
+T = TypeVar("T", BigBenchHardTask)
+
 
 class DeepEvalBaseBenchmark(ABC, Generic[T]):
     def __init__(self):
