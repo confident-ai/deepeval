@@ -156,7 +156,7 @@ def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
         raise AssertionError(f"Metrics {failed_metrics_str} failed.")
 
 
-def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
+def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric], num_processes: int = 0):
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
@@ -171,7 +171,12 @@ def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
 
     test_run_manager.reset()
     with progress_context("Evaluating testcases..."):
-        test_results = execute_test(test_cases, metrics, True)
+        if num_processes > 0:
+            test_results: List[TestResult] = []
+            for test_case in test_cases:
+                test_results.append(execute_test(test_cases, metrics, True))
+        else:
+            test_results = execute_test(test_cases, metrics, True)
         capture_evaluation_count()
         for test_result in test_results:
             print_test_result(test_result)

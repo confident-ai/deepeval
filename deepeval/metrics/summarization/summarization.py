@@ -174,7 +174,6 @@ class SummarizationMetric(BaseMetric):
                     if verdict.summary_verdict.strip().lower() == "yes":
                         coverage_count += 1
 
-
             if total == 0:
                 return 0
 

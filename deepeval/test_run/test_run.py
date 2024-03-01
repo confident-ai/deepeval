@@ -12,14 +12,10 @@ from rich.console import Console
 from rich import print
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.tracing import get_trace_stack
-from deepeval.constants import PYTEST_RUN_TEST_NAME
-from deepeval.decorators.hyperparameters import get_hyperparameters, get_model
+from deepeval.decorators.hyperparameters import get_hyperparameters, get_model, get_user_prompt_template
 from deepeval.api import Api, Endpoints
 from deepeval.test_run.api import (
     APITestCase,
-    MetricsMetadata,
     TestRunHttpResponse,
 )
 from deepeval.utils import delete_file_if_exists, is_confident
@@ -85,6 +81,7 @@ class TestRun(BaseModel):
     )
     configurations: Optional[dict[Any, Any]] = Field(default_factory=dict)
     model: Optional[str] = Field(None)
+    user_prompt_template: Optional[str] = Field(None, alias="userPromptTemplate")
 
     def cleanup(self):
         all_metric_dict = MetricsAverageDict()
@@ -94,9 +91,10 @@ class TestRun(BaseModel):
         self.metric_scores = all_metric_dict.get_average_metric_score()
         self.configurations = get_hyperparameters()
         self.model = get_model()
+        self.user_prompt_template = get_user_prompt_template()
 
     def save(self, f):
-        json.dump(self.dict(by_alias=True, exclude_none=True), f)
+        json.dump(self.model_dump(by_alias=True, exclude_none=True), f)
         return self
 
     @classmethod
