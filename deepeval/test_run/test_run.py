@@ -12,7 +12,11 @@ from rich.console import Console
 from rich import print
 
 from deepeval.metrics import BaseMetric
-from deepeval.decorators.hyperparameters import get_hyperparameters, get_model, get_user_prompt_template
+from deepeval.decorators.hyperparameters import (
+    get_hyperparameters,
+    get_model,
+    get_user_prompt_template,
+)
 from deepeval.api import Api, Endpoints
 from deepeval.test_run.api import (
     APITestCase,
@@ -81,7 +85,9 @@ class TestRun(BaseModel):
     )
     configurations: Optional[dict[Any, Any]] = Field(default_factory=dict)
     model: Optional[str] = Field(None)
-    user_prompt_template: Optional[str] = Field(None, alias="userPromptTemplate")
+    user_prompt_template: Optional[str] = Field(
+        None, alias="userPromptTemplate"
+    )
 
     def cleanup(self):
         all_metric_dict = MetricsAverageDict()

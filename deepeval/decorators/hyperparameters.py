@@ -32,5 +32,6 @@ def get_hyperparameters():
 def get_model():
     return _model
 
+
 def get_user_prompt_template():
     return _user_prompt_template

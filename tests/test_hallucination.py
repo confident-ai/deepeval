@@ -45,6 +45,7 @@ def test_hallucination_metric_3():
     )
     assert_test(test_case, [metric])
 
+
 # prompt_template = """You are a helpful assistant, answer the following question without using any prior knowledge.
 
 # Question:
