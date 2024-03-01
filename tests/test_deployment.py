@@ -45,7 +45,13 @@ def test_customer_chatbot(test_case: LLMTestCase):
     assert_test(test_case, [fake_metric])
 
 
-@deepeval.set_hyperparameters(model="gpt-4")
+prompt_template = """You are a helpful assistant, answer the following question in a non-judgemental tone.
+
+Question:
+{question}
+"""
+
+@deepeval.set_hyperparameters(model="gpt-4", prompt_template=prompt_template)
 def hyperparameters():
     return {
         "chunk_size": 500,

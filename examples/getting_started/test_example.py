@@ -88,9 +88,18 @@ def test_everything():
         test_case, [answer_relevancy_metric, coherence_metric, length_metric]
     )
 
+# Just an example of prompt_template
+prompt_template = """You are a helpful assistant, answer the following question in a non-judgemental tone.
 
-@deepeval.set_hyperparameters(model=None)
+Question:
+{question}
+"""
+
+# Although the values in this example are hardcoded,
+# you should ideally pass in variables to keep things dynamic
+@deepeval.set_hyperparameters(model="gpt-4", prompt_template=prompt_template)
 def hyperparameters():
     return {
-        "model": None,
+        "chunk_size": 500,
+        "temperature": 0
     }
