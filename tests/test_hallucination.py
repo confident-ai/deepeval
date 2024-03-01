@@ -2,6 +2,7 @@ import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric
 from deepeval import assert_test
+import deepeval
 
 
 @pytest.mark.skip(reason="openai is expensive")
@@ -45,13 +46,14 @@ def test_hallucination_metric_3():
     assert_test(test_case, [metric])
 
 
-# @deepeval.set_hyperparameters(model="gpt-4")
+# prompt_template = """You are a helpful assistant, answer the following question without using any prior knowledge.
+
+# Question:
+# {question}
+# """
+
+# @deepeval.set_hyperparameters(model="gpt-4", prompt_template=prompt_template)
 # def hyperparameters():
 #     return {
-#         "prompt_template": """You are a helpful assistant, answer the following question without using any prior knowledge.
-
-#         Question:
-#         {question}
-#         """,
 #         "model": "gpt-4",
 #     }

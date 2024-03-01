@@ -1,11 +1,13 @@
 _hyperparameters = None
 _model = None
+_user_prompt_template = None
 
 
-def set_hyperparameters(model: str):
+def set_hyperparameters(model: str, prompt_template: str):
     def decorator(func):
-        global _model
+        global _model, _user_prompt_template
         _model = model
+        _user_prompt_template = prompt_template
 
         global _hyperparameters
         _hyperparameters = func()
@@ -29,3 +31,7 @@ def get_hyperparameters():
 
 def get_model():
     return _model
+
+
+def get_user_prompt_template():
+    return _user_prompt_template
