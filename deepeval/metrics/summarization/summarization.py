@@ -166,16 +166,17 @@ class SummarizationMetric(BaseMetric):
         else:
             if self.assessment_questions is None:
                 return 1
-            total = len(self.coverage_verdicts)
-            if total == 0:
-                return 0
+            total = 0
             coverage_count = 0
             for verdict in self.coverage_verdicts:
-                if (
-                    verdict.original_verdict.strip().lower() == "yes"
-                    and verdict.summary_verdict.strip().lower() == "yes"
-                ):
-                    coverage_count += 1
+                if verdict.original_verdict.strip().lower() == "yes":
+                    total += 1
+                    if verdict.summary_verdict.strip().lower() == "yes":
+                        coverage_count += 1
+
+
+            if total == 0:
+                return 0
 
             return coverage_count / total
 
