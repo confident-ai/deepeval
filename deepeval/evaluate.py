@@ -156,10 +156,7 @@ def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
         raise AssertionError(f"Metrics {failed_metrics_str} failed.")
 
 
-def evaluate(
-    test_cases: List[LLMTestCase],
-    metrics: List[BaseMetric],
-):
+def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
