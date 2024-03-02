@@ -1,6 +1,6 @@
 class SynthesizerTemplate:
     @staticmethod
-    def generate_synthetic_data(context):
+    def generate_synthetic_data(context, max_goldens_per_context):
         return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with the `input` and `expected_output` key.
 The `input` can either be a question or a statement that can be addressed by the given context.
 The `expected_output` is what an ideal output should look like for the corresponding generated input.
@@ -8,9 +8,10 @@ The `expected_output` should NEVER contradict the given context in any way.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
-Example context: ["Einstein won the Nobel Prize for his discovery of penicillin.", "Einstein won the Nobel Prize in 1968."]
+You MUST TRY to generate {max_goldens_per_context} data points, unless there is too little context such that the `input` and `expected_output` is getting reptitive.
 
-Example:
+Example context: ["Einstein won the Nobel Prize for his discovery of penicillin.", "Einstein won the Nobel Prize in 1968."]
+Example JSON:
 {{
     "data": [
         {{
@@ -29,6 +30,7 @@ You should NOT incorporate any prior knowledge you have and take each context at
 You should NOT be lazy and simply copy the context as the `expected_output`.
 You MUST include at least one statement as the input.
 Both `input` and `expected_output` are STRINGS.
+You MUST TRY to generate {max_goldens_per_context} data points, unless there is too little context such that the `input` and `expected_output` is getting reptitive.
 **
 
 Context:

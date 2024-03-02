@@ -2,6 +2,7 @@ from typing import List, Optional, Union
 import json
 from threading import Thread, Lock
 from pydantic import BaseModel, Field
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
 from deepeval.models import (
@@ -37,8 +38,28 @@ class Synthesizer:
         self.batch_size = batch_size
         self.synthetic_data = None
 
+    def _synthesize_goldens(self, context: List[str], goldens: List[Golden], max_goldens_per_context: int, lock: Lock):
+        prompt = SynthesizerTemplate.generate_synthetic_data(context=context, max_goldens_per_context=max_goldens_per_context)
+        res = self.model(prompt)
+        data = trimAndLoadJson(res)
+        self.synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        temp_goldens : List[Golden] = []
+        for data in self.synthetic_data:
+            golden = Golden(
+                input=data.input,
+                expectedOutput=data.expected_output,
+                context=context,
+            )
+            temp_goldens.append(golden)
+
+        with lock:
+            goldens.extend(temp_goldens)
+
+
     # TODO
-    def synthesize(self, context: List[str]) -> List[Golden]:
+    def synthesize(self, contexts: List[List[str]], max_goldens_per_context: int = 2) -> List[Golden]:
+        goldens: List[Golden] = []
+
         # 1. get embeddings for context eg., [1,2,3,4,5]
         # 2. group randomly based on embedding similarity eg., [[1,2], [5,2], [4], [3,1,5]]
         # 3. supply as context, generate for each List[str]
@@ -50,24 +71,40 @@ class Synthesizer:
         # TODO: logic to group and vary contexts
 
         # TODO: batch generation
-        prompt = SynthesizerTemplate.generate_synthetic_data(context=context)
-        res = self.model(prompt)
-        data = trimAndLoadJson(res)
-        self.synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        if self.multithreading:
+            lock = Lock()
 
-        # TODO: optional evolution
+            with ThreadPoolExecutor() as executor:
+                futures = {
+                    executor.submit(
+                        self._synthesize_goldens,
+                        context,
+                        goldens,
+                        max_goldens_per_context,
+                        lock,
+                    ): context
+                    for context in contexts
+                }
 
-        # TODO: review synthetic data
+                for future in as_completed(futures):
+                    future.result()
+        else:
+            for context in contexts:
+                prompt = SynthesizerTemplate.generate_synthetic_data(context=context, max_goldens_per_context=max_goldens_per_context)
+                res = self.model(prompt)
+                data = trimAndLoadJson(res)
+                self.synthetic_data = [SyntheticData(**item) for item in data["data"]]
 
-        goldens: List[Golden] = []
+                # TODO: optional evolution
 
-        for data in self.synthetic_data:
-            golden = Golden(
-                input=data.input,
-                expectedOutput=data.expected_output,
-                context=context,
-            )
-            goldens.append(golden)
+                # TODO: review synthetic data
+                for data in self.synthetic_data:
+                    golden = Golden(
+                        input=data.input,
+                        expectedOutput=data.expected_output,
+                        context=context,
+                    )
+                    goldens.append(golden)
 
         return goldens
 
@@ -80,4 +117,9 @@ class Synthesizer:
         else:
             # Process syncly in self.batch_size, call self.synthesize
             pass
+        pass
+
+    def save(self, file_type: str, path: str):
+        
+
         pass
