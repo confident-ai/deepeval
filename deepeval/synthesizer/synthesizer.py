@@ -40,7 +40,7 @@ class Synthesizer:
         self.generator_model = self.model.get_model_name()
         self.multithreading = multithreading
         self.batch_size = batch_size
-        self.synthetic_goldens : List[Golden] = []
+        self.synthetic_goldens: List[Golden] = []
 
     def _generate(
         self,
@@ -139,7 +139,6 @@ class Synthesizer:
             pass
         pass
 
-
     def save(self, file_type: str, path: str):
         if file_type not in valid_file_types:
             raise ValueError(
@@ -151,21 +150,26 @@ class Synthesizer:
                 f"No synthetic goldens found. Please generate goldens before attempting to save data as {file_type}"
             )
 
-        if file_type == 'json':
-            with open(path, 'w') as file:
+        if file_type == "json":
+            with open(path, "w") as file:
                 json_data = [
                     {
-                        'input': golden.input,
-                        'expected_output': golden.expected_output,
-                        'context': golden.context
-                    } for golden in self.synthetic_goldens
+                        "input": golden.input,
+                        "expected_output": golden.expected_output,
+                        "context": golden.context,
+                    }
+                    for golden in self.synthetic_goldens
                 ]
                 json.dump(json_data, file, indent=4)
-        
-        elif file_type == 'csv':
-            with open(path, 'w', newline='') as file:
+
+        elif file_type == "csv":
+            with open(path, "w", newline="") as file:
                 writer = csv.writer(file)
-                writer.writerow(['input', 'expected_output', 'context'])
+                writer.writerow(["input", "expected_output", "context"])
                 for golden in self.synthetic_goldens:
-                    context_str = '|'.join(golden.context)  # Using '|' as a delimiter for context items
-                    writer.writerow([golden.input, golden.expected_output, context_str])
+                    context_str = "|".join(
+                        golden.context
+                    )  # Using '|' as a delimiter for context items
+                    writer.writerow(
+                        [golden.input, golden.expected_output, context_str]
+                    )
