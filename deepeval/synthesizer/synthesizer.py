@@ -29,19 +29,19 @@ class Synthesizer:
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
+        # embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
         multithreading: bool = True,
-        batch_size: int = 50,
+        # batch_size: int = 50,
     ):
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)
 
-        self.embedder = embedder
+        # self.embedder = embedder
         self.generator_model = self.model.get_model_name()
         self.multithreading = multithreading
-        self.batch_size = batch_size
+        # self.batch_size = batch_size
         self.synthetic_goldens: List[Golden] = []
 
     def _generate(
@@ -58,8 +58,6 @@ class Synthesizer:
         data = trimAndLoadJson(res)
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
         temp_goldens: List[Golden] = []
-        print(len(synthetic_data))
-        print(synthetic_data)
         for data in synthetic_data:
             golden = Golden(
                 input=data.input,
@@ -87,7 +85,6 @@ class Synthesizer:
 
         # TODO: logic to group and vary contexts
 
-        # TODO: batch generation
         if self.multithreading:
             lock = Lock()
 
@@ -134,12 +131,9 @@ class Synthesizer:
 
     # TODO
     def generate_goldens_from_docs(self, path: str):
-        # Load in docs using llamaindex or langchain
         if self.multithreading:
-            # Process asyncly in self.batch_size, call self.synthesize
             pass
         else:
-            # Process syncly in self.batch_size, call self.synthesize
             pass
         pass
 
@@ -154,18 +148,13 @@ class Synthesizer:
                 f"No synthetic goldens found. Please generate goldens before attempting to save data as {file_type}"
             )
 
-        # Generate a new filename based on the current timestamp
         new_filename = (
             datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f".{file_type}"
         )
 
-        # Check if the specified path exists, create it if it does not
         if not os.path.exists(directory):
-            os.makedirs(
-                directory
-            )  # Use makedirs to create intermediate directories if necessary
+            os.makedirs(directory)
 
-        # Construct the full path for the file
         full_file_path = os.path.join(directory, new_filename)
 
         if file_type == "json":
@@ -185,9 +174,7 @@ class Synthesizer:
                 writer = csv.writer(file)
                 writer.writerow(["input", "expected_output", "context"])
                 for golden in self.synthetic_goldens:
-                    context_str = "|".join(
-                        golden.context
-                    )  # Using '|' as a delimiter for context items
+                    context_str = "|".join(golden.context)
                     writer.writerow(
                         [golden.input, golden.expected_output, context_str]
                     )
