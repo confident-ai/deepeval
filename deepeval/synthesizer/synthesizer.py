@@ -38,12 +38,20 @@ class Synthesizer:
         self.batch_size = batch_size
         self.synthetic_data = None
 
-    def _synthesize_goldens(self, context: List[str], goldens: List[Golden], max_goldens_per_context: int, lock: Lock):
-        prompt = SynthesizerTemplate.generate_synthetic_data(context=context, max_goldens_per_context=max_goldens_per_context)
+    def _synthesize_goldens(
+        self,
+        context: List[str],
+        goldens: List[Golden],
+        max_goldens_per_context: int,
+        lock: Lock,
+    ):
+        prompt = SynthesizerTemplate.generate_synthetic_data(
+            context=context, max_goldens_per_context=max_goldens_per_context
+        )
         res = self.model(prompt)
         data = trimAndLoadJson(res)
         self.synthetic_data = [SyntheticData(**item) for item in data["data"]]
-        temp_goldens : List[Golden] = []
+        temp_goldens: List[Golden] = []
         for data in self.synthetic_data:
             golden = Golden(
                 input=data.input,
@@ -55,9 +63,10 @@ class Synthesizer:
         with lock:
             goldens.extend(temp_goldens)
 
-
     # TODO
-    def synthesize(self, contexts: List[List[str]], max_goldens_per_context: int = 2) -> List[Golden]:
+    def synthesize(
+        self, contexts: List[List[str]], max_goldens_per_context: int = 2
+    ) -> List[Golden]:
         goldens: List[Golden] = []
 
         # 1. get embeddings for context eg., [1,2,3,4,5]
@@ -90,10 +99,15 @@ class Synthesizer:
                     future.result()
         else:
             for context in contexts:
-                prompt = SynthesizerTemplate.generate_synthetic_data(context=context, max_goldens_per_context=max_goldens_per_context)
+                prompt = SynthesizerTemplate.generate_synthetic_data(
+                    context=context,
+                    max_goldens_per_context=max_goldens_per_context,
+                )
                 res = self.model(prompt)
                 data = trimAndLoadJson(res)
-                self.synthetic_data = [SyntheticData(**item) for item in data["data"]]
+                self.synthetic_data = [
+                    SyntheticData(**item) for item in data["data"]
+                ]
 
                 # TODO: optional evolution
 
@@ -120,6 +134,5 @@ class Synthesizer:
         pass
 
     def save(self, file_type: str, path: str):
-        
 
         pass
