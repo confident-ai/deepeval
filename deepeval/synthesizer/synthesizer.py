@@ -1,8 +1,10 @@
 from typing import List, Optional, Union
+import os
 import csv
 import json
-from threading import Thread, Lock
-from pydantic import BaseModel, Field
+from threading import Lock
+from pydantic import BaseModel
+import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
@@ -56,6 +58,8 @@ class Synthesizer:
         data = trimAndLoadJson(res)
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
         temp_goldens: List[Golden] = []
+        print(len(synthetic_data))
+        print(synthetic_data)
         for data in synthetic_data:
             golden = Golden(
                 input=data.input,
@@ -139,7 +143,7 @@ class Synthesizer:
             pass
         pass
 
-    def save(self, file_type: str, path: str):
+    def save_as(self, file_type: str, directory: str):
         if file_type not in valid_file_types:
             raise ValueError(
                 f"Invalid file type. Available file types to save as: {', '.join(type for type in valid_file_types)}"
@@ -150,8 +154,19 @@ class Synthesizer:
                 f"No synthetic goldens found. Please generate goldens before attempting to save data as {file_type}"
             )
 
+        # Generate a new filename based on the current timestamp
+        new_filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f".{file_type}"
+
+        # Check if the specified path exists, create it if it does not
+        if not os.path.exists(directory):
+            os.makedirs(directory)  # Use makedirs to create intermediate directories if necessary
+
+        # Construct the full path for the file
+        full_file_path = os.path.join(directory, new_filename)
+
+
         if file_type == "json":
-            with open(path, "w") as file:
+            with open(full_file_path, "w") as file:
                 json_data = [
                     {
                         "input": golden.input,
@@ -163,7 +178,7 @@ class Synthesizer:
                 json.dump(json_data, file, indent=4)
 
         elif file_type == "csv":
-            with open(path, "w", newline="") as file:
+            with open(full_file_path, "w", newline="") as file:
                 writer = csv.writer(file)
                 writer.writerow(["input", "expected_output", "context"])
                 for golden in self.synthetic_goldens:
@@ -173,3 +188,5 @@ class Synthesizer:
                     writer.writerow(
                         [golden.input, golden.expected_output, context_str]
                     )
+
+        print(f"Synthetic goldens saved at {full_file_path}!")

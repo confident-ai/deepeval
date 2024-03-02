@@ -141,6 +141,7 @@ class ContextualRelevancyMetric(BaseMetric):
                 for future in as_completed(futures):
                     future.result()
 
+
         else:
             for context in retrieval_context:
                 prompt = ContextualRelevancyTemplate.generate_verdicts(
