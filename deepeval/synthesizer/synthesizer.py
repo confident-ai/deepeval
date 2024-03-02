@@ -16,6 +16,7 @@ from deepeval.dataset import Golden
 
 valid_file_types = ["csv", "json"]
 
+
 class SyntheticData(BaseModel):
     input: str
     expected_output: str
@@ -144,8 +145,8 @@ class Synthesizer:
             )
 
         if len(self.synthetic_goldens) == 0:
-            raise ValueError(f"No synthetic goldens found. Please generate goldens before attemping to save data as {file_type}")  
-    
-
+            raise ValueError(
+                f"No synthetic goldens found. Please generate goldens before attemping to save data as {file_type}"
+            )
 
         pass
