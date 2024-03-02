@@ -37,6 +37,7 @@ def metrics_progress_context(
         progress.add_task(description=description, total=total)
         yield
 
+
 @contextmanager
 def synthesizer_progress_context(
     evaluation_model: str,
