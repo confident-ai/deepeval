@@ -14,6 +14,8 @@ from deepeval.utils import trimAndLoadJson
 from deepeval.dataset import Golden
 
 
+valid_file_types = ["csv", "json"]
+
 class SyntheticData(BaseModel):
     input: str
     expected_output: str
@@ -33,12 +35,12 @@ class Synthesizer:
             self.model = GPTModel(model=model)
 
         self.embedder = embedder
-        self.synthesizer_model = self.model.get_model_name()
+        self.generator_model = self.model.get_model_name()
         self.multithreading = multithreading
         self.batch_size = batch_size
-        self.synthetic_data = None
+        self.synthetic_goldens = []
 
-    def _synthesize_goldens(
+    def _generate(
         self,
         context: List[str],
         goldens: List[Golden],
@@ -50,9 +52,9 @@ class Synthesizer:
         )
         res = self.model(prompt)
         data = trimAndLoadJson(res)
-        self.synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        synthetic_data = [SyntheticData(**item) for item in data["data"]]
         temp_goldens: List[Golden] = []
-        for data in self.synthetic_data:
+        for data in synthetic_data:
             golden = Golden(
                 input=data.input,
                 expectedOutput=data.expected_output,
@@ -64,7 +66,7 @@ class Synthesizer:
             goldens.extend(temp_goldens)
 
     # TODO
-    def synthesize(
+    def generate_goldens(
         self, contexts: List[List[str]], max_goldens_per_context: int = 2
     ) -> List[Golden]:
         goldens: List[Golden] = []
@@ -86,7 +88,7 @@ class Synthesizer:
             with ThreadPoolExecutor() as executor:
                 futures = {
                     executor.submit(
-                        self._synthesize_goldens,
+                        self._generate,
                         context,
                         goldens,
                         max_goldens_per_context,
@@ -105,14 +107,14 @@ class Synthesizer:
                 )
                 res = self.model(prompt)
                 data = trimAndLoadJson(res)
-                self.synthetic_data = [
+                synthetic_data = [
                     SyntheticData(**item) for item in data["data"]
                 ]
 
                 # TODO: optional evolution
 
                 # TODO: review synthetic data
-                for data in self.synthetic_data:
+                for data in synthetic_data:
                     golden = Golden(
                         input=data.input,
                         expectedOutput=data.expected_output,
@@ -120,10 +122,12 @@ class Synthesizer:
                     )
                     goldens.append(golden)
 
+        self.synthetic_goldens.extend(goldens)
+
         return goldens
 
     # TODO
-    def synthesize_from_docs(self, path: str):
+    def generate_goldens_from_docs(self, path: str):
         # Load in docs using llamaindex or langchain
         if self.multithreading:
             # Process asyncly in self.batch_size, call self.synthesize
@@ -134,5 +138,14 @@ class Synthesizer:
         pass
 
     def save(self, file_type: str, path: str):
+        if file_type not in valid_file_types:
+            raise ValueError(
+                f"Invalid file type. Available file types to save as: {', '.join(type for type in valid_file_types)}"
+            )
+
+        if len(self.synthetic_goldens) == 0:
+            raise ValueError(f"No synthetic goldens found. Please generate goldens before attemping to save data as {file_type}")  
+    
+
 
         pass
