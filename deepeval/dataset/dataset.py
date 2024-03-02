@@ -18,6 +18,7 @@ from deepeval.dataset.api import (
 from deepeval.dataset.golden import Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import is_confident
+from deepeval.synthesizer.base_synthesizer import BaseSynthesizer
 
 
 @dataclass
@@ -324,3 +325,8 @@ class EvaluationDataset:
             raise Exception(
                 "Run `deepeval login` to pull dataset from Confident AI"
             )
+
+
+    # TODO: Cirulcar import, refactor golden away in a separate module or delay import
+    def generate_goldens(self, synthesizer: BaseSynthesizer, contexts: List[List[str]], max_goldens_per_context: int = 2):
+        self.goldens.extend(synthesizer.generate_goldens(contexts, max_goldens_per_context))
