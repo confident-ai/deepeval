@@ -1,3 +1,43 @@
+class SynthesizerTemplate:
+    @staticmethod
+    def generate_synthetic_data(context):
+        return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with the `input` and `expected_output` key.
+The `input` can either be a question or a statement that can be addressed by the given context.
+The `expected_output` is what an ideal output should look like for the corresponding generated input.
+The `expected_output` should NEVER contradict the given context in any way.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
+Example context: ["Einstein won the Nobel Prize for his discovery of penicillin.", "Einstein won the Nobel Prize in 1968."]
+
+Example:
+{{
+    "data": [
+        {{
+            "input": "What was Einstein known for?",
+            "expected_output": "Einstein was known for his discovery of penicillin. He also won the Nobel Prize in 1968."
+        }},
+        {{
+            "input": "Einstein was a smart guy huh",
+            "expected_output": "He sure was! Einstein allegedly had an IQ of 200 and was the first to disocver penicillin."
+        }}
+    ]  
+}}
+
+
+You should NOT incorporate any prior knowledge you have and take each context at face value.
+You should NOT be lazy and simply copy the context as the `expected_output`.
+You MUST include at least one statement as the input.
+Both `input` and `expected_output` are STRINGS.
+**
+
+Context:
+{context}
+
+JSON:
+"""
+
+
 ######################################################################################################
 ##### Templates taken from https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py #####
 ######################################################################################################
