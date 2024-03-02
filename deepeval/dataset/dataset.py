@@ -326,7 +326,6 @@ class EvaluationDataset:
                 "Run `deepeval login` to pull dataset from Confident AI"
             )
 
-    # TODO: Cirulcar import, refactor golden away in a separate module or delay import
     def generate_goldens(
         self,
         synthesizer: BaseSynthesizer,

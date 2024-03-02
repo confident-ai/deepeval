@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from typing import Optional, List, Union
 
-from deepeval.test_case import LLMTestCase
 from deepeval.models.base_model import (
     DeepEvalBaseLLM,
     DeepEvalBaseEmbeddingModel,
@@ -29,7 +28,3 @@ class BaseSynthesizer:
         self, embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None
     ):
         self._embedder = embedder
-
-    @abstractmethod
-    def synthesize(self, text: str, *args, **kwargs) -> List[LLMTestCase]:
-        raise NotImplementedError
