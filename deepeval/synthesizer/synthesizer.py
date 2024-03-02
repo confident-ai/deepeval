@@ -155,15 +155,18 @@ class Synthesizer:
             )
 
         # Generate a new filename based on the current timestamp
-        new_filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f".{file_type}"
+        new_filename = (
+            datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f".{file_type}"
+        )
 
         # Check if the specified path exists, create it if it does not
         if not os.path.exists(directory):
-            os.makedirs(directory)  # Use makedirs to create intermediate directories if necessary
+            os.makedirs(
+                directory
+            )  # Use makedirs to create intermediate directories if necessary
 
         # Construct the full path for the file
         full_file_path = os.path.join(directory, new_filename)
-
 
         if file_type == "json":
             with open(full_file_path, "w") as file:
