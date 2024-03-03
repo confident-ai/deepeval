@@ -21,7 +21,7 @@ try:
         Custom callback for deep evaluation during model training.
 
         Args:
-            metrics (Union[BaseMetric, List[BaseMetric]]): Evaluation metrics.
+            metrics (List[BaseMetric]): List of evaluation metrics.
             evaluation_dataset (EvaluationDataset): Dataset for evaluation.
             tokenizer_args (Dict): Arguments for the tokenizer.
             aggregation_method (str): Method for aggregating metric scores.
@@ -30,18 +30,16 @@ try:
 
         def __init__(
             self,
-            metrics: Union[BaseMetric, List[BaseMetric]] = None,
+            trainer: Trainer,
             evaluation_dataset: EvaluationDataset = None,
+            metrics: List[BaseMetric] = None,
             tokenizer_args: Dict = None,
             aggregation_method: str = "avg",
-            trainer: Trainer = None,
             show_table: bool = False,
-            show_table_every: int = 1,
         ) -> None:
             super().__init__()
 
             self.show_table = show_table
-            self.show_table_every = show_table_every
             self.metrics = metrics
             self.evaluation_dataset = evaluation_dataset
             self.tokenizer_args = tokenizer_args
@@ -75,8 +73,8 @@ try:
                 metrics=self.metrics,
             )
             scores = {}
-            for test in test_results:
-                for metric in test.metrics:
+            for test_result in test_results:
+                for metric in test_result.metrics:
                     metric_name = str(metric.__name__).lower().replace(" ", "_")
                     metric_score = metric.score
                     scores.setdefault(metric_name, []).append(metric_score)
@@ -161,22 +159,19 @@ try:
             ):
                 self.rich_manager.advance_progress()
 
-                if self.epoch_counter % self.show_table_every == 0:
-                    self.rich_manager.change_spinner_text(
-                        self.task_descriptions["evaluate"]
-                    )
+                self.rich_manager.change_spinner_text(
+                    self.task_descriptions["evaluate"]
+                )
 
-                    scores = self._calculate_metric_scores()
-                    self.deepeval_metric_history.append(scores)
-                    self.deepeval_metric_history[-1].update(
-                        state.log_history[-1]
-                    )
+                scores = self._calculate_metric_scores()
+                self.deepeval_metric_history.append(scores)
+                self.deepeval_metric_history[-1].update(state.log_history[-1])
 
-                    self.rich_manager.change_spinner_text(
-                        self.task_descriptions["training"]
-                    )
-                    columns = self._generate_table()
-                    self.rich_manager.update(columns)
+                self.rich_manager.change_spinner_text(
+                    self.task_descriptions["training"]
+                )
+                columns = self._generate_table()
+                self.rich_manager.update(columns)
 
         def _generate_table(self):
             """

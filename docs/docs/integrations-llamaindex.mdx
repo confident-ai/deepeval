@@ -8,7 +8,7 @@ sidebar_label: LlamaIndex
 
 LlamaIndex is a data framework for LLMs that facilitates the ingestion of data from various sources such as APIs, databases, and PDFs, and indexes it for later retrieval in RAG-based LLM applications.
 
-## Evaluating LlamaIndex (RAG) Applications
+## Evaluating LlamaIndex
 
 RAG applications built using LlamaIndex can be easily evaluated within `deepeval`. Lets use this RAG application built using Llamaindex as an example:
 
@@ -59,6 +59,51 @@ print(answer_relevancy_metric.reason)
 You can also extract all necessary outputs and retrieval contexts for each given input to your LlamaIndex application to [create an `EvaluationDataset` to evaluate test cases in bulk.](evaluation-datasets)
 :::
 
+## Unit Testing LlamaIndex
+
+Unit testing LlamaIndex is as simple as defining an `EvaluationDataset` and generating `actual_output`s and `retrieval_context`s at evaluation time. Building upon the previous example:
+
+```python test_llamaindex.py
+import pytest
+from deepeval import assert_test
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset, Golden
+
+example_golden = Golden(input="What is LlamaIndex?")
+
+dataset = EvaluationDataset(goldens=[example_golden])
+
+@pytest.mark.parametrize(
+    "golden",
+    dataset.goldens,
+)
+def test_rag(golden: Golden):
+    # LlamaIndex returns a response object that contains
+    # both the output string and retrieved nodes
+    response_object = rag_application.query(golden.input)
+
+    # Process the response object to get the output string
+    # and retrieved nodes
+    if response_object is not None:
+        actual_output = response_object.response
+        retrieval_context = [node.get_content() for node in response.source_nodes]
+
+    test_case = LLMTestCase(
+        input=golden.input,
+        actual_output=actual_output,
+        retrieval_context=retrieval_context
+    )
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
+    assert_test(test_case, [answer_relevancy_metric])
+```
+
+Here, `rag_application` is simply the query engine from Llamaindex, which you'll have to import from the appropriate module.
+
+:::note
+In this example, we initialized an `EvaluationDataset` with a `Golden` instead of an `LLMTestCase`. This is because we're generating `actual_output`s and `retrieval_context`s at evaluation time, meaning we cannot initialize with test cases since an `LLMTestCase` requires an `actual_output` to create. Remember, a `Golden` do not require an `actual_output`, so whilst test cases are always ready for evaluation, a golden isn't.
+:::
+
 ## Using DeepEval for LlamaIndex
 
 In LlamaIndex, there are entities known as evaluators that evaluates the responses of LlamaIndex applications. Continuing from the previous example, here's an alternative way to make use of the `AnswerRelevancyMetric` through `deepeval`'s LlamaIndex evaluators:
@@ -82,7 +127,7 @@ evaluation_result = evaluator.evaluate_response(
 print(evaluation_result)
 ```
 
-:::note
+:::info
 In LlamaIndex's documentation, you might see examples where the `evaluate()` method is called on an evaluator instead of the `evaluate_response()` method. While both is correct, you should **ALWAYS** use the `evaluate_response()` methods when using `deepeval`'s LlamaIndex evaluators.
 :::
 
@@ -96,8 +141,8 @@ from deepeval.integrations.llamaindex import DeepEvalAnswerRelevancyEvaluator
 evaluator = DeepEvalAnswerRelevancyEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
-    model="gpt-4-1106-preview",
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-0125-preview'.
+    model="gpt-4-0125-preview",
     # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
     include_reason=True
 )
@@ -113,8 +158,8 @@ from deepeval.integrations.llamaindex import DeepEvalFaithfulnessEvaluator
 evaluator = DeepEvalFaithfulnessEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
-    model="gpt-4-1106-preview",
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-0125-preview'.
+    model="gpt-4-0125-preview",
     # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
     include_reason=True
 )
@@ -130,8 +175,8 @@ from deepeval.integrations.llamaindex import DeepEvalContextualRelevancyEvaluato
 evaluator = DeepEvalContextualRelevancyEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
-    model="gpt-4-1106-preview",
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-0125-preview'.
+    model="gpt-4-0125-preview",
     # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
     include_reason=True
 )
@@ -147,8 +192,10 @@ from deepeval.integrations.llamaindex import DeepEvalSummarizationEvaluator
 evaluator = DeepEvalSummarizationEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-1106-preview'.
-    model="gpt-4-1106-preview"
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-0125-preview'.
+    model="gpt-4-0125-preview",
+    # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
+    include_reason=True
 )
 ```
 
@@ -160,8 +207,12 @@ The `DeepEvalBiasEvaluator` uses `deepeval`'s `BiasMetric` for evaluation.
 from deepeval.integrations.llamaindex import DeepEvalBiasEvaluator
 
 evaluator = DeepEvalBiasEvaluator(
-    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
-    threshold=0.5
+    # Optional. A float representing the maximum passing threshold, defaulted to 0.5.
+    threshold=0.5,
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-0125-preview'.
+    model="gpt-4-0125-preview",
+    # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
+    include_reason=True
 )
 ```
 
@@ -173,8 +224,12 @@ The `DeepEvalToxicityEvaluator` uses `deepeval`'s `ToxicityMetric` for evaluatio
 from deepeval.integrations.llamaindex import DeepEvalToxicityEvaluator
 
 evaluator = DeepEvalToxicityEvaluator(
-    # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
-    threshold=0.5
+    # Optional. A float representing the maximum passing threshold, defaulted to 0.5.
+    threshold=0.5,
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4-0125-preview'.
+    model="gpt-4-0125-preview",
+    # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
+    include_reason=True
 )
 ```
 

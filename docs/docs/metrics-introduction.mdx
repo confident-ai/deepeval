@@ -77,15 +77,21 @@ deepeval unset-azure-openai
 
 ## Using a Custom LLM
 
-We highly discourage the use of custom LLMs since evaluation requires a high level of reasoning capabilities that we find are generally not reachable apart from (Azure) OpenAI's GPT models.
+`deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
 
-That being said,`deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs through langchain's [Chat Models](https://python.langchain.com/docs/integrations/chat/), or even LLMs in GGML format, which you can specify through the `model` argument when instantiating an LLM-based metric. Here is an example of using a custom Azure OpenAI model through langchain's `AzureChatOpenAI` interface for evaluation:
+:::caution
+We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputing responses in JSON formats, which are generally hard to achieve with custom LLMs.
+:::
+
+### Azure OpenAI Example
+
+Here is an example of creating a custom Azure OpenAI model through langchain's `AzureChatOpenAI` module for evaluation:
 
 ```python
 from langchain_openai import AzureChatOpenAI
-from deepeval.models.base import DeepEvalBaseModel
+from deepeval.models.base_model import DeepEvalBaseLLM
 
-class CustomEvaluationModel(DeepEvalBaseModel):
+class AzureOpenAI(DeepEvalBaseLLM):
     def __init__(
         self,
         model
@@ -97,28 +103,28 @@ class CustomEvaluationModel(DeepEvalBaseModel):
 
     def _call(self, prompt: str) -> str:
         chat_model = self.load_model()
-        return chat_model.invoke(prompt)
+        return chat_model.invoke(prompt).content
 
     def get_model_name(self):
         return "Custom Azure OpenAI Model"
 
 # Replace these with real values
-custom_azure_openai_model = AzureChatOpenAI(
+custom_model = AzureChatOpenAI(
     openai_api_version=openai_api_version,
     azure_deployment=azure_deployment,
     azure_endpoint=azure_endpoint,
     openai_api_key=openai_api_key,
 )
-custom_evaluation_model = CustomEvaluationModel(model=chat_model)
-print(custom_model("Write me a joke"))
+azure_openai = AzureOpenAI(model=custom_model)
+print(azure_openai("Write me a joke"))
 ```
 
-Remember, when creating a custom LLM evaluation model you should always:
+When creating a custom LLM evaluation model you should **ALWAYS**:
 
-- inherit `DeepEvalBaseModel`.
+- inherit `DeepEvalBaseLLM`.
 - implement the `load_model()` method, which will be responsible for returning a model object.
 - implement the `_call()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
-- the `_call()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt)` in this particular example, but this could be different depending on the implementation of your custom LLM object.
+- the `_call()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt).content` to access the model output in this particular example, but this could be different depending on the implementation of your custom LLM object.
 - the `get_model_name()` method simply returns a string representing the name of your LLM model.
 
 Note that the `model` argument in the `__init__()` method can accept any type (the model string or object itself). Lastly, to use it for evaluation in LLM-based metrics:
@@ -127,12 +133,113 @@ Note that the `model` argument in the `__init__()` method can accept any type (t
 from deepeval.metrics import AnswerRelevancyMetric
 ...
 
-metric = AnswerRelevancyMetric(model=custom_evaluation_model)
+metric = AnswerRelevancyMetric(model=azure_openai)
 ```
 
 :::note
 While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globally for all LLM-Evals, a custom LLM has to be set each time you instantiate a metric. Remember to provide your custom LLM instance through the `model` parameter for metrics you wish to use it for.
 :::
+
+### Mistral 7B Example
+
+Here is an example of creating a custom [Mistral 7B model](https://huggingface.co/docs/transformers/model_doc/mistral) through Hugging Face's `transformers` library for evaluation:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from deepeval.models.base_model import DeepEvalBaseLLM
+
+class Mistral7B(DeepEvalBaseLLM):
+    def __init__(
+        self,
+        model,
+        tokenizer
+    ):
+        self.model = model
+        self.tokenizer = tokenizer
+
+    def load_model(self):
+        return self.model
+
+    def _call(self, prompt: str) -> str:
+        model = self.load_model()
+
+        device = "cuda" # the device to load the model onto
+
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+
+        generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def get_model_name(self):
+        return "Mistral 7B"
+
+model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
+tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
+
+mistral_7b = Mistral7B(model=model, tokenizer=tokenizer)
+print(mistral_7b("Write me a joke"))
+```
+
+Note that for this particular implementation, we initialized our `Mistral7B` model with an additional `tokenizer` parameter, as this is required in the decoding step of the `_call()` method, unlike the `AzureOpenAI` example above. Lastly, to use it for evaluation in LLM-based metrics:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+metric = AnswerRelevancyMetric(model=mistral_7b)
+```
+
+:::tip
+You need to specify the custom evaluation model you would like to use through the `model` argument when instantiating an LLM-based metric.
+:::
+
+### AWS Bedrock Example
+
+Here is an example of creating a custom AWS Bedrock model through the `langchain_community.chat_models` module for evaluation:
+
+```python
+from langchain_community.chat_models import BedrockChat
+from deepeval.models.base_model import DeepEvalBaseLLM
+
+class AWSBedrock(DeepEvalBaseLLM):
+    def __init__(
+        self,
+        model
+    ):
+        self.model = model
+
+    def load_model(self):
+        return self.model
+
+    def _call(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        return chat_model.invoke(prompt).content
+
+    def get_model_name(self):
+        return "Custom Azure OpenAI Model"
+
+# Replace these with real values
+custom_model = BedrockChat(
+    credentials_profile_name=<your-profile-name>, # e.g. "default"
+    region_name=<your-region-name>, # e.g. "us-east-1"
+    endpoint_url=<your-bedrock-endpoint>, # e.g. "https://bedrock-runtime.us-east-1.amazonaws.com"
+    model_id=<your-model-id>, # e.g. "anthropic.claude-v2"
+    model_kwargs={"temperature": 0.4},
+)
+
+aws_bedrock = AWSBedrock(model=custom_model)
+print(aws_bedrock("Write me a joke"))
+```
+
+Finally, supply the newly created `aws_bedrock` model to LLM-Evals:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+metric = AnswerRelevancyMetric(model=aws_bedrock)
+```
 
 ## Measuring a Metric
 
@@ -157,36 +264,17 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
 # Initialize a test case
-test_case = LLMTestCase(input="...", actual_output="...")
+test_case = LLMTestCase(
+    input="...",
+    actual_output="...",
+    retrieval_context=["..."]
+)
 
 # Initialize metric with threshold
 metric = AnswerRelevancyMetric(threshold=0.5)
 ```
 
-Using this metric, you can either evaluate a test case using `deepeval test run`:
-
-```python title="test_file.py"
-from deepeval import evaluate
-...
-
-def test_answer_relevancy():
-    assert_test(test_case, metric)
-```
-
-```console
-deepeval test run test_file.py
-```
-
-Or using the `evaluate` function:
-
-```python
-from deepeval import assert_test
-...
-
-evaluate([test_case], [metric])
-```
-
-Or execute the metric directly and get its score:
+Using this metric, you can either execute it directly as a standalone to get its score and reason:
 
 ```python
 ...
@@ -196,4 +284,27 @@ print(metric.score)
 print(metric.reason)
 ```
 
-For more details on how a metric evaluates a test case, refer to the [test cases section.](evaluation-test-cases#assert-test-cases)
+Or you can either evaluate a test case using `deepeval test run`:
+
+```python title="test_file.py"
+from deepeval import assert_test
+...
+
+def test_answer_relevancy():
+    assert_test(test_case, [metric])
+```
+
+```console
+deepeval test run test_file.py
+```
+
+Or using the `evaluate` function:
+
+```python
+from deepeval import evaluate
+...
+
+evaluate([test_case], [metric])
+```
+
+For more details on how a metric evaluates a test case, refer to the [test cases section.](evaluation-test-cases#assert-a-test-case)

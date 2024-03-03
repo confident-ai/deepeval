@@ -1,5 +1,12 @@
-from deepeval.models.base import DeepEvalBaseModel
-from deepeval.models.summac_model import SummaCModels
+from deepeval.models.base_model import (
+    DeepEvalBaseModel,
+    DeepEvalBaseLLM,
+    DeepEvalBaseEmbeddingModel,
+)
+from deepeval.models.gpt_model import GPTModel
+
+# TODO: uncomment out once fixed
+# from deepeval.models.summac_model import SummaCModels
 
 # TODO: uncomment out once fixed
 # from deepeval.models.detoxify_model import DetoxifyModel
@@ -10,4 +17,3 @@ from deepeval.models.summac_model import SummaCModels
 #     AnswerRelevancyModel,
 #     CrossEncoderAnswerRelevancyModel,
 # )
-from deepeval.models.gpt_model import GPTModel

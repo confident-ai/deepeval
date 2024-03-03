@@ -1,0 +1,80 @@
+---
+id: metrics-performance
+title: Performance Metrics
+sidebar_label: Performance Metrics
+---
+
+Performance metrics in `deepeval` are metrics that evaluate aspects such as latency and cost, rather than the outputs of your LLM (application).
+
+:::note
+While some performance metrics are related to LLM applications (eg. Latency and Cost), others are for the LLM itself (eg. tokens/s).
+:::
+
+## Latency
+
+The latency metric measures whether the completion time of your LLM application is efficient and meets the expected time limits. It is one of the two performance metrics offered by `deepeval`.
+
+### Required Arguments
+
+To use the `LatencyMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+- `max_latency`
+
+### Example
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import LatencyMetric
+from deepeval.test_case import LLMTestCase
+
+metric = LatencyMetric(max_latency=10.0)
+test_case = LLMTestCase(
+    input="...",
+    actual_output="...",
+    latency=9.9
+)
+
+metric.measure(test_case)
+# True if latency <= max_latency
+print(metric.is_successful())
+```
+
+:::tip
+It does not matter what unit of time you provide the `max_latency` argument with, it only has to match the unit of `latency` when creating an `LLMTestCase`.
+:::
+
+## Cost
+
+The cost metric is another performance metric offered by `deepeval`, and measures whether the token cost of your LLM application is economically acceptable.
+
+### Required Arguments
+
+To use the `CostMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+- `max_cost`
+
+### Example
+
+```python
+from deepeval.metrics import CostMetric
+from deepeval.test_case import LLMTestCase
+
+metric = CostMetric(max_cost=0.4)
+test_case = LLMTestCase(
+    input="...",
+    actual_output="...",
+    cost=0.34
+)
+
+metric.measure(test_case)
+# True if cost <= max_cost
+print(metric.is_successful())
+```
+
+:::note
+Similar to `LatencyMetric`, the `CostMetric` threshold, `max_cost`, does **NOT** have any standard units. However, you need to make sure the monetary units you provide in the `cost` argument when creating an `LLMTestCase` matches that of the cost `max_cost`.
+:::

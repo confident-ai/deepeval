@@ -4,6 +4,8 @@ title: Contextual Precision
 sidebar_label: Contextual Precision
 ---
 
+import Equation from "@site/src/components/equation";
+
 The contextual precision metric measures your RAG pipeline's retriever by evaluating whether nodes in your `retrieval_context` that are relevant to the given `input` are ranked higher than irrelevant ones. `deepeval`'s contextual precision metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 ## Required Arguments
@@ -54,11 +56,26 @@ evaluate([test_case], [metric])
 There are three optional parameters when creating a `ContextualPrecisionMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any one of langchain's [chat models](https://python.langchain.com/docs/integrations/chat/) of type `BaseChatModel`. Defaulted to 'gpt-4-1106-preview'.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 
-You can also choose to fallback to Ragas' contextual precision metric (which has a similar implemention). This however is not capable of generating a reason.
+## How Is It Calculated?
 
-```python
-from deepeval.metrics.ragas import RAGASContextualPrecisionMetric
-```
+The `ContextualPrecisionMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Contextual Precision} = \frac{1}{\text{Number of Relevant Nodes}} \sum_{k=1}^{n} \left( \frac{\text{Number of Relevant Nodes Up to Position } k}{k} \times r_{k} \right)" />
+
+:::info
+
+- **_k_** is the (i+1)<sup>th</sup> node in the `retrieval_context`
+- **_n_** is the length of the `retrieval_context`
+- **_r<sub>k</sub>_** is the binary relevance for the k<sup>th</sup> node in the `retrieval_context`. _r<sub>k</sub>_ = 1 for nodes that are relevant, 0 if not.
+
+:::
+
+The `ContextualPrecisionMetric` first uses an LLM to determine for each node in the `retrieval_context` whether it is relevant to the `input` based on information in the `expected_output`, before calculating the **weighted cumulative precision** as the contextual precision score. The weighted cumulative precision (WCP) is used because it:
+
+- **Emphasizes on Top Results**: WCP places a stronger emphasis on the relevance of top-ranked results. This emphasis is important because LLMs tend to give more attention to earlier nodes in the `retrieval_context` (which may cause downstream hallucination if nodes are ranked incorrectly).
+- **Rewards Relevant Ordering**: WCP can handle varying degrees of relevance (e.g., "highly relevant", "somewhat relevant", "not relevant"). This is in contrast to metrics like precision, which treats all retrieved nodes as equally important.
+
+A higher contextual precision score represents a greater ability of the retrieval system to correctly rank relevant nodes higher in the `retrieval_context`.

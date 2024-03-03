@@ -1,6 +1,7 @@
 from enum import Enum
 import copy
 import os
+import json
 import time
 from typing import Any, Optional, Dict
 from collections.abc import Iterable
@@ -12,6 +13,20 @@ from dataclasses import asdict, is_dataclass
 import re
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+
+
+def set_is_running_deepeval(flag: bool):
+    if flag:
+        os.environ["DEEPEVAL"] = "YES"
+    else:
+        os.environ["DEEPEVAL"] = "NO"
+
+
+def get_is_running_deepeval() -> bool:
+    try:
+        return os.environ["DEEPEVAL"] == "YES"
+    except:
+        return False
 
 
 def get_deployment_configs() -> Optional[Dict]:
@@ -88,10 +103,19 @@ def dataclass_to_dict(instance: Any) -> Any:
         return instance
 
 
-def trimToJson(input_string: str) -> str:
+def trimAndLoadJson(input_string: str) -> Any:
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
-    return input_string[start:end] if start != -1 and end != 0 else ""
+    jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
+
+    try:
+        return json.loads(jsonStr)
+    except json.JSONDecodeError:
+        raise ValueError(
+            "Error: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+        )
+    except Exception as e:
+        raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
 def delete_file_if_exists(file_path):

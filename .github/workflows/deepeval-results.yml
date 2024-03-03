@@ -49,7 +49,7 @@ jobs:
         run: poetry run deepeval login --confident-api-key "$CONFIDENT_API_KEY"
 
       - name: Run deepeval tests and capture output
-        run: poetry run deepeval test run tests/test_quickstart.py > output.txt 2>&1
+        run: poetry run deepeval test run tests/test_deployment.py > output.txt 2>&1
 
       - name: Display output.txt
         if: always()

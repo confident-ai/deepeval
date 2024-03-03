@@ -1,5 +1,5 @@
 from typing import Optional
-from deepeval.models.base import DeepEvalBaseModel
+from deepeval.models.base_model import DeepEvalBaseModel
 
 
 class UnBiasedModel(DeepEvalBaseModel):

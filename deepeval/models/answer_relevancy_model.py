@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Optional
-from deepeval.models.base import DeepEvalBaseModel
+from deepeval.models.base_model import DeepEvalBaseModel
 
 
 def softmax(x):

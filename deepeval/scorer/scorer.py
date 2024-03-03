@@ -1,7 +1,3 @@
-import torch
-from rouge_score import rouge_scorer
-from nltk.tokenize import word_tokenize
-from nltk.translate.bleu_score import sentence_bleu
 from typing import Union, List, Optional, Any
 from deepeval.utils import normalize_text
 
@@ -31,6 +27,11 @@ class Scorer:
         Returns:
             float: The Rouge score for the given target and prediction, based on the specified score type.
         """
+        try:
+            from rouge_score import rouge_scorer
+        except:
+            pass
+
         assert score_type in [
             "rouge1",
             "rouge2",
@@ -60,6 +61,12 @@ class Scorer:
         Returns:
             float: The BLEU score for the given prediction and references.
         """
+        try:
+            from nltk.tokenize import word_tokenize
+            from nltk.translate.bleu_score import sentence_bleu
+        except ModuleNotFoundError as e:
+            print("Please install nltk module. Command: pip install nltk")
+
         assert bleu_type in [
             "bleu1",
             "bleu2",
@@ -139,6 +146,11 @@ class Scorer:
             print(
                 "Please install bert_score module. Command: pip install bert-score"
             )
+
+        try:
+            import torch
+        except ModuleNotFoundError as e:
+            print("Please install torch module. Command: pip install torch")
 
         # FIXME: Fix the case for mps
         device = "cuda" if torch.cuda.is_available() else "cpu"
