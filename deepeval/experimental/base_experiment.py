@@ -13,8 +13,7 @@ class BaseEvaluationExperiment(ABC):
         An experiment name / alias should be witten like: <experiment-group> / <experiment-name>
         For custom experiments there can be custom experiment groups. However, for helm and harness
         the experiment group should be written in this format:
-
-        For HELM based experiments: helm/<experiment-name>
+        
         For Harness based experiments: harness/<experiment-name>
         """
         self.experiment_name = experiment_name
