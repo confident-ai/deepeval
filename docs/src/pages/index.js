@@ -1,10 +1,8 @@
 import React from 'react';
-import clsx from 'clsx';
 import styles from './index.module.css';
 import LayoutProvider from '@theme/Layout/Provider';
 import Footer from '@theme/Footer';
 import Link from '@docusaurus/Link';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 class HomeNav extends React.Component {
     render() {

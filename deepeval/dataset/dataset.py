@@ -5,7 +5,6 @@ import json
 import webbrowser
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
 from deepeval.api import Api, Endpoints
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
@@ -14,10 +13,12 @@ from deepeval.dataset.utils import (
 from deepeval.dataset.api import (
     APIDataset,
     CreateDatasetHttpResponse,
-    Golden,
     DatasetHttpResponse,
 )
+from deepeval.dataset.golden import Golden
+from deepeval.test_case import LLMTestCase
 from deepeval.utils import is_confident
+from deepeval.synthesizer.base_synthesizer import BaseSynthesizer
 
 
 @dataclass
@@ -33,6 +34,12 @@ class EvaluationDataset:
     ):
         if test_cases is not None:
             for test_case in test_cases:
+                # TODO: refactor
+                if not isinstance(test_case, LLMTestCase):
+                    raise TypeError(
+                        "Provided `test_cases` must be of type 'List[LLMTestCase]'."
+                    )
+
                 test_case.dataset_alias = alias
             self.test_cases = test_cases
         else:
@@ -41,6 +48,12 @@ class EvaluationDataset:
         self.alias = alias
 
     def add_test_case(self, test_case: LLMTestCase):
+        # TODO: refactor
+        if not isinstance(test_case, LLMTestCase):
+            raise TypeError(
+                "Provided `test_cases` must be of type 'List[LLMTestCase]'."
+            )
+
         self.test_cases.append(test_case)
 
     def __iter__(self):
@@ -260,12 +273,13 @@ class EvaluationDataset:
             )
 
     def push(self, alias: str):
-        if len(self.test_cases) == 0:
+        if len(self.test_cases) == 0 and len(self.goldens) == 0:
             raise ValueError(
-                "Unable to push empty dataset to Confident AI, there must be at least one test case in dataset"
+                "Unable to push empty dataset to Confident AI, there must be at least one test case or golden in dataset"
             )
         if is_confident():
-            goldens = convert_test_cases_to_goldens(self.test_cases)
+            goldens = self.goldens
+            goldens.extend(convert_test_cases_to_goldens(self.test_cases))
             body = APIDataset(
                 alias=alias, overwrite=False, goldens=goldens
             ).model_dump(by_alias=True, exclude_none=True)
@@ -311,3 +325,13 @@ class EvaluationDataset:
             raise Exception(
                 "Run `deepeval login` to pull dataset from Confident AI"
             )
+
+    def generate_goldens(
+        self,
+        synthesizer: BaseSynthesizer,
+        contexts: List[List[str]],
+        max_goldens_per_context: int = 2,
+    ):
+        self.goldens.extend(
+            synthesizer.generate_goldens(contexts, max_goldens_per_context)
+        )

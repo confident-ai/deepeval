@@ -1,5 +1,6 @@
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.telemetry import capture_metric_type
 
 
 class CostMetric(BaseMetric):
@@ -9,6 +10,7 @@ class CostMetric(BaseMetric):
     def measure(self, test_case: LLMTestCase):
         self.success = test_case.cost <= self.threshold
         self.score = test_case.cost
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):

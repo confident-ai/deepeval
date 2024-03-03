@@ -1,12 +1,14 @@
 """An implementation of the Ragas metric
 """
-from typing import Optional, Union
-from ragas.llms import LangchainLLM
+
+from typing import Optional, Union, Any
 from langchain_core.language_models import BaseChatModel
+from langchain_core.embeddings import Embeddings
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.models import GPTModel
+from deepeval.telemetry import capture_metric_type
 
 
 def format_ragas_metric_name(name: str):
@@ -19,7 +21,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, BaseChatModel]] = None,
+        model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
         self.model = GPTModel(model=model)
@@ -43,24 +45,24 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        context_precision.llm = LangchainLLM(llm=chat_model)
 
         # Create a dataset from the test case
         data = {
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
 
         # Evaluate the dataset using Ragas
-        scores = evaluate(dataset, metrics=[context_precision])
+        scores = evaluate(dataset, metrics=[context_precision], llm=chat_model)
 
         # Ragas only does dataset-level comparisons
         context_precision_score = scores["context_precision"]
         self.success = context_precision_score >= self.threshold
         self.score = context_precision_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -101,7 +103,6 @@ class RAGASContextualRelevancyMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        context_relevancy.llm = LangchainLLM(llm=chat_model)
 
         # Create a dataset from the test case
         data = {
@@ -112,12 +113,13 @@ class RAGASContextualRelevancyMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
 
         # Evaluate the dataset using Ragas
-        scores = evaluate(dataset, metrics=[context_relevancy])
+        scores = evaluate(dataset, metrics=[context_relevancy], llm=chat_model)
 
         # Ragas only does dataset-level comparisons
         context_relevancy_score = scores["context_relevancy"]
         self.success = context_relevancy_score >= self.threshold
         self.score = context_relevancy_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -135,10 +137,12 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         self,
         threshold: float = 0.3,
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
+        embeddings: Optional[Embeddings] = None,
     ):
         self.threshold = threshold
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
+        self.embeddings = embeddings
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -158,7 +162,6 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        answer_relevancy.llm = LangchainLLM(llm=chat_model)
 
         data = {
             "question": [test_case.input],
@@ -167,10 +170,16 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=[answer_relevancy])
+        scores = evaluate(
+            dataset,
+            metrics=[answer_relevancy],
+            llm=chat_model,
+            embeddings=self.embeddings,
+        )
         answer_relevancy_score = scores["answer_relevancy"]
         self.success = answer_relevancy_score >= self.threshold
         self.score = answer_relevancy_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -209,8 +218,6 @@ class RAGASFaithfulnessMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        faithfulness.llm = LangchainLLM(llm=chat_model)
-
         data = {
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
@@ -218,10 +225,11 @@ class RAGASFaithfulnessMetric(BaseMetric):
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=[faithfulness])
+        scores = evaluate(dataset, metrics=[faithfulness], llm=chat_model)
         faithfulness_score = scores["faithfulness"]
         self.success = faithfulness_score >= self.threshold
         self.score = faithfulness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -262,19 +270,19 @@ class RAGASContextualRecallMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        context_recall.llm = LangchainLLM(llm=chat_model)
 
         data = {
             "question": [test_case.input],
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.retrieval_context],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, [context_recall])
+        scores = evaluate(dataset, [context_recall], llm=chat_model)
         context_recall_score = scores["context_recall"]
         self.success = context_recall_score >= self.threshold
         self.score = context_recall_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -315,20 +323,20 @@ class HarmfulnessMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        harmfulness.llm = LangchainLLM(llm=chat_model)
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, [harmfulness])
+        scores = evaluate(dataset, [harmfulness], llm=chat_model)
         harmfulness_score = scores["harmfulness"]
         self.success = harmfulness_score >= self.threshold
         self.score = harmfulness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -367,20 +375,20 @@ class CoherenceMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        coherence.llm = LangchainLLM(llm=chat_model)
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, [coherence])
+        scores = evaluate(dataset, [coherence], llm=chat_model)
         coherence_score = scores["coherence"]
         self.success = coherence_score >= self.threshold
         self.score = coherence_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -420,20 +428,20 @@ class MaliciousnessMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        maliciousness.llm = LangchainLLM(llm=chat_model)
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, [maliciousness])
+        scores = evaluate(dataset, [maliciousness], llm=chat_model)
         maliciousness_score = scores["maliciousness"]
         self.success = maliciousness_score >= self.threshold
         self.score = maliciousness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -473,20 +481,20 @@ class CorrectnessMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        correctness.llm = LangchainLLM(llm=chat_model)
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=[correctness])
+        scores = evaluate(dataset, metrics=[correctness], llm=chat_model)
         correctness_score = scores["correctness"]
         self.success = correctness_score >= self.threshold
         self.score = correctness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -525,20 +533,20 @@ class ConcisenessMetric(BaseMetric):
 
         # Set LLM model
         chat_model = self.model.load_model()
-        conciseness.llm = LangchainLLM(llm=chat_model)
 
         data = {
-            "ground_truths": [[test_case.expected_output]],
+            "ground_truth": [test_case.expected_output],
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
-        scores = evaluate(dataset, metrics=[conciseness])
+        scores = evaluate(dataset, metrics=[conciseness], llm=chat_model)
         conciseness_score = scores["conciseness"]
         self.success = conciseness_score >= self.threshold
         self.score = conciseness_score
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):
@@ -556,11 +564,13 @@ class RagasMetric(BaseMetric):
         self,
         threshold: float = 0.3,
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
+        embeddings: Optional[Embeddings] = None,
     ):
         self.threshold = threshold
         self.model_name = model
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
+        self.embeddings = embeddings
 
     def measure(self, test_case: LLMTestCase):
         # sends to server
@@ -584,7 +594,9 @@ class RagasMetric(BaseMetric):
             RAGASContextualPrecisionMetric(model=self.model_name),
             RAGASContextualRecallMetric(model=self.model_name),
             RAGASFaithfulnessMetric(model=self.model_name),
-            RAGASAnswerRelevancyMetric(model=self.model_name),
+            RAGASAnswerRelevancyMetric(
+                model=self.model_name, embeddings=self.embeddings
+            ),
         ]
 
         for metric in metrics:
@@ -596,6 +608,7 @@ class RagasMetric(BaseMetric):
         self.success = ragas_score >= self.threshold
         self.score = ragas_score
         self.score_breakdown = score_breakdown
+        capture_metric_type(self.__name__)
         return self.score
 
     def is_successful(self):

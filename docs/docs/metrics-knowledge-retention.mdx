@@ -1,0 +1,129 @@
+---
+id: metrics-knowledge-retention
+title: Knowledge Retention
+sidebar_label: Knowledge Retention
+---
+
+import Equation from "@site/src/components/equation";
+
+The knowledge retention metric determines whether your LLM is able to retain factual information presented **throughout a conversation**.
+
+:::caution
+This is `deepeval`'s first experimental **conversational metric**. A conversational metric is a metric that evaluates an entire conversation.
+:::
+
+## Required Arguments
+
+To use the `KnowledgeRetentionMetric`, you'll have to provide the following arguments when creating an `ConversationalTestCase`:
+
+- `messages`
+
+:::info
+Here's an example of how to create a `ConversationalTestCase`:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Message
+
+message = Message(user_input="...", llm_response="...")
+messages = [message]
+
+conversational_test_case = ConversationalTestCase(messages=messages)
+```
+
+:::
+
+## Example
+
+Let's take this conversation as an example:
+
+```python
+from deepeval.test_case import Message
+
+messages = [
+    Message(
+        user_input="",
+        llm_response="Hello! I'm here to assist you with opening a new bank account. To start, may I have your full name, please?"
+    ),
+    Message(
+        user_input="Sure, it's Alex Johnson.",
+        llm_response="Great, Alex! Now, could you please provide your current address?"
+    ),
+    Message(
+        user_input="123 Maple Street, Springfield.",
+        llm_response="Is that all?"
+    ),
+    Message(
+        user_input="I also have another address at 123 Broadway, NYC.",
+        llm_response="Wonderful. Next, I'll need your bank account number where we can link this new account."
+    ),
+    Message(
+        user_input="456789123",
+        llm_response="This account number seems invalid, can you please double-check?"
+    ),
+    Message(
+        user_input="Sorry you're right, its 456789124.",
+        llm_response="Thank you. And for our next step, could you tell me your date of birth?"
+    ),
+    Message(
+        user_input="It's July 9th.",
+        llm_response="What about the year?"
+    ),
+    Message(
+        user_input="1990",
+        llm_response="Got it. Now, for security purposes, could you share your mother's maiden name?"
+    ),
+    Message(
+        user_input="It's Smith.",
+        llm_response="Excellent. Just a few more details. What is your phone number?"
+    ),
+    Message(
+        user_input="555-0102",
+        llm_response="Great, we're almost done. Could you remind me of your full name for the account documentation?"
+    ),
+    Message(
+        user_input="Didn't I tell you already? It's Alex Johnson.",
+        llm_response="What is your bank account number?"
+    ),
+    Message(
+        user_input="Yes, I did... It's 456789124. Are you not keeping track of this?",
+        llm_response="One last question, what is the country code of your phone number?"
+    ),
+    Message(
+        user_input="+44",
+        llm_response="Thank you, Alex, for bearing with me. We now have all the information we need to proceed with opening your new bank account. I appreciate your cooperation and patience throughout this process."
+    )
+]
+```
+
+You can use the `KnowledgeRetentionMetric` as follows:
+
+```python
+from deepeval.metrics import KnowledgeRetentionMetric
+from deepeval.test_case import ConversationalTestCase, Message
+...
+
+conversational_test_case = ConversationalTestCase(messages=messages)
+metric = KnowledgeRetentionMetric(threshold=0.5)
+
+metric.measure(test_case)
+print(metric.score)
+print(metric.reason)
+```
+
+There are three optional parameters when creating a `KnowledgeRetentionMetric`:
+
+- [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+
+## How Is It Calculated?
+
+The `KnowledgeRetentionMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Messages with Knowledge Attritions}}{\text{Total Number of Messages}}" />
+
+The `KnowledgeRetentionMetric` first uses an LLM to extract knowledge gained throughout `messages`, before using the same LLM to determine whether each corresponding LLM responses indicates an inability to recall said knowledge.
+
+:::info
+Unlike other metrics, the `KnowledgeRetentionMetric` is still in beta, and we would love to hear any suggestions on our [discord channel.](https://discord.com/invite/a3K9c8GRGt)
+:::

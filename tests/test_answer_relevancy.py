@@ -1,5 +1,6 @@
 """Tests for answer relevancy
 """
+
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
@@ -45,7 +46,7 @@ enhancing brain functions related to concentration and attention.
 """
 
 
-@pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is very expensive")
 def test_answer_relevancy():
     metric = AnswerRelevancyMetric(threshold=0.5)
     test_case = LLMTestCase(

@@ -6,12 +6,7 @@ from deepeval.metrics import SummarizationMetric
 
 @pytest.mark.skip(reason="openai is expensive")
 def test_summarization():
-    metric = SummarizationMetric(
-        n=6,
-        assessment_questions=[
-            "Is AI significantly influencing numberous industries?"
-        ],
-    )
+    metric = SummarizationMetric(multithreading=False)
 
     input = """
     In the rapidly evolving digital landscape, the proliferation of artificial intelligence (AI) technologies has been a game-changer in various industries, ranging from healthcare to finance. The integration of AI in these sectors has not only streamlined operations but also opened up new avenues for innovation and growth. In healthcare, AI algorithms are increasingly being used for diagnostic purposes, analyzing medical images, and providing personalized medicine solutions. This has significantly improved patient outcomes and has the potential to revolutionize healthcare delivery systems globally. For example, AI-driven tools can now detect anomalies in medical images with greater accuracy and speed than traditional methods, aiding in early diagnosis and treatment of diseases like cancer.
@@ -26,7 +21,7 @@ def test_summarization():
     """
 
     output = """
-    Artificial Intelligence (AI) is significantly influencing numerous industries, notably healthcare and finance. In healthcare, AI aids in diagnostics and personalized medicine, improving patient outcomes through efficient analysis of medical data. In finance, AI enhances market trend analysis and fraud detection, boosting efficiency and security. AI's role in developing autonomous vehicles is also pivotal, promoting road safety through real-time decision-making. However, the rapid growth of AI raises ethical concerns, including privacy, data security, and employment impact. Addressing these issues is vital for the responsible development and use of AI, which holds great potential for societal advancement.
+    Artificial Intelligence (AI) is significantly influencing numerous industries, notably healthcare, finance, and education. In healthcare, AI aids in diagnostics and personalized medicine, improving patient outcomes through efficient analysis of medical data. In finance, AI enhances market trend analysis and fraud detection, boosting efficiency and security. AI's role in developing autonomous vehicles is also pivotal, promoting road safety through real-time decision-making. However, the rapid growth of AI raises ethical concerns, including privacy, data security, and employment impact. Addressing these issues is vital for the responsible development and use of AI, which holds great potential for societal advancement. Also, OpenAI is the leader in the AI race.
     """
 
     test_case = LLMTestCase(input=input, actual_output=output)

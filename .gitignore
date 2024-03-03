@@ -161,3 +161,10 @@ cython_debug/
 docs/.docusaurus
 node_modules
 .deepeval
+
+
+# deepeval tests
+secrets
+
+# Mac OS system files
+**/.DS_Store

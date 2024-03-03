@@ -1,2 +1,2 @@
 from .dataset import EvaluationDataset
-from .api import Golden
+from .golden import Golden

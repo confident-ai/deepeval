@@ -1,7 +1,7 @@
 import torch
 from typing import Union, List, Optional
 from typing import List, Union, get_origin
-from deepeval.models.base import DeepEvalBaseModel
+from deepeval.models.base_model import DeepEvalBaseModel
 from deepeval.models._summac_model import _SummaCZS
 
 
@@ -19,9 +19,7 @@ class SummaCModels(DeepEvalBaseModel):
         self.device = (
             device
             if device is not None
-            else "cuda"
-            if torch.cuda.is_available()
-            else "cpu"
+            else "cuda" if torch.cuda.is_available() else "cpu"
         )
         super().__init__(model_name, *args, **kwargs)
 

@@ -13,52 +13,29 @@ In `deepeval`, am evaluation dataset, or just dataset, is a collection of `LLMTe
 
 ## Create An Evaluation Dataset
 
-Your original dataset can be in any format, such as CSV or JSON. Let's take JSON for example, the first step is to create a list of `LLMTestCase`s from your original dataset.
+An `EvaluationDataset` in `deepeval` is simply a collection of `LLMTestCase`s and/or `Golden`s.
+
+:::info
+A `Golden` is extremely very similar to an `LLMTestCase`, but they are more flexible as they do not require an `actual_output` at initialization. On the flip side, whilst test cases are always ready for evaluation, a golden isn't.
+:::
+
+### With Test Cases
 
 ```python
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset
 
-original_dataset = [
-    {
-        "input": "What are your operating hours?",
-        # Replace with your LLM application output
-        "actual_output": "..."
-        "context": [
-            "Our company operates from 10 AM to 6 PM, Monday to Friday.",
-            "We are closed on weekends and public holidays.",
-            "Our customer service is available 24/7.",
-        ],
-    },
-    {
-        "input": "Do you offer free shipping?",
-        # Replace with your LLM application output
-        "actual_output": "..."
-        "expected_output": "Yes, we offer free shipping on orders over $50."
-    },
-    {
-        "input": "What is your return policy?",
-        # Replace with your LLM application output
-        "actual_output": "..."
-    },
-]
+first_test_case = LLMTestCase(input="...", actual_output="...")
+second_test_case = LLMTestCase(input="...", actual_output="...")
 
-test_cases = []
-for datapoint in original_dataset:
-    input = datapoint.get("input", None)
-    actual_output = datapoint.get("actual_output", None)
-    expected_output = datapoint.get("expected_output", None)
-    context = datapoint.get("context", None)
+test_cases = [first_test_case, second_test_case]
 
-    test_case = LLMTestCase(
-        input=input,
-        actual_output=actual_output,
-        expected_output=expected_output,
-        context=context
-    )
-    test_cases.append(test_case)
-
-dataset = EvaluationDataset(test_cases=test_cases)
+dataset = EvaluationDataset(
+    # alias is optional, but helps you
+    # identify your dataset on Confident AI
+    alias="My first dataset",
+    test_cases=test_cases
+)
 ```
 
 You can also append a test case to an `EvaluationDataset` through the `test_cases` instance variable:
@@ -70,6 +47,30 @@ dataset.test_cases.append(test_case)
 # or
 dataset.add_test_case(test_case)
 ```
+
+### With Goldens
+
+You should opt to initialize `EvaluationDataset`s with goldens if you're looking to generate LLM outputs at evaluation time. This usually means your original dataset does not contain precomputed outputs, but only the inputs you want to evaluate your LLM (application) on.
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+
+first_golden = Golden(input="...")
+second_golden = Golden(input="...")
+
+goldens = [first_golden, second_golden]
+
+dataset = EvaluationDataset(
+    # alias is optional, but helps you
+    # identify your dataset on Confident AI
+    alias="My first dataset",
+    goldens=goldens
+)
+```
+
+:::note
+A `Golden` and `LLMTestCase` contains almost an identical class signature, so technically you can also supply other parameters such as the `actual_output` when creating a `Golden`.
+:::
 
 ## Load an Existing Dataset
 
@@ -167,7 +168,9 @@ def function_to_be_called_after_test_run():
     print("Test finished!")
 ```
 
-You can also use the `@deepeval.on_test_run_end` decorator to define a hook that will be executed after the `deepeval test run` has completed.
+:::info
+Iterating through an `dataset` object implicitly loops through the test cases in an `dataset`. To iterate through goldens, you can do it by accessing `dataset.goldens` instead.
+:::
 
 To run several tests cases at once in parallel, use the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 
