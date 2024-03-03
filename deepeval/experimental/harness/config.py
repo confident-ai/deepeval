@@ -1,10 +1,7 @@
-import json
-from pydantic import BaseModel 
 from typing import Optional
+from easy_eval.config import EvaluatorConfig
 
-# todo: Add desc for config 
-
-class GeneralConfigMeta(BaseModel.__class__):
+class GeneralConfigMeta(EvaluatorConfig.__class__):
     def __new__(cls, name, bases, classdict):
         return super().__new__(cls, name, bases, classdict)
 
@@ -12,7 +9,7 @@ class APIEndpointConfigMeta(GeneralConfigMeta):
     def __new__(cls, name, bases, classdict):
         return super().__new__(cls, name, bases, classdict)
 
-class GeneralConfig(BaseModel, metaclass=GeneralConfigMeta):
+class GeneralConfig(EvaluatorConfig, metaclass=GeneralConfigMeta):
     """A config common for all the other configs"""
     top_p: Optional[float] = 0.95
     n_samples: Optional[int] = 1
@@ -37,6 +34,7 @@ class GeneralConfig(BaseModel, metaclass=GeneralConfigMeta):
     
 class APIEndpointConfig(GeneralConfig, metaclass=APIEndpointConfigMeta):
     """Config for APIs. Right now this follows only OpenAI and Endpoints with OpenAI Spec"""
+    # TODO: Anthropic is not supported in APIEndpointConfig. 
     
     openai_api_key: Optional[str] = "sk-deepeval-default-none-key"
     openai_api_base: Optional[str] = ""
