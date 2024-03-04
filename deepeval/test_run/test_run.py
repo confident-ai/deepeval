@@ -78,7 +78,7 @@ class TestRun(BaseModel):
     metric_scores: List[MetricScoreType] = Field(
         default_factory=lambda: [], alias="metricScores"
     )
-    configurations: Optional[dict[Any, Any]] = Field(default_factory=dict)
+    configurations: Optional[dict[Any, Any]] = Field(None)
     model: Optional[str] = Field(None)
     user_prompt_template: Optional[str] = Field(
         None, alias="userPromptTemplate"
@@ -131,7 +131,7 @@ class TestRunManager:
             testFile=file_name,
             testCases=[],
             metricScores=[],
-            configurations={},
+            configurations=None,
             deployment=deployment,
             deploymentConfigs=deployment_configs,
         )
