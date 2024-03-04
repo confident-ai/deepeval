@@ -79,7 +79,7 @@ class Index extends React.Component {
             <div className={styles.mainLeftContainer}>
               <img src="icons/DeepEval..svg" />
               <div className={styles.contentContainer}>
-                <h1>$ the open-source evaluation framework for LLMs</h1>
+                <h1>$ the open-source LLM evaluation framework</h1>
                 <Link to={"/docs/getting-started"} className={styles.button}>Get Started</Link>
               </div>
             </div>
