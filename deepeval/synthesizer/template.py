@@ -37,7 +37,8 @@ Context:
 
 JSON:
 """
-    
+
+
 ######################################################################################################
 ##### Approach similar to https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py ######
 ######################################################################################################
@@ -58,10 +59,13 @@ depth_base_instruction = """I want you to act as an input rewriter.
 Your object is the rewrite a given `input` and must be factually correct according to the supporting information in `context`.
 You MUST complicate the given `input` using the following method:"""
 
+
 class EvolutionTemplate:
     @staticmethod
     def name_to_be_decided_evolution(input, context):
-        return depth_base_instruction + f"""
+        return (
+            depth_base_instruction
+            + f"""
     1. Using information from the provided `context`, complicate the `input` by replacing general concepts/inquiries with more specific ones.
     2. Using information help from the provided `context`, increase the depth and breadth of the `input`.
 
@@ -104,10 +108,13 @@ Context:
 
 Rewritten Input:
 """
+        )
 
     @staticmethod
     def second_name_to_be_decided_evolution(input, context):
-        return depth_base_instruction + f"""
+        return (
+            depth_base_instruction
+            + f"""
     1. Using information from the provided `context`, complicate the `input` by adding at least one more constraints/requirements.
     2. Using information from the provided `context`, complicate the `input` by requiring multi-step reasoning.
 
@@ -150,3 +157,4 @@ Input:
 
 Rewritten Input:
 """
+        )

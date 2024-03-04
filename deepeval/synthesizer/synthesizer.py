@@ -59,7 +59,6 @@ class Synthesizer:
             evolved_texts.append(res)
         return evolved_texts
 
-
     def _generate(
         self,
         context: List[str],
@@ -130,10 +129,13 @@ class Synthesizer:
                         SyntheticData(**item) for item in data["data"]
                     ]
                     for data in synthetic_data:
-                        for evolved_input in self._evolve_text(data.input, context=context):
-                            golden = Golden(input=evolved_input, context=context)
+                        for evolved_input in self._evolve_text(
+                            data.input, context=context
+                        ):
+                            golden = Golden(
+                                input=evolved_input, context=context
+                            )
                             goldens.append(golden)
-
 
             self.synthetic_goldens.extend(goldens)
 
