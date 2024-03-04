@@ -46,12 +46,12 @@ enhancing brain functions related to concentration and attention.
 """
 
 
-@pytest.mark.skip(reason="openai is very expensive")
+# @pytest.mark.skip(reason="openai is very expensive")
 def test_answer_relevancy():
     metric = AnswerRelevancyMetric(threshold=0.5)
     test_case = LLMTestCase(
-        input=question,
-        actual_output=answer,
+        input="How many ducks are there in the pond?",
+        actual_output="Five",
         retrieval_context=[one, two, three],
     )
     assert_test(test_case, [metric])

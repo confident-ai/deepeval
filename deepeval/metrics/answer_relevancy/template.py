@@ -22,22 +22,19 @@ JSON:
 """
 
     @staticmethod
-    def generate_verdicts(input, actual_output, retrieval_context):
+    def generate_verdicts(input, actual_output):
         return f"""For the provided list of statements, determine whether each statement is relevant to address the input.
 Please generate a list of JSON with two keys: `verdict` and `reason`.
-The 'verdict' key should STRICTLY be either a 'yes', 'idk' or 'no'. Answer 'yes' if the statement is relevant to addressing the original input, 'no' if the statement is irrelevant, and 'idk' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to address the input). You can use the information in the retrieval context to support your decision.
+The 'verdict' key should STRICTLY be either a 'yes', 'idk' or 'no'. Answer 'yes' if the statement is relevant to addressing the original input, 'no' if the statement is irrelevant, and 'idk' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to address the input).
 The 'reason' is the reason for the verdict.
 Provide a 'reason' ONLY if the answer is 'no'. 
 The provided statements are statements made in the actual output.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key mapping to a list of JSON objects.
+Example input: What should I do if there is an earthquake?
 Example statements: ["Shoes.", "Thanks for asking the question!", "Is there anything else I can help you with?", "Duck and hide"]
-Example retrieval context: ["In the unlikely event of an earthquake, you should duck and hide under a table."]
-
-Example:
-Input: What should I do if there is an earthquake?
-
+Example JSON:
 {{
     "verdicts": [
         {{
@@ -57,10 +54,7 @@ Input: What should I do if there is an earthquake?
 }}
 
 Since you are going to generate a verdict for each statement, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of `statements`.
-**
-
-Retrieval Context:
-{retrieval_context}           
+**          
 
 Input:
 {input}
