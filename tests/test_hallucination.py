@@ -52,7 +52,7 @@ def test_hallucination_metric_3():
 # {question}
 # """
 
-# @deepeval.set_hyperparameters(model="gpt-4", prompt_template=prompt_template)
+# @deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
 # def hyperparameters():
 #     return {
 #         "model": "gpt-4",

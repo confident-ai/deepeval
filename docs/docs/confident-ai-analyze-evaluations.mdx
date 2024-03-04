@@ -41,7 +41,7 @@ Question:
 
 # Although the values in this example are hardcoded,
 # you should ideally pass in variables to keep things dynamic
-@deepeval.set_hyperparameters(model="gpt-4", prompt_template=prompt_template)
+@deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
 def hyperparameters():
     # Any additional hyperparameters you wish to keep track of
     return {
@@ -50,7 +50,7 @@ def hyperparameters():
     }
 ```
 
-You **MUST** provide the `model` and `prompt_template` argument to `set_hyperparameters` in order for `deepeval` to know which LLM and prompt template you're evaluating.
+You **MUST** provide the `model` and `prompt_template` argument to `log_hyperparameters` in order for `deepeval` to know which LLM and prompt template you're evaluating.
 
 :::note
 This only works if you're running evaluations using `deepeval test run`. If you're not already using `deepeval test run` for evaluations, we highly recommend you to start using it.
