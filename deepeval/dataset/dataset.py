@@ -2,7 +2,10 @@ from typing import List, Optional
 from dataclasses import dataclass
 from rich.console import Console
 import json
+import csv
 import webbrowser
+import os
+import datetime
 
 from deepeval.metrics import BaseMetric
 from deepeval.api import Api, Endpoints
@@ -20,6 +23,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.utils import is_confident
 from deepeval.synthesizer.base_synthesizer import BaseSynthesizer
 
+valid_file_types = ["csv", "json"]
 
 @dataclass
 class EvaluationDataset:
@@ -335,3 +339,49 @@ class EvaluationDataset:
         self.goldens.extend(
             synthesizer.generate_goldens(contexts, max_goldens_per_context)
         )
+
+    # TODO: add save test cases as well
+    def save_as(self, file_type: str, directory: str):
+        if file_type not in valid_file_types:
+            raise ValueError(
+                f"Invalid file type. Available file types to save as: {', '.join(type for type in valid_file_types)}"
+            )
+
+        if len(self.goldens) == 0:
+            raise ValueError(
+                f"No synthetic goldens found. Please generate goldens before attempting to save data as {file_type}"
+            )
+
+        new_filename = (
+            datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f".{file_type}"
+        )
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        full_file_path = os.path.join(directory, new_filename)
+
+        if file_type == "json":
+            with open(full_file_path, "w") as file:
+                json_data = [
+                    {
+                        "input": golden.input,
+                        "actual_output": golden.actual_output,
+                        "expected_output": golden.expected_output,
+                        "context": golden.context,
+                    }
+                    for golden in self.goldens
+                ]
+                json.dump(json_data, file, indent=4)
+
+        elif file_type == "csv":
+            with open(full_file_path, "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(["input", "actual_output", "expected_output", "context"])
+                for golden in self.goldens:
+                    context_str = "|".join(golden.context)
+                    writer.writerow(
+                        [golden.input, golden.actual_output, golden.expected_output, context_str]
+                    )
+
+        print(f"Evaluation dataset saved at {full_file_path}!")
