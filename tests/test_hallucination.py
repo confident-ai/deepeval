@@ -5,7 +5,7 @@ from deepeval import assert_test
 import deepeval
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_hallucination_metric():
     metric = HallucinationMetric(threshold=0.5)
     test_case = LLMTestCase(
@@ -20,7 +20,7 @@ def test_hallucination_metric():
     assert_test(test_case, [metric])
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_hallucination_metric_2():
     metric = HallucinationMetric(threshold=0.6)
     test_case = LLMTestCase(
@@ -33,7 +33,7 @@ def test_hallucination_metric_2():
     assert_test(test_case, [metric])
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_hallucination_metric_3():
     metric = HallucinationMetric(threshold=0.6)
     test_case = LLMTestCase(
@@ -46,14 +46,14 @@ def test_hallucination_metric_3():
     assert_test(test_case, [metric])
 
 
-# prompt_template = """You are a helpful assistant, answer the following question without using any prior knowledge.
+prompt_template = """You are a helpful assistant, answer the following question without using any prior knowledge.
 
-# Question:
-# {question}
-# """
+Question:
+{question}
+"""
 
-# @deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
-# def hyperparameters():
-#     return {
-#         "model": "gpt-4",
-#     }
+@deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
+def hyperparameters():
+    return {
+        "model": "gpt-4",
+    }

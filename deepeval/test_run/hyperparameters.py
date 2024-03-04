@@ -1,7 +1,4 @@
-_hyperparameters = None
-_model = None
-_user_prompt_template = None
-
+from .test_run import test_run_manager
 
 def log_hyperparameters(model: str, prompt_template: str):
     def decorator(func):
@@ -11,6 +8,12 @@ def log_hyperparameters(model: str, prompt_template: str):
 
         global _hyperparameters
         _hyperparameters = func()
+
+        test_run = test_run_manager.get_test_run()
+        test_run.configurations = func()
+        test_run.model = model
+        test_run.user_prompt_template = prompt_template
+        test_run_manager.save_test_run()
 
         # Define the wrapper function that will be the actual decorator
         def wrapper(*args, **kwargs):
@@ -23,15 +26,3 @@ def log_hyperparameters(model: str, prompt_template: str):
 
     # Return the decorator itself
     return decorator
-
-
-def get_hyperparameters():
-    return _hyperparameters
-
-
-def get_model():
-    return _model
-
-
-def get_user_prompt_template():
-    return _user_prompt_template
