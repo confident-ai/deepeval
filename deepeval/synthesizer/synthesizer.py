@@ -60,6 +60,8 @@ class Synthesizer:
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
+            # TODO: evolution
+
             golden = Golden(
                 input=data.input,
                 expectedOutput=data.expected_output,
@@ -116,7 +118,7 @@ class Synthesizer:
                         SyntheticData(**item) for item in data["data"]
                     ]
 
-                    # TODO: optional evolution
+                    # TODO: evolution
 
                     # TODO: review synthetic data
                     for data in synthetic_data:
