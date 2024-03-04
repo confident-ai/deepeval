@@ -25,6 +25,7 @@ from deepeval.synthesizer.base_synthesizer import BaseSynthesizer
 
 valid_file_types = ["csv", "json"]
 
+
 @dataclass
 class EvaluationDataset:
     test_cases: List[LLMTestCase]
@@ -377,11 +378,18 @@ class EvaluationDataset:
         elif file_type == "csv":
             with open(full_file_path, "w", newline="") as file:
                 writer = csv.writer(file)
-                writer.writerow(["input", "actual_output", "expected_output", "context"])
+                writer.writerow(
+                    ["input", "actual_output", "expected_output", "context"]
+                )
                 for golden in self.goldens:
                     context_str = "|".join(golden.context)
                     writer.writerow(
-                        [golden.input, golden.actual_output, golden.expected_output, context_str]
+                        [
+                            golden.input,
+                            golden.actual_output,
+                            golden.expected_output,
+                            context_str,
+                        ]
                     )
 
         print(f"Evaluation dataset saved at {full_file_path}!")
