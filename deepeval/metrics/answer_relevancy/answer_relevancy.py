@@ -32,10 +32,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.n = 5
 
     def measure(self, test_case: LLMTestCase) -> float:
-        if (
-            test_case.input is None
-            or test_case.actual_output is None
-        ):
+        if test_case.input is None or test_case.actual_output is None:
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
@@ -47,11 +44,9 @@ class AnswerRelevancyMetric(BaseMetric):
 
             # generate verdicts based on statements, and retrieval context
             self.verdicts: List[AnswerRelvancyVerdict] = (
-                self._generate_verdicts(
-                    test_case.input
-                )
+                self._generate_verdicts(test_case.input)
             )
-            
+
             answer_relevancy_score = self._generate_score()
 
             self.reason = self._generate_reason(
@@ -91,9 +86,7 @@ class AnswerRelevancyMetric(BaseMetric):
         res = self.model(prompt)
         return res
 
-    def _generate_verdicts(
-        self, input: str
-    ) -> List[AnswerRelvancyVerdict]:
+    def _generate_verdicts(self, input: str) -> List[AnswerRelvancyVerdict]:
         prompt = AnswerRelevancyTemplate.generate_verdicts(
             input=input,
             actual_output=self.statements,
