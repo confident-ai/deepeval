@@ -52,6 +52,7 @@ Question:
 {question}
 """
 
+
 @deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
 def hyperparameters():
     return {

@@ -1,5 +1,6 @@
 from .test_run import test_run_manager
 
+
 def log_hyperparameters(model: str, prompt_template: str):
     def decorator(func):
         global _model, _user_prompt_template
