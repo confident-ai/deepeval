@@ -8,9 +8,11 @@ from .decorators.hyperparameters import log_hyperparameters
 from deepeval.event import track
 from deepeval.evaluate import evaluate, run_test, assert_test
 from deepeval.test_run import on_test_run_end
+from deepeval.utils import login_with_confident_api_key
 from deepeval.telemetry import *
 
 __all__ = [
+    "login_with_confident_api_key",
     "log_hyperparameters",
     "track",
     "evaluate",
