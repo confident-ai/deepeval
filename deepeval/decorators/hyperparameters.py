@@ -3,7 +3,7 @@ _model = None
 _user_prompt_template = None
 
 
-def set_hyperparameters(model: str, prompt_template: str):
+def log_hyperparameters(model: str, prompt_template: str):
     def decorator(func):
         global _model, _user_prompt_template
         _model = model
