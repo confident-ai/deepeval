@@ -23,7 +23,6 @@ valid_file_types = ["csv", "json"]
 
 class SyntheticData(BaseModel):
     input: str
-    expected_output: str
 
 
 class Synthesizer:
@@ -45,6 +44,21 @@ class Synthesizer:
         # self.batch_size = batch_size
         self.synthetic_goldens: List[Golden] = []
 
+    def _evolve_text(self, text, context: List[str]) -> List[str]:
+        evolved_texts: List[str] = []
+        for i in range(2):
+            if i == 0:
+                prompt = EvolutionTemplate.name_to_be_decided_evolution(
+                    input=text, context=context
+                )
+            else:
+                prompt = EvolutionTemplate.second_name_to_be_decided_evolution(
+                    input=text, context=context
+                )
+            res = self.model(prompt)
+            evolved_texts.append(res)
+        return evolved_texts
+
     def _generate(
         self,
         context: List[str],
@@ -61,13 +75,10 @@ class Synthesizer:
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
             # TODO: evolution
-
-            golden = Golden(
-                input=data.input,
-                expectedOutput=data.expected_output,
-                context=context,
-            )
-            temp_goldens.append(golden)
+            # Note: skip multithreading for now
+            for evolved_input in self._evolve_text(data.input, context=context):
+                golden = Golden(input=evolved_input, context=context)
+                temp_goldens.append(golden)
 
         with lock:
             goldens.extend(temp_goldens)
@@ -117,17 +128,14 @@ class Synthesizer:
                     synthetic_data = [
                         SyntheticData(**item) for item in data["data"]
                     ]
-
-                    # TODO: evolution
-
-                    # TODO: review synthetic data
                     for data in synthetic_data:
-                        golden = Golden(
-                            input=data.input,
-                            expectedOutput=data.expected_output,
-                            context=context,
-                        )
-                        goldens.append(golden)
+                        for evolved_input in self._evolve_text(
+                            data.input, context=context
+                        ):
+                            golden = Golden(
+                                input=evolved_input, context=context
+                            )
+                            goldens.append(golden)
 
             self.synthetic_goldens.extend(goldens)
 
