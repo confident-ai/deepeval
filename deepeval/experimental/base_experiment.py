@@ -7,13 +7,17 @@ from typing import Union, List, Any, Optional
 
 class BaseEvaluationExperiment(ABC):
     def __init__(
-        self, experiment_name: str, experiment_desc: str, *args, **kwargs
+        self,
+        experiment_name: str,
+        experiment_desc: Optional[str] = None,
+        *args,
+        **kwargs,
     ) -> None:
         """
         An experiment name / alias should be witten like: <experiment-group> / <experiment-name>
         For custom experiments there can be custom experiment groups. However, for helm and harness
         the experiment group should be written in this format:
-        
+
         For Harness based experiments: harness/<experiment-name>
         """
         self.experiment_name = experiment_name
@@ -33,11 +37,6 @@ class BaseEvaluationExperiment(ABC):
         self.evaluation_csvs_folder = self.experiment_folder / "eval_csvs"
         if not self.evaluation_csvs_folder.exists():
             self.evaluation_csvs_folder.mkdir(parents=True, exist_ok=True)
-
-    @abstractmethod
-    def update(self, updated_config: BaseModel, *args, **kwargs):
-        """Update an experiment with a new updated config."""
-        pass
 
     @property
     def delete(self):
