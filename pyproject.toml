@@ -39,6 +39,7 @@ setuptools = "*"
 wheel = "*"
 aiohttp = "*"
 llama-index = "*"
+easy-lm-eval = "0.1.2"
 
 [tool.black]
 line-length = 80
