@@ -24,7 +24,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             total_predictions = len(goldens)
             correct_predictions = 0
             for golden in goldens:
-                if self.predict(model, golden):
+                if self.predict(model,task, golden):
                     correct_predictions += 1
 
             print(
