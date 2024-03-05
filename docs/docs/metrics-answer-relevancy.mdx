@@ -18,7 +18,6 @@ To use the `AnswerRelevancyMetric`, you'll have to provide the following argumen
 
 - `input`
 - `actual_output`
-- `retrieval_context`
 
 ## Example
 
@@ -30,9 +29,6 @@ from deepeval.test_case import LLMTestCase
 # Replace this with the actual output from your LLM application
 actual_output = "We offer a 30-day full refund at no extra cost."
 
-# Replace this with the actual retrieved context from your RAG pipeline
-retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
-
 metric = AnswerRelevancyMetric(
     threshold=0.7,
     model="gpt-4",
@@ -40,8 +36,7 @@ metric = AnswerRelevancyMetric(
 )
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output,
-    retrieval_context=retrieval_context
+    actual_output=actual_output
 )
 
 metric.measure(test_case)
@@ -64,4 +59,4 @@ The `AnswerRelevancyMetric` score is calculated according to the following equat
 
 <Equation formula="\text{Answer Relevancy} = \frac{\text{Number of Relevant Statements}}{\text{Total Number of Statements}}" />
 
-The `AnswerRelevancyMetric` first uses an LLM to extract all statements made in the `actual_output`, before using the same LLM to classify whether each statement is relevant to the `input` using additional context from the `retrieval_context`.
+The `AnswerRelevancyMetric` first uses an LLM to extract all statements made in the `actual_output`, before using the same LLM to classify whether each statement is relevant to the `input`.
