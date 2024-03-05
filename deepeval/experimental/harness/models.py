@@ -5,6 +5,7 @@ from deepeval.experimental.harness.config import (
     GeneralConfig,
     APIEndpointConfig,
 )
+from easy_eval.harness.tasks import HarnessTask
 
 
 class DeepEvalHarnessModel(DeepEvalBaseModel):
@@ -39,7 +40,7 @@ class DeepEvalHarnessModel(DeepEvalBaseModel):
 
     def _call(
         self,
-        tasks: List[str],
+        tasks: Union[List[str], List[HarnessTask]],
         config: Optional[Union[GeneralConfig, APIEndpointConfig]] = None,
     ):
         # TODO: Anthropic is not supported in APIEndpointConfig.
