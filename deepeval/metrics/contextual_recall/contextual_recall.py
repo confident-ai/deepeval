@@ -22,15 +22,16 @@ class ContextualRecallMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.n = 5
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
         if (
@@ -42,7 +43,9 @@ class ContextualRecallMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metrics_progress_context(
+            self.__name__, self.evaluation_model, self.strict_mode
+        ):
             self.verdicts: List[ContextualRecallVerdict] = (
                 self._generate_verdicts(
                     test_case.expected_output, test_case.retrieval_context
@@ -83,7 +86,8 @@ class ContextualRecallMetric(BaseMetric):
         return res
 
     def _generate_score(self):
-        if len(self.verdicts) == 0:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
             return 0
 
         justified_sentences = 0
@@ -91,7 +95,9 @@ class ContextualRecallMetric(BaseMetric):
             if verdict.verdict.lower() == "yes":
                 justified_sentences += 1
 
-        return justified_sentences / len(self.verdicts)
+        score = justified_sentences / number_of_verdicts
+
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_verdicts(
         self, expected_output: str, retrieval_context: List[str]

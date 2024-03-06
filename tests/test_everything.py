@@ -1,9 +1,17 @@
-"""Tests for answer relevancy
-"""
-
 import pytest
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import (
+    AnswerRelevancyMetric,
+    FaithfulnessMetric,
+    ContextualRecallMetric,
+    ContextualRelevancyMetric,
+    ContextualPrecisionMetric,
+    HallucinationMetric,
+    BiasMetric,
+    ToxicityMetric,
+    GEval,
+    SummarizationMetric,
+)
 from deepeval import assert_test
 
 question = "What are the primary benefits of meditation?"
@@ -45,13 +53,64 @@ attention span, and improve memory. It's particularly beneficial in slowing down
 enhancing brain functions related to concentration and attention.
 """
 
+four = """
+Understanding comets and asteroids is crucial in studying the solar system's formation 
+and evolution. Comets, which are remnants from the outer solar system, can provide 
+insights into its icy and volatile components. Asteroids, primarily remnants of the 
+early solar system's formation, offer clues about the materials that didn't form into 
+planets, mostly located in the asteroid belt.
+"""
 
-@pytest.mark.skip(reason="openai is very expensive")
-def test_answer_relevancy():
-    metric = AnswerRelevancyMetric(threshold=0.5, strict_mode=True)
+five = """
+The physical characteristics and orbital paths of comets and asteroids vary significantly. 
+Comets often have highly elliptical orbits, taking them close to the Sun and then far into 
+the outer solar system. Their icy composition leads to distinctive features like tails and 
+comas. Asteroids, conversely, have more circular orbits and lack these visible features, 
+being composed mostly of rock and metal.
+"""
+
+strict_mode = True
+
+
+@pytest.mark.skip(reason="openai is expensive")
+def test_everything():
+    metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
+    metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
+    metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
+    metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
+    metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
+    metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode)
+    metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
+    metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
+    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode)
+    metric10 = GEval(
+        name="Coherence",
+        criteria="Coherence - determine if the actual output is coherent with the input.",
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+        ],
+    )
+
     test_case = LLMTestCase(
         input=question,
         actual_output=answer,
+        expected_output=answer,
         retrieval_context=[one, two, three],
+        context=[four, five],
     )
-    assert_test(test_case, [metric])
+    assert_test(
+        test_case,
+        [
+            metric1,
+            metric2,
+            metric3,
+            metric4,
+            metric5,
+            metric6,
+            metric7,
+            metric8,
+            metric9,
+            metric10,
+        ],
+    )

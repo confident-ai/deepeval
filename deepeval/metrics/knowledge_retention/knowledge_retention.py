@@ -28,20 +28,24 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: ConversationalTestCase):
         if len(test_case.messages) == 0:
             raise ValueError("Messages cannot be empty")
 
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metrics_progress_context(
+            self.__name__, self.evaluation_model, self.strict_mode
+        ):
             self.knowledges: List[Knowledge] = self._generate_knowledges(
                 test_case
             )
@@ -75,8 +79,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         return res
 
     def _generate_score(self) -> float:
-        total = len(self.verdicts)
-        if total == 0:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
             return 0
 
         retention_count = 0
@@ -84,7 +88,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if verdict.verdict.strip().lower() == "no":
                 retention_count += 1
 
-        return retention_count / total
+        score = retention_count / number_of_verdicts
+
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_verdicts(
         self, test_case: ConversationalTestCase

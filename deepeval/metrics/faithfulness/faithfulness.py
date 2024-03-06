@@ -24,8 +24,9 @@ class FaithfulnessMetric(BaseMetric):
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         multithreading: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
@@ -33,6 +34,7 @@ class FaithfulnessMetric(BaseMetric):
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.multithreading = multithreading
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase):
         if (
@@ -43,7 +45,9 @@ class FaithfulnessMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, and retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metrics_progress_context(
+            self.__name__, self.evaluation_model, self.strict_mode
+        ):
             if self.multithreading:
                 # Use multithreading to generate truths and claims in parallel
                 with ThreadPoolExecutor() as executor:
@@ -90,15 +94,18 @@ class FaithfulnessMetric(BaseMetric):
         return res
 
     def _generate_score(self) -> float:
-        total = len(self.verdicts)
-        if total == 0:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
             return 0
+
         faithfulness_count = 0
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() != "no":
                 faithfulness_count += 1
 
-        return faithfulness_count / total
+        score = faithfulness_count / number_of_verdicts
+
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_verdicts(self) -> List[FaithfulnessVerdict]:
         verdicts: List[FaithfulnessVerdict] = []

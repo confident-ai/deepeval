@@ -26,8 +26,9 @@ class ContextualRelevancyMetric(BaseMetric):
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         multithreading: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
@@ -35,6 +36,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.multithreading = multithreading
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
         if (
@@ -45,7 +47,9 @@ class ContextualRelevancyMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metrics_progress_context(
+            self.__name__, self.evaluation_model, self.strict_mode
+        ):
             self.verdicts_list: List[List[ContextualRelevancyVerdict]] = (
                 self._generate_verdicts_list(
                     test_case.input, test_case.retrieval_context
@@ -94,9 +98,11 @@ class ContextualRelevancyMetric(BaseMetric):
         if total_sentence_count == 0:
             return 0
 
-        return (
+        score = (
             total_sentence_count - irrelevant_sentences
         ) / total_sentence_count
+
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_verdicts(
         self,

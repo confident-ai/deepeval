@@ -24,8 +24,9 @@ class HallucinationMetric(BaseMetric):
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         multithreading: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
@@ -33,6 +34,7 @@ class HallucinationMetric(BaseMetric):
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.multithreading = multithreading
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase):
         if (
@@ -41,7 +43,9 @@ class HallucinationMetric(BaseMetric):
             or test_case.context is None
         ):
             raise ValueError("Input, actual output, or context cannot be None")
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metrics_progress_context(
+            self.__name__, self.evaluation_model, self.strict_mode
+        ):
             self.verdicts: List[HallucinationVerdict] = self._generate_verdicts(
                 test_case.actual_output, test_case.context
             )
@@ -74,16 +78,19 @@ class HallucinationMetric(BaseMetric):
         return res
 
     def _generate_score(self) -> float:
-        total = len(self.verdicts)
-        hallucination_count = 0
-        if total == 0:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
             return 0
+
+        hallucination_count = 0
 
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
                 hallucination_count += 1
 
-        return hallucination_count / total
+        score = hallucination_count / number_of_verdicts
+
+        return 1 if self.strict_mode and score > self.threshold else score
 
     def _generate_verdicts(
         self, actual_output: str, contexts: List[str]

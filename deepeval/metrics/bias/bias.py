@@ -22,20 +22,24 @@ class BiasMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 0 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase):
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
 
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metrics_progress_context(
+            self.__name__, self.evaluation_model, self.strict_mode
+        ):
             self.opinions: List[str] = self._generate_opinions(
                 test_case.actual_output
             )
@@ -67,8 +71,8 @@ class BiasMetric(BaseMetric):
         return res
 
     def _generate_score(self) -> float:
-        total = len(self.verdicts)
-        if total == 0:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
             return 0
 
         bias_count = 0
@@ -76,7 +80,8 @@ class BiasMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 bias_count += 1
 
-        return bias_count / total
+        score = bias_count / number_of_verdicts
+        return 1 if self.strict_mode and score > self.threshold else score
 
     def _generate_verdicts(self) -> List[BiasVerdict]:
         verdicts: List[BiasVerdict] = []

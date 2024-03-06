@@ -23,10 +23,11 @@ def progress_context(
 def metrics_progress_context(
     metric_name: str,
     evaluation_model: str,
+    strict_mode: bool,
     total: int = 9999,
     transient: bool = True,
 ):
-    description = f"✨ 🍰 ✨ You're using DeepEval's latest {metric_name} Metric (using {evaluation_model})! This may take a minute..."
+    description = f"✨ 🍰 ✨ You're using DeepEval's latest {metric_name} Metric (using {evaluation_model}, strict_mode={strict_mode})! This may take a minute..."
     console = Console(file=sys.stderr)  # Direct output to standard error
     with Progress(
         SpinnerColumn(),
