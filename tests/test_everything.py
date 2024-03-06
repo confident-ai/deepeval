@@ -90,7 +90,7 @@ def test_everything():
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
         ],
-        strict_mode=True
+        strict_mode=True,
     )
 
     test_case = LLMTestCase(
