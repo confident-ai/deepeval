@@ -21,22 +21,25 @@ class AnswerRelevancyMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.n = 5
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError(
                 "Input, actual output, or retrieval context cannot be None"
             )
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metrics_progress_context(
+            self.__name__, self.evaluation_model, self.strict_mode
+        ):
             # generate statements
             self.statements: List[str] = self._generate_statements(
                 test_case.actual_output
@@ -58,7 +61,8 @@ class AnswerRelevancyMetric(BaseMetric):
             return self.score
 
     def _generate_score(self):
-        if len(self.verdicts) == 0:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
             return 0
 
         relevant_count = 0
@@ -66,7 +70,9 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() != "no":
                 relevant_count += 1
 
-        return relevant_count / len(self.verdicts)
+        score = relevant_count / number_of_verdicts
+
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_reason(self, input: str, score: float) -> str:
         if self.include_reason is False:

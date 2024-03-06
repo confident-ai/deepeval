@@ -27,6 +27,7 @@ class GEval(BaseMetric):
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
+        strict_mode: bool = False,
     ):
         self.name = name
         self.evaluation_params = evaluation_params
@@ -54,7 +55,8 @@ class GEval(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase):
         """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
@@ -75,7 +77,10 @@ class GEval(BaseMetric):
 
         score, reason = self.evaluate(test_case)
         self.reason = reason
-        self.score = float(score) / 10
+
+        score = float(score) / 10
+
+        self.score = 0 if self.strict_mode and score < self.threshold else score
         self.success = score >= self.threshold
         capture_metric_type(self.__name__)
         return self.score

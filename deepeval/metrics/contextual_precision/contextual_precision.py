@@ -24,14 +24,16 @@ class ContextualPrecisionMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
         if (
@@ -44,7 +46,9 @@ class ContextualPrecisionMetric(BaseMetric):
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
 
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metrics_progress_context(
+            self.__name__, self.evaluation_model, self.strict_mode
+        ):
             self.verdicts: List[ContextualPrecisionVerdict] = (
                 self._generate_verdicts(
                     test_case.input,
@@ -86,7 +90,8 @@ class ContextualPrecisionMetric(BaseMetric):
         return res
 
     def _generate_score(self):
-        if len(self.verdicts) == 0:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
             return 0
 
         # Convert verdicts to a binary list where 'yes' is 1 and others are 0
@@ -106,15 +111,13 @@ class ContextualPrecisionMetric(BaseMetric):
                 precision_at_k = relevant_nodes_count / k
                 sum_weighted_precision_at_k += precision_at_k * is_relevant
 
-        # Calculate weighted cumulative precision
         if relevant_nodes_count == 0:
             return 0
 
-        weighted_cumulative_precision = (
-            sum_weighted_precision_at_k / relevant_nodes_count
-        )
+        # Calculate weighted cumulative precision
+        score = sum_weighted_precision_at_k / relevant_nodes_count
 
-        return weighted_cumulative_precision
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]

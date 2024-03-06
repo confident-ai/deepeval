@@ -39,8 +39,9 @@ class SummarizationMetric(BaseMetric):
         assessment_questions: Optional[List[str]] = None,
         include_reason: bool = True,
         multithreading=True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
@@ -55,12 +56,15 @@ class SummarizationMetric(BaseMetric):
         self.multithreading = multithreading
         self.include_reason = include_reason
         self.n = n
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase):
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
 
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metrics_progress_context(
+            self.__name__, self.evaluation_model, self.strict_mode
+        ):
             if test_case.input is None or test_case.actual_output is None:
                 raise ValueError("Input and actual output cannot be None")
 
@@ -161,7 +165,7 @@ class SummarizationMetric(BaseMetric):
                 if verdict.verdict.strip().lower() == "yes":
                     faithfulness_count += 1
 
-            return faithfulness_count / total
+            score = faithfulness_count / total
 
         else:
             if self.assessment_questions is None:
@@ -177,7 +181,9 @@ class SummarizationMetric(BaseMetric):
             if total == 0:
                 return 0
 
-            return coverage_count / total
+            score = coverage_count / total
+
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_answers(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_answers(
