@@ -26,7 +26,7 @@ class HallucinationMetric(BaseMetric):
         multithreading: bool = True,
         strict_mode: bool = False,
     ):
-        self.threshold = 1 if strict_mode else threshold
+        self.threshold = 0 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
