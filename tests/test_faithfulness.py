@@ -45,5 +45,5 @@ def test_faithfulness():
         actual_output=output,
         retrieval_context=[one, two, three],
     )
-    metric = FaithfulnessMetric(use_async=False)
+    metric = FaithfulnessMetric(run_async=True)
     assert_test(test_case, [metric])

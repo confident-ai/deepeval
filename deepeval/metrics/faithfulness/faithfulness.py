@@ -1,8 +1,6 @@
 from typing import List, Optional, Union
-import json
 from pydantic import BaseModel, Field
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -24,7 +22,7 @@ class FaithfulnessMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        use_async: bool = True,
+        run_async: bool = True,
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -34,7 +32,7 @@ class FaithfulnessMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.use_async = use_async
+        self.run_async = run_async
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase):
@@ -49,7 +47,7 @@ class FaithfulnessMetric(BaseMetric):
         with metrics_progress_context(
             self.__name__, self.evaluation_model, self.strict_mode
         ):
-            if self.use_async:
+            if self.run_async:
                 loop = get_or_create_event_loop()
                 self.truths, self.claims = loop.run_until_complete(
                     asyncio.gather(
@@ -87,10 +85,10 @@ class FaithfulnessMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
 
-        if self.use_async:
+        if self.run_async:
             res = await self.model.a_generate(prompt)
         else:
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
         return res
 
     def _generate_reason(self) -> str:
@@ -117,10 +115,10 @@ class FaithfulnessMetric(BaseMetric):
         prompt = FaithfulnessTemplate.generate_verdicts(
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
-        if self.use_async:
+        if self.run_async:
             res = await self.model.a_generate(prompt)
         else:
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
         verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
 
@@ -135,10 +133,10 @@ class FaithfulnessMetric(BaseMetric):
         prompt = FaithfulnessTemplate.generate_claims(
             text="\n\n".join(retrieval_context)
         )
-        if self.use_async:
+        if self.run_async:
             res = await self.model.a_generate(prompt)
         else:
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
 
         return data["claims"]
@@ -152,10 +150,10 @@ class FaithfulnessMetric(BaseMetric):
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
         print("generating claims")
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
-        if self.use_async:
+        if self.run_async:
             res = await self.model.a_generate(prompt)
         else:
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
         return data["claims"]
 

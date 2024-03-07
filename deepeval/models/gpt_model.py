@@ -75,7 +75,7 @@ class GPTModel(DeepEvalBaseLLM):
         return ChatOpenAI(model_name=self.model_name)
 
     @retry_with_exponential_backoff
-    def _call(self, prompt: str) -> str:
+    def generate(self, prompt: str) -> str:
         chat_model = self.load_model()
         return chat_model.invoke(prompt).content
 
@@ -83,7 +83,6 @@ class GPTModel(DeepEvalBaseLLM):
     async def a_generate(self, prompt: str) -> str:
         chat_model = self.load_model()
         res = await chat_model.ainvoke(prompt)
-        print(res)
         return res.content
 
     def should_use_azure_openai(self):
