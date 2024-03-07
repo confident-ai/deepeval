@@ -49,28 +49,28 @@ class HallucinationMetric(BaseMetric):
         ):
             if self.run_async:
                 loop = get_or_create_event_loop()
-                self.verdicts: List[HallucinationVerdict] = (
-                    loop.run_until_complete(
-                        self._a_generate_verdicts(
-                            test_case.actual_output, test_case.context
-                        )
-                    )
-                )
-                self.score = self._generate_score()
-                self.reason = loop.run_until_complete(self._a_generate_reason())
-
+                loop.run_until_complete(self.a_measure(test_case))
             else:
                 self.verdicts: List[HallucinationVerdict] = (
                     self._generate_verdicts(
                         test_case.actual_output, test_case.context
                     )
                 )
-                self.score = self._generate_score()
+                self.score = self._calculate_score()
                 self.reason = self._generate_reason()
 
             self.success = self.score <= self.threshold
             capture_metric_type(self.__name__)
             return self.score
+
+    async def a_measure(self, test_case: LLMTestCase):
+        self.verdicts: List[HallucinationVerdict] = (
+            await self._a_generate_verdicts(
+                test_case.actual_output, test_case.context
+            )
+        )
+        self.score = self._calculate_score()
+        self.reason = await self._a_generate_reason()
 
     async def _a_generate_reason(self):
         if self.include_reason is False:
@@ -90,18 +90,31 @@ class HallucinationMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
 
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         return res
 
     def _generate_reason(self):
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(self._a_generate_reason())
+        if self.include_reason is False:
+            return None
 
-    def _generate_score(self) -> float:
+        factual_alignments = []
+        contradictions = []
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() == "no":
+                factual_alignments.append(verdict.reason)
+            else:
+                contradictions.append(verdict.reason)
+
+        prompt: dict = HallucinationTemplate.generate_reason(
+            factual_alignments=factual_alignments,
+            contradictions=contradictions,
+            score=format(self.score, ".2f"),
+        )
+
+        res = self.model.generate(prompt)
+        return res
+
+    def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
             return 0
@@ -120,66 +133,25 @@ class HallucinationMetric(BaseMetric):
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
         verdicts: List[HallucinationVerdict] = []
-
-        if self.run_async:
-            tasks = [
-                self._a_generate_verdict(actual_output, context)
-                for context in contexts
-            ]
-            results = await asyncio.gather(*tasks)
-            verdicts.extend(results)
-        else:
-            prompt = HallucinationTemplate.generate_verdicts(
-                actual_output=actual_output, contexts=contexts
-            )
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res)
-            verdicts = [
-                HallucinationVerdict(**item) for item in data["verdicts"]
-            ]
-
+        prompt = HallucinationTemplate.generate_verdicts(
+            actual_output=actual_output, contexts=contexts
+        )
+        res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res)
+        verdicts = [HallucinationVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
     def _generate_verdicts(
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(
-            self._a_generate_verdicts(actual_output, contexts)
-        )
-
-    async def _a_generate_verdict(
-        self, actual_output: str, context: str
-    ) -> HallucinationVerdict:
-        print("generating verdict")
-        #######################################
-        ### Generate verdicts for [context] ###
-        #######################################
+        verdicts: List[HallucinationVerdict] = []
         prompt = HallucinationTemplate.generate_verdicts(
-            actual_output=actual_output, contexts=[context]
+            actual_output=actual_output, contexts=contexts
         )
-
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
-        # verdicts length will always be 1
-        final_verdicts = [
-            HallucinationVerdict(**item) for item in data["verdicts"]
-        ]
-
-        return final_verdicts[0]
-
-    def _generate_verdict(
-        self, actual_output: str, context: str
-    ) -> HallucinationVerdict:
-        print("generating verdict")
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(
-            self._a_generate_verdict(actual_output, context)
-        )
+        verdicts = [HallucinationVerdict(**item) for item in data["verdicts"]]
+        return verdicts
 
     def is_successful(self) -> bool:
         self.success = self.score <= self.threshold

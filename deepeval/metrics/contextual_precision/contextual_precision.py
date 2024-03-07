@@ -53,19 +53,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
             if self.run_async:
                 loop = get_or_create_event_loop()
-                self.verdicts: List[ContextualPrecisionVerdict] = (
-                    loop.run_until_complete(
-                        self._a_generate_verdicts(
-                            test_case.input,
-                            test_case.expected_output,
-                            test_case.retrieval_context,
-                        )
-                    )
-                )
-                self.score = self._generate_score()
-                self.reason = loop.run_until_complete(
-                    self._a_generate_reason(test_case.input)
-                )
+                loop.run_until_complete(self.a_measure(test_case))
             else:
                 self.verdicts: List[ContextualPrecisionVerdict] = (
                     self._generate_verdicts(
@@ -74,12 +62,24 @@ class ContextualPrecisionMetric(BaseMetric):
                         test_case.retrieval_context,
                     )
                 )
-                self.score = self._generate_score()
+                self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.input)
 
             self.success = self.score >= self.threshold
             capture_metric_type(self.__name__)
             return self.score
+
+    async def a_measure(self, test_case: LLMTestCase):
+        self.verdicts: List[ContextualPrecisionVerdict] = (
+            await self._a_generate_verdicts(
+                test_case.input,
+                test_case.expected_output,
+                test_case.retrieval_context,
+            )
+        )
+
+        self.score = self._calculate_score()
+        self.reason = await self._a_generate_reason(test_case.input)
 
     async def _a_generate_reason(self, input: str):
         if self.include_reason is False:
@@ -89,29 +89,33 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reasons": verdict.reason}
             for verdict in self.verdicts
         ]
-
         prompt = ContextualPrecisionTemplate.generate_reason(
             input=input,
-            # Need to pass in entire verdict because the reason has to take into account
-            # not just the relevant chunks, but the bad chunks.
-            # for example, i can still have a perfect score with [1 1 0 0],
-            # which then GPT will need the entire context to justify why the score is so high
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
         )
 
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         return res
 
     def _generate_reason(self, input: str):
-        loop = get_or_create_event_loop()
-        loop.run_until_complete(self._a_generate_reason(input))
+        if self.include_reason is False:
+            return None
 
-    def _generate_score(self):
+        retrieval_contexts_verdicts = [
+            {"verdict": verdict.verdict, "reasons": verdict.reason}
+            for verdict in self.verdicts
+        ]
+        prompt = ContextualPrecisionTemplate.generate_reason(
+            input=input,
+            verdicts=retrieval_contexts_verdicts,
+            score=format(self.score, ".2f"),
+        )
+
+        res = self.model.generate(prompt)
+        return res
+
+    def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
             return 0
@@ -149,12 +153,7 @@ class ContextualPrecisionMetric(BaseMetric):
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
-
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         verdicts = [
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
@@ -164,10 +163,17 @@ class ContextualPrecisionMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
     ) -> List[ContextualPrecisionVerdict]:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(
-            self._a_generate_verdicts(input, expected_output, retrieval_context)
+        prompt = ContextualPrecisionTemplate.generate_verdicts(
+            input=input,
+            expected_output=expected_output,
+            retrieval_context=retrieval_context,
         )
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        verdicts = [
+            ContextualPrecisionVerdict(**item) for item in data["verdicts"]
+        ]
+        return verdicts
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

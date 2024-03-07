@@ -68,30 +68,7 @@ class SummarizationMetric(BaseMetric):
         ):
             if self.run_async:
                 loop = get_or_create_event_loop()
-                self.truths, self.claims = loop.run_until_complete(
-                    asyncio.gather(
-                        self._a_generate_claims(test_case.input),
-                        self._a_generate_claims(test_case.actual_output),
-                    )
-                )
-                self.coverage_verdicts, self.alignment_verdicts = (
-                    loop.run_until_complete(
-                        asyncio.gather(
-                            self._a_generate_coverage_verdicts(test_case),
-                            self._a_generate_alignment_verdicts(),
-                        )
-                    )
-                )
-                alignment_score = self._generate_score(ScoreType.ALIGNMENT)
-                coverage_score = self._generate_score(ScoreType.COVERAGE)
-
-                self.score_breakdown = {
-                    ScoreType.ALIGNMENT.value: alignment_score,
-                    ScoreType.COVERAGE.value: coverage_score,
-                }
-                self.score = min(alignment_score, coverage_score)
-                self.reason = loop.run_until_complete(self._a_generate_reason())
-
+                loop.run_until_complete(self.a_measure(test_case))
             else:
                 self.truths: List[str] = self._generate_claims(test_case.input)
                 self.claims: List[str] = self._generate_claims(
@@ -103,9 +80,8 @@ class SummarizationMetric(BaseMetric):
                 self.alignment_verdicts: List[SummarizationAlignmentVerdict] = (
                     self._generate_alignment_verdicts()
                 )
-                alignment_score = self._generate_score(ScoreType.ALIGNMENT)
-                coverage_score = self._generate_score(ScoreType.COVERAGE)
-
+                alignment_score = self._calculate_score(ScoreType.ALIGNMENT)
+                coverage_score = self._calculate_score(ScoreType.COVERAGE)
                 self.score_breakdown = {
                     ScoreType.ALIGNMENT.value: alignment_score,
                     ScoreType.COVERAGE.value: coverage_score,
@@ -116,6 +92,24 @@ class SummarizationMetric(BaseMetric):
             self.success = self.score >= self.threshold
             capture_metric_type(self.__name__)
             return self.score
+
+    async def a_measure(self, test_case: LLMTestCase):
+        self.truths, self.claims = await asyncio.gather(
+            self._a_generate_claims(test_case.input),
+            self._a_generate_claims(test_case.actual_output),
+        )
+        self.coverage_verdicts, self.alignment_verdicts = await asyncio.gather(
+            self._a_generate_coverage_verdicts(test_case),
+            self._a_generate_alignment_verdicts(),
+        )
+        alignment_score = self._calculate_score(ScoreType.ALIGNMENT)
+        coverage_score = self._calculate_score(ScoreType.COVERAGE)
+        self.score_breakdown = {
+            ScoreType.ALIGNMENT.value: alignment_score,
+            ScoreType.COVERAGE.value: coverage_score,
+        }
+        self.score = min(alignment_score, coverage_score)
+        self.reason = await self._a_generate_reason()
 
     async def _a_generate_reason(self) -> str:
         if self.include_reason is False:
@@ -152,18 +146,47 @@ class SummarizationMetric(BaseMetric):
 """
         prompt += """Reason:"""
 
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         return res
 
     def _generate_reason(self) -> str:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(self._a_generate_reason)
+        if self.include_reason is False:
+            return None
 
-    def _generate_score(self, score_type: ScoreType) -> float:
+        contradictions = []
+        redundancies = []
+        for verdict in self.alignment_verdicts:
+            if verdict.verdict.strip().lower() == "no":
+                contradictions.append(verdict.reason)
+            elif verdict.verdict.strip().lower() == "idk":
+                redundancies.append(verdict.reason)
+
+        questions = []
+        if self.coverage_verdicts:
+            for verdict in self.coverage_verdicts:
+                if (
+                    verdict.original_verdict.strip().lower() == "yes"
+                    and verdict.summary_verdict.strip().lower() == "no"
+                ):
+                    questions.append(verdict.question)
+
+        prompt: dict = SummarizationTemplate.generate_reason(
+            contradictions=contradictions,
+            redundancies=redundancies,
+            questions=questions,
+            score=format(self.score, ".2f"),
+        )
+
+        if len(questions) > 0:
+            prompt += f"""Questions the original text can answer but not the summary:
+{questions}
+
+"""
+        prompt += """Reason:"""
+        res = self.model.generate(prompt)
+        return res
+
+    def _calculate_score(self, score_type: ScoreType) -> float:
         if score_type == ScoreType.ALIGNMENT:
             total = len(self.alignment_verdicts)
             if total == 0:
@@ -199,59 +222,70 @@ class SummarizationMetric(BaseMetric):
         prompt = SummarizationTemplate.generate_answers(
             questions=self.assessment_questions, text=text
         )
-
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         return data["answers"]
 
     def _generate_answers(self, text: str) -> List[str]:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(self._a_generate_answers(text))
+        prompt = SummarizationTemplate.generate_answers(
+            questions=self.assessment_questions, text=text
+        )
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        return data["answers"]
 
     async def _a_generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         return data["questions"]
 
     def _generate_assessment_questions(self, text: str):
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(
-            self._a_generate_assessment_questions(text)
-        )
+        prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        return data["questions"]
 
     async def _a_generate_coverage_verdicts(
         self, test_case: LLMTestCase
     ) -> List[SummarizationCoverageVerdict]:
         if self.assessment_questions is None:
-            if self.run_async:
-                self.assessment_questions = (
-                    await self._a_generate_assessment_questions(test_case.input)
-                )
-            else:
-                self.assessment_questions = self._generate_assessment_questions(
-                    test_case.input
-                )
+            self.assessment_questions = (
+                await self._a_generate_assessment_questions(test_case.input)
+            )
 
-        if self.run_async:
-            tasks = [
-                self._a_generate_answers(test_case.input),
-                self._a_generate_answers(test_case.actual_output),
-            ]
-            results = await asyncio.gather(*tasks)
-            original_answers = results[0]
-            summary_answers = results[1]
-        else:
-            original_answers = self._generate_answers(test_case.input)
-            summary_answers = self._generate_answers(test_case.actual_output)
+        tasks = [
+            self._a_generate_answers(test_case.input),
+            self._a_generate_answers(test_case.actual_output),
+        ]
+        results = await asyncio.gather(*tasks)
+        original_answers = results[0]
+        summary_answers = results[1]
+
+        if len(original_answers) != len(summary_answers):
+            raise ValueError("Number of verdicts generated does not equal.")
+
+        coverage_veridcts: List[SummarizationCoverageVerdict] = []
+        for i in range(len(original_answers)):
+            coverage_veridcts.append(
+                SummarizationCoverageVerdict(
+                    summary_verdict=summary_answers[i],
+                    original_verdict=original_answers[i],
+                    question=self.assessment_questions[i],
+                )
+            )
+        return coverage_veridcts
+
+    def _generate_coverage_verdicts(
+        self, test_case: LLMTestCase
+    ) -> List[SummarizationCoverageVerdict]:
+        if self.assessment_questions is None:
+            self.assessment_questions = self._generate_assessment_questions(
+                test_case.input
+            )
+
+        original_answers = self._generate_answers(test_case.input)
+        summary_answers = self._generate_answers(test_case.actual_output)
 
         if len(original_answers) != len(summary_answers):
             raise ValueError("Number of verdicts generated does not equal.")
@@ -268,14 +302,6 @@ class SummarizationMetric(BaseMetric):
 
         return coverage_veridcts
 
-    def _generate_coverage_verdicts(
-        self, test_case: LLMTestCase
-    ) -> List[SummarizationCoverageVerdict]:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(
-            self._a_generate_coverage_verdicts(test_case)
-        )
-
     async def _a_generate_alignment_verdicts(
         self,
     ) -> List[SummarizationAlignmentVerdict]:
@@ -283,12 +309,7 @@ class SummarizationMetric(BaseMetric):
         prompt = SummarizationTemplate.generate_alignment_verdicts(
             summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
         )
-
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         verdicts = [
             SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
@@ -298,24 +319,30 @@ class SummarizationMetric(BaseMetric):
     def _generate_alignment_verdicts(
         self,
     ) -> List[SummarizationAlignmentVerdict]:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(self._a_generate_alignment_verdicts())
+        verdicts: List[SummarizationAlignmentVerdict] = []
+        prompt = SummarizationTemplate.generate_alignment_verdicts(
+            summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
+        )
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        verdicts = [
+            SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+        ]
+        return verdicts
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
-
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         return data["claims"]
 
     def _generate_claims(self, text: str) -> List[str]:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(self._a_generate_claims(text))
+        # Borrow faithfulness template
+        prompt = FaithfulnessTemplate.generate_claims(text=text)
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        return data["claims"]
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

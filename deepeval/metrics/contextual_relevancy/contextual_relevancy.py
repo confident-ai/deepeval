@@ -55,7 +55,7 @@ class ContextualRelevancyMetric(BaseMetric):
                     test_case.input, test_case.retrieval_context
                 )
             )
-            contextual_recall_score = self._generate_score()
+            contextual_recall_score = self._calculate_score()
 
             self.reason = self._generate_reason(
                 test_case.input, contextual_recall_score
@@ -86,7 +86,7 @@ class ContextualRelevancyMetric(BaseMetric):
         res = self.model(prompt)
         return res
 
-    def _generate_score(self):
+    def _calculate_score(self):
         irrelevant_sentences = 0
         total_sentence_count = 0
         for verdicts in self.verdicts_list:

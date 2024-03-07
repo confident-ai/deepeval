@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import FaithfulnessMetric
@@ -38,12 +39,34 @@ planets, mostly located in the asteroid belt.
 """
 
 
-# @pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_faithfulness():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",
         actual_output=output,
         retrieval_context=[one, two, three],
     )
-    metric = FaithfulnessMetric(run_async=True)
+    metric = FaithfulnessMetric(run_async=False)
     assert_test(test_case, [metric])
+
+
+# test_case = LLMTestCase(
+#     input="What is the primary difference between a comet and an asteroid?",
+#     actual_output=output,
+#     retrieval_context=[one, two, three],
+# )
+
+
+# async def example():
+#     metric1 = FaithfulnessMetric(run_async=True)
+#     metric2 = FaithfulnessMetric(run_async=True)
+#     metric3 = FaithfulnessMetric(run_async=True)
+#     a = await asyncio.gather(
+#         metric1._a_execute_measure(test_case),
+#         metric2._a_execute_measure(test_case),
+#         metric3._a_execute_measure(test_case),
+#     )
+#     return a
+
+
+# asyncio.run(example())

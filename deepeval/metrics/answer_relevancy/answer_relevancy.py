@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 
@@ -42,33 +43,21 @@ class AnswerRelevancyMetric(BaseMetric):
         ):
             if self.run_async:
                 loop = get_or_create_event_loop()
-                self.statements: List[str] = loop.run_until_complete(
-                    self._a_generate_statements(test_case.actual_output)
-                )
-                self.verdicts: List[AnswerRelvancyVerdict] = (
-                    loop.run_until_complete(
-                        self._a_generate_verdicts(test_case.input)
-                    )
-                )
-                self.score = self._generate_score()
-                self.reason = loop.run_until_complete(
-                    self._a_generate_reason(test_case.input)
-                )
+                loop.run_until_complete(self.a_measure(test_case))
             else:
-                self.statements: List[str] = self._generate_statements(
-                    test_case.actual_output
+                self.truths = self._generate_statements(
+                    test_case.retrieval_context
                 )
-                self.verdicts: List[AnswerRelvancyVerdict] = (
-                    self._generate_verdicts(test_case.input)
-                )
-                self.score = self._generate_score()
-                self.reason = self._generate_reason(test_case.input)
+                self.claims = self._generate_verdicts(test_case.actual_output)
+                self.verdicts = self._generate_verdicts()
+                self.score = self._calculate_score()
+                self.reason = self._generate_reason()
 
             self.success = self.score >= self.threshold
             capture_metric_type(self.__name__)
             return self.score
 
-    def _generate_score(self):
+    def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
             return 0
@@ -79,8 +68,20 @@ class AnswerRelevancyMetric(BaseMetric):
                 relevant_count += 1
 
         score = relevant_count / number_of_verdicts
-
         return 0 if self.strict_mode and score < self.threshold else score
+
+    ################################
+    ###### Asynchronous logic ######
+    ################################
+    async def a_measure(self, test_case: LLMTestCase):
+        self.statements: List[str] = await self._a_generate_statements(
+            test_case.actual_output
+        )
+        self.verdicts: List[AnswerRelvancyVerdict] = (
+            await self._a_generate_verdicts(test_case.input)
+        )
+        self.score = self._calculate_score()
+        self.reason = await self._a_generate_reason(test_case.input)
 
     async def _a_generate_reason(self, input: str) -> str:
         if self.include_reason is False:
@@ -96,17 +97,8 @@ class AnswerRelevancyMetric(BaseMetric):
             input=input,
             score=format(self.score, ".2f"),
         )
-
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         return res
-
-    def _generate_reason(self, input: str) -> str:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(self._a_generate_reason(input))
 
     async def _a_generate_verdicts(
         self, input: str
@@ -116,18 +108,10 @@ class AnswerRelevancyMetric(BaseMetric):
             input=input,
             actual_output=self.statements,
         )
-
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
         return verdicts
-
-    def _generate_verdicts(self, input: str) -> List[AnswerRelvancyVerdict]:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(self._a_generate_verdicts(input))
 
     async def _a_generate_statements(
         self,
@@ -138,21 +122,50 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output=actual_output,
         )
 
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         return data["statements"]
+
+    ###############################
+    ###### Synchronous logic ######
+    ###############################
+    def _generate_reason(self, input: str) -> str:
+        if self.include_reason is False:
+            return None
+
+        irrelevant_statements = []
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() == "no":
+                irrelevant_statements.append(verdict.reason)
+
+        prompt = AnswerRelevancyTemplate.generate_reason(
+            irrelevant_statements=irrelevant_statements,
+            input=input,
+            score=format(self.score, ".2f"),
+        )
+        res = self.model.generate(prompt)
+        return res
+
+    def _generate_verdicts(self, input: str) -> List[AnswerRelvancyVerdict]:
+        prompt = AnswerRelevancyTemplate.generate_verdicts(
+            input=input,
+            actual_output=self.statements,
+        )
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+        return verdicts
 
     def _generate_statements(
         self,
         actual_output: str,
     ) -> List[str]:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(
-            self._a_generate_statements(actual_output)
+        prompt = AnswerRelevancyTemplate.generate_statements(
+            actual_output=actual_output,
         )
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        return data["statements"]
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

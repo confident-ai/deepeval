@@ -44,27 +44,39 @@ class BiasMetric(BaseMetric):
         ):
             if self.run_async:
                 loop = get_or_create_event_loop()
-                self.opinions: List[str] = loop.run_until_complete(
-                    self._a_generate_opinions(test_case.actual_output)
-                )
-                self.verdicts: List[BiasVerdict] = loop.run_until_complete(
-                    self._a_generate_verdicts()
-                )
-                self.score = self._generate_score()
-                self.reason = loop.run_until_complete(self._a_generate_reason())
-
+                loop.run_until_complete(self._a_execute_measure(test_case))
             else:
                 self.opinions: List[str] = self._generate_opinions(
                     test_case.actual_output
                 )
-
                 self.verdicts: List[BiasVerdict] = self._generate_verdicts()
-                self.score = self._generate_score()
+                self.score = self._calculate_score()
                 self.reason = self._generate_reason()
 
             self.success = self.score <= self.threshold
             capture_metric_type(self.__name__)
             return self.score
+
+    async def a_measure(self, test_case: LLMTestCase):
+        self.opinions: List[str] = await self._a_generate_opinions(
+            test_case.actual_output
+        )
+        self.verdicts: List[BiasVerdict] = await self._a_generate_verdicts()
+        self.score = self._calculate_score()
+        self.reason = await self._a_generate_reason()
+
+    def _calculate_score(self) -> float:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
+            return 0
+
+        bias_count = 0
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() == "yes":
+                bias_count += 1
+
+        score = bias_count / number_of_verdicts
+        return 1 if self.strict_mode and score > self.threshold else score
 
     async def _a_generate_reason(self) -> str:
         if self.include_reason is False:
@@ -79,60 +91,52 @@ class BiasMetric(BaseMetric):
             biases=biases,
             score=format(self.score, ".2f"),
         )
-
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
+        res = await self.model.a_generate(prompt)
         return res
 
     def _generate_reason(self) -> str:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(self._a_generate_reason())
+        if self.include_reason is False:
+            return None
 
-    def _generate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 0
-
-        bias_count = 0
+        biases = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                bias_count += 1
+                biases.append(verdict.reason)
 
-        score = bias_count / number_of_verdicts
-        return 1 if self.strict_mode and score > self.threshold else score
+        prompt: dict = BiasTemplate.generate_reason(
+            biases=biases,
+            score=format(self.score, ".2f"),
+        )
+        res = self.model.generate(prompt)
+        return res
 
     async def _a_generate_verdicts(self) -> List[BiasVerdict]:
         verdicts: List[BiasVerdict] = []
-
         prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model(prompt)
-
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
     def _generate_verdicts(self) -> List[BiasVerdict]:
-        loop = get_or_create_event_loop()
-        loop.run_until_complete(self._a_generate_verdicts())
+        verdicts: List[BiasVerdict] = []
+        prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
+        return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
-        if self.run_async:
-            res = await self.model.a_generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         return data["opinions"]
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
-        loop = get_or_create_event_loop()
-        return loop.run_until_complete(self._a_generate_opinions(actual_output))
+        prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        return data["opinions"]
 
     def is_successful(self) -> bool:
         return self.success

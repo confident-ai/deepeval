@@ -50,6 +50,7 @@ def execute_test(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
     save_to_disk: bool = False,
+    run_async: bool = True,
 ) -> List[TestResult]:
     test_results: List[TestResult] = []
     test_run_manager.save_to_disk = save_to_disk
@@ -73,7 +74,10 @@ def execute_test(
 
         test_start_time = time.perf_counter()
         for metric in metrics:
+
+            # Long blocking I/O process
             metric.measure(test_case)
+
             metric_metadata = MetricsMetadata(
                 metric=metric.__name__,
                 score=metric.score,
