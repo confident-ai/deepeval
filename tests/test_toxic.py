@@ -11,7 +11,7 @@ Just trying to help you learn our best practices.
 """
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_bias():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",

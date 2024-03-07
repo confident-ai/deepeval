@@ -59,7 +59,7 @@ being composed mostly of rock and metal.
 """
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_contextual_precision():
     metric = ContextualPrecisionMetric(threshold=0.5)
     test_case = LLMTestCase(

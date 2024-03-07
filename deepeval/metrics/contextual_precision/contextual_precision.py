@@ -1,8 +1,7 @@
 from typing import Optional, List, Union
-from pydantic import BaseModel, Field
-import json
+from pydantic import BaseModel
 
-from deepeval.utils import trimAndLoadJson
+from deepeval.utils import trimAndLoadJson, get_or_create_event_loop
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
@@ -24,6 +23,7 @@ class ContextualPrecisionMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        run_async: bool = True,
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -33,6 +33,7 @@ class ContextualPrecisionMetric(BaseMetric):
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
+        self.run_async = run_async
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -49,25 +50,38 @@ class ContextualPrecisionMetric(BaseMetric):
         with metrics_progress_context(
             self.__name__, self.evaluation_model, self.strict_mode
         ):
-            self.verdicts: List[ContextualPrecisionVerdict] = (
-                self._generate_verdicts(
-                    test_case.input,
-                    test_case.expected_output,
-                    test_case.retrieval_context,
+
+            if self.run_async:
+                loop = get_or_create_event_loop()
+                self.verdicts: List[ContextualPrecisionVerdict] = (
+                    loop.run_until_complete(
+                        self._a_generate_verdicts(
+                            test_case.input,
+                            test_case.expected_output,
+                            test_case.retrieval_context,
+                        )
+                    )
                 )
-            )
-            contextual_precision_score = self._generate_score()
+                self.score = self._generate_score()
+                self.reason = loop.run_until_complete(
+                    self._a_generate_reason(test_case.input)
+                )
+            else:
+                self.verdicts: List[ContextualPrecisionVerdict] = (
+                    self._generate_verdicts(
+                        test_case.input,
+                        test_case.expected_output,
+                        test_case.retrieval_context,
+                    )
+                )
+                self.score = self._generate_score()
+                self.reason = self._generate_reason(test_case.input)
 
-            self.reason = self._generate_reason(
-                test_case.input, contextual_precision_score
-            )
-
-            self.success = contextual_precision_score >= self.threshold
-            self.score = contextual_precision_score
+            self.success = self.score >= self.threshold
             capture_metric_type(self.__name__)
             return self.score
 
-    def _generate_reason(self, input: str, score: float):
+    async def _a_generate_reason(self, input: str):
         if self.include_reason is False:
             return None
 
@@ -83,11 +97,19 @@ class ContextualPrecisionMetric(BaseMetric):
             # for example, i can still have a perfect score with [1 1 0 0],
             # which then GPT will need the entire context to justify why the score is so high
             verdicts=retrieval_contexts_verdicts,
-            score=format(score, ".2f"),
+            score=format(self.score, ".2f"),
         )
 
-        res = self.model(prompt)
+        if self.run_async:
+            res = await self.model.a_generate(prompt)
+        else:
+            res = self.model.generate(prompt)
+
         return res
+
+    def _generate_reason(self, input: str):
+        loop = get_or_create_event_loop()
+        loop.run_until_complete(self._a_generate_reason(input))
 
     def _generate_score(self):
         number_of_verdicts = len(self.verdicts)
@@ -119,7 +141,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
         return 0 if self.strict_mode and score < self.threshold else score
 
-    def _generate_verdicts(
+    async def _a_generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
     ) -> List[ContextualPrecisionVerdict]:
         prompt = ContextualPrecisionTemplate.generate_verdicts(
@@ -128,13 +150,24 @@ class ContextualPrecisionMetric(BaseMetric):
             retrieval_context=retrieval_context,
         )
 
-        res = self.model(prompt)
+        if self.run_async:
+            res = await self.model.a_generate(prompt)
+        else:
+            res = self.model.generate(prompt)
+
         data = trimAndLoadJson(res)
         verdicts = [
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
         ]
-
         return verdicts
+
+    def _generate_verdicts(
+        self, input: str, expected_output: str, retrieval_context: List[str]
+    ) -> List[ContextualPrecisionVerdict]:
+        loop = get_or_create_event_loop()
+        return loop.run_until_complete(
+            self._a_generate_verdicts(input, expected_output, retrieval_context)
+        )
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

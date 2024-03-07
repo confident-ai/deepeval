@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional, Union, List
 from threading import Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -5,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.utils import trimAndLoadJson
+from deepeval.utils import trimAndLoadJson, get_or_create_event_loop
 from deepeval.metrics.hallucination.template import HallucinationTemplate
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.progress_context import metrics_progress_context
@@ -23,7 +24,7 @@ class HallucinationMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        multithreading: bool = True,
+        run_async: bool = False,
         strict_mode: bool = False,
     ):
         self.threshold = 0 if strict_mode else threshold
@@ -33,7 +34,7 @@ class HallucinationMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.multithreading = multithreading
+        self.run_async = run_async
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase):
@@ -46,17 +47,32 @@ class HallucinationMetric(BaseMetric):
         with metrics_progress_context(
             self.__name__, self.evaluation_model, self.strict_mode
         ):
-            self.verdicts: List[HallucinationVerdict] = self._generate_verdicts(
-                test_case.actual_output, test_case.context
-            )
-            hallucination_score = self._generate_score()
-            self.reason = self._generate_reason(hallucination_score)
-            self.success = hallucination_score <= self.threshold
-            self.score = hallucination_score
+            if self.run_async:
+                loop = get_or_create_event_loop()
+                self.verdicts: List[HallucinationVerdict] = (
+                    loop.run_until_complete(
+                        self._a_generate_verdicts(
+                            test_case.actual_output, test_case.context
+                        )
+                    )
+                )
+                self.score = self._generate_score()
+                self.reason = loop.run_until_complete(self._a_generate_reason())
+
+            else:
+                self.verdicts: List[HallucinationVerdict] = (
+                    self._generate_verdicts(
+                        test_case.actual_output, test_case.context
+                    )
+                )
+                self.score = self._generate_score()
+                self.reason = self._generate_reason()
+
+            self.success = self.score <= self.threshold
             capture_metric_type(self.__name__)
             return self.score
 
-    def _generate_reason(self, score):
+    async def _a_generate_reason(self):
         if self.include_reason is False:
             return None
 
@@ -71,11 +87,19 @@ class HallucinationMetric(BaseMetric):
         prompt: dict = HallucinationTemplate.generate_reason(
             factual_alignments=factual_alignments,
             contradictions=contradictions,
-            score=format(score, ".2f"),
+            score=format(self.score, ".2f"),
         )
 
-        res = self.model(prompt)
+        if self.run_async:
+            res = await self.model.a_generate(prompt)
+        else:
+            res = self.model.generate(prompt)
+
         return res
+
+    def _generate_reason(self):
+        loop = get_or_create_event_loop()
+        return loop.run_until_complete(self._a_generate_reason())
 
     def _generate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
@@ -92,32 +116,23 @@ class HallucinationMetric(BaseMetric):
 
         return 1 if self.strict_mode and score > self.threshold else score
 
-    def _generate_verdicts(
+    async def _a_generate_verdicts(
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
         verdicts: List[HallucinationVerdict] = []
 
-        if self.multithreading:
-            lock = Lock()
-            with ThreadPoolExecutor() as executor:
-                futures = {
-                    executor.submit(
-                        self._generate_verdict,
-                        actual_output,
-                        context,
-                        verdicts,
-                        lock,
-                    ): context
-                    for context in contexts
-                }
-
-                for future in as_completed(futures):
-                    future.result()
+        if self.run_async:
+            tasks = [
+                self._a_generate_verdict(actual_output, context)
+                for context in contexts
+            ]
+            results = await asyncio.gather(*tasks)
+            verdicts.extend(results)
         else:
             prompt = HallucinationTemplate.generate_verdicts(
                 actual_output=actual_output, contexts=contexts
             )
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
             data = trimAndLoadJson(res)
             verdicts = [
                 HallucinationVerdict(**item) for item in data["verdicts"]
@@ -125,30 +140,46 @@ class HallucinationMetric(BaseMetric):
 
         return verdicts
 
-    def _generate_verdict(
-        self,
-        actual_output: str,
-        context: str,
-        verdicts: List[HallucinationVerdict],
-        lock: Lock,
+    def _generate_verdicts(
+        self, actual_output: str, contexts: List[str]
+    ) -> List[HallucinationVerdict]:
+        loop = get_or_create_event_loop()
+        return loop.run_until_complete(
+            self._a_generate_verdicts(actual_output, contexts)
+        )
+
+    async def _a_generate_verdict(
+        self, actual_output: str, context: str
     ) -> HallucinationVerdict:
+        print("generating verdict")
         #######################################
         ### Generate verdicts for [context] ###
         #######################################
         prompt = HallucinationTemplate.generate_verdicts(
             actual_output=actual_output, contexts=[context]
         )
-        res = self.model(prompt)
-        data = trimAndLoadJson(res)
 
+        if self.run_async:
+            res = await self.model.a_generate(prompt)
+        else:
+            res = self.model.generate(prompt)
+
+        data = trimAndLoadJson(res)
         # verdicts length will always be 1
         final_verdicts = [
             HallucinationVerdict(**item) for item in data["verdicts"]
         ]
 
-        with lock:
-            for final_verdict in final_verdicts:
-                verdicts.append(final_verdict)
+        return final_verdicts[0]
+
+    def _generate_verdict(
+        self, actual_output: str, context: str
+    ) -> HallucinationVerdict:
+        print("generating verdict")
+        loop = get_or_create_event_loop()
+        return loop.run_until_complete(
+            self._a_generate_verdict(actual_output, context)
+        )
 
     def is_successful(self) -> bool:
         self.success = self.score <= self.threshold
