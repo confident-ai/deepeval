@@ -11,8 +11,18 @@ import string
 import numpy as np
 from dataclasses import asdict, is_dataclass
 import re
+import asyncio
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+
+
+def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop
 
 
 def login_with_confident_api_key(api_key: string):
