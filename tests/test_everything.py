@@ -69,12 +69,12 @@ comas. Asteroids, conversely, have more circular orbits and lack these visible f
 being composed mostly of rock and metal.
 """
 
-strict_mode = False
+strict_mode = True
 
 
 @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
-    metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
+    metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode, asynchronous=True)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
     metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
@@ -114,7 +114,7 @@ def test_everything():
             metric9,
             # metric10,
         ],
-        # asynchronous=False,
+        asynchronous=False,
     )
 
 
