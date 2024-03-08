@@ -75,7 +75,7 @@ strict_mode = False
 @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
-        threshold=0.5, strict_mode=strict_mode, asynchronous=True
+        threshold=0.5, strict_mode=strict_mode, run_async=True
     )
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)

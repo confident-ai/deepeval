@@ -31,7 +31,7 @@ class AnswerRelevancyMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        asynchronous: bool = True,
+        run_async: bool = True,
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -41,7 +41,7 @@ class AnswerRelevancyMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.asynchronous = asynchronous
+        self.run_async = run_async
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -50,9 +50,9 @@ class AnswerRelevancyMetric(BaseMetric):
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            self.run_async,
         ):
-            if self.asynchronous:
+            if self.run_async:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)

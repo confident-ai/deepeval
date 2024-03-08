@@ -82,7 +82,7 @@ def execute_test_cases(
 
         for metric in metrics:
             # Override metric async
-            metric.asynchronous = False
+            metric.run_async = False
 
             metric.measure(test_case)
             metric_metadata = MetricsMetadata(
@@ -188,7 +188,7 @@ def run_test(
 
 
 def assert_test(
-    test_case: LLMTestCase, metrics: List[BaseMetric], asynchronous: bool = True
+    test_case: LLMTestCase, metrics: List[BaseMetric], run_async: bool = True
 ):
     # TODO: refactor
     for metric in metrics:
@@ -199,7 +199,7 @@ def assert_test(
     if not isinstance(test_case, LLMTestCase):
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
 
-    if asynchronous:
+    if run_async:
         loop = get_or_create_event_loop()
         test_result = loop.run_until_complete(
             a_execute_test_cases(
@@ -228,7 +228,7 @@ def assert_test(
 def evaluate(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
-    asynchronous: bool = True,
+    run_async: bool = True,
 ):
     # TODO: refactor
     for metric in metrics:
@@ -244,7 +244,7 @@ def evaluate(
 
     test_run_manager.reset()
     with progress_context("Evaluating testcases..."):
-        if asynchronous:
+        if run_async:
             loop = get_or_create_event_loop()
             test_results = loop.run_until_complete(
                 a_execute_test_cases(test_cases, metrics, True)

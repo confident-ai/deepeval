@@ -40,4 +40,4 @@ def test_length_metric():
         latency=8.3,
     )
     # a_measure not implemented
-    assert_test(test_case, [metric], asynchronous=False)
+    assert_test(test_case, [metric], run_async=False)

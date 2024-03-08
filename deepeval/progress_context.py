@@ -24,12 +24,12 @@ def metrics_progress_context(
     metric_name: str,
     evaluation_model: str,
     strict_mode: bool,
-    asynchronous: bool,
+    run_async: bool,
     show_indicator: bool = True,
     total: int = 9999,
     transient: bool = True,
 ):
-    description = f"✨ 🍰 ✨ You're using DeepEval's latest {metric_name} Metric (using {evaluation_model}, strict={strict_mode}, async={asynchronous})! This may take a minute..."
+    description = f"✨ 🍰 ✨ You're using DeepEval's latest {metric_name} Metric (using {evaluation_model}, strict={strict_mode}, async={run_async})! This may take a minute..."
     console = Console(file=sys.stderr)  # Direct output to standard error
     if show_indicator:
         with Progress(

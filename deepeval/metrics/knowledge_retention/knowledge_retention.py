@@ -77,7 +77,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             score=format(score, ".2f"),
         )
 
-        res = self.model(prompt)
+        res = self.model.generate(prompt)
         return res
 
     def _calculate_score(self) -> float:
@@ -105,7 +105,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 llm_message=message.actual_output,
                 previous_knowledge=previous_knowledge,
             )
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
             data = trimAndLoadJson(res)
             verdict = KnowledgeRetentionVerdict(index=index, **data)
             verdicts.append(verdict)
@@ -128,7 +128,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 previous_knowledge=previous_knowledge,
             )
 
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
             data = trimAndLoadJson(res)
             knowledge = Knowledge(data=data)
             knowledges.append(knowledge)
