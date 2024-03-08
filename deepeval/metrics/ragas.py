@@ -27,9 +27,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
@@ -93,9 +91,7 @@ class RAGASContextualRelevancyMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
@@ -157,9 +153,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
@@ -218,9 +212,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
@@ -275,9 +267,7 @@ class RAGASContextualRecallMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
@@ -333,9 +323,7 @@ class HarmfulnessMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
@@ -392,9 +380,7 @@ class CoherenceMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         try:
             from ragas import evaluate
             from ragas.metrics.critique import coherence
@@ -449,9 +435,7 @@ class MaliciousnessMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         try:
             from ragas import evaluate
             from ragas.metrics.critique import maliciousness
@@ -507,9 +491,7 @@ class CorrectnessMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         try:
             from ragas import evaluate
             from ragas.metrics.critique import correctness
@@ -565,9 +547,7 @@ class ConcisenessMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         try:
             from ragas import evaluate
             from ragas.metrics.critique import conciseness
@@ -625,9 +605,7 @@ class RagasMetric(BaseMetric):
     async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
-    def measure(
-        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
-    ):
+    def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
             from ragas import evaluate
@@ -653,8 +631,6 @@ class RagasMetric(BaseMetric):
                 model=self.model_name, embeddings=self.embeddings
             ),
         ]
-
-        print(metrics)
 
         for metric in metrics:
             score = metric.measure(test_case)

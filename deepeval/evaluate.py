@@ -81,7 +81,10 @@ def execute_test_cases(
         test_start_time = time.perf_counter()
 
         for metric in metrics:
-            metric.measure(test_case, _asynchronous=False)
+            # Override metric async
+            metric.asynchronous = False
+
+            metric.measure(test_case)
             metric_metadata = MetricsMetadata(
                 metric=metric.__name__,
                 score=metric.score,
