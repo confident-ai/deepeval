@@ -13,6 +13,12 @@ class CostMetric(BaseMetric):
         capture_metric_type(self.__name__)
         return self.score
 
+    async def a_measure(self, test_case: LLMTestCase):
+        self.success = test_case.cost <= self.threshold
+        self.score = test_case.cost
+        capture_metric_type(self.__name__)
+        return self.score
+
     def is_successful(self):
         return self.success
 
