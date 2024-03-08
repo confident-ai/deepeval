@@ -17,6 +17,20 @@ from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 
+def show_indicator():
+    try:
+        if os.environ["DISABLE_DEEPEVAL_INDICATOR"] == "YES":
+            return False
+        else:
+            return True
+    except:
+        return True
+
+
+def disable_indicator():
+    os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "YES"
+
+
 def check_test_case_params(
     test_case: LLMTestCase,
     test_case_params: List[LLMTestCaseParams],

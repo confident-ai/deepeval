@@ -8,7 +8,7 @@ from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
 )
-from deepeval.progress_context import metrics_progress_context
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.telemetry import capture_metric_type
 
 
@@ -43,11 +43,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         if len(test_case.messages) == 0:
             raise ValueError("Messages cannot be empty")
 
-        with metrics_progress_context(
-            self.__name__,
-            self.evaluation_model,
-            self.strict_mode,
-        ):
+        with metric_progress_indicator(self):
             self.knowledges: List[Knowledge] = self._generate_knowledges(
                 test_case
             )
