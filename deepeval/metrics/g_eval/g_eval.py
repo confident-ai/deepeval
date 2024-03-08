@@ -1,17 +1,42 @@
-import json
 from typing import Optional, List, Tuple, Union
 from pydantic import BaseModel
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.metrics.g_eval.template import (
-    evaluation_steps_template,
-    evaluation_results_template,
+from deepeval.metrics.g_eval.template import GEvalTemplate
+from deepeval.utils import (
+    trimAndLoadJson,
+    check_test_case_params,
+    get_or_create_event_loop,
 )
-from deepeval.utils import trimAndLoadJson, check_test_case_params, get_or_create_event_loop
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
 from deepeval.progress_context import metrics_progress_context
+
+G_EVAL_PARAMS = {
+    LLMTestCaseParams.INPUT: "Input",
+    LLMTestCaseParams.ACTUAL_OUTPUT: "Actual Output",
+    LLMTestCaseParams.EXPECTED_OUTPUT: "Expected Output",
+    LLMTestCaseParams.CONTEXT: "Context",
+    LLMTestCaseParams.RETRIEVAL_CONTEXT: "Retrieval Context",
+}
+
+
+def construct_g_eval_params_string(
+    llm_test_case_params: List[LLMTestCaseParams],
+):
+    g_eval_params = [G_EVAL_PARAMS[param] for param in llm_test_case_params]
+
+    if len(g_eval_params) == 1:
+        g_eval_params_str = g_eval_params[0]
+    elif len(g_eval_params) == 2:
+        g_eval_params_str = " and ".join(g_eval_params)
+    else:
+        g_eval_params_str = (
+            ", ".join(g_eval_params[:-1]) + ", and " + g_eval_params[-1]
+        )
+
+    return g_eval_params_str
 
 
 class GEvalResponse(BaseModel):
@@ -61,10 +86,10 @@ class GEval(BaseMetric):
         self.strict_mode = strict_mode
         self.asynchronous = asynchronous
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase) -> float:
         """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
         check_test_case_params(
-            test_case, self.evaluation_params, f"GEval ({self.__name__})"
+            test_case, self.evaluation_params, f"GEval({self.__name__})"
         )
         with metrics_progress_context(
             f"GEval ({self.__name__})",
@@ -74,7 +99,9 @@ class GEval(BaseMetric):
         ):
             if self.asynchronous:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(self.a_measure(test_case, _show_indicator=False))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
@@ -91,21 +118,23 @@ class GEval(BaseMetric):
                 capture_metric_type(self.__name__)
                 return self.score
 
-    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool = True):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
         check_test_case_params(
-            test_case, self.evaluation_params, f"GEval ({self.__name__})"
+            test_case, self.evaluation_params, f"GEval({self.__name__})"
         )
         with metrics_progress_context(
-            f"GEval ({self.__name__})",
+            f"GEval({self.__name__})",
             self.evaluation_model,
             self.strict_mode,
             True,
             _show_indicator,
         ):
             self.evaluation_steps: List[str] = (
-                self._a_generate_evaluation_steps()
+                await self._a_generate_evaluation_steps()
             )
-            g_score, reason = self._a_evaluate(test_case)
+            g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
             self.score = float(g_score) / 10
             self.score = (
@@ -117,15 +146,25 @@ class GEval(BaseMetric):
             capture_metric_type(self.__name__)
             return self.score
 
-    def _a_generate_evaluation_steps(self) -> List[str]:
-        prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
-        res = self.model(prompt)
+    async def _a_generate_evaluation_steps(self) -> List[str]:
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params
+        )
+        prompt = GEvalTemplate.generate_evaluation_steps(
+            criteria=self.criteria, parameters=g_eval_params_str
+        )
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         return data["steps"]
 
     def _generate_evaluation_steps(self) -> List[str]:
-        prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
-        res = self.model(prompt)
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params
+        )
+        prompt = GEvalTemplate.generate_evaluation_steps(
+            criteria=self.criteria, parameters=g_eval_params_str
+        )
+        res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
         return data["steps"]
 
@@ -133,9 +172,9 @@ class GEval(BaseMetric):
         text = """"""
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
-            text += f"{param.value}: {value} \n\n"
+            text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
 
-        prompt: dict = evaluation_results_template.format(
+        prompt = GEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
         )
@@ -149,7 +188,7 @@ class GEval(BaseMetric):
             value = getattr(test_case, param.value)
             text += f"{param.value}: {value} \n\n"
 
-        prompt: dict = evaluation_results_template.format(
+        prompt = GEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
         )

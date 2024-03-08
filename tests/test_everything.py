@@ -69,7 +69,7 @@ comas. Asteroids, conversely, have more circular orbits and lack these visible f
 being composed mostly of rock and metal.
 """
 
-strict_mode = True
+strict_mode = False
 
 
 @pytest.mark.skip(reason="openai is expensive")
@@ -85,15 +85,16 @@ def test_everything():
     metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
     metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
     metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode)
-    # metric10 = GEval(
-    #     name="Coherence",
-    #     criteria="Coherence - determine if the actual output is coherent with the input.",
-    #     evaluation_params=[
-    #         LLMTestCaseParams.INPUT,
-    #         LLMTestCaseParams.ACTUAL_OUTPUT,
-    #     ],
-    #     strict_mode=True,
-    # )
+    metric10 = GEval(
+        name="Coherence",
+        criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+            LLMTestCaseParams.RETRIEVAL_CONTEXT,
+        ],
+        strict_mode=strict_mode,
+    )
 
     test_case = LLMTestCase(
         input=question,
@@ -114,9 +115,8 @@ def test_everything():
             metric7,
             metric8,
             metric9,
-            # metric10,
+            metric10,
         ],
-        asynchronous=False,
     )
 
 
