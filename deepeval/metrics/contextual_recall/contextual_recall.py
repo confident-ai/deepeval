@@ -1,13 +1,24 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 
-from deepeval.utils import trimAndLoadJson, get_or_create_event_loop
-from deepeval.test_case import LLMTestCase
+from deepeval.utils import (
+    trimAndLoadJson,
+    get_or_create_event_loop,
+    validate_test_case_params,
+)
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.contextual_recall.template import ContextualRecallTemplate
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
+
+required_params: List[LLMTestCaseParams] = [
+    LLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
+    LLMTestCaseParams.RETRIEVAL_CONTEXT,
+    LLMTestCaseParams.EXPECTED_OUTPUT,
+]
 
 
 class ContextualRecallVerdict(BaseModel):
@@ -35,15 +46,7 @@ class ContextualRecallMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        if (
-            test_case.input is None
-            or test_case.actual_output is None
-            or test_case.retrieval_context is None
-            or test_case.expected_output is None
-        ):
-            raise ValueError(
-                "Input, actual output, expected output, or retrieval context cannot be None"
-            )
+        validate_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
@@ -70,6 +73,7 @@ class ContextualRecallMetric(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
+        validate_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,

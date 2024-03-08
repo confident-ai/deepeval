@@ -1,16 +1,23 @@
-import asyncio
 from typing import Optional, Union, List
-from threading import Lock
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pydantic import BaseModel, Field
 
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
-from deepeval.utils import trimAndLoadJson, get_or_create_event_loop
+from deepeval.utils import (
+    trimAndLoadJson,
+    get_or_create_event_loop,
+    validate_test_case_params,
+)
 from deepeval.metrics.hallucination.template import HallucinationTemplate
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
+
+required_params: List[LLMTestCaseParams] = [
+    LLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
+    LLMTestCaseParams.CONTEXT,
+]
 
 
 class HallucinationVerdict(BaseModel):
@@ -38,13 +45,7 @@ class HallucinationMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        if (
-            test_case.input is None
-            or test_case.actual_output is None
-            or test_case.context is None
-        ):
-            raise ValueError("Input, actual output, or context cannot be None")
-
+        validate_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
@@ -71,6 +72,7 @@ class HallucinationMetric(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
+        validate_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,

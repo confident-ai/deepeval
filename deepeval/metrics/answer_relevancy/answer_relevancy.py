@@ -2,13 +2,22 @@ import asyncio
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 
-from deepeval.utils import trimAndLoadJson, get_or_create_event_loop
-from deepeval.test_case import LLMTestCase
+from deepeval.utils import (
+    trimAndLoadJson,
+    get_or_create_event_loop,
+    validate_test_case_params,
+)
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
+
+required_params: List[LLMTestCaseParams] = [
+    LLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
+]
 
 
 class AnswerRelvancyVerdict(BaseModel):
@@ -36,8 +45,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        if test_case.input is None or test_case.actual_output is None:
-            raise ValueError("Input or actual output cannot be None")
+        validate_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
@@ -65,6 +73,7 @@ class AnswerRelevancyMetric(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
+        validate_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,

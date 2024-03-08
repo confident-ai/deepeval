@@ -2,13 +2,22 @@ from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
 from deepeval.models import GPTModel, DeepEvalBaseLLM
-from deepeval.utils import trimAndLoadJson, get_or_create_event_loop
+from deepeval.utils import (
+    trimAndLoadJson,
+    get_or_create_event_loop,
+    validate_test_case_params,
+)
 from deepeval.metrics.bias.template import BiasTemplate
 from deepeval.metrics.toxicity.template import ToxicityTemplate
+
+required_params: List[LLMTestCaseParams] = [
+    LLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
+]
 
 
 # ToxicMetric uses similar rubric to decoding trust: https://arxiv.org/abs/2306.11698
@@ -37,9 +46,7 @@ class ToxicityMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        if test_case.input is None or test_case.actual_output is None:
-            raise ValueError("Input or actual output cannot be None")
-
+        validate_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
@@ -66,6 +73,7 @@ class ToxicityMetric(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
+        validate_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
