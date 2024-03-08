@@ -39,7 +39,7 @@ class SummarizationMetric(BaseMetric):
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         assessment_questions: Optional[List[str]] = None,
         include_reason: bool = True,
-        run_async=True,
+        asynchronous=True,
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -54,7 +54,7 @@ class SummarizationMetric(BaseMetric):
         else:
             self.assessment_questions = assessment_questions
 
-        self.run_async = run_async
+        self.asynchronous = asynchronous
         self.include_reason = include_reason
         self.n = n
         self.strict_mode = strict_mode
@@ -64,11 +64,16 @@ class SummarizationMetric(BaseMetric):
             raise ValueError("Input or actual output cannot be None")
 
         with metrics_progress_context(
-            self.__name__, self.evaluation_model, self.strict_mode
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
         ):
-            if self.run_async:
+            if self.asynchronous:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(self.a_measure(test_case))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.truths: List[str] = self._generate_claims(test_case.input)
                 self.claims: List[str] = self._generate_claims(
@@ -88,28 +93,42 @@ class SummarizationMetric(BaseMetric):
                 }
                 self.score = min(alignment_score, coverage_score)
                 self.reason = self._generate_reason()
+                self.success = self.score >= self.threshold
+                capture_metric_type(self.__name__)
+                return self.score
 
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        with metrics_progress_context(
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
+            _show_indicator,
+        ):
+            print("a summarization")
+            self.truths, self.claims = await asyncio.gather(
+                self._a_generate_claims(test_case.input),
+                self._a_generate_claims(test_case.actual_output),
+            )
+            self.coverage_verdicts, self.alignment_verdicts = (
+                await asyncio.gather(
+                    self._a_generate_coverage_verdicts(test_case),
+                    self._a_generate_alignment_verdicts(),
+                )
+            )
+            alignment_score = self._calculate_score(ScoreType.ALIGNMENT)
+            coverage_score = self._calculate_score(ScoreType.COVERAGE)
+            self.score_breakdown = {
+                ScoreType.ALIGNMENT.value: alignment_score,
+                ScoreType.COVERAGE.value: coverage_score,
+            }
+            self.score = min(alignment_score, coverage_score)
+            self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
             capture_metric_type(self.__name__)
             return self.score
-
-    async def a_measure(self, test_case: LLMTestCase):
-        self.truths, self.claims = await asyncio.gather(
-            self._a_generate_claims(test_case.input),
-            self._a_generate_claims(test_case.actual_output),
-        )
-        self.coverage_verdicts, self.alignment_verdicts = await asyncio.gather(
-            self._a_generate_coverage_verdicts(test_case),
-            self._a_generate_alignment_verdicts(),
-        )
-        alignment_score = self._calculate_score(ScoreType.ALIGNMENT)
-        coverage_score = self._calculate_score(ScoreType.COVERAGE)
-        self.score_breakdown = {
-            ScoreType.ALIGNMENT.value: alignment_score,
-            ScoreType.COVERAGE.value: coverage_score,
-        }
-        self.score = min(alignment_score, coverage_score)
-        self.reason = await self._a_generate_reason()
 
     async def _a_generate_reason(self) -> str:
         if self.include_reason is False:

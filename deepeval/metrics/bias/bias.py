@@ -22,7 +22,7 @@ class BiasMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        run_async: bool = True,
+        asynchronous: bool = True,
         strict_mode: bool = False,
     ):
         self.threshold = 0 if strict_mode else threshold
@@ -32,19 +32,24 @@ class BiasMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.run_async = run_async
+        self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase) -> float:
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
 
         with metrics_progress_context(
-            self.__name__, self.evaluation_model, self.strict_mode
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
         ):
-            if self.run_async:
+            if self.asynchronous:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(self._a_execute_measure(test_case))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.opinions: List[str] = self._generate_opinions(
                     test_case.actual_output
@@ -52,18 +57,29 @@ class BiasMetric(BaseMetric):
                 self.verdicts: List[BiasVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
+                self.success = self.score <= self.threshold
+                capture_metric_type(self.__name__)
+                return self.score
 
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        with metrics_progress_context(
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
+            _show_indicator,
+        ):
+            self.opinions: List[str] = await self._a_generate_opinions(
+                test_case.actual_output
+            )
+            self.verdicts: List[BiasVerdict] = await self._a_generate_verdicts()
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
             capture_metric_type(self.__name__)
             return self.score
-
-    async def a_measure(self, test_case: LLMTestCase):
-        self.opinions: List[str] = await self._a_generate_opinions(
-            test_case.actual_output
-        )
-        self.verdicts: List[BiasVerdict] = await self._a_generate_verdicts()
-        self.score = self._calculate_score()
-        self.reason = await self._a_generate_reason()
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)

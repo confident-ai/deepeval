@@ -23,7 +23,7 @@ class ContextualPrecisionMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        run_async: bool = True,
+        asynchronous: bool = True,
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -33,7 +33,7 @@ class ContextualPrecisionMetric(BaseMetric):
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
-        self.run_async = run_async
+        self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
@@ -48,12 +48,17 @@ class ContextualPrecisionMetric(BaseMetric):
             )
 
         with metrics_progress_context(
-            self.__name__, self.evaluation_model, self.strict_mode
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
         ):
 
-            if self.run_async:
+            if self.asynchronous:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(self.a_measure(test_case))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.verdicts: List[ContextualPrecisionVerdict] = (
                     self._generate_verdicts(
@@ -64,22 +69,32 @@ class ContextualPrecisionMetric(BaseMetric):
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.input)
+                self.success = self.score >= self.threshold
+                capture_metric_type(self.__name__)
+                return self.score
 
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        with metrics_progress_context(
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
+            _show_indicator,
+        ):
+            self.verdicts: List[ContextualPrecisionVerdict] = (
+                await self._a_generate_verdicts(
+                    test_case.input,
+                    test_case.expected_output,
+                    test_case.retrieval_context,
+                )
+            )
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
             capture_metric_type(self.__name__)
             return self.score
-
-    async def a_measure(self, test_case: LLMTestCase):
-        self.verdicts: List[ContextualPrecisionVerdict] = (
-            await self._a_generate_verdicts(
-                test_case.input,
-                test_case.expected_output,
-                test_case.retrieval_context,
-            )
-        )
-
-        self.score = self._calculate_score()
-        self.reason = await self._a_generate_reason(test_case.input)
 
     async def _a_generate_reason(self, input: str):
         if self.include_reason is False:

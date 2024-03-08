@@ -22,7 +22,7 @@ class FaithfulnessMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        run_async: bool = True,
+        asynchronous: bool = True,
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -32,10 +32,10 @@ class FaithfulnessMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.run_async = run_async
+        self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase) -> float:
         if (
             test_case.input is None
             or test_case.actual_output is None
@@ -46,48 +46,49 @@ class FaithfulnessMetric(BaseMetric):
             )
 
         with metrics_progress_context(
-            self.__name__, self.evaluation_model, self.strict_mode
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
         ):
-            if self.run_async:
+            if self.asynchronous:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(self.a_measure(test_case))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.truths = self._generate_truths(test_case.retrieval_context)
                 self.claims = self._generate_claims(test_case.actual_output)
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-
-            self.success = self.score >= self.threshold
-            capture_metric_type(self.__name__)
-            return self.score
-
-    def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 0
-
-        faithfulness_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                faithfulness_count += 1
-
-        score = faithfulness_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+                self.success = self.score >= self.threshold
+                capture_metric_type(self.__name__)
+                return self.score
 
     ################################
     ###### Asynchronous logic ######
     ################################
-    async def a_measure(self, test_case: LLMTestCase):
-        self.truths, self.claims = await asyncio.gather(
-            self._a_generate_truths(test_case.retrieval_context),
-            self._a_generate_claims(test_case.actual_output),
-        )
-        print("generate verdicts")
-        self.verdicts = await self._a_generate_verdicts()
-        self.score = self._calculate_score()
-        print("generate reasons")
-        self.reason = await self._a_generate_reason()
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        with metrics_progress_context(
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
+            _show_indicator,
+        ):
+            self.truths, self.claims = await asyncio.gather(
+                self._a_generate_truths(test_case.retrieval_context),
+                self._a_generate_claims(test_case.actual_output),
+            )
+            self.verdicts = await self._a_generate_verdicts()
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason()
+            self.success = self.score >= self.threshold
+            capture_metric_type(self.__name__)
+            return self.score
 
     async def _a_generate_reason(self) -> str:
         if self.include_reason is False:
@@ -117,7 +118,6 @@ class FaithfulnessMetric(BaseMetric):
         return verdicts
 
     async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
-        print("generating truths")
         prompt = FaithfulnessTemplate.generate_claims(
             text="\n\n".join(retrieval_context)
         )
@@ -126,7 +126,6 @@ class FaithfulnessMetric(BaseMetric):
         return data["claims"]
 
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
-        print("generating claims")
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
         res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
@@ -135,6 +134,19 @@ class FaithfulnessMetric(BaseMetric):
     ###############################
     ###### Synchronous logic ######
     ###############################
+    def _calculate_score(self) -> float:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
+            return 0
+
+        faithfulness_count = 0
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() != "no":
+                faithfulness_count += 1
+
+        score = faithfulness_count / number_of_verdicts
+        return 0 if self.strict_mode and score < self.threshold else score
+
     def _generate_reason(self) -> str:
         if self.include_reason is False:
             return None
@@ -163,7 +175,6 @@ class FaithfulnessMetric(BaseMetric):
         return verdicts
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
-        print("generating truths")
         prompt = FaithfulnessTemplate.generate_claims(
             text="\n\n".join(retrieval_context)
         )

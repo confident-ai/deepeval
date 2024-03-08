@@ -24,7 +24,7 @@ class HallucinationMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        run_async: bool = False,
+        asynchronous: bool = False,
         strict_mode: bool = False,
     ):
         self.threshold = 0 if strict_mode else threshold
@@ -34,7 +34,7 @@ class HallucinationMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.run_async = run_async
+        self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase):
@@ -45,11 +45,16 @@ class HallucinationMetric(BaseMetric):
         ):
             raise ValueError("Input, actual output, or context cannot be None")
         with metrics_progress_context(
-            self.__name__, self.evaluation_model, self.strict_mode
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
         ):
-            if self.run_async:
+            if self.asynchronous:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(self.a_measure(test_case))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.verdicts: List[HallucinationVerdict] = (
                     self._generate_verdicts(
@@ -58,19 +63,31 @@ class HallucinationMetric(BaseMetric):
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
+                self.success = self.score <= self.threshold
+                capture_metric_type(self.__name__)
+                return self.score
 
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        with metrics_progress_context(
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
+            _show_indicator,
+        ):
+            print("a hallucination")
+            self.verdicts: List[HallucinationVerdict] = (
+                await self._a_generate_verdicts(
+                    test_case.actual_output, test_case.context
+                )
+            )
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
             capture_metric_type(self.__name__)
             return self.score
-
-    async def a_measure(self, test_case: LLMTestCase):
-        self.verdicts: List[HallucinationVerdict] = (
-            await self._a_generate_verdicts(
-                test_case.actual_output, test_case.context
-            )
-        )
-        self.score = self._calculate_score()
-        self.reason = await self._a_generate_reason()
 
     async def _a_generate_reason(self):
         if self.include_reason is False:

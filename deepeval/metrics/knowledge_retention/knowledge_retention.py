@@ -44,7 +44,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             raise ValueError("Messages cannot be empty")
 
         with metrics_progress_context(
-            self.__name__, self.evaluation_model, self.strict_mode
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
         ):
             self.knowledges: List[Knowledge] = self._generate_knowledges(
                 test_case

@@ -23,6 +23,12 @@ class BaseMetric:
         raise NotImplementedError
 
     @abstractmethod
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        raise NotImplementedError(
+            f"Async execution for {self.__class__.__name__} not supported yet. Please turn set 'asynchronous' to 'False'."
+        )
+
+    @abstractmethod
     def is_successful(self) -> bool:
         raise NotImplementedError
 
