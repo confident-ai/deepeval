@@ -3,7 +3,7 @@ from .utils import get_column_order, generate_test_cases
 from .rich_manager import RichManager
 
 from deepeval.metrics import BaseMetric
-from deepeval.evaluate import execute_test
+from deepeval.evaluate import execute_test_cases
 from deepeval.dataset import EvaluationDataset
 
 try:
@@ -68,7 +68,7 @@ try:
             Returns:
                 Dict[str, List[float]]: Metric scores for each test case.
             """
-            test_results = execute_test(
+            test_results = execute_test_cases(
                 test_cases=self.evaluation_dataset.test_cases,
                 metrics=self.metrics,
             )

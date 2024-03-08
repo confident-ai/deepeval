@@ -24,18 +24,23 @@ def metrics_progress_context(
     metric_name: str,
     evaluation_model: str,
     strict_mode: bool,
+    asynchronous: bool,
+    show_indicator: bool = True,
     total: int = 9999,
     transient: bool = True,
 ):
-    description = f"✨ 🍰 ✨ You're using DeepEval's latest {metric_name} Metric (using {evaluation_model}, strict_mode={strict_mode})! This may take a minute..."
+    description = f"✨ 🍰 ✨ You're using DeepEval's latest {metric_name} Metric (using {evaluation_model}, strict={strict_mode}, async={asynchronous})! This may take a minute..."
     console = Console(file=sys.stderr)  # Direct output to standard error
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,  # Use the custom console
-        transient=transient,
-    ) as progress:
-        progress.add_task(description=description, total=total)
+    if show_indicator:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,  # Use the custom console
+            transient=transient,
+        ) as progress:
+            progress.add_task(description=description, total=total)
+            yield
+    else:
         yield
 
 

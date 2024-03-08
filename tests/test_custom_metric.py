@@ -39,4 +39,5 @@ def test_length_metric():
         actual_output="This is a long sentence that is more than 3 letters",
         latency=8.3,
     )
-    assert_test(test_case, [metric])
+    # a_measure not implemented
+    assert_test(test_case, [metric], asynchronous=False)

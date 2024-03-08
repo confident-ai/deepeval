@@ -1,9 +1,10 @@
+import asyncio
 import os
-from typing import List
+from typing import List, Optional
 import time
 from dataclasses import dataclass
 
-from deepeval.utils import drop_and_copy
+from deepeval.utils import drop_and_copy, get_or_create_event_loop
 from deepeval.telemetry import capture_evaluation_count
 from deepeval.progress_context import progress_context
 from deepeval.metrics import BaseMetric
@@ -46,7 +47,28 @@ def create_test_result(
         raise ValueError("TestCase not supported yet.")
 
 
-def execute_test(
+def create_api_test_case(
+    test_case: LLMTestCase,
+    index: Optional[int] = None,
+) -> APITestCase:
+    return APITestCase(
+        name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
+        input=test_case.input,
+        actualOutput=test_case.actual_output,
+        expectedOutput=test_case.expected_output,
+        success=True,
+        metricsMetadata=[],
+        runDuration=0,
+        latency=test_case.latency,
+        cost=test_case.cost,
+        context=test_case.context,
+        retrievalContext=test_case.retrieval_context,
+        traceStack=get_trace_stack(),
+        id=test_case.id,
+    )
+
+
+def execute_test_cases(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
     save_to_disk: bool = False,
@@ -55,25 +77,62 @@ def execute_test(
     test_run_manager.save_to_disk = save_to_disk
     for index, test_case in enumerate(test_cases):
         success = True
-        api_test_case: APITestCase = APITestCase(
-            name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
-            input=test_case.input,
-            actualOutput=test_case.actual_output,
-            expectedOutput=test_case.expected_output,
-            success=success,
-            metricsMetadata=[],
-            runDuration=0,
-            latency=test_case.latency,
-            cost=test_case.cost,
-            context=test_case.context,
-            retrievalContext=test_case.retrieval_context,
-            traceStack=get_trace_stack(),
-            id=test_case.id,
+        api_test_case: APITestCase = create_api_test_case(test_case, index)
+        test_start_time = time.perf_counter()
+
+        for metric in metrics:
+            # Override metric async
+            metric.asynchronous = False
+
+            metric.measure(test_case)
+            metric_metadata = MetricsMetadata(
+                metric=metric.__name__,
+                score=metric.score,
+                threshold=metric.threshold,
+                reason=metric.reason,
+                success=metric.is_successful(),
+                evaluationModel=metric.evaluation_model,
+            )
+            api_test_case.metrics_metadata.append(metric_metadata)
+            if metric_metadata.success is False:
+                success = False
+
+        test_end_time = time.perf_counter()
+        run_duration = test_end_time - test_start_time
+        api_test_case.run_duration = run_duration
+        api_test_case.success = success
+
+        test_run = test_run_manager.get_test_run()
+        test_run.test_cases.append(api_test_case)
+        test_run.dataset_alias = test_case.dataset_alias
+        test_run_manager.save_test_run()
+
+        test_result = create_test_result(
+            test_case, success, drop_and_copy(metrics, ["model", "embeddings"])
+        )
+        test_results.append(test_result)
+
+    return test_results
+
+
+async def a_execute_test_cases(
+    test_cases: List[LLMTestCase],
+    metrics: List[BaseMetric],
+    save_to_disk: bool = False,
+) -> List[TestResult]:
+    test_results: List[TestResult] = []
+    test_run_manager.save_to_disk = save_to_disk
+    for index, test_case in enumerate(test_cases):
+        success = True
+        api_test_case: APITestCase = create_api_test_case(test_case, index)
+        test_start_time = time.perf_counter()
+
+        # Run metrics concurrently using asyncio.gather
+        await asyncio.gather(
+            *[metric.a_measure(test_case) for metric in metrics]
         )
 
-        test_start_time = time.perf_counter()
         for metric in metrics:
-            metric.measure(test_case)
             metric_metadata = MetricsMetadata(
                 metric=metric.__name__,
                 score=metric.score,
@@ -120,7 +179,7 @@ def run_test(
 
     test_run_manager.reset()
     with progress_context("Executing run_test()..."):
-        test_result = execute_test([test_case], metrics, False)[0]
+        test_result = execute_test_cases([test_case], metrics, False)[0]
         capture_evaluation_count()
         print_test_result(test_result)
         print("")
@@ -128,7 +187,9 @@ def run_test(
         return test_result
 
 
-def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
+def assert_test(
+    test_case: LLMTestCase, metrics: List[BaseMetric], asynchronous: bool = True
+):
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
@@ -138,9 +199,17 @@ def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
     if not isinstance(test_case, LLMTestCase):
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
 
-    test_result = execute_test([test_case], metrics, get_is_running_deepeval())[
-        0
-    ]
+    if asynchronous:
+        loop = get_or_create_event_loop()
+        test_result = loop.run_until_complete(
+            a_execute_test_cases(
+                [test_case], metrics, get_is_running_deepeval()
+            )
+        )[0]
+    else:
+        test_result = execute_test_cases(
+            [test_case], metrics, get_is_running_deepeval()
+        )[0]
     if not test_result.success:
         failed_metrics = [
             metric
@@ -156,7 +225,11 @@ def assert_test(test_case: LLMTestCase, metrics: List[BaseMetric]):
         raise AssertionError(f"Metrics {failed_metrics_str} failed.")
 
 
-def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
+def evaluate(
+    test_cases: List[LLMTestCase],
+    metrics: List[BaseMetric],
+    asynchronous: bool = True,
+):
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
@@ -171,7 +244,13 @@ def evaluate(test_cases: List[LLMTestCase], metrics: List[BaseMetric]):
 
     test_run_manager.reset()
     with progress_context("Evaluating testcases..."):
-        test_results = execute_test(test_cases, metrics, True)
+        if asynchronous:
+            loop = get_or_create_event_loop()
+            test_results = loop.run_until_complete(
+                a_execute_test_cases(test_cases, metrics, True)
+            )
+        else:
+            test_results = execute_test_cases(test_cases, metrics, True)
         capture_evaluation_count()
         for test_result in test_results:
             print_test_result(test_result)
@@ -189,11 +268,11 @@ def print_test_result(test_result: TestResult):
     for metric in test_result.metrics:
         if not metric.is_successful():
             print(
-                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
+                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
             )
         else:
             print(
-                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
+                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
             )
         if metric.score_breakdown:
             for metric_name, score in metric.score_breakdown.items():

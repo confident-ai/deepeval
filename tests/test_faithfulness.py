@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import FaithfulnessMetric
@@ -45,5 +46,5 @@ def test_faithfulness():
         actual_output=output,
         retrieval_context=[one, two, three],
     )
-    metric = FaithfulnessMetric()
+    metric = FaithfulnessMetric(asynchronous=False)
     assert_test(test_case, [metric])

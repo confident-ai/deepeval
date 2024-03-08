@@ -43,11 +43,17 @@ class DeepEvalBaseLLM(ABC):
         """
         pass
 
-    def __call__(self, *args: Any, **kwargs: Any) -> str:
-        return self._call(*args, **kwargs)
+    @abstractmethod
+    def generate(self, *args, **kwargs) -> str:
+        """Runs the model to output LLM response.
+
+        Returns:
+            A string.
+        """
+        pass
 
     @abstractmethod
-    def _call(self, *args, **kwargs) -> str:
+    async def a_generate(self, *args, **kwargs) -> str:
         """Runs the model to output LLM response.
 
         Returns:

@@ -3,7 +3,7 @@ import copy
 import os
 import json
 import time
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, List
 from collections.abc import Iterable
 import tqdm
 import re
@@ -11,8 +11,44 @@ import string
 import numpy as np
 from dataclasses import asdict, is_dataclass
 import re
+import asyncio
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
+
+def check_test_case_params(
+    test_case: LLMTestCase,
+    test_case_params: List[LLMTestCaseParams],
+    metric_name: str,
+):
+    missing_params = []
+    for param in test_case_params:
+        if getattr(test_case, param.value) is None:
+            missing_params.append(f"'{param.value}'")
+
+    if missing_params:
+        if len(missing_params) == 1:
+            missing_params_str = missing_params[0]
+        elif len(missing_params) == 2:
+            missing_params_str = " and ".join(missing_params)
+        else:
+            missing_params_str = (
+                ", ".join(missing_params[:-1]) + ", and " + missing_params[-1]
+            )
+
+        raise ValueError(
+            f"{missing_params_str} cannot be None for the '{metric_name}' metric"
+        )
+
+
+def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop
 
 
 def login_with_confident_api_key(api_key: string):

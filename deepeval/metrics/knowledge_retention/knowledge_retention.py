@@ -44,7 +44,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             raise ValueError("Messages cannot be empty")
 
         with metrics_progress_context(
-            self.__name__, self.evaluation_model, self.strict_mode
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
         ):
             self.knowledges: List[Knowledge] = self._generate_knowledges(
                 test_case
@@ -53,7 +55,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 self._generate_verdicts(test_case)
             )
 
-            knowledge_retention_score = self._generate_score()
+            knowledge_retention_score = self._calculate_score()
             self.reason = self._generate_reason(knowledge_retention_score)
 
             self.success = knowledge_retention_score >= self.threshold
@@ -78,7 +80,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         res = self.model(prompt)
         return res
 
-    def _generate_score(self) -> float:
+    def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
             return 0

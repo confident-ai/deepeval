@@ -13,13 +13,21 @@ class FakeMetric(BaseMetric):
     def __init__(self, threshold: float = 0.5):
         self.threshold = threshold
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase, _asynchronous):
         # Set self.success and self.score in the "measure" method
         self.score = random.uniform(0.0, 1.0)
         self.success = self.score >= self.threshold
         # You can also optionally set a reason for the score returned.
         # This is particularly useful for a score computed using LLMs
         self.reason = "This metric looking good!"
+        return self.score
+
+    def a_meausre(self, test_case: LLMTestCase):
+        self.score = random.uniform(0.0, 1.0)
+        self.success = self.score >= self.threshold
+        # You can also optionally set a reason for the score returned.
+        # This is particularly useful for a score computed using LLMs
+        self.reason = "This async metric looking good!"
         return self.score
 
     def is_successful(self):
@@ -57,9 +65,4 @@ def hyperparameters():
     return {
         "chunk_size": 500,
         "temperature": 0,
-        "prompt_template": """You are a helpful assistant, answer the following question in a non-judgemental tone.
-
-        Question:
-        {question}
-        """,
     }

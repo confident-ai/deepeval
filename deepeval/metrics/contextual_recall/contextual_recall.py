@@ -1,14 +1,24 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
-import json
 
-from deepeval.utils import trimAndLoadJson
-from deepeval.test_case import LLMTestCase
+from deepeval.utils import (
+    trimAndLoadJson,
+    get_or_create_event_loop,
+    check_test_case_params,
+)
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.contextual_recall.template import ContextualRecallTemplate
 from deepeval.progress_context import metrics_progress_context
 from deepeval.telemetry import capture_metric_type
+
+required_params: List[LLMTestCaseParams] = [
+    LLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
+    LLMTestCaseParams.RETRIEVAL_CONTEXT,
+    LLMTestCaseParams.EXPECTED_OUTPUT,
+]
 
 
 class ContextualRecallVerdict(BaseModel):
@@ -22,6 +32,7 @@ class ContextualRecallMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        asynchronous: bool = True,
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -31,39 +42,59 @@ class ContextualRecallMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
+        self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        if (
-            test_case.input is None
-            or test_case.actual_output is None
-            or test_case.retrieval_context is None
-            or test_case.expected_output is None
-        ):
-            raise ValueError(
-                "Input, actual output, expected output, or retrieval context cannot be None"
-            )
+        check_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
-            self.__name__, self.evaluation_model, self.strict_mode
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
+        ):
+            if self.asynchronous:
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
+            else:
+                self.verdicts: List[ContextualRecallVerdict] = (
+                    self._generate_verdicts(
+                        test_case.expected_output, test_case.retrieval_context
+                    )
+                )
+                self.score = self._calculate_score()
+                self.reason = self._generate_reason(test_case.expected_output)
+                self.success = self.score >= self.threshold
+                capture_metric_type(self.__name__)
+                return self.score
+
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        check_test_case_params(test_case, required_params, self.__name__)
+        with metrics_progress_context(
+            self.__name__,
+            self.evaluation_model,
+            self.strict_mode,
+            True,
+            _show_indicator,
         ):
             self.verdicts: List[ContextualRecallVerdict] = (
-                self._generate_verdicts(
+                await self._a_generate_verdicts(
                     test_case.expected_output, test_case.retrieval_context
                 )
             )
-
-            contextual_recall_score = self._generate_score()
-
-            self.reason = self._generate_reason(
-                test_case.expected_output, contextual_recall_score
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason(
+                test_case.expected_output
             )
-
-            self.success = contextual_recall_score >= self.threshold
-            self.score = contextual_recall_score
+            self.success = self.score >= self.threshold
             capture_metric_type(self.__name__)
             return self.score
 
-    def _generate_reason(self, expected_output: str, score: float):
+    async def _a_generate_reason(self, expected_output: str):
         if self.include_reason is False:
             return None
 
@@ -79,13 +110,35 @@ class ContextualRecallMetric(BaseMetric):
             expected_output=expected_output,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
-            score=format(score, ".2f"),
+            score=format(self.score, ".2f"),
         )
 
-        res = self.model(prompt)
+        res = await self.model.a_generate(prompt)
         return res
 
-    def _generate_score(self):
+    def _generate_reason(self, expected_output: str):
+        if self.include_reason is False:
+            return None
+
+        supportive_reasons = []
+        unsupportive_reasons = []
+        for verdict in self.verdicts:
+            if verdict.verdict.lower() == "yes":
+                supportive_reasons.append(verdict.reason)
+            else:
+                unsupportive_reasons.append(verdict.reason)
+
+        prompt = ContextualRecallTemplate.generate_reason(
+            expected_output=expected_output,
+            supportive_reasons=supportive_reasons,
+            unsupportive_reasons=unsupportive_reasons,
+            score=format(self.score, ".2f"),
+        )
+
+        res = self.model.generate(prompt)
+        return res
+
+    def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
             return 0
@@ -96,8 +149,20 @@ class ContextualRecallMetric(BaseMetric):
                 justified_sentences += 1
 
         score = justified_sentences / number_of_verdicts
-
         return 0 if self.strict_mode and score < self.threshold else score
+
+    async def _a_generate_verdicts(
+        self, expected_output: str, retrieval_context: List[str]
+    ) -> List[ContextualRecallVerdict]:
+        prompt = ContextualRecallTemplate.generate_verdicts(
+            expected_output=expected_output, retrieval_context=retrieval_context
+        )
+        res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res)
+        verdicts = [
+            ContextualRecallVerdict(**item) for item in data["verdicts"]
+        ]
+        return verdicts
 
     def _generate_verdicts(
         self, expected_output: str, retrieval_context: List[str]
@@ -105,12 +170,11 @@ class ContextualRecallMetric(BaseMetric):
         prompt = ContextualRecallTemplate.generate_verdicts(
             expected_output=expected_output, retrieval_context=retrieval_context
         )
-        res = self.model(prompt)
+        res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
         verdicts = [
             ContextualRecallVerdict(**item) for item in data["verdicts"]
         ]
-
         return verdicts
 
     def is_successful(self) -> bool:
