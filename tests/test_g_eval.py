@@ -21,5 +21,4 @@ def test_g_eval():
         expected_output="Paris",
         context=["Geography"],
     )
-
-    assert_test(test_case, [metric])
+    assert_test(test_case, [metric], asynchronous=False)
