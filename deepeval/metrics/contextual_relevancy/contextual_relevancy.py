@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from deepeval.utils import (
     trimAndLoadJson,
     get_or_create_event_loop,
-    validate_test_case_params,
+    check_test_case_params,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
@@ -48,7 +48,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        validate_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
@@ -75,7 +75,7 @@ class ContextualRelevancyMetric(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
-        validate_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,

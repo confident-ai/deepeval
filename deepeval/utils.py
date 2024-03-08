@@ -17,7 +17,7 @@ from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 
-def validate_test_case_params(
+def check_test_case_params(
     test_case: LLMTestCase,
     test_case_params: List[LLMTestCaseParams],
     metric_name: str,

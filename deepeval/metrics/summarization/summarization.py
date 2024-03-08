@@ -9,7 +9,7 @@ from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.utils import (
     trimAndLoadJson,
     get_or_create_event_loop,
-    validate_test_case_params,
+    check_test_case_params,
 )
 from deepeval.metrics.summarization.template import SummarizationTemplate
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
@@ -68,7 +68,7 @@ class SummarizationMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        validate_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
@@ -106,7 +106,7 @@ class SummarizationMetric(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
-        validate_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self.__name__)
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
