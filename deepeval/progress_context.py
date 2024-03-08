@@ -20,31 +20,6 @@ def progress_context(
 
 
 @contextmanager
-def metrics_progress_context(
-    metric_name: str,
-    evaluation_model: str,
-    strict_mode: bool,
-    run_async: bool,
-    show_indicator: bool = True,
-    total: int = 9999,
-    transient: bool = True,
-):
-    description = f"✨ 🍰 ✨ You're using DeepEval's latest {metric_name} Metric (using {evaluation_model}, strict={strict_mode}, async={run_async})! This may take a minute..."
-    console = Console(file=sys.stderr)  # Direct output to standard error
-    if show_indicator:
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,  # Use the custom console
-            transient=transient,
-        ) as progress:
-            progress.add_task(description=description, total=total)
-            yield
-    else:
-        yield
-
-
-@contextmanager
 def synthesizer_progress_context(
     evaluation_model: str,
     total: int = 9999,

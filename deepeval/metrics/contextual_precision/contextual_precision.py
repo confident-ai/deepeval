@@ -12,7 +12,7 @@ from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.contextual_precision.template import (
     ContextualPrecisionTemplate,
 )
-from deepeval.progress_context import metrics_progress_context
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.telemetry import capture_metric_type
 
 
@@ -50,12 +50,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_test_case_params(test_case, required_params, self.__name__)
-        with metrics_progress_context(
-            self.__name__,
-            self.evaluation_model,
-            self.strict_mode,
-            self.run_async,
-        ):
+        with metric_progress_indicator(self):
 
             if self.run_async:
                 loop = get_or_create_event_loop()
@@ -80,12 +75,10 @@ class ContextualPrecisionMetric(BaseMetric):
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
         check_test_case_params(test_case, required_params, self.__name__)
-        with metrics_progress_context(
-            self.__name__,
-            self.evaluation_model,
-            self.strict_mode,
-            True,
-            _show_indicator,
+        with metric_progress_indicator(
+            self,
+            is_async=True,
+            _show_indicator=_show_indicator,
         ):
             self.verdicts: List[ContextualPrecisionVerdict] = (
                 await self._a_generate_verdicts(

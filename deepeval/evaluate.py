@@ -6,13 +6,15 @@ from dataclasses import dataclass
 
 from deepeval.utils import drop_and_copy, get_or_create_event_loop
 from deepeval.telemetry import capture_evaluation_count
-from deepeval.progress_context import progress_context
 from deepeval.metrics import BaseMetric
+from deepeval.metrics.indicator import (
+    measure_metrics_with_indicator,
+)
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import get_trace_stack
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
-from deepeval.utils import get_is_running_deepeval
+from deepeval.utils import get_is_running_deepeval, disable_indicator
 
 
 @dataclass
@@ -127,11 +129,7 @@ async def a_execute_test_cases(
         api_test_case: APITestCase = create_api_test_case(test_case, index)
         test_start_time = time.perf_counter()
 
-        # Run metrics concurrently using asyncio.gather
-        await asyncio.gather(
-            *[metric.a_measure(test_case) for metric in metrics]
-        )
-
+        await measure_metrics_with_indicator(metrics, test_case)
         for metric in metrics:
             metric_metadata = MetricsMetadata(
                 metric=metric.__name__,
@@ -162,29 +160,6 @@ async def a_execute_test_cases(
         test_results.append(test_result)
 
     return test_results
-
-
-def run_test(
-    test_case: LLMTestCase,
-    metrics: List[BaseMetric],
-) -> List[TestResult]:
-    # TODO: refactor
-    for metric in metrics:
-        if not isinstance(metric, BaseMetric):
-            raise TypeError("Provided 'metric' must be of type 'BaseMetric'.")
-
-    # TODO: refactor
-    if not isinstance(test_case, LLMTestCase):
-        raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
-
-    test_run_manager.reset()
-    with progress_context("Executing run_test()..."):
-        test_result = execute_test_cases([test_case], metrics, False)[0]
-        capture_evaluation_count()
-        print_test_result(test_result)
-        print("")
-        print("-" * 70)
-        return test_result
 
 
 def assert_test(
@@ -218,7 +193,7 @@ def assert_test(
         ]
         failed_metrics_str = ", ".join(
             [
-                f"{metric.__name__} (score: {metric.score}, threshold: {metric.threshold})"
+                f"{metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode})"
                 for metric in failed_metrics
             ]
         )
@@ -229,7 +204,11 @@ def evaluate(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
     run_async: bool = True,
+    show_indicator: bool = True,
 ):
+    if show_indicator is False:
+        disable_indicator()
+
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
@@ -243,22 +222,23 @@ def evaluate(
             )
 
     test_run_manager.reset()
-    with progress_context("Evaluating testcases..."):
-        if run_async:
-            loop = get_or_create_event_loop()
-            test_results = loop.run_until_complete(
-                a_execute_test_cases(test_cases, metrics, True)
-            )
-        else:
-            test_results = execute_test_cases(test_cases, metrics, True)
-        capture_evaluation_count()
-        for test_result in test_results:
-            print_test_result(test_result)
-        print("")
-        print("-" * 70)
+    print("Evaluating test cases...")
+    if run_async:
+        loop = get_or_create_event_loop()
+        test_results = loop.run_until_complete(
+            a_execute_test_cases(test_cases, metrics, True)
+        )
+    else:
+        test_results = execute_test_cases(test_cases, metrics, True)
 
-        test_run_manager.wrap_up_test_run(display_table=False)
-        return test_results
+    capture_evaluation_count()
+    for test_result in test_results:
+        print_test_result(test_result)
+
+    print("")
+    print("-" * 70)
+    test_run_manager.wrap_up_test_run(display_table=False)
+    return test_results
 
 
 def print_test_result(test_result: TestResult):

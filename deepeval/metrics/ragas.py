@@ -65,7 +65,9 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         capture_metric_type(self.__name__)
         return self.score
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def is_successful(self):
@@ -88,7 +90,9 @@ class RAGASContextualRelevancyMetric(BaseMetric):
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -150,7 +154,9 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         self.evaluation_model = self.model.get_model_name()
         self.embeddings = embeddings
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -209,7 +215,9 @@ class RAGASFaithfulnessMetric(BaseMetric):
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -264,7 +272,9 @@ class RAGASContextualRecallMetric(BaseMetric):
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -320,7 +330,9 @@ class HarmfulnessMetric(BaseMetric):
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -377,7 +389,9 @@ class CoherenceMetric(BaseMetric):
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -432,7 +446,9 @@ class MaliciousnessMetric(BaseMetric):
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -488,7 +504,9 @@ class CorrectnessMetric(BaseMetric):
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -544,7 +562,9 @@ class ConcisenessMetric(BaseMetric):
         self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -602,7 +622,9 @@ class RagasMetric(BaseMetric):
         self.evaluation_model = self.model.get_model_name()
         self.embeddings = embeddings
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):

@@ -11,7 +11,7 @@ from deepeval.utils import (
 )
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
-from deepeval.progress_context import metrics_progress_context
+from deepeval.metrics.indicator import metric_progress_indicator
 
 G_EVAL_PARAMS = {
     LLMTestCaseParams.INPUT: "Input",
@@ -53,7 +53,7 @@ class GEval(BaseMetric):
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
-        asynchronous: bool = True,
+        run_async: bool = True,
         strict_mode: bool = False,
     ):
         self.name = name
@@ -84,20 +84,15 @@ class GEval(BaseMetric):
         self.evaluation_steps = evaluation_steps
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
-        self.asynchronous = asynchronous
+        self.run_async = run_async
 
     def measure(self, test_case: LLMTestCase) -> float:
         """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
         check_test_case_params(
             test_case, self.evaluation_params, f"GEval({self.__name__})"
         )
-        with metrics_progress_context(
-            f"GEval ({self.__name__})",
-            self.evaluation_model,
-            self.strict_mode,
-            self.asynchronous,
-        ):
-            if self.asynchronous:
+        with metric_progress_indicator(self):
+            if self.run_async:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)
@@ -124,12 +119,10 @@ class GEval(BaseMetric):
         check_test_case_params(
             test_case, self.evaluation_params, f"GEval({self.__name__})"
         )
-        with metrics_progress_context(
-            f"GEval({self.__name__})",
-            self.evaluation_model,
-            self.strict_mode,
-            True,
-            _show_indicator,
+        with metric_progress_indicator(
+            self,
+            is_async=True,
+            _show_indicator=_show_indicator,
         ):
             self.evaluation_steps: List[str] = (
                 await self._a_generate_evaluation_steps()
@@ -208,4 +201,4 @@ class GEval(BaseMetric):
 
     @property
     def __name__(self):
-        return self.name
+        return f"GEval({self.name})"

@@ -5,7 +5,7 @@ import re
 from ._version import __version__
 
 from deepeval.event import track
-from deepeval.evaluate import evaluate, run_test, assert_test
+from deepeval.evaluate import evaluate, assert_test
 from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login_with_confident_api_key
 from deepeval.telemetry import *
@@ -15,7 +15,6 @@ __all__ = [
     "log_hyperparameters",
     "track",
     "evaluate",
-    "run_test",
     "assert_test",
     "on_test_run_end",
 ]
