@@ -8,9 +8,10 @@ from deepeval.metrics.g_eval.template import (
     evaluation_steps_template,
     evaluation_results_template,
 )
-from deepeval.utils import trimAndLoadJson
+from deepeval.utils import trimAndLoadJson, check_test_case_params, get_or_create_event_loop
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
+from deepeval.progress_context import metrics_progress_context
 
 
 class GEvalResponse(BaseModel):
@@ -27,6 +28,7 @@ class GEval(BaseMetric):
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
+        asynchronous: bool = True,
         strict_mode: bool = False,
     ):
         self.name = name
@@ -45,7 +47,7 @@ class GEval(BaseMetric):
         # Check if evaluation_steps is provided, it cannot be an empty list
         if evaluation_steps is not None and len(evaluation_steps) == 0:
             raise ValueError(
-                "Evaluation steps must not be an empty list. Either omit evaluation steps or include a non-empty list of steps."
+                "'evaluation_steps' must not be an empty list. Either omit evaluation steps or include a non-empty list of steps."
             )
 
         self.criteria = criteria
@@ -57,68 +59,113 @@ class GEval(BaseMetric):
         self.evaluation_steps = evaluation_steps
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
+        self.asynchronous = asynchronous
 
     def measure(self, test_case: LLMTestCase):
         """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
-
-        # Measure the test case
-        for param in self.evaluation_params:
-            if (
-                not hasattr(test_case, param.value)
-                or getattr(test_case, param.value) is None
-            ):
-                raise ValueError(
-                    f"Test case is missing the required attribute: {param.value}"
+        check_test_case_params(
+            test_case, self.evaluation_params, f"GEval ({self.__name__})"
+        )
+        with metrics_progress_context(
+            f"GEval ({self.__name__})",
+            self.evaluation_model,
+            self.strict_mode,
+            self.asynchronous,
+        ):
+            if self.asynchronous:
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(self.a_measure(test_case, _show_indicator=False))
+            else:
+                self.evaluation_steps: List[str] = (
+                    self._generate_evaluation_steps()
                 )
+                g_score, reason = self.evaluate(test_case)
+                self.reason = reason
+                self.score = float(g_score) / 10
+                self.score = (
+                    0
+                    if self.strict_mode and self.score < self.threshold
+                    else self.score
+                )
+                self.success = self.score >= self.threshold
+                capture_metric_type(self.__name__)
+                return self.score
 
-        if self.evaluation_steps is None:
-            data = trimAndLoadJson(self.generate_evaluation_steps())
-            self.evaluation_steps = data["steps"]
+    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool = True):
+        check_test_case_params(
+            test_case, self.evaluation_params, f"GEval ({self.__name__})"
+        )
+        with metrics_progress_context(
+            f"GEval ({self.__name__})",
+            self.evaluation_model,
+            self.strict_mode,
+            True,
+            _show_indicator,
+        ):
+            self.evaluation_steps: List[str] = (
+                self._a_generate_evaluation_steps()
+            )
+            g_score, reason = self._a_evaluate(test_case)
+            self.reason = reason
+            self.score = float(g_score) / 10
+            self.score = (
+                0
+                if self.strict_mode and self.score < self.threshold
+                else self.score
+            )
+            self.success = self.score >= self.threshold
+            capture_metric_type(self.__name__)
+            return self.score
 
-        score, reason = self.evaluate(test_case)
-        self.reason = reason
-
-        score = float(score) / 10
-
-        self.score = 0 if self.strict_mode and score < self.threshold else score
-        self.success = score >= self.threshold
-        capture_metric_type(self.__name__)
-        return self.score
-
-    def is_successful(self) -> bool:
-        self.success = self.score >= self.threshold
-        return self.success
-
-    def generate_evaluation_steps(self):
+    def _a_generate_evaluation_steps(self) -> List[str]:
         prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
-
         res = self.model(prompt)
+        data = trimAndLoadJson(res)
+        return data["steps"]
 
-        return res
+    def _generate_evaluation_steps(self) -> List[str]:
+        prompt: dict = evaluation_steps_template.format(criteria=self.criteria)
+        res = self.model(prompt)
+        data = trimAndLoadJson(res)
+        return data["steps"]
 
-    def evaluate(self, test_case: LLMTestCase) -> Tuple[int, str]:
+    async def _a_evaluate(self, test_case: LLMTestCase) -> Tuple[int, str]:
         text = """"""
-
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
             text += f"{param.value}: {value} \n\n"
 
         prompt: dict = evaluation_results_template.format(
-            evaluation_steps=self.numbered_evaluation_steps(),
+            evaluation_steps=self.number_evaluation_steps(),
             text=text,
         )
-
-        res = self.model(prompt)
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
-
         return data["score"], data["reason"]
 
-    def numbered_evaluation_steps(self):
+    def evaluate(self, test_case: LLMTestCase) -> Tuple[int, str]:
+        text = """"""
+        for param in self.evaluation_params:
+            value = getattr(test_case, param.value)
+            text += f"{param.value}: {value} \n\n"
+
+        prompt: dict = evaluation_results_template.format(
+            evaluation_steps=self.number_evaluation_steps(),
+            text=text,
+        )
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        return data["score"], data["reason"]
+
+    def number_evaluation_steps(self):
         evaluation_steps = """"""
         for index, string in enumerate(self.evaluation_steps, start=1):
             evaluation_steps += f"{index}. {string}\n"
-
         return evaluation_steps
+
+    def is_successful(self) -> bool:
+        self.success = self.score >= self.threshold
+        return self.success
 
     @property
     def __name__(self):
