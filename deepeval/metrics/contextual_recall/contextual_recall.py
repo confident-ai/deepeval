@@ -34,7 +34,9 @@ class ContextualRecallMetric(BaseMetric):
         self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: LLMTestCase) -> float:
+    def measure(
+        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
+    ) -> float:
         if (
             test_case.input is None
             or test_case.actual_output is None
@@ -44,13 +46,16 @@ class ContextualRecallMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
+        asynchronous = (
+            _asynchronous if _asynchronous is not None else self.asynchronous
+        )
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            asynchronous,
         ):
-            if self.asynchronous:
+            if asynchronous:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)
@@ -74,7 +79,7 @@ class ContextualRecallMetric(BaseMetric):
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            True,
             _show_indicator,
         ):
             print("a contextual recall")

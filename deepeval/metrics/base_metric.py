@@ -9,6 +9,8 @@ class BaseMetric:
     score_breakdown: Dict = None
     reason: Optional[str] = None
     evaluation_model: Optional[str] = None
+    strict_mode: bool = False
+    asynchronous: Optional[bool] = None
 
     @property
     def threshold(self) -> float:

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.telemetry import capture_metric_type
@@ -13,7 +15,9 @@ class LatencyMetric(BaseMetric):
         capture_metric_type(self.__name__)
         return self.score
 
-    async def a_measure(self, test_case: LLMTestCase):
+    async def a_measure(
+        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
+    ):
         self.success = test_case.latency <= self.threshold
         self.score = test_case.latency
         capture_metric_type(self.__name__)

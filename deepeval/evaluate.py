@@ -79,11 +79,9 @@ def execute_test_cases(
         success = True
         api_test_case: APITestCase = create_api_test_case(test_case, index)
         test_start_time = time.perf_counter()
+
         for metric in metrics:
-
-            # Long blocking I/O process
-            metric.measure(test_case)
-
+            metric.measure(test_case, _asynchronous=False)
             metric_metadata = MetricsMetadata(
                 metric=metric.__name__,
                 score=metric.score,
@@ -93,7 +91,6 @@ def execute_test_cases(
                 evaluationModel=metric.evaluation_model,
             )
             api_test_case.metrics_metadata.append(metric_metadata)
-
             if metric_metadata.success is False:
                 success = False
 
@@ -124,22 +121,7 @@ async def a_execute_test_cases(
     test_run_manager.save_to_disk = save_to_disk
     for index, test_case in enumerate(test_cases):
         success = True
-        api_test_case: APITestCase = APITestCase(
-            name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
-            input=test_case.input,
-            actualOutput=test_case.actual_output,
-            expectedOutput=test_case.expected_output,
-            success=success,
-            metricsMetadata=[],
-            runDuration=0,
-            latency=test_case.latency,
-            cost=test_case.cost,
-            context=test_case.context,
-            retrievalContext=test_case.retrieval_context,
-            traceStack=get_trace_stack(),
-            id=test_case.id,
-        )
-
+        api_test_case: APITestCase = create_api_test_case(test_case, index)
         test_start_time = time.perf_counter()
 
         # Run metrics concurrently using asyncio.gather
@@ -283,11 +265,11 @@ def print_test_result(test_result: TestResult):
     for metric in test_result.metrics:
         if not metric.is_successful():
             print(
-                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
+                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
             )
         else:
             print(
-                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
+                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
             )
         if metric.score_breakdown:
             for metric_name, score in metric.score_breakdown.items():

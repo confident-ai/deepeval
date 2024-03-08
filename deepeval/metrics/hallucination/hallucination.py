@@ -37,20 +37,25 @@ class HallucinationMetric(BaseMetric):
         self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(
+        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
+    ) -> float:
         if (
             test_case.input is None
             or test_case.actual_output is None
             or test_case.context is None
         ):
             raise ValueError("Input, actual output, or context cannot be None")
+        asynchronous = (
+            _asynchronous if _asynchronous is not None else self.asynchronous
+        )
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            asynchronous,
         ):
-            if self.asynchronous:
+            if asynchronous:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)
@@ -74,7 +79,7 @@ class HallucinationMetric(BaseMetric):
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            True,
             _show_indicator,
         ):
             print("a hallucination")
@@ -131,21 +136,6 @@ class HallucinationMetric(BaseMetric):
         res = self.model.generate(prompt)
         return res
 
-    def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 0
-
-        hallucination_count = 0
-
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                hallucination_count += 1
-
-        score = hallucination_count / number_of_verdicts
-
-        return 1 if self.strict_mode and score > self.threshold else score
-
     async def _a_generate_verdicts(
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
@@ -169,6 +159,19 @@ class HallucinationMetric(BaseMetric):
         data = trimAndLoadJson(res)
         verdicts = [HallucinationVerdict(**item) for item in data["verdicts"]]
         return verdicts
+
+    def _calculate_score(self) -> float:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
+            return 0
+
+        hallucination_count = 0
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() == "no":
+                hallucination_count += 1
+
+        score = hallucination_count / number_of_verdicts
+        return 1 if self.strict_mode and score > self.threshold else score
 
     def is_successful(self) -> bool:
         self.success = self.score <= self.threshold

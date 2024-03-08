@@ -36,17 +36,22 @@ class ToxicityMetric(BaseMetric):
         self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(
+        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
+    ) -> float:
         if test_case.input is None or test_case.actual_output is None:
             raise ValueError("Input or actual output cannot be None")
 
+        asynchronous = (
+            _asynchronous if _asynchronous is not None else self.asynchronous
+        )
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            asynchronous,
         ):
-            if self.asynchronous:
+            if asynchronous:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)
@@ -70,7 +75,7 @@ class ToxicityMetric(BaseMetric):
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            True,
             _show_indicator,
         ):
             self.opinions: List[str] = await self._a_generate_opinions(
@@ -99,7 +104,6 @@ class ToxicityMetric(BaseMetric):
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
-
         res = await self.model.a_generate(prompt)
         return res
 
@@ -116,24 +120,13 @@ class ToxicityMetric(BaseMetric):
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
-
         res = self.model.generate(prompt)
         return res
 
-    def _calculate_score(self) -> float:
-        total = len(self.verdicts)
-        if total == 0:
-            return 0
-
-        toxic_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                toxic_count += 1
-
-        score = toxic_count / total
-        return 1 if self.strict_mode and score > self.threshold else score
-
     async def _a_generate_verdicts(self) -> List[ToxicityVerdict]:
+        if len(self.opinions) == 0:
+            return []
+
         verdicts: List[ToxicityVerdict] = []
         prompt = ToxicityTemplate.generate_verdicts(opinions=self.opinions)
         res = await self.model.a_generate(prompt)
@@ -142,6 +135,9 @@ class ToxicityMetric(BaseMetric):
         return verdicts
 
     def _generate_verdicts(self) -> List[ToxicityVerdict]:
+        if len(self.opinions) == 0:
+            return []
+
         verdicts: List[ToxicityVerdict] = []
         prompt = ToxicityTemplate.generate_verdicts(opinions=self.opinions)
         res = self.model.generate(prompt)
@@ -160,6 +156,19 @@ class ToxicityMetric(BaseMetric):
         res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
         return data["opinions"]
+
+    def _calculate_score(self) -> float:
+        total = len(self.verdicts)
+        if total == 0:
+            return 0
+
+        toxic_count = 0
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() == "yes":
+                toxic_count += 1
+
+        score = toxic_count / total
+        return 1 if self.strict_mode and score > self.threshold else score
 
     def is_successful(self) -> bool:
         return self.success

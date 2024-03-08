@@ -35,7 +35,9 @@ class FaithfulnessMetric(BaseMetric):
         self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: LLMTestCase) -> float:
+    def measure(
+        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
+    ) -> float:
         if (
             test_case.input is None
             or test_case.actual_output is None
@@ -44,14 +46,16 @@ class FaithfulnessMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, and retrieval context cannot be None"
             )
-
+        asynchronous = (
+            _asynchronous if _asynchronous is not None else self.asynchronous
+        )
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            asynchronous,
         ):
-            if self.asynchronous:
+            if asynchronous:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)
@@ -66,9 +70,6 @@ class FaithfulnessMetric(BaseMetric):
                 capture_metric_type(self.__name__)
                 return self.score
 
-    ################################
-    ###### Asynchronous logic ######
-    ################################
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
@@ -76,7 +77,7 @@ class FaithfulnessMetric(BaseMetric):
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            True,
             _show_indicator,
         ):
             self.truths, self.claims = await asyncio.gather(
@@ -106,47 +107,6 @@ class FaithfulnessMetric(BaseMetric):
         res = await self.model.a_generate(prompt)
         return res
 
-    async def _a_generate_verdicts(self) -> List[FaithfulnessVerdict]:
-        verdicts: List[FaithfulnessVerdict] = []
-
-        prompt = FaithfulnessTemplate.generate_verdicts(
-            claims=self.claims, retrieval_context="\n\n".join(self.truths)
-        )
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
-        verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
-        return verdicts
-
-    async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(
-            text="\n\n".join(retrieval_context)
-        )
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
-        return data["claims"]
-
-    async def _a_generate_claims(self, actual_output: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
-        return data["claims"]
-
-    ###############################
-    ###### Synchronous logic ######
-    ###############################
-    def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 0
-
-        faithfulness_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                faithfulness_count += 1
-
-        score = faithfulness_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
-
     def _generate_reason(self) -> str:
         if self.include_reason is False:
             return None
@@ -163,9 +123,24 @@ class FaithfulnessMetric(BaseMetric):
         res = self.model.generate(prompt)
         return res
 
-    def _generate_verdicts(self) -> List[FaithfulnessVerdict]:
-        verdicts: List[FaithfulnessVerdict] = []
+    async def _a_generate_verdicts(self) -> List[FaithfulnessVerdict]:
+        if len(self.claims) == 0:
+            return []
 
+        verdicts: List[FaithfulnessVerdict] = []
+        prompt = FaithfulnessTemplate.generate_verdicts(
+            claims=self.claims, retrieval_context="\n\n".join(self.truths)
+        )
+        res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res)
+        verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+        return verdicts
+
+    def _generate_verdicts(self) -> List[FaithfulnessVerdict]:
+        if len(self.claims) == 0:
+            return []
+
+        verdicts: List[FaithfulnessVerdict] = []
         prompt = FaithfulnessTemplate.generate_verdicts(
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
@@ -174,11 +149,25 @@ class FaithfulnessMetric(BaseMetric):
         verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
+    async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
+        prompt = FaithfulnessTemplate.generate_truths(
+            text="\n\n".join(retrieval_context)
+        )
+        res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res)
+        return data["truths"]
+
     def _generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(
+        prompt = FaithfulnessTemplate.generate_truths(
             text="\n\n".join(retrieval_context)
         )
         res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        return data["truths"]
+
+    async def _a_generate_claims(self, actual_output: str) -> List[str]:
+        prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         return data["claims"]
 
@@ -187,6 +176,19 @@ class FaithfulnessMetric(BaseMetric):
         res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
         return data["claims"]
+
+    def _calculate_score(self) -> float:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
+            return 1
+
+        faithfulness_count = 0
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() != "no":
+                faithfulness_count += 1
+
+        score = faithfulness_count / number_of_verdicts
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

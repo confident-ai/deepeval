@@ -36,7 +36,9 @@ class ContextualPrecisionMetric(BaseMetric):
         self.asynchronous = asynchronous
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: LLMTestCase) -> float:
+    def measure(
+        self, test_case: LLMTestCase, _asynchronous: Optional[bool] = None
+    ) -> float:
         if (
             test_case.input is None
             or test_case.actual_output is None
@@ -46,15 +48,17 @@ class ContextualPrecisionMetric(BaseMetric):
             raise ValueError(
                 "Input, actual output, expected output, or retrieval context cannot be None"
             )
-
+        asynchronous = (
+            _asynchronous if _asynchronous is not None else self.asynchronous
+        )
         with metrics_progress_context(
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            asynchronous,
         ):
 
-            if self.asynchronous:
+            if asynchronous:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)
@@ -80,7 +84,7 @@ class ContextualPrecisionMetric(BaseMetric):
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            True,
             _show_indicator,
         ):
             self.verdicts: List[ContextualPrecisionVerdict] = (
@@ -109,7 +113,6 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
         )
-
         res = await self.model.a_generate(prompt)
         return res
 
@@ -126,39 +129,8 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
         )
-
         res = self.model.generate(prompt)
         return res
-
-    def _calculate_score(self):
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 0
-
-        # Convert verdicts to a binary list where 'yes' is 1 and others are 0
-        node_verdicts = [
-            1 if v.verdict.strip().lower() == "yes" else 0
-            for v in self.verdicts
-        ]
-
-        sum_weighted_precision_at_k = 0.0
-        relevant_nodes_count = 0
-
-        # Go through each item in the response
-        for k, is_relevant in enumerate(node_verdicts, start=1):
-            # If the item is relevant, update the counter and add the weighted precision at k to the sum
-            if is_relevant:
-                relevant_nodes_count += 1
-                precision_at_k = relevant_nodes_count / k
-                sum_weighted_precision_at_k += precision_at_k * is_relevant
-
-        if relevant_nodes_count == 0:
-            return 0
-
-        # Calculate weighted cumulative precision
-        score = sum_weighted_precision_at_k / relevant_nodes_count
-
-        return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
@@ -189,6 +161,32 @@ class ContextualPrecisionMetric(BaseMetric):
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
         ]
         return verdicts
+
+    def _calculate_score(self):
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
+            return 0
+
+        # Convert verdicts to a binary list where 'yes' is 1 and others are 0
+        node_verdicts = [
+            1 if v.verdict.strip().lower() == "yes" else 0
+            for v in self.verdicts
+        ]
+
+        sum_weighted_precision_at_k = 0.0
+        relevant_nodes_count = 0
+        for k, is_relevant in enumerate(node_verdicts, start=1):
+            # If the item is relevant, update the counter and add the weighted precision at k to the sum
+            if is_relevant:
+                relevant_nodes_count += 1
+                precision_at_k = relevant_nodes_count / k
+                sum_weighted_precision_at_k += precision_at_k * is_relevant
+
+        if relevant_nodes_count == 0:
+            return 0
+        # Calculate weighted cumulative precision
+        score = sum_weighted_precision_at_k / relevant_nodes_count
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold
