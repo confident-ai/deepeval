@@ -26,4 +26,4 @@ def test_summarization():
 
     test_case = LLMTestCase(input=input, actual_output=output)
 
-    assert_test(test_case, [metric], asynchronous=False)
+    assert_test(test_case, [metric], run_async=False)

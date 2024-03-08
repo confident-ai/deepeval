@@ -47,7 +47,7 @@ class SummarizationMetric(BaseMetric):
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         assessment_questions: Optional[List[str]] = None,
         include_reason: bool = True,
-        asynchronous=True,
+        run_async=True,
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -62,7 +62,7 @@ class SummarizationMetric(BaseMetric):
         else:
             self.assessment_questions = assessment_questions
 
-        self.asynchronous = asynchronous
+        self.run_async = run_async
         self.include_reason = include_reason
         self.n = n
         self.strict_mode = strict_mode
@@ -73,9 +73,9 @@ class SummarizationMetric(BaseMetric):
             self.__name__,
             self.evaluation_model,
             self.strict_mode,
-            self.asynchronous,
+            self.run_async,
         ):
-            if self.asynchronous:
+            if self.run_async:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)
