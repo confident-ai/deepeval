@@ -7,6 +7,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.hellaswag.task import HellaSwagTask
 from deepeval.benchmarks.hellaswag.template import HellaSwagTemplate
 from deepeval.scorer import Scorer
+import pandas as pd 
 
 # TODO: to be deleted
 from deepeval.models import GPTModel
@@ -19,51 +20,47 @@ class HellaSwag(DeepEvalBaseBenchmark):
         super().__init__()
         self.tasks: List[HellaSwagTask] = list(HellaSwagTask) if tasks is None else tasks
         self.scorer = Scorer()
-        self.dataset = None
-        self.shots_dataset = None
+        self.dataset: Dataset = None
+        self.shots_dataset: List[dict] = None
         self.n_shots = n_shots
+        self.predictions: Optional[pd.DataFrame] = None
+        self.task_scores: Optional[pd.DataFrame] = None
+        self.score: Optional[float] = None
 
     def evaluate(self, model: DeepEvalBaseLLM) -> dict:
         overall_correct_predictions = 0
         overall_total_predictions = 0
-        task_results: dict[str, dict[str, List | float]] = {
-            task.value: {'predictions': [], 'scores': [], 'accuracy': 0.0} for task in self.tasks
-        }
-        results = {'predictions': [], 'scores': [], 'accuracy': 0.0}
+        predictions_row = [] 
+        scores_row = [] 
 
         for task in self.tasks:
             goldens = self.load_benchmark_dataset(task)
             task_correct_predictions = 0
             task_total_predictions = len(goldens)
-            task_predictions = []
-            task_scores = []
+            overall_total_predictions += len(goldens)
 
             # Calculate task accuracy
             for golden in tqdm(goldens, desc=f'Processing {task.value}'):
                 prediction, score = self.predict(model, task, golden).values()
                 if score:
                     task_correct_predictions += 1
-                task_predictions.append(prediction)
-                task_scores.append(score)
+                    overall_correct_predictions += 1
+                predictions_row.append((task.value, golden.input, prediction, score))
             task_accuracy = task_correct_predictions / task_total_predictions
-
-            # Update task_results with predictions, scores, accuracy
-            task_results[task.value]['predictions'] = task_predictions
-            task_results[task.value]['scores'] = task_scores
-            task_results[task.value]['accuracy'] = task_accuracy
-            print(f"HellaSwag Task Accuracy (task={task.value}): {task_accuracy}")
-
-            # Update overall predictions, scores
-            overall_correct_predictions += task_correct_predictions
-            overall_total_predictions += task_total_predictions
-            results['predictions'].extend(task_predictions)
-            results['scores'].extend(task_scores)
+            print(f"MMLU Task Accuracy (task={task.value}): {task_accuracy}")
+            scores_row.append((task.value, task_accuracy))
 
         # Calculate overall accuracy
         overall_accuracy = overall_correct_predictions / overall_total_predictions
-        results['accuracy'] = overall_accuracy  
-        print(f"Overall HellaSwag Accuracy: {overall_accuracy}")
-        return {"results": results, "task_results": task_results}
+        print(f"Overall MMLU Accuracy: {overall_accuracy}")
+
+        # Create a DataFrame from task_results_data
+        # Columns: 'Task', 'Input', 'Prediction', 'Score'
+        self.predictions = pd.DataFrame(predictions_row, columns=['Task', 'Input', 'Prediction', 'Correct'])
+        self.task_scores = pd.DataFrame(scores_row, columns=['Task', 'Accuracy'])
+        self.score = overall_accuracy
+
+        return overall_accuracy
     
 
     def predict(self, model: DeepEvalBaseLLM, task: HellaSwagTask, golden: Golden) -> dict:
@@ -72,11 +69,12 @@ class HellaSwag(DeepEvalBaseBenchmark):
         prompt: dict = HellaSwagTemplate.generate_output(
             train_set=self.shots_dataset, input=golden.input, task=task, n_shots=self.n_shots
         )
-        prediction = model.generate(prompt)
+        prediction = model.generate(prompt)[0]
     
         # Define Metric
         score = self.scorer.exact_match_score(golden.expected_output, prediction)
         return {'prediction': prediction, 'score': score}
+
 
     def load_benchmark_dataset(self, task: HellaSwagTask) -> List[Golden]:
         # If dataset has been previously loaded, load from 
@@ -116,6 +114,9 @@ class HellaSwag(DeepEvalBaseBenchmark):
 ######## Example Usage ######
 #############################
 
-benchmark = HellaSwag()
+benchmark = HellaSwag(tasks=[HellaSwagTask.TRIMMING_BRANCHES_OR_HEDGES, HellaSwagTask.BATON_TWIRLING], n_shots=0)
 results = benchmark.evaluate(model=GPTModel())
 print(results)
+print(benchmark.score)
+print(benchmark.predictions)
+print(benchmark.task_scores)

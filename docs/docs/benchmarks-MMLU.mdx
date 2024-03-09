@@ -16,8 +16,8 @@ MMLU covers a broad variety and depth of subjects, and is good at detecting area
 
 To evaluate your model using `MMLU`, you'll have to provide the following arguments:
 
-- [Optional] `n_shots`: Specifies the number of example prompts or "shots" to use for few-shot learning. This is set to 5 by default and cannot exceed this number.
-- [Optional] `tasks`: This argument accepts a list of MMLUTask enums, detailing which of the subject areas to evaluate in the language model. If not specified, the benchmark evaluates across all 57 tasks. Detailed descriptions of the MMLUTask enum can be found [here](#tasks).
+- [Optional] `n_shots`: defines the number of "shots" to use for few-shot learning. This is set to 5 by default and cannot exceed this number.
+- [Optional] `tasks`: accepts a list of `MMLUTask` enums, specifying which of the 57 subject areas to evaluate in the language model. If not specified, the benchmark evaluates all tasks. Detailed descriptions of the `MMLUTask` enum can be found here.
 
 ## Example
 
@@ -65,8 +65,6 @@ results = benchmark.evaluate(model=mistral_7b)
 ```
 
 The `evaluate` method in the provided code performs a comprehensive evaluation of a language model across specified tasks within the Massive Multitask Language Understanding (MMLU) benchmark. Here's an overview of the result structure returned from this evaluation:
-
-## Output
 
 **Overall Results**: This includes a summary of the model's performance across all tasks it was evaluated on. The `results` dictionary contains three key components:
 
