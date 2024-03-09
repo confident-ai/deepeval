@@ -78,6 +78,7 @@ class ToxicityMetric(BaseMetric):
             self.verdicts: List[ToxicityVerdict] = (
                 await self._a_generate_verdicts()
             )
+
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
