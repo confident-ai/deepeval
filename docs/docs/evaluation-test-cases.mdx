@@ -29,7 +29,7 @@ test_case = LLMTestCase(
 )
 ```
 
-**Note that only `input` and `actual_output` is mandatory.**
+**Note that only `input` and `actual_output` are mandatory.**
 
 However, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
 
@@ -210,38 +210,6 @@ test_case = LLMTestCase(
 Similar to the `LatencyMetric`, the [`CostMetric`](metrics-cost) is the only `deepeval` metric that uses the `cost` parameter.
 :::
 
-## Run A Test Case
-
-`deepeval` offers an option to quickly run a test case without going through the CLI.
-
-```python
-# A hypothetical LLM application example
-import chatbot
-from deepeval import run_test
-from deepeval.metrics import HallucinationMetric
-from deepeval.test_case import LLMTestCase
-
-prompt_template = """
-    Impersonate a dog named Rocky when replying to the text below.
-
-    {text}
-"""
-
-prompt = prompt_template.format(text="Who's a good boy?")
-context = ["Rocky is a good boy."]
-
-test_case = LLMTestCase(
-    input=prompt,
-    # Replace this with your actual LLM application
-    actual_output=chatbot.run(prompt),
-    expected_output="Me, ruff!",
-    context=context
-)
-
-metric = HallucinationMetric(threshold=0.7)
-run_test(test_case, [metric])
-```
-
 ## Assert A Test Case
 
 Before we begin going through the final sections, we highly recommend you to login to [Confident AI](https://confident-ai.com) (the platform powering deepeval) via the CLI. This way, you can keep track of all evaluation results generated each time you execute `deepeval test run`.
@@ -250,10 +218,7 @@ Before we begin going through the final sections, we highly recommend you to log
 deepeval login
 ```
 
-Similar to Pytest, `deepeval` allows you to assert any test case you create by calling the `assert_test` function by running `deepeval test run` via the CLI. `assert_test` takes two mandatory arguments:
-
-- `test_case`: an `LLMTestCase`
-- `metrics`: a list of metrics
+Similar to Pytest, `deepeval` allows you to assert any test case you create by calling the `assert_test` function by running `deepeval test run` via the CLI.
 
 **A test case passes only if all metrics passess.** Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
 
@@ -299,7 +264,17 @@ def test_case_2():
     assert_test(test_case, metrics=[metric])
 ```
 
-In the CLI, run the command `deepeval test run`, which uses Pytest under the hood. You can also include an optional `-n` flag follow by a number (that determines the number of processes that will be used) to run tests in parallel.
+There are two mandatory and one optional parameter when calling the `assert_test()` function:
+
+- `test_case`: a `LLMTestCase`
+- `metrics`: a list of metrics of type `BaseMetric`
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
+
+:::info
+The `run_async` parameter overrides the `async_mode` property of all metrics being evaluated. The `async_mode` property, as you'll learn later in the [metrics section](metrics-introduction), determines whether each metric can execute asynchronously.
+:::
+
+To execute the test cases, run `deepeval test run` via the CLI, which uses `deepeval`'s Pytest integration under the hood to execute these tests. You can also include an optional `-n` flag follow by a number (that determines the number of processes that will be used) to run tests in parallel.
 
 ```console
 deepeval test run test_assert_example.py -n 4
@@ -346,5 +321,13 @@ test_cases = [first_test_case, second_test_case]
 metric = HallucinationMetric(threshold=0.7)
 evaluate(test_cases, [metric])
 ```
+
+There are two mandatory and three optional arguments when calling the `evaluate()` function:
+
+- `test_case`: a `LLMTestCase`
+- `metrics`: a list of metrics of type `BaseMetric`
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
+- [Optional] `show_indicator`: a boolean which when set to `True`, shows the progress indicator for each individual metric. Defaulted to `True`.
+- [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
 
 Similar to `assert_test`, `evaluate` allows you to log and view test results on Confident AI. For more examples of `evaluate`, visit the [datasets section](evaluation-datasets).

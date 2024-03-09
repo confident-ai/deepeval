@@ -65,14 +65,15 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are six optional parameters when instantiating an `SummarizationMetric` class:
+There are seven optional parameters when instantiating an `SummarizationMetric` class:
 
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
 - [Optional] `assessment_questions`: a list of **close-ended questions that can be answered with either a 'yes' or a 'no'**. These are questions you want your summary to be able to ideally answer, and is especially helpful if you already know what a good summary for your use case looks like. If `assessment_questions` is not provided, we will generate a set of `assessment_questions` for you at evaluation time. The `assessment_questions` are used to calculate the `coverage_score`.
 - [Optional] `n`: the number of assessment questions to generate when `assessment_questions` is not provided. Defaulted to 5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `multithreading`: a boolean which when set to `True`, enables concurrent evaluation of said metric. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to True, enforces a strict evaluation criterion. In strict mode, the metric score becomes binary: a score of 1 indicates a perfect result, and any outcome less than perfect is scored as 0. Defaulted as `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables concurrent execution of said metric. Defaulted to `True`.
 
 ## How Is It Calculated?
 

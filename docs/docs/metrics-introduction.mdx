@@ -101,9 +101,14 @@ class AzureOpenAI(DeepEvalBaseLLM):
     def load_model(self):
         return self.model
 
-    def _call(self, prompt: str) -> str:
+    def generate(self, prompt: str) -> str:
         chat_model = self.load_model()
         return chat_model.invoke(prompt).content
+
+    async def a_generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        res = await chat_model.ainvoke(prompt)
+        return res.content
 
     def get_model_name(self):
         return "Custom Azure OpenAI Model"
@@ -122,12 +127,19 @@ print(azure_openai("Write me a joke"))
 When creating a custom LLM evaluation model you should **ALWAYS**:
 
 - inherit `DeepEvalBaseLLM`.
+- implement the `get_model_name()` method, which simply returns a string representing your custom model name.
 - implement the `load_model()` method, which will be responsible for returning a model object.
-- implement the `_call()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
-- the `_call()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt).content` to access the model output in this particular example, but this could be different depending on the implementation of your custom LLM object.
-- the `get_model_name()` method simply returns a string representing the name of your LLM model.
+- implement the `generate()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
+- the `generate()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt).content` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
+- implement the `a_generate()` method, with the same function signature as `generate()`. **Note that this is an async method**. In this example, we called `await chat_model.ainvoke(prompt)`, which is an asynchronous wrapper provided by LangChain's chat models.
 
-Note that the `model` argument in the `__init__()` method can accept any type (the model string or object itself). Lastly, to use it for evaluation in LLM-based metrics:
+:::tip
+The `a_generate()` method is what `deepeval` uses to generate LLM outputs when you execute metrics / run evaluations asynchronously.
+
+If your custom model object does not have an asynchronous interface, simply reuse the same code from `generate()` (scroll down to the `Mistral7B` example for more details). However, this would make `a_generate()` a blocking process, regardless of whether you've turned on `async_mode` for a metric or not.
+:::
+
+Lastly, to use it for evaluation for an LLM-Eval:
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
@@ -160,7 +172,7 @@ class Mistral7B(DeepEvalBaseLLM):
     def load_model(self):
         return self.model
 
-    def _call(self, prompt: str) -> str:
+    def generate(self, prompt: str) -> str:
         model = self.load_model()
 
         device = "cuda" # the device to load the model onto
@@ -170,6 +182,9 @@ class Mistral7B(DeepEvalBaseLLM):
 
         generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
         return self.tokenizer.batch_decode(generated_ids)[0]
+
+    async def a_generate(self, prompt: str) -> str:
+        return self.generate(prompt)
 
     def get_model_name(self):
         return "Mistral 7B"
@@ -181,7 +196,33 @@ mistral_7b = Mistral7B(model=model, tokenizer=tokenizer)
 print(mistral_7b("Write me a joke"))
 ```
 
-Note that for this particular implementation, we initialized our `Mistral7B` model with an additional `tokenizer` parameter, as this is required in the decoding step of the `_call()` method, unlike the `AzureOpenAI` example above. Lastly, to use it for evaluation in LLM-based metrics:
+Note that for this particular implementation, we initialized our `Mistral7B` model with an additional `tokenizer` parameter, as this is required in the decoding step of the `generate()` method.
+
+:::info
+You'll notice we simply reused `generate()` in `a_generate()`, because unfortunately there's no asynchronous interface for Hugging Face's `transformers` library, and would make all metric executions a synchronous, blocking process.
+
+However, you can try offloading the generation process to a separate thread instead:
+
+```python
+import asyncio
+
+class Mistral7B(DeepEvalBaseLLM):
+    # ... (existing code) ...
+
+    async def a_generate(self, prompt: str) -> str:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.generate, prompt)
+```
+
+Some additional considerations and reasons why you should be extra careful with this implementation:
+
+- Running the generation in a separate thread may not fully utilize GPU resources if the model is GPU-based.
+- There could be potential performance implications of frequently switching between threads.
+- You'd need to ensure thread safety if multiple async generations are happening concurrently and sharing resources.
+
+:::
+
+Lastly, to use your custom `Mistral7B` model for evaluation:
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
@@ -191,7 +232,7 @@ metric = AnswerRelevancyMetric(model=mistral_7b)
 ```
 
 :::tip
-You need to specify the custom evaluation model you would like to use through the `model` argument when instantiating an LLM-based metric.
+You need to specify the custom evaluation model you created via the `model` argument when creating a metric.
 :::
 
 ### AWS Bedrock Example
@@ -212,9 +253,14 @@ class AWSBedrock(DeepEvalBaseLLM):
     def load_model(self):
         return self.model
 
-    def _call(self, prompt: str) -> str:
+    def generate(self, prompt: str) -> str:
         chat_model = self.load_model()
         return chat_model.invoke(prompt).content
+
+    def a_generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        res = await chat_model.ainvoke(prompt)
+        return res.content
 
     def get_model_name(self):
         return "Custom Azure OpenAI Model"
@@ -247,11 +293,16 @@ All metrics in `deepeval`, including [custom metrics that you create](metrics-cu
 
 - can be executed via the `metric.measure()` method
 - can have its score accessed via `metric.score`
+- can have its score reason accessed via `metric.reason`
 - can have its status accessed via `metric.is_successful()`
 - can be used to evaluate test cases or entire datasets, with or without Pytest.
-- has a `threshold` that acts as the threshold for success. `metric.is_successful()` is only true if `metric.score` >= `threshold`.
+- has a `threshold` that acts as the threshold for success. `metric.is_successful()` is only true if `metric.score` is above/below `threshold`.
 
-In additional, most LLM-Evals in `deepeval` offers a reason for its score, which can be accessed via `metric.reason`.
+In additional, all metrics in `deepeval` executes asynchronously by default. This behavior is something you can configure via the `async_mode` parameter when instantiating a metric.
+
+:::tip
+Visit an individual metric page for a metric's full details.
+:::
 
 Here's a quick example.
 
