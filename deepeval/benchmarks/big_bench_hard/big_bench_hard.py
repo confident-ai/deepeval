@@ -1,9 +1,5 @@
 from typing import List
 from datasets import load_dataset
-
-# TODO: to be deleted
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM

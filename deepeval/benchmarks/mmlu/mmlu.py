@@ -15,13 +15,12 @@ class MMLU(DeepEvalBaseBenchmark):
     def __init__(self, tasks: List[MMLUTask] = None, n_shots: int = 5):
         assert n_shots <= 5, "MMLU only supports n_shots <= 5"
         super().__init__()
-        self.tasks: List[MMLUTask] = tasks
+        self.tasks: List[MMLUTask] = list(MMLUTask) if tasks is None else tasks
         self.scorer = Scorer()
         self.dataset: Dataset = None
         self.shots_dataset: List[dict] = None
         self.n_shots: int = n_shots
         
-
     def evaluate(self, model: DeepEvalBaseLLM) -> dict:
         overall_correct_predictions = 0
         overall_total_predictions = 0
@@ -71,7 +70,7 @@ class MMLU(DeepEvalBaseBenchmark):
         prompt: dict = MMLUTemplate.generate_output(
             train_set=self.shots_dataset, input=golden.input, task=task, n_shots=self.n_shots
         )
-        prediction = model(prompt)
+        prediction = model.generate(prompt)
     
         # Define Metric
         score = self.scorer.exact_match_score(golden.expected_output, prediction)
@@ -110,5 +109,5 @@ class MMLU(DeepEvalBaseBenchmark):
 
 benchmark = MMLU(tasks=[MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY])
 results = benchmark.evaluate(model=GPTModel())
-print(results)
-print(benchmark.task_results)
+
+

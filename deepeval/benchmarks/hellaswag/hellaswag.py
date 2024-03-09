@@ -72,7 +72,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
         prompt: dict = HellaSwagTemplate.generate_output(
             train_set=self.shots_dataset, input=golden.input, task=task, n_shots=self.n_shots
         )
-        prediction = model(prompt)
+        prediction = model.generate(prompt)
     
         # Define Metric
         score = self.scorer.exact_match_score(golden.expected_output, prediction)
@@ -116,6 +116,6 @@ class HellaSwag(DeepEvalBaseBenchmark):
 ######## Example Usage ######
 #############################
 
-benchmark = HellaSwag(tasks=[HellaSwagTask.ARCHERY, HellaSwagTask.ARM_WRESTLING])
+benchmark = HellaSwag()
 results = benchmark.evaluate(model=GPTModel())
 print(results)
