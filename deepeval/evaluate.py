@@ -4,7 +4,7 @@ from typing import List, Optional
 import time
 from dataclasses import dataclass
 
-from deepeval.utils import drop_and_copy, get_or_create_event_loop
+from deepeval.utils import drop_and_copy
 from deepeval.telemetry import capture_evaluation_count
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.indicator import (
@@ -84,7 +84,7 @@ def execute_test_cases(
 
         for metric in metrics:
             # Override metric async
-            metric.run_async = False
+            metric.async_mode = False
 
             metric.measure(test_case)
             metric_metadata = MetricsMetadata(
@@ -122,6 +122,7 @@ async def a_execute_test_cases(
     metrics: List[BaseMetric],
     save_to_disk: bool = False,
 ) -> List[TestResult]:
+    print("#####Seems to be ok?##########")
     test_results: List[TestResult] = []
     test_run_manager.save_to_disk = save_to_disk
     for index, test_case in enumerate(test_cases):
@@ -175,8 +176,7 @@ def assert_test(
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
 
     if run_async:
-        loop = get_or_create_event_loop()
-        test_result = loop.run_until_complete(
+        test_result = asyncio.run(
             a_execute_test_cases(
                 [test_case], metrics, get_is_running_deepeval()
             )
@@ -205,6 +205,7 @@ def evaluate(
     metrics: List[BaseMetric],
     run_async: bool = True,
     show_indicator: bool = True,
+    print_results: bool = True,
 ):
     if show_indicator is False:
         disable_indicator()
@@ -222,21 +223,24 @@ def evaluate(
             )
 
     test_run_manager.reset()
-    print("Evaluating test cases...")
+
+    if print_results:
+        print("Evaluating test cases...")
     if run_async:
-        loop = get_or_create_event_loop()
-        test_results = loop.run_until_complete(
+        test_results = asyncio.run(
             a_execute_test_cases(test_cases, metrics, True)
         )
     else:
         test_results = execute_test_cases(test_cases, metrics, True)
 
     capture_evaluation_count()
-    for test_result in test_results:
-        print_test_result(test_result)
 
-    print("")
-    print("-" * 70)
+    if print_results:
+        for test_result in test_results:
+            print_test_result(test_result)
+
+        print("")
+        print("-" * 70)
     test_run_manager.wrap_up_test_run(display_table=False)
     return test_results
 

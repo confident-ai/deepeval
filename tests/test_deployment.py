@@ -13,7 +13,7 @@ class FakeMetric(BaseMetric):
     def __init__(self, threshold: float = 0.5):
         self.threshold = threshold
 
-    def measure(self, test_case: LLMTestCase, _run_async):
+    def measure(self, test_case: LLMTestCase):
         # Set self.success and self.score in the "measure" method
         self.score = random.uniform(0.0, 1.0)
         self.success = self.score >= self.threshold

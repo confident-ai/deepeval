@@ -56,15 +56,6 @@ def check_test_case_params(
         )
 
 
-def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop
-
-
 def login_with_confident_api_key(api_key: string):
     from rich import print
 

@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 
 from deepeval.utils import (
     trimAndLoadJson,
-    get_or_create_event_loop,
     check_test_case_params,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -31,7 +30,7 @@ class AnswerRelevancyMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        run_async: bool = True,
+        async_mode: bool = True,
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -41,17 +40,15 @@ class AnswerRelevancyMetric(BaseMetric):
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.run_async = run_async
+        self.async_mode = async_mode
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_test_case_params(test_case, required_params, self.__name__)
+
         with metric_progress_indicator(self):
-            if self.run_async:
-                loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
-                )
+            if self.async_mode:
+                asyncio.run(self.a_measure(test_case, _show_indicator=False))
             else:
                 self.statements: List[str] = self._generate_statements(
                     test_case.actual_output
@@ -69,8 +66,9 @@ class AnswerRelevancyMetric(BaseMetric):
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
         check_test_case_params(test_case, required_params, self.__name__)
+
         with metric_progress_indicator(
-            self, is_async=True, _show_indicator=_show_indicator
+            self, async_mode=True, _show_indicator=_show_indicator
         ):
             self.statements: List[str] = await self._a_generate_statements(
                 test_case.actual_output
