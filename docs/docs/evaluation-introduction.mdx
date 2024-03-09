@@ -129,7 +129,7 @@ deepeval test run test_example.py
 
 There are two mandatory and one optional parameter when calling the `assert_test()` function:
 
-- `test_case`: a `LLMTestCase`
+- `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 
@@ -174,7 +174,7 @@ evaluate(dataset, [answer_relevancy_metric])
 
 There are two mandatory and three optional arguments when calling the `evaluate()` function:
 
-- `test_case`: a `LLMTestCase`
+- `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the progress indicator for each individual metric. Defaulted to `True`.
