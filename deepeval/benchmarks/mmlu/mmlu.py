@@ -56,7 +56,7 @@ class MMLU(DeepEvalBaseBenchmark):
         # Create a DataFrame from task_results_data
         # Columns: 'Task', 'Input', 'Prediction', 'Score'
         self.predictions = pd.DataFrame(predictions_row, columns=['Task', 'Input', 'Prediction', 'Correct'])
-        self.task_scores = pd.DataFrame(scores_row, columns=['Task', 'Accuracy'])
+        self.task_scores = pd.DataFrame(scores_row, columns=['Task', 'Score'])
         self.score = overall_accuracy
 
         return overall_accuracy

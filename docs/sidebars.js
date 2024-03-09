@@ -19,8 +19,8 @@ module.exports = {
           items: [
             //"benchmarks-introduction",
             //"benchmarks-big-bench-hard",
-            "benchmarks-MMLU",
-            //"benchmarks-HellaSwag",
+            "benchmarks-hellaswag",
+            "benchmarks-mmlu",
           ],
           collapsed: false,
         },
