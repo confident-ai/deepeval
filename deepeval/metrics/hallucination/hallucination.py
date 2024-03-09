@@ -1,12 +1,12 @@
 from typing import Optional, Union, List
 from pydantic import BaseModel, Field
-import asyncio
 
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.utils import (
     trimAndLoadJson,
     check_test_case_params,
+    get_or_create_event_loop,
 )
 from deepeval.metrics.hallucination.template import HallucinationTemplate
 from deepeval.models import GPTModel, DeepEvalBaseLLM
@@ -48,7 +48,10 @@ class HallucinationMetric(BaseMetric):
         check_test_case_params(test_case, required_params, self.__name__)
         with metric_progress_indicator(self):
             if self.async_mode:
-                asyncio.run(self.a_measure(test_case, _show_indicator=False))
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.verdicts: List[HallucinationVerdict] = (
                     self._generate_verdicts(

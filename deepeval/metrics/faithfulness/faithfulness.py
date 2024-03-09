@@ -7,6 +7,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.utils import (
     trimAndLoadJson,
     check_test_case_params,
+    get_or_create_event_loop,
 )
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
@@ -49,7 +50,10 @@ class FaithfulnessMetric(BaseMetric):
 
         with metric_progress_indicator(self):
             if self.async_mode:
-                asyncio.run(self.a_measure(test_case, _show_indicator=False))
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.truths = self._generate_truths(test_case.retrieval_context)
                 self.claims = self._generate_claims(test_case.actual_output)

@@ -1,7 +1,7 @@
-import asyncio
 from typing import List, Optional, Union
 from enum import Enum
 from pydantic import BaseModel, Field
+import asyncio
 
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
@@ -9,6 +9,7 @@ from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.utils import (
     trimAndLoadJson,
     check_test_case_params,
+    get_or_create_event_loop,
 )
 from deepeval.metrics.summarization.template import SummarizationTemplate
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
@@ -71,7 +72,10 @@ class SummarizationMetric(BaseMetric):
 
         with metric_progress_indicator(self):
             if self.async_mode:
-                asyncio.run(self.a_measure(test_case, _show_indicator=False))
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.truths: List[str] = self._generate_claims(test_case.input)
                 self.claims: List[str] = self._generate_claims(

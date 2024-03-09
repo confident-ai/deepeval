@@ -1,4 +1,3 @@
-import asyncio
 import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import FaithfulnessMetric

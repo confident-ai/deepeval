@@ -1,10 +1,10 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
-import asyncio
 
 from deepeval.utils import (
     trimAndLoadJson,
     check_test_case_params,
+    get_or_create_event_loop,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
@@ -50,7 +50,10 @@ class ContextualRecallMetric(BaseMetric):
 
         with metric_progress_indicator(self):
             if self.async_mode:
-                asyncio.run(self.a_measure(test_case, _show_indicator=False))
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.verdicts: List[ContextualRecallVerdict] = (
                     self._generate_verdicts(
