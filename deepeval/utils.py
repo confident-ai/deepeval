@@ -45,8 +45,11 @@ def show_indicator():
         return True
 
 
-def disable_indicator():
-    os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "YES"
+def set_indicator(show_indicator: bool):
+    if show_indicator:
+        os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "NO"
+    else:
+        os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "YES"
 
 
 def check_test_case_params(

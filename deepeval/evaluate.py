@@ -13,7 +13,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.tracing import get_trace_stack
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
-from deepeval.utils import get_is_running_deepeval, disable_indicator
+from deepeval.utils import get_is_running_deepeval, set_indicator
 
 
 @dataclass
@@ -206,8 +206,7 @@ def evaluate(
     show_indicator: bool = True,
     print_results: bool = True,
 ):
-    if show_indicator is False:
-        disable_indicator()
+    set_indicator(show_indicator)
 
     # TODO: refactor
     for metric in metrics:
