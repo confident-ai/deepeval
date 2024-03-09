@@ -292,16 +292,17 @@ metric = AnswerRelevancyMetric(model=aws_bedrock)
 All metrics in `deepeval`, including [custom metrics that you create](metrics-custom):
 
 - can be executed via the `metric.measure()` method
-- can have its score accessed via `metric.score`
+- can have its score accessed via `metric.score`, which ranges from 0 - 1
 - can have its score reason accessed via `metric.reason`
 - can have its status accessed via `metric.is_successful()`
 - can be used to evaluate test cases or entire datasets, with or without Pytest.
 - has a `threshold` that acts as the threshold for success. `metric.is_successful()` is only true if `metric.score` is above/below `threshold`.
+- has a `strict_mode` property, which enforces `metric.score` to a binary one
 
 In additional, all metrics in `deepeval` executes asynchronously by default. This behavior is something you can configure via the `async_mode` parameter when instantiating a metric.
 
 :::tip
-Visit an individual metric page for a metric's full details.
+Visit an individual metric page to learn how they are calculated, and what is required when creating an `LLMTestCase` in order to execute it.
 :::
 
 Here's a quick example.
@@ -335,7 +336,7 @@ print(metric.score)
 print(metric.reason)
 ```
 
-Or you can either evaluate a test case using `deepeval test run`:
+Or you can either assert a test case using [`assert_test()` via `deepeval test run`](evaluation-test-cases#assert-a-test-case):
 
 ```python title="test_file.py"
 from deepeval import assert_test
@@ -349,7 +350,7 @@ def test_answer_relevancy():
 deepeval test run test_file.py
 ```
 
-Or using the `evaluate` function:
+Or using the [`evaluate` function:](evaluation-test-cases#evaluate-test-cases-in-bulk)
 
 ```python
 from deepeval import evaluate
@@ -358,4 +359,48 @@ from deepeval import evaluate
 evaluate([test_case], [metric])
 ```
 
-For more details on how a metric evaluates a test case, refer to the [test cases section.](evaluation-test-cases#assert-a-test-case)
+## Measuring Metrics in Async
+
+When a metric's `async_mode=True` (which is the default value for all metrics), invocations of `metric.measure()` will execute its internal algorithms concurrently. However, it's important to note that while operations **INSIDE** `measure()` executes concurrently, the `metric.measure()` call itself still blocks the main thread.
+
+:::info
+Let's take the [`FaithfulnessMetric` algorithm](metrics-faithfulness#how-is-it-calculated) for example:
+
+1. **Extract all factual claims** made in the `actual_output`
+2. **Extract all factual truths** found in the `retrieval_context`
+3. **Compare extracted claims and truths** to generate a final score and reason.
+
+```python
+from deepeval.metrics import FaithfulnessMetric
+...
+
+metric = FaithfulnessMetric(async_mode=True)
+metric.measure(test_case)
+print("Metric finished!")
+```
+
+When `async_mode=True`, steps 1 and 2 executes concurrently (ie. at the same time) since they are independent of each other, while `async_mode=False` will cause steps 1 and 2 to execute sequentially instead (ie. one after the other).
+
+In both cases, "Metric finished!" will wait for `metric.measure()` to finish running before printing, but setting `async_mode` to `True` would make the print statement appear earlier, as `async_mode=True` allows `metric.measure()` to run faster.
+
+:::
+
+To measure multiple metrics at once and **NOT** block the main thread, use the asynchronous `a_measure()` method instead.
+
+```python
+import asyncio
+...
+
+# Remember to use async
+async def long_running_function():
+    # These will all run at the same time
+    await asyncio.gather(
+        metric1.a_measure(test_case),
+        metric2.a_measure(test_case),
+        metric3.a_measure(test_case),
+        metric4.a_measure(test_case)
+    )
+    print("Metrics finished!")
+
+asyncio.run(long_running_function())
+```
