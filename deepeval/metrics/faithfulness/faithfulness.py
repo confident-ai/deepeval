@@ -72,7 +72,6 @@ class FaithfulnessMetric(BaseMetric):
                 self._a_generate_truths(test_case.retrieval_context),
                 self._a_generate_claims(test_case.actual_output),
             )
-            print("after truths and claims")
             self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()

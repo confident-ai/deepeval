@@ -122,7 +122,6 @@ async def a_execute_test_cases(
     metrics: List[BaseMetric],
     save_to_disk: bool = False,
 ) -> List[TestResult]:
-    print("#####Seems to be ok?##########")
     test_results: List[TestResult] = []
     test_run_manager.save_to_disk = save_to_disk
     for index, test_case in enumerate(test_cases):
