@@ -12,6 +12,7 @@ import numpy as np
 from dataclasses import asdict, is_dataclass
 import re
 import asyncio
+import nest_asyncio
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -20,6 +21,12 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
     try:
         loop = asyncio.get_event_loop()
+        if loop.is_running():
+            print(
+                "Event loop is already running. Applying nest_asyncio patch to allow async execution..."
+            )
+            nest_asyncio.apply()
+
         if loop.is_closed():
             raise RuntimeError
     except RuntimeError:
