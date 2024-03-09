@@ -10,7 +10,7 @@ query_engine = index.as_query_engine(similarity_top_k=5)
 
 def query(user_input):
     res = query_engine.query(user_input)
-    # evaluator = DeepEvalToxicityEvaluator()
-    # result = evaluator.evaluate_response(query=user_input, response=res)
-    # print(result)
+    evaluator = DeepEvalToxicityEvaluator()
+    result = evaluator.evaluate_response(query=user_input, response=res)
+    print(result)
     return res.response
