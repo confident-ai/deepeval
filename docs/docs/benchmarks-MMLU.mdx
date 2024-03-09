@@ -1,0 +1,147 @@
+---
+id: benchmarks-MMLU
+title: MMLU
+sidebar_label: MMLU
+---
+
+import Equation from "@site/src/components/equation";
+
+**MMLU (Massive Multitask Language Understanding)** is a benchmark for evaluating LLMs through multiple-choice questions. These questions cover 57 subjects such as math, history, law, and ethics. For more information, [visit the MMLU GitHub page](https://github.com/hendrycks/test).
+
+:::info
+MMLU covers a broad variety and depth of subjects, and is good at detecting areas where a model may lack understanding.
+:::
+
+## Arguments
+
+To evaluate your model using `MMLU`, you'll have to provide the following arguments:
+
+- [Optional] `n_shots`: Specifies the number of example prompts or "shots" to use for few-shot learning. This is set to 5 by default and cannot exceed this number.
+- [Optional] `tasks`: This argument accepts a list of MMLUTask enums, detailing which of the subject areas to evaluate in the language model. If not specified, the benchmark evaluates across all 57 tasks. Detailed descriptions of the MMLUTask enum can be found [here](#tasks).
+
+## Example
+
+The code below defines a `Mistral7B` class using `DeepEvalBaseLLM` and assesses its performance on High School Computer Science and Astronomy tasks in `MMLU` using 3-shot learning.
+
+```python
+from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
+from deepeval.benchmarks.mmlu.task import MMLUTask
+from deepeval.benchmarks.mmlu import MMLU
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+class Mistral7B(DeepEvalBaseLLM):
+    def __init__(self, model):
+        self.model = model
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "mistralai/Mistral-7B-v0.1"
+        )
+
+    def load_model(self):
+        return self.model
+
+    def _call(self, prompt: str) -> str:
+        model = self.load_model()
+        device = "cuda"  # the device to load the model onto
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+        generated_ids = model.generate(
+            **model_inputs, max_new_tokens=100, do_sample=True
+        )
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def get_model_name(self):
+        return "Mistral 7B"
+
+
+# Initialize Mistral7B model with its Hugging Face model path
+mistral_7b = Mistral7B(model_name_or_path="mistralai/Mistral-7B-v0.1")
+
+# Define benchmark with specific tasks and shots
+tasks = [MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY]
+benchmark = MMLU(tasks= tasks, n_shots=3)
+
+# Evaluate the custom model using the benchmark
+results = benchmark.evaluate(model=mistral_7b)
+```
+
+The `evaluate` method in the provided code performs a comprehensive evaluation of a language model across specified tasks within the Massive Multitask Language Understanding (MMLU) benchmark. Here's an overview of the result structure returned from this evaluation:
+
+## Output
+
+**Overall Results**: This includes a summary of the model's performance across all tasks it was evaluated on. The `results` dictionary contains three key components:
+
+- `predictions`: A list of all the predictions made by the model for every task. Each entry corresponds to the model's response to a question.
+- `scores`: A list of scores indicating how well each prediction matched the expected answer. The scoring mechanism is defined by the `Scorer` class, which, in this case, appears to use an exact match criterion.
+- `accuracy`: A single float value representing the overall accuracy of the model across all evaluated tasks. This is calculated as the ratio of the number of correct predictions to the total number of predictions made.
+
+**Task-specific Results**: The `task_results` dictionary provides detailed results for each individual task. It is indexed by the task names (as defined in the `MMLUTask` enum), with each entry containing:
+
+- `predictions`: Similar to the overall results, but specific to the task.
+- `scores`: Scores for each prediction, specific to the task.
+- `accuracy`: The accuracy of the model for this specific task, calculated as the ratio of correct predictions to total predictions within the task.
+
+This structured approach allows for both a high-level overview of the model's performance and a detailed analysis on a per-task basis. Such granularity is invaluable for identifying the model's strengths and weaknesses across different areas of knowledge covered by the MMLU benchmark.
+
+## Tasks
+
+The `MMLUTask` enum classifies the diverse range of subject areas covered in the Massive Multitask Language Understanding (MMLU) benchmark. Below is the comprehensive list of available tasks:
+
+- `HIGH_SCHOOL_EUROPEAN_HISTORY`
+- `BUSINESS_ETHICS`
+- `CLINICAL_KNOWLEDGE`
+- `MEDICAL_GENETICS`
+- `HIGH_SCHOOL_US_HISTORY`
+- `HIGH_SCHOOL_PHYSICS`
+- `HIGH_SCHOOL_WORLD_HISTORY`
+- `VIROLOGY`
+- `HIGH_SCHOOL_MICROECONOMICS`
+- `ECONOMETRICS`
+- `COLLEGE_COMPUTER_SCIENCE`
+- `HIGH_SCHOOL_BIOLOGY`
+- `ABSTRACT_ALGEBRA`
+- `PROFESSIONAL_ACCOUNTING`
+- `PHILOSOPHY`
+- `PROFESSIONAL_MEDICINE`
+- `NUTRITION`
+- `GLOBAL_FACTS`
+- `MACHINE_LEARNING`
+- `SECURITY_STUDIES`
+- `PUBLIC_RELATIONS`
+- `PROFESSIONAL_PSYCHOLOGY`
+- `PREHISTORY`
+- `ANATOMY`
+- `HUMAN_SEXUALITY`
+- `COLLEGE_MEDICINE`
+- `HIGH_SCHOOL_GOVERNMENT_AND_POLITICS`
+- `COLLEGE_CHEMISTRY`
+- `LOGICAL_FALLACIES`
+- `HIGH_SCHOOL_GEOGRAPHY`
+- `ELEMENTARY_MATHEMATICS`
+- `HUMAN_AGING`
+- `COLLEGE_MATHEMATICS`
+- `HIGH_SCHOOL_PSYCHOLOGY`
+- `FORMAL_LOGIC`
+- `HIGH_SCHOOL_STATISTICS`
+- `INTERNATIONAL_LAW`
+- `HIGH_SCHOOL_MATHEMATICS`
+- `HIGH_SCHOOL_COMPUTER_SCIENCE`
+- `CONCEPTUAL_PHYSICS`
+- `MISCELLANEOUS`
+- `HIGH_SCHOOL_CHEMISTRY`
+- `MARKETING`
+- `PROFESSIONAL_LAW`
+- `MANAGEMENT`
+- `COLLEGE_PHYSICS`
+- `JURISPRUDENCE`
+- `WORLD_RELIGIONS`
+- `SOCIOLOGY`
+- `US_FOREIGN_POLICY`
+- `HIGH_SCHOOL_MACROECONOMICS`
+- `COMPUTER_SECURITY`
+- `MORAL_SCENARIOS`
+- `MORAL_DISPUTES`
+- `ELECTRICAL_ENGINEERING`
+- `ASTRONOMY`
+- `COLLEGE_BIOLOGY`
+
+These tasks span a wide array of knowledge domains, from the sciences and humanities to professional and technical fields, reflecting the comprehensive scope of the MMLU benchmark.

@@ -6,7 +6,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard.template import BigBenchHardTemplate
 from deepeval.scorer import Scorer
-
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 class BigBenchHard(DeepEvalBaseBenchmark):
     def __init__(self, tasks: List[BigBenchHardTask] = None):
