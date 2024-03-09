@@ -2,7 +2,6 @@
 
 from typing import Optional, List, Tuple, Union
 from pydantic import BaseModel
-import asyncio
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -10,6 +9,7 @@ from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import (
     trimAndLoadJson,
     check_test_case_params,
+    get_or_create_event_loop,
 )
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
@@ -95,7 +95,10 @@ class GEval(BaseMetric):
 
         with metric_progress_indicator(self):
             if self.async_mode:
-                asyncio.run(self.a_measure(test_case, _show_indicator=False))
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()

@@ -117,7 +117,7 @@ def test_everything():
             metric9,
             metric10,
         ],
-        # run_async=False,
+        run_async=False,
     )
 
 

@@ -1,10 +1,9 @@
-import asyncio
 import os
 from typing import List, Optional
 import time
 from dataclasses import dataclass
 
-from deepeval.utils import drop_and_copy
+from deepeval.utils import drop_and_copy, get_or_create_event_loop
 from deepeval.telemetry import capture_evaluation_count
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.indicator import (
@@ -175,7 +174,8 @@ def assert_test(
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
 
     if run_async:
-        test_result = asyncio.run(
+        loop = get_or_create_event_loop()
+        test_result = loop.run_until_complete(
             a_execute_test_cases(
                 [test_case], metrics, get_is_running_deepeval()
             )
@@ -226,7 +226,8 @@ def evaluate(
     if print_results:
         print("Evaluating test cases...")
     if run_async:
-        test_results = asyncio.run(
+        loop = get_or_create_event_loop()
+        test_results = loop.run_until_complete(
             a_execute_test_cases(test_cases, metrics, True)
         )
     else:

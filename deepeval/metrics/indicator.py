@@ -1,10 +1,10 @@
-import asyncio
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from contextlib import contextmanager
 import sys
 from typing import List, Optional
 import time
+import asyncio
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase

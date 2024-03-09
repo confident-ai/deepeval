@@ -1,6 +1,6 @@
-import asyncio
 from typing import Optional, Sequence, Any
 from llama_index.core.evaluation.base import BaseEvaluator, EvaluationResult
+import asyncio
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import (
