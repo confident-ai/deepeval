@@ -9,10 +9,6 @@ from deepeval.benchmarks.hellaswag.template import HellaSwagTemplate
 from deepeval.scorer import Scorer
 import pandas as pd 
 
-# TODO: to be deleted
-from deepeval.models import GPTModel
-
-
 class HellaSwag(DeepEvalBaseBenchmark):
 
     def __init__(self, tasks: List[HellaSwagTask] = None, n_shots: int=10):
@@ -108,15 +104,3 @@ class HellaSwag(DeepEvalBaseBenchmark):
             golden = Golden(input=input, expectedOutput=choices[int(data['label'])])
             goldens.append(golden)
         return goldens
-
-
-#############################
-######## Example Usage ######
-#############################
-
-benchmark = HellaSwag(tasks=[HellaSwagTask.TRIMMING_BRANCHES_OR_HEDGES, HellaSwagTask.BATON_TWIRLING], n_shots=0)
-results = benchmark.evaluate(model=GPTModel())
-print(results)
-print(benchmark.score)
-print(benchmark.predictions)
-print(benchmark.task_scores)

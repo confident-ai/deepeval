@@ -9,9 +9,6 @@ from deepeval.benchmarks.mmlu.task import MMLUTask
 from deepeval.benchmarks.mmlu.template import MMLUTemplate
 from deepeval.scorer import Scorer
 
-# TODO: to be deleted
-from deepeval.models import GPTModel
-
 class MMLU(DeepEvalBaseBenchmark):
     def __init__(self, tasks: List[MMLUTask] = None, n_shots: int = 5):
         assert n_shots <= 5, "MMLU only supports n_shots <= 5"
@@ -101,15 +98,3 @@ class MMLU(DeepEvalBaseBenchmark):
             goldens.append(golden)
         return goldens
         
-
-#############################
-######## Example Usage ######
-#############################
-
-benchmark = MMLU(tasks=[MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY], n_shots=0)
-results = benchmark.evaluate(model=GPTModel())
-print(results)
-print(benchmark.score)
-print(benchmark.predictions)
-print(benchmark.task_scores)
-

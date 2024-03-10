@@ -1,0 +1,19 @@
+Order adjectives correctly in English sentences.
+
+Q: Which sentence has the correct adjective order:
+Options:
+(A) rubber terrible ship
+(B) terrible rubber ship
+A: (B)
+
+Q: Which sentence has the correct adjective order:
+Options:
+(A) repulsive small Brazilian exercise ship
+(B) Brazilian repulsive exercise small ship
+A: (A)
+
+Q: Which sentence has the correct adjective order:
+Options:
+(A) blue gold wonderful square shoe
+(B) wonderful square blue gold shoe
+A: (B)
