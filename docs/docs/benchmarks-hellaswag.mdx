@@ -14,12 +14,12 @@ sidebar_label: HellaSwag
 
 To evaluate your model using `HellaSwag`, you'll have to provide the following arguments:
 
-- [Optional] `n_shots`: defines the number of "shots" to use for few-shot learning. This is **set to 10** by default and **cannot exceed 15**.
-- [Optional] `tasks`: accepts a list of `HellaSwagTask` enums, which specifies the subject areas for sentence completion evaluation. The list of `HellaSwagTask` enums can be found [here](#tasks).
+- [Optional] `tasks`: a list of `HellaSwagTask` enums, which specifies the subject areas for sentence completion evaluation. By default, this is set to all tasks. The list of `HellaSwagTask` enums can be found [here](#tasks).
+- [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This is **set to 10** by default and **cannot exceed 15**.
 
 ## Example
 
-The following code creates a custom Mistral7B class that inherits from DeepEvalBaseLLM and evaluates its ability to complete sentences related to 'Trimming Branchs or Hedges' and 'Baton Twirling' subjects. This evaluation is performed using 5-shot learning with `HellaSwag`. To learn more about creating **custom LLM classes** for evaluation, [visit this page](#./metrics-introduction).
+The following code creates a custom `Mistral7B` class that inherits from `DeepEvalBaseLLM` and evaluates its ability to complete sentences related to 'Trimming Branchs or Hedges' and 'Baton Twirling' subjects. This evaluation is performed using 5-shot learning with `HellaSwag`. To learn more about creating **custom LLM classes** for evaluation, [visit this page](./metrics-introduction.mdx#using-openai).
 
 ```python
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
@@ -62,25 +62,7 @@ benchmark = HellaSwag(tasks= tasks, n_shots=5)
 results = benchmark.evaluate(model=mistral_7b)
 ```
 
-When the `evaluate` method is executed, it returns the **overall score** but also offers an in-depth analysis of the model's performance for each task. The snippet below guide you through accessing these insights.
-
-:::info
-Note that the `evaluate` method stores its output in `benchmark.score`, so `results` and `benchmark.score` are equivalent in the code below.
-:::
-
-```python
-# The overall score can be accessed from the results or the benchmark object
-print("Overall Score:", results)
-print("Overall Score:", benchmark.score)
-
-# For a detailed breakdown of predictions across tasks
-print("Detailed Predictions:")
-print(benchmark.predictions)
-
-# To review the accuracy scores specific to each task
-print("Task-specific Scores:")
-print(benchmark.task_scores)
-```
+The score of this benchmark is a float ranging from 0 to 1.
 
 ## Tasks
 

@@ -15,17 +15,6 @@ module.exports = {
         "evaluation-datasets",
         {
           type: "category",
-          label: "Benchmarks",
-          items: [
-            //"benchmarks-introduction",
-            //"benchmarks-big-bench-hard",
-            "benchmarks-hellaswag",
-            "benchmarks-mmlu",
-          ],
-          collapsed: false,
-        },
-        {
-          type: "category",
           label: "Metrics",
           items: [
             "metrics-introduction",
@@ -45,6 +34,17 @@ module.exports = {
             "metrics-performance",
             "metrics-others",
             "metrics-judgemental",
+          ],
+          collapsed: false,
+        },
+        {
+          type: "category",
+          label: "Benchmarks",
+          items: [
+            "benchmarks-introduction",
+            "benchmarks-big-bench-hard",
+            "benchmarks-hellaswag",
+            "benchmarks-mmlu",
           ],
           collapsed: false,
         },

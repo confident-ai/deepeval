@@ -1,0 +1,98 @@
+---
+id: benchmarks-big-bench-hard
+title: BIG-Bench Hard
+sidebar_label: BIG-Bench Hard
+---
+
+The **BIG-Bench Hard (BBH)** benchmark comprises 23 challenging BIG-Bench tasks where prior language model evaluations have not outperformed the average human rater. BBH evaluates models using both few-shot and chain-of-thought (CoT) prompting techniques. For more details, you can [visit the BIG-Bench Hard GitHub page](https://github.com/suzgunmirac/BIG-Bench-Hard).
+
+## Arguments
+
+To evaluate your model using `BigBenchHard`, you'll have to provide the following arguments:
+
+- [Optional] `tasks`: a list of `BigBenchHardTask` enums, which specifies the subject areas for sentence completion evaluation. By default, this is set to all tasks. The list of `BigBenchHardTask` enums can be found [here](#tasks).
+- [Optional] `n_shots`: the number of "shots" to use for few-shot learning or chain-of-thought (CoT) learning. This is **set to 3 by default** and cannot exceed this number.
+- [Optional] `enable_cot`: a boolean that determines if CoT prompting is used for evaluation if `true`, and if few-shot learning if `false`. This is set to `true` by default.
+
+:::info
+**Chain-of-thought (CoT) prompting** enhances reasoning by utilizing **intermediate steps**. Combined with few-shot prompting, it improves performance on tasks needing in-depth reasoning. You can learn more about CoT [here](https://arxiv.org/abs/2201.11903).
+:::
+
+## Example
+
+The code below defines a custom `Mistral7B` class using `DeepEvalBaseLLM` and assesses its performance on Boolean Expressions and Causal Judgement in `BigBenchHard` using 3-shot CoT learning. To learn more about using **custom LLM classes** for evaluation, [visit this page](./metrics-introduction.mdx#using-openai).
+
+```python
+from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
+from deepeval.benchmarks.mmlu.task import BigBenchHardTask
+from deepeval.benchmarks.mmlu import BigBenchHard
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+class Mistral7B(DeepEvalBaseLLM):
+    def __init__(self, model):
+        self.model = model
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "mistralai/Mistral-7B-v0.1"
+        )
+
+    def load_model(self):
+        return self.model
+
+    def _call(self, prompt: str) -> str:
+        model = self.load_model()
+        device = "cuda"  # the device to load the model onto
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+        generated_ids = model.generate(
+            **model_inputs, max_new_tokens=100, do_sample=True
+        )
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def get_model_name(self):
+        return "Mistral 7B"
+
+
+# Initialize Mistral7B model with its Hugging Face model path
+mistral_7b = Mistral7B(model_name_or_path="mistralai/Mistral-7B-v0.1")
+
+# Define benchmark with specific tasks and shots
+tasks=[BigBenchHardTask.BOOLEAN_EXPRESSIONS, BigBenchHardTask.CAUSAL_JUDGEMENT]
+benchmark = HellaSwag(tasks= tasks, n_shots=3, enable_cot=True)
+
+# Evaluate the custom model using the benchmark
+results = benchmark.evaluate(model=mistral_7b)
+```
+
+The score of this benchmark is a float ranging from 0 to 1.
+
+## Tasks
+
+The `BigBenchHardTask` enum classifies the diverse range of subject areas covered in the BIG-Bench Hard benchmark. Below is the comprehensive list of available tasks:
+
+- `BOOLEAN_EXPRESSIONS`
+- `CAUSAL_JUDGEMENT`
+- `DATE_UNDERSTANDING`
+- `DISAMBIGUATION_QA`
+- `DYCK_LANGUAGES`
+- `FORMAL_FALLACIES`
+- `GEOMETRIC_SHAPES`
+- `HYPERBATON`
+- `LOGICAL_DEDUCTION_FIVE_OBJECTS`
+- `LOGICAL_DEDUCTION_SEVEN_OBJECTS`
+- `LOGICAL_DEDUCTION_THREE_OBJECTS`
+- `MOVIE_RECOMMENDATION`
+- `MULTISTEP_ARITHMETIC_TWO`
+- `NAVIGATE`
+- `OBJECT_COUNTING`
+- `PENGUINS_IN_A_TABLE`
+- `REASONING_ABOUT_COLORED_OBJECTS`
+- `RUIN_NAMES`
+- `SALIENT_TRANSLATION_ERROR_DETECTION`
+- `SNARKS`
+- `SPORTS_UNDERSTANDING`
+- `TEMPORAL_SEQUENCES`
+- `TRACKING_SHUFFLED_OBJECTS_FIVE_OBJECTS`
+- `TRACKING_SHUFFLED_OBJECTS_SEVEN_OBJECTS`
+- `TRACKING_SHUFFLED_OBJECTS_THREE_OBJECTS`
+- `WEB_OF_LIES`
+- `WORD_SORTING`
