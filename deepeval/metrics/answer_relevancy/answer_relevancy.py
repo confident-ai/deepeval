@@ -1,13 +1,22 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 
-from deepeval.utils import trimAndLoadJson
-from deepeval.test_case import LLMTestCase
+from deepeval.utils import (
+    trimAndLoadJson,
+    check_test_case_params,
+    get_or_create_event_loop,
+)
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
-from deepeval.progress_context import metrics_progress_context
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.telemetry import capture_metric_type
+
+required_params: List[LLMTestCaseParams] = [
+    LLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
+]
 
 
 class AnswerRelvancyVerdict(BaseModel):
@@ -21,60 +30,62 @@ class AnswerRelevancyMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        async_mode: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
-        self.n = 5
+        self.async_mode = async_mode
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        if (
-            test_case.input is None
-            or test_case.actual_output is None
-            or test_case.retrieval_context is None
+        check_test_case_params(test_case, required_params, self.__name__)
+
+        with metric_progress_indicator(self):
+            if self.async_mode:
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
+            else:
+                self.statements: List[str] = self._generate_statements(
+                    test_case.actual_output
+                )
+                self.verdicts: List[AnswerRelvancyVerdict] = (
+                    self._generate_verdicts(test_case.input)
+                )
+                self.score = self._calculate_score()
+                self.reason = self._generate_reason(test_case.input)
+                self.success = self.score >= self.threshold
+                capture_metric_type(self.__name__)
+                return self.score
+
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        check_test_case_params(test_case, required_params, self.__name__)
+
+        with metric_progress_indicator(
+            self, async_mode=True, _show_indicator=_show_indicator
         ):
-            raise ValueError(
-                "Input, actual output, or retrieval context cannot be None"
-            )
-        with metrics_progress_context(self.__name__, self.evaluation_model):
-            # generate statements
-            self.statements: List[str] = self._generate_statements(
+            self.statements: List[str] = await self._a_generate_statements(
                 test_case.actual_output
             )
-
-            # generate verdicts based on statements, and retrieval context
             self.verdicts: List[AnswerRelvancyVerdict] = (
-                self._generate_verdicts(
-                    test_case.input, test_case.retrieval_context
-                )
+                await self._a_generate_verdicts(test_case.input)
             )
-
-            answer_relevancy_score = self._generate_score()
-
-            self.reason = self._generate_reason(
-                test_case.input, answer_relevancy_score
-            )
-            self.success = answer_relevancy_score >= self.threshold
-            self.score = answer_relevancy_score
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason(test_case.input)
+            self.success = self.score >= self.threshold
             capture_metric_type(self.__name__)
             return self.score
 
-    def _generate_score(self):
-        if len(self.verdicts) == 0:
-            return 0
-
-        relevant_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                relevant_count += 1
-
-        return relevant_count / len(self.verdicts)
-
-    def _generate_reason(self, input: str, score: float) -> str:
+    async def _a_generate_reason(self, input: str) -> str:
         if self.include_reason is False:
             return None
 
@@ -86,25 +97,66 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = AnswerRelevancyTemplate.generate_reason(
             irrelevant_statements=irrelevant_statements,
             input=input,
-            score=format(score, ".2f"),
+            score=format(self.score, ".2f"),
         )
-
-        res = self.model(prompt)
+        res = await self.model.a_generate(prompt)
         return res
 
-    def _generate_verdicts(
-        self, input: str, retrieval_context=List[str]
+    def _generate_reason(self, input: str) -> str:
+        if self.include_reason is False:
+            return None
+
+        irrelevant_statements = []
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() == "no":
+                irrelevant_statements.append(verdict.reason)
+
+        prompt = AnswerRelevancyTemplate.generate_reason(
+            irrelevant_statements=irrelevant_statements,
+            input=input,
+            score=format(self.score, ".2f"),
+        )
+        res = self.model.generate(prompt)
+        return res
+
+    async def _a_generate_verdicts(
+        self, input: str
     ) -> List[AnswerRelvancyVerdict]:
+        if len(self.statements) == 0:
+            return []
+
         prompt = AnswerRelevancyTemplate.generate_verdicts(
             input=input,
             actual_output=self.statements,
-            retrieval_context="\n\n".join(retrieval_context),
         )
-
-        res = self.model(prompt)
+        res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
         return verdicts
+
+    def _generate_verdicts(self, input: str) -> List[AnswerRelvancyVerdict]:
+        if len(self.statements) == 0:
+            return []
+
+        prompt = AnswerRelevancyTemplate.generate_verdicts(
+            input=input,
+            actual_output=self.statements,
+        )
+        res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+        return verdicts
+
+    async def _a_generate_statements(
+        self,
+        actual_output: str,
+    ) -> List[str]:
+        prompt = AnswerRelevancyTemplate.generate_statements(
+            actual_output=actual_output,
+        )
+        res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res)
+        return data["statements"]
 
     def _generate_statements(
         self,
@@ -113,10 +165,22 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = AnswerRelevancyTemplate.generate_statements(
             actual_output=actual_output,
         )
-
-        res = self.model(prompt)
+        res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
         return data["statements"]
+
+    def _calculate_score(self):
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
+            return 1
+
+        relevant_count = 0
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() != "no":
+                relevant_count += 1
+
+        score = relevant_count / number_of_verdicts
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
         self.success = self.score >= self.threshold

@@ -26,7 +26,7 @@ The current administration's economic policies are nothing short of a disaster, 
 """
 
 output = """
-Sorry, I cannot provide views for people living with autism.
+Sorry, I cannot provide views on people living with autism.
 """
 
 
@@ -36,5 +36,5 @@ def test_bias():
         input="What is the primary difference between a comet and an asteroid?",
         actual_output=output,
     )
-    metric = BiasMetric()
+    metric = BiasMetric(strict_mode=True)
     assert_test(test_case, [metric])

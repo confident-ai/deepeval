@@ -39,7 +39,7 @@ def test_hallucination_metric_3():
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="Python is a programming language.",
-        context=["Python is a snake."],
+        context=["Python is a snake.", "Pythons like to lurk in the forests."],
         cost=0.1,
         latency=13.0,
     )
@@ -52,7 +52,8 @@ def test_hallucination_metric_3():
 # {question}
 # """
 
-# @deepeval.set_hyperparameters(model="gpt-4", prompt_template=prompt_template)
+
+# @deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
 # def hyperparameters():
 #     return {
 #         "model": "gpt-4",

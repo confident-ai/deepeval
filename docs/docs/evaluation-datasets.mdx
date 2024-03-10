@@ -72,6 +72,51 @@ dataset = EvaluationDataset(
 A `Golden` and `LLMTestCase` contains almost an identical class signature, so technically you can also supply other parameters such as the `actual_output` when creating a `Golden`.
 :::
 
+## Generate An Evaluation Dataset
+
+You can generate `EvaluationDataset`s using `deepeval`'s `Synthesizer` class. The `Synthesizer` class is a synthetic data generator that first uses an LLM to generate a series of `inputs` based on a list of provided `context`, before evolving each `input` to make them more complex and realistic. These evolved `input`s, are then used to create a list of goldens, which will form your `EvaluationDataset`.
+
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.dataset import EvaluationDataset
+
+synthesizer = Synthesizer()
+contexts = [
+    ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
+    ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
+]
+
+# Use synthesizer directly
+synthesizer.generate_goldens(contexts=contexts)
+synthesizer.save_as(
+    # also accepts 'csv'
+    file_type='json',
+    path="./synthetic_data"
+)
+
+
+# Use synthesizer within an EvaluationDataset
+dataset = EvaluationDataset()
+dataset.generate_goldens(
+    synthesizer=synthesizer,
+    contexts=contexts
+)
+dataset.save_as(
+    # also accepts 'csv'
+    file_type='json',
+    path="./synthetic_data"
+)
+```
+
+There are two optional parameters when creating a `Synthesizer`:
+
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
+- [Optional] `multithreading`: a boolean which when set to `True`, enables concurrent generation of goldens. Defaulted to `True`.
+
+:::tip
+Remember to to call `save_as()` just to be safe.
+:::
+
 ## Load an Existing Dataset
 
 `deepeval` offers support for loading datasetes stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as test cases.
@@ -180,7 +225,7 @@ deepeval test run test_bulk.py -n 3
 
 ## Evaluate Your Dataset Without Pytest
 
-Alternately, you can use deepeval's `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
+Alternately, you can use `deepeval`'s `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
 
 ```python
 from deepeval import evaluate
@@ -188,7 +233,6 @@ from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(test_cases=[...])
-
 hallucination_metric = HallucinationMetric(threshold=0.3)
 answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
 

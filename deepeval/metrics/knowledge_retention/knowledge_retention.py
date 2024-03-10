@@ -8,7 +8,7 @@ from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
 )
-from deepeval.progress_context import metrics_progress_context
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.telemetry import capture_metric_type
 
 
@@ -28,20 +28,22 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        strict_mode: bool = False,
     ):
-        self.threshold = threshold
+        self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
             self.model = model
         else:
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
+        self.strict_mode = strict_mode
 
     def measure(self, test_case: ConversationalTestCase):
         if len(test_case.messages) == 0:
             raise ValueError("Messages cannot be empty")
 
-        with metrics_progress_context(self.__name__, self.evaluation_model):
+        with metric_progress_indicator(self):
             self.knowledges: List[Knowledge] = self._generate_knowledges(
                 test_case
             )
@@ -49,7 +51,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 self._generate_verdicts(test_case)
             )
 
-            knowledge_retention_score = self._generate_score()
+            knowledge_retention_score = self._calculate_score()
             self.reason = self._generate_reason(knowledge_retention_score)
 
             self.success = knowledge_retention_score >= self.threshold
@@ -71,12 +73,12 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             score=format(score, ".2f"),
         )
 
-        res = self.model(prompt)
+        res = self.model.generate(prompt)
         return res
 
-    def _generate_score(self) -> float:
-        total = len(self.verdicts)
-        if total == 0:
+    def _calculate_score(self) -> float:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
             return 0
 
         retention_count = 0
@@ -84,7 +86,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if verdict.verdict.strip().lower() == "no":
                 retention_count += 1
 
-        return retention_count / total
+        score = retention_count / number_of_verdicts
+
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_verdicts(
         self, test_case: ConversationalTestCase
@@ -97,7 +101,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 llm_message=message.actual_output,
                 previous_knowledge=previous_knowledge,
             )
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
             data = trimAndLoadJson(res)
             verdict = KnowledgeRetentionVerdict(index=index, **data)
             verdicts.append(verdict)
@@ -120,7 +124,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 previous_knowledge=previous_knowledge,
             )
 
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
             data = trimAndLoadJson(res)
             knowledge = Knowledge(data=data)
             knowledges.append(knowledge)

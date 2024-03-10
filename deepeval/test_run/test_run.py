@@ -12,11 +12,6 @@ from rich.console import Console
 from rich import print
 
 from deepeval.metrics import BaseMetric
-from deepeval.decorators.hyperparameters import (
-    get_hyperparameters,
-    get_model,
-    get_user_prompt_template,
-)
 from deepeval.api import Api, Endpoints
 from deepeval.test_run.api import (
     APITestCase,
@@ -83,7 +78,7 @@ class TestRun(BaseModel):
     metric_scores: List[MetricScoreType] = Field(
         default_factory=lambda: [], alias="metricScores"
     )
-    configurations: Optional[dict[Any, Any]] = Field(default_factory=dict)
+    configurations: Optional[dict[Any, Any]] = Field(None)
     model: Optional[str] = Field(None)
     user_prompt_template: Optional[str] = Field(
         None, alias="userPromptTemplate"
@@ -95,9 +90,9 @@ class TestRun(BaseModel):
             for metric in test_case.metrics_metadata:
                 all_metric_dict.add_metric(metric.metric, metric.score)
         self.metric_scores = all_metric_dict.get_average_metric_score()
-        self.configurations = get_hyperparameters()
-        self.model = get_model()
-        self.user_prompt_template = get_user_prompt_template()
+        # self.configurations = get_hyperparameters()
+        # self.model = get_model()
+        # self.user_prompt_template = get_user_prompt_template()
 
     def save(self, f):
         json.dump(self.model_dump(by_alias=True, exclude_none=True), f)
@@ -136,7 +131,7 @@ class TestRunManager:
             testFile=file_name,
             testCases=[],
             metricScores=[],
-            configurations={},
+            configurations=None,
             deployment=deployment,
             deploymentConfigs=deployment_configs,
         )

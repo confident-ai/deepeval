@@ -22,6 +22,14 @@ class FakeMetric(BaseMetric):
         self.reason = "This metric looking good!"
         return self.score
 
+    def a_meausre(self, test_case: LLMTestCase):
+        self.score = random.uniform(0.0, 1.0)
+        self.success = self.score >= self.threshold
+        # You can also optionally set a reason for the score returned.
+        # This is particularly useful for a score computed using LLMs
+        self.reason = "This async metric looking good!"
+        return self.score
+
     def is_successful(self):
         return self.success
 
@@ -52,14 +60,9 @@ Question:
 """
 
 
-@deepeval.set_hyperparameters(model="gpt-4", prompt_template=prompt_template)
+@deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
 def hyperparameters():
     return {
         "chunk_size": 500,
         "temperature": 0,
-        "prompt_template": """You are a helpful assistant, answer the following question in a non-judgemental tone.
-
-        Question:
-        {question}
-        """,
     }

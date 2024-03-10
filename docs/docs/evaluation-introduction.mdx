@@ -127,6 +127,12 @@ And run the test file in the CLI:
 deepeval test run test_example.py
 ```
 
+There are two mandatory and one optional parameter when calling the `assert_test()` function:
+
+- `test_case`: an `LLMTestCase`
+- `metrics`: a list of metrics of type `BaseMetric`
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
+
 :::info
 `@pytest.mark.parametrize` is a decorator offered by Pytest. It simply loops through your `EvaluationDataset` to evaluate each test case individually.
 :::
@@ -153,7 +159,7 @@ def function_to_be_called_after_test_run():
 
 ## Evaluating Without Pytest
 
-Alternately, you can use deepeval's `evaluate` function. This approach avoids the CLI (if you're in a notebook environment), but does not allow for parallel test execution.
+Alternately, you can use `deepeval`'s `evaluate` function. This approach avoids the CLI (if you're in a notebook environment), but does not allow for parallel test execution.
 
 ```python
 from deepeval import evaluate
@@ -161,11 +167,18 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(test_cases=[...])
-
 answer_relevancy_metric = AnswerRelevancyMetric()
 
 evaluate(dataset, [answer_relevancy_metric])
 ```
+
+There are two mandatory and three optional arguments when calling the `evaluate()` function:
+
+- `test_case`: an `LLMTestCase`
+- `metrics`: a list of metrics of type `BaseMetric`
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
+- [Optional] `show_indicator`: a boolean which when set to `True`, shows the progress indicator for each individual metric. Defaulted to `True`.
+- [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
 
 :::tip
 You can also replace `dataset` with a list of test cases, as shown in the [test cases section.](evaluation-test-cases#evaluate-test-cases-in-bulk)

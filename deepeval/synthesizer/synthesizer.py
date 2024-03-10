@@ -17,13 +17,11 @@ from deepeval.progress_context import synthesizer_progress_context
 from deepeval.utils import trimAndLoadJson
 from deepeval.dataset.golden import Golden
 
-
 valid_file_types = ["csv", "json"]
 
 
 class SyntheticData(BaseModel):
     input: str
-    expected_output: str
 
 
 class Synthesizer:
@@ -45,6 +43,21 @@ class Synthesizer:
         # self.batch_size = batch_size
         self.synthetic_goldens: List[Golden] = []
 
+    def _evolve_text(self, text, context: List[str]) -> List[str]:
+        evolved_texts: List[str] = []
+        for i in range(2):
+            if i == 0:
+                prompt = EvolutionTemplate.name_to_be_decided_evolution(
+                    input=text, context=context
+                )
+            else:
+                prompt = EvolutionTemplate.second_name_to_be_decided_evolution(
+                    input=text, context=context
+                )
+            res = self.model(prompt)
+            evolved_texts.append(res)
+        return evolved_texts
+
     def _generate(
         self,
         context: List[str],
@@ -60,12 +73,11 @@ class Synthesizer:
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
-            golden = Golden(
-                input=data.input,
-                expectedOutput=data.expected_output,
-                context=context,
-            )
-            temp_goldens.append(golden)
+            # TODO: evolution
+            # Note: skip multithreading for now
+            for evolved_input in self._evolve_text(data.input, context=context):
+                golden = Golden(input=evolved_input, context=context)
+                temp_goldens.append(golden)
 
         with lock:
             goldens.extend(temp_goldens)
@@ -115,17 +127,14 @@ class Synthesizer:
                     synthetic_data = [
                         SyntheticData(**item) for item in data["data"]
                     ]
-
-                    # TODO: optional evolution
-
-                    # TODO: review synthetic data
                     for data in synthetic_data:
-                        golden = Golden(
-                            input=data.input,
-                            expectedOutput=data.expected_output,
-                            context=context,
-                        )
-                        goldens.append(golden)
+                        for evolved_input in self._evolve_text(
+                            data.input, context=context
+                        ):
+                            golden = Golden(
+                                input=evolved_input, context=context
+                            )
+                            goldens.append(golden)
 
             self.synthetic_goldens.extend(goldens)
 
@@ -164,6 +173,7 @@ class Synthesizer:
                 json_data = [
                     {
                         "input": golden.input,
+                        "actual_output": golden.actual_output,
                         "expected_output": golden.expected_output,
                         "context": golden.context,
                     }
@@ -174,11 +184,18 @@ class Synthesizer:
         elif file_type == "csv":
             with open(full_file_path, "w", newline="") as file:
                 writer = csv.writer(file)
-                writer.writerow(["input", "expected_output", "context"])
+                writer.writerow(
+                    ["input", "actual_output", "expected_output", "context"]
+                )
                 for golden in self.synthetic_goldens:
                     context_str = "|".join(golden.context)
                     writer.writerow(
-                        [golden.input, golden.expected_output, context_str]
+                        [
+                            golden.input,
+                            golden.actual_output,
+                            golden.expected_output,
+                            context_str,
+                        ]
                     )
 
         print(f"Synthetic goldens saved at {full_file_path}!")

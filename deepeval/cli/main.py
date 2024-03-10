@@ -1,11 +1,7 @@
 import typer
 from typing_extensions import Annotated
 
-# Rich has a few dependency issues
-try:
-    from rich import print
-except Exception as e:
-    pass
+from rich import print
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.cli.test import app as test_app
 from typing import Optional

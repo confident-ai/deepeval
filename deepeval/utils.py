@@ -3,7 +3,7 @@ import copy
 import os
 import json
 import time
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, List
 from collections.abc import Iterable
 import tqdm
 import re
@@ -11,8 +11,77 @@ import string
 import numpy as np
 from dataclasses import asdict, is_dataclass
 import re
+import asyncio
+import nest_asyncio
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
+
+def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            print(
+                "Event loop is already running. Applying nest_asyncio patch to allow async execution..."
+            )
+            nest_asyncio.apply()
+
+        if loop.is_closed():
+            raise RuntimeError
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop
+
+
+def show_indicator():
+    try:
+        if os.environ["DISABLE_DEEPEVAL_INDICATOR"] == "YES":
+            return False
+        else:
+            return True
+    except:
+        return True
+
+
+def set_indicator(show_indicator: bool):
+    if show_indicator:
+        os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "NO"
+    else:
+        os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "YES"
+
+
+def check_test_case_params(
+    test_case: LLMTestCase,
+    test_case_params: List[LLMTestCaseParams],
+    metric_name: str,
+):
+    missing_params = []
+    for param in test_case_params:
+        if getattr(test_case, param.value) is None:
+            missing_params.append(f"'{param.value}'")
+
+    if missing_params:
+        if len(missing_params) == 1:
+            missing_params_str = missing_params[0]
+        elif len(missing_params) == 2:
+            missing_params_str = " and ".join(missing_params)
+        else:
+            missing_params_str = (
+                ", ".join(missing_params[:-1]) + ", and " + missing_params[-1]
+            )
+
+        raise ValueError(
+            f"{missing_params_str} cannot be None for the '{metric_name}' metric"
+        )
+
+
+def login_with_confident_api_key(api_key: string):
+    from rich import print
+
+    KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
+    print("Congratulations! Login successful :raising_hands: ")
 
 
 def set_is_running_deepeval(flag: bool):
