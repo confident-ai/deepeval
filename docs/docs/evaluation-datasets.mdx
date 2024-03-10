@@ -113,8 +113,8 @@ There are two optional parameters when creating a `Synthesizer`:
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
 - [Optional] `multithreading`: a boolean which when set to `True`, enables concurrent generation of goldens. Defaulted to `True`.
 
-:::caution
-We highly recommend you to call `save_as()` to save all generated synthetic data.
+:::tip
+Remember to to call `save_as()` just to be safe.
 :::
 
 ## Load an Existing Dataset
@@ -225,7 +225,7 @@ deepeval test run test_bulk.py -n 3
 
 ## Evaluate Your Dataset Without Pytest
 
-Alternately, you can use deepeval's `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
+Alternately, you can use `deepeval`'s `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
 
 ```python
 from deepeval import evaluate
@@ -233,7 +233,6 @@ from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(test_cases=[...])
-
 hallucination_metric = HallucinationMetric(threshold=0.3)
 answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
 

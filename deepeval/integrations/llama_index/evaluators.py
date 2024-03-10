@@ -1,6 +1,6 @@
-import asyncio
 from typing import Optional, Sequence, Any
 from llama_index.core.evaluation.base import BaseEvaluator, EvaluationResult
+import asyncio
 
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import (
@@ -56,7 +56,7 @@ class AnswerRelevancyEvaluator(BaseEvaluator):
             include_reason=self.include_reason,
             model=self.model,
         )
-        metric.measure(test_case)
+        await metric.a_measure(test_case)
         return EvaluationResult(
             query=query,
             response=response,
@@ -108,7 +108,7 @@ class FaithfulnessEvaluator(BaseEvaluator):
             include_reason=self.include_reason,
             model=self.model,
         )
-        metric.measure(test_case)
+        await metric.a_measure(test_case)
         return EvaluationResult(
             query=query,
             response=response,
@@ -160,7 +160,7 @@ class ContextualRelevancyEvaluator(BaseEvaluator):
             include_reason=self.include_reason,
             model=self.model,
         )
-        metric.measure(test_case)
+        await metric.a_measure(test_case)
         return EvaluationResult(
             query=query,
             response=response,
@@ -209,7 +209,7 @@ class SummarizationEvaluator(BaseEvaluator):
             model=self.model,
             include_reason=self.include_reason,
         )
-        metric.measure(test_case)
+        await metric.a_measure(test_case)
         return EvaluationResult(
             query=query,
             response=response,
@@ -261,7 +261,7 @@ class BiasEvaluator(BaseEvaluator):
             model=self.model,
             include_reason=self.include_reason,
         )
-        metric.measure(test_case)
+        await metric.a_measure(test_case)
         return EvaluationResult(
             query=query,
             response=response,
@@ -313,7 +313,7 @@ class ToxicityEvaluator(BaseEvaluator):
             model=self.model,
             include_reason=self.include_reason,
         )
-        metric.measure(test_case)
+        await metric.a_measure(test_case)
         return EvaluationResult(
             query=query,
             response=response,

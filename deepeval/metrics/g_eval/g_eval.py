@@ -1,3 +1,5 @@
+"""LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
+
 from typing import Optional, List, Tuple, Union
 from pydantic import BaseModel
 
@@ -53,7 +55,7 @@ class GEval(BaseMetric):
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
-        run_async: bool = True,
+        async_mode: bool = True,
         strict_mode: bool = False,
     ):
         self.name = name
@@ -84,15 +86,15 @@ class GEval(BaseMetric):
         self.evaluation_steps = evaluation_steps
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
-        self.run_async = run_async
+        self.async_mode = async_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
         check_test_case_params(
             test_case, self.evaluation_params, f"GEval({self.__name__})"
         )
+
         with metric_progress_indicator(self):
-            if self.run_async:
+            if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)
@@ -119,9 +121,10 @@ class GEval(BaseMetric):
         check_test_case_params(
             test_case, self.evaluation_params, f"GEval({self.__name__})"
         )
+
         with metric_progress_indicator(
             self,
-            is_async=True,
+            async_mode=True,
             _show_indicator=_show_indicator,
         ):
             self.evaluation_steps: List[str] = (
@@ -201,4 +204,4 @@ class GEval(BaseMetric):
 
     @property
     def __name__(self):
-        return f"GEval({self.name})"
+        return f"GEval ({self.name})"
