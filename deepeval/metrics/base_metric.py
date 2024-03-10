@@ -10,7 +10,7 @@ class BaseMetric:
     reason: Optional[str] = None
     evaluation_model: Optional[str] = None
     strict_mode: bool = False
-    run_async: Optional[bool] = None
+    async_mode: bool = True
 
     @property
     def threshold(self) -> float:
@@ -27,7 +27,7 @@ class BaseMetric:
     @abstractmethod
     async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
         raise NotImplementedError(
-            f"Async execution for {self.__class__.__name__} not supported yet. Please turn set 'run_async' to 'False'."
+            f"Async execution for {self.__class__.__name__} not supported yet. Please set 'async_mode' to 'False'."
         )
 
     @abstractmethod

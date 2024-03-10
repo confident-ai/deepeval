@@ -1,10 +1,10 @@
-import asyncio
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from contextlib import contextmanager
 import sys
 from typing import List, Optional
 import time
+import asyncio
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
@@ -12,20 +12,25 @@ from deepeval.utils import show_indicator
 
 
 def format_metric_description(
-    metric: BaseMetric, is_async: Optional[bool] = None
+    metric: BaseMetric, async_mode: Optional[bool] = None
 ):
-    if is_async is None:
-        run_async = metric.run_async
+    if async_mode is None:
+        run_async = metric.async_mode
     else:
-        run_async = is_async
+        run_async = async_mode
 
-    return f"✨ You're running DeepEval's latest [rgb(106,0,255)]{metric.__name__} Metric[/rgb(106,0,255)]! [rgb(55,65,81)](using {metric.evaluation_model}, strict={metric.strict_mode})...[/rgb(55,65,81)]"
+    if run_async:
+        is_async = "yes"
+    else:
+        is_async = "no"
+
+    return f"✨ You're running DeepEval's latest [rgb(106,0,255)]{metric.__name__} Metric[/rgb(106,0,255)]! [rgb(55,65,81)](using {metric.evaluation_model}, strict={metric.strict_mode}, async_mode={run_async})...[/rgb(55,65,81)]"
 
 
 @contextmanager
 def metric_progress_indicator(
     metric: BaseMetric,
-    is_async: Optional[bool] = None,
+    async_mode: Optional[bool] = None,
     _show_indicator: bool = True,
     total: int = 9999,
     transient: bool = True,
@@ -39,7 +44,7 @@ def metric_progress_indicator(
             transient=transient,
         ) as progress:
             progress.add_task(
-                description=format_metric_description(metric, is_async),
+                description=format_metric_description(metric, async_mode),
                 total=total,
             )
             yield
@@ -76,7 +81,10 @@ async def measure_metrics_with_indicator(
             tasks = []
             for metric in metrics:
                 task_id = progress.add_task(
-                    description=format_metric_description(metric), total=100
+                    description=format_metric_description(
+                        metric, async_mode=True
+                    ),
+                    total=100,
                 )
                 tasks.append(
                     measure_metric_task(task_id, progress, metric, test_case)

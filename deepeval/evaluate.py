@@ -1,4 +1,3 @@
-import asyncio
 import os
 from typing import List, Optional
 import time
@@ -14,7 +13,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.tracing import get_trace_stack
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
-from deepeval.utils import get_is_running_deepeval, disable_indicator
+from deepeval.utils import get_is_running_deepeval, set_indicator
 
 
 @dataclass
@@ -84,7 +83,7 @@ def execute_test_cases(
 
         for metric in metrics:
             # Override metric async
-            metric.run_async = False
+            metric.async_mode = False
 
             metric.measure(test_case)
             metric_metadata = MetricsMetadata(
@@ -205,9 +204,9 @@ def evaluate(
     metrics: List[BaseMetric],
     run_async: bool = True,
     show_indicator: bool = True,
+    print_results: bool = True,
 ):
-    if show_indicator is False:
-        disable_indicator()
+    set_indicator(show_indicator)
 
     # TODO: refactor
     for metric in metrics:
@@ -222,7 +221,9 @@ def evaluate(
             )
 
     test_run_manager.reset()
-    print("Evaluating test cases...")
+
+    if print_results:
+        print("Evaluating test cases...")
     if run_async:
         loop = get_or_create_event_loop()
         test_results = loop.run_until_complete(
@@ -232,11 +233,13 @@ def evaluate(
         test_results = execute_test_cases(test_cases, metrics, True)
 
     capture_evaluation_count()
-    for test_result in test_results:
-        print_test_result(test_result)
 
-    print("")
-    print("-" * 70)
+    if print_results:
+        for test_result in test_results:
+            print_test_result(test_result)
+
+        print("")
+        print("-" * 70)
     test_run_manager.wrap_up_test_run(display_table=False)
     return test_results
 
