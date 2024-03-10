@@ -1,21 +1,24 @@
-from typing import Optional, Union, List
+from typing import Optional, Union
 
-from deepeval.models.base_model import DeepEvalBaseModel
+from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.experimental.harness.config import (
     GeneralConfig,
     APIEndpointConfig,
 )
-from easy_eval.harness.tasks import HarnessTask
 
-
-class DeepEvalHarnessModel(DeepEvalBaseModel):
+class DeepEvalHarnessModel(DeepEvalBaseLLM):
     def __init__(
-        self, model_name_or_path: str, model_backend: str, **kwargs
+        self, model_name_or_path: str, model_backend: str, config: Optional[Union[GeneralConfig, APIEndpointConfig]] = None, **kwargs
     ) -> None:
         self.model_name_or_path, self.model_backend = (
             model_name_or_path,
             model_backend,
         )
+        if config is None:
+            self.config = APIEndpointConfig() if model_backend in ["openai"] else GeneralConfig()
+        else:
+            self.config = config
+            
         self.additional_params = kwargs
         super().__init__(
             model_name=model_name_or_path, **self.additional_params
@@ -23,7 +26,7 @@ class DeepEvalHarnessModel(DeepEvalBaseModel):
 
     def load_model(self, *args, **kwargs):
         try:
-            from easy_eval import HarnessEvaluator
+            from easy_eval.harness import HarnessModels
         except ImportError as error:
             raise ImportError(
                 f"Error: {error}"
@@ -31,25 +34,10 @@ class DeepEvalHarnessModel(DeepEvalBaseModel):
                 "You can install it using: pip install easy-evaluator"
             )
 
-        self.evaluator = HarnessEvaluator(
+        self.model = HarnessModels(
             model_name_or_path=self.model_name_or_path,
             model_backend=self.model_backend,
+            config=self.config,
             **self.additional_params,
         )
-        return self.evaluator.llm
-
-    def _call(
-        self,
-        tasks: Union[List[str], List[HarnessTask]],
-        config: Optional[Union[GeneralConfig, APIEndpointConfig]] = None,
-    ):
-        # TODO: Anthropic is not supported in APIEndpointConfig.
-        if config is None:
-            self.config = (
-                APIEndpointConfig()
-                if self.model_name_or_path == "openai"
-                else GeneralConfig()
-            )
-        else:
-            self.config = config
-        return self.evaluator.evaluate(tasks=tasks, config=self.config)
+        return self.model.lm
