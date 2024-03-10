@@ -1,10 +1,19 @@
-from typing import Optional, Union
+from typing import Optional, Union, List 
 
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.experimental.harness.config import (
     GeneralConfig,
     APIEndpointConfig,
 )
+
+try:
+    from easy_eval.harness import HarnessTask, HarnessModels
+except ImportError as error:
+    raise ImportError(
+        f"Error: {error}"
+        "easy_eval is not found."
+        "You can install it using: pip install easy-evaluator"
+    )
 
 class DeepEvalHarnessModel(DeepEvalBaseLLM):
     def __init__(
@@ -25,15 +34,6 @@ class DeepEvalHarnessModel(DeepEvalBaseLLM):
         )
 
     def load_model(self, *args, **kwargs):
-        try:
-            from easy_eval.harness import HarnessModels
-        except ImportError as error:
-            raise ImportError(
-                f"Error: {error}"
-                "easy_eval is not found."
-                "You can install it using: pip install easy-evaluator"
-            )
-
         self.model = HarnessModels(
             model_name_or_path=self.model_name_or_path,
             model_backend=self.model_backend,
@@ -41,3 +41,10 @@ class DeepEvalHarnessModel(DeepEvalBaseLLM):
             **self.additional_params,
         )
         return self.model.lm
+
+    def generate(self, tasks: Union[List[str], HarnessTask], *args, **kwargs) -> str:
+        responses, task_dict, task_metadata = self.model.generate(
+            tasks=tasks, return_task_metadata=True
+        )
+        self.task_dict, self.task_metadata = task_dict, task_metadata
+        return responses
