@@ -167,8 +167,8 @@ def test_everything_2():
     )
 
 
-@deepeval.log_hyperparameters(
-    model="gpt-4", prompt_template="another template!"
-)
-def hyperparameters():
-    return {"chunk_size": 600, "temperature": 1}
+# @deepeval.log_hyperparameters(
+#     model="gpt-4", prompt_template="another template!"
+# )
+# def hyperparameters():
+#     return {"chunk_size": 600, "temperature": 1}
