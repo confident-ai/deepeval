@@ -1,4 +1,5 @@
 import pytest
+import deepeval
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import (
     AnswerRelevancyMetric,
@@ -164,3 +165,10 @@ def test_everything_2():
             # metric10,
         ],
     )
+
+
+@deepeval.log_hyperparameters(
+    model="gpt-4", prompt_template="another template!"
+)
+def hyperparameters():
+    return {"chunk_size": 500, "temperature": 0}
