@@ -54,7 +54,7 @@ class Synthesizer:
                 prompt = EvolutionTemplate.second_name_to_be_decided_evolution(
                     input=text, context=context
                 )
-            res = self.model(prompt)
+            res = self.model.generate(prompt)
             evolved_texts.append(res)
         return evolved_texts
 
@@ -68,7 +68,7 @@ class Synthesizer:
         prompt = SynthesizerTemplate.generate_synthetic_data(
             context=context, max_goldens_per_context=max_goldens_per_context
         )
-        res = self.model(prompt)
+        res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
         temp_goldens: List[Golden] = []
@@ -122,7 +122,7 @@ class Synthesizer:
                         context=context,
                         max_goldens_per_context=max_goldens_per_context,
                     )
-                    res = self.model(prompt)
+                    res = self.model.generate(prompt)
                     data = trimAndLoadJson(res)
                     synthetic_data = [
                         SyntheticData(**item) for item in data["data"]
