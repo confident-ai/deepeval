@@ -143,6 +143,9 @@ class GEval(BaseMetric):
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
+        if self.evaluation_steps:
+            return self.evaluation_steps
+
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
@@ -154,6 +157,9 @@ class GEval(BaseMetric):
         return data["steps"]
 
     def _generate_evaluation_steps(self) -> List[str]:
+        if self.evaluation_steps:
+            return self.evaluation_steps
+
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
@@ -174,6 +180,7 @@ class GEval(BaseMetric):
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
         )
+        print(prompt)
         res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         return data["score"], data["reason"]
