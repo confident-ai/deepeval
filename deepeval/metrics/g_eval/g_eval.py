@@ -64,7 +64,7 @@ class GEval(BaseMetric):
         # Check if both criteria and evaluation_steps are not None at the same time
         if criteria is None and evaluation_steps is None:
             raise ValueError(
-                "Either 'criteria' or 'evaluation_steps' must be provided, but not both None."
+                "Either 'criteria' or 'evaluation_steps' must be provided."
             )
 
         # Check if criteria is provided, it cannot be an empty string
