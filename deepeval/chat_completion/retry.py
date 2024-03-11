@@ -1,5 +1,9 @@
 import random
 import time
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 
 def retry_with_exponential_backoff(
@@ -16,7 +20,6 @@ def retry_with_exponential_backoff(
         # Initialize variables
         num_retries = 0
         delay = initial_delay
-
         # Loop until a successful response or max_retries is hit or an exception is raised
         while True:
             try:
@@ -25,7 +28,7 @@ def retry_with_exponential_backoff(
             # Retry on specified errors
             # except error as e:
             except Exception as e:
-                print(e)
+                logger.warning(e)
                 # Increment retries
                 num_retries += 1
 
