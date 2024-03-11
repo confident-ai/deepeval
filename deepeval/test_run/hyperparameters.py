@@ -32,9 +32,8 @@ def process_hyperparameters(hyperparameters) -> Union[dict, None]:
 def log_hyperparameters(model: str, prompt_template: str):
     def decorator(func):
         test_run = test_run_manager.get_test_run()
-        hyperparameters = func()
-        processed_hyperparameters = process_hyperparameters(hyperparameters)
-        test_run.hyperparameters = processed_hyperparameters
+        hyperparameters = process_hyperparameters(func())
+        test_run.hyperparameters = hyperparameters
         test_run.model = model
         test_run.user_prompt_template = prompt_template
         test_run_manager.save_test_run()
