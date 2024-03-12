@@ -33,14 +33,6 @@ class TestRunCacheManager:
         self.cached_test_run = None
         self.cache_file_name = CACHE_FILE_NAME
 
-    def create_cached_test_run(self, cache: dict[str: List[MetricsMetadata]]):
-        self.cached_test_run = CachedTestRun(
-            cache_file=self.cache_file_name,
-            cache=cache
-        )
-
-        self.save_cached_test_run()
-
     def get_cached_test_run(self) -> Union[CachedTestRun, None]:
         # Subsequent calls to get cached test run (if any) doesn't go through disk
         if self.cached_test_run:
