@@ -74,24 +74,35 @@ async def measure_metric_task(
 async def measure_metrics_with_indicator(
     metrics: List[BaseMetric],
     test_case: LLMTestCase,
+    cached_metrics: List[str],
 ):
     if show_indicator():
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
             TextColumn("[progress.description]{task.description}"),
             transient=False,
-        ) as progress:
+        ) as progress:    
             tasks = []
             for metric in metrics:
-                task_id = progress.add_task(
+                if metric.__name__ in cached_metrics:
+                    task_id = progress.add_task(
                     description=format_metric_description(
                         metric, async_mode=True
                     ),
-                    total=100,
-                )
-                tasks.append(
-                    measure_metric_task(task_id, progress, metric, test_case)
-                )
+                    total=1,
+                    )
+                    progress.update(task_id, advance=1)  # Instantly complete
+                    progress.update(task_id, description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Cached! (0s)")
+                else:    
+                    task_id = progress.add_task(
+                        description=format_metric_description(
+                            metric, async_mode=True
+                        ),
+                        total=100,
+                    )
+                    tasks.append(
+                        measure_metric_task(task_id, progress, metric, test_case)
+                    )
             await asyncio.gather(*tasks)
     else:
         tasks = []
