@@ -1,7 +1,7 @@
 import os
 import json
 from pydantic import BaseModel, Field
-from typing import Any, Optional, List, Dict
+from typing import Optional, List, Union
 import shutil
 import webbrowser
 import sys
@@ -78,7 +78,7 @@ class TestRun(BaseModel):
     metric_scores: List[MetricScoreType] = Field(
         default_factory=lambda: [], alias="metricScores"
     )
-    hyperparameters: Optional[dict[Any, Any]] = Field(None)
+    hyperparameters: Optional[dict[str, Union[str, float, int]]] = Field(None)
     model: Optional[str] = Field(None)
     user_prompt_template: Optional[str] = Field(
         None, alias="userPromptTemplate"
