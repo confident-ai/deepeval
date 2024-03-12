@@ -22,7 +22,7 @@ class FakeMetric(BaseMetric):
         self.reason = "This metric looking good!"
         return self.score
 
-    def a_meausre(self, test_case: LLMTestCase):
+    async def a_meausre(self, test_case: LLMTestCase):
         self.score = random.uniform(0.0, 1.0)
         self.success = self.score >= self.threshold
         # You can also optionally set a reason for the score returned.

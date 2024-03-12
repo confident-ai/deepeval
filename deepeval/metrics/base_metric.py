@@ -44,6 +44,9 @@ class BaseConversationalMetric:
     score_breakdown: Dict = None
     reason: Optional[str] = None
     evaluation_model: Optional[str] = None
+    # Not changeable for now
+    strict_mode: bool = False
+    async_mode: bool = False
 
     @property
     def threshold(self) -> float:

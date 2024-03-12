@@ -57,7 +57,10 @@ async def measure_metric_task(
 ):
     while not progress.finished:
         start_time = time.perf_counter()
-        await metric.a_measure(test_case, _show_indicator=False)
+        try:
+            await metric.a_measure(test_case, _show_indicator=False)
+        except TypeError:
+            await metric.a_measure(test_case)
         end_time = time.perf_counter()
         time_taken = format(end_time - start_time, ".2f")
         progress.update(task_id, advance=100)
@@ -91,9 +94,10 @@ async def measure_metrics_with_indicator(
                 )
             await asyncio.gather(*tasks)
     else:
-        await asyncio.gather(
-            *[
-                metric.a_measure(test_case, _show_indicator=False)
-                for metric in metrics
-            ]
-        )
+        tasks = []
+        for metric in metrics:
+            try:
+                tasks.append(metric.a_measure(test_case, _show_indicator=False))
+            except TypeError:
+                tasks.append(metric.a_measure(test_case))
+        await asyncio.gather(*tasks)
