@@ -24,8 +24,8 @@ The code below defines a custom `Mistral7B` class using `DeepEvalBaseLLM` and as
 
 ```python
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
-from deepeval.benchmarks.mmlu.task import BigBenchHardTask
-from deepeval.benchmarks.mmlu import BigBenchHard
+from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
+from deepeval.benchmarks.big_bench_hard import BigBenchHard
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 class Mistral7B(DeepEvalBaseLLM):
@@ -57,7 +57,7 @@ mistral_7b = Mistral7B(model_name_or_path="mistralai/Mistral-7B-v0.1")
 
 # Define benchmark with specific tasks and shots
 tasks=[BigBenchHardTask.BOOLEAN_EXPRESSIONS, BigBenchHardTask.CAUSAL_JUDGEMENT]
-benchmark = HellaSwag(tasks= tasks, n_shots=3, enable_cot=True)
+benchmark = BigBenchHard(tasks= tasks, n_shots=3, enable_cot=True)
 
 # Evaluate the custom model using the benchmark
 results = benchmark.evaluate(model=mistral_7b)

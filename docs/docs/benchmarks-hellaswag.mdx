@@ -23,8 +23,8 @@ The following code creates a custom `Mistral7B` class that inherits from `DeepEv
 
 ```python
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
-from deepeval.benchmarks.mmlu.task import HellaSwagTask
-from deepeval.benchmarks.mmlu import HellaSwag
+from deepeval.benchmarks.hellaswag.task import HellaSwagTask
+from deepeval.benchmarks.hellaswag import HellaSwag
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 class Mistral7B(DeepEvalBaseLLM):
