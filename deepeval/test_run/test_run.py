@@ -31,6 +31,11 @@ class MetricScoreType(BaseModel):
         return cls(metric=metric.__name__, score=metric.score)
 
 
+class MetricScores(BaseModel):
+    metric: str
+    scores: List[float]
+
+
 class DeploymentConfigs(BaseModel):
     env: str
     actor: Optional[str]
@@ -78,6 +83,9 @@ class TestRun(BaseModel):
     metric_scores: List[MetricScoreType] = Field(
         default_factory=lambda: [], alias="metricScores"
     )
+    metrics_scores: List[MetricScores] = Field(
+        default_factory=lambda: [], alias="metricsScores"
+    )
     hyperparameters: Optional[Dict[Any, Any]] = Field(None)
     model: Optional[str] = Field(None)
     user_prompt_template: Optional[str] = Field(
@@ -85,11 +93,37 @@ class TestRun(BaseModel):
     )
 
     def cleanup(self):
+        # TODO: deprecate
         all_metric_dict = MetricsAverageDict()
         for test_case in self.test_cases:
             for metric in test_case.metrics_metadata:
                 all_metric_dict.add_metric(metric.metric, metric.score)
         self.metric_scores = all_metric_dict.get_average_metric_score()
+
+        metrics_scores: List[MetricScores] = []
+        for test_case in self.test_cases:
+            for metric_metadata in test_case.metrics_metadata:
+                print(metric_metadata.metric)
+                print(metric.score)
+
+        self.metrics_scores = metrics_scores
+
+    def construct_metrics_scores(self):
+        metrics_dict: Dict[str, List[float]] = {}
+
+        for test_case in self.test_cases:
+            for metric_metadata in test_case.metrics_metadata:
+                metric = metric_metadata.metric
+                score = metric_metadata.score
+                print(metric, score)
+                if metric in metrics_dict:
+                    metrics_dict[metric].append(score)
+                else:
+                    metrics_dict[metric] = [score]
+        self.metrics_scores = [
+            MetricScores(metric=metric, scores=scores)
+            for metric, scores in metrics_dict.items()
+        ]
 
     def save(self, f):
         json.dump(self.model_dump(by_alias=True, exclude_none=True), f)
@@ -128,6 +162,7 @@ class TestRunManager:
             testFile=file_name,
             testCases=[],
             metricScores=[],
+            metricsScores=[],
             hyperparameters=None,
             deployment=deployment,
             deploymentConfigs=deployment_configs,
@@ -283,6 +318,8 @@ class TestRunManager:
     def wrap_up_test_run(self, display_table: bool = True):
         test_run = self.get_test_run()
         test_run.cleanup()
+        test_run.construct_metrics_scores()
+        print(test_run.metrics_scores)
         if test_run is None:
             print("Test Run is empty, please try again.")
             delete_file_if_exists(self.temp_file_name)
