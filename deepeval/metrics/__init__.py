@@ -29,3 +29,4 @@ from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 #     RAGASCoherenceMetric as CoherenceMetric,
 #     RAGASMaliciousnessMetric as MaliciousnessMetric,
 # )
+from .accuracy_metric import ExactMatchAccuracyMetric
