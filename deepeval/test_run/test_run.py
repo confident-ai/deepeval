@@ -92,7 +92,12 @@ class TestRun(BaseModel):
         self.metric_scores = all_metric_dict.get_average_metric_score()
 
     def save(self, f):
-        json.dump(self.model_dump(by_alias=True, exclude_none=True), f)
+        try:
+            body = self.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = self.dict(by_alias=True, exclude_none=True)
+        json.dump(body, f)
         return self
 
     @classmethod
