@@ -316,7 +316,6 @@ class TestRunManager:
         test_run = self.get_test_run()
         test_run.cleanup()
         test_run.construct_metrics_scores()
-        print(test_run.metrics_scores)
         if test_run is None:
             print("Test Run is empty, please try again.")
             delete_file_if_exists(self.temp_file_name)
