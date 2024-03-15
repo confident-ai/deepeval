@@ -8,6 +8,7 @@ import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
+from deepeval.synthesizer.context_generator import ContextGenerator
 from deepeval.models import (
     GPTModel,
     DeepEvalBaseLLM,
@@ -141,11 +142,18 @@ class Synthesizer:
             return goldens
 
     # TODO
-    def generate_goldens_from_docs(self, path: str):
+    def generate_goldens_from_docs(
+            self, 
+            paths: List[str],
+            chunk_size:int=1024, 
+            chunk_overlap:int=0):
         if self.multithreading:
             pass
         else:
-            pass
+            cg = ContextGenerator(paths, chunk_size, chunk_overlap)
+            contexts = cg.generate_contexts()
+            return self.generate_goldens(contexts)
+
         pass
 
     def save_as(self, file_type: str, directory: str):
