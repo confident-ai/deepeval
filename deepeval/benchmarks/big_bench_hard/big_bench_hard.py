@@ -19,7 +19,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         self.enable_cot: bool = enable_cot
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
-        self.score: Optional[float] = None
+        self.overall_score: Optional[float] = None
 
     def evaluate(self, model: DeepEvalBaseLLM) -> dict:
         overall_correct_predictions = 0
@@ -52,7 +52,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         # Columns: 'Task', 'Input', 'Prediction', 'Score'
         self.predictions = pd.DataFrame(predictions_row, columns=['Task', 'Input', 'Prediction', 'Correct'])
         self.task_scores = pd.DataFrame(scores_row, columns=['Task', 'Score'])
-        self.score = overall_accuracy
+        self.overall_score = overall_accuracy
 
         return overall_accuracy
 
@@ -78,3 +78,9 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             goldens.append(golden)
 
         return goldens
+
+
+from deepeval.models import GPTModel
+model = GPTModel()
+bbh = BigBenchHard(tasks = [BigBenchHardTask.BOOLEAN_EXPRESSIONS])
+bbh.evaluate(model)

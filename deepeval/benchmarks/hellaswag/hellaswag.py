@@ -21,7 +21,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
         self.n_shots = n_shots
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
-        self.score: Optional[float] = None
+        self.overall_score: Optional[float] = None
 
     def evaluate(self, model: DeepEvalBaseLLM) -> dict:
         overall_correct_predictions = 0
@@ -43,18 +43,18 @@ class HellaSwag(DeepEvalBaseBenchmark):
                     overall_correct_predictions += 1
                 predictions_row.append((task.value, golden.input, prediction, score))
             task_accuracy = task_correct_predictions / task_total_predictions
-            print(f"MMLU Task Accuracy (task={task.value}): {task_accuracy}")
+            print(f"HellaSwag Task Accuracy (task={task.value}): {task_accuracy}")
             scores_row.append((task.value, task_accuracy))
 
         # Calculate overall accuracy
         overall_accuracy = overall_correct_predictions / overall_total_predictions
-        print(f"Overall MMLU Accuracy: {overall_accuracy}")
+        print(f"Overall HellaSwag Accuracy: {overall_accuracy}")
 
         # Create a DataFrame from task_results_data
         # Columns: 'Task', 'Input', 'Prediction', 'Score'
         self.predictions = pd.DataFrame(predictions_row, columns=['Task', 'Input', 'Prediction', 'Correct'])
         self.task_scores = pd.DataFrame(scores_row, columns=['Task', 'Score'])
-        self.score = overall_accuracy
+        self.overall_score = overall_accuracy
 
         return overall_accuracy
     

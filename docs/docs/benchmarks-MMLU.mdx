@@ -16,7 +16,7 @@ import Equation from "@site/src/components/equation";
 
 To evaluate your model using `MMLU`, you'll have to provide the following arguments:
 
-- [Optional] `tasks`: a list of `MMLUTask` enums, specifying which of the **57 subject** areas to evaluate in the language model. By default, this is set to all tasks. Detailed descriptions of the `MMLUTask` enum can be found [here](#tasks).
+- [Optional] `tasks`: a list of tasks (`MMLUTask` enums), specifying which of the **57 subject** areas to evaluate in the language model. By default, this is set to all tasks. Detailed descriptions of the `MMLUTask` enum can be found [here](#tasks).
 - [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This is set to **5 by default** and cannot exceed this number.
 
 ## Example
@@ -27,7 +27,7 @@ The code below defines a custom `Mistral7B` class using `DeepEvalBaseLLM` and as
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
 from deepeval.benchmarks.mmlu.task import MMLUTask
 from deepeval.benchmarks.mmlu import MMLU
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer
 
 class Mistral7B(DeepEvalBaseLLM):
     def __init__(self, model):
@@ -39,7 +39,17 @@ class Mistral7B(DeepEvalBaseLLM):
     def load_model(self):
         return self.model
 
-    def _call(self, prompt: str) -> str:
+    def generate(self, prompt: str) -> str:
+        model = self.load_model()
+        device = "cuda"  # the device to load the model onto
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+        generated_ids = model.generate(
+            **model_inputs, max_new_tokens=100, do_sample=True
+        )
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def a_generate(self, prompt: str) -> str:
         model = self.load_model()
         device = "cuda"  # the device to load the model onto
         model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
@@ -58,17 +68,26 @@ mistral_7b = Mistral7B(model_name_or_path="mistralai/Mistral-7B-v0.1")
 
 # Define benchmark with specific tasks and shots
 tasks = [MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY]
-benchmark = MMLU(tasks= tasks, n_shots=3)
+benchmark = MMLU(tasks=tasks, n_shots=3)
 
 # Evaluate the custom model using the benchmark
 results = benchmark.evaluate(model=mistral_7b)
 ```
 
-The score of this benchmark is a float ranging from 0 to 1.
+The score for this benchmark is a float ranging from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is calculated by determining the proportion of multiple-choice questions for which the model produces the precise correct letter answer (e.g. 'A') in relation to the total number of questions.
+
+As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
 
 ## Tasks
 
-The `MMLUTask` enum classifies the diverse range of subject areas covered in the MMLU benchmark. Below is the comprehensive list of available tasks:
+The MMLUTask enum classifies the diverse range of subject areas covered in the MMLU benchmark.
+
+```python
+# Example
+task = MMLUTask.HIGH_SCHOOL_EUROPEAN_HISTORY
+```
+
+Below is the comprehensive list of available tasks:
 
 - `HIGH_SCHOOL_EUROPEAN_HISTORY`
 - `BUSINESS_ETHICS`

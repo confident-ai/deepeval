@@ -10,12 +10,12 @@ The **BIG-Bench Hard (BBH)** benchmark comprises 23 challenging BIG-Bench tasks 
 
 To evaluate your model using `BigBenchHard`, you'll have to provide the following arguments:
 
-- [Optional] `tasks`: a list of `BigBenchHardTask` enums, which specifies the subject areas for sentence completion evaluation. By default, this is set to all tasks. The list of `BigBenchHardTask` enums can be found [here](#tasks).
+- [Optional] `tasks`: a list of tasks (`BigBenchHardTask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `BigBenchHardTask` enums can be found [here](#tasks).
 - [Optional] `n_shots`: the number of "shots" to use for few-shot learning or chain-of-thought (CoT) learning. This is **set to 3 by default** and cannot exceed this number.
 - [Optional] `enable_cot`: a boolean that determines if CoT prompting is used for evaluation if `true`, and if few-shot learning if `false`. This is set to `true` by default.
 
 :::info
-**Chain-of-thought (CoT) prompting** enhances reasoning by utilizing **intermediate steps**. Combined with few-shot prompting, it improves performance on tasks needing in-depth reasoning. You can learn more about CoT [here](https://arxiv.org/abs/2201.11903).
+**Chain-of-Thought (CoT) prompting** is an approach where the model is prompted to articulate its reasoning process to arrive at an answer. Meanwhile, **few-shot prompting** is a method where the model is provided with a few examples (or "shots") to learn from before making predictions. When combined, few-shot prompting and CoT can significantly enhance performance. You can learn more about CoT [here](https://arxiv.org/abs/2201.11903).
 :::
 
 ## Example
@@ -26,7 +26,7 @@ The code below defines a custom `Mistral7B` class using `DeepEvalBaseLLM` and as
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
 from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard import BigBenchHard
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer
 
 class Mistral7B(DeepEvalBaseLLM):
     def __init__(self, model):
@@ -38,7 +38,17 @@ class Mistral7B(DeepEvalBaseLLM):
     def load_model(self):
         return self.model
 
-    def _call(self, prompt: str) -> str:
+    def generate(self, prompt: str) -> str:
+        model = self.load_model()
+        device = "cuda"  # the device to load the model onto
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+        generated_ids = model.generate(
+            **model_inputs, max_new_tokens=100, do_sample=True
+        )
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def a_generate(self, prompt: str) -> str:
         model = self.load_model()
         device = "cuda"  # the device to load the model onto
         model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
@@ -57,17 +67,28 @@ mistral_7b = Mistral7B(model_name_or_path="mistralai/Mistral-7B-v0.1")
 
 # Define benchmark with specific tasks and shots
 tasks=[BigBenchHardTask.BOOLEAN_EXPRESSIONS, BigBenchHardTask.CAUSAL_JUDGEMENT]
-benchmark = BigBenchHard(tasks= tasks, n_shots=3, enable_cot=True)
+benchmark = BigBenchHard(tasks=tasks, n_shots=3, enable_cot=True)
 
 # Evaluate the custom model using the benchmark
 results = benchmark.evaluate(model=mistral_7b)
 ```
 
-The score of this benchmark is a float ranging from 0 to 1.
+The score for this benchmark is a float ranging from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is calculated by determining the proportion of answers for which the model produces the exact correct answer (e.g. 'False' in boolean expression tasks) in relation to the total number of questions.
+
+As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
+
+Moreover, BBH answers exhibit a greater variety of answers compared to benchmarks that use multiple-choice questions, since different tasks in BBH require different types of outputs (for example, boolean values in boolean expression tasks versus numbers in arithmetic tasks). To enhance benchmark performance, employing **CoT** prompting will prove to be extremely helpful.
 
 ## Tasks
 
-The `BigBenchHardTask` enum classifies the diverse range of subject areas covered in the BIG-Bench Hard benchmark. Below is the comprehensive list of available tasks:
+The BigBenchHardTask enum classifies the diverse range of tasks covered in the BIG-Bench Hard benchmark.
+
+```python
+# Example
+task = BigBenchHardTask.BOOLEAN_EXPRESSIONS
+```
+
+Below is the comprehensive list of available tasks:
 
 - `BOOLEAN_EXPRESSIONS`
 - `CAUSAL_JUDGEMENT`

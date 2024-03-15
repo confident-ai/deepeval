@@ -3,6 +3,10 @@ from deepeval.benchmarks.mmlu.task import MMLUTask
 
 class MMLUTemplate:
 
+    # Most of this template was taken from MMLU Github Repo
+    # The output confinement is a novel addition, since the original code
+    # outputted log_probabilties for each answer choice
+
     @staticmethod
     def generate_output(input: str, train_set: object, task: MMLUTask, n_shots: int):
         prompt = "The following are multiple choice questions (with answers) about{}.\n\n"

@@ -20,7 +20,7 @@ Below is an example of how to evaluate the Mistral 7B model against the `MMLU` b
 
 ```python
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer
 
 class Mistral7B(DeepEvalBaseLLM):
     def __init__(self, model):
@@ -32,7 +32,17 @@ class Mistral7B(DeepEvalBaseLLM):
     def load_model(self):
         return self.model
 
-    def _call(self, prompt: str) -> str:
+    def generate(self, prompt: str) -> str:
+        model = self.load_model()
+        device = "cuda"  # the device to load the model onto
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+        generated_ids = model.generate(
+            **model_inputs, max_new_tokens=100, do_sample=True
+        )
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def a_generate(self, prompt: str) -> str:
         model = self.load_model()
         device = "cuda"  # the device to load the model onto
         model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
@@ -70,10 +80,10 @@ from deepeval.benchmarks.mmlu.task import MMLUTask
 # Define benchmark with specific tasks and shots
 tasks = [MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY]
 benchmark = MMLU(tasks=tasks, n_shots=3)
-benchmark = MMLU()
 
 # Evaluate the custom model using the benchmark
 results = benchmark.evaluate(model=mistral_7b)
+print("Overall Score:", results)
 ```
 
 In the code above, you'll see the model is evaluated on High School Computer Science and Astronomy using 3-shot learning. You can select specific tasks by providing a list of `MMLUTask`s.
@@ -88,14 +98,11 @@ After running an evaluation, you can access the results in multiple ways to anal
 
 ### Score
 
-The overall score, which represents your model's performance across all specified tasks, can be retrieved from the results variable or directly from the benchmark object through `score`:
+The overall score, which represents your model's performance across all specified tasks, can be retrieved from the results variable or directly from the benchmark object through `overall_score`:
 
 ```python
-# Accessing the overall score from the results
-print("Score:", results)
-
 # Accessing the overall score directly from the benchmark object
-print("Score:", benchmark.score)
+print("Overall Score:", benchmark.overall_score)
 ```
 
 ### Task Scores
