@@ -100,14 +100,6 @@ class TestRun(BaseModel):
                 all_metric_dict.add_metric(metric.metric, metric.score)
         self.metric_scores = all_metric_dict.get_average_metric_score()
 
-        metrics_scores: List[MetricScores] = []
-        for test_case in self.test_cases:
-            for metric_metadata in test_case.metrics_metadata:
-                print(metric_metadata.metric)
-                print(metric.score)
-
-        self.metrics_scores = metrics_scores
-
     def construct_metrics_scores(self):
         metrics_dict: Dict[str, List[float]] = {}
 
