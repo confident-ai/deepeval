@@ -285,9 +285,14 @@ class EvaluationDataset:
         if is_confident():
             goldens = self.goldens
             goldens.extend(convert_test_cases_to_goldens(self.test_cases))
-            body = APIDataset(
+            api_dataset = APIDataset(
                 alias=alias, overwrite=False, goldens=goldens
-            ).model_dump(by_alias=True, exclude_none=True)
+            )
+            try:
+                body = api_dataset.model_dump(by_alias=True, exclude_none=True)
+            except AttributeError:
+                # Pydantic version below 2.0
+                body = api_dataset.dict(by_alias=True, exclude_none=True)
             api = Api()
             result = api.post_request(
                 endpoint=Endpoints.DATASET_ENDPOINT.value,
