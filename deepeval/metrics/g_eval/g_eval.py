@@ -180,7 +180,6 @@ class GEval(BaseMetric):
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
         )
-        print(prompt)
         res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res)
         return data["score"], data["reason"]
