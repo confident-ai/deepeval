@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Optional, Dict
 from datasets import load_dataset
 import pandas as pd
 from tqdm import tqdm
+
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
@@ -17,7 +18,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         n_shots: int = 3,
         enable_cot: bool = True,
     ):
-        assert n_shots <= 3, "MMLU only supports n_shots <= 3"
+        assert n_shots <= 3, "BBH only supports n_shots <= 3"
         super().__init__()
         self.tasks: List[BigBenchHardTask] = (
             list(BigBenchHardTask) if tasks is None else tasks
@@ -29,7 +30,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> dict:
+    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
         overall_correct_predictions = 0
         overall_total_predictions = 0
         predictions_row = []
@@ -74,7 +75,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
 
     def predict(
         self, model: DeepEvalBaseLLM, task: BigBenchHardTask, golden: Golden
-    ) -> dict:
+    ) -> Dict:
         # Define prompt template
         prompt: dict = BigBenchHardTemplate.generate_output(
             input=golden.input,
@@ -101,10 +102,3 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             goldens.append(golden)
 
         return goldens
-
-
-from deepeval.models import GPTModel
-
-model = GPTModel()
-bbh = BigBenchHard(tasks=[BigBenchHardTask.BOOLEAN_EXPRESSIONS])
-bbh.evaluate(model)

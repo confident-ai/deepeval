@@ -1,13 +1,14 @@
-from typing import List
+from typing import List, Dict, Optional
 from datasets import load_dataset
 from tqdm import tqdm
+import pandas as pd
+
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.hellaswag.task import HellaSwagTask
 from deepeval.benchmarks.hellaswag.template import HellaSwagTemplate
 from deepeval.scorer import Scorer
-import pandas as pd
 
 
 class HellaSwag(DeepEvalBaseBenchmark):
@@ -20,13 +21,13 @@ class HellaSwag(DeepEvalBaseBenchmark):
         )
         self.scorer = Scorer()
         self.dataset: Dataset = None
-        self.shots_dataset: List[dict] = None
+        self.shots_dataset: List[Dict] = None
         self.n_shots = n_shots
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> dict:
+    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
         overall_correct_predictions = 0
         overall_total_predictions = 0
         predictions_row = []
@@ -71,7 +72,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
 
     def predict(
         self, model: DeepEvalBaseLLM, task: HellaSwagTask, golden: Golden
-    ) -> dict:
+    ) -> Dict:
         # Define prompt template
         assert (
             self.shots_dataset != None

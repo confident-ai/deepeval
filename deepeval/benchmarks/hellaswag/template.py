@@ -7,8 +7,7 @@ class HellaSwagTemplate:
     # In the original HellaSwag paper, the models were fine-tuned using softmax layer. No prompts were used.
     # But GPT-4 topped the leaderboard using 10-shot prompting, though the prompt was not released.
 
-    staticmethod
-
+    @staticmethod
     def generate_output(
         input: str, train_set: object, task: HellaSwagTask, n_shots: int
     ):

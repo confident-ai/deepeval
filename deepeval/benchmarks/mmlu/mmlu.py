@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Optional, Dict
 from datasets import load_dataset
 import pandas as pd
 from tqdm import tqdm
+
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
@@ -17,13 +18,13 @@ class MMLU(DeepEvalBaseBenchmark):
         self.tasks: List[MMLUTask] = list(MMLUTask) if tasks is None else tasks
         self.scorer = Scorer()
         self.dataset: Dataset = None
-        self.shots_dataset: List[dict] = None
+        self.shots_dataset: List[Dict] = None
         self.n_shots: int = n_shots
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> dict:
+    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
         overall_correct_predictions = 0
         overall_total_predictions = 0
         predictions_row = []
@@ -66,7 +67,7 @@ class MMLU(DeepEvalBaseBenchmark):
 
     def predict(
         self, model: DeepEvalBaseLLM, task: MMLUTask, golden: Golden
-    ) -> dict:
+    ) -> Dict:
         # Define prompt template
         assert (
             self.shots_dataset != None
