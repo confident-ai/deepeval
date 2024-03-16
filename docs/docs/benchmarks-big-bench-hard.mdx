@@ -23,8 +23,8 @@ There are three optional arguments when using the `BigBenchHard` benchmark:
 The code below assesses a custom `mistral_7b` model ([click here to learn how to use **ANY** custom LLM](benchmarks-introduction#benchmarking-your-llm)) on Boolean Expressions and Causal Judgement in `BigBenchHard` using 3-shot CoT prompting.
 
 ```python
-from deepeval.benchmarks.task import BigBenchHardTask
 from deepeval.benchmarks import BigBenchHard
+from deepeval.benchmarks.tasks import BigBenchHardTask
 
 # Define benchmark with specific tasks and shots
 benchmark = BigBenchHard(
