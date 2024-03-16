@@ -1,0 +1,10 @@
+Evaluate the result of a random Boolean expression.
+
+Q: not ( ( not not True ) ) is
+A: False
+
+Q: True and False and not True and True is
+A: False
+
+Q: not not ( not ( False ) ) is
+A: True

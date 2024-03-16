@@ -1,0 +1,22 @@
+A logical deduction task which requires deducing the order of a sequence of objects.
+
+Q: The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In a golf tournament, there were three golfers: Amy, Eli, and Eve. Eve finished above Amy. Eli finished below Amy.
+Options:
+(A) Amy finished last
+(B) Eli finished last
+(C) Eve finished last
+A: (B)
+
+Q: The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a shelf, there are three books: a white book, a green book, and an orange book. The green book is to the right of the white book. The orange book is the rightmost.
+Options:
+(A) The white book is the leftmost
+(B) The green book is the leftmost
+(C) The orange book is the leftmost
+A: (A)
+
+Q: The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a shelf, there are three books: a red book, a gray book, and a white book. The white book is to the left of the gray book. The red book is the second from the left.
+Options:
+(A) The red book is the leftmost
+(B) The gray book is the leftmost
+(C) The white book is the leftmost
+A: (C)
