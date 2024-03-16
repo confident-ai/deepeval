@@ -1,0 +1,10 @@
+Sort a list of words.
+
+Q: Sort the following words alphabetically: List: oven costume counterpart
+A: costume counterpart oven
+
+Q: Sort the following words alphabetically: List: hypochlorite ponderosa phone credulity
+A: credulity hypochlorite phone ponderosa
+
+Q: Sort the following words alphabetically: List: newt arson parthia seismography mugho aspect census
+A: arson aspect census mugho newt parthia seismography

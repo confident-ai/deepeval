@@ -1,0 +1,148 @@
+---
+id: benchmarks-mmlu
+title: MMLU
+sidebar_label: MMLU
+---
+
+import Equation from "@site/src/components/equation";
+
+**MMLU (Massive Multitask Language Understanding)** is a benchmark for evaluating LLMs through multiple-choice questions. These questions cover 57 subjects such as math, history, law, and ethics. For more information, [visit the MMLU GitHub page](https://github.com/hendrycks/test).
+
+:::tip
+`MMLU` covers a broad variety and depth of subjects, and is good at detecting areas where a model **may lack understanding.**
+:::
+
+## Arguments
+
+To evaluate your model using `MMLU`, you'll have to provide the following arguments:
+
+- [Optional] `tasks`: a list of tasks (`MMLUTask` enums), specifying which of the **57 subject** areas to evaluate in the language model. By default, this is set to all tasks. Detailed descriptions of the `MMLUTask` enum can be found [here](#tasks).
+- [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This is set to **5 by default** and cannot exceed this number.
+
+## Example
+
+The code below defines a custom `Mistral7B` class using `DeepEvalBaseLLM` and assesses its performance on High School Computer Science and Astronomy tasks in `MMLU` using 3-shot learning. To learn more about using **custom LLM classes** for evaluation, [visit this page](./metrics-introduction.mdx#using-openai).
+
+```python
+from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
+from deepeval.benchmarks.mmlu.task import MMLUTask
+from deepeval.benchmarks.mmlu import MMLU
+from transformers import AutoTokenizer
+
+class Mistral7B(DeepEvalBaseLLM):
+    def __init__(self, model):
+        self.model = model
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "mistralai/Mistral-7B-v0.1"
+        )
+
+    def load_model(self):
+        return self.model
+
+    def generate(self, prompt: str) -> str:
+        model = self.load_model()
+        device = "cuda"  # the device to load the model onto
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+        generated_ids = model.generate(
+            **model_inputs, max_new_tokens=100, do_sample=True
+        )
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def a_generate(self, prompt: str) -> str:
+        model = self.load_model()
+        device = "cuda"  # the device to load the model onto
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+        generated_ids = model.generate(
+            **model_inputs, max_new_tokens=100, do_sample=True
+        )
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def get_model_name(self):
+        return "Mistral 7B"
+
+
+# Initialize Mistral7B model with its Hugging Face model path
+mistral_7b = Mistral7B(model_name_or_path="mistralai/Mistral-7B-v0.1")
+
+# Define benchmark with specific tasks and shots
+tasks = [MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY]
+benchmark = MMLU(tasks=tasks, n_shots=3)
+
+# Evaluate the custom model using the benchmark
+results = benchmark.evaluate(model=mistral_7b)
+```
+
+The score for this benchmark is a float ranging from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is calculated by determining the proportion of multiple-choice questions for which the model produces the precise correct letter answer (e.g. 'A') in relation to the total number of questions.
+
+As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
+
+## Tasks
+
+The MMLUTask enum classifies the diverse range of subject areas covered in the MMLU benchmark.
+
+```python
+# Example
+task = MMLUTask.HIGH_SCHOOL_EUROPEAN_HISTORY
+```
+
+Below is the comprehensive list of available tasks:
+
+- `HIGH_SCHOOL_EUROPEAN_HISTORY`
+- `BUSINESS_ETHICS`
+- `CLINICAL_KNOWLEDGE`
+- `MEDICAL_GENETICS`
+- `HIGH_SCHOOL_US_HISTORY`
+- `HIGH_SCHOOL_PHYSICS`
+- `HIGH_SCHOOL_WORLD_HISTORY`
+- `VIROLOGY`
+- `HIGH_SCHOOL_MICROECONOMICS`
+- `ECONOMETRICS`
+- `COLLEGE_COMPUTER_SCIENCE`
+- `HIGH_SCHOOL_BIOLOGY`
+- `ABSTRACT_ALGEBRA`
+- `PROFESSIONAL_ACCOUNTING`
+- `PHILOSOPHY`
+- `PROFESSIONAL_MEDICINE`
+- `NUTRITION`
+- `GLOBAL_FACTS`
+- `MACHINE_LEARNING`
+- `SECURITY_STUDIES`
+- `PUBLIC_RELATIONS`
+- `PROFESSIONAL_PSYCHOLOGY`
+- `PREHISTORY`
+- `ANATOMY`
+- `HUMAN_SEXUALITY`
+- `COLLEGE_MEDICINE`
+- `HIGH_SCHOOL_GOVERNMENT_AND_POLITICS`
+- `COLLEGE_CHEMISTRY`
+- `LOGICAL_FALLACIES`
+- `HIGH_SCHOOL_GEOGRAPHY`
+- `ELEMENTARY_MATHEMATICS`
+- `HUMAN_AGING`
+- `COLLEGE_MATHEMATICS`
+- `HIGH_SCHOOL_PSYCHOLOGY`
+- `FORMAL_LOGIC`
+- `HIGH_SCHOOL_STATISTICS`
+- `INTERNATIONAL_LAW`
+- `HIGH_SCHOOL_MATHEMATICS`
+- `HIGH_SCHOOL_COMPUTER_SCIENCE`
+- `CONCEPTUAL_PHYSICS`
+- `MISCELLANEOUS`
+- `HIGH_SCHOOL_CHEMISTRY`
+- `MARKETING`
+- `PROFESSIONAL_LAW`
+- `MANAGEMENT`
+- `COLLEGE_PHYSICS`
+- `JURISPRUDENCE`
+- `WORLD_RELIGIONS`
+- `SOCIOLOGY`
+- `US_FOREIGN_POLICY`
+- `HIGH_SCHOOL_MACROECONOMICS`
+- `COMPUTER_SECURITY`
+- `MORAL_SCENARIOS`
+- `MORAL_DISPUTES`
+- `ELECTRICAL_ENGINEERING`
+- `ASTRONOMY`
+- `COLLEGE_BIOLOGY`

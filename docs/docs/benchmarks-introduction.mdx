@@ -1,0 +1,139 @@
+---
+id: benchmarks-introduction
+title: Introduction
+sidebar_label: Introduction
+---
+
+## Quick Summary
+
+In `deepeval`, benchmarks provide a standardized method to evaluate LLM performance. Each benchmark assesses various aspects of language model performance. `deepeval` offers a range of popular benchmarks for you to quickly get started with, such as:
+
+- BIG-Bench Hard
+- HellaSwag
+- MMLU (Massive Multitask Language Understanding)
+
+To assess your LLM's performance on a benchmark, you will need to create a model with `DeepEvalLLMBase`. More information on this can be found [here](./metrics-introduction.mdx).
+
+## Benchmark Evaluation
+
+Below is an example of how to evaluate the Mistral 7B model against the `MMLU` benchmark. Start by creating a custom model with `DeepEvalLLMBase`.
+
+```python
+from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
+from transformers import AutoTokenizer
+
+class Mistral7B(DeepEvalBaseLLM):
+    def __init__(self, model):
+        self.model = model
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "mistralai/Mistral-7B-v0.1"
+        )
+
+    def load_model(self):
+        return self.model
+
+    def generate(self, prompt: str) -> str:
+        model = self.load_model()
+        device = "cuda"  # the device to load the model onto
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+        generated_ids = model.generate(
+            **model_inputs, max_new_tokens=100, do_sample=True
+        )
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def a_generate(self, prompt: str) -> str:
+        model = self.load_model()
+        device = "cuda"  # the device to load the model onto
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
+        model.to(device)
+        generated_ids = model.generate(
+            **model_inputs, max_new_tokens=100, do_sample=True
+        )
+        return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def get_model_name(self):
+        return "Mistral 7B"
+
+# Initialize Mistral7B model with its Hugging Face model path
+mistral_7b = Mistral7B(model_name_or_path="mistralai/Mistral-7B-v0.1")
+```
+
+Next, create a benchmark instance using the `MMLU` class, and call the `evaluate` method with the model you created previously.
+
+```python
+from deepeval.benchmarks.mmlu import MMLU
+
+# Define benchmark
+benchmark = MMLU()
+
+# Evaluate the custom model using the benchmark
+results = benchmark.evaluate(model=mistral_7b)
+```
+
+Optionally, you can specify a list of `tasks` and `n_shots`, or number of example problems (for few-shot learning) for your model's evaluation.
+
+```python
+from deepeval.benchmarks.mmlu import MMLU
+from deepeval.benchmarks.mmlu.task import MMLUTask
+
+# Define benchmark with specific tasks and shots
+tasks = [MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY]
+benchmark = MMLU(tasks=tasks, n_shots=3)
+
+# Evaluate the custom model using the benchmark
+results = benchmark.evaluate(model=mistral_7b)
+print("Overall Score:", results)
+```
+
+In the code above, you'll see the model is evaluated on High School Computer Science and Astronomy using 3-shot learning. You can select specific tasks by providing a list of `MMLUTask`s.
+
+:::info
+Each benchmark is associated with a unique **Task class**, which is an enum. Details on the available tasks can be found on their respective pages. By default, each benchmark evaluates your model across all available `tasks`.
+:::
+
+## Evaluation Results
+
+After running an evaluation, you can access the results in multiple ways to analyze the performance of your model. This includes viewing the overall score, task-specific scores, and details about each prediction.
+
+### Score
+
+The overall score, which represents your model's performance across all specified tasks, can be retrieved from the results variable or directly from the benchmark object through `overall_score`:
+
+```python
+# Accessing the overall score directly from the benchmark object
+print("Overall Score:", benchmark.overall_score)
+```
+
+### Task Scores
+
+Individual task scores can be accessed through the `task_scores` attribute:
+
+```python
+print("Task-specific Scores:")
+print(benchmark.task_scores)
+```
+
+The `task_scores` attribute outputs a pandas DataFrame containing information about scores achieved in various tasks. Below is an example DataFrame:
+
+| Task                         | Score |
+| ---------------------------- | ----- |
+| high_school_computer_science | 0.75  |
+| astronomy                    | 0.93  |
+
+### Prediction Details
+
+For a comprehensive breakdown of your model's predictions across different tasks, refer to the benchmark.predictions attribute:
+
+```python
+print("Detailed Predictions:")
+print(benchmark.predictions)
+```
+
+The benchmark.predictions attribute also yields a pandas DataFrame containing detailed information about predictions made by the model. Below is an example DataFrame:
+
+| Task                         | Input                                                                              | Prediction | Correct |
+| ---------------------------- | ---------------------------------------------------------------------------------- | ---------- | ------- |
+| high_school_computer_science | In Python 3, which of the following function convert a string to an int in python? | A          | 0       |
+| high_school_computer_science | Let x = 1. What is x << 3 in Python 3?                                             | B          | 1       |
+| ...                          | ...                                                                                | ...        | ...     |

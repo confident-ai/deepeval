@@ -5,22 +5,24 @@ from tqdm import tqdm
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
-from deepeval.benchmarks.big_bench_hard.template import BigBenchHardTemplate
+from deepeval.benchmarks.mmlu.task import MMLUTask
+from deepeval.benchmarks.mmlu.template import MMLUTemplate
 from deepeval.scorer import Scorer
 
-class BigBenchHard(DeepEvalBaseBenchmark):
-    def __init__(self, tasks: List[BigBenchHardTask] = None, n_shots: int = 3, enable_cot: bool = True):
-        assert n_shots <= 3, "MMLU only supports n_shots <= 3"
+class MMLU(DeepEvalBaseBenchmark):
+    def __init__(self, tasks: List[MMLUTask] = None, n_shots: int = 5):
+        assert n_shots <= 5, "MMLU only supports n_shots <= 5"
         super().__init__()
-        self.tasks: List[BigBenchHardTask] = list(BigBenchHardTask) if tasks is None else tasks
+        self.tasks: List[MMLUTask] = list(MMLUTask) if tasks is None else tasks
         self.scorer = Scorer()
+        self.dataset: Dataset = None
+        self.shots_dataset: List[dict] = None
         self.n_shots: int = n_shots
-        self.enable_cot: bool = enable_cot
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
 
+        
     def evaluate(self, model: DeepEvalBaseLLM) -> dict:
         overall_correct_predictions = 0
         overall_total_predictions = 0
@@ -41,12 +43,12 @@ class BigBenchHard(DeepEvalBaseBenchmark):
                     overall_correct_predictions += 1
                 predictions_row.append((task.value, golden.input, prediction, score))
             task_accuracy = task_correct_predictions / task_total_predictions
-            print(f"Big Bench Hard Task Accuracy (task={task.value}): {task_accuracy}")
+            print(f"MMLU Task Accuracy (task={task.value}): {task_accuracy}")
             scores_row.append((task.value, task_accuracy))
 
         # Calculate overall accuracy
         overall_accuracy = overall_correct_predictions / overall_total_predictions
-        print(f"Overall Big Bench Hard Accuracy: {overall_accuracy}")
+        print(f"Overall MMLU Accuracy: {overall_accuracy}")
 
         # Create a DataFrame from task_results_data
         # Columns: 'Task', 'Input', 'Prediction', 'Score'
@@ -56,31 +58,43 @@ class BigBenchHard(DeepEvalBaseBenchmark):
 
         return overall_accuracy
 
-    def predict(self, model: DeepEvalBaseLLM, task: BigBenchHardTask, golden: Golden) -> dict:
-        # Define prompt template
-        prompt: dict = BigBenchHardTemplate.generate_output(
-           input=golden.input, task=task, n_shots=self.n_shots, enable_cot=self.enable_cot
-        )
-        prediction = model.generate(prompt)
-        prediction = prediction.split()[-1]
-        prediction = prediction[:-1] if self.enable_cot else prediction
 
+    def predict(self, model: DeepEvalBaseLLM, task: MMLUTask, golden: Golden) -> dict:
+        # Define prompt template
+        assert self.shots_dataset != None, "Example dataset is empty. Call load_benchmark."
+        prompt: dict = MMLUTemplate.generate_output(
+            train_set=self.shots_dataset, input=golden.input, task=task, n_shots=self.n_shots
+        )
+        prediction = model.generate(prompt)[0]
+    
         # Define Metric
         score = self.scorer.exact_match_score(golden.expected_output, prediction)
         return {'prediction': prediction, 'score': score}
 
-    def load_benchmark_dataset(self, task: BigBenchHardTask) -> List[Golden]:
-        # load from hugging face
-        dataset = load_dataset("lukaemon/bbh", task.value)
+
+    def load_benchmark_dataset(self, task: MMLUTask) -> List[Golden]:
+        # If dataset has been previously loaded, load from 
+        # instance var (to save time)
+        if self.dataset:
+            dataset = self.dataset
+        else:
+            dataset = load_dataset("lukaemon/mmlu", task.value, trust_remote_code=True)
+            self.dataset = dataset
+
+        # If dataset has not been previously loaded, construct 
+        # dataset of examples and save as instance var (to save time)
+        if not self.shots_dataset:
+            train_set = dataset['train']
+            shots_set = []
+            for data in train_set:
+                shots_set.append(data)
+            self.shots_dataset = shots_set
+            
+        # Construct test set
         goldens: List[Golden] = []
         for data in dataset["test"]:
-            golden = Golden(input=data["input"], expectedOutput=data["target"])
+            input = MMLUTemplate.format_question(data, include_answer=False)
+            golden = Golden(input=input, expectedOutput=data["target"])
             goldens.append(golden)
-
         return goldens
-
-
-from deepeval.models import GPTModel
-model = GPTModel()
-bbh = BigBenchHard(tasks = [BigBenchHardTask.BOOLEAN_EXPRESSIONS])
-bbh.evaluate(model)
+        
