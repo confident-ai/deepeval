@@ -34,7 +34,7 @@ class TestResult:
 def create_test_result(
     test_case: LLMTestCase,
     success: bool,
-    metrics: list[BaseMetric],
+    metrics: List[BaseMetric],
 ) -> TestResult:
     if isinstance(test_case, LLMTestCase):
         return TestResult(

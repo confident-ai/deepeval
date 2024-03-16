@@ -10,6 +10,7 @@ setup(
     author_email="jeffreyip@confident-ai.com",
     description="The open-source evaluation framework for LLMs.",
     packages=find_packages(),
+    include_package_data=True,
     install_requires=[
         "requests",
         "tqdm",

@@ -1,0 +1,10 @@
+Correctly close a Dyck-n word.
+
+Q: Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { [
+A: ] } ]
+
+Q: Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < > ( ( [ [ ( { } ) [ < > ] ]
+A: ] ) )
+
+Q: Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ < [ { < [ ] < { } > > } ] > { { ( ) } { < [ < > ] > }
+A: } ] >
