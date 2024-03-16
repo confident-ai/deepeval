@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class HellaSwagTask(Enum):
     APPLYING_SUNSCREEN = "Applying sunscreen"
     TRIMMING_BRANCHES_OR_HEDGES = "Trimming branches or hedges"
@@ -193,6 +194,3 @@ class HellaSwagTask(Enum):
     CLEAN_AND_JERK = "Clean and jerk"
     COMPUTERS_AND_ELECTRONICS = "Computers and Electronics"
     CROQUET = "Croquet"
-
-
-
