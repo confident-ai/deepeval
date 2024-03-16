@@ -6,97 +6,101 @@ sidebar_label: Introduction
 
 ## Quick Summary
 
-In `deepeval`, benchmarks provide a standardized method to evaluate LLM performance. Each benchmark assesses various aspects of language model performance. `deepeval` offers a range of popular benchmarks for you to quickly get started with, such as:
+LLM benchmarking provides a standardized way to quantify LLM performances across a range of different tasks. `deepeval` offers several state-of-the-art, research-backed benchmarks for you to quickly evaluate **ANY** custom LLM of your choice. These benchmarks include:
 
 - BIG-Bench Hard
 - HellaSwag
 - MMLU (Massive Multitask Language Understanding)
 
-To assess your LLM's performance on a benchmark, you will need to create a model with `DeepEvalLLMBase`. More information on this can be found [here](./metrics-introduction.mdx).
+To benchmark your LLM, you will need to wrap your LLM implementation (which could be anything such as a simple API call to OpenAI, or a Hugging Face transformers model) within `deepeval`'s `DeepEvalBaseLLM` class. Visit the [custom models section](metrics-introduction#using-a-custom-llm) for a full detailed example.
 
-## Benchmark Evaluation
+:::info
+In `deepeval`, anyone can benchmark any LLM of their choice in just a few lines of code.
+:::
 
-Below is an example of how to evaluate the Mistral 7B model against the `MMLU` benchmark. Start by creating a custom model with `DeepEvalLLMBase`.
+## What are LLM Benchmarks?
+
+An LLM benchmark is a set of standardized tests designed to evaluate the performance of LLMs on various skills, such as reasoning and comprehension. A benchmark is made up of:
+
+- one or more **tasks**, where each task is its own evaluation dataset with target labels
+- a **scorer**, to determine whether predictions from your LLM is correct or not (by referencing target labels)
+- various **prompting techniques**, which can be either few-shot learning and/or CoTs prompting
+
+The LLM to be evaluated will be supplied prompts outlined by the prompting techniques to generate "predictions" for all tasks in a benchmark, which the scorer will then score these predictions accordingly using the target labels. Each benchmark has its own method of scoring, but most LLM benchmarks the **exact match scorer** is used.
+
+:::tip
+We'll dive more into various prompting techniques for each benchmark in later sections.
+:::
+
+## Benchmarking Your LLM
+
+Below is an example of how to evaluate a [Mistral 7B model](https://huggingface.co/docs/transformers/model_doc/mistral) (exposed through Hugging Face's `transformers` library) against the `MMLU` benchmark.
+
+Start by creating a custom model by inheriting the `DeepEvalBaseLLM` class (visit the [custom models section](metrics-introduction#using-a-custom-llm) for a full guide):
 
 ```python
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseLLM
-from transformers import AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from deepeval.models.base_model import DeepEvalBaseLLM
 
 class Mistral7B(DeepEvalBaseLLM):
-    def __init__(self, model):
+    def __init__(
+        self,
+        model,
+        tokenizer
+    ):
         self.model = model
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "mistralai/Mistral-7B-v0.1"
-        )
+        self.tokenizer = tokenizer
 
     def load_model(self):
         return self.model
 
     def generate(self, prompt: str) -> str:
         model = self.load_model()
-        device = "cuda"  # the device to load the model onto
+
+        device = "cuda" # the device to load the model onto
+
         model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
         model.to(device)
-        generated_ids = model.generate(
-            **model_inputs, max_new_tokens=100, do_sample=True
-        )
+
+        generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
         return self.tokenizer.batch_decode(generated_ids)[0]
 
-    def a_generate(self, prompt: str) -> str:
-        model = self.load_model()
-        device = "cuda"  # the device to load the model onto
-        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
-        model.to(device)
-        generated_ids = model.generate(
-            **model_inputs, max_new_tokens=100, do_sample=True
-        )
-        return self.tokenizer.batch_decode(generated_ids)[0]
+    async def a_generate(self, prompt: str) -> str:
+        return self.generate(prompt)
 
     def get_model_name(self):
         return "Mistral 7B"
 
-# Initialize Mistral7B model with its Hugging Face model path
-mistral_7b = Mistral7B(model_name_or_path="mistralai/Mistral-7B-v0.1")
+model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
+tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
+
+mistral_7b = Mistral7B(model=model, tokenizer=tokenizer)
+print(mistral_7b("Write me a joke"))
 ```
 
-Next, create a benchmark instance using the `MMLU` class, and call the `evaluate` method with the model you created previously.
+Next, define a MMLU benchmark using the `MMLU` class, and call the `evaluate` method with the model you previously created.
 
 ```python
 from deepeval.benchmarks.mmlu import MMLU
+...
 
-# Define benchmark
 benchmark = MMLU()
-
-# Evaluate the custom model using the benchmark
-results = benchmark.evaluate(model=mistral_7b)
 ```
 
-Optionally, you can specify a list of `tasks` and `n_shots`, or number of example problems (for few-shot learning) for your model's evaluation.
+Lastly, simply call the `evaluate()` method to benchmark your custom LLM:
 
 ```python
-from deepeval.benchmarks.mmlu import MMLU
-from deepeval.benchmarks.mmlu.task import MMLUTask
+...
 
-# Define benchmark with specific tasks and shots
-tasks = [MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY]
-benchmark = MMLU(tasks=tasks, n_shots=3)
-
-# Evaluate the custom model using the benchmark
 results = benchmark.evaluate(model=mistral_7b)
-print("Overall Score:", results)
+print("Overall Score: ", results)
 ```
 
-In the code above, you'll see the model is evaluated on High School Computer Science and Astronomy using 3-shot learning. You can select specific tasks by providing a list of `MMLUTask`s.
+✅ **Congraulations! You can now evaluate any custom LLM of your choice on all LLM benchmarks offered by `deepeval`.**
 
-:::info
-Each benchmark is associated with a unique **Task class**, which is an enum. Details on the available tasks can be found on their respective pages. By default, each benchmark evaluates your model across all available `tasks`.
-:::
+After running an evaluation, you can access the results in multiple ways to analyze the performance of your model. This includes the overall score, task-specific scores, and details about each prediction.
 
-## Evaluation Results
-
-After running an evaluation, you can access the results in multiple ways to analyze the performance of your model. This includes viewing the overall score, task-specific scores, and details about each prediction.
-
-### Score
+### Overall Score
 
 The overall score, which represents your model's performance across all specified tasks, can be retrieved from the results variable or directly from the benchmark object through `overall_score`:
 
@@ -110,8 +114,7 @@ print("Overall Score:", benchmark.overall_score)
 Individual task scores can be accessed through the `task_scores` attribute:
 
 ```python
-print("Task-specific Scores:")
-print(benchmark.task_scores)
+print("Task-specific Scores: ", benchmark.task_scores)
 ```
 
 The `task_scores` attribute outputs a pandas DataFrame containing information about scores achieved in various tasks. Below is an example DataFrame:
@@ -126,8 +129,7 @@ The `task_scores` attribute outputs a pandas DataFrame containing information ab
 For a comprehensive breakdown of your model's predictions across different tasks, refer to the benchmark.predictions attribute:
 
 ```python
-print("Detailed Predictions:")
-print(benchmark.predictions)
+print("Detailed Predictions: ", benchmark.predictions)
 ```
 
 The benchmark.predictions attribute also yields a pandas DataFrame containing detailed information about predictions made by the model. Below is an example DataFrame:
@@ -137,3 +139,59 @@ The benchmark.predictions attribute also yields a pandas DataFrame containing de
 | high_school_computer_science | In Python 3, which of the following function convert a string to an int in python? | A          | 0       |
 | high_school_computer_science | Let x = 1. What is x << 3 in Python 3?                                             | B          | 1       |
 | ...                          | ...                                                                                | ...        | ...     |
+
+## Configurating LLM Benchmarks
+
+All benchmarks are configurable in one way or another, and `deepeval` offers an easy inferface to do so.
+
+:::note
+You'll notice although tasks and prompting techniques are configurable, scorers are not. This is because the type of scorer is an universal standard within any LLM benchmark.
+:::
+
+### Tasks
+
+A task for an LLM benchmark is a challenge or problem designed to assess an LLM's capabilities on a specific area of focus. For example, you can specify which **subset** of the the `MMLU` benchmark to evaluate your LLM on by providing a list of `MMLUTASK`:
+
+```python
+from deepeval.benchmarks import MMLU
+from deepeval.benchmarks.task import MMLUTask
+
+tasks = [MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY]
+benchmark = MMLU(tasks=tasks)
+```
+
+In this example, we're only evaluating our Mistral 7B model on the MMLU `HIGH_SCHOOL_COMPUTER_SCIENCE` and `ASTRONOMY` tasks.
+
+:::info
+Each benchmark is associated with a unique **Task** enum which can be found on each benchmark's individual documentation pages. These tasks are 100% drawn from the original research papers for each respective benchmark, and maps one-to-one to the benchmark datasets available on Hugging Face.
+
+By default, `deepeval` will evaluate your LLM on all available tasks for a particular benchmark.
+:::
+
+### Few-Shot Learning
+
+Few-shot learning, also known as in-context learning, is a prompting technique that involves supplying your LLM a few examples as part of the prompt template to help its generation. These examples can help guide accuracy or behavior. The number of examples to provide, can be specified in the `n_shots` parameter:
+
+```python
+from deepeval.benchmarks import HellaSwag
+
+benchmark = HellaSwag(n_shots=3)
+```
+
+:::note
+Each benchmark has a range of allowed `n_shots` values. `deepeval` handles all the logic with respect to the `n_shots` value according to the original research papers for each respective benchmark.
+:::
+
+### CoTs Prompting
+
+Chain of thought prompting is an approach where the model is prompted to articulate its reasoning process to arrive at an answer, which usually results in an increase in prediction accuracy.
+
+```python
+from deepeval.benchmarks import BigBenchHard
+
+benchmark = BigBenchHard(enable_cot=True)
+```
+
+:::note
+Not all benchmarks offers CoTs as a prompting technique, but the [original paper for BIG-Bench Hard](https://arxiv.org/abs/2210.09261) found major improvements when using CoTs prompting during benchmarking.
+:::
