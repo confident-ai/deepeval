@@ -31,7 +31,7 @@ class ContextGenerator:
         combined_chunks = []
         for path in self.document_paths:
             doc_chunker = DocumentChunker(self.chunk_size, self.chunk_overlap)
-            chunks = doc_chunker.load_from_pdf(path)
+            chunks = doc_chunker.load_doc(path)
             combined_chunks.extend(chunks)
         self.combined_chunks = combined_chunks
         return combined_chunks
@@ -67,8 +67,8 @@ class ContextGenerator:
 ################# Example Usage# ###################
 ####################################################
 
-# currently only accepts pdf
-paths = ["example_data/good_essay_1.pdf", "example_data/good_essay_2.pdf"]
-generator = ContextGenerator(paths, chunk_size=1024, chunk_overlap=0)
-contexts = generator.generate_contexts(5)
-
+if __name__ == "__main__":
+    paths = ["example_data/txt_example.txt", "example_data/docx_example.docx",  "example_data/pdf_example.pdf"]
+    generator = ContextGenerator(paths)#, chunk_size=10, chunk_overlap=0)
+    contexts = generator.generate_contexts(5)
+    print(contexts)

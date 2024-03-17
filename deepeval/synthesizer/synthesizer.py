@@ -218,7 +218,7 @@ class Synthesizer:
 ################# Example Usage ###################
 ####################################################
 
-synthesizer = Synthesizer()
-paths = ["example_data/good_essay_1.pdf", "example_data/good_essay_2.pdf"]
-goldens = synthesizer.generate_goldens_from_docs(paths=paths, output_size=5)
-print(goldens)
+#synthesizer = Synthesizer()
+#paths = ["example_data/good_essay_1.pdf", "example_data/good_essay_2.pdf"]
+#goldens = synthesizer.generate_goldens_from_docs(paths=paths, output_size=5)
+#print(goldens)

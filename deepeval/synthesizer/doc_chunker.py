@@ -1,5 +1,5 @@
 from langchain_core.documents import Document as LCDocument
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
 from langchain_openai import OpenAIEmbeddings
@@ -7,6 +7,7 @@ from typing import Optional, List, Tuple
 from pydantic import Field
 from enum import Enum
 import numpy as np
+import os
 
 
 class Chunk:
@@ -42,9 +43,24 @@ class DocumentChunker:
         self.embedder: OpenAIEmbeddings = OpenAIEmbeddings()
         self.mean_embedding: Optional[float] = None
 
-    ############### Load and Chunk (PDF) ###############
-    def load_from_pdf(self, path: str) -> List[LCDocument]:
-        loader = PyPDFLoader(path)
+         # Mapping of file extensions to their respective loader classes
+        self.loader_mapping: Dict[str, Type] = {
+            '.pdf': PyPDFLoader,
+            '.txt': TextLoader,
+            '.docx': Docx2txtLoader
+        }
+
+    ############### Load and Chunk ###############
+    def load_doc(self, path: str) -> List[LCDocument]:
+
+        _, extension = os.path.splitext(path)
+        extension = extension.lower()
+        # Select the appropriate loader based on the file extension
+        loader_class = self.loader_mapping.get(extension)
+        if loader_class is None:
+            raise ValueError(f"Unsupported file format: {extension}")
+        
+        loader = loader_class(path)
         raw_chunks = loader.load_and_split(self.text_splitter)
         contents = [rc.page_content for rc in raw_chunks] 
 
