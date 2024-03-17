@@ -45,7 +45,11 @@ class Synthesizer:
         # self.batch_size = batch_size
         self.synthetic_goldens: List[Golden] = []
 
-    def _evolve_text(self, text, context: List[str]) -> List[str]:
+    def _evolve_text(self, 
+                     text, 
+                     context: List[str], 
+                     num_evolutions: int, 
+                     enable_breadth_evolve: bool) -> List[str]:
         # List of method references from EvolutionTemplate
         evolution_methods = [
             EvolutionTemplate.reasoning_evolution,
@@ -55,18 +59,22 @@ class Synthesizer:
             EvolutionTemplate.comparative_question_evolution,
             EvolutionTemplate.hypothetical_scenario_evolution
         ]
+        if enable_breadth_evolve:
+            evolution_method.append(EvolutionTemplate.in_breadth_evolution)
         
-        # Randomly select an evolution method
-        evolution_method = random.choice(evolution_methods)
-        print(evolution_method)
+        evolved_text = text
+        for _ in range(num_evolutions):
+            evolution_method = random.choice(evolution_methods)
+            prompt = evolution_method(input=evolved_text, context=context)
+            evolved_text = self.model.generate(prompt)
 
-        # Call the selected method with the given text and context
-        prompt = evolution_method(input=text, context=context)
+        print("----")
+        print("")
+        print(text)
+        print(evolved_text)
+        print("")
+        print("----")
 
-        # Assuming the model's generate method returns a string
-        # You might need to adjust this part depending on how your model.generate function works
-        evolved_text = self.model.generate(prompt)
-        
         return evolved_text
     
     def _generate(
@@ -75,6 +83,8 @@ class Synthesizer:
         goldens: List[Golden],
         max_goldens_per_context: int,
         lock: Lock,
+        num_evolutions: int,
+        enable_breadth_evolve:bool
     ):
         prompt = SynthesizerTemplate.generate_synthetic_data(
             context=context, max_goldens_per_context=max_goldens_per_context
@@ -86,7 +96,10 @@ class Synthesizer:
         for data in synthetic_data:
             # TODO: evolution
             # Note: skip multithreading for now
-            evolved_input = self._evolve_text(data.input, context=context)
+            evolved_input = self._evolve_text(data.input, 
+                                              context=context, 
+                                              num_evolutions=num_evolutions,
+                                              enable_breadth_evolve=enable_breadth_evolve)
             golden = Golden(input=evolved_input, context=context)
             temp_goldens.append(golden)
 
@@ -95,7 +108,10 @@ class Synthesizer:
 
     # TODO
     def generate_goldens(
-        self, contexts: List[List[str]], max_goldens_per_context: int = 2
+        self, contexts: List[List[str]], 
+        max_goldens_per_context: int = 2, 
+        num_evolutions: int = 1,
+        enable_breadth_evolve: bool = False,
     ) -> List[Golden]:
         with synthesizer_progress_context(self.generator_model):
             goldens: List[Golden] = []
@@ -121,6 +137,8 @@ class Synthesizer:
                             goldens,
                             max_goldens_per_context,
                             lock,
+                            num_evolutions,
+                            enable_breadth_evolve
                         ): context
                         for context in contexts
                     }
@@ -139,13 +157,12 @@ class Synthesizer:
                         SyntheticData(**item) for item in data["data"]
                     ]
                     for data in synthetic_data:
-                        for evolved_input in self._evolve_text(
-                            data.input, context=context
-                        ):
-                            golden = Golden(
-                                input=evolved_input, context=context
-                            )
-                            goldens.append(golden)
+                         evolved_input = self._evolve_text(data.input, 
+                                                           context=context, 
+                                                           num_evolutions=num_evolutions,
+                                                           enable_breadth_evolve=enable_breadth_evolve)
+                         golden = Golden(input=evolved_input, context=context)
+                         goldens.append(golden)
 
             self.synthetic_goldens.extend(goldens)
 
@@ -157,18 +174,25 @@ class Synthesizer:
             paths: List[str],
             output_size:int,
             chunk_size:int=1024, 
-            chunk_overlap:int=0
+            chunk_overlap:int=0,
+            max_goldens_per_context: int = 2, 
+            num_evolutions: int = 1,
+            enable_breadth_evolve: bool = False
             ):
+        
+        contexts = None
         if self.multithreading:
             cg = ContextGenerator(paths, chunk_size, chunk_overlap)
-            contexts = cg.generate_contexts(n_contexts=output_size)
-            goldens = self.generate_goldens(contexts)
-            return goldens
+            contexts = cg.generate_contexts(output_size=output_size)
         else:
             cg = ContextGenerator(paths, chunk_size, chunk_overlap)
-            contexts = cg.generate_contexts(n_contexts=output_size)
-            goldens = self.generate_goldens(contexts)
-            return goldens
+            contexts = cg.generate_contexts(output_size=output_size)
+
+        goldens = self.generate_goldens(contexts, 
+                                        max_goldens_per_context, 
+                                        num_evolutions, 
+                                        enable_breadth_evolve)
+        return goldens
 
     def save_as(self, file_type: str, directory: str):
         if file_type not in valid_file_types:
@@ -230,4 +254,8 @@ class Synthesizer:
 if __name__ == "__main__":
     synthesizer = Synthesizer()
     paths = ["example_data/docx_example.docx"]
-    goldens = synthesizer.generate_goldens_from_docs(paths=paths, chunk_size=100, output_size=5)
+    goldens = synthesizer.generate_goldens_from_docs(paths=paths, 
+                                                     chunk_size=100, 
+                                                     output_size=5, 
+                                                     max_goldens_per_context=2, 
+                                                     num_evolutions=2)

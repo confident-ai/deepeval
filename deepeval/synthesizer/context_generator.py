@@ -16,9 +16,14 @@ class ContextGenerator:
         self.chunk_overlap = chunk_overlap
 
     ############### Generate Topics ########################
-    def generate_contexts(self, n_contexts: int, max_context_size: int = 3):
-        self._load_docs()
-        clusters = self._get_n_random_clusters(n = n_contexts, cluster_size = max_context_size)
+    def generate_contexts(self, output_size: int, max_context_size: int = 2):
+        chunks = self._load_docs()
+        num_chunks = len(chunks)
+        if output_size > num_chunks:
+            raise ValueError("Not enough chunks (" + str(num_chunks) + 
+                             ") to return the requested number of outputs ("  + str(output_size) + 
+                             "). Please decrease chunk_size or increase document length.")
+        clusters = self._get_n_random_clusters(n = output_size, cluster_size = max_context_size)
         contexts = []
         for cluster in clusters:
             context=[chunk.content for chunk in cluster]
@@ -48,12 +53,14 @@ class ContextGenerator:
 
     def _get_n_random_chunks(self, n: int) -> List[str]:
         if not self.combined_chunks or len(self.combined_chunks) < n:
-            raise ValueError("Not enough nodes to return the requested number of random nodes.")
+            raise ValueError("Not enough chunks to return the requested number of random nodes.")
         return random.sample(self.combined_chunks, n)
     
     def _get_n_similar_chunks(
         self, chunk: Chunk, n: int, threshold: float = 0.7, 
     ): 
+        if not self.combined_chunks or len(self.combined_chunks) < n:
+            raise ValueError("Not enough chunks to return the requested number of random nodes.")
         embedding = self.embedder.embed_query(chunk.content)
         similarities = [Similarity.get_embedding_similarity(embedding, (c.embedding)) for c in self.combined_chunks]
         filtered_indices = [i for i, sim in enumerate(similarities) if sim > threshold and self.combined_chunks[i].id != chunk.id]

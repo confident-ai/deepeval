@@ -64,6 +64,7 @@ class EvolutionTemplate:
             2. `Rewritten Input` must be fully answerable from information in `Context`. 
             3. `Rewritten Input` should be concise and understandable by humans.
             4. `Rewritten Input` should not contain phrases like  'based on the provided context' or 'according to the context'.
+            5. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
             
             **
             EXAMPLES
@@ -113,6 +114,7 @@ class EvolutionTemplate:
             3. `Rewritten Input` should be concise and understandable by humans.
             4. `Rewritten Input` should not contain phrases like  'based on the provided context' or 'according to the context'.
             5. `Rewritten Input` must be fully answerable from information in `Context`. 
+            6. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
 
             **
             EXAMPLES
@@ -161,6 +163,7 @@ class EvolutionTemplate:
             2. `Rewritten Input` should be concise and understandable by humans.
             3. `Rewritten Input` should not contain phrases like  'based on the provided context' or 'according to the context'.
             4. `Rewritten Input` must be fully answerable from information in `Context`.  
+            5. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
 
             **
             EXAMPLES
@@ -209,6 +212,7 @@ class EvolutionTemplate:
             f"""
             1. Rewrite `Input` by adding at least one more constraints/requirements.
             2. `Rewritten Input` must be fully answerable from information in `Context`. 
+            5. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
 
             **
             EXAMPLES
@@ -260,6 +264,7 @@ class EvolutionTemplate:
             3. `Rewritten Input` must be fully answerable from information in `Context`. 
             4. `Rewritten Input` should be concise and understandable by humans.
             5. `Rewritten Input` should not contain phrases like  'based on the provided context' or 'according to the context'.
+            6. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
 
             **
             EXAMPLES
@@ -309,6 +314,7 @@ class EvolutionTemplate:
             3. `Rewritten Input` should be concise, clear, and understandable by humans.
             4. `Rewritten Input` should not contain phrases like 'based on the provided context' or 'according to the context'.
             5. `Rewritten Input` must be fully answerable from information in `Context`.
+            6. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
 
             **
             EXAMPLES
@@ -346,3 +352,54 @@ class EvolutionTemplate:
             Rewritten Input:
             """
     )
+
+    @staticmethod
+    def in_breadth_evolution(input, context):
+        return (
+            EvolutionTemplate.base_instruction
+            +
+            f"""
+            1. Rewrite `Input` to create a create a brand new prompt.
+            2. `Rewritten Input` should belong to the same domain as the `input` but be even more rare.
+            3. `Rewritten Input` should be concise, clear, and understandable by humans.
+            4. `Rewritten Input` should not contain phrases like 'based on the provided context' or 'according to the context'.
+            5. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
+
+            **
+            EXAMPLES
+
+            Example context:
+            Wearable technology has revolutionized personal health monitoring, allowing individuals to track vital signs and activity levels in real time.
+            Example input:
+            Explore the impact of wearable technology on personal health management.
+            Example rewritten input:
+            Delve into the development of implantable health devices and their potential to transform chronic disease management.
+
+            --------------------------
+
+            Example context:
+            Quantum computing leverages the principles of quantum mechanics to process information, offering significant advancements over traditional computing methods.
+            Example input:
+            How is quantum computing different from traditional computing?
+            Example rewritten input:
+            Explore the potential of quantum cryptography in enhancing cybersecurity measures beyond current encryption standards
+
+            --------------------------
+
+            Example context:
+            Virtual reality (VR) offers immersive learning experiences, transforming educational methodologies by providing interactive and engaging ways to acquire knowledge, especially in fields requiring practical skills.
+            Example input:
+            What impact does virtual reality (VR) have on education?
+            Example rewritten input:
+            Investigate the use of VR simulations in medical training to enhance practical skills and decision-making under pressure.
+            **
+
+            Context:
+            {context}
+            Input:
+            {input}
+            Rewritten Input:
+            """
+    )
+
+
