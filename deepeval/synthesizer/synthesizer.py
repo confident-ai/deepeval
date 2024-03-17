@@ -17,6 +17,7 @@ from deepeval.models import (
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.utils import trimAndLoadJson
 from deepeval.dataset.golden import Golden
+import random
 
 valid_file_types = ["csv", "json"]
 
@@ -45,20 +46,29 @@ class Synthesizer:
         self.synthetic_goldens: List[Golden] = []
 
     def _evolve_text(self, text, context: List[str]) -> List[str]:
-        evolved_texts: List[str] = []
-        for i in range(2):
-            if i == 0:
-                prompt = EvolutionTemplate.name_to_be_decided_evolution(
-                    input=text, context=context
-                )
-            else:
-                prompt = EvolutionTemplate.second_name_to_be_decided_evolution(
-                    input=text, context=context
-                )
-            res = self.model.generate(prompt)
-            evolved_texts.append(res)
-        return evolved_texts
+        # List of method references from EvolutionTemplate
+        evolution_methods = [
+            EvolutionTemplate.reasoning_evolution,
+            EvolutionTemplate.multi_context_evolution,
+            EvolutionTemplate.concretizing_evolution,
+            EvolutionTemplate.constrained_evolution,
+            EvolutionTemplate.comparative_question_evolution,
+            EvolutionTemplate.hypothetical_scenario_evolution
+        ]
+        
+        # Randomly select an evolution method
+        evolution_method = random.choice(evolution_methods)
+        print(evolution_method)
 
+        # Call the selected method with the given text and context
+        prompt = evolution_method(input=text, context=context)
+
+        # Assuming the model's generate method returns a string
+        # You might need to adjust this part depending on how your model.generate function works
+        evolved_text = self.model.generate(prompt)
+        
+        return evolved_text
+    
     def _generate(
         self,
         context: List[str],
@@ -71,15 +81,14 @@ class Synthesizer:
         )
         res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
-        print(data)
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
             # TODO: evolution
             # Note: skip multithreading for now
-            for evolved_input in self._evolve_text(data.input, context=context):
-                golden = Golden(input=evolved_input, context=context)
-                temp_goldens.append(golden)
+            evolved_input = self._evolve_text(data.input, context=context)
+            golden = Golden(input=evolved_input, context=context)
+            temp_goldens.append(golden)
 
         with lock:
             goldens.extend(temp_goldens)
@@ -218,7 +227,7 @@ class Synthesizer:
 ################# Example Usage ###################
 ####################################################
 
-#synthesizer = Synthesizer()
-#paths = ["example_data/good_essay_1.pdf", "example_data/good_essay_2.pdf"]
-#goldens = synthesizer.generate_goldens_from_docs(paths=paths, output_size=5)
-#print(goldens)
+if __name__ == "__main__":
+    synthesizer = Synthesizer()
+    paths = ["example_data/docx_example.docx"]
+    goldens = synthesizer.generate_goldens_from_docs(paths=paths, chunk_size=100, output_size=5)
