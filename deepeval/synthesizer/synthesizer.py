@@ -71,6 +71,7 @@ class Synthesizer:
         )
         res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
+        print(data)
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
@@ -145,16 +146,20 @@ class Synthesizer:
     def generate_goldens_from_docs(
             self, 
             paths: List[str],
+            output_size:int,
             chunk_size:int=1024, 
-            chunk_overlap:int=0):
+            chunk_overlap:int=0
+            ):
         if self.multithreading:
-            pass
+            cg = ContextGenerator(paths, chunk_size, chunk_overlap)
+            contexts = cg.generate_contexts(n_contexts=output_size)
+            goldens = self.generate_goldens(contexts)
+            return goldens
         else:
             cg = ContextGenerator(paths, chunk_size, chunk_overlap)
-            contexts = cg.generate_contexts()
-            return self.generate_goldens(contexts)
-
-        pass
+            contexts = cg.generate_contexts(n_contexts=output_size)
+            goldens = self.generate_goldens(contexts)
+            return goldens
 
     def save_as(self, file_type: str, directory: str):
         if file_type not in valid_file_types:
@@ -207,3 +212,13 @@ class Synthesizer:
                     )
 
         print(f"Synthetic goldens saved at {full_file_path}!")
+
+
+####################################################
+################# Example Usage ###################
+####################################################
+
+synthesizer = Synthesizer()
+paths = ["example_data/good_essay_1.pdf", "example_data/good_essay_2.pdf"]
+goldens = synthesizer.generate_goldens_from_docs(paths=paths, output_size=5)
+print(goldens)

@@ -46,8 +46,9 @@ class DocumentChunker:
     def load_from_pdf(self, path: str) -> List[LCDocument]:
         loader = PyPDFLoader(path)
         raw_chunks = loader.load_and_split(self.text_splitter)
-
         contents = [rc.page_content for rc in raw_chunks] 
+
+        # Utilize lang_chain for run async
         embeddings = self.embedder.embed_documents(contents)
         embeddings_np = np.array(embeddings)
         mean_embedding = np.mean(embeddings_np, axis=0)
@@ -63,7 +64,6 @@ class DocumentChunker:
         self.chunks = chunks
 
         return chunks
-
 
 ####################################################
 ############### Similarity Funcs ###################

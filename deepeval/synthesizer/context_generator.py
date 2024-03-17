@@ -3,7 +3,6 @@ from langchain_openai import OpenAIEmbeddings
 from typing import List, Optional
 import random
 
-
 class ContextGenerator:
     def __init__(self, 
              document_paths: List[str],
@@ -17,7 +16,7 @@ class ContextGenerator:
         self.chunk_overlap = chunk_overlap
 
     ############### Generate Topics ########################
-    def generate_contexts(self, n_contexts: int = 10, max_context_size: int = 3):
+    def generate_contexts(self, n_contexts: int, max_context_size: int = 3):
         self._load_docs()
         clusters = self._get_n_random_clusters(n = n_contexts, cluster_size = max_context_size)
         contexts = []
@@ -25,6 +24,7 @@ class ContextGenerator:
             context=[chunk.content for chunk in cluster]
             contexts.append(context)
         return contexts
+    
     
      ############### Load Docs #############################
     def _load_docs(self):
@@ -70,6 +70,5 @@ class ContextGenerator:
 # currently only accepts pdf
 paths = ["example_data/good_essay_1.pdf", "example_data/good_essay_2.pdf"]
 generator = ContextGenerator(paths, chunk_size=1024, chunk_overlap=0)
-contexts = generator.generate_contexts()
-print("contexts")
+contexts = generator.generate_contexts(5)
 
