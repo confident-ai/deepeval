@@ -142,7 +142,12 @@ def execute_test_cases(
             metric_metadata = None
             if metric.__name__ in cached_metrics_metadata:
                 metric_metadata = cached_metrics_metadata[metric.__name__]
-            else:
+            
+            # If same metric_metadata does not exist in cache 
+            # or threshold is not in same as in cached
+            # recomputer metric
+            new_threshold = metric.threshold
+            if not metric_metadata or new_threshold != metric_metadata.threshold:
                 metric.async_mode = False # Override metric async
                 metric.measure(test_case)
                 metric_metadata = MetricsMetadata(
@@ -233,12 +238,16 @@ async def a_execute_test_cases(
         api_test_case: APITestCase = create_api_test_case(test_case, index)
         test_start_time = time.perf_counter()
 
-        await measure_metrics_with_indicator(metrics, test_case, list(cached_metrics_metadata.keys()))
+        await measure_metrics_with_indicator(metrics, test_case, cached_metrics_metadata)
         for metric in metrics:
+            # If same metric_metadata does not exist in cache 
+            # or threshold is not in same as in cached
+            # recomputer metric
             metric_metadata = None
             if metric.__name__ in cached_metrics_metadata:
                 metric_metadata = cached_metrics_metadata[metric.__name__]
-            else:
+            new_threshold = metric.threshold
+            if not metric_metadata or new_threshold != metric_metadata.threshold:
                 metric_metadata = MetricsMetadata(
                     metric=metric.__name__,
                     score=metric.score,

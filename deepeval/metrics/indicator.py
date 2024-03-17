@@ -74,7 +74,7 @@ async def measure_metric_task(
 async def measure_metrics_with_indicator(
     metrics: List[BaseMetric],
     test_case: LLMTestCase,
-    cached_metrics: List[str],
+    cached_metrics_metadata: List[str],
 ):
     if show_indicator():
         with Progress(
@@ -84,7 +84,11 @@ async def measure_metrics_with_indicator(
         ) as progress:    
             tasks = []
             for metric in metrics:
-                if metric.__name__ in cached_metrics:
+                metric_metadata = None
+                if metric.__name__ in cached_metrics_metadata:
+                    metric_metadata = cached_metrics_metadata[metric.__name__]
+                new_threshold = metric.threshold
+                if metric_metadata and new_threshold == metric_metadata.threshold:
                     task_id = progress.add_task(
                     description=format_metric_description(
                         metric, async_mode=True

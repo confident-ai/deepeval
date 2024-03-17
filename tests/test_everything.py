@@ -122,14 +122,14 @@ def test_everything():
     )
 
 
-@pytest.mark.skip(reason="openai is expensive")
+#@pytest.mark.skip(reason="openai is expensive")
 def test_everything_2():
-    metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
+    metric1 = AnswerRelevancyMetric(threshold=0.7, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
     metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
-    metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
-    metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode)
+    metric5 = ContextualRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
+    metric6 = BiasMetric(threshold=0.2, strict_mode=strict_mode)
     metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
     metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
     metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode)
@@ -163,7 +163,7 @@ def test_everything_2():
             # metric8,
             # metric9,
             # metric10,
-        ],
+        ], run_async=False
     )
 
 
