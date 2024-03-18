@@ -39,7 +39,7 @@ response_object = rag_application.query(user_input)
 # and retrieved nodes
 if response_object is not None:
     actual_output = response_object.response
-    retrieval_context = [node.get_content() for node in response.source_nodes]
+    retrieval_context = [node.get_content() for node in response_object.source_nodes]
 
 # Create a test case and metric as usual
 test_case = LLMTestCase(
@@ -87,7 +87,7 @@ def test_rag(golden: Golden):
     # and retrieved nodes
     if response_object is not None:
         actual_output = response_object.response
-        retrieval_context = [node.get_content() for node in response.source_nodes]
+        retrieval_context = [node.get_content() for node in response_object.source_nodes]
 
     test_case = LLMTestCase(
         input=golden.input,
@@ -109,7 +109,7 @@ In this example, we initialized an `EvaluationDataset` with a `Golden` instead o
 In LlamaIndex, there are entities known as evaluators that evaluates the responses of LlamaIndex applications. Continuing from the previous example, here's an alternative way to make use of the `AnswerRelevancyMetric` through `deepeval`'s LlamaIndex evaluators:
 
 ```python
-from deepeval.integrations.llamaindex import DeepEvalAnswerRelevancyEvaluator
+from deepeval.integrations.llama_index import DeepEvalAnswerRelevancyEvaluator
 ...
 
 # An example input to your RAG application
@@ -136,7 +136,7 @@ In LlamaIndex's documentation, you might see examples where the `evaluate()` met
 The `DeepEvalAnswerRelevancyEvaluator` uses `deepeval`'s `AnswerRelevancyMetric` for evaluation.
 
 ```python
-from deepeval.integrations.llamaindex import DeepEvalAnswerRelevancyEvaluator
+from deepeval.integrations.llama_index import DeepEvalAnswerRelevancyEvaluator
 
 evaluator = DeepEvalAnswerRelevancyEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
@@ -153,7 +153,7 @@ evaluator = DeepEvalAnswerRelevancyEvaluator(
 The `DeepEvalFaithfulnessEvaluator` uses `deepeval`'s `FaithfulnessMetric` for evaluation.
 
 ```python
-from deepeval.integrations.llamaindex import DeepEvalFaithfulnessEvaluator
+from deepeval.integrations.llama_index import DeepEvalFaithfulnessEvaluator
 
 evaluator = DeepEvalFaithfulnessEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
@@ -170,7 +170,7 @@ evaluator = DeepEvalFaithfulnessEvaluator(
 The `DeepEvalContextualRelevancyEvaluator` uses `deepeval`'s `ContextualRelevancyMetric` for evaluation.
 
 ```python
-from deepeval.integrations.llamaindex import DeepEvalContextualRelevancyEvaluator
+from deepeval.integrations.llama_index import DeepEvalContextualRelevancyEvaluator
 
 evaluator = DeepEvalContextualRelevancyEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
@@ -187,7 +187,7 @@ evaluator = DeepEvalContextualRelevancyEvaluator(
 The `DeepEvalSummarizationEvaluator` uses `deepeval`'s `SummarizationMetric` for evaluation.
 
 ```python
-from deepeval.integrations.llamaindex import DeepEvalSummarizationEvaluator
+from deepeval.integrations.llama_index import DeepEvalSummarizationEvaluator
 
 evaluator = DeepEvalSummarizationEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
@@ -204,7 +204,7 @@ evaluator = DeepEvalSummarizationEvaluator(
 The `DeepEvalBiasEvaluator` uses `deepeval`'s `BiasMetric` for evaluation.
 
 ```python
-from deepeval.integrations.llamaindex import DeepEvalBiasEvaluator
+from deepeval.integrations.llama_index import DeepEvalBiasEvaluator
 
 evaluator = DeepEvalBiasEvaluator(
     # Optional. A float representing the maximum passing threshold, defaulted to 0.5.
@@ -221,7 +221,7 @@ evaluator = DeepEvalBiasEvaluator(
 The `DeepEvalToxicityEvaluator` uses `deepeval`'s `ToxicityMetric` for evaluation.
 
 ```python
-from deepeval.integrations.llamaindex import DeepEvalToxicityEvaluator
+from deepeval.integrations.llama_index import DeepEvalToxicityEvaluator
 
 evaluator = DeepEvalToxicityEvaluator(
     # Optional. A float representing the maximum passing threshold, defaulted to 0.5.
@@ -260,7 +260,7 @@ response_object = rag_application.query(user_input)
 # and retrieved nodes
 if response_object is not None:
     actual_output = response_object.response
-    retrieval_context = [node.get_content() for node in response.source_nodes]
+    retrieval_context = [node.get_content() for node in response_object.source_nodes]
 ```
 
 :::
