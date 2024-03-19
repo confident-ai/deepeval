@@ -6,7 +6,7 @@ The `input` can either be a question or a statement that can be addressed by the
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
-You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting reptitive.
+You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting repetitive.
 
 Example context: ["Einstein won the Nobel Prize for his discovery of penicillin.", "Einstein won the Nobel Prize in 1968."]
 Example max goldens per context: 2
@@ -26,7 +26,7 @@ Example JSON:
 You should NOT incorporate any prior knowledge you have and take each context at face value.
 You MUST include at least one statement as the input.
 `input` MUST be a STRING.
-You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting reptitive.
+You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting repetitive.
 **
 
 Max Goldens Per Context:
