@@ -80,9 +80,6 @@ class TestRun(BaseModel):
     test_cases: List[APITestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
-    metric_scores: List[MetricScoreType] = Field(
-        default_factory=lambda: [], alias="metricScores"
-    )
     metrics_scores: List[MetricScores] = Field(
         default_factory=lambda: [], alias="metricsScores"
     )
@@ -92,14 +89,6 @@ class TestRun(BaseModel):
         None, alias="userPromptTemplate"
     )
 
-    def cleanup(self):
-        # TODO: deprecate
-        all_metric_dict = MetricsAverageDict()
-        for test_case in self.test_cases:
-            for metric in test_case.metrics_metadata:
-                all_metric_dict.add_metric(metric.metric, metric.score)
-        self.metric_scores = all_metric_dict.get_average_metric_score()
-
     def construct_metrics_scores(self):
         metrics_dict: Dict[str, List[float]] = {}
 
@@ -107,7 +96,6 @@ class TestRun(BaseModel):
             for metric_metadata in test_case.metrics_metadata:
                 metric = metric_metadata.metric
                 score = metric_metadata.score
-                print(metric, score)
                 if metric in metrics_dict:
                     metrics_dict[metric].append(score)
                 else:
@@ -158,7 +146,6 @@ class TestRunManager:
         test_run = TestRun(
             testFile=file_name,
             testCases=[],
-            metricScores=[],
             metricsScores=[],
             hyperparameters=None,
             deployment=deployment,
@@ -314,7 +301,6 @@ class TestRunManager:
 
     def wrap_up_test_run(self, display_table: bool = True):
         test_run = self.get_test_run()
-        test_run.cleanup()
         test_run.construct_metrics_scores()
         if test_run is None:
             print("Test Run is empty, please try again.")
