@@ -96,7 +96,6 @@ class TestRun(BaseModel):
             for metric_metadata in test_case.metrics_metadata:
                 metric = metric_metadata.metric
                 score = metric_metadata.score
-                print(metric, score)
                 if metric in metrics_dict:
                     metrics_dict[metric].append(score)
                 else:
