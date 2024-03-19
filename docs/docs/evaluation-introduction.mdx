@@ -145,6 +145,23 @@ Evaluate each test case in parallel by specifying a `-n` parameter following by 
 deepeval test run test_example.py -n 4
 ```
 
+### Reruns
+
+Rerun each test case by specifying a `-r` parameter following by a number to specify how many times to rerun each test case.
+
+```
+deepeval test run test_example.py -r 2
+```
+
+:::tip
+You can combine the `-r` and `-n` flag to rerun test cases in parallel:
+
+```python
+deepeval test run test_example.py -r 2 -n 2
+```
+
+:::
+
 ### Hooks
 
 `deepeval`'s Pytest integration allosw you to run custom code at the end of each evaluation via the `@deepeval.on_test_run_end` decorator:
