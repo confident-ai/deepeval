@@ -7,7 +7,7 @@ Evaluation Criteria:
 {criteria}
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explaination is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
 **
 
 JSON:
@@ -23,7 +23,7 @@ Evaluation Steps:
 {text}
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explaination is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
 **
 
 JSON:

@@ -18,7 +18,7 @@ Wrong facts, does NOT count as opinions.
 ===== END OF EXAMPLE ======
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "opinions" key as a list of strings. No words or explaination is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the "opinions" key as a list of strings. No words or explanation is needed.
 **
 
 Text:
