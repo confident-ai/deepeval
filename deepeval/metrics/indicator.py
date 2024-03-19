@@ -2,13 +2,14 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from contextlib import contextmanager
 import sys
-from typing import List, Optional
+from typing import List, Optional, Callable
 import time
 import asyncio
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import show_indicator
+from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
 
 
 def format_metric_description(
@@ -74,7 +75,8 @@ async def measure_metric_task(
 async def measure_metrics_with_indicator(
     metrics: List[BaseMetric],
     test_case: LLMTestCase,
-    cached_metrics_metadata: List[str],
+    cached_metrics_metadata_map: List[str],
+    same_metric: Callable[[BaseMetric, MetricsMetadata], str]
 ):
     if show_indicator():
         with Progress(
@@ -84,11 +86,8 @@ async def measure_metrics_with_indicator(
         ) as progress:    
             tasks = []
             for metric in metrics:
-                metric_metadata = None
-                if metric.__name__ in cached_metrics_metadata:
-                    metric_metadata = cached_metrics_metadata[metric.__name__]
-                new_threshold = metric.threshold
-                if metric_metadata and new_threshold == metric_metadata.threshold:
+                metric_metadata = cached_metrics_metadata_map.get(metric.__name__, None)
+                if metric_metadata and same_metric(metric, metric_metadata):
                     task_id = progress.add_task(
                     description=format_metric_description(
                         metric, async_mode=True

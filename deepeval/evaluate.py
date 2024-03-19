@@ -3,6 +3,7 @@ from typing import List, Optional
 import time
 from dataclasses import dataclass
 import json
+from enum import Enum
 
 from deepeval.utils import drop_and_copy, get_or_create_event_loop
 from deepeval.telemetry import capture_evaluation_count
@@ -30,6 +31,37 @@ class TestResult:
     context: List[str]
     retrieval_context: List[str]
 
+# Every BaseMetric has these attributes
+# Score success and reason are not parameters....
+class MetricsRequiredParams(Enum):
+    STRICT_MODE = 'strict_mode'
+    THRESHOLD = 'threshold'
+    EVALUATION_MODEL = 'evaluation_model'
+
+    @classmethod
+    def values(cls):
+        return [member.value for member in cls]
+    
+# Not every BaseMetric has these attributes
+class MetricsOptionalParams(Enum):
+    CRITERIA = 'criteria'
+    INCLUDE_REASON = 'include_reason'
+    N = 'n'
+
+    # Below problematic either because
+    # gets updated after running metric or
+    # Cannot compress into JSON format
+
+    #EVALUATION_STEPS = 'evaluation_steps'
+    #ASSESSMENT_QUESTIONS = 'assessment_questions'
+    
+    #EVALUATION_PARAMS = 'evaluation_params'
+    #EMBEDDINGS = 'embeddings'
+    #LANGUAGE = 'language'
+   
+    @classmethod
+    def values(cls):
+        return [member.value for member in cls]
 
 def create_test_result(
     test_case: LLMTestCase,
@@ -70,6 +102,38 @@ def create_api_test_case(
         id=test_case.id,
     )
 
+def create_metric_metadata(metric: BaseMetric) -> MetricsMetadata:
+    metadata_kwargs = {
+        'metric': metric.__name__,
+        'score': metric.score,
+        'success': metric.is_successful(),
+        'reason': metric.reason,
+        }
+
+    # Start with required attributes, assuming they must exist in metric
+    for attr in MetricsRequiredParams.values():
+        metadata_kwargs[attr] = getattr(metric, attr)
+    # Then create the optional attrevaluationModelibutes
+    for attr in MetricsOptionalParams.values():
+        if hasattr(metric, attr):
+            metadata_kwargs[attr] = getattr(metric, attr)
+    return MetricsMetadata(**metadata_kwargs)
+
+def same_metric(metric: BaseMetric, cached_metric_metadata: MetricsMetadata):
+    if metric.__name__ != cached_metric_metadata.metric:
+        return False
+    # Start with required attributes, assuming they must exist in metric
+    for attr in MetricsRequiredParams.values():
+        if getattr(metric, attr, None) != getattr(cached_metric_metadata, attr, None):
+            print("False Required")
+            print(attr)
+            return False
+    # Then check optional attributes
+    for attr in MetricsOptionalParams.values():
+        if hasattr(metric, attr):
+            if getattr(metric, attr, None) != getattr(cached_metric_metadata, attr, None):
+                return False
+    return True
 
 def generate_cache_key(test_case: LLMTestCase):
         # Explicitly handle None values for context and retrieval_context
@@ -107,59 +171,37 @@ def execute_test_cases(
         test_run = test_run_manager.get_test_run()
         cached_test_run = test_run_cache_manager.get_cached_test_run()
         key = generate_cache_key(test_case=test_case)
-        look_up_map = cached_test_run.test_cases_lookup_map
+        lookup_map = cached_test_run.test_cases_lookup_map
 
-        #########################################
-        # Get cached data if available
-        ##########################################
-        already_in_cache = (key in look_up_map)
-        hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
-        actual_output_exists = False
-        metrics_metadata_exists = False
-        cached_api_test_case = None
+        #######################################################
+        # build cached data map from cached_api_test_case
+        # if available (1 test_case and >= 1 metrics)
+        #######################################################
 
-        if already_in_cache:
-            cached_api_test_case = look_up_map[key]
-            actual_output_exists = cached_api_test_case.actual_output != None
-            if actual_output_exists:
-                metrics_metadata_exists = cached_api_test_case.metrics_metadata != None
-        can_use_cache = (already_in_cache and hyperparameter_same and actual_output_exists and metrics_metadata_exists)
+        cached_api_test_case = lookup_map.get(key, None)
+        check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
 
-        cached_metrics_metadata = {} 
-        if can_use_cache:
-            metrics_metadata = look_up_map[key].metrics_metadata
-            cached_metrics_metadata = {metadata.metric: metadata for metadata in metrics_metadata}
+        cached_metrics_metadata_map = {}
+        # not sure I need to check cached_api_test_case.metrics_metadata
+        if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
+             cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
 
-        #########################################
-        # Calculate remaining metrics (if not cached)
-        #########################################
+        #######################################################
+        # Calculate metrics
+        #######################################################
         success = True
         api_test_case: APITestCase = create_api_test_case(test_case, index)
         test_start_time = time.perf_counter()
 
-
         for metric in metrics:
-            metric_metadata = None
-            if metric.__name__ in cached_metrics_metadata:
-                metric_metadata = cached_metrics_metadata[metric.__name__]
-            
-            # If same metric_metadata does not exist in cache 
-            # or threshold is not in same as in cached
-            # recomputer metric
-            new_threshold = metric.threshold
-            if not metric_metadata or new_threshold != metric_metadata.threshold:
+            # If metric is the same as cached, append metric to api_test_case
+            # Otherwise, recompute metric and append that to api_test_case
+            metric_metadata = cached_metrics_metadata_map.get(metric.__name__, None)
+
+            if not metric_metadata or not same_metric(metric, metric_metadata):
                 metric.async_mode = False # Override metric async
                 metric.measure(test_case)
-                metric_metadata = MetricsMetadata(
-                    metric=metric.__name__,
-                    score=metric.score,
-                    threshold=metric.threshold,
-                    reason=metric.reason,
-                    success=metric.is_successful(),
-                    evaluationModel=metric.evaluation_model,
-                )
-                if cached_api_test_case:
-                    cached_api_test_case.metrics_metadata.append(metric_metadata)
+                metric_metadata = create_metric_metadata(metric)
 
             api_test_case.metrics_metadata.append(metric_metadata)
             if metric_metadata.success is False:
@@ -184,11 +226,9 @@ def execute_test_cases(
         #########################################
         # Update test_run_cache_manager
         #########################################
-        cached_api_test_case = api_test_case if cached_api_test_case is None else cached_api_test_case
-        cached_test_run.test_cases_lookup_map[key] = cached_api_test_case
+        cached_test_run.test_cases_lookup_map[key] = api_test_case
         cached_test_run.hyperparameters = test_run.hyperparameters
         test_run_cache_manager.save_cached_test_run()
-
 
     return test_results
 
@@ -208,28 +248,18 @@ async def a_execute_test_cases(
         test_run = test_run_manager.get_test_run()
         cached_test_run = test_run_cache_manager.get_cached_test_run()
         key = generate_cache_key(test_case=test_case)
-        look_up_map = cached_test_run.test_cases_lookup_map
+        lookup_map = cached_test_run.test_cases_lookup_map
 
         #########################################
         # Get cached data if available
         ##########################################
-        already_in_cache = (key in look_up_map)
-        hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
-        actual_output_exists = False
-        metrics_metadata_exists = False
-        cached_api_test_case = None
+        cached_api_test_case = lookup_map.get(key, None)
+        check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
 
-        if already_in_cache:
-            cached_api_test_case = look_up_map[key]
-            actual_output_exists = cached_api_test_case.actual_output != None
-            if actual_output_exists:
-                metrics_metadata_exists = cached_api_test_case.metrics_metadata != None
-        can_use_cache = (already_in_cache and hyperparameter_same and actual_output_exists and metrics_metadata_exists)
-
-        cached_metrics_metadata = {} 
-        if can_use_cache:
-            metrics_metadata = look_up_map[key].metrics_metadata
-            cached_metrics_metadata = {metadata.metric: metadata for metadata in metrics_metadata}
+        cached_metrics_metadata_map = {}
+        # not sure I need to check cached_api_test_case.metrics_metadata
+        if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
+             cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
 
         #########################################
         # Calculate remaining metrics (if not cached)
@@ -238,26 +268,14 @@ async def a_execute_test_cases(
         api_test_case: APITestCase = create_api_test_case(test_case, index)
         test_start_time = time.perf_counter()
 
-        await measure_metrics_with_indicator(metrics, test_case, cached_metrics_metadata)
+        await measure_metrics_with_indicator(metrics, test_case, cached_metrics_metadata_map, same_metric)
         for metric in metrics:
-            # If same metric_metadata does not exist in cache 
-            # or threshold is not in same as in cached
-            # recomputer metric
-            metric_metadata = None
-            if metric.__name__ in cached_metrics_metadata:
-                metric_metadata = cached_metrics_metadata[metric.__name__]
-            new_threshold = metric.threshold
-            if not metric_metadata or new_threshold != metric_metadata.threshold:
-                metric_metadata = MetricsMetadata(
-                    metric=metric.__name__,
-                    score=metric.score,
-                    threshold=metric.threshold,
-                    reason=metric.reason,
-                    success=metric.is_successful(),
-                    evaluationModel=metric.evaluation_model,
-                )
-                if cached_api_test_case:
-                    cached_api_test_case.metrics_metadata.append(metric_metadata)
+            # If metric is the same as cached, append metric to api_test_case
+            # Otherwise, recompute metric and append that to api_test_case
+            metric_metadata = cached_metrics_metadata_map.get(metric.__name__, None)
+            
+            if not metric_metadata or not same_metric(metric, metric_metadata):
+                metric_metadata = create_metric_metadata(metric)
 
             api_test_case.metrics_metadata.append(metric_metadata)
             if metric_metadata.success is False:
@@ -282,8 +300,7 @@ async def a_execute_test_cases(
         #########################################
         # Update test_run_cache_manager
         #########################################
-        cached_api_test_case = api_test_case if cached_api_test_case is None else cached_api_test_case
-        cached_test_run.test_cases_lookup_map[key] = cached_api_test_case
+        cached_test_run.test_cases_lookup_map[key] = api_test_case
         cached_test_run.hyperparameters = test_run.hyperparameters
         test_run_cache_manager.save_cached_test_run()
 

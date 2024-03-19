@@ -1,14 +1,36 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-
+from deepeval.test_case import LLMTestCaseParams
+from deepeval.types import Languages
+from langchain_core.embeddings import Embeddings
 
 class MetricsMetadata(BaseModel):
+    strict_mode: bool
     metric: str
     score: float
     threshold: float
     success: bool
+    evaluation_model: Optional[str] = None
     reason: Optional[str] = None
-    evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
+
+    # Optional attributes (Not every BaseMetric has these attributes)
+    criteria: Optional[str] = None
+    include_reason: Optional[bool] = None
+    n: Optional[int] = None
+
+    # Below problematic either because
+    # gets updated after running metric or
+    # Cannot compress into JSON format
+
+    #evaluation_steps: Optional[List[str]] = None
+    #assessment_questions: Optional[List[str]] = None
+    
+    #language: Optional[Languages] = None
+    #embeddings: Optional[Embeddings] = None
+    #evaluation_params: Optional[List[LLMTestCaseParams]] = None
+
+    class Config:
+        arbitrary_types_allowed = True  # Allow arbitrary types (Embeddings)
 
 
 class APITestCase(BaseModel):
