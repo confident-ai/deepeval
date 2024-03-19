@@ -82,6 +82,8 @@ class EvaluationDataset:
         expected_output_col_name: Optional[str] = None,
         context_col_name: Optional[str] = None,
         context_col_delimiter: str = ";",
+        retrieval_context_col_name: Optional[str] = None,
+        retrieval_context_col_delimiter: str = ";",
     ):
         """
         Load test cases from a CSV file.
@@ -95,6 +97,8 @@ class EvaluationDataset:
             expected_output_col_name (str, optional): The column name in the CSV corresponding to the expected output for the test case. Defaults to None.
             context_col_name (str, optional): The column name in the CSV corresponding to the context for the test case. Defaults to None.
             context_delimiter (str, optional): The delimiter used to separate items in the context list within the CSV file. Defaults to ';'.
+            retrieval_context_col_name (str, optional): The column name in the CSV corresponding to the retrieval context for the test case. Defaults to None.
+            retrieval_context_delimiter (str, optional): The delimiter used to separate items in the retrieval context list within the CSV file. Defaults to ';'.
 
         Returns:
             None: The method adds test cases to the Dataset instance but does not return anything.
@@ -132,9 +136,29 @@ class EvaluationDataset:
             context.split(context_col_delimiter) if context else []
             for context in get_column_data(df, context_col_name, default="")
         ]
+        retrieval_contexts = [
+            (
+                retreival_context.split(retrieval_context_col_delimiter)
+                if retreival_context
+                else []
+            )
+            for retreival_context in get_column_data(
+                df, retrieval_context_col_name, default=""
+            )
+        ]
 
-        for input, actual_output, expected_output, context in zip(
-            inputs, actual_outputs, expected_outputs, contexts
+        for (
+            input,
+            actual_output,
+            expected_output,
+            context,
+            retrieval_context,
+        ) in zip(
+            inputs,
+            actual_outputs,
+            expected_outputs,
+            contexts,
+            retrieval_contexts,
         ):
             self.add_test_case(
                 LLMTestCase(
@@ -142,6 +166,7 @@ class EvaluationDataset:
                     actual_output=actual_output,
                     expected_output=expected_output,
                     context=context,
+                    retrieval_context=retrieval_context,
                     dataset_alias=self.alias,
                 )
             )
@@ -153,6 +178,7 @@ class EvaluationDataset:
         actual_output_key_name: str,
         expected_output_key_name: Optional[str] = None,
         context_key_name: Optional[str] = None,
+        retrieval_context_key_name: Optional[str] = None,
     ):
         """
         Load test cases from a JSON file.
@@ -165,6 +191,7 @@ class EvaluationDataset:
             actual_output_key_name (str): The key name in the JSON objects corresponding to the actual output for the test case.
             expected_output_key_name (str, optional): The key name in the JSON objects corresponding to the expected output for the test case. Defaults to None.
             context_key_name (str, optional): The key name in the JSON objects corresponding to the context for the test case. Defaults to None.
+            retrieval_context_key_name (str, optional): The key name in the JSON objects corresponding to the retrieval context for the test case. Defaults to None.
 
         Returns:
             None: The method adds test cases to the Dataset instance but does not return anything.
@@ -198,6 +225,7 @@ class EvaluationDataset:
             actual_output = json_obj[actual_output_key_name]
             expected_output = json_obj.get(expected_output_key_name)
             context = json_obj.get(context_key_name)
+            retrieval_context = json_obj.get(context_key_name)
 
             self.add_test_case(
                 LLMTestCase(
@@ -205,6 +233,7 @@ class EvaluationDataset:
                     actual_output=actual_output,
                     expected_output=expected_output,
                     context=context,
+                    retrieval_context=retrieval_context,
                     dataset_alias=self.alias,
                 )
             )
