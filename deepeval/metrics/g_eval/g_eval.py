@@ -273,13 +273,13 @@ class GEval(BaseMetric):
             token_linear_probability: Dict[int, float] = {}
             sum_linear_probability = 0
             for token_logprob in score_logprobs["top_logprobs"]:
-                # filter out tokens with >1% linear probability, i.e., logprobs > math.log(0.01) ~= -4.605
+                # Filter out tokens with >1% linear probability, i.e., logprobs > math.log(0.01) ~= -4.605
                 if token_logprob["logprob"] < -4.605:
                     continue
-                # filter out non-decimal tokens
+                # Filter out non-decimal tokens
                 if not token_logprob["token"].isdecimal():
                     continue
-                # calculate the linear probability
+                # Calculate the linear probability
                 linear_prob = math.exp(token_logprob["logprob"])
                 token_linear_probability[int(token_logprob["token"])] = (
                     linear_prob
@@ -289,15 +289,14 @@ class GEval(BaseMetric):
             logprob_weighted_score = 0.0
             for score, prob in token_linear_probability.items():
                 logprob_weighted_score += score * prob
-            # scale the sum of linear probability to 1
+            # Scale the sum of linear probability to 1
             logprob_weighted_score = (
                 logprob_weighted_score / sum_linear_probability
             )
             return logprob_weighted_score
         except Exception as e:
             print(e)
-            # return the raw_score if encounter any errors, such as model does not support logprobs
-            # or response is with incompatible format
+            # Return the raw_score if encounter any errors, such as model does not support logprobs or incompatible response format
             return raw_score
 
     def number_evaluation_steps(self):
