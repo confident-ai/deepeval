@@ -3,6 +3,8 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import GEval
 from deepeval import assert_test
 from langchain.schema import AIMessage
+from unittest import mock
+import os
 
 
 @pytest.mark.skip(reason="openai is expensive")
@@ -25,6 +27,12 @@ def test_g_eval():
     assert_test(test_case, [metric], run_async=False)
 
 
+@mock.patch.dict(
+    os.environ,
+    {
+        "OPENAI_API_KEY": "test",
+    },
+)
 def test_generate_logprobs_based_score():
     metric = GEval(
         name="Validity",
