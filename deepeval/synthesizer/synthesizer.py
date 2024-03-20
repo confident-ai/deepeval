@@ -68,13 +68,6 @@ class Synthesizer:
             prompt = evolution_method(input=evolved_text, context=context)
             evolved_text = self.model.generate(prompt)
 
-        print("----")
-        print("")
-        print(text)
-        print(evolved_text)
-        print("")
-        print("----")
-
         return evolved_text
     
     def _generate(
@@ -172,7 +165,7 @@ class Synthesizer:
     def generate_goldens_from_docs(
             self, 
             paths: List[str],
-            output_size:int,
+            num_context:int,
             chunk_size:int=1024, 
             chunk_overlap:int=0,
             max_goldens_per_context: int = 2, 
@@ -182,11 +175,19 @@ class Synthesizer:
         
         contexts = None
         if self.multithreading:
-            cg = ContextGenerator(paths, chunk_size, chunk_overlap)
-            contexts = cg.generate_contexts(output_size=output_size)
+            cg = ContextGenerator(paths, 
+                                  chunk_size, 
+                                  chunk_overlap, 
+                                  fast_mode=False, 
+                                  multithreading=True)
+            contexts = cg.generate_contexts(num_context=num_context)
         else:
-            cg = ContextGenerator(paths, chunk_size, chunk_overlap)
-            contexts = cg.generate_contexts(output_size=output_size)
+            cg = ContextGenerator(paths, 
+                                  chunk_size, 
+                                  chunk_overlap, 
+                                  fast_mode=False, 
+                                  multithreading=False)
+            contexts = cg.generate_contexts(num_context=num_context)
 
         goldens = self.generate_goldens(contexts, 
                                         max_goldens_per_context, 
@@ -251,11 +252,14 @@ class Synthesizer:
 ################# Example Usage ###################
 ####################################################
 
+'''
 if __name__ == "__main__":
     synthesizer = Synthesizer()
     paths = ["example_data/docx_example.docx"]
     goldens = synthesizer.generate_goldens_from_docs(paths=paths, 
                                                      chunk_size=100, 
-                                                     output_size=5, 
+                                                     num_context=5, 
                                                      max_goldens_per_context=2, 
                                                      num_evolutions=2)
+    print(goldens)
+'''

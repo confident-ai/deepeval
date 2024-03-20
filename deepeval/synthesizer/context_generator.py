@@ -1,6 +1,7 @@
 from deepeval.synthesizer.doc_chunker import DocumentChunker, Chunk, get_embedding_similarity
 from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Optional
 import numpy as np
 import random
@@ -11,13 +12,15 @@ class ContextGenerator:
              document_paths: List[str],
              chunk_size: int = 1024,
              chunk_overlap: int = 0,
-             fast_mode: bool = True
+             fast_mode: bool = True,
+             multithreading: bool = False,
         ):
         
         self.embedder: DeepEvalBaseEmbeddingModel = OpenAIEmbeddingModel()
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
+        self.multithreading = multithreading
         self.document_paths: List[str] = document_paths
         self.combined_chunks: List[Chunk] = self._load_docs()
         
@@ -26,14 +29,14 @@ class ContextGenerator:
             self.index = self._build_faiss_index()
 
     ############### Generate Topics ########################
-    def generate_contexts(self, output_size: int, max_context_size: int = 2):
+    def generate_contexts(self, num_context: int, max_context_size: int = 2):
         
         num_chunks = len(self.combined_chunks)
-        if output_size > num_chunks:
+        if num_context > num_chunks:
             raise ValueError("Not enough chunks (" + str(num_chunks) + 
-                             ") to return the requested number of outputs ("  + str(output_size) + 
+                             ") to return the requested number of contexts ("  + str(num_context) + 
                              "). Please decrease chunk_size or increase document length.")
-        clusters = self._get_n_random_clusters(n = output_size, cluster_size = max_context_size)
+        clusters = self._get_n_random_clusters(n = num_context, cluster_size = max_context_size)
         contexts = []
         for cluster in clusters:
             context=[chunk.content for chunk in cluster]
@@ -41,13 +44,32 @@ class ContextGenerator:
         return contexts
     
     
-     ############### Load Docs #############################
+    ############### Load Docs #############################
     def _load_docs(self) -> List[Chunk]:
-        combined_chunks = []
-        for path in self.document_paths:
+
+        def process_document(path):
             doc_chunker = DocumentChunker(self.embedder, self.chunk_size, self.chunk_overlap)
-            chunks = doc_chunker.load_doc(path)
-            combined_chunks.extend(chunks)
+            return doc_chunker.load_doc(path)
+        
+        combined_chunks = []
+
+        if not self.multithreading:
+            for path in self.document_paths:
+                doc_chunker = DocumentChunker(self.embedder, self.chunk_size, self.chunk_overlap)
+                chunks = doc_chunker.load_doc(path)
+                combined_chunks.extend(chunks)
+        else:
+            with ThreadPoolExecutor() as executor:
+                future_to_path = {executor.submit(process_document, path): path for path in self.document_paths}
+                for future in as_completed(future_to_path):
+                    path = future_to_path[future]
+                    try:
+                        chunks = future.result()
+                        combined_chunks.extend(chunks)
+                    except Exception as exc:
+                        print(f'{path} generated an exception: {exc}')
+
+
         return combined_chunks
     
     def _build_faiss_index(self) -> faiss.IndexFlatL2:
@@ -126,7 +148,7 @@ class ContextGenerator:
 ################# Example Usage# ###################
 ####################################################
 
-'''
+
 import time
 
 if __name__ == "__main__":
@@ -151,4 +173,14 @@ if __name__ == "__main__":
     contexts_with_faiss_shapes = [len(context) for context in contexts_with_faiss]
     print(f"Shapes of contexts with FAISS: {contexts_with_faiss_shapes}")
     print(f"Time taken with FAISS: {end_with_faiss - start_with_faiss} seconds")
-'''
+
+    # With Fast Mode + Multithreading (FAISS)
+    start_with_faiss = time.time()
+    generator_with_faiss = ContextGenerator(paths, chunk_size=100, fast_mode=True, multithreading=True)
+    contexts_with_faiss = generator_with_faiss.generate_contexts(5)
+    end_with_faiss = time.time()
+    
+    contexts_with_faiss_shapes = [len(context) for context in contexts_with_faiss]
+    print(f"Shapes of contexts with FAISS + multithreading: {contexts_with_faiss_shapes}")
+    print(f"Time taken with FAISS + multithreading: {end_with_faiss - start_with_faiss} seconds")
+
