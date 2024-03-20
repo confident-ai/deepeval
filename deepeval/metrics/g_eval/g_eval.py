@@ -185,19 +185,22 @@ class GEval(BaseMetric):
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
         )
-        generate_kwargs = (
-            {"logprobs": True, "top_logprobs": 20} if self.use_logprobs else {}
-        )
-        res = await self.model.a_generate(
-            prompt, return_raw_response=True, **generate_kwargs
-        )
-        data = trimAndLoadJson(res.content)
-        score = (
-            data["score"]
-            if not self.use_logprobs
-            else self.generate_logprobs_based_score(data["score"], res)
-        )
-        return score, data["reason"]
+
+        if self.use_logprobs:
+            res = await self.model.a_generate(
+                prompt, return_raw_response=True, logprobs=True, top_logprobs=20
+            )
+            data = trimAndLoadJson(res.content)
+            score = (
+                data["score"]
+                if not self.use_logprobs
+                else self.generate_logprobs_based_score(data["score"], res)
+            )
+            return score, data["reason"]
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res)
+            return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         text = """"""
@@ -209,19 +212,22 @@ class GEval(BaseMetric):
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
         )
-        generate_kwargs = (
-            {"logprobs": True, "top_logprobs": 20} if self.use_logprobs else {}
-        )
-        res = self.model.generate(
-            prompt, return_raw_response=True, **generate_kwargs
-        )
-        data = trimAndLoadJson(res.content)
-        score = (
-            data["score"]
-            if not self.use_logprobs
-            else self.generate_logprobs_based_score(data["score"], res)
-        )
-        return score, data["reason"]
+
+        if self.use_logprobs:
+            res = self.model.generate(
+                prompt, return_raw_response=True, logprobs=True, top_logprobs=20
+            )
+            data = trimAndLoadJson(res.content)
+            score = (
+                data["score"]
+                if not self.use_logprobs
+                else self.generate_logprobs_based_score(data["score"], res)
+            )
+            return score, data["reason"]
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res)
+            return data["score"], data["reason"]
 
     def generate_logprobs_based_score(
         self, raw_score: int, raw_response: AIMessage
