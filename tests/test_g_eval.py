@@ -1218,7 +1218,6 @@ def test_generate_logprobs_based_score():
             },
         },
     )
-    assert (
-        round(metric.generate_logprobs_based_score(9, raw_response), 8)
-        == round(0.8893309402242041 * 10, 8)
-    )
+    assert round(
+        metric.generate_logprobs_based_score(9, raw_response), 8
+    ) == round(0.8893309402242041 * 10, 8)
