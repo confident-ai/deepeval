@@ -191,11 +191,7 @@ class GEval(BaseMetric):
                 prompt, return_raw_response=True, logprobs=True, top_logprobs=20
             )
             data = trimAndLoadJson(res.content)
-            score = (
-                data["score"]
-                if not self.use_logprobs
-                else self.generate_logprobs_based_score(data["score"], res)
-            )
+            score = self.generate_logprobs_based_score(data["score"], res)
             return score, data["reason"]
         else:
             res = await self.model.a_generate(prompt)
@@ -218,11 +214,7 @@ class GEval(BaseMetric):
                 prompt, return_raw_response=True, logprobs=True, top_logprobs=20
             )
             data = trimAndLoadJson(res.content)
-            score = (
-                data["score"]
-                if not self.use_logprobs
-                else self.generate_logprobs_based_score(data["score"], res)
-            )
+            score = self.generate_logprobs_based_score(data["score"], res)
             return score, data["reason"]
         else:
             res = self.model.generate(prompt)
