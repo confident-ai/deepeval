@@ -273,7 +273,7 @@ class GEval(BaseMetric):
             token_linear_probability: Dict[int, float] = {}
             sum_linear_probability = 0
             for token_logprob in score_logprobs["top_logprobs"]:
-                # Filter out tokens with >1% linear probability, i.e., logprobs > math.log(0.01) ~= -4.605
+                # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01) ~= -4.605
                 if token_logprob["logprob"] < -4.605:
                     continue
                 # Filter out non-decimal tokens
