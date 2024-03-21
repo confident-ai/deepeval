@@ -212,7 +212,11 @@ from deepeval.dataset import EvaluationDataset
 first_test_case = LLMTestCase(input="...", actual_output="...")
 second_test_case = LLMTestCase(input="...", actual_output="...")
 
-dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
+dataset = EvaluationDataset(
+    # Optional 'alias', but highly recommended IF you're logged into Confident AI
+    alias="My first dataset",
+    test_cases=[first_test_case, second_test_case]
+)
 ```
 
 Then, using `deepeval`'s Pytest integration, you can utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate your dataset.
@@ -263,72 +267,89 @@ Visit the [datasets section](evaluation-datasets) to learn about everything an `
 
 ## Using Confident AI
 
-If you have reached this point, you've likely ran `deepeval test run` multiple times. To keep track of all future evaluation results created by `deepeval`, login to **[Confident AI](https://app.confident-ai.com/auth/signup)** by running the following command:
+If you have reached this point, you've likely ran `deepeval test run` multiple times. To keep track of all future evaluation results created by `deepeval`, [login to Confident AI](https://app.confident-ai.com/auth/signup) by running the following command in the CLI:
 
 ```console
 deepeval login
 ```
 
-**Confident AI** is the platform powering `deepeval`, and allows anyone to:
+**Confident AI** is the platform that unlocks `deepeval`'s full potential, and allows anyone to easily:
 
+- keep track of and debug historical test run results
+- discover optimal hyperparameters, such as the best models and prompt templates to use
+- centralize and synthesize evaluation datasets on the cloud
 - safeguard against breaking changes in CI/CD pipelines
-- compare hyperparameters, such as model and prompt templates used
-- centralize evaluation datasets on the cloud
-- run real-time evaluations in production
+- run real-time evaluations in production, with custom metrics
 
-:::tip
+:::info
 [Click here](confident-ai-introduction) for the full documentation on using Confident AI with `deepeval`.
 :::
 
-Follow the instructions displayed on the CLI to create an account, get your Confident API key, and paste it in the CLI.
+Follow the instructions displayed on the CLI to create an account, get your Confident API key, and paste it in the CLI. You should see a message congratulating your successful login.
 
-Once you've pasted your Confident API key in the CLI, execute the previously created test file once more:
+Once logged in, you'll be able to view test run results on Confident AI each time you execute a test run:
 
 ```console
 deepeval test run test_example.py
 ```
 
-### Analyze Test Runs
+**You should now see a link being returned upon test completion.** Paste it in your browser to view results.
 
-You should now see a link being returned upon test completion. Paste it in your browser to view results.
+### Optimizing Hyperparameters
 
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/test-summary.png)
+Confident AI helps you easily discover the optimal set of hyperparameters, which in `deepeval` refers to properties such as the models, prompt templates, etc. used when generating the `actual_output`s for each `LLMTestCase`.
 
-### View Individual Test Cases
-
-You can also view individual test cases for enhanced debugging:
-
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/confident-test-cases.png)
-
-### Compare Hyperparameters
-
-To log hyperparameters (such as prompt templates used) for your LLM application, paste in the following code in `test_example.py`:
+To discover which set of hyperparameters gives you the best evaluation metrics results, use the `@deepeval.log_hyperparameters` decorator:
 
 ```python title="test_example.py"
 import deepeval
 ...
 
-# Just an example of prompt_template
-prompt_template = """You are a helpful assistant, answer the following question in a non-judgemental tone.
-
-Question:
-{question}
-"""
-
-# Although the values in this example are hardcoded,
-# you should ideally pass in variables to keep things dynamic
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
+# You should aim to make these values dynamic
+@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
 def hyperparameters():
-    # Any additional hyperparameters you wish to keep track of
+    # Return a dict to log additional hyperparameters.
+    # You can also return an empty dict {} if there's no additional parameters to log
     return {
-        "chunk_size": 500,
-        "temperature": 0
+        "temperature": 1,
+        "chunk size": 500
     }
 ```
 
-Execute `deepeval test run test_example.py` again to start comparing hyperparmeters for each test run.
+:::note
+The `hyperparameters()` function **DOESN'T** necessarily have to be named 'hyperparameters'. All you need in order to log hyperparameters on Confident AI is to decorate a function that returns a valid dictionary.
+:::
 
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/compare-hyperparameters.png)
+Once you've added this decorator, execute `test_example.py` once more:
+
+```console
+deepeval test run test_example.py
+```
+
+The `@deepeval.log_hyperparameters` decorator helps Confident AI keep track of the hyperparameters used when generating the `actual_output`s for a particular test run. This allows you to **identify which combination of hyperparameters gives the best evaluation metric results over time.**
+
+### Monitoring LLM Responses
+
+Confident AI allows anyone to **monitor and evaluate LLM responses in real-time.** A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
+
+```python
+import deepeval
+
+# At the end of your LLM call
+deepeval.track(
+    event_name="Chatbot",
+    model="gpt-4",
+    input="Example input.",
+    response="Example response.",
+    retrieval_context=["..."]
+)
+```
+
+Confident AI will automatically run evaluations for each incoming LLM response on metrics you have turned on. Head over to the 'Project Details' page on Confident AI to turn on metrics.
+
+:::info
+You can find more information on [running real-time evaluations here.](confident-ai-evals-in-production)
+:::
 
 ## Full Example
 

@@ -89,7 +89,7 @@ class Index extends React.Component {
             <FeatureCard 
                 title="Regression Testing for LLMs" 
                 link="/docs/evaluation-test-cases" 
-                description="LLM evaluation metrics to test LLMs in Python"
+                description="LLM evaluation metrics to unit test LLM outputs in Python"
             />
             <FeatureCard 
                 title="Hyperparameter Discovery"
