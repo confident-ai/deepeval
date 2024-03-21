@@ -49,18 +49,16 @@ deepeval login
 Run `touch test_example.py` to create a test file in your root directory. Open `test_example.py` and paste in your first test case:
 
 ```python title="test_example.py"
-import pytest
 from deepeval import assert_test
-from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
 
 def test_answer_relevancy():
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
     test_case = LLMTestCase(
         input="What if these shoes don't fit?",
         # Replace this with the actual output of your LLM application
-        actual_output="We offer a 30-day full refund at no extra cost.",
-        retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
+        actual_output="We offer a 30-day full refund at no extra cost."
     )
     assert_test(test_case, [answer_relevancy_metric])
 ```
@@ -78,7 +76,9 @@ deepeval test run test_example.py
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
 :::info
-You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running the `AnswerRelevancyMetric`, since the `AnswerRelevancyMetric` is an LLM-evaluated metric. To use **ANY** custom LLM of your choice, [check out this part of the docs](evaluation-introduction#using-a-custom-llm).
+You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running the `AnswerRelevancyMetric`, since the `AnswerRelevancyMetric` is an LLM-evaluated metric.
+
+To use **ANY** custom LLM of your choice, [check out this part of the docs](evaluation-introduction#using-a-custom-llm).
 :::
 
 You can also save test results locally for each test run. Simply set the `DEEPEVAL_RESULTS_FOLDER` environement variable to your relative path of choice:
@@ -87,120 +87,106 @@ You can also save test results locally for each test run. Simply set the `DEEPEV
 export DEEPEVAL_RESULTS_FOLDER="./data"
 ```
 
-## Create Your First Custom Metric
+## Create Your First Metric
 
-`deepeval` provides two types of custom metric to evaluate LLM outputs: metrics evaluated with LLMs and metrics evaluated without LLMs. Here is a brief overview of each:
+`deepeval` provides two types of LLM evaluation metrics to evaluate LLM outputs: plug-and-use **default** metrics, and **custom** metrics for any evaluation criteria.
 
-### LLM Evaluated Metrics
+### Default Metrics
 
-An LLM evaluated metric (aka. LLM-Evals), is one where evaluation is carried out by an LLM. `deepeval` offers more than a dozen LLM-Evals, one of which is G-Eval, a state-of-the-art framework to evaluate LLM outputs.
+`deepeval` offers 14+ research backed default metrics covering a wide range of use-cases (such as RAG and fine-tuning). To create a metric, simply import from the `deepeval.metrics` module:
 
-```python title="test_example.py"
-from deepeval import assert_test
-from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-...
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
 
-def test_coherence():
-    coherence_metric = GEval(
-        name="Coherence",
-        criteria="Coherence - determine if the actual output is logical, has flow, and is easy to understand and follow.",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-        threshold=0.5
-    )
-    test_case = LLMTestCase(
-        input="What if these shoes don't fit? I want a full refund.",
-        # Replace this with the actual output from your LLM application
-        actual_output="If the shoes don't fit, the customer wants a full refund."
-    )
-    assert_test(test_case, [coherence_metric])
+test_case = LLMTestCase(input="...", actual_output="...")
+metric = AnswerRelevancyMetric(threshold=0.5)
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
 ```
 
+Note that you can run a metric as a standalone or as part of a test run as shown in previous sections.
+
 :::info
-All of `deepeval`'s default metrics are LLM-Evals, most of which are backed by associated research papers. To learn more, here is an article on [everything you need to know about LLM evaluation metrics](https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation).
+All default metrics are evaluated using LLMs, and you can use **ANY** LLM of your choice. For more information, visit the [metrics introduction section.](metrics-introduction)
 :::
 
-### Non-LLM Evaluated Metrics
+### Custom Metrics
 
-A non-LLM evaluated metric is a metric where evluation is not carried out by another LLM. Since all of `deepeval`'s metrics are evaluated using LLMs, you'll have to created a custom metric instead by defining the `measure` and `is_successful` methods upon inheriting the base `BaseMetric` class.
+`deepeval` provides G-Eval, a state-of-the-art LLM evaluation framework for anyone to createa a custom LLM-evaluated metric using natural language. Here's an example:
 
-```python title="test_example.py"
+```python
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import GEval
+
+test_case = LLMTestCase(input="...", actual_output="...")
+metric = GEval(
+    name="Correctness",
+    criteria="Correctness - determine if the actual output is correct according to the expected output.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    strict=True
+)
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjuction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](metrics-llm-evals)
+
+:::tip
+If you wish to customize your metrics a bit more, you can choose to implement your own metric. You can find a full tutorial [here](metrics-custom), but here's a quick example of how you can create a metric that is **NOT** evaluated using LLMs:
+
+```python
+from deepeval.scorer import Scorer
 from deepeval.metrics import BaseMetric
-...
 
-class LengthMetric(BaseMetric):
-    # This metric checks if the output length is greater than 10 characters
-    def __init__(self, max_length: int=10):
-        self.threshold = max_length
+class RougeMetric(BaseMetric):
+    def __init__(self, threshold: float = 0.5):
+        self.threshold = threshold
+        self.scorer = Scorer()
 
     def measure(self, test_case: LLMTestCase):
-        self.success = len(test_case.actual_output) > self.threshold
-        if self.success:
-            score = 1
-        else:
-            score = 0
-        return score
+        self.score = scorer.rouge_score(
+            prediction=test_case.actual_output,
+            target=test_case.expected_output,
+            score_type="rouge1"
+        )
+        self.success = self.score >= self.threshold
+        return self.score
+
+    # Async implementation of measure(). If async version for
+    # scoring method does not exist, just reuse the measure method.
+    async def a_measure(self, test_case: LLMTestCase):
+        return self.measure(test_case)
 
     def is_successful(self):
         return self.success
 
     @property
     def __name__(self):
-        return "Length"
-
-
-def test_length():
-    length_metric = LengthMetric(max_length=10)
-    test_case = LLMTestCase(
-        input="What if these shoes don't fit?",
-        # Replace this with the actual output of your LLM application
-        actual_output="We offer a 30-day full refund at no extra cost."
-    )
-    assert_test(test_case, [length_metric])
+        return "Rouge Metric"
 ```
 
-Run `deepeval test run` from the root directory of your project again:
+You'll notice that although not documented, `deepeval` additionally offers a `scorer` module for more traditional NLP scoring method and can be found [here.](https://github.com/confident-ai/deepeval/blob/main/deepeval/scorer/scorer.py)
 
-```console
-deepeval test run test_example.py
-```
+You can also create a custom metric to combine several different metrics into one. For example. combining the `AnswerRelevancyMetric` and `FaithfulnessMetric` to test whether an LLM output is both relevant and faithful (ie. not hallucinating).
 
-You should see both `test_answer_relevancy` and `test_length` passing.
+:::
 
 **Two things to note:**
 
 - Custom metrics requires a `threshsold` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `actual_output` is greater than 10.
 - We removed `retrieval_context` in `test_length` since it was irrelevant to evaluating output length. However `input` and `actual_output` is always mandatory when creating an `LLMTestCase`.
 
-:::tip
-You can also create a custom metric to combine several different metrics into one. For example. combining the `AnswerRelevancyMetric` and `FaithfulnessMetric` to test whether an LLM output is both relevant and faithful (ie. not hallucinating).
+## Evaluate Several Metrics At Once
 
-[Click here to learn more on how to create a custom metric](metrics-custom)
-:::
-
-## Combine Your Metrics
-
-You might've noticed we have duplicated test cases for both `test_answer_relevancy` and `test_length` (ie. they have the same input and expected output). To avoid this redundancy, `deepeval` offers an easy way to apply as many metrics as you wish for a single test case.
+To avoid redundant code, `deepeval` offers an easy way to apply as many metrics as you wish for a single test case.
 
 ```python title="test_example.py"
 ...
 
 def test_everything():
-    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
-    length_metric = LengthMetric(max_length=10)
-    coherence_metric = GEval(
-        name="Coherence",
-        criteria="Coherence - determine if the actual output is logical, has flow, and is easy to understand and follow.",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-        threshold=0.5
-    )
-
-    test_case = LLMTestCase(
-        input="What if these shoes don't fit?",
-        # Replace this with the actual output of your LLM application
-        actual_output="We offer a 30-day full refund at no extra cost.",
-        retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
-    )
     assert_test(test_case, [answer_relevancy_metric, coherence_metric, length_metric])
 ```
 
@@ -210,28 +196,37 @@ In this scenario, `test_everything` only passes if all metrics are passing. Run 
 deepeval test run test_example.py
 ```
 
-## Evaluate Your Evaluation Dataset
+:::info
+`deepeval` optimizes evaluation speed by running all metrics for each test case concurrently.
+:::
 
-An evaluation dataset in `deepeval` is simply a collection of `LLMTestCases` and/or `Goldens`.
+## Create Your First Dataset
 
-:::tip
+A dataset in `deepeval`, or more specifically an evaluation dataset, is simply a collection of `LLMTestCases` and/or `Goldens`.
+
+:::note
 We're not going to dive into what a `Golden` is here, but it is an important concept if you're looking to generate LLM outputs at evlauation time. To learn more about `Golden`s, [click here.](evaluation-dataset#with-goldens)
 :::
 
-Using `deepeval`'s Pytest integration, you can utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate your evaluation dataset.
+To create a dataset, simply initialize an `EvaluationDataset` with a list of `LLMTestCase`s or `Golden`s:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
+
+first_test_case = LLMTestCase(input="...", actual_output="...")
+second_test_case = LLMTestCase(input="...", actual_output="...")
+
+dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
+```
+
+Then, using `deepeval`'s Pytest integration, you can utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate your dataset.
 
 ```python title="test_dataset.py"
 import pytest
 from deepeval import assert_test
-from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.dataset import EvaluationDataset
-
-first_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
-second_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
-
-# Initialize an evaluation dataset by supplying a list of test cases
-dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
+from deepeval.metrics import AnswerRelevancyMetric
+...
 
 # Loop through test cases using Pytest
 @pytest.mark.parametrize(
@@ -239,27 +234,36 @@ dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
     dataset,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
-    faithfulness_metric = FaithfulnessMetric(threshold=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-    assert_test(test_case, [faithfulness_metric, answer_relevancy_metric])
+    assert_test(test_case, [answer_relevancy_metric])
 ```
 
-You can also run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
+:::tip
+You can also evaluate entire datasets without going through the CLI (if you're in a notebook environment):
+
+```python
+from deepeval import evaluate
+...
+
+evaluate(dataset, [answer_relevancy_metric])
+```
+
+:::
+
+Additionally, you can run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 
 ```
 deepeval test run test_dataset.py -n 2
 ```
 
-Alternatively, you can evaluate entire datasets without going through the CLI (if you're in a notebook environment):
+Or repeat evaluating each test case how ever many times you want through the `-r` flag:
 
-```python
-...
-
-evaluate(test_cases, [faithfulness_metric, answer_relevancy_metric])
+```
+deepeval test run test_dataset.py -r 2
 ```
 
 :::info
-To learn more about the additional features an `EvaluationDataset` offers, visit the [dataset section.](evaluation-datasets)
+Visit the [datasets section](evaluation-datasets) to learn about everything an `EvaluationDataset` has to offer.
 :::
 
 ## Using Confident AI
