@@ -148,20 +148,24 @@ def execute_test_cases(
         test_run = test_run_manager.get_test_run()
         cached_metrics_metadata_map = {}
         cached_test_run = None
+        temp_cached_test_run = None
 
         #######################################################
         # build cached data map from cached_api_test_case
-        # if available (1 test_case and >= 1 metrics)
         #######################################################
         if use_cache:
+            
+            # get cached_test_run and temp_cached_test_run
             cached_test_run = test_run_cache_manager.get_cached_test_run()
+            temp_cached_test_run = test_run_cache_manager.get_temp_cached_test_run()
+
+            # get cached_api_test_case from cached_test_run
             key = generate_cache_key(test_case=test_case)
             lookup_map = cached_test_run.test_cases_lookup_map
-
             cached_api_test_case = lookup_map.get(key, None)
-            check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
 
-            # not sure I need to check cached_api_test_case.metrics_metadata
+            # construct a map from the metrics in the cached_api_test_case 
+            check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
             if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
                 cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
 
@@ -203,12 +207,15 @@ def execute_test_cases(
         test_results.append(test_result)
 
         #########################################
-        # Update test_run_cache_manager
+        # Update cached_test_run and temp_cached_test_run
         ########################################
         if use_cache:
+            temp_cached_test_run.test_cases_lookup_map[key] = api_test_case
             cached_test_run.test_cases_lookup_map[key] = api_test_case
             cached_test_run.hyperparameters = test_run.hyperparameters
+            temp_cached_test_run.hyperparameters = test_run.hyperparameters
             test_run_cache_manager.save_cached_test_run()
+            test_run_cache_manager.save_temp_cached_test_run()
 
     return test_results
 
@@ -222,7 +229,6 @@ async def a_execute_test_cases(
 ) -> List[TestResult]:
     
     test_results: List[TestResult] = []
-    used_keys = set()
     test_run_manager.save_to_disk = save_to_disk
 
     for index, test_case in enumerate(test_cases):
@@ -230,27 +236,30 @@ async def a_execute_test_cases(
         test_run = test_run_manager.get_test_run()
         cached_metrics_metadata_map = {}
         cached_test_run = None
+        temp_cached_test_run = None
 
         #######################################################
         # build cached data map from cached_api_test_case
-        # if available (1 test_case and >= 1 metrics)
         #######################################################
         if use_cache:
+            
+            # get cached_test_run and temp_cached_test_run
             cached_test_run = test_run_cache_manager.get_cached_test_run()
+            temp_cached_test_run = test_run_cache_manager.get_temp_cached_test_run()
+
+            # get cached_api_test_case from cached_test_run
             key = generate_cache_key(test_case=test_case)
-            used_keys.add(key)
             lookup_map = cached_test_run.test_cases_lookup_map
-
             cached_api_test_case = lookup_map.get(key, None)
-            check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
 
-            # not sure I need to check cached_api_test_case.metrics_metadata
+            # construct a map from the metrics in the cached_api_test_case 
+            check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
             if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
                 cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
 
-        #########################################
-        # Calculate remaining metrics (if not cached)
-        #########################################
+        #######################################################
+        # Calculate remaining metrics if not cached
+        #######################################################
         success = True
         api_test_case: APITestCase = create_api_test_case(test_case, index)
         test_start_time = time.perf_counter()
@@ -285,30 +294,15 @@ async def a_execute_test_cases(
         test_results.append(test_result)
 
         #########################################
-        # Update test_run_cache_manager
+        # Update cached_test_run and temp_cached_test_run
         ########################################
         if use_cache:
+            temp_cached_test_run.test_cases_lookup_map[key] = api_test_case
             cached_test_run.test_cases_lookup_map[key] = api_test_case
             cached_test_run.hyperparameters = test_run.hyperparameters
+            temp_cached_test_run.hyperparameters = test_run.hyperparameters
             test_run_cache_manager.save_cached_test_run()
-    
-    #########################################
-    # Clear cache
-    ########################################
-    # Doesn't work when >= 2 assert_test are called because
-    # cache gets cleared at the end of this function, which
-    # is called inside the assert_test function.
-    # Will only work for evaluate
-
-    #if use_cache:        
-    #    all_keys = set(cached_test_run.test_cases_lookup_map.keys())
-    #    keys_to_remove = all_keys - used_keys
-    #    for key in keys_to_remove:
-    #        del cached_test_run.test_cases_lookup_map[key]
-    #    print(all_keys)
-    #    print(keys_to_remove)
-    #    print(test_run_cache_manager.cached_test_run.test_cases_lookup_map)
-    #    test_run_cache_manager.save_cached_test_run()
+            test_run_cache_manager.save_temp_cached_test_run()
 
     return test_results
 
