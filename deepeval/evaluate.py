@@ -125,8 +125,6 @@ def same_metric(metric: BaseMetric, cached_metric_metadata: MetricsMetadata):
     # Start with required attributes, assuming they must exist in metric
     for attr in MetricsRequiredParams.values():
         if getattr(metric, attr, None) != getattr(cached_metric_metadata, attr, None):
-            print("False Required")
-            print(attr)
             return False
     # Then check optional attributes
     for attr in MetricsOptionalParams.values():
@@ -161,6 +159,7 @@ def execute_test_cases(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
     save_to_disk: bool = False,
+    use_cache: bool = True
 ) -> List[TestResult]:
     
     test_results: List[TestResult] = []
@@ -169,22 +168,24 @@ def execute_test_cases(
     for index, test_case in enumerate(test_cases):
 
         test_run = test_run_manager.get_test_run()
-        cached_test_run = test_run_cache_manager.get_cached_test_run()
-        key = generate_cache_key(test_case=test_case)
-        lookup_map = cached_test_run.test_cases_lookup_map
+        cached_metrics_metadata_map = {}
+        cached_test_run = None
 
         #######################################################
         # build cached data map from cached_api_test_case
         # if available (1 test_case and >= 1 metrics)
         #######################################################
+        if use_cache:
+            cached_test_run = test_run_cache_manager.get_cached_test_run()
+            key = generate_cache_key(test_case=test_case)
+            lookup_map = cached_test_run.test_cases_lookup_map
 
-        cached_api_test_case = lookup_map.get(key, None)
-        check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
+            cached_api_test_case = lookup_map.get(key, None)
+            check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
 
-        cached_metrics_metadata_map = {}
-        # not sure I need to check cached_api_test_case.metrics_metadata
-        if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
-             cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
+            # not sure I need to check cached_api_test_case.metrics_metadata
+            if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
+                cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
 
         #######################################################
         # Calculate metrics
@@ -225,10 +226,11 @@ def execute_test_cases(
 
         #########################################
         # Update test_run_cache_manager
-        #########################################
-        cached_test_run.test_cases_lookup_map[key] = api_test_case
-        cached_test_run.hyperparameters = test_run.hyperparameters
-        test_run_cache_manager.save_cached_test_run()
+        ########################################
+        if use_cache:
+            cached_test_run.test_cases_lookup_map[key] = api_test_case
+            cached_test_run.hyperparameters = test_run.hyperparameters
+            test_run_cache_manager.save_cached_test_run()
 
     return test_results
 
@@ -238,6 +240,7 @@ async def a_execute_test_cases(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
     save_to_disk: bool = False,
+    use_cache: bool = True
 ) -> List[TestResult]:
     
     test_results: List[TestResult] = []
@@ -246,20 +249,24 @@ async def a_execute_test_cases(
     for index, test_case in enumerate(test_cases):
 
         test_run = test_run_manager.get_test_run()
-        cached_test_run = test_run_cache_manager.get_cached_test_run()
-        key = generate_cache_key(test_case=test_case)
-        lookup_map = cached_test_run.test_cases_lookup_map
-
-        #########################################
-        # Get cached data if available
-        ##########################################
-        cached_api_test_case = lookup_map.get(key, None)
-        check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
-
         cached_metrics_metadata_map = {}
-        # not sure I need to check cached_api_test_case.metrics_metadata
-        if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
-             cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
+        cached_test_run = None
+
+        #######################################################
+        # build cached data map from cached_api_test_case
+        # if available (1 test_case and >= 1 metrics)
+        #######################################################
+        if use_cache:
+            cached_test_run = test_run_cache_manager.get_cached_test_run()
+            key = generate_cache_key(test_case=test_case)
+            lookup_map = cached_test_run.test_cases_lookup_map
+
+            cached_api_test_case = lookup_map.get(key, None)
+            check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
+
+            # not sure I need to check cached_api_test_case.metrics_metadata
+            if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
+                cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
 
         #########################################
         # Calculate remaining metrics (if not cached)
@@ -297,12 +304,13 @@ async def a_execute_test_cases(
         )
         test_results.append(test_result)
 
-        #########################################
+         #########################################
         # Update test_run_cache_manager
-        #########################################
-        cached_test_run.test_cases_lookup_map[key] = api_test_case
-        cached_test_run.hyperparameters = test_run.hyperparameters
-        test_run_cache_manager.save_cached_test_run()
+        ########################################
+        if use_cache:
+            cached_test_run.test_cases_lookup_map[key] = api_test_case
+            cached_test_run.hyperparameters = test_run.hyperparameters
+            test_run_cache_manager.save_cached_test_run()
 
     return test_results
 
@@ -318,16 +326,17 @@ def assert_test(
     # TODO: refactor
     if not isinstance(test_case, LLMTestCase):
         raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
+
     if run_async:
         loop = get_or_create_event_loop()
         test_result = loop.run_until_complete(
             a_execute_test_cases(
-                [test_case], metrics, get_is_running_deepeval()
+                [test_case], metrics, get_is_running_deepeval(), test_run_manager.use_cache
             )
         )[0]
     else:
         test_result = execute_test_cases(
-            [test_case], metrics, get_is_running_deepeval()
+            [test_case], metrics, get_is_running_deepeval(), test_run_manager.use_cache
         )[0]
         
     if not test_result.success:

@@ -137,13 +137,14 @@ class TestRunManager:
         self.temp_file_name = TEMP_FILE_NAME
         self.save_to_disk = False
         self.disable_request = False
+        self.use_cache = None
 
     def reset(self):
         self.test_run = None
         self.temp_file_name = TEMP_FILE_NAME
         self.save_to_disk = False
         self.disable_request = False
-
+        
     def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
 

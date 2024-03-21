@@ -49,16 +49,22 @@ def run(
         "-n",
         help="Number of processes to use with pytest",
     ),
+    repeat: int = typer.Option(
+        0,
+        "--repeat",
+        "-r",
+        help="Number of times to run each test run",
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
     check_if_valid_file(test_file_or_directory)
-    test_run_manager.reset()
+    
     pytest_args = [test_file_or_directory]
 
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
-
+    
     deployment_configs = get_deployment_configs()
     if deployment_configs is not None:
         deployment_configs_json = json.dumps(deployment_configs)
@@ -78,15 +84,26 @@ def run(
         pytest_args.append("--disable-warnings")
     if num_processes is not None:
         pytest_args.extend(["-n", str(num_processes)])
+        
+    if repeat < 0:
+        raise ValueError("The repeat argument must be at least 1.")
+    test_run_manager.use_cache = (repeat == 0)
 
-    set_is_running_deepeval(True)
+    overall_retcode = 0
+    for _ in range(repeat + 1):
+        test_run_manager.reset()
+        set_is_running_deepeval(True)
 
-    # Add the deepeval plugin file to pytest arguments
-    pytest_args.extend(["-p", "plugins"])
+        # Add the deepeval plugin file to pytest arguments
+        pytest_args.extend(["-p", "plugins"])
 
-    retcode = pytest.main(pytest_args)
-    capture_evaluation_count()
-    test_run_manager.wrap_up_test_run()
+        retcode = pytest.main(pytest_args)
+        if retcode != 0 and overall_retcode == 0:
+            overall_retcode = retcode
+
+        capture_evaluation_count()
+        test_run_manager.wrap_up_test_run()
+        
     invoke_test_run_end_hook()
 
-    return retcode
+    return overall_retcode
