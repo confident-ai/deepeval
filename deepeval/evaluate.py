@@ -31,30 +31,18 @@ class TestResult:
     context: List[str]
     retrieval_context: List[str]
 
-# Every BaseMetric has these attributes
-# Score success and reason are not parameters....
-class MetricsRequiredParams(Enum):
+class MetricsParams(Enum):
     STRICT_MODE = 'strict_mode'
     THRESHOLD = 'threshold'
     EVALUATION_MODEL = 'evaluation_model'
-
-    @classmethod
-    def values(cls):
-        return [member.value for member in cls]
     
-# Not every BaseMetric has these attributes
-class MetricsOptionalParams(Enum):
+    # Not every BaseMetric has these attributes
     CRITERIA = 'criteria'
     INCLUDE_REASON = 'include_reason'
     N = 'n'
 
-    # Below problematic either because
-    # gets updated after running metric or
-    # Cannot compress into JSON format
-
     #EVALUATION_STEPS = 'evaluation_steps'
     #ASSESSMENT_QUESTIONS = 'assessment_questions'
-    
     #EVALUATION_PARAMS = 'evaluation_params'
     #EMBEDDINGS = 'embeddings'
     #LANGUAGE = 'language'
@@ -109,12 +97,7 @@ def create_metric_metadata(metric: BaseMetric) -> MetricsMetadata:
         'success': metric.is_successful(),
         'reason': metric.reason,
         }
-
-    # Start with required attributes, assuming they must exist in metric
-    for attr in MetricsRequiredParams.values():
-        metadata_kwargs[attr] = getattr(metric, attr)
-    # Then create the optional attrevaluationModelibutes
-    for attr in MetricsOptionalParams.values():
+    for attr in MetricsParams.values():
         if hasattr(metric, attr):
             metadata_kwargs[attr] = getattr(metric, attr)
     return MetricsMetadata(**metadata_kwargs)
@@ -122,12 +105,7 @@ def create_metric_metadata(metric: BaseMetric) -> MetricsMetadata:
 def same_metric(metric: BaseMetric, cached_metric_metadata: MetricsMetadata):
     if metric.__name__ != cached_metric_metadata.metric:
         return False
-    # Start with required attributes, assuming they must exist in metric
-    for attr in MetricsRequiredParams.values():
-        if getattr(metric, attr, None) != getattr(cached_metric_metadata, attr, None):
-            return False
-    # Then check optional attributes
-    for attr in MetricsOptionalParams.values():
+    for attr in MetricsParams.values():
         if hasattr(metric, attr):
             if getattr(metric, attr, None) != getattr(cached_metric_metadata, attr, None):
                 return False
@@ -244,6 +222,7 @@ async def a_execute_test_cases(
 ) -> List[TestResult]:
     
     test_results: List[TestResult] = []
+    used_keys = set()
     test_run_manager.save_to_disk = save_to_disk
 
     for index, test_case in enumerate(test_cases):
@@ -259,6 +238,7 @@ async def a_execute_test_cases(
         if use_cache:
             cached_test_run = test_run_cache_manager.get_cached_test_run()
             key = generate_cache_key(test_case=test_case)
+            used_keys.add(key)
             lookup_map = cached_test_run.test_cases_lookup_map
 
             cached_api_test_case = lookup_map.get(key, None)
@@ -304,13 +284,31 @@ async def a_execute_test_cases(
         )
         test_results.append(test_result)
 
-         #########################################
+        #########################################
         # Update test_run_cache_manager
         ########################################
         if use_cache:
             cached_test_run.test_cases_lookup_map[key] = api_test_case
             cached_test_run.hyperparameters = test_run.hyperparameters
             test_run_cache_manager.save_cached_test_run()
+    
+    #########################################
+    # Clear cache
+    ########################################
+    # Doesn't work when >= 2 assert_test are called because
+    # cache gets cleared at the end of this function, which
+    # is called inside the assert_test function.
+    # Will only work for evaluate
+
+    #if use_cache:        
+    #    all_keys = set(cached_test_run.test_cases_lookup_map.keys())
+    #    keys_to_remove = all_keys - used_keys
+    #    for key in keys_to_remove:
+    #        del cached_test_run.test_cases_lookup_map[key]
+    #    print(all_keys)
+    #    print(keys_to_remove)
+    #    print(test_run_cache_manager.cached_test_run.test_cases_lookup_map)
+    #    test_run_cache_manager.save_cached_test_run()
 
     return test_results
 
