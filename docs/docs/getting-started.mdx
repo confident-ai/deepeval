@@ -179,7 +179,7 @@ You can also create a custom metric to combine several different metrics into on
 - Custom metrics requires a `threshsold` as a passing criteria. In the case of our `LengthMetric`, the passing criteria was whether the `max_length` of `actual_output` is greater than 10.
 - We removed `retrieval_context` in `test_length` since it was irrelevant to evaluating output length. However `input` and `actual_output` is always mandatory when creating an `LLMTestCase`.
 
-## Evaluate Several Metrics At Once
+## Measure Multiple Metrics At Once
 
 To avoid redundant code, `deepeval` offers an easy way to apply as many metrics as you wish for a single test case.
 
