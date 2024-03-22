@@ -1,11 +1,9 @@
-from typing import Optional, Union
+from typing import Optional, List
 from langchain_openai import OpenAIEmbeddings, AzureOpenAIEmbeddings
-from langchain_openai import ChatOpenAI, AzureChatOpenAI
-from langchain_core.language_models import BaseChatModel
+
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseEmbeddingModel
 from deepeval.chat_completion.retry import retry_with_exponential_backoff
-from typing import List
 
 valid_openai_embedding_models = [
     "text-embedding-3-small",
@@ -98,25 +96,29 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 ###### Example Usage #######
 ############################
 
-""" 
+'''
 import time
 import asyncio
 
-async def main():
+async def async_main(model):
+    start_async = time.time()
+    async_result = await model.aembed_query('test')
+    end_async = time.time()
+    
+    print(f"Asynchronous Execution time: {end_async - start_async} seconds")
+
+def main():
     model = OpenAIEmbeddingModel()
 
     start_sync = time.time()
-    sync_result = model.embed_query('asdfaasdf')
+    sync_result = model.embed_query('test')
     end_sync = time.time()
 
-    start_async = time.time()
-    async_result = await model.aembed_query('asdfaasdf')
-    end_async = time.time()
+    print(f"Synchronous Execution time: {end_sync - start_sync} seconds")
 
-    print(f"Synchronous Execution time: {end_sync - start_sync} seconds\n")
-    print(f"Asynchronous Execution time: {end_async - start_async} seconds")
+    # Call the asynchronous part using asyncio.run
+    asyncio.run(async_main(model))
 
 if __name__ == "__main__":
-    # This ensures that the main method is executed when the script is run directly.
-    asyncio.run(main())
-"""
+    main()
+'''

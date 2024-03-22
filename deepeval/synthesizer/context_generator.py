@@ -1,11 +1,12 @@
-from deepeval.synthesizer.doc_chunker import DocumentChunker, Chunk, get_embedding_similarity
-from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
-from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Optional
+from typing import List
 import numpy as np
 import random
 import faiss
+
+from deepeval.synthesizer.doc_chunker import DocumentChunker, Chunk, get_embedding_similarity
+from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
+from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 
 class ContextGenerator:
     def __init__(self, 
@@ -29,7 +30,7 @@ class ContextGenerator:
             self.index = self._build_faiss_index()
 
     ############### Generate Topics ########################
-    def generate_contexts(self, num_context: int, max_context_size: int = 2):
+    def generate_contexts(self, num_context: int, max_context_size: int = 2) -> List[List[str]]:
         
         num_chunks = len(self.combined_chunks)
         if num_context > num_chunks:
@@ -85,7 +86,7 @@ class ContextGenerator:
         return index
     
     ############### Search N Chunks ########################
-    def _get_n_random_clusters(self, n: int, cluster_size: int):
+    def _get_n_random_clusters(self, n: int, cluster_size: int) -> List[List[Chunk]]:
         chunk_cluster = []
         random_chunks = self._get_n_random_chunks(n)
         for chunk in random_chunks:
@@ -101,7 +102,7 @@ class ContextGenerator:
     
     def _get_n_other_similar_chunks(
         self, query_chunk: Chunk, n: int, threshold: float = 0.7, fast_threshold: float = 0.6
-    ): 
+    ) -> List[Chunk]: 
         if not self.combined_chunks or len(self.combined_chunks) < n:
             raise ValueError("Not enough chunks to return the requested number of random nodes.")
         query_embedding = self.embedder.embed_query(query_chunk.content)
@@ -148,7 +149,7 @@ class ContextGenerator:
 ################# Example Usage# ###################
 ####################################################
 
-
+'''
 import time
 
 if __name__ == "__main__":
@@ -183,4 +184,4 @@ if __name__ == "__main__":
     contexts_with_faiss_shapes = [len(context) for context in contexts_with_faiss]
     print(f"Shapes of contexts with FAISS + multithreading: {contexts_with_faiss_shapes}")
     print(f"Time taken with FAISS + multithreading: {end_with_faiss - start_with_faiss} seconds")
-
+'''

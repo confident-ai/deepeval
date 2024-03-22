@@ -2,16 +2,13 @@ from langchain_core.documents import Document as LCDocument
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
-
-from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
-from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
-from typing import Optional, List, Tuple, Dict, Type
+from typing import Optional, List, Dict, Type
 from pydantic import Field
-from enum import Enum
 import numpy as np
 import uuid
 import os
 
+from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 
 class Chunk:
     def __init__(self):
@@ -54,12 +51,12 @@ class DocumentChunker:
         # Find appropiate doc loader
         _, extension = os.path.splitext(path)
         extension = extension.lower()
-        loader_class = self.loader_mapping.get(extension)
-        if loader_class is None:
+        loader = self.loader_mapping.get(extension)
+        if loader is None:
             raise ValueError(f"Unsupported file format: {extension}")
         
         # Load and split text in doc
-        loader = loader_class(path)
+        loader = loader(path)
         raw_chunks: List[LCDocument] = loader.load_and_split(self.text_splitter)
 
         # Load results into Chunk class

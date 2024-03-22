@@ -6,6 +6,7 @@ from threading import Lock
 from pydantic import BaseModel
 import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import random
 
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
 from deepeval.synthesizer.context_generator import ContextGenerator
@@ -17,7 +18,6 @@ from deepeval.models import (
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.utils import trimAndLoadJson
 from deepeval.dataset.golden import Golden
-import random
 
 valid_file_types = ["csv", "json"]
 
