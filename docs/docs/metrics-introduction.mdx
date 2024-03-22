@@ -121,7 +121,7 @@ custom_model = AzureChatOpenAI(
     openai_api_key=openai_api_key,
 )
 azure_openai = AzureOpenAI(model=custom_model)
-print(azure_openai("Write me a joke"))
+print(azure_openai.generate("Write me a joke"))
 ```
 
 When creating a custom LLM evaluation model you should **ALWAYS**:
@@ -193,7 +193,7 @@ model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
 tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
 
 mistral_7b = Mistral7B(model=model, tokenizer=tokenizer)
-print(mistral_7b("Write me a joke"))
+print(mistral_7b.generate("Write me a joke"))
 ```
 
 Note that for this particular implementation, we initialized our `Mistral7B` model with an additional `tokenizer` parameter, as this is required in the decoding step of the `generate()` method.
@@ -257,7 +257,7 @@ class AWSBedrock(DeepEvalBaseLLM):
         chat_model = self.load_model()
         return chat_model.invoke(prompt).content
 
-    def a_generate(self, prompt: str) -> str:
+    async def a_generate(self, prompt: str) -> str:
         chat_model = self.load_model()
         res = await chat_model.ainvoke(prompt)
         return res.content
@@ -275,7 +275,7 @@ custom_model = BedrockChat(
 )
 
 aws_bedrock = AWSBedrock(model=custom_model)
-print(aws_bedrock("Write me a joke"))
+print(aws_bedrock.generate("Write me a joke"))
 ```
 
 Finally, supply the newly created `aws_bedrock` model to LLM-Evals:
