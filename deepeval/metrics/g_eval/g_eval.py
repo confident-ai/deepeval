@@ -1,8 +1,9 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Dict
 from pydantic import BaseModel
-
+from langchain.schema import AIMessage
+import math
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.g_eval.template import GEvalTemplate
@@ -57,6 +58,7 @@ class GEval(BaseMetric):
         threshold: float = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
+        use_logprobs: bool = False,
     ):
         self.name = name
         self.evaluation_params = evaluation_params
@@ -87,6 +89,7 @@ class GEval(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
+        self.use_logprobs = use_logprobs
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_test_case_params(
@@ -170,7 +173,9 @@ class GEval(BaseMetric):
         data = trimAndLoadJson(res)
         return data["steps"]
 
-    async def _a_evaluate(self, test_case: LLMTestCase) -> Tuple[int, str]:
+    async def _a_evaluate(
+        self, test_case: LLMTestCase
+    ) -> Tuple[Union[int, float], str]:
         text = """"""
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
@@ -180,11 +185,20 @@ class GEval(BaseMetric):
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
         )
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
-        return data["score"], data["reason"]
 
-    def evaluate(self, test_case: LLMTestCase) -> Tuple[int, str]:
+        if self.use_logprobs:
+            res = await self.model.a_generate(
+                prompt, return_raw_response=True, logprobs=True, top_logprobs=20
+            )
+            data = trimAndLoadJson(res.content)
+            score = self.generate_logprobs_based_score(data["score"], res)
+            return score, data["reason"]
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res)
+            return data["score"], data["reason"]
+
+    def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         text = """"""
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
@@ -194,9 +208,96 @@ class GEval(BaseMetric):
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
         )
-        res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
-        return data["score"], data["reason"]
+
+        if self.use_logprobs:
+            res = self.model.generate(
+                prompt, return_raw_response=True, logprobs=True, top_logprobs=20
+            )
+            data = trimAndLoadJson(res.content)
+            score = self.generate_logprobs_based_score(data["score"], res)
+            return score, data["reason"]
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res)
+            return data["score"], data["reason"]
+
+    def generate_logprobs_based_score(
+        self, raw_score: int, raw_response: AIMessage
+    ) -> Union[int, float]:
+        """
+        Example raw_response.response_metadata["logprobs"]["content"]
+        [
+            {
+                'token': '9',
+                'bytes': [57],
+                'logprob': -0.18066935,
+                'top_logprobs': [
+                    {'token': '9', 'bytes': [57], 'logprob': -0.18066935},
+                    {'token': '8', 'bytes': [56], 'logprob': -1.8056693},
+                    {'token': '10', 'bytes': [49, 48], 'logprob': -7.1337943},
+                    {'token': '7', 'bytes': [55], 'logprob': -8.977545},
+                    {'token': ' ', 'bytes': [32], 'logprob': -15.477545},
+                    {'token': '6', 'bytes': [54], 'logprob': -17.133795},
+                    {'token': '5', 'bytes': [53], 'logprob': -20.352545},
+                    {'token': '09', 'bytes': [48, 57], 'logprob': -21.83692},
+                    {'token': '0', 'bytes': [48], 'logprob': -22.383795},
+                    {'token': ' nine', 'bytes': [32, 110, 105, 110, 101], 'logprob': -22.74317},
+                    {'token': '4', 'bytes': [52], 'logprob': -22.875982},
+                    {'token': '08', 'bytes': [48, 56], 'logprob': -22.99317},
+                    {'token': '<|end|>', 'bytes': None, 'logprob': -23.469732},
+                    {'token': '９', 'bytes': [239, 188, 153], 'logprob': -23.625982},
+                    {'token': '\xa0', 'bytes': [194, 160], 'logprob': -24.079107},
+                    {'token': '3', 'bytes': [51], 'logprob': -24.125982},
+                    {'token': ' eight',
+                    'bytes': [32, 101, 105, 103, 104, 116],
+                    'logprob': -24.39942},
+                    {'token': '90', 'bytes': [57, 48], 'logprob': -24.454107},
+                    {'token': '８', 'bytes': [239, 188, 152], 'logprob': -24.89942},
+                    {'token': '1', 'bytes': [49], 'logprob': -25.329107}
+                ]
+            },
+            { next token in generation with top_logprobs ...}
+        ]
+        """
+        try:
+            generated_logprobs = raw_response.response_metadata["logprobs"][
+                "content"
+            ]
+            # First, locate the token that we care for logprobs, i.e., the token matching the score
+            score_logprobs = None
+            for token_logprobs in generated_logprobs:
+                if token_logprobs["token"] == str(raw_score):
+                    score_logprobs = token_logprobs
+                    break
+            # Then, calculate the score based on the logprobs
+            token_linear_probability: Dict[int, float] = {}
+            sum_linear_probability = 0
+            for token_logprob in score_logprobs["top_logprobs"]:
+                # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01) ~= -4.605
+                if token_logprob["logprob"] < -4.605:
+                    continue
+                # Filter out non-decimal tokens
+                if not token_logprob["token"].isdecimal():
+                    continue
+                # Calculate the linear probability
+                linear_prob = math.exp(token_logprob["logprob"])
+                token_linear_probability[int(token_logprob["token"])] = (
+                    linear_prob
+                )
+                sum_linear_probability += linear_prob
+
+            logprob_weighted_score = 0.0
+            for score, prob in token_linear_probability.items():
+                logprob_weighted_score += score * prob
+            # Scale the sum of linear probability to 1
+            logprob_weighted_score = (
+                logprob_weighted_score / sum_linear_probability
+            )
+            return logprob_weighted_score
+        except Exception as e:
+            print(e)
+            # Return the raw_score if encounter any errors, such as model does not support logprobs or incompatible response format
+            return raw_score
 
     def number_evaluation_steps(self):
         evaluation_steps = """"""
