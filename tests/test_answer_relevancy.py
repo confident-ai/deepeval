@@ -2,6 +2,7 @@
 """
 
 import pytest
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval import assert_test
@@ -46,12 +47,37 @@ enhancing brain functions related to concentration and attention.
 """
 
 
+# Inherit BaseMetric
+class FakeMetric(BaseMetric):
+    def __init__(self, threshold: float = 0.5):
+        self.threshold = threshold
+
+    def measure(self, test_case: LLMTestCase):
+        self.score = 1
+        self.success = self.score >= self.threshold
+        self.reason = "This metric looking good!"
+        return self.score
+
+    async def a_measure(self, test_case: LLMTestCase):
+        self.score = 1
+        self.success = self.score >= self.threshold
+        self.reason = "This async metric looking good!"
+        return self.score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Fake"
+
+
 @pytest.mark.skip(reason="openai is very expensive")
 def test_answer_relevancy():
-    metric = AnswerRelevancyMetric(threshold=0.5)
+    metric = FakeMetric(threshold=0.5)
     test_case = LLMTestCase(
-        input=question,
-        actual_output=answer,
+        input="What is your name",
+        actual_output="Idk",
         retrieval_context=[one, two, three],
     )
     assert_test(test_case, [metric])

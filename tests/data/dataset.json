@@ -18,7 +18,8 @@
     {
         "query": "4",
         "expected_output": "Python Programming",
-        "actual_output": "Actual output for 4"
+        "actual_output": "Actual output for 4",
+        "retrieval_context": ["A powerful language model.", "Context for 2", "Additional info"]
     },
     {
         "query": "5",
