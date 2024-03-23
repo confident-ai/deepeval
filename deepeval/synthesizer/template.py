@@ -1,8 +1,7 @@
 class SynthesizerTemplate:
     @staticmethod
     def generate_synthetic_data(context, max_goldens_per_context):
-        return (
-            f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
+        return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
             The `input` can either be a question or a statement that can be addressed by the given context.
 
             **
@@ -38,7 +37,6 @@ class SynthesizerTemplate:
 
             JSON:
             """
-        )
 
 
 ######################################################################################################
@@ -49,6 +47,7 @@ class SynthesizerTemplate:
 # generate_deepen_prompt
 # "If #The Given Prompt# contains inquiries about certain issues, the depth and breadth of the inquiry can be increased."
 
+
 class EvolutionTemplate:
 
     base_instruction = """I want you to act as an input rewriter.
@@ -57,10 +56,9 @@ class EvolutionTemplate:
 
     @staticmethod
     def multi_context_evolution(input, context):
-         return (
+        return (
             EvolutionTemplate.base_instruction
-            +
-            f"""
+            + f"""
             1. `Input` should be rewritten to require readers to use information from all elements of `Context`. 
             2. `Rewritten Input` must be fully answerable from information in `Context`. 
             3. `Rewritten Input` should be concise and understandable by humans.
@@ -102,14 +100,13 @@ class EvolutionTemplate:
             {input}
             Rewritten Input:            
             """
-         )
-    
+        )
+
     @staticmethod
     def reasoning_evolution(input, context):
         return (
             EvolutionTemplate.base_instruction
-            +
-            f"""
+            + f"""
             1. If `Inpur` can be solved with just a few simple thinking processes, you can rewrite it to explicitly request multiple-step reasoning.
             2. `Rewritten Input` should require readers to make multiple logical connections or inferences.
             3. `Rewritten Input` should be concise and understandable by humans.
@@ -153,13 +150,12 @@ class EvolutionTemplate:
             Rewritten Input:            
             """
         )
-    
+
     @staticmethod
     def concretizing_evolution(input, context):
         return (
             EvolutionTemplate.base_instruction
-            + 
-            f"""
+            + f"""
             1. Rewrite `Input` by replacing general concepts/inquiries with more specific ones.
             2. `Rewritten Input` should be concise and understandable by humans.
             3. `Rewritten Input` should not contain phrases like  'based on the provided context' or 'according to the context'.
@@ -203,14 +199,13 @@ class EvolutionTemplate:
             {context}
             Rewritten Input:
             """
-                    )
+        )
 
     @staticmethod
     def constrained_evolution(input, context):
         return (
             EvolutionTemplate.base_instruction
-            + 
-            f"""
+            + f"""
             1. Rewrite `Input` by adding at least one more constraints/requirements.
             2. `Rewritten Input` must be fully answerable from information in `Context`. 
             5. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
@@ -252,14 +247,13 @@ class EvolutionTemplate:
             {input}
             Rewritten Input:
             """
-                    )
-    
+        )
+
     @staticmethod
     def comparative_question_evolution(input, context):
         return (
             EvolutionTemplate.base_instruction
-            + 
-            f"""
+            + f"""
             1. Rewrite `Input` to focus on comparing two or more entities, concepts, or processes.
             2. `Rewritten Input` should encourage a detailed comparison that highlights similarities and differences.
             3. `Rewritten Input` must be fully answerable from information in `Context`. 
@@ -302,14 +296,13 @@ class EvolutionTemplate:
             {input}
             Rewritten Input:
             """
-                    )
-    
+        )
+
     @staticmethod
     def hypothetical_scenario_evolution(input, context):
         return (
             EvolutionTemplate.base_instruction
-            +
-            f"""
+            + f"""
             1. Rewrite `Input` to include a hypothetical or speculative scenario that is relevant to the `Context`.
             2. `Rewritten Input` should encourage the reader to apply knowledge from the `Context` to imagine or deduce outcomes.
             3. `Rewritten Input` should be concise, clear, and understandable by humans.
@@ -352,14 +345,13 @@ class EvolutionTemplate:
             {input}
             Rewritten Input:
             """
-    )
+        )
 
     @staticmethod
     def in_breadth_evolution(input, context):
         return (
             EvolutionTemplate.base_instruction
-            +
-            f"""
+            + f"""
             1. Rewrite `Input` to create a create a brand new prompt.
             2. `Rewritten Input` should belong to the same domain as the `input` but be even more rare.
             3. `Rewritten Input` should be concise, clear, and understandable by humans.
@@ -401,6 +393,4 @@ class EvolutionTemplate:
             {input}
             Rewritten Input:
             """
-    )
-
-
+        )
