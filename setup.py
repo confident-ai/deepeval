@@ -22,6 +22,7 @@ setup(
         "protobuf==4.25.1",
         "pydantic",  # loosen pydantic requirements as we support multiple
         "sentry-sdk",
+        "pytest-repeat",
         "pytest-xdist",
         "portalocker",
         "langchain",

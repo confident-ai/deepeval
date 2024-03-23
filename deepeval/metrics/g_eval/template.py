@@ -7,7 +7,7 @@ Evaluation Criteria:
 {criteria}
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explaination is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
 **
 
 JSON:
@@ -15,7 +15,7 @@ JSON:
 
     @staticmethod
     def generate_evaluation_results(evaluation_steps, text):
-        return f"""Given th evaluation steps, return a JSON with two keys: 1) a `score` key ranging from 0 - 10, with 10 being that it follows the criteria and 0 being that it does not, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason.
+        return f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key ranging from 0 - 10, with 10 being that it follows the criteria and 0 being that it does not, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason.
 
 Evaluation Steps:
 {evaluation_steps}
@@ -23,7 +23,7 @@ Evaluation Steps:
 {text}
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explaination is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
 **
 
 JSON:

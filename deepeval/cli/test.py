@@ -49,6 +49,12 @@ def run(
         "-n",
         help="Number of processes to use with pytest",
     ),
+    rerun: Optional[int] = typer.Option(
+        None,
+        "--repeat",
+        "-r",
+        help="Number of times to rerun a test case",
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
@@ -78,6 +84,8 @@ def run(
         pytest_args.append("--disable-warnings")
     if num_processes is not None:
         pytest_args.extend(["-n", str(num_processes)])
+    if rerun is not None:
+        pytest_args.extend(["--count", str(rerun)])
 
     set_is_running_deepeval(True)
 

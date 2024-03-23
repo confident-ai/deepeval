@@ -139,11 +139,28 @@ There are two mandatory and one optional parameter when calling the `assert_test
 
 ### Parallelization
 
-Evaluate each test case in parallel by specifying a `-n` parameter following by a number to specify how many processes to use.
+Evaluate each test case in parallel by providing a number to the `-n` flag to specify how many processes to use.
 
 ```
 deepeval test run test_example.py -n 4
 ```
+
+### Repeats
+
+Repeat each test case by providing a number to the `-r` flag to specify how many times to rerun each test case.
+
+```
+deepeval test run test_example.py -r 2
+```
+
+:::tip
+You can combine the `-r` and `-n` flag to rerun test cases in parallel:
+
+```python
+deepeval test run test_example.py -r 2 -n 2
+```
+
+:::
 
 ### Hooks
 

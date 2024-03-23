@@ -19,6 +19,7 @@ def test_create_dataset():
         actual_output_col_name="actual_output",
         expected_output_col_name="expected_output",
         context_col_name="context",
+        retrieval_context_col_name="retrieval",
     )
     assert len(dataset.test_cases) == 5, "Test Cases not loaded from CSV"
     file_path = os.path.join(module_b_dir, "data", "dataset.json")
@@ -28,6 +29,7 @@ def test_create_dataset():
         actual_output_key_name="actual_output",
         expected_output_key_name="expected_output",
         context_key_name="context",
+        retrieval_context_key_name="retrieval",
     )
     assert len(dataset.test_cases) == 10, "Test Cases not loaded from JSON"
 
