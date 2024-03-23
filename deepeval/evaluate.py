@@ -1,9 +1,10 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Union
 import time
 from dataclasses import dataclass
 import json
 from enum import Enum
+from langchain_core.embeddings import Embeddings
 
 from deepeval.utils import drop_and_copy, get_or_create_event_loop
 from deepeval.telemetry import capture_evaluation_count
@@ -12,12 +13,12 @@ from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
 )
 from deepeval.test_case import LLMTestCase
+from deepeval.types import Languages
 from deepeval.tracing import get_trace_stack
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
-from deepeval.test_run.cache import test_run_cache_manager
 from deepeval.utils import get_is_running_deepeval, set_indicator
-
+from deepeval.test_run.cache import test_run_cache_manager, Cache, CachedAPITestCase, CachedMetricsMetadata
 
 @dataclass
 class TestResult:
@@ -30,26 +31,6 @@ class TestResult:
     expected_output: str
     context: List[str]
     retrieval_context: List[str]
-
-class MetricsParams(Enum):
-    STRICT_MODE = 'strict_mode'
-    THRESHOLD = 'threshold'
-    EVALUATION_MODEL = 'evaluation_model'
-    
-    # Not every BaseMetric has these attributes
-    CRITERIA = 'criteria'
-    INCLUDE_REASON = 'include_reason'
-    N = 'n'
-
-    #EVALUATION_STEPS = 'evaluation_steps'
-    #ASSESSMENT_QUESTIONS = 'assessment_questions'
-    #EVALUATION_PARAMS = 'evaluation_params'
-    #EMBEDDINGS = 'embeddings'
-    #LANGUAGE = 'language'
-   
-    @classmethod
-    def values(cls):
-        return [member.value for member in cls]
 
 def create_test_result(
     test_case: LLMTestCase,
@@ -68,7 +49,6 @@ def create_test_result(
         )
     else:
         raise ValueError("TestCase not supported yet.")
-
 
 def create_api_test_case(
     test_case: LLMTestCase,
@@ -90,49 +70,6 @@ def create_api_test_case(
         id=test_case.id,
     )
 
-def create_metric_metadata(metric: BaseMetric) -> MetricsMetadata:
-    metadata_kwargs = {
-        'metric': metric.__name__,
-        'score': metric.score,
-        'success': metric.is_successful(),
-        'reason': metric.reason,
-        }
-    for attr in MetricsParams.values():
-        if hasattr(metric, attr):
-            metadata_kwargs[attr] = getattr(metric, attr)
-    return MetricsMetadata(**metadata_kwargs)
-
-def same_metric(metric: BaseMetric, cached_metric_metadata: MetricsMetadata):
-    if metric.__name__ != cached_metric_metadata.metric:
-        return False
-    for attr in MetricsParams.values():
-        if hasattr(metric, attr):
-            if getattr(metric, attr, None) != getattr(cached_metric_metadata, attr, None):
-                return False
-    return True
-
-def generate_cache_key(test_case: LLMTestCase):
-        # Explicitly handle None values for context and retrieval_context
-        context = sorted(test_case.context) if test_case.context else []
-        retrieval_context = sorted(test_case.retrieval_context) if test_case.retrieval_context else []
-
-        # Create a dictionary with the relevant fields
-        cache_data = {
-            "input": test_case.input,
-            "expected_output": test_case.expected_output,
-            "context": context,
-            "retrieval_context": retrieval_context,
-        }
-        
-        # Sort the dictionary by key to ensure consistent ordering
-        sorted_cache_data = dict(sorted(cache_data.items()))
-        
-        # Convert the sorted dictionary to a JSON string to use as a cache key
-        # JSON serialization ensures that the data structure is converted to a string format that can be hashed
-        cache_key = json.dumps(sorted_cache_data)
-        
-        return cache_key 
-
 def execute_test_cases(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
@@ -145,48 +82,48 @@ def execute_test_cases(
 
     for index, test_case in enumerate(test_cases):
 
+        ##### Cache Logic #####
         test_run = test_run_manager.get_test_run()
-        cached_metrics_metadata_map = {}
+        cached_api_test_case = None
         cached_test_run = None
         temp_cached_test_run = None
+        key = Cache.generate_cache_key(test_case=test_case)
 
-        #######################################################
-        # build cached data map from cached_api_test_case
-        #######################################################
         if use_cache:
-            
-            # get cached_test_run and temp_cached_test_run
             cached_test_run = test_run_cache_manager.get_cached_test_run()
             temp_cached_test_run = test_run_cache_manager.get_temp_cached_test_run()
+            
+            if cached_test_run.hyperparameters == test_run.hyperparameters:
+                cached_api_test_case = cached_test_run.get_cached_api_test_case(key)
 
-            # get cached_api_test_case from cached_test_run
-            key = generate_cache_key(test_case=test_case)
-            lookup_map = cached_test_run.test_cases_lookup_map
-            cached_api_test_case = lookup_map.get(key, None)
-
-            # construct a map from the metrics in the cached_api_test_case 
-            check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
-            if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
-                cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
-
-        #######################################################
-        # Calculate metrics
-        #######################################################
+        ##### Metric Calculation #####
         success = True
         api_test_case: APITestCase = create_api_test_case(test_case, index)
+        new_cached_api_test_case: CachedAPITestCase = Cache.create_cached_api_test_case()
         test_start_time = time.perf_counter()
 
         for metric in metrics:
-            # If metric is the same as cached, append metric to api_test_case
-            # Otherwise, recompute metric and append that to api_test_case
-            metric_metadata = cached_metrics_metadata_map.get(metric.__name__, None)
-
-            if not metric_metadata or not same_metric(metric, metric_metadata):
+            metric_config = Cache.create_metric_configuration(metric)
+            metric_metadata = Cache.get_metrics_metadata_from_cache(metric, cached_api_test_case)
+            if not metric_metadata:
                 metric.async_mode = False # Override metric async
-                metric.measure(test_case)
-                metric_metadata = create_metric_metadata(metric)
 
+                metric.measure(test_case)
+                metric_metadata = MetricsMetadata(
+                metric=metric.__name__,
+                score=metric.score,
+                threshold=metric.threshold,
+                reason=metric.reason,
+                success=metric.is_successful(),
+                evaluationModel=metric.evaluation_model,
+            )
             api_test_case.metrics_metadata.append(metric_metadata)
+
+            cached_metrics_metadata = CachedMetricsMetadata(
+                metric_metadata=metric_metadata,
+                metric_configuration = metric_config
+            )
+            new_cached_api_test_case.cached_metrics_metadata.append(cached_metrics_metadata)
             if metric_metadata.success is False:
                 success = False
 
@@ -195,9 +132,6 @@ def execute_test_cases(
         api_test_case.run_duration = run_duration
         api_test_case.success = success
 
-        #########################################
-        # Update test_run_manager
-        #########################################
         test_run.test_cases.append(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
         test_run_manager.save_test_run()
@@ -206,12 +140,10 @@ def execute_test_cases(
         )
         test_results.append(test_result)
 
-        #########################################
-        # Update cached_test_run and temp_cached_test_run
-        ########################################
+        ##### Cache Logic #####
         if use_cache:
-            temp_cached_test_run.test_cases_lookup_map[key] = api_test_case
-            cached_test_run.test_cases_lookup_map[key] = api_test_case
+            temp_cached_test_run.test_cases_lookup_map[key] = new_cached_api_test_case
+            cached_test_run.test_cases_lookup_map[key] = new_cached_api_test_case
             cached_test_run.hyperparameters = test_run.hyperparameters
             temp_cached_test_run.hyperparameters = test_run.hyperparameters
             test_run_cache_manager.save_cached_test_run()
@@ -233,47 +165,47 @@ async def a_execute_test_cases(
 
     for index, test_case in enumerate(test_cases):
 
+        ##### Cache Logic #####
         test_run = test_run_manager.get_test_run()
-        cached_metrics_metadata_map = {}
+        cached_api_test_case = None
         cached_test_run = None
         temp_cached_test_run = None
+        key = Cache.generate_cache_key(test_case=test_case)
 
-        #######################################################
-        # build cached data map from cached_api_test_case
-        #######################################################
         if use_cache:
-            
-            # get cached_test_run and temp_cached_test_run
             cached_test_run = test_run_cache_manager.get_cached_test_run()
             temp_cached_test_run = test_run_cache_manager.get_temp_cached_test_run()
+            
+            if cached_test_run.hyperparameters == test_run.hyperparameters:
+                cached_api_test_case = cached_test_run.get_cached_api_test_case(key)
 
-            # get cached_api_test_case from cached_test_run
-            key = generate_cache_key(test_case=test_case)
-            lookup_map = cached_test_run.test_cases_lookup_map
-            cached_api_test_case = lookup_map.get(key, None)
-
-            # construct a map from the metrics in the cached_api_test_case 
-            check_hyperparameter_same = cached_test_run.hyperparameters == test_run.hyperparameters
-            if cached_api_test_case and check_hyperparameter_same and cached_api_test_case.metrics_metadata: 
-                cached_metrics_metadata_map = {metadata.metric: metadata for metadata in cached_api_test_case.metrics_metadata}
-
-        #######################################################
-        # Calculate remaining metrics if not cached
-        #######################################################
+        ##### Metric Calculation #####
         success = True
         api_test_case: APITestCase = create_api_test_case(test_case, index)
+        new_cached_api_test_case: CachedAPITestCase = Cache.create_cached_api_test_case()
         test_start_time = time.perf_counter()
-
-        await measure_metrics_with_indicator(metrics, test_case, cached_metrics_metadata_map, same_metric)
-        for metric in metrics:
-            # If metric is the same as cached, append metric to api_test_case
-            # Otherwise, recompute metric and append that to api_test_case
-            metric_metadata = cached_metrics_metadata_map.get(metric.__name__, None)
-            
-            if not metric_metadata or not same_metric(metric, metric_metadata):
-                metric_metadata = create_metric_metadata(metric)
-
+        
+        metric_configs = [Cache.create_metric_configuration(metric) for metric in metrics]
+        await measure_metrics_with_indicator(metrics, test_case, cached_api_test_case, Cache.get_metrics_metadata_from_cache)
+        for (i, metric) in enumerate(metrics):
+            metric_metadata = Cache.get_metrics_metadata_from_cache(metric, cached_api_test_case)
+            if not metric_metadata:
+                metric_metadata = MetricsMetadata(
+                metric=metric.__name__,
+                score=metric.score,
+                threshold=metric.threshold,
+                reason=metric.reason,
+                success=metric.is_successful(),
+                evaluationModel=metric.evaluation_model,
+            )
             api_test_case.metrics_metadata.append(metric_metadata)
+
+            cached_metrics_metadata = CachedMetricsMetadata(
+                metric_metadata=metric_metadata,
+                metric_configuration = metric_configs[i]
+            )
+
+            new_cached_api_test_case.cached_metrics_metadata.append(cached_metrics_metadata)
             if metric_metadata.success is False:
                 success = False
 
@@ -282,9 +214,6 @@ async def a_execute_test_cases(
         api_test_case.run_duration = run_duration
         api_test_case.success = success
 
-        #########################################
-        # Update test_run_manager
-        #########################################
         test_run.test_cases.append(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
         test_run_manager.save_test_run()
@@ -293,19 +222,16 @@ async def a_execute_test_cases(
         )
         test_results.append(test_result)
 
-        #########################################
-        # Update cached_test_run and temp_cached_test_run
-        ########################################
+        ##### Cache Logic #####
         if use_cache:
-            temp_cached_test_run.test_cases_lookup_map[key] = api_test_case
-            cached_test_run.test_cases_lookup_map[key] = api_test_case
+            temp_cached_test_run.test_cases_lookup_map[key] = new_cached_api_test_case
+            cached_test_run.test_cases_lookup_map[key] = new_cached_api_test_case
             cached_test_run.hyperparameters = test_run.hyperparameters
             temp_cached_test_run.hyperparameters = test_run.hyperparameters
             test_run_cache_manager.save_cached_test_run()
             test_run_cache_manager.save_temp_cached_test_run()
 
     return test_results
-
 
 def assert_test(
     test_case: LLMTestCase, metrics: List[BaseMetric], run_async: bool = True

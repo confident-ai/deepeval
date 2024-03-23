@@ -269,7 +269,7 @@ class TestRunManager:
                 body = test_run.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
                 # Pydantic version below 2.0
-                body = test_run.dict(by_alias=True, exclude_none=True)
+                body = test_run.model_dump(by_alias=True, exclude_none=True)
             api = Api()
             result = api.post_request(
                 endpoint=Endpoints.TEST_RUN_ENDPOINT.value,

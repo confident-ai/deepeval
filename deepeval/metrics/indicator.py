@@ -10,6 +10,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import show_indicator
 from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
+from deepeval.test_run.cache import CachedAPITestCase
 
 
 def format_metric_description(
@@ -75,8 +76,8 @@ async def measure_metric_task(
 async def measure_metrics_with_indicator(
     metrics: List[BaseMetric],
     test_case: LLMTestCase,
-    cached_metrics_metadata_map: List[str],
-    same_metric: Callable[[BaseMetric, MetricsMetadata], str]
+    cached_api_test_case: CachedAPITestCase,
+    get_metrics_metadata_from_cache: Callable[[BaseMetric, CachedAPITestCase], str]
 ):
     if show_indicator():
         with Progress(
@@ -86,8 +87,8 @@ async def measure_metrics_with_indicator(
         ) as progress:    
             tasks = []
             for metric in metrics:
-                metric_metadata = cached_metrics_metadata_map.get(metric.__name__, None)
-                if metric_metadata and same_metric(metric, metric_metadata):
+                metric_metadata = get_metrics_metadata_from_cache(metric, cached_api_test_case)
+                if metric_metadata:
                     task_id = progress.add_task(
                     description=format_metric_description(
                         metric, async_mode=True
