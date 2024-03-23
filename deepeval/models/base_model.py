@@ -76,14 +76,38 @@ class DeepEvalBaseEmbeddingModel(ABC):
         """
         pass
 
-    def __call__(self, *args: Any, **kwargs: Any) -> List[float]:
-        return self._call(*args, **kwargs)
-
     @abstractmethod
-    def _call(self, *args, **kwargs) -> List[float]:
+    def embed_query(self, *args, **kwargs) -> List[float]:
         """Runs the model to generate text embeddings.
 
         Returns:
             A list of float.
+        """
+        pass
+
+    @abstractmethod
+    async def aembed_query(self, *args, **kwargs) -> List[float]:
+        """Runs the model to generate text embeddings.
+
+        Returns:
+            A list of list of float.
+        """
+        pass
+
+    @abstractmethod
+    def embed_documents(self, *args, **kwargs) -> List[List[float]]:
+        """Runs the model to generate list of text embeddings.
+
+        Returns:
+            A list of float.
+        """
+        pass
+
+    @abstractmethod
+    async def aembed_documents(self, *args, **kwargs) -> List[List[float]]:
+        """Runs the model to generate list of text embeddings.
+
+        Returns:
+            A list of list of float.
         """
         pass

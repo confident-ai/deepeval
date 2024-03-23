@@ -11,3 +11,4 @@ class Golden(BaseModel):
     additional_metadata: Optional[Dict] = Field(
         None, alias="additionalMetadata"
     )
+    source_file: Optional[str] = Field(None, alias="sourceFile")

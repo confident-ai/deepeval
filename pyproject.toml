@@ -40,6 +40,7 @@ setuptools = "*"
 wheel = "*"
 aiohttp = "*"
 llama-index = "*"
+docx2txt = "^0.8"
 importlib-metadata = "^7.0.2"
 
 [tool.black]
