@@ -15,7 +15,7 @@ class Chunk:
         self.id = Field(default_factory=lambda: str(uuid.uuid4()))
         self.content = None
         self.embedding = None
-        self.source_doc_id = None
+        self.source_file = None
         self.similarity_to_mean = None
 
 ####################################################
@@ -29,12 +29,13 @@ class DocumentChunker:
         chunk_size: int = 1024,
         chunk_overlap: int = 0, 
     ):
-        self.doc_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+        self.source_file: Optional[str] = None
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.chunks: Optional[List[Chunk]] = None
 
-        self.text_splitter: TextSplitter = TokenTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        self.text_splitter: TextSplitter = TokenTextSplitter(chunk_size=chunk_size, 
+                                                             chunk_overlap=chunk_overlap)
         self.embedder: DeepEvalBaseEmbeddingModel = embedder
         self.mean_embedding: Optional[float] = None
 
@@ -47,7 +48,8 @@ class DocumentChunker:
 
     ############### Load and Chunk ###############
     def load_doc(self, path: str) -> List[LCDocument]:
-
+        self.source_file = path
+        
         # Find appropiate doc loader
         _, extension = os.path.splitext(path)
         extension = extension.lower()
@@ -69,7 +71,7 @@ class DocumentChunker:
             chunk = Chunk()
             chunk.content = contents[i]
             chunk.embedding = embeddings[i]
-            chunk.source_doc_id = self.doc_id,
+            chunk.source_file = path
             chunk.similarity_to_mean = get_embedding_similarity((embeddings_np[i]), mean_embedding)
             chunks.append(chunk)
         self.chunks = chunks

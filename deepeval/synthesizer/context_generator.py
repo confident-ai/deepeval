@@ -1,8 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List
-import numpy as np
+from typing import List, Tuple
 import random
-import faiss
 
 from deepeval.synthesizer.doc_chunker import DocumentChunker, Chunk, get_embedding_similarity
 from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
@@ -13,7 +11,6 @@ class ContextGenerator:
              document_paths: List[str],
              chunk_size: int = 1024,
              chunk_overlap: int = 0,
-             fast_mode: bool = True,
              multithreading: bool = False,
         ):
         
@@ -24,13 +21,13 @@ class ContextGenerator:
         self.multithreading = multithreading
         self.document_paths: List[str] = document_paths
         self.combined_chunks: List[Chunk] = self._load_docs()
-        
-        self.fast_mode = fast_mode
-        if fast_mode:
-            self.index = self._build_faiss_index()
 
     ############### Generate Topics ########################
-    def generate_contexts(self, num_context: int, max_context_size: int = 2) -> List[List[str]]:
+    def generate_contexts(
+            self, 
+            num_context: int, 
+            max_context_size: int = 2
+        ) -> Tuple[List[List[str]], List[str]]:
         
         num_chunks = len(self.combined_chunks)
         if num_context > num_chunks:
@@ -39,10 +36,12 @@ class ContextGenerator:
                              "). Please decrease chunk_size or increase document length.")
         clusters = self._get_n_random_clusters(n = num_context, cluster_size = max_context_size)
         contexts = []
+        source_files = []
         for cluster in clusters:
             context=[chunk.content for chunk in cluster]
             contexts.append(context)
-        return contexts
+            source_files.append(cluster[0].source_file)
+        return contexts, source_files
     
     
     ############### Load Docs #############################
@@ -73,18 +72,6 @@ class ContextGenerator:
 
         return combined_chunks
     
-    def _build_faiss_index(self) -> faiss.IndexFlatL2:
-        d = len(self.combined_chunks[0].embedding)
-        index = faiss.IndexFlatL2(d)
-        embeddings = np.array([chunk.embedding for chunk in self.combined_chunks])
-        # Normalize embeddings to unit length
-        norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
-        normalized_embeddings = embeddings / norms
-        
-        # Add normalized embeddings to the FAISS index
-        index.add(normalized_embeddings)
-        return index
-    
     ############### Search N Chunks ########################
     def _get_n_random_clusters(self, n: int, cluster_size: int) -> List[List[Chunk]]:
         chunk_cluster = []
@@ -108,40 +95,19 @@ class ContextGenerator:
         query_embedding = self.embedder.embed_query(query_chunk.content)
         similar_chunks = None
 
-        if not self.fast_mode:
-            similarities = []
-            filtered_indices = []
+        similarities = []
+        filtered_indices = []
 
-            for (i, c) in enumerate(self.combined_chunks):
-                sim = get_embedding_similarity(query_embedding, (c.embedding))
-                similarities.append(sim)
+        for (i, c) in enumerate(self.combined_chunks):
+            sim = get_embedding_similarity(query_embedding, (c.embedding))
+            similarities.append(sim)
 
-                if sim > threshold and self.combined_chunks[i].id != query_chunk.id:
-                    filtered_indices.append(i)
+            if sim > threshold and self.combined_chunks[i].id != query_chunk.id:
+                filtered_indices.append(i)
 
-            sorted_indices = sorted(filtered_indices, key=lambda i: similarities[i], reverse=True)
-            top_n_indices = sorted_indices[:n]
-            similar_chunks = [self.combined_chunks[i] for i in top_n_indices]
-
-        else:
-            query_embedding = np.array(query_embedding).reshape(1, -1) 
-            query_norm = np.linalg.norm(query_embedding, axis=1, keepdims=True)
-            normalized_query_embedding = query_embedding / query_norm
-            distances, indices = self.index.search(normalized_query_embedding, n + 1)
-            similar_chunks = []
-            found = 0  # Counter for found chunks that meet the criteria
-
-            for i in range(len(indices[0])):
-                curr_idx = indices[0][i]
-                curr_dis = distances[0][i]
-                if self.combined_chunks[curr_idx].id == query_chunk.id: 
-                    continue  
-                if curr_dis > fast_threshold: 
-                    continue
-                similar_chunks.append(self.combined_chunks[curr_idx])
-                found += 1
-                if found == n:  # Stop once we have found 'n' similar chunks
-                    break
+        sorted_indices = sorted(filtered_indices, key=lambda i: similarities[i], reverse=True)
+        top_n_indices = sorted_indices[:n]
+        similar_chunks = [self.combined_chunks[i] for i in top_n_indices]
 
         return similar_chunks    
     
@@ -153,35 +119,27 @@ class ContextGenerator:
 import time
 
 if __name__ == "__main__":
-    paths = ["example_data/txt_example.txt", "example_data/docx_example.docx", "example_data/pdf_example.pdf"]
+    paths = ["example_data/txt_example.txt", 
+             "example_data/docx_example.docx", 
+             "example_data/pdf_example.pdf"]
     
-    # Without Fast Mode (FAISS)
-    start_no_faiss = time.time()
-    generator_no_faiss = ContextGenerator(paths, chunk_size=100, fast_mode=False)
-    contexts_no_faiss = generator_no_faiss.generate_contexts(5)
-    end_no_faiss = time.time()
+    # No Multithreading
+    start = time.time()
+    generator = ContextGenerator(paths, chunk_size=100)
+    contexts = generator.generate_contexts(5)
+    end = time.time()
     
-    contexts_no_faiss_shapes = [len(context) for context in contexts_no_faiss]
-    print(f"Shapes of contexts without FAISS: {contexts_no_faiss_shapes}")
-    print(f"Time taken without FAISS: {end_no_faiss - start_no_faiss} seconds\n")
-    
-    # With Fast Mode (FAISS)
-    start_with_faiss = time.time()
-    generator_with_faiss = ContextGenerator(paths, chunk_size=100, fast_mode=True)
-    contexts_with_faiss = generator_with_faiss.generate_contexts(5)
-    end_with_faiss = time.time()
-    
-    contexts_with_faiss_shapes = [len(context) for context in contexts_with_faiss]
-    print(f"Shapes of contexts with FAISS: {contexts_with_faiss_shapes}")
-    print(f"Time taken with FAISS: {end_with_faiss - start_with_faiss} seconds")
+    contexts_with_faiss_shapes = [len(context) for context in contexts]
+    print(f"Shapes of contexts: {contexts_with_faiss_shapes}")
+    print(f"Time taken w/o Multithreading: {end - start} seconds")
 
-    # With Fast Mode + Multithreading (FAISS)
-    start_with_faiss = time.time()
-    generator_with_faiss = ContextGenerator(paths, chunk_size=100, fast_mode=True, multithreading=True)
-    contexts_with_faiss = generator_with_faiss.generate_contexts(5)
-    end_with_faiss = time.time()
+    # Multithreading
+    start_multi = time.time()
+    generator_multi = ContextGenerator(paths, chunk_size=100, multithreading=True)
+    contexts_multi = generator_multi.generate_contexts(5)
+    end_multi = time.time()
     
-    contexts_with_faiss_shapes = [len(context) for context in contexts_with_faiss]
-    print(f"Shapes of contexts with FAISS + multithreading: {contexts_with_faiss_shapes}")
-    print(f"Time taken with FAISS + multithreading: {end_with_faiss - start_with_faiss} seconds")
+    contexts_with_faiss_shapes = [len(context) for context in contexts_multi]
+    print(f"Shapes of contexts: {contexts_with_faiss_shapes}")
+    print(f"Time w with Multithreading: {end_multi - start_multi} seconds")
 '''

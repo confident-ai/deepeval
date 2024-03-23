@@ -13,7 +13,6 @@ from deepeval.synthesizer.context_generator import ContextGenerator
 from deepeval.models import (
     GPTModel,
     DeepEvalBaseLLM,
-    DeepEvalBaseEmbeddingModel,
 )
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.utils import trimAndLoadJson
@@ -77,7 +76,9 @@ class Synthesizer:
         max_goldens_per_context: int,
         lock: Lock,
         num_evolutions: int,
-        enable_breadth_evolve:bool
+        enable_breadth_evolve:bool,
+        source_files: Optional[List[str]],
+        index: int
     ):
         prompt = SynthesizerTemplate.generate_synthetic_data(
             context=context, max_goldens_per_context=max_goldens_per_context
@@ -93,7 +94,8 @@ class Synthesizer:
                                               context=context, 
                                               num_evolutions=num_evolutions,
                                               enable_breadth_evolve=enable_breadth_evolve)
-            golden = Golden(input=evolved_input, context=context)
+            source_file = source_files[index] if source_files is not None else None
+            golden = Golden(input=evolved_input, context=context, sourceFile=source_file)
             temp_goldens.append(golden)
 
         with lock:
@@ -105,6 +107,7 @@ class Synthesizer:
         max_goldens_per_context: int = 2, 
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
+        source_files: Optional[List[str]] = None
     ) -> List[Golden]:
         with synthesizer_progress_context(self.generator_model):
             goldens: List[Golden] = []
@@ -131,15 +134,17 @@ class Synthesizer:
                             max_goldens_per_context,
                             lock,
                             num_evolutions,
-                            enable_breadth_evolve
+                            enable_breadth_evolve,
+                            source_files,
+                            index
                         ): context
-                        for context in contexts
+                        for index, context in enumerate(contexts)
                     }
 
                     for future in as_completed(futures):
                         future.result()
             else:
-                for context in contexts:
+                for (i, context) in enumerate(contexts):
                     prompt = SynthesizerTemplate.generate_synthetic_data(
                         context=context,
                         max_goldens_per_context=max_goldens_per_context,
@@ -154,7 +159,8 @@ class Synthesizer:
                                                            context=context, 
                                                            num_evolutions=num_evolutions,
                                                            enable_breadth_evolve=enable_breadth_evolve)
-                         golden = Golden(input=evolved_input, context=context)
+                         source_file = source_files[i] if source_files is not None else None
+                         golden = Golden(input=evolved_input, context=context, source_file=source_file)
                          goldens.append(golden)
 
             self.synthetic_goldens.extend(goldens)
@@ -178,21 +184,19 @@ class Synthesizer:
             cg = ContextGenerator(paths, 
                                   chunk_size, 
                                   chunk_overlap, 
-                                  fast_mode=False, 
                                   multithreading=True)
-            contexts = cg.generate_contexts(num_context=num_context)
+            contexts, source_files = cg.generate_contexts(num_context=num_context)
         else:
             cg = ContextGenerator(paths, 
                                   chunk_size, 
                                   chunk_overlap, 
-                                  fast_mode=False, 
-                                  multithreading=False)
-            contexts = cg.generate_contexts(num_context=num_context)
-
+                                  multithreading=False),
+            contexts, source_files = cg.generate_contexts(num_context=num_context)
         goldens = self.generate_goldens(contexts, 
                                         max_goldens_per_context, 
                                         num_evolutions, 
-                                        enable_breadth_evolve)
+                                        enable_breadth_evolve,
+                                        source_files)
         return goldens
 
     def save_as(self, file_type: str, directory: str):
@@ -251,15 +255,39 @@ class Synthesizer:
 ####################################################
 ################# Example Usage ###################
 ####################################################
-
-'''
+    
+''' 
 if __name__ == "__main__":
     synthesizer = Synthesizer()
-    paths = ["example_data/docx_example.docx"]
-    goldens = synthesizer.generate_goldens_from_docs(paths=paths, 
-                                                     chunk_size=100, 
-                                                     num_context=5, 
-                                                     max_goldens_per_context=2, 
-                                                     num_evolutions=2)
-    print(goldens)
+    paths = ["example_data/txt_example.txt", 
+             "example_data/docx_example.docx"]
+    contexts = [
+    ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
+    ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
+    ]
+    goldens_docs = synthesizer.generate_goldens_from_docs(
+        paths=paths, 
+        chunk_size=100, 
+        num_context=5, 
+        max_goldens_per_context=2, 
+        num_evolutions=2)
+    goldens_context = synthesizer.generate_goldens(
+        contexts
+    )
+    print(goldens_docs)
+    print(goldens_context)
+
+    synthesizer_multi = Synthesizer(multithreading=True)
+    
+    goldens_context_multi = synthesizer_multi.generate_goldens_from_docs(
+        paths=paths, 
+        chunk_size=100, 
+        num_context=5, 
+        max_goldens_per_context=2, 
+        num_evolutions=2)
+    goldens_context_multi = synthesizer_multi.generate_goldens(
+            contexts
+    )
+    print(goldens_context_multi)
+    print(goldens_context_multi)
 '''
