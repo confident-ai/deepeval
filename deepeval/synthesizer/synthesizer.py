@@ -118,8 +118,11 @@ class Synthesizer:
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
         source_files: Optional[List[str]] = None,
+        _show_indicator: bool = True,
     ) -> List[Golden]:
-        with synthesizer_progress_context(self.generator_model):
+        with synthesizer_progress_context(
+            self.generator_model, _show_indicator
+        ):
             goldens: List[Golden] = []
             if self.multithreading:
                 lock = Lock()
@@ -173,10 +176,8 @@ class Synthesizer:
                         goldens.append(golden)
 
             self.synthetic_goldens.extend(goldens)
-
             return goldens
 
-    # TODO
     def generate_goldens_from_docs(
         self,
         docuemnt_paths: List[str],
@@ -186,36 +187,35 @@ class Synthesizer:
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
     ):
+        with synthesizer_progress_context(self.generator_model):
+            if self.context_generator is None:
+                self.context_generator = ContextGenerator(
+                    docuemnt_paths,
+                    chunk_size,
+                    chunk_overlap,
+                    multithreading=self.multithreading,
+                )
 
-        if self.context_generator is None:
-            print("context generator")
-            self.context_generator = ContextGenerator(
-                docuemnt_paths,
-                chunk_size,
-                chunk_overlap,
-                multithreading=self.multithreading,
+            max_goldens_per_context = 2
+            if max_goldens_per_document < max_goldens_per_context:
+                max_goldens_per_context = 1
+
+            num_context = math.floor(
+                max_goldens_per_document / max_goldens_per_context
             )
 
-        max_goldens_per_context = 2
-        if max_goldens_per_document < max_goldens_per_context:
-            max_goldens_per_context = 1
+            contexts, source_files = self.context_generator.generate_contexts(
+                num_context=num_context
+            )
 
-        num_context = math.floor(
-            max_goldens_per_document / max_goldens_per_context
-        )
-
-        print("generating context, num context: ", num_context)
-        contexts, source_files = self.context_generator.generate_contexts(
-            num_context=num_context
-        )
-        print("generate goldens")
-        return self.generate_goldens(
-            contexts,
-            max_goldens_per_context,
-            num_evolutions,
-            enable_breadth_evolve,
-            source_files,
-        )
+            return self.generate_goldens(
+                contexts,
+                max_goldens_per_context,
+                num_evolutions,
+                enable_breadth_evolve,
+                source_files,
+                _show_indicator=False,
+            )
 
     def save_as(self, file_type: str, directory: str):
         if file_type not in valid_file_types:
@@ -268,30 +268,3 @@ class Synthesizer:
                     )
 
         print(f"Synthetic goldens saved at {full_file_path}!")
-
-
-####################################################
-################# Example Usage ###################
-####################################################
-
-""" 
-if __name__ == "__main__":
-    synthesizer = Synthesizer()
-    paths = ["example_data/txt_example.txt", 
-             "example_data/docx_example.docx"]
-    contexts = [
-    ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
-    ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
-    ]
-    goldens_docs = synthesizer.generate_goldens_from_docs(
-        paths=paths, 
-        chunk_size=100, 
-        num_context=5, 
-        max_goldens_per_context=2, 
-        num_evolutions=2)
-    goldens_context = synthesizer.generate_goldens(
-        contexts
-    )
-    print(goldens_docs)
-    print(goldens_context)
-"""

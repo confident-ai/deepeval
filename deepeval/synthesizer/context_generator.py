@@ -36,21 +36,16 @@ class ContextGenerator:
         self, num_context: int, max_context_size: int = 3
     ) -> Tuple[List[List[str]], List[str]]:
         num_chunks = len(self.combined_chunks)
-        print(num_chunks, "Num chUNKS")
-        print(num_context, "Num CONTEXT")
         num_context = min(num_context, num_chunks)
-        print("get n random clusters")
         clusters = self._get_n_random_clusters(
             n=num_context, cluster_size=max_context_size
         )
-        print("clusters: ", clusters)
         contexts: List[List[str]] = []
         source_files = []
         for cluster in clusters:
             context = [chunk.content for chunk in cluster]
             contexts.append(context)
             source_files.append(cluster[0].source_file)
-        print("finish generating contexts: ", contexts)
         return contexts, source_files
 
     ############### Load Docs #############################
@@ -92,18 +87,13 @@ class ContextGenerator:
         self, n: int, cluster_size: int
     ) -> List[List[Chunk]]:
         chunk_cluster = []
-        print("get n random chunks, cluster size: ", cluster_size)
-        print("n: ", n)
         random_chunks = self._get_n_random_chunks(n)
-        print(len(random_chunks))
         for chunk in random_chunks:
-            print("ok")
             cluster = [chunk]
             cluster.extend(
                 self._get_n_other_similar_chunks(chunk, n=cluster_size - 1)
             )
             chunk_cluster.append(cluster)
-        print(chunk_cluster)
         return chunk_cluster
 
     def _get_n_random_chunks(self, n: int) -> List[str]:
@@ -140,37 +130,3 @@ class ContextGenerator:
         similar_chunks = [self.combined_chunks[i] for i in top_n_indices]
 
         return similar_chunks
-
-
-####################################################
-################# Example Usage# ###################
-####################################################
-
-"""
-import time
-
-if __name__ == "__main__":
-    paths = ["example_data/txt_example.txt", 
-             "example_data/docx_example.docx", 
-             "example_data/pdf_example.pdf"]
-    
-    # No Multithreading
-    start = time.time()
-    generator = ContextGenerator(paths, chunk_size=100)
-    contexts = generator.generate_contexts(5)
-    end = time.time()
-    
-    contexts_with_faiss_shapes = [len(context) for context in contexts]
-    print(f"Shapes of contexts: {contexts_with_faiss_shapes}")
-    print(f"Time taken w/o Multithreading: {end - start} seconds")
-
-    # Multithreading
-    start_multi = time.time()
-    generator_multi = ContextGenerator(paths, chunk_size=100, multithreading=True)
-    contexts_multi = generator_multi.generate_contexts(5)
-    end_multi = time.time()
-    
-    contexts_with_faiss_shapes = [len(context) for context in contexts_multi]
-    print(f"Shapes of contexts: {contexts_with_faiss_shapes}")
-    print(f"Time w with Multithreading: {end_multi - start_multi} seconds")
-"""

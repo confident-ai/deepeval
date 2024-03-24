@@ -1,6 +1,4 @@
 import os
-import math
-import pytest
 from deepeval.synthesizer import Synthesizer
 
 
