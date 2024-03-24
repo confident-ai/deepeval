@@ -3,7 +3,7 @@ import pytest
 from deepeval.synthesizer import Synthesizer
 
 
-@pytest.skip("OpenAI is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_synthesizer():
     module_b_dir = os.path.dirname(os.path.realpath(__file__))
 
