@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "0.20.97"
+version = "0.21.00"
 description = "The Evaluation Framework for LLMs"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -20,6 +20,7 @@ requests = "^2.31.0"
 tqdm = "^4.66.1"
 pytest = "^7.4.3"
 pytest-xdist = "*"
+pytest-repeat = "*"
 pytest-rerunfailures = "^12.0"
 pytest-asyncio = "^0.21.1"
 tabulate = "^0.9.0"
@@ -39,6 +40,8 @@ setuptools = "*"
 wheel = "*"
 aiohttp = "*"
 llama-index = "*"
+docx2txt = "^0.8"
+importlib-metadata = "^7.0.2"
 
 [tool.black]
 line-length = 80

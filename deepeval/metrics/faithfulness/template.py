@@ -17,7 +17,7 @@ Example JSON:
 ===== END OF EXAMPLE ======
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "claims" key as a list of strings. No words or explaination is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the "claims" key as a list of strings. No words or explanation is needed.
 Only include claims that are factual, and the claims you extract should include the full context it was presented in, NOT cherry picked facts.
 You should NOT include any prior knowledge, and take the text at face value when extracting claims.
 **
@@ -30,7 +30,7 @@ JSON:
 
     @staticmethod
     def generate_truths(text):
-        return f"""Based on the given text, please generate a comphrensive list of FACTUAL, undisputed truths that can inferred from the provided text.
+        return f"""Based on the given text, please generate a comprehensive list of FACTUAL, undisputed truths that can inferred from the provided text.
 
 Example:
 Example Text: 
@@ -46,7 +46,7 @@ Example JSON:
 ===== END OF EXAMPLE ======
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "truths" key as a list of strings. No words or explaination is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the "truths" key as a list of strings. No words or explanation is needed.
 Only include truths that are factual.
 **
 

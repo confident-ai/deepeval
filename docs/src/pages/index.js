@@ -87,12 +87,12 @@ class Index extends React.Component {
           </div>
           <div className={styles.featuresContainer}>
             <FeatureCard 
-                title="Regression Testing in Python" 
+                title="Regression Testing for LLMs" 
                 link="/docs/evaluation-test-cases" 
-                description="Simple functions to unit test LLM applications in the CLI"
+                description="LLM evaluation metrics to unit test LLM outputs in Python"
             />
             <FeatureCard 
-                title="Built in Observability" 
+                title="Hyperparameter Discovery"
                 link="/docs/getting-started#visualize-your-results" 
                 description="Gain insights to quickly iterate towards optimal hyperparameters"
             />

@@ -39,7 +39,7 @@ Example JSON:
     "verdicts": [
         {{
             "verdict": "no",
-            "reason": "The 'Shoes.' statement made in the actual output is completely irrelvant to the input, which asks about what to do in the event of an earthquake."
+            "reason": "The 'Shoes.' statement made in the actual output is completely irrelevant to the input, which asks about what to do in the event of an earthquake."
         }},
         {{
             "verdict": "idk"

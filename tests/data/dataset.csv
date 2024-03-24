@@ -1,6 +1,6 @@
 query,expected_output,context,actual_output
-1,"Hello, world!","This is a greeting.","Context for 1; Additional info","Actual output for 1"
-2,"OpenAI GPT-3","A powerful language model.","Context for 2; Additional info","Actual output for 2"
-3,"CSV Example","Working with CSV data.","Context for 3; Additional info","Actual output for 3"
-4,"Python Programming","Coding in Python.","Context for 4; Additional info","Actual output for 4"
-5,"Data Science","Analyzing data.","Context for 5; Additional info","Actual output for 5"
+1,"Hello, world!","This is a greeting.","Context for 1; Additional info","Actual output for 1","Retrieval context for 1; Additional info"
+2,"OpenAI GPT-3","A powerful language model.","Context for 2; Additional info","Actual output for 2","Retrieval context for 2; Additional info"
+3,"CSV Example","Working with CSV data.","Context for 3; Additional info","Actual output for 3","Retrieval context for 3; Additional info"
+4,"Python Programming","Coding in Python.","Context for 4; Additional info","Actual output for 4","Retrieval context for 4; Additional info"
+5,"Data Science","Analyzing data.","Context for 5; Additional info","Actual output for 5","Retrieval context for 5; Additional info"
