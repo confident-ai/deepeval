@@ -7,7 +7,7 @@ from langchain_community.document_loaders import (
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
 from typing import Optional, List, Dict, Type
-from pydantic import Field
+from pydantic import BaseModel, Field
 import numpy as np
 import uuid
 import os
@@ -15,13 +15,13 @@ import os
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 
 
-class Chunk:
-    def __init__(self):
-        self.id = Field(default_factory=lambda: str(uuid.uuid4()))
-        self.content = None
-        self.embedding = None
-        self.source_file = None
-        self.similarity_to_mean = None
+class Chunk(BaseModel):
+    id: str = Field(str(uuid.uuid4()))
+    content: str
+    embedding: List[float]
+    source_file: str
+    similarity_to_mean: float
+
 
 
 ####################################################
@@ -76,12 +76,13 @@ class DocumentChunker:
         mean_embedding = np.mean(embeddings_np, axis=0)
         chunks = []
         for i in range(len(raw_chunks)):
-            chunk = Chunk()
-            chunk.content = contents[i]
-            chunk.embedding = embeddings[i]
-            chunk.source_file = path
-            chunk.similarity_to_mean = get_embedding_similarity(
-                (embeddings_np[i]), mean_embedding
+            chunk = Chunk(
+                content=contents[i],
+                embedding=embeddings[i],
+                source_file=path,
+                similarity_to_mean=get_embedding_similarity(
+                    (embeddings_np[i]), mean_embedding
+                ),
             )
             chunks.append(chunk)
         self.chunks = chunks

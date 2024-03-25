@@ -26,26 +26,21 @@ class ContextGenerator:
 
         self.multithreading = multithreading
         self.document_paths: List[str] = document_paths
+
+        # TODO: Potential bug, calling generate_goldens_from_docs
+        # twice in a notebook enviornment will not refresh combined chunks
         self.combined_chunks: List[Chunk] = self._load_docs()
 
     ############### Generate Topics ########################
     def generate_contexts(
-        self, num_context: int, max_context_size: int = 2
+        self, num_context: int, max_context_size: int = 3
     ) -> Tuple[List[List[str]], List[str]]:
-
         num_chunks = len(self.combined_chunks)
-        if num_context > num_chunks:
-            raise ValueError(
-                "Not enough chunks ("
-                + str(num_chunks)
-                + ") to return the requested number of contexts ("
-                + str(num_context)
-                + "). Please decrease chunk_size or increase document length."
-            )
+        num_context = min(num_context, num_chunks)
         clusters = self._get_n_random_clusters(
             n=num_context, cluster_size=max_context_size
         )
-        contexts = []
+        contexts: List[List[str]] = []
         source_files = []
         for cluster in clusters:
             context = [chunk.content for chunk in cluster]
@@ -102,10 +97,7 @@ class ContextGenerator:
         return chunk_cluster
 
     def _get_n_random_chunks(self, n: int) -> List[str]:
-        if not self.combined_chunks or len(self.combined_chunks) < n:
-            raise ValueError(
-                "Not enough chunks to return the requested number of random nodes."
-            )
+        n = min(len(self.combined_chunks), n)
         return random.sample(self.combined_chunks, n)
 
     def _get_n_other_similar_chunks(
@@ -113,7 +105,6 @@ class ContextGenerator:
         query_chunk: Chunk,
         n: int,
         threshold: float = 0.7,
-        fast_threshold: float = 0.6,
     ) -> List[Chunk]:
         if not self.combined_chunks or len(self.combined_chunks) < n:
             raise ValueError(
@@ -140,36 +131,3 @@ class ContextGenerator:
 
         return similar_chunks
 
-
-####################################################
-################# Example Usage# ###################
-####################################################
-
-"""
-import time
-
-if __name__ == "__main__":
-    paths = ["example_data/txt_example.txt", 
-             "example_data/docx_example.docx", 
-             "example_data/pdf_example.pdf"]
-    
-    # No Multithreading
-    start = time.time()
-    generator = ContextGenerator(paths, chunk_size=100)
-    contexts = generator.generate_contexts(5)
-    end = time.time()
-    
-    contexts_with_faiss_shapes = [len(context) for context in contexts]
-    print(f"Shapes of contexts: {contexts_with_faiss_shapes}")
-    print(f"Time taken w/o Multithreading: {end - start} seconds")
-
-    # Multithreading
-    start_multi = time.time()
-    generator_multi = ContextGenerator(paths, chunk_size=100, multithreading=True)
-    contexts_multi = generator_multi.generate_contexts(5)
-    end_multi = time.time()
-    
-    contexts_with_faiss_shapes = [len(context) for context in contexts_multi]
-    print(f"Shapes of contexts: {contexts_with_faiss_shapes}")
-    print(f"Time w with Multithreading: {end_multi - start_multi} seconds")
-"""
