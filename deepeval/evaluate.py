@@ -98,8 +98,8 @@ def execute_test_cases(
     use_cache: bool,
     save_to_disk: bool = False,
 ) -> List[TestResult]:
-
     test_results: List[TestResult] = []
+    test_run_cache_manager.disable_write_cache = save_to_disk == False
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
     for index, test_case in enumerate(test_cases):
@@ -185,8 +185,8 @@ async def a_execute_test_cases(
     use_cache: bool,
     save_to_disk: bool = False,
 ) -> List[TestResult]:
-    print(use_cache)
     test_results: List[TestResult] = []
+    test_run_cache_manager.disable_write_cache = save_to_disk == False
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
     for index, test_case in enumerate(test_cases):
@@ -262,6 +262,7 @@ async def a_execute_test_cases(
 def assert_test(
     test_case: LLMTestCase, metrics: List[BaseMetric], run_async: bool = True
 ):
+
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):

@@ -9,7 +9,11 @@ from pydantic import BaseModel, Field
 from deepeval.test_case import LLMTestCaseParams, LLMTestCase
 from deepeval.types import Languages
 from deepeval.test_run.api import MetricMetadata
-from deepeval.utils import delete_file_if_exists, serialize
+from deepeval.utils import (
+    delete_file_if_exists,
+    get_is_running_deepeval,
+    serialize,
+)
 from deepeval.metrics import BaseMetric
 
 CACHE_FILE_NAME = ".deepeval-cache.json"
@@ -74,6 +78,7 @@ class CachedTestRun(BaseModel):
 
 class TestRunCacheManager:
     def __init__(self):
+        self.disable_write_cache = True
         self.cached_test_run: Optional[CachedTestRun] = None
         self.cache_file_name: str = CACHE_FILE_NAME
         self.temp_cached_test_run: Optional[CachedTestRun] = None
@@ -86,6 +91,9 @@ class TestRunCacheManager:
         model: str,
         user_prompt_template: str,
     ) -> Union[CachedTestCase, None]:
+        if self.disable_write_cache:
+            return None
+
         cached_test_run = self.get_cached_test_run()
         cache_dict = {
             LLMTestCaseParams.INPUT.value: test_case.input,
@@ -112,6 +120,9 @@ class TestRunCacheManager:
         user_prompt_template: str,
         to_temp: bool = False,
     ):
+        if self.disable_write_cache:
+            return
+
         cache_dict = {
             LLMTestCaseParams.INPUT.value: test_case.input,
             LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.actual_output,
@@ -132,12 +143,18 @@ class TestRunCacheManager:
     def set_cached_test_run(
         self, cached_test_run: CachedTestRun, temp: bool = False
     ):
+        if self.disable_write_cache:
+            return
+
         if temp:
             self.temp_cached_test_run = cached_test_run
         else:
             self.cached_test_run = cached_test_run
 
     def save_cached_test_run(self, to_temp: bool = False):
+        if self.disable_write_cache:
+            return
+
         if to_temp:
             try:
                 with portalocker.Lock(
@@ -164,6 +181,9 @@ class TestRunCacheManager:
                 )
 
     def create_cached_test_run(self, temp: bool = False):
+        if self.disable_write_cache:
+            return
+
         cached_test_run = CachedTestRun()
         self.set_cached_test_run(cached_test_run, temp)
         self.save_cached_test_run(to_temp=temp)
@@ -171,6 +191,9 @@ class TestRunCacheManager:
     def get_cached_test_run(
         self, from_temp: bool = False
     ) -> Union[CachedTestRun, None]:
+        if self.disable_write_cache:
+            return
+
         should_create_cached_test_run = False
         if from_temp:
             if self.temp_cached_test_run:
