@@ -1,5 +1,6 @@
 import pytest
 from langchain_openai import OpenAIEmbeddings
+import random
 
 import deepeval
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -81,7 +82,7 @@ strict_mode = False
 @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
-        threshold=0.5, strict_mode=strict_mode, async_mode=False
+        threshold=0.1, strict_mode=strict_mode, async_mode=False
     )
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)

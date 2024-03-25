@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from deepeval.utils import (
     drop_and_copy,
     get_or_create_event_loop,
+    set_should_use_cache,
     should_use_cache,
 )
 from deepeval.telemetry import capture_evaluation_count
@@ -184,7 +185,7 @@ async def a_execute_test_cases(
     use_cache: bool,
     save_to_disk: bool = False,
 ) -> List[TestResult]:
-
+    print(use_cache)
     test_results: List[TestResult] = []
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
@@ -337,7 +338,6 @@ def evaluate(
             )
         )
     else:
-
         test_results = execute_test_cases(
             test_cases, metrics, use_cache=use_cache, save_to_disk=True
         )
@@ -351,6 +351,7 @@ def evaluate(
         print("")
         print("-" * 70)
     test_run_manager.wrap_up_test_run(display_table=False)
+    test_run_cache_manager.wrap_up_cached_test_run()
     return test_results
 
 
