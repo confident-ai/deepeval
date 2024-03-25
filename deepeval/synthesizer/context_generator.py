@@ -130,4 +130,3 @@ class ContextGenerator:
         similar_chunks = [self.combined_chunks[i] for i in top_n_indices]
 
         return similar_chunks
-
