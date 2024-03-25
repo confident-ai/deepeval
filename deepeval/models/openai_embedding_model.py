@@ -13,6 +13,7 @@ valid_openai_embedding_models = [
 
 default_openai_embedding_model = "text-embedding-3-small"
 
+
 class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
         self,
@@ -30,7 +31,6 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         elif model is None:
             model_name = default_openai_embedding_model
         super().__init__(model_name, *args, **kwargs)
-
 
     def load_model(self):
         if self.should_use_azure_openai():
@@ -64,23 +64,23 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             )
 
         return OpenAIEmbeddings(model=self.model_name)
-    
+
     def embed_query(self, text: str) -> List[float]:
         embedding_model = self.load_model()
         return embedding_model.embed_query(text)
-    
+
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
         return embedding_model.embed_documents(texts)
-    
+
     async def aembed_query(self, text: str) -> List[float]:
         embedding_model = self.load_model()
         return await embedding_model.aembed_query(text)
-    
+
     async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
         return await embedding_model.aembed_documents(texts)
-    
+
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
         return value.lower() == "yes" if value is not None else False
@@ -96,7 +96,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 ###### Example Usage #######
 ############################
 
-'''
+"""
 import time
 import asyncio
 
@@ -121,4 +121,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-'''
+"""

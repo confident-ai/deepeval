@@ -145,7 +145,6 @@ class TestRunManager:
         self.temp_file_name = TEMP_FILE_NAME
         self.save_to_disk = False
         self.disable_request = False
-        self.use_cache = None
 
     def reset(self):
         self.test_run = None
@@ -205,7 +204,10 @@ class TestRunManager:
                 ) as file:
                     self.test_run = self.test_run.save(file)
             except portalocker.exceptions.LockException:
-                print("Error saving test run to disk", file=sys.stderr)
+                print(
+                    "In save_test_run, Error saving test run to disk",
+                    file=sys.stderr,
+                )
 
     def clear_test_run(self):
         self.test_run = None

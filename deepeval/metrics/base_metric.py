@@ -8,6 +8,7 @@ class BaseMetric:
     score: float = 0
     score_breakdown: Dict = None
     reason: Optional[str] = None
+    success: Optional[bool] = None
     evaluation_model: Optional[str] = None
     strict_mode: bool = False
     async_mode: bool = True

@@ -103,56 +103,6 @@ def test_everything():
     )
 
     test_case = LLMTestCase(
-        input="What is this?",
-        actual_output="this is a latte",
-        expected_output="this is a mocha",
-        retrieval_context=["I love coffee"],
-        context=["I love coffee"],
-    )
-    assert_test(
-        test_case,
-        [
-            metric1,
-            #metric2,
-            #metric3,
-            #metric4,
-            #metric5,
-            #metric6,
-            #metric7,
-            #metric8,
-            #metric9,
-            ##metric10,
-        ],
-        # run_async=False,
-    )
-
-
-#@pytest.mark.skip(reason="openai is expensive")
-def test_everything_2():
-    metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
-    metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
-    metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
-    metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
-    metric5 = ContextualRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
-    metric6 = BiasMetric(threshold=0.2, strict_mode=strict_mode)
-    metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
-    metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
-    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, n=2)
-    metric10 = GEval(
-        name="Coherence",
-        criteria="Coherence - determine if the actual output is coherent with the input.",
-        evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
-        ],
-        strict_mode=True,
-    ),
-    metric11 = RagasMetric(threshold=0.5, model="gpt-3.5-turbo", embeddings=OpenAIEmbeddings())
-
-
-
-
-    test_case = LLMTestCase(
         input="What is this",
         actual_output="this is a latte",
         expected_output="this is a mocha",
@@ -164,17 +114,70 @@ def test_everything_2():
         [
             metric1,
             metric2,
-            #metric3,
-            #metric4,
-            #metric5,
-            metric6,
+            # metric3,
+            # metric4,
+            # metric5,
+            # metric6,
             # metric7,
             # metric8,
-            #metric9,
-            #metric10,
-            #metric11,
-        ]
+            # metric9,
+            # metric10,
+        ],
+        # run_async=False,
     )
+
+
+@pytest.mark.skip(reason="openai is expensive")
+def test_everything_2():
+    metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
+    metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
+    metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
+    metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
+    metric5 = ContextualRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
+    metric6 = BiasMetric(threshold=0.2, strict_mode=strict_mode)
+    metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
+    metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
+    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, n=2)
+    metric10 = (
+        GEval(
+            name="Coherence",
+            criteria="Coherence - determine if the actual output is coherent with the input.",
+            evaluation_params=[
+                LLMTestCaseParams.INPUT,
+                LLMTestCaseParams.ACTUAL_OUTPUT,
+            ],
+            strict_mode=True,
+        ),
+    )
+    metric11 = RagasMetric(
+        threshold=0.5, model="gpt-3.5-turbo", embeddings=OpenAIEmbeddings()
+    )
+
+    test_case = LLMTestCase(
+        input="What is this again?",
+        actual_output="this is a latte",
+        expected_output="this is a mocha",
+        retrieval_context=["I love coffee"],
+        context=["I love coffee"],
+    )
+    assert_test(
+        test_case,
+        [
+            metric1,
+            # metric2,
+            # metric3,
+            # metric4,
+            # metric5,
+            # metric6,
+            # metric7,
+            # metric8,
+            # metric9,
+            # metric10,
+            # metric11,
+        ],
+        # run_async=False,
+    )
+
 
 @deepeval.log_hyperparameters(
     model="gpt-4", prompt_template="another template!"
