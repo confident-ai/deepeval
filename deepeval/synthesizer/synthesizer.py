@@ -268,3 +268,4 @@ class Synthesizer:
                     )
 
         print(f"Synthetic goldens saved at {full_file_path}!")
+

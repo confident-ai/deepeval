@@ -4,8 +4,14 @@ import os
 import json
 from typing_extensions import Annotated
 from typing import Optional
+
 from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
-from deepeval.utils import delete_file_if_exists, get_deployment_configs
+from deepeval.test_run.cache import test_run_cache_manager, TEMP_CACHE_FILE_NAME
+from deepeval.utils import (
+    delete_file_if_exists,
+    get_deployment_configs,
+    set_should_use_cache,
+)
 from deepeval.test_run import invoke_test_run_end_hook
 from deepeval.telemetry import capture_evaluation_count
 from deepeval.utils import set_is_running_deepeval
@@ -49,17 +55,30 @@ def run(
         "-n",
         help="Number of processes to use with pytest",
     ),
-    rerun: Optional[int] = typer.Option(
+    repeat: Optional[int] = typer.Option(
         None,
         "--repeat",
         "-r",
         help="Number of times to rerun a test case",
     ),
+    use_cache: Optional[bool] = typer.Option(
+        False,
+        "--use-cache",
+        "-c",
+        help="Whether to use cached results or not",
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
+    delete_file_if_exists(TEMP_CACHE_FILE_NAME)
     check_if_valid_file(test_file_or_directory)
+    set_is_running_deepeval(True)
+
+    should_use_cache = use_cache and repeat is None
+    set_should_use_cache(should_use_cache)
+
     test_run_manager.reset()
+
     pytest_args = [test_file_or_directory]
 
     if exit_on_first_failure:
@@ -84,17 +103,21 @@ def run(
         pytest_args.append("--disable-warnings")
     if num_processes is not None:
         pytest_args.extend(["-n", str(num_processes)])
-    if rerun is not None:
-        pytest_args.extend(["--count", str(rerun)])
 
-    set_is_running_deepeval(True)
+    if repeat is not None:
+        pytest_args.extend(["--count", str(repeat)])
+        if repeat < 1:
+            raise ValueError("The repeat argument must be at least 1.")
 
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
 
     retcode = pytest.main(pytest_args)
     capture_evaluation_count()
+
+    test_run_cache_manager.wrap_up_cached_test_run()
     test_run_manager.wrap_up_test_run()
+
     invoke_test_run_end_hook()
 
     return retcode

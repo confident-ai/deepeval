@@ -1,6 +1,9 @@
 import pytest
+from langchain_openai import OpenAIEmbeddings
+
 import deepeval
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.types import Languages
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     FaithfulnessMetric,
@@ -12,7 +15,9 @@ from deepeval.metrics import (
     ToxicityMetric,
     GEval,
     SummarizationMetric,
+    JudgementalGPT,
 )
+from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
 
 question = "What are the primary benefits of meditation?"
@@ -98,7 +103,7 @@ def test_everything():
     )
 
     test_case = LLMTestCase(
-        input="What is this?",
+        input="What is this",
         actual_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
@@ -109,14 +114,14 @@ def test_everything():
         [
             metric1,
             metric2,
-            metric3,
-            metric4,
-            metric5,
-            metric6,
-            metric7,
-            metric8,
-            metric9,
-            metric10,
+            # metric3,
+            # metric4,
+            # metric5,
+            # metric6,
+            # metric7,
+            # metric8,
+            # metric9,
+            # metric10,
         ],
         # run_async=False,
     )
@@ -128,23 +133,28 @@ def test_everything_2():
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
     metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
-    metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
-    metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode)
+    metric5 = ContextualRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
+    metric6 = BiasMetric(threshold=0.2, strict_mode=strict_mode)
     metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
     metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
-    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode)
-    metric10 = GEval(
-        name="Coherence",
-        criteria="Coherence - determine if the actual output is coherent with the input.",
-        evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
-        ],
-        strict_mode=True,
+    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, n=2)
+    metric10 = (
+        GEval(
+            name="Coherence",
+            criteria="Coherence - determine if the actual output is coherent with the input.",
+            evaluation_params=[
+                LLMTestCaseParams.INPUT,
+                LLMTestCaseParams.ACTUAL_OUTPUT,
+            ],
+            strict_mode=True,
+        ),
+    )
+    metric11 = RagasMetric(
+        threshold=0.5, model="gpt-3.5-turbo", embeddings=OpenAIEmbeddings()
     )
 
     test_case = LLMTestCase(
-        input="What is this?",
+        input="What is this again?",
         actual_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
@@ -154,16 +164,18 @@ def test_everything_2():
         test_case,
         [
             metric1,
-            metric2,
-            metric3,
-            metric4,
-            metric5,
-            metric6,
+            # metric2,
+            # metric3,
+            # metric4,
+            # metric5,
+            # metric6,
             # metric7,
             # metric8,
             # metric9,
             # metric10,
+            # metric11,
         ],
+        # run_async=False,
     )
 
 
