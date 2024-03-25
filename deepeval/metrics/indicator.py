@@ -70,16 +70,10 @@ async def measure_metric_task(
                 metric_metadata = cached_metric_data.metric_metadata
 
         if metric_metadata:
-            ## Here we're setting the metric state from metrics metadata cache,
-            ## and later using the metric state to create a new metrics metadata cache
-            ## WARNING: Potential for bugs, what will happen if a metric changes state in between
-            ## test cases?
+            ## only change metric state, not configs
             metric.score = metric_metadata.score
-            metric.threshold = metric_metadata.threshold
             metric.success = metric_metadata.success
             metric.reason = metric_metadata.reason
-            metric.strict_mode = metric_metadata.strict_mode
-            metric.evaluation_model = metric_metadata.evaluation_model
             finish_text = "Read from Cache"
         else:
             try:
