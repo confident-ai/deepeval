@@ -199,6 +199,8 @@ async def a_execute_test_cases(
                 test_run.model,
                 test_run.user_prompt_template,
             )
+            # print("test case", cached_test_case)
+            # return
 
         ##### Metric Calculation #####
         api_test_case: APITestCase = create_api_test_case(test_case, index)
@@ -352,7 +354,6 @@ def evaluate(
         print("")
         print("-" * 70)
     test_run_manager.wrap_up_test_run(display_table=False)
-    test_run_cache_manager.wrap_up_cached_test_run()
     return test_results
 
 

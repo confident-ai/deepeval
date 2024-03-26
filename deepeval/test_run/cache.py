@@ -54,6 +54,15 @@ class CachedTestCase(BaseModel):
     user_prompt_template: Optional[str] = Field(None)
 
 
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        elif isinstance(obj, BaseModel):
+            return obj.model_dump(by_alias=True, exclude_none=True)
+        return json.JSONEncoder.default(self, obj)
+
+
 class CachedTestRun(BaseModel):
     test_cases_lookup_map: Optional[dict[str, CachedTestCase]] = Field(
         default_factory=lambda: {}
@@ -66,7 +75,7 @@ class CachedTestRun(BaseModel):
         except AttributeError:
             # Pydantic version below 2.0
             body = self.dict(by_alias=True, exclude_none=True)
-        json.dump(body, f)
+        json.dump(body, f, cls=CustomEncoder)
         return self
 
     # load from file (this happens initially during a test run)
@@ -259,7 +268,7 @@ class TestRunCacheManager:
                 self.temp_cached_test_run = self.temp_cached_test_run.save(file)
         except Exception as e:
             print(
-                f"In wrap_up_cached_test_run,Error saving test run to disk, {e}",
+                f"In wrap_up_cached_test_run, Error saving test run to disk, {e}",
                 file=sys.stderr,
             )
         finally:
@@ -300,18 +309,40 @@ class Cache:
             "strict_mode",
             "include_reason",
             "n",
-            "criteria",
             "language",
             "embeddings",
-            "evaluation_steps",
             "evaluation_params",
             "assessment_questions",
+            "evaluation_steps",
         ]
+
         for field in config_fields:
             metric_value = getattr(metric, field, None)
             cached_value = getattr(metric_configuration, field, None)
+
+            # TODO: Refactor. This won't work well with custom metrics
+            if field == "evaluation_steps":
+                if metric_value is not None:
+                    if metric_value == cached_value:
+                        continue
+                else:
+                    try:
+                        # For GEval only
+                        if metric.criteria is not None:
+                            criteria_value = getattr(metric, "criteria", None)
+                            cached_criteria_value = getattr(
+                                metric_configuration, "criteria", None
+                            )
+                            if criteria_value != cached_criteria_value:
+                                return False
+                            continue
+                    except:
+                        # For non-GEval
+                        continue
+
             if field == "embeddings" and metric_value is not None:
                 metric_value = metric_value.__class__.__name__
+
             if metric_value != cached_value:
                 return False
 

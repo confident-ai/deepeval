@@ -6,7 +6,7 @@ from typing_extensions import Annotated
 from typing import Optional
 
 from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
-from deepeval.test_run.cache import test_run_cache_manager, TEMP_CACHE_FILE_NAME
+from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.utils import (
     delete_file_if_exists,
     get_deployment_configs,
@@ -115,7 +115,6 @@ def run(
     retcode = pytest.main(pytest_args)
     capture_evaluation_count()
 
-    test_run_cache_manager.wrap_up_cached_test_run()
     test_run_manager.wrap_up_test_run()
 
     invoke_test_run_end_hook()

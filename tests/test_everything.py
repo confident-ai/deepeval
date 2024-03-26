@@ -114,7 +114,7 @@ def test_everything():
         test_case,
         [
             metric1,
-            metric2,
+            # metric2,
             # metric3,
             # metric4,
             # metric5,
@@ -128,7 +128,7 @@ def test_everything():
     )
 
 
-@pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)

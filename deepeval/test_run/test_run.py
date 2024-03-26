@@ -18,6 +18,7 @@ from deepeval.test_run.api import (
     TestRunHttpResponse,
 )
 from deepeval.utils import delete_file_if_exists, is_confident
+from deepeval.test_run.cache import test_run_cache_manager
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
 
@@ -369,6 +370,7 @@ class TestRunManager:
         test_run = self.get_test_run()
         test_run.calculate_test_passes_and_fails()
         test_run.construct_metrics_scores()
+
         if test_run is None:
             print("Test Run is empty, please try again.")
             delete_file_if_exists(self.temp_file_name)
@@ -378,6 +380,7 @@ class TestRunManager:
             delete_file_if_exists(self.temp_file_name)
             return
 
+        test_run_cache_manager.wrap_up_cached_test_run()
         if display_table:
             self.display_results_table(test_run)
 

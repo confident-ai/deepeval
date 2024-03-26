@@ -8,8 +8,8 @@ from deepeval import assert_test
 def test_g_eval():
     metric = GEval(
         name="Validity",
-        criteria="The response is a valid response to the prompt.",
-        threshold=0.5,
+        criteria="The response is a valid response to the prompt",
+        threshold=0.6,
         evaluation_params=[
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -21,4 +21,4 @@ def test_g_eval():
         expected_output="Paris",
         context=["Geography"],
     )
-    assert_test(test_case, [metric], run_async=False)
+    assert_test(test_case, [metric])
