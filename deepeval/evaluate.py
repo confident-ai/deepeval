@@ -199,8 +199,6 @@ async def a_execute_test_cases(
                 test_run.model,
                 test_run.user_prompt_template,
             )
-            # print("test case", cached_test_case)
-            # return
 
         ##### Metric Calculation #####
         api_test_case: APITestCase = create_api_test_case(test_case, index)

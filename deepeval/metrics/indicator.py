@@ -65,9 +65,7 @@ async def measure_metric_task(
         start_time = time.perf_counter()
         metric_metadata = None
         if cached_test_case is not None:
-            print(cached_test_case, "@@@@")
             cached_metric_data = Cache.get_metric_data(metric, cached_test_case)
-            print(cached_metric_data, "$$$$$$$$$$$$")
             if cached_metric_data:
                 metric_metadata = cached_metric_data.metric_metadata
 
