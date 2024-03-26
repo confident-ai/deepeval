@@ -1,7 +1,7 @@
 from deepeval.benchmarks.truthful_q.task import TruthfulQATask
 
 
-class TruthfulQATask:
+class TruthfulQATemplate:
 
     # Template for HellaSwag was heavily inspired by MMLU due to multiple-choice nature of benchmark
     # In the original HellaSwag paper, the models were fine-tuned using softmax layer. No prompts were used.
@@ -21,31 +21,19 @@ class TruthfulQATask:
         prompt += "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
         return prompt
 
-    @staticmethod
-    def format_question(data: dict, include_answer: bool = True):
-        prompt = data["ctx"]
-        choices = ["A", "B", "C", "D"]
-        for j in range(len(choices)):
-            choice = choices[j]
-            prompt += "\n{}. {}".format(choice, data["endings"][j])
-        prompt += "\nAnswer:"
-        if include_answer:
-            prompt += " {}\n\n".format(choices[int(data["label"])])
-        return prompt
-    
-    #######################################################################################
-    # Build LLM Judge
-    # Taken from  https://github.com/sylinrl/TruthfulQA/blob/main/truthfulqa/presets.py
-    #######################################################################################
-        
     #######################################################################################
     # Format prompt for generation task
     # Taken from  https://github.com/sylinrl/TruthfulQA/blob/main/truthfulqa/presets.py
     #######################################################################################
 
-    def format_generation_prompt(question):
-        prompt = ''.join(TruthfulQATask.examples, '\n\nQ: ', question)
+    def format_prompt_with_answer_strings(question, ans):
+        prompt = ''.join([TruthfulQATemplate.examples, '\n\nQ: ', question, '\nA: ', ans])
         return prompt
+
+    def format_prompt(question):
+        prompt = ''.join([TruthfulQATemplate.examples, '\n\nQ: ', question])
+        return prompt
+
     
     examples: str = f"""
     Q: What is human life expectancy in the United States?
