@@ -22,9 +22,11 @@ TEMP_CACHE_FILE_NAME = ".temp-deepeval-cache.json"
 
 class MetricConfiguration(BaseModel):
     ##### Required fields #####
+    threshold: float
+    evaluation_model: Optional[str] = None
+    strict_mode: bool = False
     criteria: Optional[str] = None
     include_reason: Optional[bool] = None
-    strict_mode: Optional[bool] = None
     n: Optional[int] = None
 
     ##### Optional fields #####
@@ -272,70 +274,70 @@ test_run_cache_manager = TestRunCacheManager()
 class Cache:
     @staticmethod
     def get_metric_data(
-        metric: BaseMetric, cached_api_test_case: Optional[CachedTestCase]
+        metric: BaseMetric, cached_test_case: Optional[CachedTestCase]
     ) -> Optional[CachedMetricData]:
-        metadata_fields = ["threshold", "evaluation_model", "strict_mode"]
+        if not cached_test_case:
+            return None
+        for cached_metric_data in cached_test_case.cached_metrics_data:
+            if (
+                cached_metric_data.metric_metadata.metric == metric.__name__
+                and Cache.same_metric_configs(
+                    metric,
+                    cached_metric_data.metric_configuration,
+                )
+            ):
+                return cached_metric_data
+        return None
+
+    @staticmethod
+    def same_metric_configs(
+        metric: BaseMetric,
+        metric_configuration: MetricConfiguration,
+    ) -> bool:
         config_fields = [
+            "threshold",
+            "evaluation_model",
+            "strict_mode",
+            "include_reason",
             "n",
             "criteria",
             "language",
             "embeddings",
-            "strict_mode",
-            "include_reason",
             "evaluation_steps",
             "evaluation_params",
             "assessment_questions",
         ]
-        if not cached_api_test_case:
-            return None
-        for c in cached_api_test_case.cached_metrics_data:
-            if (
-                c.metric_metadata.metric == metric.__name__
-                and Cache.same_fields(
-                    metric, c.metric_metadata, metadata_fields
-                )
-                and Cache.same_fields(
-                    metric, c.metric_configuration, config_fields
-                )
-            ):
-                return c
-        return None
+        for field in config_fields:
+            metric_value = getattr(metric, field, None)
+            cached_value = getattr(metric_configuration, field, None)
+            if field == "embeddings" and metric_value is not None:
+                metric_value = metric_value.__class__.__name__
+            if metric_value != cached_value:
+                return False
 
-    @staticmethod
-    def same_fields(
-        metric: BaseMetric,
-        cached_object: Union[MetricMetadata, MetricConfiguration],
-        fields,
-    ) -> bool:
-        for field in fields:
-            if hasattr(metric, field):
-                metric_value = getattr(metric, field, None)
-                cached_value = getattr(cached_object, field, None)
-                if field == "embeddings" and metric_value is not None:
-                    metric_value = metric_value.__class__.__name__
-                if metric_value != cached_value:
-                    return False
         return True
 
     @staticmethod
     def create_metric_configuration(metric: BaseMetric) -> MetricConfiguration:
         config_kwargs = {}
         config_fields = [
+            "threshold",
+            "evaluation_model",
+            "strict_mode",
+            "include_reason",  # checked
             "n",  # checked
             "criteria",  # checked
             "language",  # can't check
             "embeddings",  #
-            "include_reason",  # checked
             "strict_mode",  # checked
             "evaluation_steps",  # checked
             "evaluation_params",  # checked
             "assessment_questions",  # checked
         ]
         for field in config_fields:
-            if hasattr(metric, field):
-                value = getattr(metric, field)
-                if field == "embeddings" and value is not None:
-                    value = value.__class__.__name__
-                config_kwargs[field] = value
+            value = getattr(metric, field, None)
+            if field == "embeddings" and value is not None:
+                value = value.__class__.__name__
+            config_kwargs[field] = value
 
         return MetricConfiguration(**config_kwargs)

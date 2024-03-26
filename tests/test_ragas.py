@@ -13,7 +13,7 @@ from deepeval.metrics.ragas import (
     RAGASAnswerRelevancyMetric,
 )
 from deepeval import assert_test
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 
 query = "Who won the FIFA World Cup in 2018 and what was the score?"
 output = "Winners of the FIFA world cup were the French national football team"
@@ -78,3 +78,16 @@ def test_everything():
             metric10,
         ],
     )
+
+
+# test_case = LLMTestCase(
+#     input=query,
+#     actual_output=output,
+#     expected_output=expected_output,
+#     retrieval_context=context,
+#     context=context,
+# )
+# metric = RagasMetric(model=ChatOpenAI(model_name="gpt-3.5-turbo"))
+
+# metric.measure(test_case)
+# print(metric.score_breakdown)
