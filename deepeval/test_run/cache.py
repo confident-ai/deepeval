@@ -133,7 +133,6 @@ class TestRunCacheManager:
     ):
         if self.disable_write_cache:
             return
-
         cache_dict = {
             LLMTestCaseParams.INPUT.value: test_case.input,
             LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.actual_output,
@@ -259,6 +258,7 @@ class TestRunCacheManager:
 
             return self.cached_test_run
 
+    # THIS IS CAUSINFG TH WUCKING PROBLEM SOMFGGFG
     def wrap_up_cached_test_run(self):
         self.get_cached_test_run(from_temp=True)
         try:
@@ -273,6 +273,7 @@ class TestRunCacheManager:
             )
         finally:
             delete_file_if_exists(self.temp_cache_file_name)
+            pass
 
 
 test_run_cache_manager = TestRunCacheManager()

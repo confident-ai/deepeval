@@ -1,3 +1,4 @@
+import pytest
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval import assert_test
@@ -19,7 +20,7 @@ class FakeMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase):
-        time.sleep(2)
+        time.sleep(5)
         self.score = random.uniform(0.0, 1.0)
         self.success = self.score >= self.threshold
         if self.include_reason:
@@ -40,6 +41,15 @@ class FakeMetric(BaseMetric):
 
 def test_cache():
     test_case = LLMTestCase(input="input", actual_output="output")
+    metric = FakeMetric(
+        threshold=0.2, include_reason=False, strict_mode=True, model="omg"
+    )
+    assert_test(test_case, [metric])
+
+
+# @pytest.mark.skip("askjdfn")
+def test_cache_again():
+    test_case = LLMTestCase(input="input 3", actual_output="output 2")
     metric = FakeMetric(
         threshold=0.2, include_reason=False, strict_mode=True, model="omg"
     )
