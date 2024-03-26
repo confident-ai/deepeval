@@ -2,11 +2,11 @@ import os
 from typing import List, Optional
 import time
 from dataclasses import dataclass
+import sys
 
 from deepeval.utils import (
     drop_and_copy,
     get_or_create_event_loop,
-    set_should_use_cache,
     should_use_cache,
 )
 from deepeval.telemetry import capture_evaluation_count
@@ -150,6 +150,7 @@ def execute_test_cases(
         api_test_case.success = success
 
         ### Save Test Run ###
+        test_run = test_run_manager.get_test_run()
         test_run.test_cases.append(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
         test_run_manager.save_test_run()
@@ -230,6 +231,7 @@ async def a_execute_test_cases(
         api_test_case.success = success
 
         ### Save Test Run ###
+        test_run = test_run_manager.get_test_run()
         test_run.test_cases.append(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
         test_run_manager.save_test_run()

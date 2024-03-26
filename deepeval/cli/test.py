@@ -97,6 +97,7 @@ def run(
             "-s",
         ]
     )
+
     if pdb:
         pytest_args.append("--pdb")
     if not show_warnings:
