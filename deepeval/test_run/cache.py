@@ -273,7 +273,6 @@ class TestRunCacheManager:
             )
         finally:
             delete_file_if_exists(self.temp_cache_file_name)
-            pass
 
 
 test_run_cache_manager = TestRunCacheManager()
