@@ -302,9 +302,41 @@ class EvaluationDataset:
         synthesizer: BaseSynthesizer,
         contexts: List[List[str]],
         max_goldens_per_context: int = 2,
+        num_evolutions: int = 1,
+        enable_breadth_evolve: bool = False,
+        source_files: Optional[List[str]] = None,
+        _show_indicator: bool = True,
     ):
         self.goldens.extend(
-            synthesizer.generate_goldens(contexts, max_goldens_per_context)
+            synthesizer.generate_goldens(
+                contexts=contexts,
+                max_goldens_per_context=max_goldens_per_context,
+                num_evolutions=num_evolutions,
+                enable_breadth_evolve=enable_breadth_evolve,
+                source_files=source_files,
+                _show_indicator=_show_indicator,
+            )
+        )
+
+    def generate_goldens_from_docs(
+        self,
+        synthesizer: BaseSynthesizer,
+        document_paths: List[str],
+        max_goldens_per_document: int = 5,
+        chunk_size: int = 1024,
+        chunk_overlap: int = 0,
+        num_evolutions: int = 1,
+        enable_breadth_evolve: bool = False,
+    ):
+        self.goldens.extend(
+            synthesizer.generate_goldens_from_docs(
+                document_paths=document_paths, 
+                max_goldens_per_document=max_goldens_per_document, 
+                chunk_size=chunk_size, 
+                chunk_overlap=chunk_overlap, 
+                num_evolutions=num_evolutions,
+                enable_breadth_evolve=enable_breadth_evolve
+                )
         )
 
     # TODO: add save test cases as well
