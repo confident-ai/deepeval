@@ -258,20 +258,20 @@ evaluate(dataset, [answer_relevancy_metric])
 
 :::
 
-Additionally, you can run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
+Additionally, you can avoid re-evaluating test cases by reading from `deepeval`'s local cache using the optional `-c` flag:
+
+```
+deepeval test run test_dataset.py -c
+```
+
+Or run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 
 ```
 deepeval test run test_dataset.py -n 2
 ```
 
-Or repeat evaluating each test case how ever many times you want through the `-r` flag:
-
-```
-deepeval test run test_dataset.py -r 2
-```
-
 :::info
-Visit the [datasets section](evaluation-datasets) to learn about everything an `EvaluationDataset` has to offer.
+Visit the [evaluation introduction section](evaluation-introduction#evaluating-with-pytest) to learn about the different types of flags you can use with the `deepeval test run` command.
 :::
 
 ## Using Confident AI
