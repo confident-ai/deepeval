@@ -12,15 +12,8 @@ module.exports = {
       items: [
         "evaluation-introduction",
         "evaluation-test-cases",
-        {
-          type: "category",
-          label: "Datasets",
-          items: [
-            "evaluation-datasets",
-            "evaluation-datasets-synthetic-data",
-          ],
-          collapsed: false,
-        },
+        "evaluation-datasets",
+        "evaluation-datasets-synthetic-data",
         {
           type: "category",
           label: "Metrics",
