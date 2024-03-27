@@ -13,6 +13,7 @@ module.exports = {
         "evaluation-introduction",
         "evaluation-test-cases",
         "evaluation-datasets",
+        "evaluation-synthetic-datasets",
         {
           type: "category",
           label: "Metrics",
