@@ -1,7 +1,7 @@
 ---
-id: evaluation-synthetic-datasets
-title: Synthetic Datasets
-sidebar_label: Synthetic Datasets
+id: evaluation-datasets-synthetic-data
+title: Generate Synthetic Data
+sidebar_label: Generate Synthetic Data
 ---
 
 ## Quick Summary
@@ -22,9 +22,9 @@ There are two optional parameters when creating a Synthesizer:
 There are 2 approaches to synthetic dataset generation in `deepeval`:
 
 1. Generating an `EvaluationDataset` from documents (.pdf, .docx, .txt)
-2. Generating an `EvaluationDataset`from a list of contexts
+2. Generating an `EvaluationDataset` from a list of contexts
 
-### 1. Synthetic Dataset Generation from Documents
+### From Documents
 
 The `generate_goldens_from_docs` method in `Synthesizer` takes a list of document paths and uses the content within these documents to create contexts for goldens. It then generates inputs from these contexts and evolves them. `deepeval` currently supports .txt, .docx, and .pdf formats.
 
@@ -32,15 +32,12 @@ The `generate_goldens_from_docs` method in `Synthesizer` takes a list of documen
 from deepeval.synthesizer import Synthesizer
 from deepeval.dataset import EvaluationDataset
 
-# List of document paths for the documents to be used in generating the dataset
-document_paths = [‘example_1.txt’, ‘example_2.docx, ‘example_3.pdf’]
-max_goldens_per_document = 2
-
 # Use synthesizer directly
 synthesizer = Synthesizer()
 synthesizer.generate_goldens_from_docs(
-    document_path=document_paths,
-    max_goldens_per_document=max_goldens_per_document)
+    document_paths=['example_1.txt', 'example_2.docx', 'example_3.pdf'],
+    max_goldens_per_document=2
+)
 synthesizer.save_as(
     # also accepts 'csv'
     file_type='json',
@@ -51,8 +48,9 @@ synthesizer.save_as(
 # Use synthesizer within an EvaluationDataset
 dataset = EvaluationDataset()
 dataset.generate_goldens_from_docs(
-    document_path=document_paths,
-    max_goldens_per_document=max_goldens_per_document)
+    document_paths=['example_1.txt', 'example_2.docx', 'example_3.pdf'],
+    max_goldens_per_document=2
+)
 dataset.save_as(
     # also accepts 'csv'
     file_type='json',
@@ -75,9 +73,11 @@ These parameters enable users to adjust context extraction, data evolution, and 
 The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
 :::
 
-### 2. Generate An Evaluation Dataset from a List of contexts
+### From Contexts
 
-The `generate_goldens` method within the Synthesizer class allows for the creation of an evaluation dataset from a manually provided list of `contexts`. This method directly transforms predefined textual contexts into inputs, which are then evolved. The evolved inputs form the basis of the goldens in your evaluation dataset.
+The `generate_goldens` method within the Synthesizer class allows for the creation of an evaluation dataset from a manually provided list of `contexts`, which is of type `list[list[str]]`.
+
+This method directly transforms predefined textual contexts into inputs, which are then evolved. The evolved inputs form the basis of the goldens in your evaluation dataset.
 
 ```python
 from deepeval.synthesizer import Synthesizer
