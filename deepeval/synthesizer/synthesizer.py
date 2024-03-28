@@ -180,7 +180,7 @@ class Synthesizer:
 
     def generate_goldens_from_docs(
         self,
-        docuemnt_paths: List[str],
+        document_paths: List[str],
         max_goldens_per_document: int = 5,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
@@ -190,7 +190,7 @@ class Synthesizer:
         with synthesizer_progress_context(self.generator_model):
             if self.context_generator is None:
                 self.context_generator = ContextGenerator(
-                    docuemnt_paths,
+                    document_paths,
                     chunk_size,
                     chunk_overlap,
                     multithreading=self.multithreading,

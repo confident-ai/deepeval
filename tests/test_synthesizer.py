@@ -12,7 +12,7 @@ def test_synthesizer():
     )
     synthesizer = Synthesizer()
     synthesizer.generate_goldens_from_docs(
-        docuemnt_paths=[file_path],
+        document_paths=[file_path],
         max_goldens_per_document=2,
     )
     synthesizer.save_as(file_type="json", directory="./results")
