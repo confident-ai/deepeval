@@ -330,13 +330,13 @@ class EvaluationDataset:
     ):
         self.goldens.extend(
             synthesizer.generate_goldens_from_docs(
-                document_paths=document_paths, 
-                max_goldens_per_document=max_goldens_per_document, 
-                chunk_size=chunk_size, 
-                chunk_overlap=chunk_overlap, 
+                document_paths=document_paths,
+                max_goldens_per_document=max_goldens_per_document,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
                 num_evolutions=num_evolutions,
-                enable_breadth_evolve=enable_breadth_evolve
-                )
+                enable_breadth_evolve=enable_breadth_evolve,
+            )
         )
 
     # TODO: add save test cases as well

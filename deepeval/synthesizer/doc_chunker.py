@@ -56,7 +56,7 @@ class DocumentChunker:
     ############### Load and Chunk ###############
     def load_doc(self, path: str) -> List[LCDocument]:
         self.source_file = path
-        
+
         # Find appropiate doc loader
         _, extension = os.path.splitext(path)
         extension = extension.lower()
