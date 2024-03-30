@@ -2,6 +2,7 @@ from typing import Optional, Union
 
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_core.language_models import BaseChatModel
+from langchain.schema import AIMessage
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.chat_completion.retry import retry_with_exponential_backoff
@@ -76,15 +77,20 @@ class GPTModel(DeepEvalBaseLLM):
         return ChatOpenAI(model_name=self.model_name)
 
     @retry_with_exponential_backoff
-    def generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        return chat_model.invoke(prompt).content
+    def generate(
+        self, prompt: str, return_raw_response: bool = False, **kwargs
+    ) -> Union[str, AIMessage]:
+        chat_model = self.load_model().bind(**kwargs)
+        res = chat_model.invoke(prompt)
+        return res.content if not return_raw_response else res
 
     @retry_with_exponential_backoff
-    async def a_generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
+    async def a_generate(
+        self, prompt: str, return_raw_response: bool = False, **kwargs
+    ) -> Union[str, AIMessage]:
+        chat_model = self.load_model().bind(**kwargs)
         res = await chat_model.ainvoke(prompt)
-        return res.content
+        return res.content if not return_raw_response else res
 
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)

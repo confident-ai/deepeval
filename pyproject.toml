@@ -15,7 +15,7 @@ deepeval = 'deepeval.cli.main:app'
 plugins = "deepeval.plugins.plugin"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = ">=3.9,<3.12"
 requests = "^2.31.0"
 tqdm = "^4.66.1"
 pytest = "^7.4.3"
