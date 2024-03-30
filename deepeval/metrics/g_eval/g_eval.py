@@ -236,8 +236,6 @@ class GEval(BaseMetric):
     def generate_weighted_summed_score(
         self, raw_score: int, raw_response: AIMessage
     ) -> Union[int, float]:
-        print(raw_score)
-        print(raw_response)
         """
         Example raw_response.response_metadata["logprobs"]["content"]
         [
