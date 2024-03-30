@@ -77,20 +77,16 @@ class GPTModel(DeepEvalBaseLLM):
         return ChatOpenAI(model_name=self.model_name)
 
     @retry_with_exponential_backoff
-    def generate(
-        self, prompt: str, return_raw_response: bool = False, **kwargs
-    ) -> Union[str, AIMessage]:
-        chat_model = self.load_model().bind(**kwargs)
+    def generate(self, prompt: str) -> Union[str, AIMessage]:
+        chat_model = self.load_model()
         res = chat_model.invoke(prompt)
-        return res.content if not return_raw_response else res
+        return res.content
 
     @retry_with_exponential_backoff
-    async def a_generate(
-        self, prompt: str, return_raw_response: bool = False, **kwargs
-    ) -> Union[str, AIMessage]:
-        chat_model = self.load_model().bind(**kwargs)
+    async def a_generate(self, prompt: str) -> Union[str, AIMessage]:
+        chat_model = self.load_model()
         res = await chat_model.ainvoke(prompt)
-        return res.content if not return_raw_response else res
+        return res.content
 
     @retry_with_exponential_backoff
     def generate_raw_response(self, prompt: str, **kwargs) -> AIMessage:
