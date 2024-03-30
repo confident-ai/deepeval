@@ -88,7 +88,6 @@ class GEval(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
-        self.use_logprobs = True
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_test_case_params(
