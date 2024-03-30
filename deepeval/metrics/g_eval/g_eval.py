@@ -58,7 +58,6 @@ class GEval(BaseMetric):
         threshold: float = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
-        use_logprobs: bool = False,
     ):
         self.name = name
         self.evaluation_params = evaluation_params
@@ -89,7 +88,7 @@ class GEval(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
-        self.use_logprobs = use_logprobs
+        self.use_logprobs = True
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_test_case_params(
@@ -186,14 +185,21 @@ class GEval(BaseMetric):
             text=text,
         )
 
-        if self.use_logprobs:
-            res = await self.model.a_generate(
+        try:
+            res = await self.model.a_generate_raw_response(
                 prompt, return_raw_response=True, logprobs=True, top_logprobs=20
             )
             data = trimAndLoadJson(res.content)
-            score = self.generate_logprobs_based_score(data["score"], res)
-            return score, data["reason"]
-        else:
+            reason = data["reason"]
+            score = data["score"]
+            try:
+                weighted_summed_score = self.generate_weighted_summed_score(
+                    score, res
+                )
+                return weighted_summed_score, reason
+            except:
+                return score, reason
+        except:
             res = await self.model.a_generate(prompt)
             data = trimAndLoadJson(res)
             return data["score"], data["reason"]
@@ -209,21 +215,30 @@ class GEval(BaseMetric):
             text=text,
         )
 
-        if self.use_logprobs:
-            res = self.model.generate(
+        try:
+            res = self.model.generate_raw_response(
                 prompt, return_raw_response=True, logprobs=True, top_logprobs=20
             )
             data = trimAndLoadJson(res.content)
-            score = self.generate_logprobs_based_score(data["score"], res)
-            return score, data["reason"]
-        else:
+            reason = data["reason"]
+            score = data["score"]
+            try:
+                weighted_summed_score = self.generate_weighted_summed_score(
+                    score, res
+                )
+                return weighted_summed_score, reason
+            except:
+                return score, reason
+        except:
             res = self.model.generate(prompt)
             data = trimAndLoadJson(res)
             return data["score"], data["reason"]
 
-    def generate_logprobs_based_score(
+    def generate_weighted_summed_score(
         self, raw_score: int, raw_response: AIMessage
     ) -> Union[int, float]:
+        print(raw_score)
+        print(raw_response)
         """
         Example raw_response.response_metadata["logprobs"]["content"]
         [
@@ -273,31 +288,28 @@ class GEval(BaseMetric):
             token_linear_probability: Dict[int, float] = {}
             sum_linear_probability = 0
             for token_logprob in score_logprobs["top_logprobs"]:
-                # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01) ~= -4.605
-                if token_logprob["logprob"] < -4.605:
+                # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
+                logprob = token_logprob["logprob"]
+
+                if logprob < math.log(0.01):
                     continue
-                # Filter out non-decimal tokens
-                if not token_logprob["token"].isdecimal():
-                    continue
+
                 # Calculate the linear probability
-                linear_prob = math.exp(token_logprob["logprob"])
-                token_linear_probability[int(token_logprob["token"])] = (
-                    linear_prob
-                )
+                linear_prob = math.exp(logprob)
+                token_linear_probability[int(logprob)] = linear_prob
                 sum_linear_probability += linear_prob
 
-            logprob_weighted_score = 0.0
+            sum_of_weighted_scores = 0.0
             for score, prob in token_linear_probability.items():
-                logprob_weighted_score += score * prob
+                sum_of_weighted_scores += score * prob
+
             # Scale the sum of linear probability to 1
-            logprob_weighted_score = (
-                logprob_weighted_score / sum_linear_probability
+            weighted_summed_score = (
+                sum_of_weighted_scores / sum_linear_probability
             )
-            return logprob_weighted_score
+            return weighted_summed_score
         except Exception as e:
-            print(e)
-            # Return the raw_score if encounter any errors, such as model does not support logprobs or incompatible response format
-            return raw_score
+            raise (e)
 
     def number_evaluation_steps(self):
         evaluation_steps = """"""
@@ -306,7 +318,6 @@ class GEval(BaseMetric):
         return evaluation_steps
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.threshold
         return self.success
 
     @property
