@@ -92,6 +92,16 @@ class GPTModel(DeepEvalBaseLLM):
         res = await chat_model.ainvoke(prompt)
         return res.content if not return_raw_response else res
 
+    @retry_with_exponential_backoff
+    def generate_raw_response(self, prompt: str, **kwargs) -> AIMessage:
+        chat_model = self.load_model().bind(**kwargs)
+        return chat_model.invoke(prompt)
+
+    @retry_with_exponential_backoff
+    async def a_generate_raw_response(self, prompt: str, **kwargs) -> AIMessage:
+        chat_model = self.load_model().bind(**kwargs)
+        return await chat_model.ainvoke(prompt)
+
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
         return value.lower() == "yes" if value is not None else False

@@ -24,9 +24,10 @@ def test_g_eval():
         expected_output="Paris",
         context=["Geography"],
     )
-    assert_test(test_case, [metric], run_async=False)
+    assert_test(test_case, [metric])
 
 
+@pytest.mark.skip(reason="openai is expensive")
 @mock.patch.dict(
     os.environ,
     {
