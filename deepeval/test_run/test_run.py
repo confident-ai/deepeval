@@ -17,7 +17,12 @@ from deepeval.test_run.api import (
     APITestCase,
     TestRunHttpResponse,
 )
-from deepeval.utils import delete_file_if_exists, is_confident
+from deepeval.utils import (
+    delete_file_if_exists,
+    get_is_running_deepeval,
+    is_confident,
+)
+from deepeval.test_run.cache import test_run_cache_manager
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
 
@@ -67,6 +72,13 @@ class MetricsAverageDict:
         ]
 
 
+class RemainingTestRun(BaseModel):
+    testRunId: str
+    test_cases: List[APITestCase] = Field(
+        alias="testCases", default_factory=lambda: []
+    )
+
+
 class TestRun(BaseModel):
     test_file: Optional[str] = Field(
         None,
@@ -88,6 +100,8 @@ class TestRun(BaseModel):
     user_prompt_template: Optional[str] = Field(
         None, alias="userPromptTemplate"
     )
+    testPassed: Optional[int] = Field(None)
+    testFailed: Optional[int] = Field(None)
 
     def construct_metrics_scores(self):
         metrics_dict: Dict[str, List[float]] = {}
@@ -104,6 +118,17 @@ class TestRun(BaseModel):
             MetricScores(metric=metric, scores=scores)
             for metric, scores in metrics_dict.items()
         ]
+
+    def calculate_test_passes_and_fails(self):
+        testPassed = 0
+        testFailed = 0
+        for test_case in self.test_cases:
+            if test_case.success:
+                testPassed += 1
+            else:
+                testFailed += 1
+        self.testPassed = testPassed
+        self.testFailed = testFailed
 
     def save(self, f):
         try:
@@ -150,6 +175,8 @@ class TestRunManager:
             hyperparameters=None,
             deployment=deployment,
             deploymentConfigs=deployment_configs,
+            testPassed=None,
+            testFailed=None,
         )
         self.set_test_run(test_run)
 
@@ -172,6 +199,7 @@ class TestRunManager:
             ) as e:
                 print(f"Error loading test run from disk: {e}", file=sys.stderr)
                 self.test_run = None
+
         return self.test_run
 
     def save_test_run(self):
@@ -182,7 +210,10 @@ class TestRunManager:
                 ) as file:
                     self.test_run = self.test_run.save(file)
             except portalocker.exceptions.LockException:
-                print("Error saving test run to disk", file=sys.stderr)
+                print(
+                    "In save_test_run, Error saving test run to disk",
+                    file=sys.stderr,
+                )
 
     def clear_test_run(self):
         self.test_run = None
@@ -251,6 +282,18 @@ class TestRunManager:
             test_case.id = None
 
         if is_confident() and self.disable_request is False:
+            BATCH_SIZE = 50
+            initial_batch = test_run.test_cases[:BATCH_SIZE]
+            remaining_test_cases = test_run.test_cases[BATCH_SIZE:]
+            if len(remaining_test_cases) > 0:
+                console.print(
+                    "Sending a large test run to Confident, this might take a bit longer than usual..."
+                )
+
+            ####################
+            ### POST REQUEST ###
+            ####################
+            test_run.test_cases = initial_batch
             try:
                 body = test_run.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
@@ -266,14 +309,43 @@ class TestRunManager:
                 projectId=result["projectId"],
                 link=result["link"],
             )
-            if response:
-                link = response.link
-                console.print(
-                    "✅ Tests finished! View results on "
-                    f"[link={link}]{link}[/link]"
+            link = response.link
+            ################################################
+            ### Send the remaining test cases in batches ###
+            ################################################
+            for i in range(0, len(remaining_test_cases), BATCH_SIZE):
+                body = None
+                remaining_test_run = RemainingTestRun(
+                    testRunId=response.testRunId,
+                    testCases=remaining_test_cases[i : i + BATCH_SIZE],
                 )
-                if test_run.deployment == False:
-                    webbrowser.open(link)
+                try:
+                    body = remaining_test_run.model_dump(
+                        by_alias=True, exclude_none=True
+                    )
+                except AttributeError:
+                    # Pydantic version below 2.0
+                    body = remaining_test_run.dict(
+                        by_alias=True, exclude_none=True
+                    )
+
+                try:
+                    result = api.put_request(
+                        endpoint=Endpoints.TEST_RUN_ENDPOINT.value,
+                        body=body,
+                    )
+                except Exception as e:
+                    remaining_count = len(remaining_test_cases) - i
+                    message = f"Unexpected error when sending the last {remaining_count} test cases. Incomplete test run available at {link}"
+                    raise Exception(message) from e
+
+            console.print(
+                "✅ Tests finished! View results on "
+                f"[link={link}]{link}[/link]"
+            )
+            if test_run.deployment == False:
+                webbrowser.open(link)
+
         else:
             console.print(
                 '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'
@@ -301,7 +373,9 @@ class TestRunManager:
 
     def wrap_up_test_run(self, display_table: bool = True):
         test_run = self.get_test_run()
+        test_run.calculate_test_passes_and_fails()
         test_run.construct_metrics_scores()
+
         if test_run is None:
             print("Test Run is empty, please try again.")
             delete_file_if_exists(self.temp_file_name)
@@ -311,8 +385,14 @@ class TestRunManager:
             delete_file_if_exists(self.temp_file_name)
             return
 
+        test_run_cache_manager.disable_write_cache = (
+            get_is_running_deepeval() == False
+        )
+        test_run_cache_manager.wrap_up_cached_test_run()
+
         if display_table:
             self.display_results_table(test_run)
+
         self.post_test_run(test_run)
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)

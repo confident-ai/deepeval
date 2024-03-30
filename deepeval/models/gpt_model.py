@@ -18,6 +18,7 @@ valid_gpt_models = [
     "gpt-3.5-turbo-1106",
     "gpt-3.5-turbo",
     "gpt-3.5-turbo-16k",
+    "gpt-3.5-turbo-0125",
 ]
 
 default_gpt_model = "gpt-4-0125-preview"

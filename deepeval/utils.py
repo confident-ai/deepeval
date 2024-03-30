@@ -3,7 +3,7 @@ import copy
 import os
 import json
 import time
-from typing import Any, Optional, Dict, List
+from typing import Any, Optional, Dict, List, Union
 from collections.abc import Iterable
 import tqdm
 import re
@@ -16,6 +16,28 @@ import nest_asyncio
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
+
+def serialize_dict_with_sorting(obj):
+    if obj is None:
+        return obj
+    elif isinstance(obj, dict):
+        sorted_dict = {
+            k: serialize_dict_with_sorting(v) for k, v in sorted(obj.items())
+        }
+        return sorted_dict
+    elif isinstance(obj, list):
+        sorted_list = sorted(
+            [serialize_dict_with_sorting(item) for item in obj],
+            key=lambda x: json.dumps(x),
+        )
+        return sorted_list
+    else:
+        return obj
+
+
+def serialize(obj) -> Union[str, None]:
+    return json.dumps(serialize_dict_with_sorting(obj), sort_keys=True)
 
 
 def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
@@ -50,6 +72,23 @@ def set_indicator(show_indicator: bool):
         os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "NO"
     else:
         os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "YES"
+
+
+def should_use_cache():
+    try:
+        if os.environ["ENABLE_DEEPEVAL_CACHE"] == "YES":
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+def set_should_use_cache(yes: bool):
+    if yes:
+        os.environ["ENABLE_DEEPEVAL_CACHE"] = "YES"
+    else:
+        os.environ["ENABLE_DEEPEVAL_CACHE"] = "NO"
 
 
 def check_test_case_params(

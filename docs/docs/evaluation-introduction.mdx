@@ -145,6 +145,18 @@ Evaluate each test case in parallel by providing a number to the `-n` flag to sp
 deepeval test run test_example.py -n 4
 ```
 
+### Cache
+
+Provide the `-c` flag (with no arguments) to read from the local `deepeval` cache instead of re-evaluating test cases on the same metrics.
+
+```
+deepeval test run test_example.py -c
+```
+
+:::info
+This is extremely useful if you're running large amounts of test cases. For example, lets say you're running 1000 test cases using `deepeval test run`, but you encounter an error on the 999th test case. The cache functionality would allow you to skip all the previously evaluated 999 test cases, and just evaluate the remaining one.
+:::
+
 ### Repeats
 
 Repeat each test case by providing a number to the `-r` flag to specify how many times to rerun each test case.

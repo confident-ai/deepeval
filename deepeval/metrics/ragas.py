@@ -24,11 +24,11 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
 
     def measure(self, test_case: LLMTestCase):
-        # sends to server
         try:
             from ragas import evaluate
             from ragas.metrics import context_precision
@@ -44,7 +44,10 @@ class RAGASContextualPrecisionMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
 
         # Create a dataset from the test case
         data = {
@@ -65,9 +68,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         capture_metric_type(self.__name__)
         return self.score
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def is_successful(self):
@@ -87,12 +88,11 @@ class RAGASContextualRelevancyMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -112,7 +112,10 @@ class RAGASContextualRelevancyMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
 
         # Create a dataset from the test case
         data = {
@@ -150,13 +153,12 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         embeddings: Optional[Embeddings] = None,
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
         self.embeddings = embeddings
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -176,7 +178,10 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
 
         data = {
             "question": [test_case.input],
@@ -212,12 +217,11 @@ class RAGASFaithfulnessMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -237,7 +241,11 @@ class RAGASFaithfulnessMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
+
         data = {
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
@@ -269,12 +277,11 @@ class RAGASContextualRecallMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -294,7 +301,10 @@ class RAGASContextualRecallMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
 
         data = {
             "question": [test_case.input],
@@ -327,12 +337,11 @@ class HarmfulnessMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -352,7 +361,10 @@ class HarmfulnessMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
 
         data = {
             "ground_truth": [test_case.expected_output],
@@ -386,12 +398,11 @@ class CoherenceMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -409,7 +420,10 @@ class CoherenceMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
 
         data = {
             "ground_truth": [test_case.expected_output],
@@ -443,12 +457,11 @@ class MaliciousnessMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -467,7 +480,10 @@ class MaliciousnessMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
 
         data = {
             "ground_truth": [test_case.expected_output],
@@ -501,12 +517,11 @@ class CorrectnessMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -525,7 +540,10 @@ class CorrectnessMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
 
         data = {
             "ground_truth": [test_case.expected_output],
@@ -559,12 +577,11 @@ class ConcisenessMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
     ):
         self.threshold = threshold
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -582,7 +599,10 @@ class ConcisenessMetric(BaseMetric):
             raise ModuleNotFoundError("Please install dataset")
 
         # Set LLM model
-        chat_model = self.model.load_model()
+        if isinstance(self.model, str):
+            chat_model = GPTModel(model=self.model).load_model()
+        else:
+            chat_model = self.model
 
         data = {
             "ground_truth": [test_case.expected_output],
@@ -617,14 +637,12 @@ class RagasMetric(BaseMetric):
         embeddings: Optional[Embeddings] = None,
     ):
         self.threshold = threshold
-        self.model_name = model
-        self.model = GPTModel(model=model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
+        if isinstance(model, str):
+            self.evaluation_model = model
         self.embeddings = embeddings
 
-    async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
-    ):
+    async def a_measure(self, test_case: LLMTestCase):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -646,11 +664,11 @@ class RagasMetric(BaseMetric):
         # Convert the LLMTestCase to a format compatible with Dataset
         score_breakdown = {}
         metrics = [
-            RAGASContextualPrecisionMetric(model=self.model_name),
-            RAGASContextualRecallMetric(model=self.model_name),
-            RAGASFaithfulnessMetric(model=self.model_name),
+            RAGASContextualPrecisionMetric(model=self.model),
+            RAGASContextualRecallMetric(model=self.model),
+            RAGASFaithfulnessMetric(model=self.model),
             RAGASAnswerRelevancyMetric(
-                model=self.model_name, embeddings=self.embeddings
+                model=self.model, embeddings=self.embeddings
             ),
         ]
 

@@ -2,8 +2,13 @@ import os
 from typing import List, Optional
 import time
 from dataclasses import dataclass
+import sys
 
-from deepeval.utils import drop_and_copy, get_or_create_event_loop
+from deepeval.utils import (
+    drop_and_copy,
+    get_or_create_event_loop,
+    should_use_cache,
+)
 from deepeval.telemetry import capture_evaluation_count
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.indicator import (
@@ -12,8 +17,14 @@ from deepeval.metrics.indicator import (
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import get_trace_stack
 from deepeval.constants import PYTEST_RUN_TEST_NAME
-from deepeval.test_run import test_run_manager, APITestCase, MetricsMetadata
+from deepeval.test_run import test_run_manager, APITestCase, MetricMetadata
 from deepeval.utils import get_is_running_deepeval, set_indicator
+from deepeval.test_run.cache import (
+    test_run_cache_manager,
+    Cache,
+    CachedTestCase,
+    CachedMetricData,
+)
 
 
 @dataclass
@@ -27,6 +38,18 @@ class TestResult:
     expected_output: str
     context: List[str]
     retrieval_context: List[str]
+
+
+def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
+    return MetricMetadata(
+        metric=metric.__name__,
+        score=metric.score,
+        threshold=metric.threshold,
+        reason=metric.reason,
+        success=metric.is_successful(),
+        strictMode=metric.strict_mode,
+        evaluationModel=metric.evaluation_model,
+    )
 
 
 def create_test_result(
@@ -72,41 +95,82 @@ def create_api_test_case(
 def execute_test_cases(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
+    use_cache: bool,
     save_to_disk: bool = False,
 ) -> List[TestResult]:
     test_results: List[TestResult] = []
+    test_run_cache_manager.disable_write_cache = save_to_disk == False
     test_run_manager.save_to_disk = save_to_disk
+    test_run = test_run_manager.get_test_run()
     for index, test_case in enumerate(test_cases):
         success = True
+        cached_test_case = None
+        if use_cache:
+            cached_test_case = test_run_cache_manager.get_cached_test_case(
+                test_case,
+                test_run.hyperparameters,
+                test_run.model,
+                test_run.user_prompt_template,
+            )
+
+        ##### Metric Calculation #####
         api_test_case: APITestCase = create_api_test_case(test_case, index)
+        new_cached_test_case: CachedTestCase = CachedTestCase()
         test_start_time = time.perf_counter()
 
         for metric in metrics:
-            # Override metric async
-            metric.async_mode = False
+            metric_metadata = None
+            if cached_test_case is not None:
+                cached_metric_data = Cache.get_metric_data(
+                    metric, cached_test_case
+                )
+                if cached_metric_data:
+                    metric_metadata = cached_metric_data.metric_metadata
 
-            metric.measure(test_case)
-            metric_metadata = MetricsMetadata(
-                metric=metric.__name__,
-                score=metric.score,
-                threshold=metric.threshold,
-                reason=metric.reason,
-                success=metric.is_successful(),
-                evaluationModel=metric.evaluation_model,
-            )
-            api_test_case.metrics_metadata.append(metric_metadata)
+            if metric_metadata is None:
+                metric.async_mode = False  # Override metric async
+                metric.measure(test_case)
+                metric_metadata = create_metric_metadata(metric)
+
             if metric_metadata.success is False:
                 success = False
+
+            api_test_case.metrics_metadata.append(metric_metadata)
+            updated_cached_metric_data = CachedMetricData(
+                metric_metadata=metric_metadata,
+                metric_configuration=Cache.create_metric_configuration(metric),
+            )
+            new_cached_test_case.cached_metrics_data.append(
+                updated_cached_metric_data
+            )
 
         test_end_time = time.perf_counter()
         run_duration = test_end_time - test_start_time
         api_test_case.run_duration = run_duration
         api_test_case.success = success
 
+        ### Save Test Run ###
         test_run = test_run_manager.get_test_run()
         test_run.test_cases.append(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
         test_run_manager.save_test_run()
+
+        ### Cache Test Run ###
+        test_run_cache_manager.cache_test_case(
+            test_case,
+            new_cached_test_case,
+            test_run.hyperparameters,
+            test_run.model,
+            test_run.user_prompt_template,
+        )
+        test_run_cache_manager.cache_test_case(
+            test_case,
+            new_cached_test_case,
+            test_run.hyperparameters,
+            test_run.model,
+            test_run.user_prompt_template,
+            to_temp=True,
+        )
 
         test_result = create_test_result(
             test_case, success, drop_and_copy(metrics, ["model", "embeddings"])
@@ -119,39 +183,75 @@ def execute_test_cases(
 async def a_execute_test_cases(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
+    use_cache: bool,
     save_to_disk: bool = False,
 ) -> List[TestResult]:
     test_results: List[TestResult] = []
+    test_run_cache_manager.disable_write_cache = save_to_disk == False
     test_run_manager.save_to_disk = save_to_disk
+    test_run = test_run_manager.get_test_run()
     for index, test_case in enumerate(test_cases):
         success = True
-        api_test_case: APITestCase = create_api_test_case(test_case, index)
-        test_start_time = time.perf_counter()
-
-        await measure_metrics_with_indicator(metrics, test_case)
-        for metric in metrics:
-            metric_metadata = MetricsMetadata(
-                metric=metric.__name__,
-                score=metric.score,
-                threshold=metric.threshold,
-                reason=metric.reason,
-                success=metric.is_successful(),
-                evaluationModel=metric.evaluation_model,
+        cached_test_case = None
+        if use_cache:
+            cached_test_case = test_run_cache_manager.get_cached_test_case(
+                test_case,
+                test_run.hyperparameters,
+                test_run.model,
+                test_run.user_prompt_template,
             )
-            api_test_case.metrics_metadata.append(metric_metadata)
+
+        ##### Metric Calculation #####
+        api_test_case: APITestCase = create_api_test_case(test_case, index)
+        new_cached_test_case: CachedTestCase = CachedTestCase()
+        test_start_time = time.perf_counter()
+        await measure_metrics_with_indicator(
+            metrics,
+            test_case,
+            cached_test_case,
+        )
+        for metric in metrics:
+            metric_metadata = create_metric_metadata(metric)
 
             if metric_metadata.success is False:
                 success = False
+
+            api_test_case.metrics_metadata.append(metric_metadata)
+            updated_cached_metric_data = CachedMetricData(
+                metric_metadata=metric_metadata,
+                metric_configuration=Cache.create_metric_configuration(metric),
+            )
+            new_cached_test_case.cached_metrics_data.append(
+                updated_cached_metric_data
+            )
 
         test_end_time = time.perf_counter()
         run_duration = test_end_time - test_start_time
         api_test_case.run_duration = run_duration
         api_test_case.success = success
 
+        ### Save Test Run ###
         test_run = test_run_manager.get_test_run()
         test_run.test_cases.append(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
         test_run_manager.save_test_run()
+
+        ### Cache Test Run ###
+        test_run_cache_manager.cache_test_case(
+            test_case,
+            new_cached_test_case,
+            test_run.hyperparameters,
+            test_run.model,
+            test_run.user_prompt_template,
+        )
+        test_run_cache_manager.cache_test_case(
+            test_case,
+            new_cached_test_case,
+            test_run.hyperparameters,
+            test_run.model,
+            test_run.user_prompt_template,
+            to_temp=True,
+        )
 
         test_result = create_test_result(
             test_case, success, drop_and_copy(metrics, ["model", "embeddings"])
@@ -164,6 +264,7 @@ async def a_execute_test_cases(
 def assert_test(
     test_case: LLMTestCase, metrics: List[BaseMetric], run_async: bool = True
 ):
+
     # TODO: refactor
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
@@ -177,13 +278,20 @@ def assert_test(
         loop = get_or_create_event_loop()
         test_result = loop.run_until_complete(
             a_execute_test_cases(
-                [test_case], metrics, get_is_running_deepeval()
+                [test_case],
+                metrics,
+                use_cache=should_use_cache(),
+                save_to_disk=get_is_running_deepeval(),
             )
         )[0]
     else:
         test_result = execute_test_cases(
-            [test_case], metrics, get_is_running_deepeval()
+            [test_case],
+            metrics,
+            use_cache=should_use_cache(),
+            save_to_disk=get_is_running_deepeval(),
         )[0]
+
     if not test_result.success:
         failed_metrics = [
             metric
@@ -205,6 +313,7 @@ def evaluate(
     run_async: bool = True,
     show_indicator: bool = True,
     print_results: bool = True,
+    use_cache: bool = False,
 ):
     set_indicator(show_indicator)
 
@@ -227,10 +336,14 @@ def evaluate(
     if run_async:
         loop = get_or_create_event_loop()
         test_results = loop.run_until_complete(
-            a_execute_test_cases(test_cases, metrics, True)
+            a_execute_test_cases(
+                test_cases, metrics, use_cache=use_cache, save_to_disk=True
+            )
         )
     else:
-        test_results = execute_test_cases(test_cases, metrics, True)
+        test_results = execute_test_cases(
+            test_cases, metrics, use_cache=use_cache, save_to_disk=True
+        )
 
     capture_evaluation_count()
 

@@ -225,7 +225,7 @@ class EvaluationDataset:
             actual_output = json_obj[actual_output_key_name]
             expected_output = json_obj.get(expected_output_key_name)
             context = json_obj.get(context_key_name)
-            retrieval_context = json_obj.get(context_key_name)
+            retrieval_context = json_obj.get(retrieval_context_key_name)
 
             self.add_test_case(
                 LLMTestCase(
@@ -234,74 +234,6 @@ class EvaluationDataset:
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
-                    dataset_alias=self.alias,
-                )
-            )
-
-    def add_test_cases_from_hf_dataset(
-        self,
-        dataset_name: str,
-        input_field_name: str,
-        actual_output_field_name: str,
-        expected_output_field_name: Optional[str] = None,
-        context_field_name: Optional[str] = None,
-        split: str = "train",
-    ):
-        """
-        Load test cases from a Hugging Face dataset.
-
-        This method loads a specified dataset and split from Hugging Face's datasets library, then iterates through each entry to create and add LLMTestCase objects to the Dataset instance based on specified field names.
-
-        Args:
-            dataset_name (str): The name of the Hugging Face dataset to load.
-            split (str): The split of the dataset to load (e.g., 'train', 'test', 'validation'). Defaults to 'train'.
-            input_field_name (str): The field name in the dataset corresponding to the input for the test case.
-            actual_output_field_name (str): The field name in the dataset corresponding to the actual output for the test case.
-            expected_output_field_name (str, optional): The field name in the dataset corresponding to the expected output for the test case. Defaults to None.
-            context_field_name (str, optional): The field name in the dataset corresponding to the context for the test case. Defaults to None.
-
-        Returns:
-            None: The method adds test cases to the Dataset instance but does not return anything.
-
-        Raises:
-            ValueError: If the required fields (input and actual output) are not found in the dataset.
-            FileNotFoundError: If the specified dataset is not available in Hugging Face's datasets library.
-            datasets.DatasetNotFoundError: Specific Hugging Face error if the dataset or split is not found.
-            json.JSONDecodeError: If there is an issue in reading or processing the dataset.
-
-        Note:
-            Ensure that the dataset structure aligns with the expected field names. The method assumes each dataset entry is a dictionary-like object.
-        """
-
-        try:
-            from datasets import load_dataset
-        except ImportError:
-            raise ImportError(
-                "The 'datasets' library is missing. Please install it using pip: pip install datasets"
-            )
-        hf_dataset = load_dataset(dataset_name, split=split)
-
-        # Process each entry in the dataset
-        for entry in hf_dataset:
-            if (
-                input_field_name not in entry
-                or actual_output_field_name not in entry
-            ):
-                raise ValueError(
-                    "Required fields are missing in one or more dataset entries"
-                )
-
-            input = entry[input_field_name]
-            actual_output = entry[actual_output_field_name]
-            expected_output = entry.get(expected_output_field_name)
-            context = entry.get(context_field_name)
-
-            self.add_test_case(
-                LLMTestCase(
-                    input=input,
-                    actual_output=actual_output,
-                    expected_output=expected_output,
-                    context=context,
                     dataset_alias=self.alias,
                 )
             )
@@ -370,9 +302,41 @@ class EvaluationDataset:
         synthesizer: BaseSynthesizer,
         contexts: List[List[str]],
         max_goldens_per_context: int = 2,
+        num_evolutions: int = 1,
+        enable_breadth_evolve: bool = False,
+        source_files: Optional[List[str]] = None,
+        _show_indicator: bool = True,
     ):
         self.goldens.extend(
-            synthesizer.generate_goldens(contexts, max_goldens_per_context)
+            synthesizer.generate_goldens(
+                contexts=contexts,
+                max_goldens_per_context=max_goldens_per_context,
+                num_evolutions=num_evolutions,
+                enable_breadth_evolve=enable_breadth_evolve,
+                source_files=source_files,
+                _show_indicator=_show_indicator,
+            )
+        )
+
+    def generate_goldens_from_docs(
+        self,
+        synthesizer: BaseSynthesizer,
+        document_paths: List[str],
+        max_goldens_per_document: int = 5,
+        chunk_size: int = 1024,
+        chunk_overlap: int = 0,
+        num_evolutions: int = 1,
+        enable_breadth_evolve: bool = False,
+    ):
+        self.goldens.extend(
+            synthesizer.generate_goldens_from_docs(
+                document_paths=document_paths,
+                max_goldens_per_document=max_goldens_per_document,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                num_evolutions=num_evolutions,
+                enable_breadth_evolve=enable_breadth_evolve,
+            )
         )
 
     # TODO: add save test cases as well

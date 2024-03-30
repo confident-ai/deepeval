@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "0.20.99"
+version = "0.21.13"
 description = "The Evaluation Framework for LLMs"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -40,6 +40,7 @@ setuptools = "*"
 wheel = "*"
 aiohttp = "*"
 llama-index = "*"
+docx2txt = "^0.8"
 importlib-metadata = "^7.0.2"
 
 [tool.black]
