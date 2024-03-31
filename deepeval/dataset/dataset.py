@@ -292,6 +292,8 @@ class EvaluationDataset:
                 self.test_cases = convert_goldens_to_test_cases(
                     response.goldens, alias
                 )
+            else:
+                self.goldens = response.goldens
         else:
             raise Exception(
                 "Run `deepeval login` to pull dataset from Confident AI"
