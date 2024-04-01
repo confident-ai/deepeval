@@ -78,24 +78,36 @@ class GPTModel(DeepEvalBaseLLM):
 
         return ChatOpenAI(model_name=self.model_name)
 
-    @retry(wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10), retry_error_cls=openai.RateLimitError)
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry_error_cls=openai.RateLimitError,
+    )
     def generate(self, prompt: str) -> Union[str, AIMessage]:
         chat_model = self.load_model()
         res = chat_model.invoke(prompt)
         return res.content
 
-    @retry(wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10), retry_error_cls=openai.RateLimitError)
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry_error_cls=openai.RateLimitError,
+    )
     async def a_generate(self, prompt: str) -> Union[str, AIMessage]:
         chat_model = self.load_model()
         res = await chat_model.ainvoke(prompt)
         return res.content
 
-    @retry(wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10), retry_error_cls=openai.RateLimitError)
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry_error_cls=openai.RateLimitError,
+    )
     def generate_raw_response(self, prompt: str, **kwargs) -> AIMessage:
         chat_model = self.load_model().bind(**kwargs)
         return chat_model.invoke(prompt)
 
-    @retry(wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10), retry_error_cls=openai.RateLimitError)
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry_error_cls=openai.RateLimitError,
+    )
     async def a_generate_raw_response(self, prompt: str, **kwargs) -> AIMessage:
         chat_model = self.load_model().bind(**kwargs)
         return await chat_model.ainvoke(prompt)

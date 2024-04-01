@@ -113,11 +113,12 @@ class SummarizationMetric(BaseMetric):
                 self._a_generate_claims(test_case.input),
                 self._a_generate_claims(test_case.actual_output),
             )
-            self.coverage_verdicts, self.alignment_verdicts = (
-                await asyncio.gather(
-                    self._a_generate_coverage_verdicts(test_case),
-                    self._a_generate_alignment_verdicts(),
-                )
+            (
+                self.coverage_verdicts,
+                self.alignment_verdicts,
+            ) = await asyncio.gather(
+                self._a_generate_coverage_verdicts(test_case),
+                self._a_generate_alignment_verdicts(),
             )
             alignment_score = self._calculate_score(ScoreType.ALIGNMENT)
             coverage_score = self._calculate_score(ScoreType.COVERAGE)
