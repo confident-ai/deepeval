@@ -3,7 +3,6 @@ from langchain_openai import OpenAIEmbeddings, AzureOpenAIEmbeddings
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseEmbeddingModel
-from deepeval.chat_completion.retry import retry_with_exponential_backoff
 
 valid_openai_embedding_models = [
     "text-embedding-3-small",

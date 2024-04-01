@@ -1,11 +1,13 @@
+import openai
+
 from typing import Optional, Union
 
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_core.language_models import BaseChatModel
 from langchain.schema import AIMessage
+from tenacity import retry, wait_exponential_jitter
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.chat_completion.retry import retry_with_exponential_backoff
 
 valid_gpt_models = [
     "gpt-4-turbo-preview",
@@ -76,24 +78,24 @@ class GPTModel(DeepEvalBaseLLM):
 
         return ChatOpenAI(model_name=self.model_name)
 
-    @retry_with_exponential_backoff
+    @retry(wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10), retry_error_cls=openai.RateLimitError)
     def generate(self, prompt: str) -> Union[str, AIMessage]:
         chat_model = self.load_model()
         res = chat_model.invoke(prompt)
         return res.content
 
-    @retry_with_exponential_backoff
+    @retry(wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10), retry_error_cls=openai.RateLimitError)
     async def a_generate(self, prompt: str) -> Union[str, AIMessage]:
         chat_model = self.load_model()
         res = await chat_model.ainvoke(prompt)
         return res.content
 
-    @retry_with_exponential_backoff
+    @retry(wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10), retry_error_cls=openai.RateLimitError)
     def generate_raw_response(self, prompt: str, **kwargs) -> AIMessage:
         chat_model = self.load_model().bind(**kwargs)
         return chat_model.invoke(prompt)
 
-    @retry_with_exponential_backoff
+    @retry(wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10), retry_error_cls=openai.RateLimitError)
     async def a_generate_raw_response(self, prompt: str, **kwargs) -> AIMessage:
         chat_model = self.load_model().bind(**kwargs)
         return await chat_model.ainvoke(prompt)
