@@ -295,10 +295,12 @@ class GEval(BaseMetric):
                 # Filter out non-decimal token to prevent errors in later int(token) conversion
                 if not token_logprob["token"].isdecimal():
                     continue
-        
+
                 # Calculate the linear probability
                 linear_prob = math.exp(logprob)
-                token_linear_probability[int(token_logprob["token"])] = linear_prob
+                token_linear_probability[int(token_logprob["token"])] = (
+                    linear_prob
+                )
                 sum_linear_probability += linear_prob
 
             sum_of_weighted_scores = 0.0
