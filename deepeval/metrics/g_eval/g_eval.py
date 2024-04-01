@@ -186,7 +186,7 @@ class GEval(BaseMetric):
 
         try:
             res = await self.model.a_generate_raw_response(
-                prompt, return_raw_response=True, logprobs=True, top_logprobs=20
+                prompt, logprobs=True, top_logprobs=20
             )
             data = trimAndLoadJson(res.content)
             reason = data["reason"]
@@ -216,7 +216,7 @@ class GEval(BaseMetric):
 
         try:
             res = self.model.generate_raw_response(
-                prompt, return_raw_response=True, logprobs=True, top_logprobs=20
+                prompt, logprobs=True, top_logprobs=20
             )
             data = trimAndLoadJson(res.content)
             reason = data["reason"]
@@ -284,16 +284,21 @@ class GEval(BaseMetric):
             # Then, calculate the score based on the logprobs
             token_linear_probability: Dict[int, float] = {}
             sum_linear_probability = 0
+            # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
+            min_logprob = math.log(0.01)
             for token_logprob in score_logprobs["top_logprobs"]:
-                # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
                 logprob = token_logprob["logprob"]
 
-                if logprob < math.log(0.01):
+                # Filter out low probability tokens
+                if logprob < min_logprob:
                     continue
-
+                # Filter out non-decimal token to prevent errors in later int(token) conversion
+                if not token_logprob["token"].isdecimal():
+                    continue
+        
                 # Calculate the linear probability
                 linear_prob = math.exp(logprob)
-                token_linear_probability[int(logprob)] = linear_prob
+                token_linear_probability[int(token_logprob["token"])] = linear_prob
                 sum_linear_probability += linear_prob
 
             sum_of_weighted_scores = 0.0
