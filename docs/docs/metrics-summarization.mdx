@@ -73,7 +73,7 @@ There are seven optional parameters when instantiating an `SummarizationMetric` 
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to True, enforces a strict evaluation criterion. In strict mode, the metric score becomes binary: a score of 1 indicates a perfect result, and any outcome less than perfect is scored as 0. Defaulted as `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 
 ## How Is It Calculated?
 

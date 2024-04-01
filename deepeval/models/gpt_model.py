@@ -2,6 +2,7 @@ from typing import Optional, Union
 
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_core.language_models import BaseChatModel
+from langchain.schema import AIMessage
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.chat_completion.retry import retry_with_exponential_backoff
@@ -17,6 +18,7 @@ valid_gpt_models = [
     "gpt-3.5-turbo-1106",
     "gpt-3.5-turbo",
     "gpt-3.5-turbo-16k",
+    "gpt-3.5-turbo-0125",
 ]
 
 default_gpt_model = "gpt-4-0125-preview"
@@ -75,15 +77,26 @@ class GPTModel(DeepEvalBaseLLM):
         return ChatOpenAI(model_name=self.model_name)
 
     @retry_with_exponential_backoff
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str) -> Union[str, AIMessage]:
         chat_model = self.load_model()
-        return chat_model.invoke(prompt).content
+        res = chat_model.invoke(prompt)
+        return res.content
 
     @retry_with_exponential_backoff
-    async def a_generate(self, prompt: str) -> str:
+    async def a_generate(self, prompt: str) -> Union[str, AIMessage]:
         chat_model = self.load_model()
         res = await chat_model.ainvoke(prompt)
         return res.content
+
+    @retry_with_exponential_backoff
+    def generate_raw_response(self, prompt: str, **kwargs) -> AIMessage:
+        chat_model = self.load_model().bind(**kwargs)
+        return chat_model.invoke(prompt)
+
+    @retry_with_exponential_backoff
+    async def a_generate_raw_response(self, prompt: str, **kwargs) -> AIMessage:
+        chat_model = self.load_model().bind(**kwargs)
+        return await chat_model.ainvoke(prompt)
 
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)

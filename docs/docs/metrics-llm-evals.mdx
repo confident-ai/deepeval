@@ -41,7 +41,7 @@ There are three mandatory and five optional parameters required when instantiati
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 
 :::danger
 For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
@@ -64,5 +64,7 @@ print(coherence_metric.reason)
 ```
 
 :::tip
-Remember, you can configure `deepeval` to [use Azure OpenAI for all LLM-based metrics.](metrics-introduction#using-azure-openai)
+Did you know that in the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the authors used the the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation?
+
+This step was introduced in the paper because it minimizes bias in LLM scoring. **This normalization is handled by `deepeval` by default** (unless you're using a custom model).
 :::

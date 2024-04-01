@@ -4,7 +4,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import SummarizationMetric
 
 
-@pytest.mark.skip(reason="openai is expdensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_summarization():
     metric = SummarizationMetric()
 
@@ -26,4 +26,4 @@ def test_summarization():
 
     test_case = LLMTestCase(input=input, actual_output=output)
 
-    assert_test(test_case, [metric], run_async=False)
+    assert_test(test_case, [metric])

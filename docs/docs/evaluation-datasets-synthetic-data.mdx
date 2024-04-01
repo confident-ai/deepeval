@@ -1,0 +1,123 @@
+---
+id: evaluation-datasets-synthetic-data
+title: Generate Synthetic Data
+sidebar_label: Generate Synthetic Data
+---
+
+## Quick Summary
+
+In `deepeval`, you can also generate a synthetic dataset (or evaluation dataset) using the `Synthesizer` class. The `Synthesizer` class is a synthetic data generator that first uses an LLM to generate a series of `input`s, before evolving each `input` to make them more complex and realistic. These evolved inputs are then used to create a list of goldens, which will form your `EvaluationDataset`.
+
+There are two optional parameters when creating a Synthesizer:
+
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR **any custom LLM model** of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
+- [Optional] `multithreading`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
+
+:::info
+`deepeval` uses the data evolution method to generate large volumes of data across various complexity levels. This method was originally introduced by the developers of Eval-Struct and WizardML. For further details, [read the original paper here](https://arxiv.org/abs/2304.12244).
+:::
+
+## Synthetic Dataset Generation
+
+There are 2 approaches to synthetic dataset generation in `deepeval`:
+
+1. Generating an `EvaluationDataset` from documents (.pdf, .docx, .txt)
+2. Generating an `EvaluationDataset` from a list of contexts
+
+### From Documents
+
+The `generate_goldens_from_docs` method in `Synthesizer` takes a list of document paths and uses the content within these documents to create contexts for goldens. It then generates inputs from these contexts and evolves them. `deepeval` currently supports .txt, .docx, and .pdf formats.
+
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.dataset import EvaluationDataset
+
+# Use synthesizer directly
+synthesizer = Synthesizer()
+synthesizer.generate_goldens_from_docs(
+    document_paths=['example_1.txt', 'example_2.docx', 'example_3.pdf'],
+    max_goldens_per_document=2
+)
+synthesizer.save_as(
+    # also accepts 'csv'
+    file_type='json',
+    path="./synthetic_data"
+)
+
+
+# Use synthesizer within an EvaluationDataset
+dataset = EvaluationDataset()
+dataset.generate_goldens_from_docs(
+    document_paths=['example_1.txt', 'example_2.docx', 'example_3.pdf'],
+    max_goldens_per_document=2
+)
+dataset.save_as(
+    # also accepts 'csv'
+    file_type='json',
+    path="./synthetic_data"
+)
+```
+
+In addition to `document_paths`, the `generate_goldens_from_docs` method offers several parameters to fine-tune the synthetic data generation process. The list of arguments is listed below.
+
+- `document_paths`: a list of paths (strings) to the documents from which contexts will be extracted. This method supports documents in .txt, .docx, and .pdf formats.
+- [Optional] `max_goldens_per_document`: the maximum number of golden data points to be generated for each document. Default value is 5.
+- [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered for context extraction within each document. Default value is 1024.
+- [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during context extraction. Default value is 0.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Default value is 1.
+- [Optional] `enable_breadth_evolve`: a boolean indicating whether to enable breadth evolution strategies during data generation. When set to True, it introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Default value is False.
+
+These parameters enable users to adjust context extraction, data evolution, and dataset complexity, ensuring the synthetic data meets specific needs and challenges for their machine learning models.
+
+:::caution
+The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
+:::
+
+### From Contexts
+
+The `generate_goldens` method within the Synthesizer class allows for the creation of an evaluation dataset from a manually provided list of `contexts`, which is of type `list[list[str]]`.
+
+This method directly transforms predefined textual contexts into inputs, which are then evolved. The evolved inputs form the basis of the goldens in your evaluation dataset.
+
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.dataset import EvaluationDataset
+
+# Initialize the Synthesizer
+synthesizer = Synthesizer()
+
+# Define a list of contexts for synthetic data generation
+contexts = [
+    ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
+    ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
+]
+
+# Generate goldens directly with the synthesizer
+synthesizer.generate_goldens(contexts=contexts)
+synthesizer.save_as(
+    file_type='json',  # The method also supports 'csv'
+    path="./synthetic_data"
+)
+
+# Generate goldens within an EvaluationDataset
+dataset = EvaluationDataset()
+dataset.generate_goldens(
+    synthesizer=synthesizer,
+    contexts=contexts
+)
+dataset.save_as(
+    file_type='json',  # Similarly, this supports 'csv'
+    path="./synthetic_data"
+)
+```
+
+For the `generate_goldens` method in `deepeval`, the parameters are:
+
+- `contexts`: a list of contexts, where each context is itself a list of strings sharing a common theme or subject area.
+- [Optional] `max_goldens_per_context`: the maximum number of golden data points to be generated from each context. Adjusting this parameter can influence the size of the resulting dataset. Defaulted to 2.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Default value is 1.
+- [Optional] `enable_breadth_evolve`: a boolean indicating whether to enable breadth evolution strategies during data generation. When set to True, it introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Default value is False.
+
+:::tip
+Remember to to call `save_as()` just to be safe.
+:::

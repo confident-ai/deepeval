@@ -16,7 +16,6 @@ setup(
         "tqdm",
         "pytest",
         "tabulate",
-        "pytest",
         "typer",
         "rich",
         "protobuf==4.25.1",
@@ -29,6 +28,8 @@ setup(
         "langchain-core",
         "langchain_openai",
         "ragas",
+        "docx2txt~=0.8",
+        "importlib-metadata~=7.0.2",
     ],
     extras_require={
         "dev": ["black"],

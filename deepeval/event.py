@@ -8,7 +8,7 @@ class APIEvent(BaseModel):
     name: str = Field(..., alias="name")
     model: str
     input: str
-    output: str
+    response: str
     retrieval_context: Optional[List[str]] = Field(
         None, alias="retrievalContext"
     )
@@ -24,7 +24,7 @@ def track(
     event_name: str,
     model: str,
     input: str,
-    output: str,
+    response: str,
     retrieval_context: Optional[List[str]] = None,
     completion_time: Optional[float] = None,
     token_usage: Optional[float] = None,
@@ -49,7 +49,7 @@ def track(
         name=event_name,
         model=model,
         input=input,
-        output=output,
+        response=response,
         retrievalContext=retrieval_context,
         completionTime=completion_time,
         tokenUsage=token_usage,

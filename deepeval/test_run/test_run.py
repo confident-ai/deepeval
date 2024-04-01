@@ -17,7 +17,12 @@ from deepeval.test_run.api import (
     APITestCase,
     TestRunHttpResponse,
 )
-from deepeval.utils import delete_file_if_exists, is_confident
+from deepeval.utils import (
+    delete_file_if_exists,
+    get_is_running_deepeval,
+    is_confident,
+)
+from deepeval.test_run.cache import test_run_cache_manager
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
 
@@ -194,6 +199,7 @@ class TestRunManager:
             ) as e:
                 print(f"Error loading test run from disk: {e}", file=sys.stderr)
                 self.test_run = None
+
         return self.test_run
 
     def save_test_run(self):
@@ -204,7 +210,10 @@ class TestRunManager:
                 ) as file:
                     self.test_run = self.test_run.save(file)
             except portalocker.exceptions.LockException:
-                print("Error saving test run to disk", file=sys.stderr)
+                print(
+                    "In save_test_run, Error saving test run to disk",
+                    file=sys.stderr,
+                )
 
     def clear_test_run(self):
         self.test_run = None
@@ -366,6 +375,7 @@ class TestRunManager:
         test_run = self.get_test_run()
         test_run.calculate_test_passes_and_fails()
         test_run.construct_metrics_scores()
+
         if test_run is None:
             print("Test Run is empty, please try again.")
             delete_file_if_exists(self.temp_file_name)
@@ -374,6 +384,11 @@ class TestRunManager:
             print("No test cases found, please try again.")
             delete_file_if_exists(self.temp_file_name)
             return
+
+        test_run_cache_manager.disable_write_cache = (
+            get_is_running_deepeval() == False
+        )
+        test_run_cache_manager.wrap_up_cached_test_run()
 
         if display_table:
             self.display_results_table(test_run)

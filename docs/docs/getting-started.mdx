@@ -100,10 +100,10 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
 test_case = LLMTestCase(input="...", actual_output="...")
-metric = AnswerRelevancyMetric(threshold=0.5)
+relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
 
-metric.measure(test_case)
-print(metric.score, metric.reason)
+relevancy_metric.measure(test_case)
+print(relevancy_metric.score, relevancy_metric.reason)
 ```
 
 Note that you can run a metric as a standalone or as part of a test run as shown in previous sections.
@@ -114,22 +114,22 @@ All default metrics are evaluated using LLMs, and you can use **ANY** LLM of you
 
 ### Custom Metrics
 
-`deepeval` provides G-Eval, a state-of-the-art LLM evaluation framework for anyone to createa a custom LLM-evaluated metric using natural language. Here's an example:
+`deepeval` provides G-Eval, a state-of-the-art LLM evaluation framework for anyone to create a custom LLM-evaluated metric using natural language. Here's an example:
 
 ```python
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import GEval
 
 test_case = LLMTestCase(input="...", actual_output="...")
-metric = GEval(
+correctness_metric = GEval(
     name="Correctness",
     criteria="Correctness - determine if the actual output is correct according to the expected output.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
     strict=True
 )
 
-metric.measure(test_case)
-print(metric.score, metric.reason)
+correctness_metric.measure(test_case)
+print(correctness_metric.score, correctness_metric.reason)
 ```
 
 Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjuction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](metrics-llm-evals)
@@ -166,6 +166,15 @@ class RougeMetric(BaseMetric):
     @property
     def __name__(self):
         return "Rouge Metric"
+
+#####################
+### Example Usage ###
+#####################
+test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
+metric = RougeMetric()
+
+metric.measure(test_case)
+print(metric.is_successful())
 ```
 
 You'll notice that although not documented, `deepeval` additionally offers a `scorer` module for more traditional NLP scoring method and can be found [here.](https://github.com/confident-ai/deepeval/blob/main/deepeval/scorer/scorer.py)
@@ -182,7 +191,7 @@ To avoid redundant code, `deepeval` offers an easy way to apply as many metrics 
 ...
 
 def test_everything():
-    assert_test(test_case, [answer_relevancy_metric, coherence_metric, length_metric])
+    assert_test(test_case, [answer_relevancy_metric, correctness_metric])
 ```
 
 In this scenario, `test_everything` only passes if all metrics are passing. Run `deepeval test run` again to see the results:
@@ -249,20 +258,20 @@ evaluate(dataset, [answer_relevancy_metric])
 
 :::
 
-Additionally, you can run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
+Additionally, you can avoid re-evaluating test cases by reading from `deepeval`'s local cache using the optional `-c` flag:
+
+```
+deepeval test run test_dataset.py -c
+```
+
+Or run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 
 ```
 deepeval test run test_dataset.py -n 2
 ```
 
-Or repeat evaluating each test case how ever many times you want through the `-r` flag:
-
-```
-deepeval test run test_dataset.py -r 2
-```
-
 :::info
-Visit the [datasets section](evaluation-datasets) to learn about everything an `EvaluationDataset` has to offer.
+Visit the [evaluation introduction section](evaluation-introduction#evaluating-with-pytest) to learn about the different types of flags you can use with the `deepeval test run` command.
 :::
 
 ## Using Confident AI

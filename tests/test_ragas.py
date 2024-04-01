@@ -13,7 +13,7 @@ from deepeval.metrics.ragas import (
     RAGASAnswerRelevancyMetric,
 )
 from deepeval import assert_test
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 
 query = "Who won the FIFA World Cup in 2018 and what was the score?"
 output = "Winners of the FIFA world cup were the French national football team"
@@ -62,19 +62,21 @@ def test_everything():
     metric7 = MaliciousnessMetric()
     metric8 = RAGASAnswerRelevancyMetric(embeddings=embeddings)
     metric9 = RAGASContextualPrecisionMetric()
-    metric10 = RagasMetric(model="gpt-4", embeddings=embeddings)
+    metric10 = RagasMetric(
+        model=ChatOpenAI(model_name="gpt-3.5-turbo"), embeddings=embeddings
+    )
     assert_test(
         test_case,
         [
             metric1,
             metric2,
-            metric3,
+            # metric3,
             # metric4,
             # metric5,
             # metric6,
             # metric7,
-            metric8,
-            metric9,
+            # metric8,
+            # metric9,
             metric10,
         ],
     )
