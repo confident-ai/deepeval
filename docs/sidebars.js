@@ -46,6 +46,7 @@ module.exports = {
             "benchmarks-big-bench-hard",
             "benchmarks-hellaswag",
             "benchmarks-mmlu",
+            "benchmarks-truthful-qa",
           ],
           collapsed: false,
         },
