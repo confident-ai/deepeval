@@ -28,6 +28,7 @@ class GPTModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model: Optional[str] = None,
+        _openai_api_key: Optional[str] = None,
         *args,
         **kwargs,
     ):
@@ -41,6 +42,7 @@ class GPTModel(DeepEvalBaseLLM):
         elif model is None:
             model_name = default_gpt_model
 
+        self._openai_api_key = _openai_api_key
         super().__init__(model_name, *args, **kwargs)
 
     def load_model(self):
@@ -74,7 +76,9 @@ class GPTModel(DeepEvalBaseLLM):
                 model_version=model_version,
             )
 
-        return ChatOpenAI(model_name=self.model_name)
+        return ChatOpenAI(
+            model_name=self.model_name, openai_api_key=self._openai_api_key
+        )
 
     @retry_with_exponential_backoff
     def generate(self, prompt: str) -> Union[str, AIMessage]:
