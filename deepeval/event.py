@@ -18,6 +18,7 @@ class APIEvent(BaseModel):
     conversation_id: Optional[str] = Field(None, alias="conversationId")
     additional_data: Optional[Dict] = Field(None, alias="additionalData")
 
+
 class EventHttpResponse(BaseModel):
     eventId: str
 
@@ -66,4 +67,4 @@ def track(
         return response.eventId
     except Exception as e:
         if not fail_silently:
-            raise(e)
+            raise (e)
