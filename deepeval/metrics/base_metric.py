@@ -12,6 +12,7 @@ class BaseMetric:
     evaluation_model: Optional[str] = None
     strict_mode: bool = False
     async_mode: bool = True
+    include_reason: bool = False
 
     @property
     def threshold(self) -> float:
