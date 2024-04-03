@@ -13,6 +13,3 @@ def test_cohere_model():
     res = model.generate(prompt)
 
     assert res is not None
-
-if __name__ == '__main__':
-    test_cohere_model()
