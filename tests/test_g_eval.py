@@ -7,7 +7,7 @@ from unittest import mock
 import os
 
 
-@pytest.mark.skip(reasong="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_g_eval():
     metric = GEval(
         name="Validity",
