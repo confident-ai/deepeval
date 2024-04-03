@@ -173,7 +173,10 @@ class ContextualRelevancyMetric(BaseMetric):
         return verdicts
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.threshold
+        try:
+            self.success = self.score >= self.threshold
+        except:
+            self.success = False
         return self.success
 
     @property

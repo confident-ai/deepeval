@@ -78,10 +78,14 @@ async def measure_metric_task(
         else:
             try:
                 await metric.a_measure(test_case, _show_indicator=False)
+                finish_text = "Done"
             except TypeError:
                 await metric.a_measure(test_case)
-            finally:
                 finish_text = "Done"
+            except Exception as e:
+                metric.error = str(e)
+                metric.success = False  # Override metric success
+                finish_text = "Errored"
 
         end_time = time.perf_counter()
         time_taken = format(end_time - start_time, ".2f")
@@ -147,5 +151,7 @@ async def measure_metrics_with_indicator(
                     )
                 except TypeError:
                     tasks.append(metric.a_measure(test_case))
+                except Exception as e:
+                    metric.error = str(e)
 
         await asyncio.gather(*tasks)

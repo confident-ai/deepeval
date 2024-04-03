@@ -41,15 +41,28 @@ class TestResult:
 
 
 def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
-    return MetricMetadata(
-        metric=metric.__name__,
-        score=metric.score,
-        threshold=metric.threshold,
-        reason=metric.reason,
-        success=metric.is_successful(),
-        strictMode=metric.strict_mode,
-        evaluationModel=metric.evaluation_model,
-    )
+    if metric.error is not None:
+        return MetricMetadata(
+            metric=metric.__name__,
+            threshold=metric.threshold,
+            score=None,
+            reason=None,
+            success=False,
+            strictMode=metric.strict_mode,
+            evaluationModel=metric.evaluation_model,
+            error=metric.error,
+        )
+    else:
+        return MetricMetadata(
+            metric=metric.__name__,
+            score=metric.score,
+            threshold=metric.threshold,
+            reason=metric.reason,
+            success=metric.is_successful(),
+            strictMode=metric.strict_mode,
+            evaluationModel=metric.evaluation_model,
+            error=None,
+        )
 
 
 def create_test_result(
@@ -129,20 +142,28 @@ def execute_test_cases(
 
             if metric_metadata is None:
                 metric.async_mode = False  # Override metric async
-                metric.measure(test_case)
-                metric_metadata = create_metric_metadata(metric)
+                try:
+                    metric.measure(test_case)
+                    metric_metadata = create_metric_metadata(metric)
+                except Exception as e:
+                    metric.error = str(e)
+                    metric.success = False  # Override metric success
+                    metric_metadata = create_metric_metadata(metric)
 
             if metric_metadata.success is False:
                 success = False
 
             api_test_case.metrics_metadata.append(metric_metadata)
-            updated_cached_metric_data = CachedMetricData(
-                metric_metadata=metric_metadata,
-                metric_configuration=Cache.create_metric_configuration(metric),
-            )
-            new_cached_test_case.cached_metrics_data.append(
-                updated_cached_metric_data
-            )
+            if metric.error is None:
+                updated_cached_metric_data = CachedMetricData(
+                    metric_metadata=metric_metadata,
+                    metric_configuration=Cache.create_metric_configuration(
+                        metric
+                    ),
+                )
+                new_cached_test_case.cached_metrics_data.append(
+                    updated_cached_metric_data
+                )
 
         test_end_time = time.perf_counter()
         run_duration = test_end_time - test_start_time
@@ -217,13 +238,17 @@ async def a_execute_test_cases(
                 success = False
 
             api_test_case.metrics_metadata.append(metric_metadata)
-            updated_cached_metric_data = CachedMetricData(
-                metric_metadata=metric_metadata,
-                metric_configuration=Cache.create_metric_configuration(metric),
-            )
-            new_cached_test_case.cached_metrics_data.append(
-                updated_cached_metric_data
-            )
+
+            if metric.error is None:
+                updated_cached_metric_data = CachedMetricData(
+                    metric_metadata=metric_metadata,
+                    metric_configuration=Cache.create_metric_configuration(
+                        metric
+                    ),
+                )
+                new_cached_test_case.cached_metrics_data.append(
+                    updated_cached_metric_data
+                )
 
         test_end_time = time.perf_counter()
         run_duration = test_end_time - test_start_time
@@ -293,18 +318,21 @@ def assert_test(
         )[0]
 
     if not test_result.success:
-        failed_metrics = [
-            metric
-            for metric in test_result.metrics
-            if not metric.is_successful()
-        ]
+        failed_metrics: List[BaseMetric] = []
+        for metric in test_result.metrics:
+            try:
+                if not metric.is_successful():
+                    failed_metrics.append(metric)
+            except:
+                failed_metrics.append(metric)
+
         failed_metrics_str = ", ".join(
             [
                 f"{metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode})"
                 for metric in failed_metrics
             ]
         )
-        raise AssertionError(f"Metrics {failed_metrics_str} failed.")
+        raise AssertionError(f"Metric {failed_metrics_str} failed.")
 
 
 def evaluate(

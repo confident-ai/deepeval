@@ -132,6 +132,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         return knowledges
 
     def is_successful(self) -> bool:
+        try:
+            self.score >= self.threshold
+        except:
+            self.success = False
         return self.success
 
     @property

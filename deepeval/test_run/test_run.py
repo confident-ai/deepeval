@@ -110,6 +110,8 @@ class TestRun(BaseModel):
             for metric_metadata in test_case.metrics_metadata:
                 metric = metric_metadata.metric
                 score = metric_metadata.score
+                if score is None:
+                    continue
                 if metric in metrics_dict:
                     metrics_dict[metric].append(score)
                 else:
@@ -257,10 +259,15 @@ class TestRunManager:
                 if evaluation_model is None:
                     evaluation_model = "n/a"
 
+                if metric_metadata.score is not None:
+                    metric_score = round(metric_metadata.score, 2)
+                else:
+                    metric_score = None
+
                 table.add_row(
                     "",
                     str(metric_metadata.metric),
-                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason})",
+                    f"{metric_score} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason}, error={metric_metadata.error})",
                     status,
                     "",
                 )

@@ -165,6 +165,10 @@ class BiasMetric(BaseMetric):
         return 1 if self.strict_mode and score > self.threshold else score
 
     def is_successful(self) -> bool:
+        try:
+            self.success = self.score <= self.threshold
+        except:
+            self.success = False
         return self.success
 
     @property

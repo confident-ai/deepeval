@@ -322,6 +322,10 @@ class GEval(BaseMetric):
         return evaluation_steps
 
     def is_successful(self) -> bool:
+        try:
+            self.score >= self.threshold
+        except:
+            self.success = False
         return self.success
 
     @property
