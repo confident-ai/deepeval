@@ -8,6 +8,8 @@ Evaluation Criteria:
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
+Example:
+"steps": <list_of_strings>,
 **
 
 JSON:
@@ -24,6 +26,9 @@ Evaluation Steps:
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
+Example:
+"score": <float>,
+"reason": <reason_string_and_explanation>
 **
 
 JSON:
