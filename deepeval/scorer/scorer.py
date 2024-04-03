@@ -103,7 +103,6 @@ class Scorer:
             return 0
         return 1 if prediction.strip() == target.strip() else 0
 
-    
     @classmethod
     def quasi_exact_match_score(cls, target: str, prediction: str) -> int:
         if not prediction:
@@ -359,20 +358,20 @@ class Scorer:
             print(f"Unable to load UnBiasedModel.\n{e}")
         scorer = UnBiasedModel(model_name=model)
         return scorer(text)
-    
+
     @classmethod
     def truth_identification_score(cls, target: str, prediction: str) -> int:
         """
         Metrics that calculates the number of correct true answers identified in the prediction.
-        
-        This method assumes both target and prediction are strings representing lists of integers, 
-        formatted like '1,2,3'. It converts these strings to lists of integers, counts how many items 
+
+        This method assumes both target and prediction are strings representing lists of integers,
+        formatted like '1,2,3'. It converts these strings to lists of integers, counts how many items
         in the prediction list are also in the target list, and returns this count as the score.
-        
+
         Args:
             target (str): The target string representing the list of correct answers.
             prediction (str): The predicted string from the LLM, representing the guessed answers.
-        
+
         Returns:
             int: The number of correct answers identified.
         """
@@ -381,15 +380,25 @@ class Scorer:
                 return 0  # Return score as 0 if prediction or target is empty
 
             # Convert strings to sorted lists of integers
-            target_list = sorted([int(item) for item in target.strip("[]").split(",") if item])
-            prediction_list = sorted([int(item) for item in prediction.strip("[]").split(",") if item])
-            
+            target_list = sorted(
+                [int(item) for item in target.strip("[]").split(",") if item]
+            )
+            prediction_list = sorted(
+                [
+                    int(item)
+                    for item in prediction.strip("[]").split(",")
+                    if item
+                ]
+            )
+
             if not target_list:
                 return 0  # Return 0 if target list is empty to avoid division by zero
 
             # Count the number of correct matches
-            correct_matches = sum(1 for item in prediction_list if item in target_list)
-        
+            correct_matches = sum(
+                1 for item in prediction_list if item in target_list
+            )
+
             # Calculate percentage
             score_percentage = (correct_matches / len(target_list)) * 100
 

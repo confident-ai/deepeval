@@ -14,7 +14,11 @@ from deepeval.scorer import Scorer
 
 class TruthfulQA(DeepEvalBaseBenchmark):
 
-    def __init__(self, tasks: List[TruthfulQATask] = None, mode: TruthfulQAMode = TruthfulQAMode.MC1):
+    def __init__(
+        self,
+        tasks: List[TruthfulQATask] = None,
+        mode: TruthfulQAMode = TruthfulQAMode.MC1,
+    ):
         super().__init__()
         self.tasks: List[TruthfulQATask] = (
             list(TruthfulQATask) if tasks is None else tasks
@@ -41,7 +45,9 @@ class TruthfulQA(DeepEvalBaseBenchmark):
 
             # Calculate task accuracy
             for golden in tqdm(goldens, desc=f"Processing {task.value}"):
-                prediction, score = self.predict(model, golden, self.mode).values()
+                prediction, score = self.predict(
+                    model, golden, self.mode
+                ).values()
                 if score:
                     task_correct_predictions += score
                     overall_correct_predictions += score
@@ -71,57 +77,90 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         return overall_accuracy
 
     def predict(
-        self, model: DeepEvalBaseLLM, golden: Golden, mode:TruthfulQAMode
+        self, model: DeepEvalBaseLLM, golden: Golden, mode: TruthfulQAMode
     ) -> Dict:
         # Define prompt template
-        prompt: dict = TruthfulQATemplate.generate_output(input=golden.input, mode=mode)
-        prediction = (model.generate(prompt))
-        
+        prompt: dict = TruthfulQATemplate.generate_output(
+            input=golden.input, mode=mode
+        )
+        prediction = model.generate(prompt)
+
         # Define Metric
         if mode == TruthfulQAMode.MC1:
-            score = self.scorer.exact_match_score(prediction[0], golden.expected_output)
+            score = self.scorer.exact_match_score(
+                prediction[0], golden.expected_output
+            )
 
         if mode == TruthfulQAMode.MC2:
-            prediction = (model.generate(prompt))
+            prediction = model.generate(prompt)
             # Define Metric
-            score = self.scorer.truth_identification_score(golden.expected_output, prediction)
+            score = self.scorer.truth_identification_score(
+                golden.expected_output, prediction
+            )
 
         return {"prediction": prediction, "score": score}
 
-    def load_benchmark_dataset(self, task: TruthfulQATask, mode:TruthfulQAMode) -> List[Golden]:
+    def load_benchmark_dataset(
+        self, task: TruthfulQATask, mode: TruthfulQAMode
+    ) -> List[Golden]:
         # Load full dataset
         if self.mc_dataset is None:
-            gen_dataset = load_dataset("truthful_qa", 'generation')['validation']
-            mc_dataset = load_dataset("truthful_qa", 'multiple_choice')['validation']
+            gen_dataset = load_dataset("truthful_qa", "generation")[
+                "validation"
+            ]
+            mc_dataset = load_dataset("truthful_qa", "multiple_choice")[
+                "validation"
+            ]
             df_mc, df_gen = mc_dataset.to_pandas(), gen_dataset.to_pandas()
-            merged_df = pd.merge(df_mc, df_gen[['question', 'category']], on='question', how='left')
+            merged_df = pd.merge(
+                df_mc,
+                df_gen[["question", "category"]],
+                on="question",
+                how="left",
+            )
             mc_dataset = Dataset.from_pandas(merged_df)
             self.mc_dataset = mc_dataset
         else:
             mc_dataset = self.mc_dataset
-        dataset = self.mc_dataset.filter(lambda data: data["category"] == task.value)
+        dataset = self.mc_dataset.filter(
+            lambda data: data["category"] == task.value
+        )
 
         # Create goldens list from datset
         goldens: List[Golden] = []
         for data in dataset:
             if mode == TruthfulQAMode.MC1:
-                input, expected_output = TruthfulQATemplate.format_mc1_question(data)
+                input, expected_output = TruthfulQATemplate.format_mc1_question(
+                    data
+                )
                 golden = Golden(input=input, expectedOutput=expected_output)
                 goldens.append(golden)
             elif mode == TruthfulQAMode.MC2:
-                input, expected_output = TruthfulQATemplate.format_mc2_question(data)
-                golden = Golden(input=input, expectedOutput=str(expected_output))
+                input, expected_output = TruthfulQATemplate.format_mc2_question(
+                    data
+                )
+                golden = Golden(
+                    input=input, expectedOutput=str(expected_output)
+                )
                 goldens.append(golden)
 
         return goldens
+
 
 ########################
 #### Example Usage #####
 ########################
 from deepeval.models.gpt_model import GPTModel
+
 model = GPTModel()
-benchmark = TruthfulQA([TruthfulQATask.ADVERTISING, TruthfulQATask.FICTION], mode=TruthfulQAMode.MC2)
+benchmark = TruthfulQA(
+    [TruthfulQATask.ADVERTISING, TruthfulQATask.FICTION],
+    mode=TruthfulQAMode.MC2,
+)
 benchmark.evaluate(model)
 
-benchmark = TruthfulQA([TruthfulQATask.ADVERTISING, TruthfulQATask.FICTION], mode=TruthfulQAMode.MC1)
+benchmark = TruthfulQA(
+    [TruthfulQATask.ADVERTISING, TruthfulQATask.FICTION],
+    mode=TruthfulQAMode.MC1,
+)
 benchmark.evaluate(model)
