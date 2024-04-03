@@ -30,6 +30,7 @@ setup(
         "ragas",
         "docx2txt~=0.8",
         "importlib-metadata~=7.0.2",
+        "cohere",
     ],
     extras_require={
         "dev": ["black"],
