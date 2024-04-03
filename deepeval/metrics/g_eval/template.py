@@ -9,7 +9,7 @@ Evaluation Criteria:
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
 Example:
-"steps": <list_of_strings>,
+"steps": <list_of_strings>
 **
 
 JSON:
