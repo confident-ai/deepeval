@@ -1,3 +1,4 @@
+import time
 import pytest
 import typer
 import os
@@ -121,10 +122,12 @@ def run(
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
 
+    start_time = time.perf_counter()
     retcode = pytest.main(pytest_args)
     capture_evaluation_count()
-
-    test_run_manager.wrap_up_test_run()
+    end_time = time.perf_counter()
+    run_duration = end_time - start_time
+    test_run_manager.wrap_up_test_run(run_duration)
 
     invoke_test_run_end_hook()
 

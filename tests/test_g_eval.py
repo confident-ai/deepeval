@@ -17,7 +17,6 @@ def test_g_eval():
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
         ],
-        evaluation_steps=["asd"],
     )
     test_case = LLMTestCase(
         input="What is the capital of France?",

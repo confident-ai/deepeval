@@ -373,7 +373,7 @@ def evaluate(
             )
 
     test_run_manager.reset()
-
+    start_time = time.perf_counter()
     if print_results:
         print("Evaluating test cases...")
     if run_async:
@@ -397,14 +397,15 @@ def evaluate(
         )
 
     capture_evaluation_count()
-
+    end_time = time.perf_counter()
+    run_duration = end_time - start_time
     if print_results:
         for test_result in test_results:
             print_test_result(test_result)
 
         print("")
         print("-" * 70)
-    test_run_manager.wrap_up_test_run(display_table=False)
+    test_run_manager.wrap_up_test_run(run_duration, display_table=False)
     return test_results
 
 

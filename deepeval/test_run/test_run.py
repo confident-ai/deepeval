@@ -102,6 +102,7 @@ class TestRun(BaseModel):
     )
     testPassed: Optional[int] = Field(None)
     testFailed: Optional[int] = Field(None)
+    run_duration: float = Field(0.0, alias="runDuration")
 
     def construct_metrics_scores(self) -> int:
         metrics_dict: Dict[str, List[float]] = {}
@@ -382,11 +383,8 @@ class TestRunManager:
                 print(f"Results saved in {local_folder} as {new_test_filename}")
             os.remove(new_test_filename)
 
-    def wrap_up_test_run(self, display_table: bool = True):
+    def wrap_up_test_run(self, runDuration: float, display_table: bool = True):
         test_run = self.get_test_run()
-        test_run.calculate_test_passes_and_fails()
-        valid_scores = test_run.construct_metrics_scores()
-
         if test_run is None:
             print("Test Run is empty, please try again.")
             delete_file_if_exists(self.temp_file_name)
@@ -395,11 +393,15 @@ class TestRunManager:
             print("No test cases found, please try again.")
             delete_file_if_exists(self.temp_file_name)
             return
-        elif valid_scores == 0:
+
+        valid_scores = test_run.construct_metrics_scores()
+        if valid_scores == 0:
             print("All metrics errored for all test cases, please try again.")
             delete_file_if_exists(self.temp_file_name)
             delete_file_if_exists(test_run_cache_manager.temp_cache_file_name)
             return
+        test_run.run_duration = runDuration
+        test_run.calculate_test_passes_and_fails()
 
         test_run_cache_manager.disable_write_cache = (
             get_is_running_deepeval() == False
