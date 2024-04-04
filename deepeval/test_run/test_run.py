@@ -250,7 +250,9 @@ class TestRunManager:
             )
 
             for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.success:
+                if metric_metadata.error:
+                    status = "[red]ERRORED[/red]"
+                elif metric_metadata.success:
                     status = "[green]PASSED[/green]"
                 else:
                     status = "[red]FAILED[/red]"
@@ -400,9 +402,9 @@ class TestRunManager:
         if display_table:
             self.display_results_table(test_run)
 
+        delete_file_if_exists(self.temp_file_name)
         self.post_test_run(test_run)
         self.save_test_run_locally()
-        delete_file_if_exists(self.temp_file_name)
 
 
 test_run_manager = TestRunManager()

@@ -7,11 +7,8 @@ import math
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.g_eval.template import GEvalTemplate
-from deepeval.utils import (
-    trimAndLoadJson,
-    check_test_case_params,
-    get_or_create_event_loop,
-)
+from deepeval.utils import get_or_create_event_loop
+from deepeval.metrics.utils import trimAndLoadJson, check_test_case_params
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -90,9 +87,7 @@ class GEval(BaseMetric):
         self.async_mode = async_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        check_test_case_params(
-            test_case, self.evaluation_params, f"GEval({self.__name__})"
-        )
+        check_test_case_params(test_case, self.evaluation_params, self)
 
         with metric_progress_indicator(self):
             if self.async_mode:
@@ -119,9 +114,7 @@ class GEval(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
-        check_test_case_params(
-            test_case, self.evaluation_params, f"GEval({self.__name__})"
-        )
+        check_test_case_params(test_case, self.evaluation_params, self)
 
         with metric_progress_indicator(
             self,
@@ -322,12 +315,15 @@ class GEval(BaseMetric):
         return evaluation_steps
 
     def is_successful(self) -> bool:
-        try:
-            self.score >= self.threshold
-        except:
+        if self.error is not None:
             self.success = False
+        else:
+            try:
+                self.score >= self.threshold
+            except:
+                self.success = False
         return self.success
 
     @property
     def __name__(self):
-        return f"GEval ({self.name})"
+        return f"{self.name} (GEval)"

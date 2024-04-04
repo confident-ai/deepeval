@@ -4,11 +4,8 @@ import asyncio
 
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
-from deepeval.utils import (
-    trimAndLoadJson,
-    check_test_case_params,
-    get_or_create_event_loop,
-)
+from deepeval.utils import get_or_create_event_loop
+from deepeval.metrics.utils import trimAndLoadJson, check_test_case_params
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -46,7 +43,7 @@ class FaithfulnessMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        check_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self)
 
         with metric_progress_indicator(self):
             if self.async_mode:
@@ -67,7 +64,7 @@ class FaithfulnessMetric(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
-        check_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self)
 
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
@@ -183,10 +180,13 @@ class FaithfulnessMetric(BaseMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
-        try:
-            self.success = self.score >= self.threshold
-        except:
+        if self.error is not None:
             self.success = False
+        else:
+            try:
+                self.success = self.score >= self.threshold
+            except:
+                self.success = False
         return self.success
 
     @property

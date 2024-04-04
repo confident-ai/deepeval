@@ -320,15 +320,20 @@ def assert_test(
     if not test_result.success:
         failed_metrics: List[BaseMetric] = []
         for metric in test_result.metrics:
-            try:
-                if not metric.is_successful():
-                    failed_metrics.append(metric)
-            except:
+            if metric.error is not None:
                 failed_metrics.append(metric)
+            else:
+                # This try block is for user defined custom metrics,
+                # which might not handle the score == undefined case elegantly
+                try:
+                    if not metric.is_successful():
+                        failed_metrics.append(metric)
+                except:
+                    failed_metrics.append(metric)
 
         failed_metrics_str = ", ".join(
             [
-                f"{metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode})"
+                f"{metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, error: {metric.error})"
                 for metric in failed_metrics
             ]
         )
@@ -390,13 +395,25 @@ def print_test_result(test_result: TestResult):
     print("=" * 70 + "\n")
     print("Metrics Summary\n")
     for metric in test_result.metrics:
-        if not metric.is_successful():
+        successful = True
+        if metric.error is not None:
+            successful = False
+        else:
+            # This try block is for user defined custom metrics,
+            # which might not handle the score == undefined case elegantly
+            try:
+                if not metric.is_successful():
+                    successful = False
+            except:
+                successful = False
+
+        if not successful:
             print(
-                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
+                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason}, error: {metric.error})"
             )
         else:
             print(
-                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason})"
+                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason}, error: {metric.error})"
             )
         if metric.score_breakdown:
             for metric_name, score in metric.score_breakdown.items():

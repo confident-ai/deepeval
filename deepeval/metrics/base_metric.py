@@ -43,10 +43,11 @@ class BaseMetric:
 
 
 class BaseConversationalMetric:
-    score: float = 0
+    score: Optional[float] = None
     score_breakdown: Dict = None
     reason: Optional[str] = None
     evaluation_model: Optional[str] = None
+    error: Optional[str] = None
     # Not changeable for now
     strict_mode: bool = False
     async_mode: bool = False

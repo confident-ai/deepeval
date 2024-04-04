@@ -79,7 +79,7 @@ being composed mostly of rock and metal.
 strict_mode = False
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1, strict_mode=strict_mode, async_mode=False
@@ -116,13 +116,13 @@ def test_everything():
             metric1,
             metric2,
             metric3,
-            # metric4,
-            # metric5,
-            # metric6,
-            # metric7,
-            # metric8,
-            # metric9,
-            # metric10,
+            metric4,
+            metric5,
+            metric6,
+            metric7,
+            metric8,
+            metric9,
+            metric10,
         ],
         # run_async=False,
     )
