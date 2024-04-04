@@ -106,9 +106,9 @@ def test_everything():
     test_case = LLMTestCase(
         input="What is this",
         actual_output="this is a latte",
-        expected_output="this is a mocha",
+        # expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
-        context=["I love coffee"],
+        # context=["I love coffee"],
     )
     assert_test(
         test_case,
@@ -124,7 +124,7 @@ def test_everything():
             metric9,
             metric10,
         ],
-        run_async=False,
+        # run_async=False,
     )
 
 
@@ -158,7 +158,7 @@ def test_everything_2():
         input="What is this again?",
         actual_output="this is a latte",
         expected_output="this is a mocha",
-        retrieval_context=["I love coffee"],
+        # retrieval_context=["I love coffee"],
         context=["I love coffee"],
     )
     assert_test(
