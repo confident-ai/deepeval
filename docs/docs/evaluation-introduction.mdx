@@ -157,6 +157,23 @@ deepeval test run test_example.py -c
 This is extremely useful if you're running large amounts of test cases. For example, lets say you're running 1000 test cases using `deepeval test run`, but you encounter an error on the 999th test case. The cache functionality would allow you to skip all the previously evaluated 999 test cases, and just evaluate the remaining one.
 :::
 
+### Ignore Errors
+
+The `-i` flag (with no arguments) allows you to ignore errors for metrics executions during a test run. An example of where this is helpful is if you're using a custom LLM and often find it generating invalid JSONs that will stop the execution of the entire test run.
+
+```
+deepeval test run test_example.py -i
+```
+
+:::tip
+You can combine differnet flags, such as the `-i`, `-c`, and `-n` flag to execute any uncached test cases in parallel while ignoring any errors along the way:
+
+```python
+deepeval test run test_example.py -r 2 -n 2
+```
+
+:::
+
 ### Repeats
 
 Repeat each test case by providing a number to the `-r` flag to specify how many times to rerun each test case.
@@ -164,15 +181,6 @@ Repeat each test case by providing a number to the `-r` flag to specify how many
 ```
 deepeval test run test_example.py -r 2
 ```
-
-:::tip
-You can combine the `-r` and `-n` flag to rerun test cases in parallel:
-
-```python
-deepeval test run test_example.py -r 2 -n 2
-```
-
-:::
 
 ### Hooks
 
@@ -206,6 +214,8 @@ There are two mandatory and three optional arguments when calling the `evaluate(
 - `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
+- [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for eac test case. Defaulted to `False`.
+- [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the progress indicator for each individual metric. Defaulted to `True`.
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
 
