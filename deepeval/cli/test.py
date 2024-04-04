@@ -10,6 +10,7 @@ from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.utils import (
     delete_file_if_exists,
     get_deployment_configs,
+    set_should_ignore_errors,
     set_should_use_cache,
 )
 from deepeval.test_run import invoke_test_run_end_hook
@@ -67,6 +68,12 @@ def run(
         "-c",
         help="Whether to use cached results or not",
     ),
+    ignore_errors: Optional[bool] = typer.Option(
+        False,
+        "--ignore-errors",
+        "-i",
+        help="Whether to ignore errors or not",
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
@@ -76,6 +83,7 @@ def run(
 
     should_use_cache = use_cache and repeat is None
     set_should_use_cache(should_use_cache)
+    set_should_ignore_errors(ignore_errors)
 
     test_run_manager.reset()
 

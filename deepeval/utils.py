@@ -74,6 +74,23 @@ def set_indicator(show_indicator: bool):
         os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "YES"
 
 
+def should_ignore_errors():
+    try:
+        if os.environ["IGNORE_DEEPEVAL_ERRORS"] == "YES":
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+def set_should_ignore_errors(yes: bool):
+    if yes:
+        os.environ["IGNORE_DEEPEVAL_ERRORS"] = "YES"
+    else:
+        os.environ["IGNORE_DEEPEVAL_ERRORS"] = "NO"
+
+
 def should_use_cache():
     try:
         if os.environ["ENABLE_DEEPEVAL_CACHE"] == "YES":

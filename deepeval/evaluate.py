@@ -2,11 +2,12 @@ import os
 from typing import List, Optional
 import time
 from dataclasses import dataclass
-import sys
+import json
 
 from deepeval.utils import (
     drop_and_copy,
     get_or_create_event_loop,
+    should_ignore_errors,
     should_use_cache,
 )
 from deepeval.telemetry import capture_evaluation_count
@@ -108,6 +109,7 @@ def create_api_test_case(
 def execute_test_cases(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
+    ignore_errors: bool,
     use_cache: bool,
     save_to_disk: bool = False,
 ) -> List[TestResult]:
@@ -145,8 +147,11 @@ def execute_test_cases(
                 try:
                     metric.measure(test_case)
                 except Exception as e:
-                    metric.error = str(e)
-                    metric.success = False  # Override metric success
+                    if ignore_errors:
+                        metric.error = str(e)  # Override metric error
+                        metric.success = False  # Override metric success
+                    else:
+                        raise
                 metric_metadata = create_metric_metadata(metric)
 
             if metric_metadata.success is False:
@@ -205,6 +210,7 @@ def execute_test_cases(
 async def a_execute_test_cases(
     test_cases: List[LLMTestCase],
     metrics: List[BaseMetric],
+    ignore_errors: bool,
     use_cache: bool,
     save_to_disk: bool = False,
 ) -> List[TestResult]:
@@ -228,9 +234,7 @@ async def a_execute_test_cases(
         new_cached_test_case: CachedTestCase = CachedTestCase()
         test_start_time = time.perf_counter()
         await measure_metrics_with_indicator(
-            metrics,
-            test_case,
-            cached_test_case,
+            metrics, test_case, cached_test_case, ignore_errors
         )
         for metric in metrics:
             metric_metadata = create_metric_metadata(metric)
@@ -308,6 +312,7 @@ def assert_test(
             a_execute_test_cases(
                 [test_case],
                 metrics,
+                ignore_errors=should_ignore_errors(),
                 use_cache=should_use_cache(),
                 save_to_disk=get_is_running_deepeval(),
             )
@@ -316,6 +321,7 @@ def assert_test(
         test_result = execute_test_cases(
             [test_case],
             metrics,
+            ignore_errors=should_ignore_errors(),
             use_cache=should_use_cache(),
             save_to_disk=get_is_running_deepeval(),
         )[0]
@@ -350,6 +356,7 @@ def evaluate(
     show_indicator: bool = True,
     print_results: bool = True,
     use_cache: bool = False,
+    ignore_errors: bool = False,
 ):
     set_indicator(show_indicator)
 
@@ -373,12 +380,20 @@ def evaluate(
         loop = get_or_create_event_loop()
         test_results = loop.run_until_complete(
             a_execute_test_cases(
-                test_cases, metrics, use_cache=use_cache, save_to_disk=True
+                test_cases,
+                metrics,
+                ignore_errors=ignore_errors,
+                use_cache=use_cache,
+                save_to_disk=True,
             )
         )
     else:
         test_results = execute_test_cases(
-            test_cases, metrics, use_cache=use_cache, save_to_disk=True
+            test_cases,
+            metrics,
+            ignore_errors=ignore_errors,
+            use_cache=use_cache,
+            save_to_disk=True,
         )
 
     capture_evaluation_count()

@@ -103,15 +103,16 @@ class TestRun(BaseModel):
     testPassed: Optional[int] = Field(None)
     testFailed: Optional[int] = Field(None)
 
-    def construct_metrics_scores(self):
+    def construct_metrics_scores(self) -> int:
         metrics_dict: Dict[str, List[float]] = {}
-
+        valid_scores = 0
         for test_case in self.test_cases:
             for metric_metadata in test_case.metrics_metadata:
                 metric = metric_metadata.metric
                 score = metric_metadata.score
                 if score is None:
                     continue
+                valid_scores += 1
                 if metric in metrics_dict:
                     metrics_dict[metric].append(score)
                 else:
@@ -120,6 +121,7 @@ class TestRun(BaseModel):
             MetricScores(metric=metric, scores=scores)
             for metric, scores in metrics_dict.items()
         ]
+        return valid_scores
 
     def calculate_test_passes_and_fails(self):
         testPassed = 0
@@ -383,7 +385,7 @@ class TestRunManager:
     def wrap_up_test_run(self, display_table: bool = True):
         test_run = self.get_test_run()
         test_run.calculate_test_passes_and_fails()
-        test_run.construct_metrics_scores()
+        valid_scores = test_run.construct_metrics_scores()
 
         if test_run is None:
             print("Test Run is empty, please try again.")
@@ -392,6 +394,11 @@ class TestRunManager:
         elif len(test_run.test_cases) == 0:
             print("No test cases found, please try again.")
             delete_file_if_exists(self.temp_file_name)
+            return
+        elif valid_scores == 0:
+            print("All metrics errored for all test cases, please try again.")
+            delete_file_if_exists(self.temp_file_name)
+            delete_file_if_exists(test_run_cache_manager.temp_cache_file_name)
             return
 
         test_run_cache_manager.disable_write_cache = (

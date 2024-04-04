@@ -33,7 +33,6 @@ def check_test_case_params(
 def trimAndLoadJson(
     input_string: str, metric: Optional[BaseMetric] = None
 ) -> Any:
-    raise ValueError("omfg")
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
     jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
