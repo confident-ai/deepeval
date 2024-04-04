@@ -153,7 +153,9 @@ def execute_test_cases(
                 success = False
 
             api_test_case.metrics_metadata.append(metric_metadata)
-            if metric.error is None: # Only save to cache if metric didn't error
+            if (
+                metric.error is None
+            ):  # Only save to cache if metric didn't error
                 updated_cached_metric_data = CachedMetricData(
                     metric_metadata=metric_metadata,
                     metric_configuration=Cache.create_metric_configuration(
@@ -238,7 +240,9 @@ async def a_execute_test_cases(
 
             api_test_case.metrics_metadata.append(metric_metadata)
 
-            if metric.error is None: # Only save to cache if metric didn't error
+            if (
+                metric.error is None
+            ):  # Only save to cache if metric didn't error
                 updated_cached_metric_data = CachedMetricData(
                     metric_metadata=metric_metadata,
                     metric_configuration=Cache.create_metric_configuration(
@@ -336,7 +340,7 @@ def assert_test(
                 for metric in failed_metrics
             ]
         )
-        raise AssertionError(f"Metric {failed_metrics_str} failed.")
+        raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
 
 
 def evaluate(

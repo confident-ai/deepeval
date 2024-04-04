@@ -181,7 +181,12 @@ class GEval(BaseMetric):
             res = await self.model.a_generate_raw_response(
                 prompt, logprobs=True, top_logprobs=20
             )
-            data = trimAndLoadJson(res.content)
+            try:
+                data = trimAndLoadJson(res.content)
+            except Exception as e:
+                self.error = str(e)
+                raise
+
             reason = data["reason"]
             score = data["score"]
             try:
@@ -191,8 +196,14 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except:
                 return score, reason
-        except:
-            res = await self.model.a_generate(prompt)
+        except AttributeError:
+            # This catches the case where a_generate_raw_response doesn't exist.
+            try:
+                res = await self.model.a_generate(prompt)
+            except Exception as e:
+                self.error = str(e)
+                raise
+
             data = trimAndLoadJson(res)
             return data["score"], data["reason"]
 
@@ -211,7 +222,12 @@ class GEval(BaseMetric):
             res = self.model.generate_raw_response(
                 prompt, logprobs=True, top_logprobs=20
             )
-            data = trimAndLoadJson(res.content)
+            try:
+                data = trimAndLoadJson(res.content)
+            except Exception as e:
+                self.error = str(e)
+                raise
+
             reason = data["reason"]
             score = data["score"]
             try:
@@ -221,9 +237,14 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except:
                 return score, reason
-        except:
+        except AttributeError:
+            # This catches the case where a_generate_raw_response doesn't exist.
             res = self.model.generate(prompt)
-            data = trimAndLoadJson(res)
+            try:
+                data = trimAndLoadJson(res.content)
+            except Exception as e:
+                self.error = str(e)
+                raise
             return data["score"], data["reason"]
 
     def generate_weighted_summed_score(
@@ -305,8 +326,8 @@ class GEval(BaseMetric):
                 sum_of_weighted_scores / sum_linear_probability
             )
             return weighted_summed_score
-        except Exception as e:
-            raise (e)
+        except:
+            raise
 
     def number_evaluation_steps(self):
         evaluation_steps = """"""
