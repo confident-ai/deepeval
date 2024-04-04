@@ -75,5 +75,4 @@ class JudgementalGPT(BaseMetric):
         return self.score
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.threshold
         return self.success

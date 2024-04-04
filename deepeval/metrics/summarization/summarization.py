@@ -6,11 +6,8 @@ import asyncio
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
-from deepeval.utils import (
-    trimAndLoadJson,
-    check_test_case_params,
-    get_or_create_event_loop,
-)
+from deepeval.utils import get_or_create_event_loop
+from deepeval.metrics.utils import trimAndLoadJson, check_test_case_params
 from deepeval.metrics.summarization.template import SummarizationTemplate
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -68,7 +65,7 @@ class SummarizationMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        check_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self)
 
         with metric_progress_indicator(self):
             if self.async_mode:
@@ -102,7 +99,7 @@ class SummarizationMetric(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
-        check_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self)
 
         with metric_progress_indicator(
             self,
@@ -371,7 +368,13 @@ class SummarizationMetric(BaseMetric):
         return data["claims"]
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.threshold
+        if self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.success = self.score >= self.threshold
+            except:
+                self.success = False
         return self.success
 
     @property

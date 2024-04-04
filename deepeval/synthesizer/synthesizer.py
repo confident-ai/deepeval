@@ -16,7 +16,7 @@ from deepeval.models import (
     DeepEvalBaseLLM,
 )
 from deepeval.progress_context import synthesizer_progress_context
-from deepeval.utils import trimAndLoadJson
+from deepeval.metrics.utils import trimAndLoadJson
 from deepeval.dataset.golden import Golden
 
 valid_file_types = ["csv", "json"]

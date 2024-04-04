@@ -43,7 +43,7 @@ def test_faithfulness():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",
         actual_output=output,
-        retrieval_context=[one, two, three],
+        # retrieval_context=[one, two, three],
     )
     metric = FaithfulnessMetric()
     assert_test(test_case, [metric])

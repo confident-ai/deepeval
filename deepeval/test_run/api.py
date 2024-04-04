@@ -4,12 +4,13 @@ from typing import Optional, List
 
 class MetricMetadata(BaseModel):
     metric: str
-    score: float
     threshold: float
     success: bool
+    score: Optional[float] = None
     reason: Optional[str] = None
     strict_mode: Optional[bool] = Field(False, alias="strictMode")
     evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
+    error: Optional[str] = None
 
 
 class APITestCase(BaseModel):

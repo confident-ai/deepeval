@@ -60,6 +60,7 @@ async def measure_metric_task(
     metric: BaseMetric,
     test_case: LLMTestCase,
     cached_test_case: Union[CachedTestCase, None],
+    ignore_errors: bool,
 ):
     while not progress.finished:
         start_time = time.perf_counter()
@@ -78,10 +79,17 @@ async def measure_metric_task(
         else:
             try:
                 await metric.a_measure(test_case, _show_indicator=False)
+                finish_text = "Done"
             except TypeError:
                 await metric.a_measure(test_case)
-            finally:
                 finish_text = "Done"
+            except Exception as e:
+                if ignore_errors:
+                    metric.error = str(e)
+                    metric.success = False  # Override metric success
+                    finish_text = "Errored"
+                else:
+                    raise
 
         end_time = time.perf_counter()
         time_taken = format(end_time - start_time, ".2f")
@@ -97,6 +105,7 @@ async def measure_metrics_with_indicator(
     metrics: List[BaseMetric],
     test_case: LLMTestCase,
     cached_test_case: Union[CachedTestCase, None],
+    ignore_errors: bool,
 ):
     if show_indicator():
         with Progress(
@@ -114,7 +123,12 @@ async def measure_metrics_with_indicator(
                 )
                 tasks.append(
                     measure_metric_task(
-                        task_id, progress, metric, test_case, cached_test_case
+                        task_id,
+                        progress,
+                        metric,
+                        test_case,
+                        cached_test_case,
+                        ignore_errors,
                     )
                 )
             await asyncio.gather(*tasks)
@@ -147,5 +161,10 @@ async def measure_metrics_with_indicator(
                     )
                 except TypeError:
                     tasks.append(metric.a_measure(test_case))
+                except Exception as e:
+                    if ignore_errors:
+                        metric.error = str(e)
+                    else:
+                        raise
 
         await asyncio.gather(*tasks)
