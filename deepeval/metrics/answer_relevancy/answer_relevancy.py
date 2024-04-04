@@ -127,7 +127,7 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output=self.statements,
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
@@ -140,7 +140,7 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output=self.statements,
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
@@ -152,7 +152,7 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output=actual_output,
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["statements"]
 
     def _generate_statements(
@@ -163,7 +163,7 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output=actual_output,
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["statements"]
 
     def _calculate_score(self):

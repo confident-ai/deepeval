@@ -106,9 +106,9 @@ def test_everything():
     test_case = LLMTestCase(
         input="What is this",
         actual_output="this is a latte",
-        # expected_output="this is a mocha",
+        expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
-        # context=["I love coffee"],
+        context=["I love coffee"],
     )
     assert_test(
         test_case,

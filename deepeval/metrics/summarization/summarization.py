@@ -240,7 +240,7 @@ class SummarizationMetric(BaseMetric):
             questions=self.assessment_questions, text=text
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["answers"]
 
     def _generate_answers(self, text: str) -> List[str]:
@@ -248,19 +248,19 @@ class SummarizationMetric(BaseMetric):
             questions=self.assessment_questions, text=text
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["answers"]
 
     async def _a_generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["questions"]
 
     def _generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["questions"]
 
     async def _a_generate_coverage_verdicts(
@@ -330,7 +330,7 @@ class SummarizationMetric(BaseMetric):
             summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
         ]
@@ -347,7 +347,7 @@ class SummarizationMetric(BaseMetric):
             summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
         ]
@@ -357,14 +357,14 @@ class SummarizationMetric(BaseMetric):
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["claims"]
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["claims"]
 
     def is_successful(self) -> bool:

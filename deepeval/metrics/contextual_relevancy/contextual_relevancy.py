@@ -148,7 +148,7 @@ class ContextualRelevancyMetric(BaseMetric):
 
         verdicts = []
         for res in results:
-            data = trimAndLoadJson(res)
+            data = trimAndLoadJson(res, self)
             verdict = ContextualRelevancyVerdict(**data)
             verdicts.append(verdict)
 
@@ -163,7 +163,7 @@ class ContextualRelevancyMetric(BaseMetric):
                 text=text, context=context
             )
             res = self.model.generate(prompt)
-            data = trimAndLoadJson(res)
+            data = trimAndLoadJson(res, self)
             verdict = ContextualRelevancyVerdict(**data)
             verdicts.append(verdict)
 

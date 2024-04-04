@@ -131,7 +131,7 @@ class HallucinationMetric(BaseMetric):
             actual_output=actual_output, contexts=contexts
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [HallucinationVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
@@ -143,7 +143,7 @@ class HallucinationMetric(BaseMetric):
             actual_output=actual_output, contexts=contexts
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [HallucinationVerdict(**item) for item in data["verdicts"]]
         return verdicts
 

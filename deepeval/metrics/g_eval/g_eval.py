@@ -147,7 +147,7 @@ class GEval(BaseMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["steps"]
 
     def _generate_evaluation_steps(self) -> List[str]:
@@ -161,7 +161,7 @@ class GEval(BaseMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["steps"]
 
     async def _a_evaluate(
@@ -181,11 +181,7 @@ class GEval(BaseMetric):
             res = await self.model.a_generate_raw_response(
                 prompt, logprobs=True, top_logprobs=20
             )
-            try:
-                data = trimAndLoadJson(res.content)
-            except Exception as e:
-                self.error = str(e)
-                raise
+            data = trimAndLoadJson(res.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -204,7 +200,7 @@ class GEval(BaseMetric):
                 self.error = str(e)
                 raise
 
-            data = trimAndLoadJson(res)
+            data = trimAndLoadJson(res, self)
             return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
@@ -222,11 +218,7 @@ class GEval(BaseMetric):
             res = self.model.generate_raw_response(
                 prompt, logprobs=True, top_logprobs=20
             )
-            try:
-                data = trimAndLoadJson(res.content)
-            except Exception as e:
-                self.error = str(e)
-                raise
+            data = trimAndLoadJson(res.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -240,11 +232,7 @@ class GEval(BaseMetric):
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
             res = self.model.generate(prompt)
-            try:
-                data = trimAndLoadJson(res.content)
-            except Exception as e:
-                self.error = str(e)
-                raise
+            data = trimAndLoadJson(res.content, self)
             return data["score"], data["reason"]
 
     def generate_weighted_summed_score(

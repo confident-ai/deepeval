@@ -150,7 +150,7 @@ class ContextualRecallMetric(BaseMetric):
             expected_output=expected_output, retrieval_context=retrieval_context
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualRecallVerdict(**item) for item in data["verdicts"]
         ]
@@ -163,7 +163,7 @@ class ContextualRecallMetric(BaseMetric):
             expected_output=expected_output, retrieval_context=retrieval_context
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualRecallVerdict(**item) for item in data["verdicts"]
         ]

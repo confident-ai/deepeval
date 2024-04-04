@@ -102,7 +102,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 previous_knowledge=previous_knowledge,
             )
             res = self.model.generate(prompt)
-            data = trimAndLoadJson(res)
+            data = trimAndLoadJson(res, self)
             verdict = KnowledgeRetentionVerdict(index=index, **data)
             verdicts.append(verdict)
 
@@ -125,7 +125,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             )
 
             res = self.model.generate(prompt)
-            data = trimAndLoadJson(res)
+            data = trimAndLoadJson(res, self)
             knowledge = Knowledge(data=data)
             knowledges.append(knowledge)
 

@@ -121,7 +121,7 @@ class BiasMetric(BaseMetric):
         verdicts: List[BiasVerdict] = []
         prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
@@ -132,20 +132,20 @@ class BiasMetric(BaseMetric):
         verdicts: List[BiasVerdict] = []
         prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["opinions"]
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["opinions"]
 
     def _calculate_score(self) -> float:

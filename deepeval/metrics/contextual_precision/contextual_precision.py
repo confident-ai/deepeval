@@ -132,7 +132,7 @@ class ContextualPrecisionMetric(BaseMetric):
             retrieval_context=retrieval_context,
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
         ]
@@ -147,7 +147,7 @@ class ContextualPrecisionMetric(BaseMetric):
             retrieval_context=retrieval_context,
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
         ]

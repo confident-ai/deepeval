@@ -121,7 +121,7 @@ class FaithfulnessMetric(BaseMetric):
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
@@ -134,7 +134,7 @@ class FaithfulnessMetric(BaseMetric):
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
@@ -143,7 +143,7 @@ class FaithfulnessMetric(BaseMetric):
             text="\n\n".join(retrieval_context)
         )
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["truths"]
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
@@ -151,19 +151,19 @@ class FaithfulnessMetric(BaseMetric):
             text="\n\n".join(retrieval_context)
         )
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["truths"]
 
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
         res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["claims"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
         res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        data = trimAndLoadJson(res, self)
         return data["claims"]
 
     def _calculate_score(self) -> float:
