@@ -144,17 +144,16 @@ def execute_test_cases(
                 metric.async_mode = False  # Override metric async
                 try:
                     metric.measure(test_case)
-                    metric_metadata = create_metric_metadata(metric)
                 except Exception as e:
                     metric.error = str(e)
                     metric.success = False  # Override metric success
-                    metric_metadata = create_metric_metadata(metric)
+                metric_metadata = create_metric_metadata(metric)
 
             if metric_metadata.success is False:
                 success = False
 
             api_test_case.metrics_metadata.append(metric_metadata)
-            if metric.error is None:
+            if metric.error is None: # Only save to cache if metric didn't error
                 updated_cached_metric_data = CachedMetricData(
                     metric_metadata=metric_metadata,
                     metric_configuration=Cache.create_metric_configuration(
@@ -239,7 +238,7 @@ async def a_execute_test_cases(
 
             api_test_case.metrics_metadata.append(metric_metadata)
 
-            if metric.error is None:
+            if metric.error is None: # Only save to cache if metric didn't error
                 updated_cached_metric_data = CachedMetricData(
                     metric_metadata=metric_metadata,
                     metric_configuration=Cache.create_metric_configuration(
