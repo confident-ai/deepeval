@@ -411,9 +411,9 @@ class TestRunManager:
         if display_table:
             self.display_results_table(test_run)
 
+        self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
         self.post_test_run(test_run)
-        self.save_test_run_locally()
 
 
 test_run_manager = TestRunManager()
