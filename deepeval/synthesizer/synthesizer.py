@@ -32,11 +32,12 @@ class Synthesizer:
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         # embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
         multithreading: bool = True,
-        # batch_size: int = 50,
     ):
         if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
             self.model = model
         else:
+            self.using_native_model = True
             self.model = GPTModel(model=model)
 
         # self.embedder = embedder
@@ -69,7 +70,10 @@ class Synthesizer:
         for _ in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
             prompt = evolution_method(input=evolved_text, context=context)
-            evolved_text = self.model.generate(prompt)
+            if self.using_native_model:
+                evolved_text, _ = self.model.generate(prompt)
+            else:
+                evolved_text = self.model.generate(prompt)
 
         return evolved_text
 
@@ -87,7 +91,10 @@ class Synthesizer:
         prompt = SynthesizerTemplate.generate_synthetic_data(
             context=context, max_goldens_per_context=max_goldens_per_context
         )
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, _ = self.model.generate(prompt)
+        else:
+            res = self.model.generate(prompt)
         data = trimAndLoadJson(res)
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
         temp_goldens: List[Golden] = []
@@ -151,7 +158,10 @@ class Synthesizer:
                         context=context,
                         max_goldens_per_context=max_goldens_per_context,
                     )
-                    res = self.model.generate(prompt)
+                    if self.using_native_model:
+                        res, _ = self.model.generate(prompt)
+                    else:
+                        res = self.model.generate(prompt)
                     data = trimAndLoadJson(res)
                     synthetic_data = [
                         SyntheticData(**item) for item in data["data"]
