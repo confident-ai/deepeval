@@ -288,7 +288,7 @@ class TestRunManager:
                 )
 
         print(table)
-        print(f"Total evaluation cost: {test_run.evaluation_cost} USD")
+        print(f"Total evaluation tokens cost: {test_run.evaluation_cost} USD")
 
     def post_test_run(self, test_run: TestRun):
         console = Console()

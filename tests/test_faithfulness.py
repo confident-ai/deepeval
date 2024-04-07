@@ -69,6 +69,6 @@ def test_faithfulness():
     )
     model = OpenAI()
     metric = FaithfulnessMetric(
-
+        model=model
     )
     assert_test(test_case, [metric])
