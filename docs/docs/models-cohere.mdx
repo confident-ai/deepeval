@@ -1,0 +1,85 @@
+---
+id: models-cohere
+title: Cohere Model
+sidebar_label: Cohere Model
+---
+
+import Equation from "@site/src/components/equation";
+
+Cohere is a service with multiple LLMs available. It can be used instead of openapi's gpt model if needed.
+
+## CohereModel class
+
+In order to use it, we need to create a file with a new class `CohereModel` in a file e.g. `cohere_model.py` derived from `DeepEvalBaseLLM`:
+
+```python
+from typing import Optional
+
+from cohere import Client
+from deepeval.models.base_model import DeepEvalBaseLLM
+
+
+class CohereModel(DeepEvalBaseLLM):
+    def __init__(
+            self,
+            cohere_api_key: str,
+            model_name: Optional[str] = "command-r",
+            max_tokens: Optional[int] = 1024,
+            temperature: Optional[float] = 0.7,
+    ):
+        self.cohere_api_key = cohere_api_key
+        self.model_name = model_name
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        super().__init__()
+
+    def load_model(self):
+        return Client(self.cohere_api_key)
+
+    def generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        return chat_model.chat(message=prompt,
+                               max_tokens=self.max_tokens,
+                               temperature=self.temperature).text
+
+    async def a_generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        res = await chat_model.chat(message=prompt,
+                                    max_tokens=self.max_tokens,
+                                    temperature=self.temperature)
+        return res.text
+
+    def get_model_name(self):
+        return self.model_name
+```
+
+## Required Arguments
+
+To use the `CohereModel`, you'll have to provide the following arguments:
+
+- `cohere_api_key`
+
+## Example
+
+This example showcase a SummarizationMetric creation with a Cohere model:
+
+```python
+from deepeval.metrics import SummarizationMetric
+from cohere.model import CohereModel
+
+api_key_cohere = "..."
+model = CohereModel(api_key_cohere)
+metric_using_cohere_llm = SummarizationMetric(model=model)
+
+# use metric_using_cohere_llm in your test case
+```
+
+There are three optional parameters when creating a `CohereModel`:
+
+- [Optional] `temperature`: a float representing the LLM temperature, defaulted to 0.7.
+- [Optional] `model_name`: a string specifying which of Cohere's model to use. Defaulted to 'command-r'.
+- [Optional] `max_tokens`: an int representing the maximum number of tokens for Cohere's api. Defaulted to 1024.
+
+:::note
+The Cohere api does not currently support using different model name. Just pass the api and it will work.
+:::
