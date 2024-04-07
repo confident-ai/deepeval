@@ -68,5 +68,7 @@ def test_faithfulness():
         retrieval_context=[one, two, three],
     )
     model = OpenAI()
-    metric = FaithfulnessMetric(model=model)
+    metric = FaithfulnessMetric(
+
+    )
     assert_test(test_case, [metric])

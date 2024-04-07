@@ -17,6 +17,7 @@ def test_synthesizer():
     )
     synthesizer.save_as(file_type="json", directory="./results")
 
+
 # module_b_dir = os.path.dirname(os.path.realpath(__file__))
 
 # file_path = os.path.join(

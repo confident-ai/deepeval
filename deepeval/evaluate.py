@@ -411,6 +411,7 @@ def evaluate(
 
         print("")
         print("-" * 70)
+
     test_run_manager.wrap_up_test_run(run_duration, display_table=False)
     return test_results
 
