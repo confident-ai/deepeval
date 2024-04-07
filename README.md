@@ -54,7 +54,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - etc. 
 - Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**. Do this via the CLI in a Pytest-like manner, or through our `evaluate()` function.
 - Create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
-- Integrates seamlessly with **ANY** CI/CD pipeline.
+- Integrates seamlessly with **ANY** CI/CD environment.
 - Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://docs.confident-ai.com/docs/benchmarks-introduction), which includes:
   - MMLU
   - HellaSwag
