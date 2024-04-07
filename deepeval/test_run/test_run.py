@@ -1,7 +1,7 @@
 import os
 import json
 from pydantic import BaseModel, Field
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, List, Dict, Union
 import shutil
 import webbrowser
 import sys
@@ -103,6 +103,7 @@ class TestRun(BaseModel):
     testPassed: Optional[int] = Field(None)
     testFailed: Optional[int] = Field(None)
     run_duration: float = Field(0.0, alias="runDuration")
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
 
     def construct_metrics_scores(self) -> int:
         metrics_dict: Dict[str, List[float]] = {}

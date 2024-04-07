@@ -34,8 +34,10 @@ class ContextualRecallMetric(BaseMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
             self.model = model
         else:
+            self.using_native_model = True
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
@@ -44,6 +46,7 @@ class ContextualRecallMetric(BaseMetric):
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_test_case_params(test_case, required_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(self):
             if self.async_mode:
@@ -67,6 +70,7 @@ class ContextualRecallMetric(BaseMetric):
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
         check_test_case_params(test_case, required_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
             self,
@@ -105,7 +109,11 @@ class ContextualRecallMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
 
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         return res
 
     def _generate_reason(self, expected_output: str):
@@ -127,7 +135,11 @@ class ContextualRecallMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
 
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         return res
 
     def _calculate_score(self):
@@ -149,7 +161,11 @@ class ContextualRecallMetric(BaseMetric):
         prompt = ContextualRecallTemplate.generate_verdicts(
             expected_output=expected_output, retrieval_context=retrieval_context
         )
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualRecallVerdict(**item) for item in data["verdicts"]
@@ -162,7 +178,11 @@ class ContextualRecallMetric(BaseMetric):
         prompt = ContextualRecallTemplate.generate_verdicts(
             expected_output=expected_output, retrieval_context=retrieval_context
         )
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualRecallVerdict(**item) for item in data["verdicts"]

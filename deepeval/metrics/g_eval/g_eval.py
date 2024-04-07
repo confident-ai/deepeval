@@ -77,8 +77,10 @@ class GEval(BaseMetric):
 
         self.criteria = criteria
         if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
             self.model = model
         else:
+            self.using_native_model = True
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
@@ -88,6 +90,7 @@ class GEval(BaseMetric):
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_test_case_params(test_case, self.evaluation_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(self):
             if self.async_mode:
@@ -115,6 +118,7 @@ class GEval(BaseMetric):
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
         check_test_case_params(test_case, self.evaluation_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
             self,
@@ -146,7 +150,11 @@ class GEval(BaseMetric):
         prompt = GEvalTemplate.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res, self)
         return data["steps"]
 
@@ -160,7 +168,11 @@ class GEval(BaseMetric):
         prompt = GEvalTemplate.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         data = trimAndLoadJson(res, self)
         return data["steps"]
 
@@ -178,9 +190,12 @@ class GEval(BaseMetric):
         )
 
         try:
-            res = await self.model.a_generate_raw_response(
+            # Don't have to check for using native model
+            # since generate raw response only exist for deepeval's native model
+            res, cost = await self.model.a_generate_raw_response(
                 prompt, logprobs=True, top_logprobs=20
             )
+            self.evaluation_cost += cost
             data = trimAndLoadJson(res.content, self)
 
             reason = data["reason"]
@@ -192,13 +207,14 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except:
                 return score, reason
-        except AttributeError:
-            # This catches the case where a_generate_raw_response doesn't exist.
-            try:
+        except (
+            AttributeError
+        ):  # This catches the case where a_generate_raw_response doesn't exist.
+            if self.using_native_model:
+                res, cost = await self.model.a_generate(prompt)
+                self.evaluation_cost += cost
+            else:
                 res = await self.model.a_generate(prompt)
-            except Exception as e:
-                self.error = str(e)
-                raise
 
             data = trimAndLoadJson(res, self)
             return data["score"], data["reason"]
@@ -215,9 +231,10 @@ class GEval(BaseMetric):
         )
 
         try:
-            res = self.model.generate_raw_response(
+            res, cost = self.model.generate_raw_response(
                 prompt, logprobs=True, top_logprobs=20
             )
+            self.evaluation_cost += cost
             data = trimAndLoadJson(res.content, self)
 
             reason = data["reason"]
@@ -231,8 +248,12 @@ class GEval(BaseMetric):
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res.content, self)
+            if self.using_native_model:
+                res, cost = self.model.generate(prompt)
+                self.evaluation_cost += cost
+            else:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res.content, self)
             return data["score"], data["reason"]
 
     def generate_weighted_summed_score(

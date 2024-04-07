@@ -2,7 +2,6 @@ import os
 from typing import List, Optional
 import time
 from dataclasses import dataclass
-import json
 
 from deepeval.utils import (
     drop_and_copy,
@@ -52,6 +51,7 @@ def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
             strictMode=metric.strict_mode,
             evaluationModel=metric.evaluation_model,
             error=metric.error,
+            evaluationCost=metric.evaluation_cost,
         )
     else:
         return MetricMetadata(
@@ -63,26 +63,23 @@ def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
             strictMode=metric.strict_mode,
             evaluationModel=metric.evaluation_model,
             error=None,
+            evaluationCost=metric.evaluation_cost,
         )
 
 
 def create_test_result(
-    test_case: LLMTestCase,
-    success: bool,
+    test_case: APITestCase,
     metrics: List[BaseMetric],
 ) -> TestResult:
-    if isinstance(test_case, LLMTestCase):
-        return TestResult(
-            success=success,
-            metrics=metrics,
-            input=test_case.input,
-            actual_output=test_case.actual_output,
-            expected_output=test_case.expected_output,
-            context=test_case.context,
-            retrieval_context=test_case.retrieval_context,
-        )
-    else:
-        raise ValueError("TestCase not supported yet.")
+    return TestResult(
+        success=test_case.success,
+        metrics=metrics,
+        input=test_case.input,
+        actual_output=test_case.actual_output,
+        expected_output=test_case.expected_output,
+        context=test_case.context,
+        retrieval_context=test_case.retrieval_context,
+    )
 
 
 def create_api_test_case(
@@ -97,12 +94,13 @@ def create_api_test_case(
         success=True,
         metricsMetadata=[],
         runDuration=0,
-        latency=test_case.latency,
         cost=test_case.cost,
+        latency=test_case.latency,
         context=test_case.context,
         retrievalContext=test_case.retrieval_context,
         traceStack=get_trace_stack(),
         id=test_case.id,
+        evaluationCost=None,
     )
 
 
@@ -118,7 +116,6 @@ def execute_test_cases(
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
     for index, test_case in enumerate(test_cases):
-        success = True
         cached_test_case = None
         if use_cache:
             cached_test_case = test_run_cache_manager.get_cached_test_case(
@@ -154,15 +151,17 @@ def execute_test_cases(
                         raise
                 metric_metadata = create_metric_metadata(metric)
 
-            if metric_metadata.success is False:
-                success = False
+            api_test_case.update(metric_metadata)
 
-            api_test_case.metrics_metadata.append(metric_metadata)
             if (
                 metric.error is None
             ):  # Only save to cache if metric didn't error
+                cache_metric_metadata = create_metric_metadata(metric)
+                cache_metric_metadata.evaluation_cost = (
+                    0  # Create copy and save 0 for cost
+                )
                 updated_cached_metric_data = CachedMetricData(
-                    metric_metadata=metric_metadata,
+                    metric_metadata=cache_metric_metadata,
                     metric_configuration=Cache.create_metric_configuration(
                         metric
                     ),
@@ -174,12 +173,16 @@ def execute_test_cases(
         test_end_time = time.perf_counter()
         run_duration = test_end_time - test_start_time
         api_test_case.run_duration = run_duration
-        api_test_case.success = success
 
         ### Save Test Run ###
         test_run = test_run_manager.get_test_run()
         test_run.test_cases.append(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
+        if api_test_case.evaluation_cost is not None:
+            if test_run.evaluation_cost is None:
+                test_run.evaluation_cost = api_test_case.evaluation_cost
+            else:
+                test_run.evaluation_cost += api_test_case.evaluation_cost
         test_run_manager.save_test_run()
 
         ### Cache Test Run ###
@@ -200,7 +203,7 @@ def execute_test_cases(
         )
 
         test_result = create_test_result(
-            test_case, success, drop_and_copy(metrics, ["model", "embeddings"])
+            api_test_case, drop_and_copy(metrics, ["model", "embeddings"])
         )
         test_results.append(test_result)
 
@@ -219,7 +222,6 @@ async def a_execute_test_cases(
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
     for index, test_case in enumerate(test_cases):
-        success = True
         cached_test_case = None
         if use_cache:
             cached_test_case = test_run_cache_manager.get_cached_test_case(
@@ -238,17 +240,17 @@ async def a_execute_test_cases(
         )
         for metric in metrics:
             metric_metadata = create_metric_metadata(metric)
-
-            if metric_metadata.success is False:
-                success = False
-
-            api_test_case.metrics_metadata.append(metric_metadata)
+            api_test_case.update(metric_metadata)
 
             if (
                 metric.error is None
             ):  # Only save to cache if metric didn't error
+                cache_metric_metadata = create_metric_metadata(metric)
+                cache_metric_metadata.evaluation_cost = (
+                    0  # Create new copy and save 0 for cost
+                )
                 updated_cached_metric_data = CachedMetricData(
-                    metric_metadata=metric_metadata,
+                    metric_metadata=cache_metric_metadata,
                     metric_configuration=Cache.create_metric_configuration(
                         metric
                     ),
@@ -260,12 +262,16 @@ async def a_execute_test_cases(
         test_end_time = time.perf_counter()
         run_duration = test_end_time - test_start_time
         api_test_case.run_duration = run_duration
-        api_test_case.success = success
 
         ### Save Test Run ###
         test_run = test_run_manager.get_test_run()
         test_run.test_cases.append(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
+        if api_test_case.evaluation_cost is not None:
+            if test_run.evaluation_cost is None:
+                test_run.evaluation_cost = api_test_case.evaluation_cost
+            else:
+                test_run.evaluation_cost += api_test_case.evaluation_cost
         test_run_manager.save_test_run()
 
         ### Cache Test Run ###
@@ -286,7 +292,7 @@ async def a_execute_test_cases(
         )
 
         test_result = create_test_result(
-            test_case, success, drop_and_copy(metrics, ["model", "embeddings"])
+            api_test_case, drop_and_copy(metrics, ["model", "embeddings"])
         )
         test_results.append(test_result)
 
