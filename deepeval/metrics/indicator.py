@@ -75,6 +75,7 @@ async def measure_metric_task(
             metric.score = metric_metadata.score
             metric.success = metric_metadata.success
             metric.reason = metric_metadata.reason
+            metric.evaluation_cost = metric_metadata.evaluation_cost
             finish_text = "Read from Cache"
         else:
             try:
@@ -154,6 +155,7 @@ async def measure_metrics_with_indicator(
                 metric.reason = metric_metadata.reason
                 metric.strict_mode = metric_metadata.strict_mode
                 metric.evaluation_model = metric_metadata.evaluation_model
+                metric.evaluation_cost = metric_metadata.evaluation_cost
             else:
                 try:
                     tasks.append(

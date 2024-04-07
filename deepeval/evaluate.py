@@ -138,7 +138,6 @@ def execute_test_cases(
                 )
                 if cached_metric_data:
                     metric_metadata = cached_metric_data.metric_metadata
-                    metric_metadata.evaluation_cost = 0  # Set to 0
 
             if metric_metadata is None:
                 metric.async_mode = False  # Override metric async
@@ -157,8 +156,12 @@ def execute_test_cases(
             if (
                 metric.error is None
             ):  # Only save to cache if metric didn't error
+                cache_metric_metadata = create_metric_metadata(metric)
+                cache_metric_metadata.evaluation_cost = (
+                    0  # Create copy and save 0 for cost
+                )
                 updated_cached_metric_data = CachedMetricData(
-                    metric_metadata=metric_metadata,
+                    metric_metadata=cache_metric_metadata,
                     metric_configuration=Cache.create_metric_configuration(
                         metric
                     ),
@@ -242,8 +245,12 @@ async def a_execute_test_cases(
             if (
                 metric.error is None
             ):  # Only save to cache if metric didn't error
+                cache_metric_metadata = create_metric_metadata(metric)
+                cache_metric_metadata.evaluation_cost = (
+                    0  # Create copy and save 0 for cost
+                )
                 updated_cached_metric_data = CachedMetricData(
-                    metric_metadata=metric_metadata,
+                    metric_metadata=cache_metric_metadata,
                     metric_configuration=Cache.create_metric_configuration(
                         metric
                     ),
