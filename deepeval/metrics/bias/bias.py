@@ -34,9 +34,12 @@ class BiasMetric(BaseMetric):
     ):
         self.threshold = 0 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
             self.model = model
         else:
+            self.using_native_model = True
             self.model = GPTModel(model=model)
+            self.evaluation_cost = 0
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
@@ -95,7 +98,11 @@ class BiasMetric(BaseMetric):
             biases=biases,
             score=format(self.score, ".2f"),
         )
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         return res
 
     def _generate_reason(self) -> str:
@@ -111,7 +118,11 @@ class BiasMetric(BaseMetric):
             biases=biases,
             score=format(self.score, ".2f"),
         )
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         return res
 
     async def _a_generate_verdicts(self) -> List[BiasVerdict]:
@@ -120,7 +131,11 @@ class BiasMetric(BaseMetric):
 
         verdicts: List[BiasVerdict] = []
         prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res, self)
         verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
         return verdicts
@@ -131,20 +146,32 @@ class BiasMetric(BaseMetric):
 
         verdicts: List[BiasVerdict] = []
         prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         data = trimAndLoadJson(res, self)
         verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
         return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res, self)
         return data["opinions"]
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         data = trimAndLoadJson(res, self)
         return data["opinions"]
 

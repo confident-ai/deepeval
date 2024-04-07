@@ -14,6 +14,7 @@ class BaseMetric:
     async_mode: bool = True
     include_reason: bool = False
     error: Optional[str] = None
+    evaluationCost: Optional[float] = None
 
     @property
     def threshold(self) -> float:

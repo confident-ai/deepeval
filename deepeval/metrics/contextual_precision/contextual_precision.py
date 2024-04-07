@@ -38,9 +38,12 @@ class ContextualPrecisionMetric(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
         if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
             self.model = model
         else:
+            self.using_native_model = True
             self.model = GPTModel(model=model)
+            self.evaluation_cost = 0
         self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -104,7 +107,11 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
         )
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         return res
 
     def _generate_reason(self, input: str):
@@ -120,7 +127,11 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
         )
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         return res
 
     async def _a_generate_verdicts(
@@ -131,7 +142,11 @@ class ContextualPrecisionMetric(BaseMetric):
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
@@ -146,7 +161,11 @@ class ContextualPrecisionMetric(BaseMetric):
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
