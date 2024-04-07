@@ -82,7 +82,6 @@ class GEval(BaseMetric):
         else:
             self.using_native_model = True
             self.model = GPTModel(model=model)
-            self.evaluation_cost = 0
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
         self.threshold = 1 if strict_mode else threshold
@@ -91,6 +90,7 @@ class GEval(BaseMetric):
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_test_case_params(test_case, self.evaluation_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(self):
             if self.async_mode:
@@ -118,6 +118,7 @@ class GEval(BaseMetric):
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
         check_test_case_params(test_case, self.evaluation_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
             self,

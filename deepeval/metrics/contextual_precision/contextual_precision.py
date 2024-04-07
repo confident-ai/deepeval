@@ -43,13 +43,13 @@ class ContextualPrecisionMetric(BaseMetric):
         else:
             self.using_native_model = True
             self.model = GPTModel(model=model)
-            self.evaluation_cost = 0
         self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_test_case_params(test_case, required_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(self):
             if self.async_mode:
@@ -75,6 +75,7 @@ class ContextualPrecisionMetric(BaseMetric):
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
         check_test_case_params(test_case, required_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
             self,

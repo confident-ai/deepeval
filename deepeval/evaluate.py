@@ -247,7 +247,7 @@ async def a_execute_test_cases(
             ):  # Only save to cache if metric didn't error
                 cache_metric_metadata = create_metric_metadata(metric)
                 cache_metric_metadata.evaluation_cost = (
-                    0  # Create copy and save 0 for cost
+                    0  # Create new copy and save 0 for cost
                 )
                 updated_cached_metric_data = CachedMetricData(
                     metric_metadata=cache_metric_metadata,
