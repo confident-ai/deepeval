@@ -1,7 +1,7 @@
 import os
 import json
 from pydantic import BaseModel, Field
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, List, Dict, Union
 import shutil
 import webbrowser
 import sys
@@ -102,14 +102,19 @@ class TestRun(BaseModel):
     )
     testPassed: Optional[int] = Field(None)
     testFailed: Optional[int] = Field(None)
+    run_duration: float = Field(0.0, alias="runDuration")
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
 
-    def construct_metrics_scores(self):
+    def construct_metrics_scores(self) -> int:
         metrics_dict: Dict[str, List[float]] = {}
-
+        valid_scores = 0
         for test_case in self.test_cases:
             for metric_metadata in test_case.metrics_metadata:
                 metric = metric_metadata.metric
                 score = metric_metadata.score
+                if score is None:
+                    continue
+                valid_scores += 1
                 if metric in metrics_dict:
                     metrics_dict[metric].append(score)
                 else:
@@ -118,6 +123,7 @@ class TestRun(BaseModel):
             MetricScores(metric=metric, scores=scores)
             for metric, scores in metrics_dict.items()
         ]
+        return valid_scores
 
     def calculate_test_passes_and_fails(self):
         testPassed = 0
@@ -248,7 +254,9 @@ class TestRunManager:
             )
 
             for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.success:
+                if metric_metadata.error:
+                    status = "[red]ERRORED[/red]"
+                elif metric_metadata.success:
                     status = "[green]PASSED[/green]"
                 else:
                     status = "[red]FAILED[/red]"
@@ -257,10 +265,15 @@ class TestRunManager:
                 if evaluation_model is None:
                     evaluation_model = "n/a"
 
+                if metric_metadata.score is not None:
+                    metric_score = round(metric_metadata.score, 2)
+                else:
+                    metric_score = None
+
                 table.add_row(
                     "",
                     str(metric_metadata.metric),
-                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason})",
+                    f"{metric_score} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason}, error={metric_metadata.error})",
                     status,
                     "",
                 )
@@ -273,7 +286,9 @@ class TestRunManager:
                     "",
                     "",
                 )
+
         print(table)
+        print(f"Total evaluation tokens cost: {test_run.evaluation_cost} USD")
 
     def post_test_run(self, test_run: TestRun):
         console = Console()
@@ -371,11 +386,8 @@ class TestRunManager:
                 print(f"Results saved in {local_folder} as {new_test_filename}")
             os.remove(new_test_filename)
 
-    def wrap_up_test_run(self, display_table: bool = True):
+    def wrap_up_test_run(self, runDuration: float, display_table: bool = True):
         test_run = self.get_test_run()
-        test_run.calculate_test_passes_and_fails()
-        test_run.construct_metrics_scores()
-
         if test_run is None:
             print("Test Run is empty, please try again.")
             delete_file_if_exists(self.temp_file_name)
@@ -385,6 +397,15 @@ class TestRunManager:
             delete_file_if_exists(self.temp_file_name)
             return
 
+        valid_scores = test_run.construct_metrics_scores()
+        if valid_scores == 0:
+            print("All metrics errored for all test cases, please try again.")
+            delete_file_if_exists(self.temp_file_name)
+            delete_file_if_exists(test_run_cache_manager.temp_cache_file_name)
+            return
+        test_run.run_duration = runDuration
+        test_run.calculate_test_passes_and_fails()
+
         test_run_cache_manager.disable_write_cache = (
             get_is_running_deepeval() == False
         )
@@ -393,9 +414,9 @@ class TestRunManager:
         if display_table:
             self.display_results_table(test_run)
 
-        self.post_test_run(test_run)
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
+        self.post_test_run(test_run)
 
 
 test_run_manager = TestRunManager()

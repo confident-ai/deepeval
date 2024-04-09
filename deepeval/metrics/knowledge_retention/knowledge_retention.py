@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.utils import trimAndLoadJson
+from deepeval.metrics.utils import trimAndLoadJson
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
@@ -102,7 +102,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 previous_knowledge=previous_knowledge,
             )
             res = self.model.generate(prompt)
-            data = trimAndLoadJson(res)
+            data = trimAndLoadJson(res, self)
             verdict = KnowledgeRetentionVerdict(index=index, **data)
             verdicts.append(verdict)
 
@@ -125,13 +125,20 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             )
 
             res = self.model.generate(prompt)
-            data = trimAndLoadJson(res)
+            data = trimAndLoadJson(res, self)
             knowledge = Knowledge(data=data)
             knowledges.append(knowledge)
 
         return knowledges
 
     def is_successful(self) -> bool:
+        if self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.score >= self.threshold
+            except:
+                self.success = False
         return self.success
 
     @property

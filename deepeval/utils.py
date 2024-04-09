@@ -74,6 +74,23 @@ def set_indicator(show_indicator: bool):
         os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "YES"
 
 
+def should_ignore_errors():
+    try:
+        if os.environ["IGNORE_DEEPEVAL_ERRORS"] == "YES":
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+def set_should_ignore_errors(yes: bool):
+    if yes:
+        os.environ["IGNORE_DEEPEVAL_ERRORS"] = "YES"
+    else:
+        os.environ["IGNORE_DEEPEVAL_ERRORS"] = "NO"
+
+
 def should_use_cache():
     try:
         if os.environ["ENABLE_DEEPEVAL_CACHE"] == "YES":
@@ -89,31 +106,6 @@ def set_should_use_cache(yes: bool):
         os.environ["ENABLE_DEEPEVAL_CACHE"] = "YES"
     else:
         os.environ["ENABLE_DEEPEVAL_CACHE"] = "NO"
-
-
-def check_test_case_params(
-    test_case: LLMTestCase,
-    test_case_params: List[LLMTestCaseParams],
-    metric_name: str,
-):
-    missing_params = []
-    for param in test_case_params:
-        if getattr(test_case, param.value) is None:
-            missing_params.append(f"'{param.value}'")
-
-    if missing_params:
-        if len(missing_params) == 1:
-            missing_params_str = missing_params[0]
-        elif len(missing_params) == 2:
-            missing_params_str = " and ".join(missing_params)
-        else:
-            missing_params_str = (
-                ", ".join(missing_params[:-1]) + ", and " + missing_params[-1]
-            )
-
-        raise ValueError(
-            f"{missing_params_str} cannot be None for the '{metric_name}' metric"
-        )
 
 
 def login_with_confident_api_key(api_key: string):
@@ -209,21 +201,6 @@ def dataclass_to_dict(instance: Any) -> Any:
         return {k: dataclass_to_dict(v) for k, v in instance.items()}
     else:
         return instance
-
-
-def trimAndLoadJson(input_string: str) -> Any:
-    start = input_string.find("{")
-    end = input_string.rfind("}") + 1
-    jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
-
-    try:
-        return json.loads(jsonStr)
-    except json.JSONDecodeError:
-        raise ValueError(
-            "Error: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-        )
-    except Exception as e:
-        raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
 def delete_file_if_exists(file_path):

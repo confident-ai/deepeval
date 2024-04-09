@@ -7,11 +7,8 @@ import math
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.g_eval.template import GEvalTemplate
-from deepeval.utils import (
-    trimAndLoadJson,
-    check_test_case_params,
-    get_or_create_event_loop,
-)
+from deepeval.utils import get_or_create_event_loop
+from deepeval.metrics.utils import trimAndLoadJson, check_test_case_params
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -80,8 +77,10 @@ class GEval(BaseMetric):
 
         self.criteria = criteria
         if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
             self.model = model
         else:
+            self.using_native_model = True
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
@@ -90,9 +89,8 @@ class GEval(BaseMetric):
         self.async_mode = async_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        check_test_case_params(
-            test_case, self.evaluation_params, f"GEval({self.__name__})"
-        )
+        check_test_case_params(test_case, self.evaluation_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(self):
             if self.async_mode:
@@ -119,9 +117,8 @@ class GEval(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
-        check_test_case_params(
-            test_case, self.evaluation_params, f"GEval({self.__name__})"
-        )
+        check_test_case_params(test_case, self.evaluation_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
             self,
@@ -153,8 +150,12 @@ class GEval(BaseMetric):
         prompt = GEvalTemplate.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res, self)
         return data["steps"]
 
     def _generate_evaluation_steps(self) -> List[str]:
@@ -167,8 +168,12 @@ class GEval(BaseMetric):
         prompt = GEvalTemplate.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
+        data = trimAndLoadJson(res, self)
         return data["steps"]
 
     async def _a_evaluate(
@@ -185,10 +190,14 @@ class GEval(BaseMetric):
         )
 
         try:
-            res = await self.model.a_generate_raw_response(
+            # Don't have to check for using native model
+            # since generate raw response only exist for deepeval's native model
+            res, cost = await self.model.a_generate_raw_response(
                 prompt, logprobs=True, top_logprobs=20
             )
-            data = trimAndLoadJson(res.content)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res.content, self)
+
             reason = data["reason"]
             score = data["score"]
             try:
@@ -198,9 +207,16 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except:
                 return score, reason
-        except:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res)
+        except (
+            AttributeError
+        ):  # This catches the case where a_generate_raw_response doesn't exist.
+            if self.using_native_model:
+                res, cost = await self.model.a_generate(prompt)
+                self.evaluation_cost += cost
+            else:
+                res = await self.model.a_generate(prompt)
+
+            data = trimAndLoadJson(res, self)
             return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
@@ -215,10 +231,12 @@ class GEval(BaseMetric):
         )
 
         try:
-            res = self.model.generate_raw_response(
+            res, cost = self.model.generate_raw_response(
                 prompt, logprobs=True, top_logprobs=20
             )
-            data = trimAndLoadJson(res.content)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res.content, self)
+
             reason = data["reason"]
             score = data["score"]
             try:
@@ -228,9 +246,14 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except:
                 return score, reason
-        except:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res)
+        except AttributeError:
+            # This catches the case where a_generate_raw_response doesn't exist.
+            if self.using_native_model:
+                res, cost = self.model.generate(prompt)
+                self.evaluation_cost += cost
+            else:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res.content, self)
             return data["score"], data["reason"]
 
     def generate_weighted_summed_score(
@@ -312,8 +335,8 @@ class GEval(BaseMetric):
                 sum_of_weighted_scores / sum_linear_probability
             )
             return weighted_summed_score
-        except Exception as e:
-            raise (e)
+        except:
+            raise
 
     def number_evaluation_steps(self):
         evaluation_steps = """"""
@@ -322,8 +345,15 @@ class GEval(BaseMetric):
         return evaluation_steps
 
     def is_successful(self) -> bool:
+        if self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.score >= self.threshold
+            except:
+                self.success = False
         return self.success
 
     @property
     def __name__(self):
-        return f"GEval ({self.name})"
+        return f"{self.name} (GEval)"

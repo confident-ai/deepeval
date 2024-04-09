@@ -1,11 +1,8 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel
 
-from deepeval.utils import (
-    trimAndLoadJson,
-    check_test_case_params,
-    get_or_create_event_loop,
-)
+from deepeval.utils import get_or_create_event_loop
+from deepeval.metrics.utils import trimAndLoadJson, check_test_case_params
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
@@ -41,15 +38,18 @@ class ContextualPrecisionMetric(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
         if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
             self.model = model
         else:
+            self.using_native_model = True
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
         self.strict_mode = strict_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        check_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(self):
             if self.async_mode:
@@ -74,7 +74,8 @@ class ContextualPrecisionMetric(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
-        check_test_case_params(test_case, required_params, self.__name__)
+        check_test_case_params(test_case, required_params, self)
+        self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
             self,
@@ -107,7 +108,11 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
         )
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         return res
 
     def _generate_reason(self, input: str):
@@ -123,7 +128,11 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
         )
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         return res
 
     async def _a_generate_verdicts(
@@ -134,8 +143,12 @@ class ContextualPrecisionMetric(BaseMetric):
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
         ]
@@ -149,8 +162,12 @@ class ContextualPrecisionMetric(BaseMetric):
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
-        res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualPrecisionVerdict(**item) for item in data["verdicts"]
         ]
@@ -183,7 +200,13 @@ class ContextualPrecisionMetric(BaseMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.threshold
+        if self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.success = self.score >= self.threshold
+            except:
+                self.success = False
         return self.success
 
     @property

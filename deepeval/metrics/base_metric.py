@@ -5,7 +5,7 @@ from typing import Optional, Dict
 
 
 class BaseMetric:
-    score: float = 0
+    score: Optional[float] = None
     score_breakdown: Dict = None
     reason: Optional[str] = None
     success: Optional[bool] = None
@@ -13,6 +13,8 @@ class BaseMetric:
     strict_mode: bool = False
     async_mode: bool = True
     include_reason: bool = False
+    error: Optional[str] = None
+    evaluation_cost: Optional[float] = None
 
     @property
     def threshold(self) -> float:
@@ -42,10 +44,11 @@ class BaseMetric:
 
 
 class BaseConversationalMetric:
-    score: float = 0
+    score: Optional[float] = None
     score_breakdown: Dict = None
     reason: Optional[str] = None
     evaluation_model: Optional[str] = None
+    error: Optional[str] = None
     # Not changeable for now
     strict_mode: bool = False
     async_mode: bool = False
