@@ -32,8 +32,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
             self.model = model
         else:
+            self.using_native_model = True
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
@@ -50,7 +52,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             self.verdicts: List[KnowledgeRetentionVerdict] = (
                 self._generate_verdicts(test_case)
             )
-
             knowledge_retention_score = self._calculate_score()
             self.reason = self._generate_reason(knowledge_retention_score)
 
@@ -72,8 +73,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             attritions=attritions,
             score=format(score, ".2f"),
         )
-
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, _ = self.model.generate(prompt)
+        else:
+            res = self.model.generate(prompt)
         return res
 
     def _calculate_score(self) -> float:
@@ -101,7 +104,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 llm_message=message.actual_output,
                 previous_knowledge=previous_knowledge,
             )
-            res = self.model.generate(prompt)
+            if self.using_native_model:
+                res, _ = self.model.generate(prompt)
+            else:
+                res = self.model.generate(prompt)
             data = trimAndLoadJson(res, self)
             verdict = KnowledgeRetentionVerdict(index=index, **data)
             verdicts.append(verdict)
@@ -124,7 +130,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 previous_knowledge=previous_knowledge,
             )
 
-            res = self.model.generate(prompt)
+            if self.using_native_model:
+                res, _ = self.model.generate(prompt)
+            else:
+                res = self.model.generate(prompt)
             data = trimAndLoadJson(res, self)
             knowledge = Knowledge(data=data)
             knowledges.append(knowledge)
