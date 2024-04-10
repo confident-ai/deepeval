@@ -1,7 +1,7 @@
 from typing import Optional, Tuple
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_community.callbacks import get_openai_callback
-from langchain.schema import AIMessage
+from langchain.schema import AIMessage, HumanMessage
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
@@ -111,6 +111,22 @@ class GPTModel(DeepEvalBaseLLM):
         with get_openai_callback() as cb:
             res = await chat_model.ainvoke(prompt)
         return res, cb.total_cost
+    
+    @retry_with_exponential_backoff
+    def generate_samples(
+        self, prompt: str, n: int, temperature: float
+    ) -> Tuple[AIMessage, float]:
+        chat_model = self.load_model()
+        og_parameters = {'n': chat_model.n, 'temp': chat_model.temperature}
+        chat_model.n = n
+        chat_model.temperature = temperature
+
+        generations = chat_model._generate([HumanMessage(prompt)]).generations
+        chat_model.temperature = og_parameters['temp']
+        chat_model.n = og_parameters['n']
+        
+        completions = [r.text for r in generations]
+        return completions
 
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
