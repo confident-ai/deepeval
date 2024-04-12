@@ -253,7 +253,7 @@ class GEval(BaseMetric):
                 self.evaluation_cost += cost
             else:
                 res = self.model.generate(prompt)
-                data = trimAndLoadJson(res.content, self)
+                data = trimAndLoadJson(res, self)
             return data["score"], data["reason"]
 
     def generate_weighted_summed_score(
