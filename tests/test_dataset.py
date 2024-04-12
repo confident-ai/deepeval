@@ -61,3 +61,6 @@ def test_create_dataset():
 # def test_customer_chatbot(test_case: LLMTestCase):
 #     hallucination_metric = HallucinationMetric(threshold=0.3)
 #     assert_test(test_case, [hallucination_metric])
+
+# dataset = EvaluationDataset()
+# dataset.pull(alias="Evals Dataset")
