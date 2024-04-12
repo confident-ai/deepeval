@@ -8,6 +8,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.chat_completion.retry import retry_with_exponential_backoff
 
 valid_gpt_models = [
+    "gpt-4-turbo",
     "gpt-4-turbo-preview",
     "gpt-4-0125-preview",
     "gpt-4-1106-preview",
@@ -98,6 +99,9 @@ class GPTModel(DeepEvalBaseLLM):
     def generate_raw_response(
         self, prompt: str, **kwargs
     ) -> Tuple[AIMessage, float]:
+        if self.should_use_azure_openai():
+            raise AttributeError
+
         chat_model = self.load_model().bind(**kwargs)
         with get_openai_callback() as cb:
             res = chat_model.invoke(prompt)
@@ -107,6 +111,9 @@ class GPTModel(DeepEvalBaseLLM):
     async def a_generate_raw_response(
         self, prompt: str, **kwargs
     ) -> Tuple[AIMessage, float]:
+        if self.should_use_azure_openai():
+            raise AttributeError
+
         chat_model = self.load_model().bind(**kwargs)
         with get_openai_callback() as cb:
             res = await chat_model.ainvoke(prompt)

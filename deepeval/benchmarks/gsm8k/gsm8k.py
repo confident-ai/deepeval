@@ -11,7 +11,9 @@ from deepeval.scorer import Scorer
 
 
 class GSM8K(DeepEvalBaseBenchmark):
-    def __init__(self, n_shots: int = 3, enable_cot: bool = True, n_problems: int = 1319):
+    def __init__(
+        self, n_shots: int = 3, enable_cot: bool = True, n_problems: int = 1319
+    ):
         assert n_shots <= 5, "MMLU only supports n_shots <= 5"
         super().__init__()
         self.scorer = Scorer()
@@ -32,13 +34,13 @@ class GSM8K(DeepEvalBaseBenchmark):
 
         # Solving each problem
         goldens = self.load_benchmark_dataset()[: self.n_problems]
-        for golden in tqdm(goldens, desc=f"Processing {self.n_problems} problems"):
+        for golden in tqdm(
+            goldens, desc=f"Processing {self.n_problems} problems"
+        ):
             prediction, score = self.predict(model, golden).values()
             if score:
                 overall_correct_predictions += 1
-            predictions_row.append(
-                (golden.input, prediction, score)
-            )
+            predictions_row.append((golden.input, prediction, score))
 
         # Calculate overall accuracy
         overall_accuracy = (
@@ -53,9 +55,7 @@ class GSM8K(DeepEvalBaseBenchmark):
 
         return overall_accuracy
 
-    def predict(
-        self, model: DeepEvalBaseLLM, golden: Golden
-    ) -> Dict:
+    def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
         assert (
             self.shots_dataset != None
@@ -64,7 +64,7 @@ class GSM8K(DeepEvalBaseBenchmark):
             train_set=self.shots_dataset,
             input=golden.input,
             n_shots=self.n_shots,
-            enable_cot = self.enable_cot
+            enable_cot=self.enable_cot,
         )
         prediction = model.generate(prompt)
 
@@ -79,7 +79,7 @@ class GSM8K(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("gsm8k", 'main', trust_remote_code=True)
+            dataset = load_dataset("gsm8k", "main", trust_remote_code=True)
             self.dataset = dataset
 
         # Construct example dataset for n_shot inference
@@ -93,12 +93,13 @@ class GSM8K(DeepEvalBaseBenchmark):
         # Construct test set
         goldens: List[Golden] = []
         for data in dataset["test"]:
-            input = data['question']
+            input = data["question"]
             output = GSM8KTemplate.format_answer(data)
             golden = Golden(input=input, expectedOutput=output)
             goldens.append(golden)
 
         return goldens
+
 
 ########################
 #### Example Usage #####
@@ -107,5 +108,5 @@ from deepeval.models.gpt_model import GPTModel
 
 model = GPTModel()
 
-benchmark = GSM8K(n_shots=0, enable_cot=False, n_problems=10)  
+benchmark = GSM8K(n_shots=0, enable_cot=False, n_problems=10)
 goldens = benchmark.evaluate(model)
