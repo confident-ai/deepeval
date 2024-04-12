@@ -1,5 +1,6 @@
 import re
 
+
 class GSM8KTemplate:
 
     # Template was inspired by https://arxiv.org/pdf/2110.14168.pdf
@@ -16,8 +17,10 @@ class GSM8KTemplate:
         if n_shots > 0:
             prompt = "The following are grade school math word problems\n\n"
         for i in range(n_shots):
-            prompt += GSM8KTemplate.format_example(train_set[i], enable_cot) + '\n\n'
-        
+            prompt += (
+                GSM8KTemplate.format_example(train_set[i], enable_cot) + "\n\n"
+            )
+
         # problem of interest
         prompt += "**Problem**: " + input + "\n**Answer**: \n\n"
 
@@ -30,23 +33,22 @@ class GSM8KTemplate:
     def format_example(data: dict, enable_cot: bool):
 
         formatted_problem = ""
-        question = data['question']
-        formatted_problem  += "**Problem**: " + question + '\n'
+        question = data["question"]
+        formatted_problem += "**Problem**: " + question + "\n"
 
-        raw_answer = data['answer']
+        raw_answer = data["answer"]
         solution, answer = raw_answer.strip().split("\n#### ")
         if enable_cot:
-            formatted_problem += "**Solution**: " + solution + '\n'
+            formatted_problem += "**Solution**: " + solution + "\n"
         formatted_problem += "**Answer**: " + answer
 
         return formatted_problem
-    
+
     @staticmethod
     def format_answer(data: dict):
-        raw_answer = data['answer']
-        answer = re.findall(r'#### (.*)', raw_answer)[0]
+        raw_answer = data["answer"]
+        answer = re.findall(r"#### (.*)", raw_answer)[0]
         return answer
 
     def format_subject(subject: str):
-        return 
-
+        return
