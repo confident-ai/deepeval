@@ -361,6 +361,7 @@ def evaluate(
     run_async: bool = True,
     show_indicator: bool = True,
     print_results: bool = True,
+    write_cache: bool = True,
     use_cache: bool = False,
     ignore_errors: bool = False,
 ):
@@ -390,7 +391,7 @@ def evaluate(
                 metrics,
                 ignore_errors=ignore_errors,
                 use_cache=use_cache,
-                save_to_disk=True,
+                save_to_disk=write_cache,
             )
         )
     else:
@@ -399,7 +400,7 @@ def evaluate(
             metrics,
             ignore_errors=ignore_errors,
             use_cache=use_cache,
-            save_to_disk=True,
+            save_to_disk=write_cache,
         )
 
     capture_evaluation_count()
