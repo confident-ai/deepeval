@@ -190,7 +190,7 @@ class TestRunManager:
             self.save_test_run()
 
     def get_test_run(self):
-        if self.test_run is None or not self.save_to_disk:
+        if self.test_run is None:
             self.create_test_run()
 
         if self.save_to_disk:
@@ -406,9 +406,11 @@ class TestRunManager:
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
 
-        test_run_cache_manager.disable_write_cache = (
-            get_is_running_deepeval() == False
-        )
+        if test_run_cache_manager.disable_write_cache is None:
+            test_run_cache_manager.disable_write_cache = (
+                get_is_running_deepeval() == False
+            )
+
         test_run_cache_manager.wrap_up_cached_test_run()
 
         if display_table:

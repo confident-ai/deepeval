@@ -89,7 +89,7 @@ class CachedTestRun(BaseModel):
 
 class TestRunCacheManager:
     def __init__(self):
-        self.disable_write_cache = True
+        self.disable_write_cache: Optional[bool] = None
         self.cached_test_run: Optional[CachedTestRun] = None
         self.cache_file_name: str = CACHE_FILE_NAME
         self.temp_cached_test_run: Optional[CachedTestRun] = None
@@ -259,6 +259,12 @@ class TestRunCacheManager:
             return self.cached_test_run
 
     def wrap_up_cached_test_run(self):
+        if self.disable_write_cache:
+            # Clear cache if write cache is disabled
+            delete_file_if_exists(self.cache_file_name)
+            delete_file_if_exists(self.temp_cache_file_name)
+            return
+
         self.get_cached_test_run(from_temp=True)
         try:
             with portalocker.Lock(
