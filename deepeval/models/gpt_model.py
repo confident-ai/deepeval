@@ -22,7 +22,7 @@ valid_gpt_models = [
     "gpt-3.5-turbo-0125",
 ]
 
-default_gpt_model = "gpt-4-0125-preview"
+default_gpt_model = "gpt-4-turbo"
 
 
 class GPTModel(DeepEvalBaseLLM):
