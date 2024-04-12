@@ -284,9 +284,9 @@ class EvaluationDataset:
                 params={"alias": alias},
             )
 
-            print(result)
             response = DatasetHttpResponse(
-                goldens=result["goldens"], conversationalGoldens=[]
+                goldens=result["goldens"],
+                conversationalGoldens=result["conversationalGoldens"],
             )
 
             if auto_convert_goldens_to_test_cases:
