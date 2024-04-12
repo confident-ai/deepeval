@@ -200,6 +200,9 @@ class GEval(BaseMetric):
 
             reason = data["reason"]
             score = data["score"]
+            if self.strict_mode:
+                return score, reason
+
             try:
                 weighted_summed_score = self.generate_weighted_summed_score(
                     score, res
@@ -239,6 +242,9 @@ class GEval(BaseMetric):
 
             reason = data["reason"]
             score = data["score"]
+            if self.strict_mode:
+                return score, reason
+
             try:
                 weighted_summed_score = self.generate_weighted_summed_score(
                     score, res
