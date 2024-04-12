@@ -214,7 +214,10 @@ class TestRunCacheManager:
 
             try:
                 with portalocker.Lock(
-                    self.temp_cache_file_name, mode="r", timeout=5
+                    self.temp_cache_file_name,
+                    mode="r",
+                    timeout=5,
+                    flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
                 ) as file:
                     content = file.read().strip()
                     try:
@@ -238,7 +241,10 @@ class TestRunCacheManager:
 
             try:
                 with portalocker.Lock(
-                    self.cache_file_name, mode="r", timeout=5
+                    self.cache_file_name,
+                    mode="r",
+                    timeout=5,
+                    flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
                 ) as file:
                     content = file.read().strip()
                     try:
