@@ -16,4 +16,6 @@ class CreateDatasetHttpResponse(BaseModel):
 
 class DatasetHttpResponse(BaseModel):
     goldens: List[Golden]
-    conversationalGoldens: List[ConversationalGolden]
+    conversational_goldens: List[ConversationalGolden] = Field(
+        alias="conversationalGoldens"
+    )

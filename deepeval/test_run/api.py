@@ -19,16 +19,20 @@ class APITestCase(BaseModel):
     input: str
     actual_output: str = Field(..., alias="actualOutput")
     expected_output: Optional[str] = Field(None, alias="expectedOutput")
-    success: bool
+    context: Optional[list] = Field(None)
+    retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
+    # make optional, test cases in a conversation will NOT be evaluated individually
+    success: Union[bool, None] = Field(None)
+    # make optional, test cases in a conversation will NOT be evaluated individually
     metrics_metadata: List[MetricMetadata] = Field(..., alias="metricsMetadata")
+    # make optional, test cases in a conversation will NOT be evaluated individually
     run_duration: float = Field(..., alias="runDuration")
+    # make optional, test cases in a conversation will NOT be evaluated individually
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+
     latency: Optional[float] = Field(None)
     cost: Optional[float] = Field(None)
     traceStack: Optional[dict] = Field(None)
-    context: Optional[list] = Field(None)
-    retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
-    id: Optional[str] = None
-    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
 
     def update(self, metric_metadata: MetricMetadata):
         self.metrics_metadata.append(metric_metadata)
@@ -43,6 +47,15 @@ class APITestCase(BaseModel):
             self.evaluation_cost = evaluationCost
         else:
             self.evaluation_cost += evaluationCost
+
+
+class ConversationalAPITestCase(BaseModel):
+    name: str
+    messages: List[APITestCase] = Field(default_factory=lambda: [])
+    success: bool
+    metrics_metadata: List[MetricMetadata] = Field(..., alias="metricsMetadata")
+    run_duration: float = Field(..., alias="runDuration")
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
 
 
 class TestRunHttpResponse(BaseModel):

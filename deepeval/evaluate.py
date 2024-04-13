@@ -99,7 +99,6 @@ def create_api_test_case(
         context=test_case.context,
         retrievalContext=test_case.retrieval_context,
         traceStack=get_trace_stack(),
-        id=test_case.id,
         evaluationCost=None,
     )
 
