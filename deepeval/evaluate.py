@@ -414,7 +414,7 @@ def assert_test(
 
 
 def evaluate(
-    test_cases: List[LLMTestCase],
+    test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
     metrics: List[BaseMetric],
     run_async: bool = True,
     show_indicator: bool = True,
