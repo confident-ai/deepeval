@@ -14,7 +14,8 @@ from rich import print
 from deepeval.metrics import BaseMetric
 from deepeval.api import Api, Endpoints
 from deepeval.test_run.api import (
-    APITestCase,
+    LLMApiTestCase,
+    ConversationalApiTestCase,
     TestRunHttpResponse,
 )
 from deepeval.utils import (
@@ -74,7 +75,7 @@ class MetricsAverageDict:
 
 class RemainingTestRun(BaseModel):
     testRunId: str
-    test_cases: List[APITestCase] = Field(
+    test_cases: List[LLMApiTestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
 
@@ -89,8 +90,11 @@ class TestRun(BaseModel):
     deployment_configs: Optional[DeploymentConfigs] = Field(
         None, alias="deploymentConfigs"
     )
-    test_cases: List[APITestCase] = Field(
+    test_cases: List[LLMApiTestCase] = Field(
         alias="testCases", default_factory=lambda: []
+    )
+    conversational_test_cases: List[ConversationalApiTestCase] = Field(
+        alias="conversationalTestCases", default_factory=lambda: []
     )
     metrics_scores: List[MetricScores] = Field(
         default_factory=lambda: [], alias="metricsScores"
@@ -100,15 +104,48 @@ class TestRun(BaseModel):
     user_prompt_template: Optional[str] = Field(
         None, alias="userPromptTemplate"
     )
-    testPassed: Optional[int] = Field(None)
-    testFailed: Optional[int] = Field(None)
+    test_passed: Optional[int] = Field(None, alias="testPassed")
+    test_failed: Optional[int] = Field(None, alias="testFailed")
     run_duration: float = Field(0.0, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+
+    def add_test_case(
+        self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
+    ):
+        if isinstance(api_test_case, ConversationalApiTestCase):
+            self.conversational_test_cases.append(api_test_case)
+        else:
+            self.test_cases.append(api_test_case)
+
+        if api_test_case.evaluation_cost is not None:
+            if self.evaluation_cost is None:
+                self.evaluation_cost = api_test_case.evaluation_cost
+            else:
+                self.evaluation_cost += api_test_case.evaluation_cost
+
+    def sort_test_cases_by_name(self):
+        self.test_cases = sorted(
+            self.test_cases, key=lambda test_case: test_case.name
+        )
+        i = 0
+        for test_case in self.test_cases:
+            test_case.order = i
+            i += 1
+
+        self.conversational_test_cases = sorted(
+            self.conversational_test_cases, key=lambda test_case: test_case.name
+        )
+        i = 0
+        for test_case in self.conversational_test_cases:
+            test_case.order = i
+            i += 1
 
     def construct_metrics_scores(self) -> int:
         metrics_dict: Dict[str, List[float]] = {}
         valid_scores = 0
         for test_case in self.test_cases:
+            if test_case.metrics_metadata is None:
+                continue
             for metric_metadata in test_case.metrics_metadata:
                 metric = metric_metadata.metric
                 score = metric_metadata.score
@@ -119,6 +156,26 @@ class TestRun(BaseModel):
                     metrics_dict[metric].append(score)
                 else:
                     metrics_dict[metric] = [score]
+
+        for test_case in self.conversational_test_cases:
+            # right now, we only look at individual message evaluations
+            # and not a conversation as a whole
+            for message in test_case.messages:
+                if message.metrics_metadata is None:
+                    continue
+                for metric_metadata in message.metrics_metadata:
+                    metric = metric_metadata.metric
+                    score = metric_metadata.score
+                    if score is None:
+                        continue
+                    valid_scores += 1
+                    if metric in metrics_dict:
+                        metrics_dict[metric].append(score)
+                    else:
+                        metrics_dict[metric] = [score]
+
+        # metrics_scores combines both conversational and nonconvo scores
+        # might need to separate in the future
         self.metrics_scores = [
             MetricScores(metric=metric, scores=scores)
             for metric, scores in metrics_dict.items()
@@ -126,15 +183,28 @@ class TestRun(BaseModel):
         return valid_scores
 
     def calculate_test_passes_and_fails(self):
-        testPassed = 0
-        testFailed = 0
+        test_passed = 0
+        test_failed = 0
         for test_case in self.test_cases:
-            if test_case.success:
-                testPassed += 1
-            else:
-                testFailed += 1
-        self.testPassed = testPassed
-        self.testFailed = testFailed
+            if test_case.success is not None:
+                if test_case.success:
+                    test_passed += 1
+                else:
+                    test_failed += 1
+
+        for test_case in self.conversational_test_cases:
+            # we don't count for conversational test cases success,
+            # because that would be double counting
+            for message in test_case.messages:
+                if message.success is not None:
+                    # check None for messages that are not evaluated
+                    if message.success:
+                        test_passed += 1
+                    else:
+                        test_failed += 1
+
+        self.test_passed = test_passed
+        self.test_failed = test_failed
 
     def save(self, f):
         try:
@@ -296,6 +366,9 @@ class TestRunManager:
     def post_test_run(self, test_run: TestRun):
         console = Console()
 
+        # TODO: remove when ready
+        del test_run.conversational_test_cases
+
         if is_confident() and self.disable_request is False:
             BATCH_SIZE = 50
             initial_batch = test_run.test_cases[:BATCH_SIZE]
@@ -392,7 +465,10 @@ class TestRunManager:
             print("Test Run is empty, please try again.")
             delete_file_if_exists(self.temp_file_name)
             return
-        elif len(test_run.test_cases) == 0:
+        elif (
+            len(test_run.test_cases) == 0
+            and len(test_run.conversational_test_cases) == 0
+        ):
             print("No test cases found, please try again.")
             delete_file_if_exists(self.temp_file_name)
             return
@@ -405,6 +481,7 @@ class TestRunManager:
             return
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
+        test_run.sort_test_cases_by_name()
 
         if test_run_cache_manager.disable_write_cache is None:
             test_run_cache_manager.disable_write_cache = (

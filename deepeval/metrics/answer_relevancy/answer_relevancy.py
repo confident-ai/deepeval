@@ -50,13 +50,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
 
-    def measure(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
-    ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = get_last_message(test_case, self)
-
-        print(test_case)
+    def measure(self, test_case: LLMTestCase) -> float:
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -81,13 +75,9 @@ class AnswerRelevancyMetric(BaseMetric):
 
     async def a_measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = get_last_message(test_case, self)
-
-        print(test_case)
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -100,8 +90,6 @@ class AnswerRelevancyMetric(BaseMetric):
             self.verdicts: List[AnswerRelvancyVerdict] = (
                 await self._a_generate_verdicts(test_case.input)
             )
-            print(self.statements)
-            print(self.verdicts)
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold

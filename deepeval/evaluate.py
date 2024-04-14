@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Union
 import time
 from dataclasses import dataclass
 
@@ -14,10 +14,14 @@ from deepeval.metrics import BaseMetric
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
 )
-from deepeval.test_case import LLMTestCase
-from deepeval.tracing import get_trace_stack
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.constants import PYTEST_RUN_TEST_NAME
-from deepeval.test_run import test_run_manager, APITestCase, MetricMetadata
+from deepeval.test_run import (
+    test_run_manager,
+    LLMApiTestCase,
+    ConversationalApiTestCase,
+    MetricMetadata,
+)
 from deepeval.utils import get_is_running_deepeval, set_indicator
 from deepeval.test_run.cache import (
     test_run_cache_manager,
@@ -68,43 +72,72 @@ def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
 
 
 def create_test_result(
-    test_case: APITestCase,
+    test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
     metrics: List[BaseMetric],
 ) -> TestResult:
+    if isinstance(test_case, ConversationalApiTestCase):
+        tc = test_case.messages[len(test_case.messages) - 1]
+    else:
+        tc = test_case
+
     return TestResult(
-        success=test_case.success,
+        success=tc.success,
         metrics=metrics,
-        input=test_case.input,
-        actual_output=test_case.actual_output,
-        expected_output=test_case.expected_output,
-        context=test_case.context,
-        retrieval_context=test_case.retrieval_context,
+        input=tc.input,
+        actual_output=tc.actual_output,
+        expected_output=tc.expected_output,
+        context=tc.context,
+        retrieval_context=tc.retrieval_context,
     )
 
 
 def create_api_test_case(
-    test_case: LLMTestCase,
+    test_case: Union[LLMTestCase, ConversationalTestCase],
     index: Optional[int] = None,
-) -> APITestCase:
-    return APITestCase(
-        name=os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}"),
-        input=test_case.input,
-        actualOutput=test_case.actual_output,
-        expectedOutput=test_case.expected_output,
-        success=True,
-        metricsMetadata=[],
-        runDuration=0,
-        cost=test_case.cost,
-        latency=test_case.latency,
-        context=test_case.context,
-        retrievalContext=test_case.retrieval_context,
-        traceStack=get_trace_stack(),
-        evaluationCost=None,
-    )
+    is_message: Optional[bool] = False,
+) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
+    if isinstance(test_case, LLMTestCase):
+        if is_message:
+            success = None
+            name = "test_case_{index}"
+            order = index
+        else:
+            success = True
+            name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
+            order = None
+
+        return LLMApiTestCase(
+            name=name,
+            input=test_case.input,
+            actualOutput=test_case.actual_output,
+            expectedOutput=test_case.expected_output,
+            context=test_case.context,
+            retrievalContext=test_case.retrieval_context,
+            success=success,
+            metricsMetadata=None,
+            runDuration=None,
+            evaluationCost=None,
+            order=order,
+        )
+    elif isinstance(test_case, ConversationalTestCase):
+        return ConversationalApiTestCase(
+            name=os.getenv(
+                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
+            ),
+            success=True,
+            metricsMetadata=None,
+            runDuration=0,
+            evaluationCost=None,
+            order=None,
+            testCases=[
+                create_api_test_case(tc, i, True)
+                for i, tc in enumerate(test_case.messages)
+            ],
+        )
 
 
 def execute_test_cases(
-    test_cases: List[LLMTestCase],
+    test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
     metrics: List[BaseMetric],
     ignore_errors: bool,
     use_cache: bool,
@@ -115,8 +148,15 @@ def execute_test_cases(
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
     for index, test_case in enumerate(test_cases):
+        if isinstance(test_case, ConversationalTestCase):
+            last_message_index = len(test_case.messages) - 1
+        else:
+            last_message_index = -1
+
         cached_test_case = None
-        if use_cache:
+        if use_cache and isinstance(
+            test_case, LLMTestCase
+        ):  # for now, don't use cache when it is a conversation
             cached_test_case = test_run_cache_manager.get_cached_test_case(
                 test_case,
                 test_run.hyperparameters,
@@ -125,12 +165,14 @@ def execute_test_cases(
             )
 
         ##### Metric Calculation #####
-        api_test_case: APITestCase = create_api_test_case(test_case, index)
+        # this can be a converational api or llm api test case
+        api_test_case = create_api_test_case(test_case, index)
         new_cached_test_case: CachedTestCase = CachedTestCase()
         test_start_time = time.perf_counter()
 
         for metric in metrics:
             metric_metadata = None
+            # cached_tet_case will always be false for conversationals
             if cached_test_case is not None:
                 cached_metric_data = Cache.get_metric_data(
                     metric, cached_test_case
@@ -138,10 +180,17 @@ def execute_test_cases(
                 if cached_metric_data:
                     metric_metadata = cached_metric_data.metric_metadata
 
+            # metric_metadata will always be false for conversationals
             if metric_metadata is None:
                 metric.async_mode = False  # Override metric async
                 try:
-                    metric.measure(test_case)
+                    # if conversational, manually extract the last one for now
+                    # In the future, might add support for evaluating any message in a convo
+                    if isinstance(test_case, ConversationalTestCase):
+                        tc = test_case.messages[last_message_index]
+                    else:
+                        tc = test_case
+                    metric.measure(tc)
                 except Exception as e:
                     if ignore_errors:
                         metric.error = str(e)  # Override metric error
@@ -150,11 +199,15 @@ def execute_test_cases(
                         raise
                 metric_metadata = create_metric_metadata(metric)
 
-            api_test_case.update(metric_metadata)
+            if isinstance(test_case, ConversationalTestCase):
+                # the index can be dynamic in the future, just not now
+                api_test_case.update(metric_metadata, last_message_index)
+            else:
+                api_test_case.update(metric_metadata)
 
-            if (
-                metric.error is None
-            ):  # Only save to cache if metric didn't error
+            if metric.error is None and isinstance(
+                test_case, LLMTestCase
+            ):  # Only save to cache if metric didn't error and not conversational
                 cache_metric_metadata = create_metric_metadata(metric)
                 cache_metric_metadata.evaluation_cost = (
                     0  # Create copy and save 0 for cost
@@ -175,31 +228,29 @@ def execute_test_cases(
 
         ### Save Test Run ###
         test_run = test_run_manager.get_test_run()
-        test_run.test_cases.append(api_test_case)
+        test_run.add_test_case(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
-        if api_test_case.evaluation_cost is not None:
-            if test_run.evaluation_cost is None:
-                test_run.evaluation_cost = api_test_case.evaluation_cost
-            else:
-                test_run.evaluation_cost += api_test_case.evaluation_cost
         test_run_manager.save_test_run()
 
         ### Cache Test Run ###
-        test_run_cache_manager.cache_test_case(
-            test_case,
-            new_cached_test_case,
-            test_run.hyperparameters,
-            test_run.model,
-            test_run.user_prompt_template,
-        )
-        test_run_cache_manager.cache_test_case(
-            test_case,
-            new_cached_test_case,
-            test_run.hyperparameters,
-            test_run.model,
-            test_run.user_prompt_template,
-            to_temp=True,
-        )
+        if isinstance(
+            test_case, LLMTestCase
+        ):  # only cache if not conversational
+            test_run_cache_manager.cache_test_case(
+                test_case,
+                new_cached_test_case,
+                test_run.hyperparameters,
+                test_run.model,
+                test_run.user_prompt_template,
+            )
+            test_run_cache_manager.cache_test_case(
+                test_case,
+                new_cached_test_case,
+                test_run.hyperparameters,
+                test_run.model,
+                test_run.user_prompt_template,
+                to_temp=True,
+            )
 
         test_result = create_test_result(
             api_test_case, drop_and_copy(metrics, ["model", "embeddings"])
@@ -210,7 +261,7 @@ def execute_test_cases(
 
 
 async def a_execute_test_cases(
-    test_cases: List[LLMTestCase],
+    test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
     metrics: List[BaseMetric],
     ignore_errors: bool,
     use_cache: bool,
@@ -222,7 +273,8 @@ async def a_execute_test_cases(
     test_run = test_run_manager.get_test_run()
     for index, test_case in enumerate(test_cases):
         cached_test_case = None
-        if use_cache:
+        # only use cache when NOT conversational test case
+        if use_cache and isinstance(test_case, LLMTestCase):
             cached_test_case = test_run_cache_manager.get_cached_test_case(
                 test_case,
                 test_run.hyperparameters,
@@ -231,7 +283,9 @@ async def a_execute_test_cases(
             )
 
         ##### Metric Calculation #####
-        api_test_case: APITestCase = create_api_test_case(test_case, index)
+        # api test case can be conversational
+        api_test_case = create_api_test_case(test_case, index)
+
         new_cached_test_case: CachedTestCase = CachedTestCase()
         test_start_time = time.perf_counter()
         await measure_metrics_with_indicator(
@@ -239,11 +293,18 @@ async def a_execute_test_cases(
         )
         for metric in metrics:
             metric_metadata = create_metric_metadata(metric)
-            api_test_case.update(metric_metadata)
 
-            if (
-                metric.error is None
-            ):  # Only save to cache if metric didn't error
+            if isinstance(test_case, ConversationalTestCase):
+                # index hardcoded as the last message for now
+                api_test_case.update(
+                    metric_metadata, len(test_case.messages) - 1
+                )
+            else:
+                api_test_case.update(metric_metadata)
+
+            if metric.error is None and isinstance(
+                test_case, LLMTestCase
+            ):  # Only save to cache if metric didn't error AND is not conversational
                 cache_metric_metadata = create_metric_metadata(metric)
                 cache_metric_metadata.evaluation_cost = (
                     0  # Create new copy and save 0 for cost
@@ -264,31 +325,29 @@ async def a_execute_test_cases(
 
         ### Save Test Run ###
         test_run = test_run_manager.get_test_run()
-        test_run.test_cases.append(api_test_case)
+        test_run.add_test_case(api_test_case)
         test_run.dataset_alias = test_case.dataset_alias
-        if api_test_case.evaluation_cost is not None:
-            if test_run.evaluation_cost is None:
-                test_run.evaluation_cost = api_test_case.evaluation_cost
-            else:
-                test_run.evaluation_cost += api_test_case.evaluation_cost
         test_run_manager.save_test_run()
 
         ### Cache Test Run ###
-        test_run_cache_manager.cache_test_case(
-            test_case,
-            new_cached_test_case,
-            test_run.hyperparameters,
-            test_run.model,
-            test_run.user_prompt_template,
-        )
-        test_run_cache_manager.cache_test_case(
-            test_case,
-            new_cached_test_case,
-            test_run.hyperparameters,
-            test_run.model,
-            test_run.user_prompt_template,
-            to_temp=True,
-        )
+        if isinstance(
+            test_case, LLMTestCase
+        ):  # only cache if not conversational
+            test_run_cache_manager.cache_test_case(
+                test_case,
+                new_cached_test_case,
+                test_run.hyperparameters,
+                test_run.model,
+                test_run.user_prompt_template,
+            )
+            test_run_cache_manager.cache_test_case(
+                test_case,
+                new_cached_test_case,
+                test_run.hyperparameters,
+                test_run.model,
+                test_run.user_prompt_template,
+                to_temp=True,
+            )
 
         test_result = create_test_result(
             api_test_case, drop_and_copy(metrics, ["model", "embeddings"])
@@ -299,17 +358,15 @@ async def a_execute_test_cases(
 
 
 def assert_test(
-    test_case: LLMTestCase, metrics: List[BaseMetric], run_async: bool = True
+    test_case: Union[LLMTestCase, ConversationalTestCase],
+    metrics: List[BaseMetric],
+    run_async: bool = True,
 ):
 
-    # TODO: refactor
+    # TODO: keep this for now, blocking conversational metrics like KR
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
             raise TypeError("Provided 'metric' must be of type 'BaseMetric'.")
-
-    # TODO: refactor
-    if not isinstance(test_case, LLMTestCase):
-        raise TypeError("'test_case' must be an instance of 'LLMTestCase'.")
 
     if run_async:
         loop = get_or_create_event_loop()
@@ -333,6 +390,8 @@ def assert_test(
 
     if not test_result.success:
         failed_metrics: List[BaseMetric] = []
+        # even for conversations, test_result right now is just the
+        # result for the last message
         for metric in test_result.metrics:
             if metric.error is not None:
                 failed_metrics.append(metric)
@@ -366,17 +425,10 @@ def evaluate(
 ):
     set_indicator(show_indicator)
 
-    # TODO: refactor
+    # TODO: keep this for now, blocking conversational metrics like KR
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
             raise TypeError("Provided 'metric' must be of type 'BaseMetric'.")
-
-    # TODO: refactor
-    for test_case in test_cases:
-        if not isinstance(test_case, LLMTestCase):
-            raise TypeError(
-                "Provided `test_cases` must be of type 'List[LLMTestCase]'."
-            )
 
     test_run_manager.reset()
     start_time = time.perf_counter()

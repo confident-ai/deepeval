@@ -7,9 +7,8 @@ import time
 import asyncio
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import show_indicator
-from deepeval.test_run import test_run_manager, APITestCase, MetricMetadata
 from deepeval.test_run.cache import CachedTestCase, Cache
 
 
@@ -58,7 +57,7 @@ async def measure_metric_task(
     task_id,
     progress,
     metric: BaseMetric,
-    test_case: LLMTestCase,
+    test_case: Union[LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
 ):
@@ -66,6 +65,7 @@ async def measure_metric_task(
         start_time = time.perf_counter()
         metric_metadata = None
         if cached_test_case is not None:
+            # cached test casr will always be None for conversational test case (from a_execute_test_cases)
             cached_metric_data = Cache.get_metric_data(metric, cached_test_case)
             if cached_metric_data:
                 metric_metadata = cached_metric_data.metric_metadata
@@ -78,11 +78,15 @@ async def measure_metric_task(
             metric.evaluation_cost = metric_metadata.evaluation_cost
             finish_text = "Read from Cache"
         else:
+            if isinstance(test_case, ConversationalTestCase):
+                tc = test_case.messages[len(test_case.messages) - 1]
+            else:
+                tc = test_case
             try:
-                await metric.a_measure(test_case, _show_indicator=False)
+                await metric.a_measure(tc, _show_indicator=False)
                 finish_text = "Done"
             except TypeError:
-                await metric.a_measure(test_case)
+                await metric.a_measure(tc)
                 finish_text = "Done"
             except Exception as e:
                 if ignore_errors:
@@ -104,7 +108,7 @@ async def measure_metric_task(
 
 async def measure_metrics_with_indicator(
     metrics: List[BaseMetric],
-    test_case: LLMTestCase,
+    test_case: Union[LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
 ):
@@ -137,6 +141,7 @@ async def measure_metrics_with_indicator(
         tasks = []
         for metric in metrics:
             metric_metadata = None
+            # cached test case will always be None for conversationals
             if cached_test_case is not None:
                 cached_metric_data = Cache.get_metric_data(
                     metric, cached_test_case
@@ -157,12 +162,14 @@ async def measure_metrics_with_indicator(
                 metric.evaluation_model = metric_metadata.evaluation_model
                 metric.evaluation_cost = metric_metadata.evaluation_cost
             else:
+                if isinstance(test_case, ConversationalTestCase):
+                    tc = test_case.messages[len(test_case.messages) - 1]
+                else:
+                    tc = test_case
                 try:
-                    tasks.append(
-                        metric.a_measure(test_case, _show_indicator=False)
-                    )
+                    tasks.append(metric.a_measure(tc, _show_indicator=False))
                 except TypeError:
-                    tasks.append(metric.a_measure(test_case))
+                    tasks.append(metric.a_measure(tc))
                 except Exception as e:
                     if ignore_errors:
                         metric.error = str(e)

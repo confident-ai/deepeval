@@ -43,7 +43,7 @@ def test_ragas_score():
         )
 
 
-# @pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
     test_case = LLMTestCase(
