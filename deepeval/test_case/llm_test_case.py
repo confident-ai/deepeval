@@ -21,7 +21,6 @@ class LLMTestCase:
     latency: Optional[float] = None
     cost: Optional[float] = None
     dataset_alias: Optional[str] = None
-    id: Optional[str] = None
 
     def __post_init__(self):
         # Ensure `context` is None or a list of strings

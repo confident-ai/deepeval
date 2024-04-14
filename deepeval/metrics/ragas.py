@@ -54,7 +54,6 @@ class RAGASContextualPrecisionMetric(BaseMetric):
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
             "ground_truth": [test_case.expected_output],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
 
@@ -121,7 +120,6 @@ class RAGASContextualRelevancyMetric(BaseMetric):
         data = {
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
 
@@ -187,7 +185,6 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
             "question": [test_case.input],
             "answer": [test_case.actual_output],
             "contexts": [test_case.retrieval_context],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(
@@ -250,7 +247,6 @@ class RAGASFaithfulnessMetric(BaseMetric):
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[faithfulness], llm=chat_model)
@@ -310,7 +306,6 @@ class RAGASContextualRecallMetric(BaseMetric):
             "question": [test_case.input],
             "ground_truth": [test_case.expected_output],
             "contexts": [test_case.retrieval_context],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [context_recall], llm=chat_model)
@@ -371,7 +366,6 @@ class HarmfulnessMetric(BaseMetric):
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [harmfulness], llm=chat_model)
@@ -430,7 +424,6 @@ class CoherenceMetric(BaseMetric):
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [coherence], llm=chat_model)
@@ -490,7 +483,6 @@ class MaliciousnessMetric(BaseMetric):
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, [maliciousness], llm=chat_model)
@@ -550,7 +542,6 @@ class CorrectnessMetric(BaseMetric):
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[correctness], llm=chat_model)
@@ -609,7 +600,6 @@ class ConcisenessMetric(BaseMetric):
             "contexts": [test_case.context],
             "question": [test_case.input],
             "answer": [test_case.actual_output],
-            "id": [[test_case.id]],
         }
         dataset = Dataset.from_dict(data)
         scores = evaluate(dataset, metrics=[conciseness], llm=chat_model)

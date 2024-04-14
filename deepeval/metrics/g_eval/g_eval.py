@@ -8,7 +8,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop
-from deepeval.metrics.utils import trimAndLoadJson, check_test_case_params
+from deepeval.metrics.utils import trimAndLoadJson, check_llm_test_case_params
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -89,7 +89,7 @@ class GEval(BaseMetric):
         self.async_mode = async_mode
 
     def measure(self, test_case: LLMTestCase) -> float:
-        check_test_case_params(test_case, self.evaluation_params, self)
+        check_llm_test_case_params(test_case, self.evaluation_params, self)
         self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(self):
@@ -117,7 +117,7 @@ class GEval(BaseMetric):
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
-        check_test_case_params(test_case, self.evaluation_params, self)
+        check_llm_test_case_params(test_case, self.evaluation_params, self)
         self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
