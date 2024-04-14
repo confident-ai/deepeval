@@ -40,7 +40,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 # 🔥 Metrics and Features
 
-- Large variety of ready-to-use LLM evaluation metrics powered by LLMs (all with explanations), statistical methods, or NLP models that runs **locally on your machine**:
+- Large variety of ready-to-use LLM evaluation metrics powered by **ANY** LLMs (all with explanations), statistical methods, or NLP models that runs **locally on your machine**:
   - G-Eval
   - Summarization
   - Answer Relevancy
