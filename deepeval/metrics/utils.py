@@ -1,11 +1,27 @@
 import json
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Union
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import (
+    LLMTestCase,
+    LLMTestCaseParams,
+    ConversationalTestCase,
+)
 
 
-def check_test_case_params(
+def get_last_message(
+    test_case: ConversationalTestCase,
+    metric: BaseMetric,
+) -> LLMTestCase:
+    if len(test_case.messages) is 0:
+        error_str = f"Messages cannot be empty for ConversationalTestCase."
+        metric.error = error_str
+        raise ValueError(error_str)
+
+    return test_case.messages[len(test_case.messages) - 1]
+
+
+def check_llm_test_case_params(
     test_case: LLMTestCase,
     test_case_params: List[LLMTestCaseParams],
     metric: BaseMetric,

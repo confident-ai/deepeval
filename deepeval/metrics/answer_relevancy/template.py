@@ -11,12 +11,12 @@ Example text: Shoes. The shoes can be refunded at no extra cost. Thanks for aski
 }}
 ===== END OF EXAMPLE ======
         
-Text:
-{actual_output}
-
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "statements" key mapping to a list of strings. No words or explanation is needed.
 **
+
+Text:
+{actual_output}
 
 JSON:
 """
@@ -71,6 +71,9 @@ JSON:
 The irrelevant statements represent things in the actual output that is irrelevant to addressing whatever is asked/talked about in the input.
 If there is nothing irrelevant, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
 
+Example:
+The score is <answer_relevancy_score> because <your_reason>.
+
 Answer Relevancy Score:
 {score}
 
@@ -79,9 +82,6 @@ Reasons why the score can't be higher based on irrelevant statements in the actu
 
 Input:
 {input}
-
-Example:
-The score is <answer_relevancy_score> because <your_reason>.
 
 Reason:
 """

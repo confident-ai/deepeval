@@ -239,8 +239,6 @@ class TestRunManager:
             pass_count = 0
             fail_count = 0
             test_case_name = test_case.name
-            if test_case.id:
-                test_case_name += f" ({test_case.id})"
 
             for metric_metadata in test_case.metrics_metadata:
                 if metric_metadata.success:
@@ -297,9 +295,6 @@ class TestRunManager:
 
     def post_test_run(self, test_run: TestRun):
         console = Console()
-
-        for test_case in test_run.test_cases:
-            test_case.id = None
 
         if is_confident() and self.disable_request is False:
             BATCH_SIZE = 50
