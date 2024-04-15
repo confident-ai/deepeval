@@ -358,6 +358,66 @@ class TestRunManager:
                     "",
                 )
 
+        for index, conversattional_test_case in enumerate(
+            test_run.conversational_test_cases
+        ):
+            for test_case in conversattional_test_case.messages:
+                if test_case.metrics_metadata is None:
+                    # skip if no evaluation
+                    continue
+
+                pass_count = 0
+                fail_count = 0
+                test_case_name = test_case.name
+
+                for metric_metadata in test_case.metrics_metadata:
+                    if metric_metadata.success:
+                        pass_count += 1
+                    else:
+                        fail_count += 1
+
+                table.add_row(
+                    test_case_name,
+                    "",
+                    "",
+                    "",
+                    f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
+                )
+
+                for metric_metadata in test_case.metrics_metadata:
+                    if metric_metadata.error:
+                        status = "[red]ERRORED[/red]"
+                    elif metric_metadata.success:
+                        status = "[green]PASSED[/green]"
+                    else:
+                        status = "[red]FAILED[/red]"
+
+                    evaluation_model = metric_metadata.evaluation_model
+                    if evaluation_model is None:
+                        evaluation_model = "n/a"
+
+                    if metric_metadata.score is not None:
+                        metric_score = round(metric_metadata.score, 2)
+                    else:
+                        metric_score = None
+
+                    table.add_row(
+                        "",
+                        str(metric_metadata.metric),
+                        f"{metric_score} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason}, error={metric_metadata.error})",
+                        status,
+                        "",
+                    )
+
+            if index is not len(self.test_run.conversational_test_cases) - 1:
+                table.add_row(
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                )
+
         print(table)
         print(
             f"Total estimated evaluation tokens cost: {test_run.evaluation_cost} USD"
@@ -365,9 +425,6 @@ class TestRunManager:
 
     def post_test_run(self, test_run: TestRun):
         console = Console()
-
-        # TODO: remove when ready
-        del test_run.conversational_test_cases
 
         if is_confident() and self.disable_request is False:
             BATCH_SIZE = 50
