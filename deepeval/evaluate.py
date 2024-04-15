@@ -99,7 +99,7 @@ def create_api_test_case(
     if isinstance(test_case, LLMTestCase):
         if is_message:
             success = None
-            name = "test_case_{index}"
+            name = f"test_case_{index}"
             order = index
         else:
             success = True
