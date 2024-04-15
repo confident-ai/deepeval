@@ -12,7 +12,7 @@ The processes of retrieving relevant context, is carried out by the **retriever*
 
 Since a satisfactory LLM output depends entirely on the quality of the retriever and generator, RAG evaluation focuses on evaluating the retriever and generator in your RAG pipeline seperately. This also allows for easier debugging and to pinpoint issues on a component level.
 
-## Common Pitfalls in a RAG Pipeline
+## Common Pitfalls in RAG Pipelines
 
 A RAG pipeline involves a retrieval and generation step, which is influenced by your choice of hyperparameters. Hyperparameters include things like the embedding model to use for retrieval, the number of nodes to retrieve (we'll just be referring to just as "top-K" from here onwards), LLM temperature, prompt template, etc.
 
@@ -228,7 +228,7 @@ Visit their respective metric documentation pages to learn how they calculated:
 
 ### Beyond Generic Evaluation
 
-As mentioned above, these RAG metrics are useful but extremely generic. For example, if I'd like my RAG-based chatbot to answer questions using dark humor, how can I do it?
+As mentioned above, these RAG metrics are useful but extremely generic. For example, if I'd like my RAG-based chatbot to answer questions using dark humor, how can I evaluate that?
 
 Here is where you can take advantage of `deepeval`'s `GEval` metric, capcable of evaluating LLM outputs on **ANY** criteria.
 
@@ -273,7 +273,7 @@ evaluate(
 
 ## Unit Testing RAG Systems in CI/CD
 
-With `deepeval`, you can easily unit test RAG applications in CI environments. We'll be using GitHub Actions and GitHub workflow as an example here. First, setup a test file:
+With `deepeval`, you can easily unit test RAG applications in CI environments. We'll be using GitHub Actions and GitHub workflow as an example here. First, create a test file:
 
 ```python title="test_rag.py"
 from deepeval import assert_test
@@ -333,13 +333,13 @@ For those interested, here is another nice article on [Unit Testing RAG Applicat
 
 In `deepeval`, you can associate hyperparameters such as text chunk size, top-K, embedding model, LLM, etc. to each test run, which when used in conjuction with Confident AI, allows you to easily see how changing different hyperparameters lead to different evaluation results.
 
-Confident AI is an web-based LLM evaluation platform which all users of `deepeval` automatically have access to. To begin, login:
+Confident AI is a web-based LLM evaluation platform which all users of `deepeval` automatically have access to. To begin, login via the CLI:
 
 ```console
 deepeval login
 ```
 
-Follow the instructions to create an account, copy your API key, and add these few lines of code to start logging hyperparameters with each test run:
+Follow the instructions to create an account, copy and paste your API key in the CLI, and add these few lines of code in your test file to start logging hyperparameters with each test run:
 
 ```python title="test_rag.py"
 import deepeval
@@ -356,7 +356,7 @@ def custom_parameters():
 ```
 
 :::tip
-You can simply return an empty dictionary `{}` if you don't have any custom parameters.
+You can simply return an empty dictionary `{}` if you don't have any custom parameters to log.
 :::
 
 **Congratulations 🎉!** This is pretty much most of what you need to know for RAG evaluation.
