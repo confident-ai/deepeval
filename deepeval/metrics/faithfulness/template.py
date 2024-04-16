@@ -1,7 +1,7 @@
 class FaithfulnessTemplate:
     @staticmethod
     def generate_claims(text):
-        return f"""Based on the given text, please generate a comphrensive list of FACTUAL claims that can inferred from the provided text.
+        return f"""Based on the given text, please generate a comprehensive list of FACTUAL claims that can inferred from the provided text.
 
 Example:
 Example Text: 
