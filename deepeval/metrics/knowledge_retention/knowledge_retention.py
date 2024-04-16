@@ -3,7 +3,10 @@ from pydantic import BaseModel, Field
 
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.metrics.utils import trimAndLoadJson
+from deepeval.metrics.utils import (
+    validate_conversational_test_case,
+    trimAndLoadJson,
+)
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
@@ -42,9 +45,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: ConversationalTestCase):
-        if len(test_case.messages) == 0:
-            raise ValueError("Messages cannot be empty")
-
+        validate_conversational_test_case(test_case, self)
         with metric_progress_indicator(self):
             self.knowledges: List[Knowledge] = self._generate_knowledges(
                 test_case
