@@ -30,7 +30,7 @@
     </a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source LLM evaluation framework. It is similar to Pytest but specialized for unit testing LLM outputs. DeepEval incorporates the latest research to evaluate LLM outputs based on metrics such as hallucination, answer relevancy, RAGAS, etc., which uses LLMs and various other NLP models that runs **locally on your machine** for evaluation.
+**DeepEval** is a simple-to-use, open-source LLM evaluation framework. It is similar to Pytest but specialized for unit testing LLM outputs. DeepEval incorporates the latest research to evaluate LLM outputs based on metrics such as G-Eval, hallucination, answer relevancy, RAGAS, etc., which uses LLMs and various other NLP models that runs **locally on your machine** for evaluation.
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama2 with confidence.
 
@@ -40,7 +40,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 # 🔥 Metrics and Features
 
-- Large variety of ready-to-use LLM evaluation metrics powered by LLMs (all with explanations), statistical methods, or NLP models that runs **locally on your machine**:
+- Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
   - G-Eval
   - Summarization
   - Answer Relevancy
@@ -54,10 +54,12 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - etc. 
 - Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**. Do this via the CLI in a Pytest-like manner, or through our `evaluate()` function.
 - Create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
+- Integrates seamlessly with **ANY** CI/CD environment.
 - Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://docs.confident-ai.com/docs/benchmarks-introduction), which includes:
   - MMLU
   - HellaSwag
   - BIG-Bench Hard
+  - TruthfulQA
 - [Automatically integrated with Confident AI](https://app.confident-ai.com) for continous evaluation throughout the lifetime of your LLM (app):
   - log evaluation results and analyze metrics pass / fails
   - compare and pick the optimal hyperparameters (eg. prompt templates, chunk size, models used, etc.) based on evaluation results

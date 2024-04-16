@@ -3,7 +3,11 @@ from langchain_openai import OpenAIEmbeddings
 import random
 
 import deepeval
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import (
+    LLMTestCase,
+    LLMTestCaseParams,
+    ConversationalTestCase,
+)
 from deepeval.types import Languages
 from deepeval.metrics import (
     AnswerRelevancyMetric,
@@ -82,7 +86,10 @@ strict_mode = False
 @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
-        threshold=0.1, strict_mode=strict_mode, async_mode=False
+        threshold=0.1,
+        strict_mode=strict_mode,
+        async_mode=False,
+        model="gpt-4-0125-preview",
     )
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
@@ -101,28 +108,30 @@ def test_everything():
             LLMTestCaseParams.RETRIEVAL_CONTEXT,
         ],
         strict_mode=strict_mode,
+        model="gpt-4-0125-preview",
     )
 
     test_case = LLMTestCase(
         input="What is this",
         actual_output="this is a latte",
         expected_output="this is a mocha",
-        retrieval_context=["I love coffee"],
+        # retrieval_context=["I love coffee"],
         context=["I love coffee"],
     )
+    c_test_case = ConversationalTestCase(messages=[test_case, test_case])
     assert_test(
-        test_case,
+        c_test_case,
         [
             metric1,
-            metric2,
-            metric3,
+            # metric2,
+            # metric3,
             # metric4,
             # metric5,
             # metric6,
             # metric7,
             # metric8,
             # metric9,
-            # metric10,
+            metric10,
         ],
         # run_async=False,
     )
@@ -158,7 +167,7 @@ def test_everything_2():
         input="What is this again?",
         actual_output="this is a latte",
         expected_output="this is a mocha",
-        retrieval_context=["I love coffee"],
+        # retrieval_context=["I love coffee"],
         context=["I love coffee"],
     )
     assert_test(

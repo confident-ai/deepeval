@@ -4,7 +4,7 @@ title: G-Eval
 sidebar_label: G-Eval
 ---
 
-G-Eval is a custom, LLM evaluated metric. This means its score is calculated using an LLM. G-Eval is the most verstile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
+G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most verstile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
 
 ## Required Arguments
 
@@ -39,7 +39,7 @@ There are three mandatory and five optional parameters required when instantiati
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
 - [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-turbo'.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 

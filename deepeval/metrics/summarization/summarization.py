@@ -3,13 +3,18 @@ from enum import Enum
 from pydantic import BaseModel, Field
 import asyncio
 
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import (
+    LLMTestCase,
+    LLMTestCaseParams,
+    ConversationalTestCase,
+)
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
-from deepeval.utils import (
+from deepeval.utils import get_or_create_event_loop
+from deepeval.metrics.utils import (
+    validate_conversational_test_case,
     trimAndLoadJson,
-    check_test_case_params,
-    get_or_create_event_loop,
+    check_llm_test_case_params,
 )
 from deepeval.metrics.summarization.template import SummarizationTemplate
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
@@ -52,8 +57,10 @@ class SummarizationMetric(BaseMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
             self.model = model
         else:
+            self.using_native_model = True
             self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
 
@@ -67,9 +74,14 @@ class SummarizationMetric(BaseMetric):
         self.n = n
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: LLMTestCase) -> float:
-        check_test_case_params(test_case, required_params, self.__name__)
+    def measure(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ) -> float:
+        if isinstance(test_case, ConversationalTestCase):
+            test_case = validate_conversational_test_case(test_case, self)
+        check_llm_test_case_params(test_case, required_params, self)
 
+        self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
@@ -100,10 +112,15 @@ class SummarizationMetric(BaseMetric):
                 return self.score
 
     async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        _show_indicator: bool = True,
     ) -> float:
-        check_test_case_params(test_case, required_params, self.__name__)
+        if isinstance(test_case, ConversationalTestCase):
+            test_case = validate_conversational_test_case(test_case, self)
+        check_llm_test_case_params(test_case, required_params, self)
 
+        self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,
@@ -167,7 +184,11 @@ class SummarizationMetric(BaseMetric):
 """
         prompt += """Reason:"""
 
-        res = await self.model.a_generate(prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
         return res
 
     def _generate_reason(self) -> str:
@@ -204,7 +225,11 @@ class SummarizationMetric(BaseMetric):
 
 """
         prompt += """Reason:"""
-        res = self.model.generate(prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
         return res
 
     def _calculate_score(self, score_type: ScoreType) -> float:
@@ -243,28 +268,44 @@ class SummarizationMetric(BaseMetric):
         prompt = SummarizationTemplate.generate_answers(
             questions=self.assessment_questions, text=text
         )
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res, self)
         return data["answers"]
 
     def _generate_answers(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_answers(
             questions=self.assessment_questions, text=text
         )
-        res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
+        data = trimAndLoadJson(res, self)
         return data["answers"]
 
     async def _a_generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res, self)
         return data["questions"]
 
     def _generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
-        res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
+        data = trimAndLoadJson(res, self)
         return data["questions"]
 
     async def _a_generate_coverage_verdicts(
@@ -333,8 +374,12 @@ class SummarizationMetric(BaseMetric):
         prompt = SummarizationTemplate.generate_alignment_verdicts(
             summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
         )
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
         ]
@@ -350,8 +395,12 @@ class SummarizationMetric(BaseMetric):
         prompt = SummarizationTemplate.generate_alignment_verdicts(
             summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
         )
-        res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
+        data = trimAndLoadJson(res, self)
         verdicts = [
             SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
         ]
@@ -360,19 +409,33 @@ class SummarizationMetric(BaseMetric):
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = await self.model.a_generate(prompt)
+        data = trimAndLoadJson(res, self)
         return data["claims"]
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
-        res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+        else:
+            res = self.model.generate(prompt)
+        data = trimAndLoadJson(res, self)
         return data["claims"]
 
     def is_successful(self) -> bool:
-        self.success = self.score >= self.threshold
+        if self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.success = self.score >= self.threshold
+            except:
+                self.success = False
         return self.success
 
     @property

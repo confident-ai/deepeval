@@ -1,7 +1,7 @@
 import os
 import json
 from pydantic import BaseModel, Field
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, List, Dict, Union
 import shutil
 import webbrowser
 import sys
@@ -14,7 +14,8 @@ from rich import print
 from deepeval.metrics import BaseMetric
 from deepeval.api import Api, Endpoints
 from deepeval.test_run.api import (
-    APITestCase,
+    LLMApiTestCase,
+    ConversationalApiTestCase,
     TestRunHttpResponse,
 )
 from deepeval.utils import (
@@ -74,7 +75,7 @@ class MetricsAverageDict:
 
 class RemainingTestRun(BaseModel):
     testRunId: str
-    test_cases: List[APITestCase] = Field(
+    test_cases: List[LLMApiTestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
 
@@ -89,8 +90,11 @@ class TestRun(BaseModel):
     deployment_configs: Optional[DeploymentConfigs] = Field(
         None, alias="deploymentConfigs"
     )
-    test_cases: List[APITestCase] = Field(
+    test_cases: List[LLMApiTestCase] = Field(
         alias="testCases", default_factory=lambda: []
+    )
+    conversational_test_cases: List[ConversationalApiTestCase] = Field(
+        alias="conversationalTestCases", default_factory=lambda: []
     )
     metrics_scores: List[MetricScores] = Field(
         default_factory=lambda: [], alias="metricsScores"
@@ -100,35 +104,107 @@ class TestRun(BaseModel):
     user_prompt_template: Optional[str] = Field(
         None, alias="userPromptTemplate"
     )
-    testPassed: Optional[int] = Field(None)
-    testFailed: Optional[int] = Field(None)
+    test_passed: Optional[int] = Field(None, alias="testPassed")
+    test_failed: Optional[int] = Field(None, alias="testFailed")
+    run_duration: float = Field(0.0, alias="runDuration")
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
 
-    def construct_metrics_scores(self):
-        metrics_dict: Dict[str, List[float]] = {}
+    def add_test_case(
+        self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
+    ):
+        if isinstance(api_test_case, ConversationalApiTestCase):
+            self.conversational_test_cases.append(api_test_case)
+        else:
+            self.test_cases.append(api_test_case)
 
+        if api_test_case.evaluation_cost is not None:
+            if self.evaluation_cost is None:
+                self.evaluation_cost = api_test_case.evaluation_cost
+            else:
+                self.evaluation_cost += api_test_case.evaluation_cost
+
+    def sort_test_cases_by_name(self):
+        self.test_cases = sorted(
+            self.test_cases, key=lambda test_case: test_case.name
+        )
+        i = 0
         for test_case in self.test_cases:
+            test_case.order = i
+            i += 1
+
+        self.conversational_test_cases = sorted(
+            self.conversational_test_cases, key=lambda test_case: test_case.name
+        )
+        i = 0
+        for test_case in self.conversational_test_cases:
+            test_case.order = i
+            i += 1
+
+    def construct_metrics_scores(self) -> int:
+        metrics_dict: Dict[str, List[float]] = {}
+        valid_scores = 0
+        for test_case in self.test_cases:
+            if test_case.metrics_metadata is None:
+                continue
             for metric_metadata in test_case.metrics_metadata:
                 metric = metric_metadata.metric
                 score = metric_metadata.score
+                if score is None:
+                    continue
+                valid_scores += 1
                 if metric in metrics_dict:
                     metrics_dict[metric].append(score)
                 else:
                     metrics_dict[metric] = [score]
+
+        for test_case in self.conversational_test_cases:
+            # right now, we only look at individual message evaluations
+            # and not a conversation as a whole
+            for message in test_case.messages:
+                if message.metrics_metadata is None:
+                    continue
+                for metric_metadata in message.metrics_metadata:
+                    metric = metric_metadata.metric
+                    score = metric_metadata.score
+                    if score is None:
+                        continue
+                    valid_scores += 1
+                    if metric in metrics_dict:
+                        metrics_dict[metric].append(score)
+                    else:
+                        metrics_dict[metric] = [score]
+
+        # metrics_scores combines both conversational and nonconvo scores
+        # might need to separate in the future
         self.metrics_scores = [
             MetricScores(metric=metric, scores=scores)
             for metric, scores in metrics_dict.items()
         ]
+        return valid_scores
 
     def calculate_test_passes_and_fails(self):
-        testPassed = 0
-        testFailed = 0
+        test_passed = 0
+        test_failed = 0
         for test_case in self.test_cases:
-            if test_case.success:
-                testPassed += 1
-            else:
-                testFailed += 1
-        self.testPassed = testPassed
-        self.testFailed = testFailed
+            if test_case.success is not None:
+                if test_case.success:
+                    test_passed += 1
+                else:
+                    test_failed += 1
+
+        for test_case in self.conversational_test_cases:
+            # we don't count for conversational test cases success,
+            # because that would be double counting
+            for message in test_case.messages:
+                if message.success is not None:
+                    # check None for messages that are not evaluated
+                    if message.success:
+                        test_passed += 1
+                    else:
+                        test_failed += 1
+
+        self.test_passed = test_passed
+        self.test_failed = test_failed
 
     def save(self, f):
         try:
@@ -184,13 +260,16 @@ class TestRunManager:
             self.save_test_run()
 
     def get_test_run(self):
-        if self.test_run is None or not self.save_to_disk:
+        if self.test_run is None:
             self.create_test_run()
 
         if self.save_to_disk:
             try:
                 with portalocker.Lock(
-                    self.temp_file_name, mode="r", timeout=5
+                    self.temp_file_name,
+                    mode="r",
+                    timeout=5,
+                    flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
                 ) as file:
                     self.test_run = self.test_run.load(file)
             except (
@@ -230,8 +309,6 @@ class TestRunManager:
             pass_count = 0
             fail_count = 0
             test_case_name = test_case.name
-            if test_case.id:
-                test_case_name += f" ({test_case.id})"
 
             for metric_metadata in test_case.metrics_metadata:
                 if metric_metadata.success:
@@ -248,7 +325,9 @@ class TestRunManager:
             )
 
             for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.success:
+                if metric_metadata.error:
+                    status = "[red]ERRORED[/red]"
+                elif metric_metadata.success:
                     status = "[green]PASSED[/green]"
                 else:
                     status = "[red]FAILED[/red]"
@@ -257,10 +336,15 @@ class TestRunManager:
                 if evaluation_model is None:
                     evaluation_model = "n/a"
 
+                if metric_metadata.score is not None:
+                    metric_score = round(metric_metadata.score, 2)
+                else:
+                    metric_score = None
+
                 table.add_row(
                     "",
                     str(metric_metadata.metric),
-                    f"{round(metric_metadata.score,2)} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason})",
+                    f"{metric_score} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason}, error={metric_metadata.error})",
                     status,
                     "",
                 )
@@ -273,13 +357,74 @@ class TestRunManager:
                     "",
                     "",
                 )
+
+        for index, conversattional_test_case in enumerate(
+            test_run.conversational_test_cases
+        ):
+            for test_case in conversattional_test_case.messages:
+                if test_case.metrics_metadata is None:
+                    # skip if no evaluation
+                    continue
+
+                pass_count = 0
+                fail_count = 0
+                test_case_name = test_case.name
+
+                for metric_metadata in test_case.metrics_metadata:
+                    if metric_metadata.success:
+                        pass_count += 1
+                    else:
+                        fail_count += 1
+
+                table.add_row(
+                    test_case_name,
+                    "",
+                    "",
+                    "",
+                    f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
+                )
+
+                for metric_metadata in test_case.metrics_metadata:
+                    if metric_metadata.error:
+                        status = "[red]ERRORED[/red]"
+                    elif metric_metadata.success:
+                        status = "[green]PASSED[/green]"
+                    else:
+                        status = "[red]FAILED[/red]"
+
+                    evaluation_model = metric_metadata.evaluation_model
+                    if evaluation_model is None:
+                        evaluation_model = "n/a"
+
+                    if metric_metadata.score is not None:
+                        metric_score = round(metric_metadata.score, 2)
+                    else:
+                        metric_score = None
+
+                    table.add_row(
+                        "",
+                        str(metric_metadata.metric),
+                        f"{metric_score} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason}, error={metric_metadata.error})",
+                        status,
+                        "",
+                    )
+
+            if index is not len(self.test_run.conversational_test_cases) - 1:
+                table.add_row(
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                )
+
         print(table)
+        print(
+            f"Total estimated evaluation tokens cost: {test_run.evaluation_cost} USD"
+        )
 
     def post_test_run(self, test_run: TestRun):
         console = Console()
-
-        for test_case in test_run.test_cases:
-            test_case.id = None
 
         if is_confident() and self.disable_request is False:
             BATCH_SIZE = 50
@@ -371,31 +516,43 @@ class TestRunManager:
                 print(f"Results saved in {local_folder} as {new_test_filename}")
             os.remove(new_test_filename)
 
-    def wrap_up_test_run(self, display_table: bool = True):
+    def wrap_up_test_run(self, runDuration: float, display_table: bool = True):
         test_run = self.get_test_run()
-        test_run.calculate_test_passes_and_fails()
-        test_run.construct_metrics_scores()
-
         if test_run is None:
             print("Test Run is empty, please try again.")
             delete_file_if_exists(self.temp_file_name)
             return
-        elif len(test_run.test_cases) == 0:
+        elif (
+            len(test_run.test_cases) == 0
+            and len(test_run.conversational_test_cases) == 0
+        ):
             print("No test cases found, please try again.")
             delete_file_if_exists(self.temp_file_name)
             return
 
-        test_run_cache_manager.disable_write_cache = (
-            get_is_running_deepeval() == False
-        )
+        valid_scores = test_run.construct_metrics_scores()
+        if valid_scores == 0:
+            print("All metrics errored for all test cases, please try again.")
+            delete_file_if_exists(self.temp_file_name)
+            delete_file_if_exists(test_run_cache_manager.temp_cache_file_name)
+            return
+        test_run.run_duration = runDuration
+        test_run.calculate_test_passes_and_fails()
+        test_run.sort_test_cases_by_name()
+
+        if test_run_cache_manager.disable_write_cache is None:
+            test_run_cache_manager.disable_write_cache = (
+                get_is_running_deepeval() == False
+            )
+
         test_run_cache_manager.wrap_up_cached_test_run()
 
         if display_table:
             self.display_results_table(test_run)
 
-        self.post_test_run(test_run)
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
+        self.post_test_run(test_run)
 
 
 test_run_manager = TestRunManager()

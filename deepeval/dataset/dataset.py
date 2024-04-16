@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from dataclasses import dataclass
 from rich.console import Console
 import json
@@ -18,8 +18,8 @@ from deepeval.dataset.api import (
     CreateDatasetHttpResponse,
     DatasetHttpResponse,
 )
-from deepeval.dataset.golden import Golden
-from deepeval.test_case import LLMTestCase
+from deepeval.dataset.golden import Golden, ConversationalGolden
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import is_confident
 from deepeval.synthesizer.base_synthesizer import BaseSynthesizer
 
@@ -28,31 +28,33 @@ valid_file_types = ["csv", "json"]
 
 @dataclass
 class EvaluationDataset:
-    test_cases: List[LLMTestCase]
+    test_cases: List[Union[LLMTestCase, ConversationalTestCase]]
     goldens: List[Golden]
+    conversational_goldens: List[ConversationalGolden]
 
     def __init__(
         self,
         alias: Optional[str] = None,
-        goldens: Optional[List[Golden]] = None,
-        test_cases: Optional[List[LLMTestCase]] = None,
+        test_cases: List[Union[LLMTestCase, ConversationalTestCase]] = [],
+        goldens: List[Golden] = [],
+        conversational_goldens: List[ConversationalGolden] = [],
     ):
-        if test_cases is not None:
-            for test_case in test_cases:
-                # TODO: refactor
-                if not isinstance(test_case, LLMTestCase):
-                    raise TypeError(
-                        "Provided `test_cases` must be of type 'List[LLMTestCase]'."
-                    )
+        for test_case in test_cases:
+            # TODO: refactor
+            if not isinstance(test_case, LLMTestCase):
+                raise TypeError(
+                    "Provided `test_cases` must be of type 'List[LLMTestCase]'."
+                )
+            test_case.dataset_alias = alias
 
-                test_case.dataset_alias = alias
-            self.test_cases = test_cases
-        else:
-            self.test_cases = []
-        self.goldens = goldens or []
+        self.test_cases = test_cases
+        self.goldens = goldens
+        self.conversational_goldens = conversational_goldens
         self.alias = alias
 
-    def add_test_case(self, test_case: LLMTestCase):
+    def add_test_case(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ):
         # TODO: refactor
         if not isinstance(test_case, LLMTestCase):
             raise TypeError(
@@ -286,6 +288,7 @@ class EvaluationDataset:
 
             response = DatasetHttpResponse(
                 goldens=result["goldens"],
+                conversationalGoldens=result["conversationalGoldens"],
             )
 
             if auto_convert_goldens_to_test_cases:
@@ -294,6 +297,7 @@ class EvaluationDataset:
                 )
             else:
                 self.goldens = response.goldens
+                self.conversational_goldens = response.conversational_goldens
         else:
             raise Exception(
                 "Run `deepeval login` to pull dataset from Confident AI"

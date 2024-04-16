@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-from deepeval.dataset.golden import Golden
+from deepeval.dataset.golden import Golden, ConversationalGolden
 
 
 class APIDataset(BaseModel):
@@ -16,3 +16,6 @@ class CreateDatasetHttpResponse(BaseModel):
 
 class DatasetHttpResponse(BaseModel):
     goldens: List[Golden]
+    conversational_goldens: List[ConversationalGolden] = Field(
+        alias="conversationalGoldens"
+    )
