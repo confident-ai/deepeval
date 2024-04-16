@@ -20,4 +20,4 @@ class ConversationalGolden(BaseModel):
     additional_metadata: Optional[Dict] = Field(
         None, alias="additionalMetadata"
     )
-    messages: List[Golden] = Field(default_factory=lambda: [])
+    messages: List[Golden] = Field(default_factory=lambda: [], alias="goldens")
