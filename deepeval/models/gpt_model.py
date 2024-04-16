@@ -83,7 +83,6 @@ class GPTModel(DeepEvalBaseLLM):
             model_name=self.model_name, openai_api_key=self._openai_api_key
         )
 
-
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry_error_cls=openai.RateLimitError,
@@ -94,7 +93,6 @@ class GPTModel(DeepEvalBaseLLM):
             res = chat_model.invoke(prompt)
             return res.content, cb.total_cost
 
-
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry_error_cls=openai.RateLimitError,
@@ -104,7 +102,6 @@ class GPTModel(DeepEvalBaseLLM):
         with get_openai_callback() as cb:
             res = await chat_model.ainvoke(prompt)
             return res.content, cb.total_cost
-
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
@@ -120,7 +117,6 @@ class GPTModel(DeepEvalBaseLLM):
         with get_openai_callback() as cb:
             res = chat_model.invoke(prompt)
             return res, cb.total_cost
-
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
