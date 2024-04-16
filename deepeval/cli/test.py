@@ -137,7 +137,6 @@ def run(
             # Needed additional quotes because it's a nested parameter
             pytest_args.extend(["--override-ini", f"'{override_arg}'"])
 
-
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
 
