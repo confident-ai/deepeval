@@ -50,7 +50,6 @@ class ContextGenerator:
 
     ############### Load Docs #############################
     def _load_docs(self) -> List[Chunk]:
-
         def process_document(path):
             doc_chunker = DocumentChunker(
                 self.embedder, self.chunk_size, self.chunk_overlap
