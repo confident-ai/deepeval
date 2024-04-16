@@ -9,12 +9,12 @@ from deepeval.test_case import (
 )
 
 
-def get_last_message(
+def validate_conversational_test_case(
     test_case: ConversationalTestCase,
     metric: BaseMetric,
 ) -> LLMTestCase:
     if len(test_case.messages) is 0:
-        error_str = f"Messages cannot be empty for ConversationalTestCase."
+        error_str = "'messages' in conversational test case cannot be empty."
         metric.error = error_str
         raise ValueError(error_str)
 

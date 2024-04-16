@@ -2,8 +2,16 @@ from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 
 from deepeval.utils import get_or_create_event_loop
-from deepeval.metrics.utils import trimAndLoadJson, check_llm_test_case_params
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics.utils import (
+    validate_conversational_test_case,
+    trimAndLoadJson,
+    check_llm_test_case_params,
+)
+from deepeval.test_case import (
+    LLMTestCase,
+    LLMTestCaseParams,
+    ConversationalTestCase,
+)
 from deepeval.metrics import BaseMetric
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.metrics.contextual_recall.template import ContextualRecallTemplate
@@ -44,7 +52,11 @@ class ContextualRecallMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: LLMTestCase) -> float:
+    def measure(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ) -> float:
+        if isinstance(test_case, ConversationalTestCase):
+            test_case = validate_conversational_test_case(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)
         self.evaluation_cost = 0 if self.using_native_model else None
 
@@ -67,11 +79,15 @@ class ContextualRecallMetric(BaseMetric):
                 return self.score
 
     async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        _show_indicator: bool = True,
     ) -> float:
+        if isinstance(test_case, ConversationalTestCase):
+            test_case = validate_conversational_test_case(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)
-        self.evaluation_cost = 0 if self.using_native_model else None
 
+        self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,
