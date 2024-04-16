@@ -120,7 +120,7 @@ def test_everything():
     )
     c_test_case = ConversationalTestCase(messages=[test_case, test_case])
     assert_test(
-        test_case,
+        c_test_case,
         [
             metric1,
             # metric2,
