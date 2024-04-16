@@ -75,6 +75,12 @@ def run(
         "-i",
         help="Whether to ignore errors or not",
     ),
+    override_pytest_ini: Optional[list[str]] = typer.Option(
+        None,
+        "--override-pytest-ini",
+        "-o",
+        help="Set of option=value pairs to override settings in pytest.ini",
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
@@ -118,6 +124,19 @@ def run(
         pytest_args.extend(["--count", str(repeat)])
         if repeat < 1:
             raise ValueError("The repeat argument must be at least 1.")
+
+    # Override pytest.ini settings
+    if override_pytest_ini:
+        # Loop needed because multiple args are passed as `-o key1=val1 -o key2=val2`
+        for override_arg in override_pytest_ini:
+            if "=" not in override_arg:
+                raise ValueError(
+                    "Invalid argument in --override-pytest-ini. Please provide"
+                    " the argument in the form of option=value."
+                )
+            # Needed additional quotes because it's a nested parameter
+            pytest_args.extend(["--override-ini", f"'{override_arg}'"])
+
 
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
