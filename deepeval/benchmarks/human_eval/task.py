@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class HumanEvalTask(Enum):
     HAS_CLOSE_ELEMENTS = "has_close_elements"
     SEPARATE_PAREN_GROUPS = "separate_paren_groups"
@@ -89,7 +90,7 @@ class HumanEvalTask(Enum):
     SORT_ARRAY = "sort_array"
     ENCRYPT = "encrypt"
     NEXT_SMALLEST = "next_smallest"
-    IS_BORED ="is_bored"
+    IS_BORED = "is_bored"
     ANY_INT = "any_int"
     ENCODE = "encode"
     SKJKASDKD = "skjkasdkd"
@@ -158,8 +159,3 @@ class HumanEvalTask(Enum):
     DO_ALGEBRA = "do_algebra"
     STRING_TO_MD5 = "string_to_md5"
     GENERATE_INTEGERS = "generate_integers"
-
-
-
-
-

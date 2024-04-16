@@ -118,20 +118,20 @@ class GPTModel(DeepEvalBaseLLM):
         with get_openai_callback() as cb:
             res = await chat_model.ainvoke(prompt)
         return res, cb.total_cost
-    
+
     @retry_with_exponential_backoff
     def generate_samples(
         self, prompt: str, n: int, temperature: float
     ) -> Tuple[AIMessage, float]:
         chat_model = self.load_model()
-        og_parameters = {'n': chat_model.n, 'temp': chat_model.temperature}
+        og_parameters = {"n": chat_model.n, "temp": chat_model.temperature}
         chat_model.n = n
         chat_model.temperature = temperature
 
         generations = chat_model._generate([HumanMessage(prompt)]).generations
-        chat_model.temperature = og_parameters['temp']
-        chat_model.n = og_parameters['n']
-        
+        chat_model.temperature = og_parameters["temp"]
+        chat_model.n = og_parameters["n"]
+
         completions = [r.text for r in generations]
         return completions
 

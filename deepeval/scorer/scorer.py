@@ -2,6 +2,7 @@ from typing import Union, List, Optional, Any
 import numpy as np
 from deepeval.utils import normalize_text
 
+
 # TODO: More scores are to be added
 class Scorer:
     """This class calculates various Natural Language Processing (NLP) evaluation score.
@@ -405,13 +406,13 @@ class Scorer:
             return round(score_percentage)  # Return rounded percentage
         except Exception as e:
             return 0  # Return score as 0 in case of any exception
-    
-    
+
     def pass_at_k(self, n, c, k):
         """
         :param n: total number of samples
         :param c: number of correct samples
         :param k: k in pass@$k$
         """
-        if n - c < k: return 1.0
+        if n - c < k:
+            return 1.0
         return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))

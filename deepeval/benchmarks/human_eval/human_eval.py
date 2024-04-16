@@ -14,7 +14,9 @@ class HumanEval(DeepEvalBaseBenchmark):
     def __init__(self, tasks: List[HumanEvalTask] = None, n: int = 200):
 
         super().__init__()
-        self.tasks: List[HumanEvalTask] = list(HumanEvalTask) if tasks is None else tasks
+        self.tasks: List[HumanEvalTask] = (
+            list(HumanEvalTask) if tasks is None else tasks
+        )
         self.scorer = Scorer()
         self.dataset: Dataset = None
 
@@ -28,7 +30,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         self.overall_score: Optional[float] = None
 
     def evaluate(self, model: DeepEvalBaseLLM, k) -> Dict:
-        assert(self.n >= k)
+        assert self.n >= k
         overall_correct_predictions = 0
         overall_total_predictions = 0
         predictions_row = []
@@ -46,11 +48,15 @@ class HumanEval(DeepEvalBaseBenchmark):
                 predictions_row.append(
                     (task.value, golden.input, prediction, score)
                 )
-            print(f"HUmanEval Task Accuracy (task={task.value}): {task_correct}")
+            print(
+                f"HUmanEval Task Accuracy (task={task.value}): {task_correct}"
+            )
             scores_row.append((task.value, task_correct))
 
         # Calculate overall accuracy
-        overall_accuracy = (overall_correct_predictions / overall_total_predictions)
+        overall_accuracy = (
+            overall_correct_predictions / overall_total_predictions
+        )
         print(f"Overall HUmanEval Accuracy: {overall_accuracy}")
 
         # Create a DataFrame from task_results_data
@@ -65,12 +71,12 @@ class HumanEval(DeepEvalBaseBenchmark):
 
     def predict(
         self,
-        model: DeepEvalBaseLLM, 
-        task: HumanEvalTask, 
+        model: DeepEvalBaseLLM,
+        task: HumanEvalTask,
         golden: Golden,
-        k: int
+        k: int,
     ) -> Dict:
-        
+
         # functional correctness
         c = self.c.get(task.value, None)
         functions = self.functions.get(task.value, None)
@@ -81,9 +87,8 @@ class HumanEval(DeepEvalBaseBenchmark):
                 task=task,
             )
             functions = model.generate_samples(
-                prompt=prompt, 
-                n=self.n, 
-                temperature=self.temperature)
+                prompt=prompt, n=self.n, temperature=self.temperature
+            )
             c = 0
             for function in functions:
                 try:
@@ -110,15 +115,21 @@ class HumanEval(DeepEvalBaseBenchmark):
         test_set = dataset["test"].filter(
             lambda data: data["entry_point"] == task.value
         )[0]
-        # Construct test set 
-        golden = Golden(input=test_set['prompt'], expectedOutput=test_set["test"])
+        # Construct test set
+        golden = Golden(
+            input=test_set["prompt"], expectedOutput=test_set["test"]
+        )
         return golden
-    
+
+
 #######################################
 from deepeval.models import GPTModel
+
 model = GPTModel()
 
-benchmark = HumanEval([HumanEvalTask.ADD_ELEMENTS, HumanEvalTask.ALL_PREFIXES], n = 10) 
+benchmark = HumanEval(
+    [HumanEvalTask.ADD_ELEMENTS, HumanEvalTask.ALL_PREFIXES], n=10
+)
 benchmark.evaluate(model, 10)
 
 print(benchmark.overall_score)
