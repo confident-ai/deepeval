@@ -47,6 +47,7 @@ module.exports = {
             "benchmarks-hellaswag",
             "benchmarks-mmlu",
             "benchmarks-truthful-qa",
+            "benchmarks-gsm8k",
           ],
           collapsed: false,
         },
