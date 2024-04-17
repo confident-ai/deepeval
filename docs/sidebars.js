@@ -47,6 +47,7 @@ module.exports = {
             "benchmarks-hellaswag",
             "benchmarks-mmlu",
             "benchmarks-truthful-qa",
+            "benchmarks-human-eval",
           ],
           collapsed: true,
         },
@@ -70,9 +71,7 @@ module.exports = {
     {
       type: "category",
       label: "Guides",
-      items: [
-        "guides-rag-evaluation",
-      ],
+      items: ["guides-rag-evaluation"],
       collapsed: false,
     },
     {

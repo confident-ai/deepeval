@@ -29,7 +29,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
 
-    def evaluate(self, model: DeepEvalBaseLLM, k) -> Dict:
+    def evaluate(self, model: DeepEvalBaseLLM, k: int) -> Dict:
         assert self.n >= k
         overall_correct_predictions = 0
         overall_total_predictions = 0
