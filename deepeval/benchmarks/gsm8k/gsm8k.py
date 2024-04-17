@@ -14,7 +14,7 @@ class GSM8K(DeepEvalBaseBenchmark):
     def __init__(
         self, n_shots: int = 3, enable_cot: bool = True, n_problems: int = 1319
     ):
-        assert n_shots <= 5, "MMLU only supports n_shots <= 5"
+        assert n_shots <= 15, "GSM8K only supports n_shots <= 15"
         super().__init__()
         self.scorer = Scorer()
         self.dataset: Dataset = None
@@ -46,7 +46,7 @@ class GSM8K(DeepEvalBaseBenchmark):
         overall_accuracy = (
             overall_correct_predictions / overall_total_predictions
         )
-        print(f"Overall MMLU Accuracy: {overall_accuracy}")
+        print(f"Overall GSM8K Accuracy: {overall_accuracy}")
 
         self.predictions = pd.DataFrame(
             predictions_row, columns=["Input", "Prediction", "Correct"]

@@ -49,7 +49,7 @@ class HumanEval(DeepEvalBaseBenchmark):
                     (task.value, golden.input, prediction, score)
                 )
             print(
-                f"HUmanEval Task Accuracy (task={task.value}): {task_correct}"
+                f"HumanEval Task Accuracy (task={task.value}): {task_correct}"
             )
             scores_row.append((task.value, task_correct))
 
@@ -57,7 +57,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         overall_accuracy = (
             overall_correct_predictions / overall_total_predictions
         )
-        print(f"Overall HUmanEval Accuracy: {overall_accuracy}")
+        print(f"Overall HumanEval Accuracy: {overall_accuracy}")
 
         # Create a DataFrame from task_results_data
         # Columns: 'Task', 'Input', 'Prediction', 'Score'
