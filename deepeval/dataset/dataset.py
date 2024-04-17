@@ -12,6 +12,7 @@ from deepeval.api import Api, Endpoints
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
+    convert_convo_goldens_to_convo_test_cases,
 )
 from deepeval.dataset.api import (
     APIDataset,
@@ -294,6 +295,11 @@ class EvaluationDataset:
             if auto_convert_goldens_to_test_cases:
                 self.test_cases = convert_goldens_to_test_cases(
                     response.goldens, alias
+                )
+                self.test_cases.extend(
+                    convert_convo_goldens_to_convo_test_cases(
+                        response.conversational_goldens, alias
+                    )
                 )
             else:
                 self.goldens = response.goldens
