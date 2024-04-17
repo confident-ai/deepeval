@@ -48,6 +48,7 @@ module.exports = {
             "benchmarks-mmlu",
             "benchmarks-truthful-qa",
             "benchmarks-human-eval",
+            "benchmarks-gsm8k",
           ],
           collapsed: true,
         },
