@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_community.callbacks import get_openai_callback
 from langchain.schema import AIMessage, HumanMessage
-from tenacity import retry, wait_exponential_jitter
+from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
@@ -85,7 +85,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry_error_cls=openai.RateLimitError,
+        retry=retry_if_exception_type(openai.RateLimitError),
     )
     def generate(self, prompt: str) -> Tuple[str, float]:
         chat_model = self.load_model()
@@ -95,7 +95,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry_error_cls=openai.RateLimitError,
+        retry=retry_if_exception_type(openai.RateLimitError),
     )
     async def a_generate(self, prompt: str) -> Tuple[str, float]:
         chat_model = self.load_model()
@@ -105,7 +105,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry_error_cls=openai.RateLimitError,
+        retry=retry_if_exception_type(openai.RateLimitError),
     )
     def generate_raw_response(
         self, prompt: str, **kwargs
@@ -120,7 +120,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry_error_cls=openai.RateLimitError,
+        retry=retry_if_exception_type(openai.RateLimitError),
     )
     async def a_generate_raw_response(
         self, prompt: str, **kwargs
@@ -135,7 +135,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry_error_cls=openai.RateLimitError,
+        retry=retry_if_exception_type(openai.RateLimitError),
     )
     def generate_samples(
         self, prompt: str, n: int, temperature: float
