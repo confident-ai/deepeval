@@ -41,20 +41,21 @@ synthesizer.generate_goldens_from_docs(
 synthesizer.save_as(
     # also accepts 'csv'
     file_type='json',
-    path="./synthetic_data"
+    directory="./synthetic_data"
 )
 
 
 # Use synthesizer within an EvaluationDataset
 dataset = EvaluationDataset()
 dataset.generate_goldens_from_docs(
+    synthesizer=synthesizer,
     document_paths=['example_1.txt', 'example_2.docx', 'example_3.pdf'],
     max_goldens_per_document=2
 )
 dataset.save_as(
     # also accepts 'csv'
     file_type='json',
-    path="./synthetic_data"
+    directory="./synthetic_data"
 )
 ```
 
@@ -96,7 +97,7 @@ contexts = [
 synthesizer.generate_goldens(contexts=contexts)
 synthesizer.save_as(
     file_type='json',  # The method also supports 'csv'
-    path="./synthetic_data"
+    directory="./synthetic_data"
 )
 
 # Generate goldens within an EvaluationDataset
@@ -107,7 +108,7 @@ dataset.generate_goldens(
 )
 dataset.save_as(
     file_type='json',  # Similarly, this supports 'csv'
-    path="./synthetic_data"
+    directory="./synthetic_data"
 )
 ```
 
