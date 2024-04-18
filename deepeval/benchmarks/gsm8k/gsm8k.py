@@ -99,14 +99,3 @@ class GSM8K(DeepEvalBaseBenchmark):
             goldens.append(golden)
 
         return goldens
-
-
-########################
-#### Example Usage #####
-########################
-from deepeval.models.gpt_model import GPTModel
-
-model = GPTModel()
-
-benchmark = GSM8K(n_shots=0, enable_cot=False, n_problems=10)
-goldens = benchmark.evaluate(model)

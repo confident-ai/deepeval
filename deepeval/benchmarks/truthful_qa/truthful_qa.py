@@ -145,22 +145,3 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                 goldens.append(golden)
 
         return goldens
-
-
-########################
-#### Example Usage #####
-########################
-from deepeval.models.gpt_model import GPTModel
-
-model = GPTModel()
-benchmark = TruthfulQA(
-    [TruthfulQATask.ADVERTISING, TruthfulQATask.FICTION],
-    mode=TruthfulQAMode.MC2,
-)
-benchmark.evaluate(model)
-
-benchmark = TruthfulQA(
-    [TruthfulQATask.ADVERTISING, TruthfulQATask.FICTION],
-    mode=TruthfulQAMode.MC1,
-)
-benchmark.evaluate(model)

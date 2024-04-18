@@ -122,13 +122,3 @@ class DROP(DeepEvalBaseBenchmark):
             goldens.append(golden)
  
         return goldens
-
-#######################################
-from deepeval.models import GPTModel
-
-model = GPTModel()
-
-benchmark = DROP(
-    [DROPTask.HISTORY_1002, DROPTask.NFL_649], n_shots=0
-)
-benchmark.evaluate(model)
