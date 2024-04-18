@@ -16,8 +16,9 @@ from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
+    initialize_model,
 )
-from deepeval.models import GPTModel, DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
 from deepeval.metrics.indicator import metric_progress_indicator
 
@@ -84,12 +85,7 @@ class GEval(BaseMetric):
             )
 
         self.criteria = criteria
-        if isinstance(model, DeepEvalBaseLLM):
-            self.using_native_model = False
-            self.model = model
-        else:
-            self.using_native_model = True
-            self.model = GPTModel(model=model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
         self.threshold = 1 if strict_mode else threshold

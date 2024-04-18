@@ -46,7 +46,10 @@ class GPTModel(DeepEvalBaseLLM):
             model_name = default_gpt_model
 
         self._openai_api_key = _openai_api_key
-        super().__init__(model_name, *args, **kwargs)
+        # args and kwargs will be passed to the underlying model, in load_model function
+        self.args = args
+        self.kwargs = kwargs
+        super().__init__(model_name)
 
     def load_model(self):
         if self.should_use_azure_openai():
@@ -77,10 +80,15 @@ class GPTModel(DeepEvalBaseLLM):
                 azure_endpoint=azure_endpoint,
                 openai_api_key=openai_api_key,
                 model_version=model_version,
+                *self.args,
+                **self.kwargs,
             )
 
         return ChatOpenAI(
-            model_name=self.model_name, openai_api_key=self._openai_api_key
+            model_name=self.model_name,
+            openai_api_key=self._openai_api_key,
+            *self.args,
+            **self.kwargs,
         )
 
     @retry(

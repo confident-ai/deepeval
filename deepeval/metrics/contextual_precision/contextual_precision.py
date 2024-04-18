@@ -6,6 +6,7 @@ from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
+    initialize_model,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -13,7 +14,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
-from deepeval.models import GPTModel, DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.contextual_precision.template import (
     ContextualPrecisionTemplate,
 )
@@ -45,12 +46,7 @@ class ContextualPrecisionMetric(BaseMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
-        if isinstance(model, DeepEvalBaseLLM):
-            self.using_native_model = False
-            self.model = model
-        else:
-            self.using_native_model = True
-            self.model = GPTModel(model=model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
         self.strict_mode = strict_mode

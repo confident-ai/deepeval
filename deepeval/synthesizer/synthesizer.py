@@ -11,12 +11,9 @@ import math
 
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
 from deepeval.synthesizer.context_generator import ContextGenerator
-from deepeval.models import (
-    GPTModel,
-    DeepEvalBaseLLM,
-)
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.progress_context import synthesizer_progress_context
-from deepeval.metrics.utils import trimAndLoadJson
+from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.dataset.golden import Golden
 
 valid_file_types = ["csv", "json"]
@@ -33,12 +30,7 @@ class Synthesizer:
         # embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
         multithreading: bool = True,
     ):
-        if isinstance(model, DeepEvalBaseLLM):
-            self.using_native_model = False
-            self.model = model
-        else:
-            self.using_native_model = True
-            self.model = GPTModel(model=model)
+        self.model, self.using_native_model = initialize_model(model)
 
         # self.embedder = embedder
         self.generator_model = self.model.get_model_name()
