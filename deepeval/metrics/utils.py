@@ -14,7 +14,7 @@ def validate_conversational_test_case(
     test_case: ConversationalTestCase,
     metric: BaseMetric,
 ) -> LLMTestCase:
-    if len(test_case.messages) is 0:
+    if len(test_case.messages) == 0:
         error_str = "'messages' in conversational test case cannot be empty."
         metric.error = error_str
         raise ValueError(error_str)
