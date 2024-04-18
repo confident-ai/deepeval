@@ -10,7 +10,8 @@ from deepeval.benchmarks.drop.task import DROPTask
 from deepeval.benchmarks.drop.template import DROPTemplate
 from deepeval.scorer import Scorer
 
-DELIMITER = ','
+DELIMITER = ","
+
 
 class DROP(DeepEvalBaseBenchmark):
     def __init__(self, tasks: List[DROPTask] = None, n_shots: int = 5):
@@ -66,9 +67,7 @@ class DROP(DeepEvalBaseBenchmark):
 
         return overall_accuracy
 
-    def predict(
-        self, model: DeepEvalBaseLLM, golden: Golden
-    ) -> Dict:
+    def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
         assert (
             self.shots_dataset != None
@@ -116,9 +115,11 @@ class DROP(DeepEvalBaseBenchmark):
         goldens: List[Golden] = []
         for data in val_set:
             input = DROPTemplate.format_question(data, include_answer=False)
-            output =  DELIMITER.join(tuple(data["answers_spans"]["spans"][0]))
+            output = DELIMITER.join(tuple(data["answers_spans"]["spans"][0]))
             output_type = data["answers_spans"]["types"][0]
-            golden = Golden(input=input, expectedOutput=output, context=[output_type])
+            golden = Golden(
+                input=input, expectedOutput=output, context=[output_type]
+            )
             goldens.append(golden)
- 
+
         return goldens

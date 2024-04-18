@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class DROPTask(Enum):
     NFL_649 = "nfl_649"
     HISTORY_1418 = "history_1418"
