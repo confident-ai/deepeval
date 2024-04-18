@@ -49,6 +49,7 @@ module.exports = {
             "benchmarks-truthful-qa",
             "benchmarks-human-eval",
             "benchmarks-gsm8k",
+            "benchmarks-drop",
           ],
           collapsed: true,
         },
