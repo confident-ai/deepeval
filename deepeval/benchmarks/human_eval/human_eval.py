@@ -120,18 +120,3 @@ class HumanEval(DeepEvalBaseBenchmark):
             input=test_set["prompt"], expectedOutput=test_set["test"]
         )
         return golden
-
-
-#######################################
-from deepeval.models import GPTModel
-
-model = GPTModel()
-
-benchmark = HumanEval(
-    [HumanEvalTask.ADD_ELEMENTS, HumanEvalTask.ALL_PREFIXES], n=10
-)
-benchmark.evaluate(model, 10)
-
-print(benchmark.overall_score)
-print(benchmark.task_scores)
-print(benchmark.predictions)
