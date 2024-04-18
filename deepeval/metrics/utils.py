@@ -77,5 +77,5 @@ def initialize_model(
     # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
-    # Otherwise (the model is a string or None), we initialize a GPTModel and us as a native model
+    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return GPTModel(model=model), True
