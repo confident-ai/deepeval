@@ -119,8 +119,8 @@ class EvaluationDataset:
             test_case._dataset_rank = len(conversational_test_cases)
             conversational_test_cases.append(test_case)
 
-        self._llm_test_cases.extend(llm_test_cases)
-        self._conversational_test_cases.extend(conversational_test_cases)
+        self._llm_test_cases.append(llm_test_cases)
+        self._conversational_test_cases.append(conversational_test_cases)
 
     def __iter__(self):
         return iter(self.test_cases)
