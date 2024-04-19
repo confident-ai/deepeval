@@ -58,8 +58,11 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 - Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://docs.confident-ai.com/docs/benchmarks-introduction), which includes:
   - MMLU
   - HellaSwag
+  - DROP
   - BIG-Bench Hard
   - TruthfulQA
+  - HumanEval
+  - GSM8K
 - [Automatically integrated with Confident AI](https://app.confident-ai.com) for continous evaluation throughout the lifetime of your LLM (app):
   - log evaluation results and analyze metrics pass / fails
   - compare and pick the optimal hyperparameters (eg. prompt templates, chunk size, models used, etc.) based on evaluation results
