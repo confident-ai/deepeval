@@ -83,6 +83,9 @@ class EvaluationDataset:
     def test_cases(
         self, test_cases: List[Union[LLMTestCase, ConversationalTestCase]]
     ):
+        if not isinstance(test_cases, list):
+            raise TypeError("'test_cases' must be a list")
+
         llm_test_cases = []
         conversational_test_cases = []
         for test_case in test_cases:
@@ -108,19 +111,14 @@ class EvaluationDataset:
     ):
         validate_test_case_type(test_case, subject="test cases")
 
-        llm_test_cases = self._llm_test_cases
-        conversational_test_cases = self._conversational_test_cases
         test_case._dataset_alias = self._alias
         test_case._dataset_id = self._id
         if isinstance(test_case, LLMTestCase):
-            test_case._dataset_rank = len(llm_test_cases)
-            llm_test_cases.append(test_case)
+            test_case._dataset_rank = len(self._llm_test_cases)
+            self._llm_test_cases.append(test_case)
         elif isinstance(test_case, ConversationalTestCase):
-            test_case._dataset_rank = len(conversational_test_cases)
-            conversational_test_cases.append(test_case)
-
-        self._llm_test_cases.append(llm_test_cases)
-        self._conversational_test_cases.append(conversational_test_cases)
+            test_case._dataset_rank = len(self._conversational_test_cases)
+            self._conversational_test_cases.append(test_case)
 
     def __iter__(self):
         return iter(self.test_cases)
