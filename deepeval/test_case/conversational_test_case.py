@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 from deepeval.test_case import LLMTestCase
 
@@ -6,4 +6,15 @@ from deepeval.test_case import LLMTestCase
 @dataclass
 class ConversationalTestCase:
     messages: List[LLMTestCase]
-    dataset_alias: Optional[str] = None
+    _dataset_rank: Optional[int] = field(default=None, repr=False)
+    _dataset_alias: Optional[str] = field(default=None, repr=False)
+    _dataset_id: Optional[str] = field(default=None, repr=False)
+
+    def __post_init__(self):
+        if len(self.messages) == 0:
+            raise TypeError("'messages' must not be empty")
+
+        if not isinstance(self.messages, list) or not all(
+            isinstance(item, LLMTestCase) for item in self.messages
+        ):
+            raise TypeError("'messages' must be a list of LLMTestCase")

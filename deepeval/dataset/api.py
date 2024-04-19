@@ -19,3 +19,4 @@ class DatasetHttpResponse(BaseModel):
     conversational_goldens: List[ConversationalGolden] = Field(
         alias="conversationalGoldens"
     )
+    datasetId: str

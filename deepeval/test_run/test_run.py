@@ -18,6 +18,7 @@ from deepeval.test_run.api import (
     ConversationalApiTestCase,
     TestRunHttpResponse,
 )
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
@@ -85,7 +86,6 @@ class TestRun(BaseModel):
         None,
         alias="testFile",
     )
-    dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
     deployment: Optional[bool] = Field(True)
     deployment_configs: Optional[DeploymentConfigs] = Field(
         None, alias="deploymentConfigs"
@@ -108,6 +108,8 @@ class TestRun(BaseModel):
     test_failed: Optional[int] = Field(None, alias="testFailed")
     run_duration: float = Field(0.0, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+    dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
+    dataset_id: Optional[str] = Field(None, alias="datasetId")
 
     def add_test_case(
         self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
@@ -123,22 +125,41 @@ class TestRun(BaseModel):
             else:
                 self.evaluation_cost += api_test_case.evaluation_cost
 
-    def sort_test_cases_by_name(self):
-        self.test_cases = sorted(
-            self.test_cases, key=lambda test_case: test_case.name
-        )
-        i = 0
-        for test_case in self.test_cases:
-            test_case.order = i
-            i += 1
+    def set_dataset_properties(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ):
+        if self.dataset_alias is None:
+            self.dataset_alias = test_case._dataset_alias
 
-        self.conversational_test_cases = sorted(
-            self.conversational_test_cases, key=lambda test_case: test_case.name
+        if self.dataset_id is None:
+            self.dataset_id = test_case._dataset_id
+
+    def sort_test_cases(self):
+        self.test_cases.sort(
+            key=lambda x: (
+                x.order if x.order is not None else float("inf"),
+                x.name,
+            )
         )
-        i = 0
+        # Optionally update order only if not already set
+        highest_order = 0
+        for test_case in self.test_cases:
+            if test_case.order is None:
+                test_case.order = highest_order
+            highest_order = test_case.order + 1
+
+        self.conversational_test_cases.sort(
+            key=lambda x: (
+                x.order if x.order is not None else float("inf"),
+                x.name,
+            )
+        )
+        # Optionally update order only if not already set
+        highest_order = 0
         for test_case in self.conversational_test_cases:
-            test_case.order = i
-            i += 1
+            if test_case.order is None:
+                test_case.order = highest_order
+            highest_order = test_case.order + 1
 
     def construct_metrics_scores(self) -> int:
         metrics_dict: Dict[str, List[float]] = {}
@@ -293,6 +314,43 @@ class TestRunManager:
                     "In save_test_run, Error saving test run to disk",
                     file=sys.stderr,
                 )
+
+    def update_test_run(
+        self,
+        api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+    ):
+        if self.save_to_disk:
+            try:
+                with portalocker.Lock(
+                    self.temp_file_name,
+                    mode="r+",
+                    timeout=5,
+                    flags=portalocker.LOCK_EX,
+                ) as file:
+                    file.seek(0)
+                    self.test_run = self.test_run.load(file)
+
+                    # Update the test run object
+                    self.test_run.add_test_case(api_test_case)
+                    self.test_run.set_dataset_properties(test_case)
+
+                    # Save the updated test run back to the file
+                    file.seek(0)
+                    file.truncate()
+                    self.test_run.save(file)
+            except (
+                FileNotFoundError,
+                portalocker.exceptions.LockException,
+            ) as e:
+                print(f"Error updating test run to disk: {e}", file=sys.stderr)
+                self.test_run = None
+        else:
+            if self.test_run is None:
+                self.create_test_run()
+
+            self.test_run.add_test_case(api_test_case)
+            self.test_run.set_dataset_properties(test_case)
 
     def clear_test_run(self):
         self.test_run = None
@@ -538,7 +596,7 @@ class TestRunManager:
             return
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
-        test_run.sort_test_cases_by_name()
+        test_run.sort_test_cases()
 
         if test_run_cache_manager.disable_write_cache is None:
             test_run_cache_manager.disable_write_cache = (
