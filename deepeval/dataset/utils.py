@@ -19,17 +19,21 @@ def convert_test_cases_to_goldens(
 
 
 def convert_goldens_to_test_cases(
-    goldens: List[Golden], dataset_alias: Optional[str] = None
+    goldens: List[Golden],
+    _alias: Optional[str] = None,
+    _id: Optional[str] = None,
 ) -> List[LLMTestCase]:
     test_cases = []
-    for golden in goldens:
+    for index, golden in enumerate(goldens):
         test_case = LLMTestCase(
             input=golden.input,
             actual_output=golden.actual_output,
             expected_output=golden.expected_output,
             context=golden.context,
             retrieval_context=golden.retrieval_context,
-            dataset_alias=dataset_alias,
+            _dataset_alias=_alias,
+            _dataset_id=_id,
+            _dataset_rank=index,
         )
         test_cases.append(test_case)
     return test_cases
@@ -37,13 +41,16 @@ def convert_goldens_to_test_cases(
 
 def convert_convo_goldens_to_convo_test_cases(
     convo_goldens: List[ConversationalGolden],
-    dataset_alias: Optional[str] = None,
+    _alias: Optional[str] = None,
+    _id: Optional[str] = None,
 ) -> List[ConversationalTestCase]:
     conv_test_cases = []
-    for convo_golden in convo_goldens:
+    for index, convo_golden in enumerate(convo_goldens):
         conv_test_case = ConversationalTestCase(
-            dataset_alias=dataset_alias,
             messages=convert_goldens_to_test_cases(convo_golden.messages),
+            _dataset_alias=_alias,
+            _dataset_id=_id,
+            _dataset_rank=index,
         )
         conv_test_cases.append(conv_test_case)
     return conv_test_cases

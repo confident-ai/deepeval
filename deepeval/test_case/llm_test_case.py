@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 from enum import Enum
 
@@ -20,7 +20,9 @@ class LLMTestCase:
     retrieval_context: Optional[List[str]] = None
     latency: Optional[float] = None
     cost: Optional[float] = None
-    dataset_alias: Optional[str] = None
+    _dataset_rank: Optional[int] = field(default=None, repr=False)
+    _dataset_alias: Optional[str] = field(default=None, repr=False)
+    _dataset_id: Optional[str] = field(default=None, repr=False)
 
     def __post_init__(self):
         # Ensure `context` is None or a list of strings
@@ -28,7 +30,7 @@ class LLMTestCase:
             if not isinstance(self.context, list) or not all(
                 isinstance(item, str) for item in self.context
             ):
-                raise TypeError("context must be None or a list of strings")
+                raise TypeError("'context' must be None or a list of strings")
 
         # Ensure `retrieval_context` is None or a list of strings
         if self.retrieval_context is not None:
@@ -36,5 +38,5 @@ class LLMTestCase:
                 isinstance(item, str) for item in self.retrieval_context
             ):
                 raise TypeError(
-                    "retrieval_context must be None or a list of strings"
+                    "'retrieval_context' must be None or a list of strings"
                 )

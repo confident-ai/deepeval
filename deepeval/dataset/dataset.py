@@ -1,5 +1,5 @@
 from typing import List, Optional, Union
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from rich.console import Console
 import json
 import csv
@@ -27,42 +27,100 @@ from deepeval.synthesizer.base_synthesizer import BaseSynthesizer
 valid_file_types = ["csv", "json"]
 
 
+def validate_test_case_type(
+    test_case: Union[LLMTestCase, ConversationalTestCase], subject: str
+):
+    if not isinstance(test_case, LLMTestCase) and not isinstance(
+        test_case, ConversationalTestCase
+    ):
+        raise TypeError(
+            f"Provided `{subject}` must be a list of LLMTestCase or ConversationalTestCase"
+        )
+
+
 @dataclass
 class EvaluationDataset:
-    test_cases: List[Union[LLMTestCase, ConversationalTestCase]]
     goldens: List[Golden]
     conversational_goldens: List[ConversationalGolden]
+    _alias: Union[str, None] = field(default=None)
+    _id: Union[str, None] = field(default=None)
+    _llm_test_cases: List[LLMTestCase] = field(default_factory=[], repr=None)
+    _conversational_test_cases: List[ConversationalTestCase] = field(
+        default_factory=[], repr=None
+    )
 
     def __init__(
         self,
-        alias: Optional[str] = None,
         test_cases: List[Union[LLMTestCase, ConversationalTestCase]] = [],
         goldens: List[Golden] = [],
         conversational_goldens: List[ConversationalGolden] = [],
     ):
         for test_case in test_cases:
-            # TODO: refactor
-            if not isinstance(test_case, LLMTestCase):
-                raise TypeError(
-                    "Provided `test_cases` must be of type 'List[LLMTestCase]'."
-                )
-            test_case.dataset_alias = alias
-
-        self.test_cases = test_cases
+            validate_test_case_type(test_case, subject="test cases")
         self.goldens = goldens
         self.conversational_goldens = conversational_goldens
-        self.alias = alias
+        self._alias = None
+        self._id = None
+
+        llm_test_cases = []
+        conversational_test_cases = []
+        for test_case in test_cases:
+            if isinstance(test_case, LLMTestCase):
+                test_case._dataset_rank = len(llm_test_cases)
+                llm_test_cases.append(test_case)
+            elif isinstance(test_case, ConversationalTestCase):
+                test_case._dataset_rank = len(conversational_test_cases)
+                conversational_test_cases.append(test_case)
+
+        self._llm_test_cases = llm_test_cases
+        self._conversational_test_cases = conversational_test_cases
+
+    @property
+    def test_cases(self) -> List[Union[LLMTestCase, ConversationalTestCase]]:
+        return self._llm_test_cases + self._conversational_test_cases
+
+    @test_cases.setter
+    def test_cases(
+        self, test_cases: List[Union[LLMTestCase, ConversationalTestCase]]
+    ):
+        llm_test_cases = []
+        conversational_test_cases = []
+        for test_case in test_cases:
+            if not isinstance(test_case, LLMTestCase) and not isinstance(
+                test_case, ConversationalTestCase
+            ):
+                continue
+
+            test_case._dataset_alias = self._alias
+            test_case._dataset_id = self._id
+            if isinstance(test_case, LLMTestCase):
+                test_case._dataset_rank = len(llm_test_cases)
+                llm_test_cases.append(test_case)
+            elif isinstance(test_case, ConversationalTestCase):
+                test_case._dataset_rank = len(conversational_test_cases)
+                conversational_test_cases.append(test_case)
+
+        self._llm_test_cases = llm_test_cases
+        self._conversational_test_cases = conversational_test_cases
 
     def add_test_case(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ):
-        # TODO: refactor
-        if not isinstance(test_case, LLMTestCase):
-            raise TypeError(
-                "Provided `test_cases` must be of type 'List[LLMTestCase]'."
-            )
+        validate_test_case_type(test_case, subject="test cases")
 
-        self.test_cases.append(test_case)
+        llm_test_cases = self._llm_test_cases
+        conversational_test_cases = self._conversational_test_cases
+        test_case._dataset_alias = self._alias
+        test_case._dataset_id = self._id
+        if isinstance(test_case, LLMTestCase):
+            test_case._dataset_rank = len(llm_test_cases)
+            llm_test_cases.append(test_case)
+        elif isinstance(test_case, ConversationalTestCase):
+            test_case._dataset_rank = len(conversational_test_cases)
+            conversational_test_cases.append(test_case)
+
+        self._llm_test_cases.extend(llm_test_cases)
+        self._conversational_test_cases.extend(conversational_test_cases)
 
     def __iter__(self):
         return iter(self.test_cases)
@@ -170,7 +228,6 @@ class EvaluationDataset:
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
-                    dataset_alias=self.alias,
                 )
             )
 
@@ -237,7 +294,6 @@ class EvaluationDataset:
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
-                    dataset_alias=self.alias,
                 )
             )
 
@@ -280,7 +336,6 @@ class EvaluationDataset:
 
     def pull(self, alias: str, auto_convert_goldens_to_test_cases: bool = True):
         if is_confident():
-            self.alias = alias
             api = Api()
             result = api.get_request(
                 endpoint=Endpoints.DATASET_ENDPOINT.value,
@@ -290,16 +345,25 @@ class EvaluationDataset:
             response = DatasetHttpResponse(
                 goldens=result["goldens"],
                 conversationalGoldens=result["conversationalGoldens"],
+                datasetId=result["datasetId"],
             )
+            self._alias = alias
+            self._id = response.datasetId
 
             if auto_convert_goldens_to_test_cases:
-                self.test_cases = convert_goldens_to_test_cases(
-                    response.goldens, alias
+                llm_test_cases = convert_goldens_to_test_cases(
+                    response.goldens, alias, response.datasetId
                 )
-                self.test_cases.extend(
+                conversational_test_cases = (
                     convert_convo_goldens_to_convo_test_cases(
-                        response.conversational_goldens, alias
+                        response.conversational_goldens,
+                        alias,
+                        response.datasetId,
                     )
+                )
+                self._llm_test_cases.extend(llm_test_cases)
+                self._conversational_test_cases.extend(
+                    conversational_test_cases
                 )
             else:
                 self.goldens = response.goldens

@@ -104,7 +104,7 @@ def create_api_test_case(
         else:
             success = True
             name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
-            order = None
+            order = test_case._dataset_rank
 
         return LLMApiTestCase(
             name=name,
@@ -128,7 +128,7 @@ def create_api_test_case(
             metricsMetadata=None,
             runDuration=0,
             evaluationCost=None,
-            order=None,
+            order=test_case._dataset_rank,
             testCases=[
                 create_api_test_case(tc, i, True)
                 for i, tc in enumerate(test_case.messages)
@@ -226,11 +226,8 @@ def execute_test_cases(
         run_duration = test_end_time - test_start_time
         api_test_case.run_duration = run_duration
 
-        ### Save Test Run ###
-        test_run = test_run_manager.get_test_run()
-        test_run.add_test_case(api_test_case)
-        test_run.dataset_alias = test_case.dataset_alias
-        test_run_manager.save_test_run()
+        ### Update Test Run ###
+        test_run_manager.update_test_run(api_test_case, test_case)
 
         ### Cache Test Run ###
         if isinstance(
@@ -323,11 +320,8 @@ async def a_execute_test_cases(
         run_duration = test_end_time - test_start_time
         api_test_case.run_duration = run_duration
 
-        ### Save Test Run ###
-        test_run = test_run_manager.get_test_run()
-        test_run.add_test_case(api_test_case)
-        test_run.dataset_alias = test_case.dataset_alias
-        test_run_manager.save_test_run()
+        ### Update Test Run ###
+        test_run_manager.update_test_run(api_test_case, test_case)
 
         ### Cache Test Run ###
         if isinstance(
