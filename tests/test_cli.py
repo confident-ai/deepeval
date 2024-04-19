@@ -8,7 +8,7 @@ In pyproject.toml, include?:
 addopts = "-m 'not skip_test'"
 markers = [
     "skip_test: skip the test",
-\]
+]
 ```
 
 Now:
