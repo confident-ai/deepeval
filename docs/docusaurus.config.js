@@ -77,8 +77,7 @@ module.exports = async function createConfigAsync() {
     themeConfig:
       /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
       ({
-        // TODO: make this an actual social card
-        image: 'img/social-card.png',
+        image: 'img/social_card.png',
         navbar: {
           logo: {
             alt: 'DeepEval Logo',
