@@ -84,7 +84,7 @@ class EvaluationDataset:
         self, test_cases: List[Union[LLMTestCase, ConversationalTestCase]]
     ):
         if not isinstance(test_cases, list):
-            raise TypeError("Provided 'test_cases' must be a list")
+            raise TypeError("'test_cases' must be a list")
 
         llm_test_cases = []
         conversational_test_cases = []
