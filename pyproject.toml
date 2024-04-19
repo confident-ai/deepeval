@@ -50,3 +50,9 @@ line-length = 80
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "-m 'not skip_test'"
+markers = [
+    "skip_test: skip the test",
+]
