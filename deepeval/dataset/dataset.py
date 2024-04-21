@@ -339,7 +339,7 @@ class EvaluationDataset:
                 endpoint=Endpoints.DATASET_ENDPOINT.value,
                 params={"alias": alias},
             )
-            print(result)
+
             response = DatasetHttpResponse(
                 goldens=result["goldens"],
                 conversationalGoldens=result["conversationalGoldens"],
