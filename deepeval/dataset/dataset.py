@@ -345,6 +345,7 @@ class EvaluationDataset:
                 conversationalGoldens=result["conversationalGoldens"],
                 datasetId=result["datasetId"],
             )
+
             self._alias = alias
             self._id = response.datasetId
 

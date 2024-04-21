@@ -1,11 +1,15 @@
+from pydantic import Field
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Dict
+
 from deepeval.test_case import LLMTestCase
 
 
 @dataclass
 class ConversationalTestCase:
     messages: List[LLMTestCase]
+    additional_metadata: Optional[Dict] = None
+    comments: Optional[str] = None
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)

@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from deepeval.dataset import EvaluationDataset
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import HallucinationMetric
 from deepeval import assert_test, evaluate
 from deepeval.test_case import LLMTestCase
