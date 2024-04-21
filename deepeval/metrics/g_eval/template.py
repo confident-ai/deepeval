@@ -17,7 +17,7 @@ JSON:
 
     @staticmethod
     def generate_evaluation_results(evaluation_steps, text):
-        return f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key ranging from 0 - 10, with 10 being that it follows the criteria and 0 being that it does not, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason.
+        return f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key ranging from 0 - 10, with 10 being that it follows the criteria outlined in the steps and 0 being that it does not, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason.
 
 Evaluation Steps:
 {evaluation_steps}
@@ -26,9 +26,12 @@ Evaluation Steps:
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
-Example:
-"score": <float>,
-"reason": <reason_string_and_explanation>
+
+Example output:
+{{
+    "score": 0,
+    "reason": "The text does not follow the evaluation steps provided."
+}}
 **
 
 JSON:
