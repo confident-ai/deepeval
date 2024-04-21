@@ -348,8 +348,6 @@ class EvaluationDataset:
             self._alias = alias
             self._id = response.datasetId
 
-            print(response.goldens[0])
-
             if auto_convert_goldens_to_test_cases:
                 llm_test_cases = convert_goldens_to_test_cases(
                     response.goldens, alias, response.datasetId
