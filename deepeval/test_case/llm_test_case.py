@@ -19,10 +19,8 @@ class LLMTestCase:
     expected_output: Optional[str] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
-    additional_metadata: Optional[Dict] = Field(
-        None, alias="additionalMetadata"
-    )
-    comments: Optional[str] = Field(None)
+    additional_metadata: Optional[Dict] = None
+    comments: Optional[str] = None
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
