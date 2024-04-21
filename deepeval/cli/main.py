@@ -26,8 +26,19 @@ def login(
         "-c",
         help="Optional confident API key to bypass login.",
     ),
+    use_existing: Optional[bool] = typer.Option(
+        False,
+        "--use-existing",
+        "-u",
+        help="Use the existing API key stored in the key file if present.",
+    ),
 ):
     # Use the confident_api_key if it is provided, otherwise proceed with existing logic
+    if use_existing:
+        confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
+        if confident_api_key:
+            print("Using existing API key.")
+
     if confident_api_key:
         api_key = confident_api_key
     else:
