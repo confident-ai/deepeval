@@ -66,7 +66,7 @@ def trimAndLoadJson(
 
 
 def initialize_model(
-    model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+    model: Optional[Union[str, DeepEvalBaseLLM, GPTModel]] = None,
 ) -> Tuple[DeepEvalBaseLLM, bool]:
     """
     Returns a tuple of (initialized DeepEvalBaseLLM, using_native_model boolean)
