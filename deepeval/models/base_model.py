@@ -61,6 +61,10 @@ class DeepEvalBaseLLM(ABC):
         """
         pass
 
+    @abstractmethod
+    async def get_model_name(self, *args, **kwargs) -> str:
+        pass
+
 
 class DeepEvalBaseEmbeddingModel(ABC):
     def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
