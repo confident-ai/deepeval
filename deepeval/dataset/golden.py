@@ -13,6 +13,7 @@ class Golden(BaseModel):
     additional_metadata: Optional[Dict] = Field(
         None, alias="additionalMetadata"
     )
+    comments: Optional[str] = Field(None)
     source_file: Optional[str] = Field(None, alias="sourceFile")
 
 
@@ -20,4 +21,5 @@ class ConversationalGolden(BaseModel):
     additional_metadata: Optional[Dict] = Field(
         None, alias="additionalMetadata"
     )
+    comments: Optional[str] = Field(None)
     messages: List[Golden] = Field(default_factory=lambda: [], alias="goldens")

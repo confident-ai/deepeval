@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 import time
 from dataclasses import dataclass
 
@@ -95,12 +95,19 @@ def create_api_test_case(
     test_case: Union[LLMTestCase, ConversationalTestCase],
     index: Optional[int] = None,
     is_message: Optional[bool] = False,
+    additional_metadata: Optional[Dict] = None,
+    comments: Optional[str] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
     if isinstance(test_case, LLMTestCase):
         if is_message:
             success = None
-            name = f"test_case_{index}"
+            name = f"message_{index}"
             order = index
+
+            # Manually set the metadata and comments on conversational test case
+            # to each individual message (test case)
+            test_case.additional_metadata = additional_metadata
+            test_case.comments = comments
         else:
             success = True
             name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
@@ -118,6 +125,8 @@ def create_api_test_case(
             runDuration=None,
             evaluationCost=None,
             order=order,
+            additionalMetadata=test_case.additional_metadata,
+            comments=test_case.comments,
         )
     elif isinstance(test_case, ConversationalTestCase):
         return ConversationalApiTestCase(
@@ -130,7 +139,13 @@ def create_api_test_case(
             evaluationCost=None,
             order=test_case._dataset_rank,
             testCases=[
-                create_api_test_case(tc, i, True)
+                create_api_test_case(
+                    tc,
+                    i,
+                    True,
+                    test_case.additional_metadata,
+                    test_case.comments,
+                )
                 for i, tc in enumerate(test_case.messages)
             ],
         )

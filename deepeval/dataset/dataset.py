@@ -339,7 +339,7 @@ class EvaluationDataset:
                 endpoint=Endpoints.DATASET_ENDPOINT.value,
                 params={"alias": alias},
             )
-
+            print(result)
             response = DatasetHttpResponse(
                 goldens=result["goldens"],
                 conversationalGoldens=result["conversationalGoldens"],
@@ -347,6 +347,8 @@ class EvaluationDataset:
             )
             self._alias = alias
             self._id = response.datasetId
+
+            print(response.goldens[0])
 
             if auto_convert_goldens_to_test_cases:
                 llm_test_cases = convert_goldens_to_test_cases(

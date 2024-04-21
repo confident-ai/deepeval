@@ -62,5 +62,5 @@ def test_create_dataset():
 #     hallucination_metric = HallucinationMetric(threshold=0.3)
 #     assert_test(test_case, [hallucination_metric])
 
-# dataset = EvaluationDataset()
-# dataset.pull(alias="Evals Dataset")
+dataset = EvaluationDataset()
+dataset.pull(alias="Evals Dataset")

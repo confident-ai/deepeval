@@ -31,6 +31,8 @@ def convert_goldens_to_test_cases(
             expected_output=golden.expected_output,
             context=golden.context,
             retrieval_context=golden.retrieval_context,
+            additional_metadata=golden.additional_metadata,
+            comments=golden.comments,
             _dataset_alias=_alias,
             _dataset_id=_id,
             _dataset_rank=index,
@@ -47,6 +49,8 @@ def convert_convo_goldens_to_convo_test_cases(
     conv_test_cases = []
     for index, convo_golden in enumerate(convo_goldens):
         conv_test_case = ConversationalTestCase(
+            additional_metadata=convo_golden.additional_metadata,
+            comments=convo_golden.comments,
             messages=convert_goldens_to_test_cases(convo_golden.messages),
             _dataset_alias=_alias,
             _dataset_id=_id,
