@@ -75,6 +75,14 @@ class EvaluationDataset:
         self._llm_test_cases = llm_test_cases
         self._conversational_test_cases = conversational_test_cases
 
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(test_cases={self.test_cases}, "
+            f"goldens={self.goldens}, "
+            f"conversational_goldens={self.conversational_goldens}, "
+            f"_alias={self._alias}, _id={self._id})"
+        )
+
     @property
     def test_cases(self) -> List[Union[LLMTestCase, ConversationalTestCase]]:
         return self._llm_test_cases + self._conversational_test_cases
