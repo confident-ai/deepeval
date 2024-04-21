@@ -8,8 +8,10 @@ Evaluation Criteria:
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
-Example:
-"steps": <list_of_strings>
+Example JSON:
+{{
+    "steps": <list_of_strings>
+}}
 **
 
 JSON:
@@ -27,7 +29,7 @@ Evaluation Steps:
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
 
-Example output:
+Example JSON:
 {{
     "score": 0,
     "reason": "The text does not follow the evaluation steps provided."
