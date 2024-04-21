@@ -13,8 +13,6 @@ A test case is a blueprint provided by `deepeval` to unit test LLM outputs based
 - [Optional] `expected_output`
 - [Optional] `context`
 - [Optional] `retrieval_context`
-- [Optional] `latency` (`float`)
-- [Optional] `cost` (`float`)
 
 Except for `actual_output`, all parameters should originate from your evaluation dataset (if you have one). Here's an example implementation of a test case:
 
@@ -25,7 +23,6 @@ test_case = LLMTestCase(
     actual_output="We offer a 30-day full refund at no extra cost.",
     context=["All customers are eligible for a 30 day full refund at no extra cost."],
     retrieval_context=["Only shoes can be refunded."],
-    latency=10.0
 )
 ```
 
@@ -172,42 +169,6 @@ test_case = LLMTestCase(
 
 :::note
 Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results.
-:::
-
-## Latency
-
-The `latency` is an **optional** parameter that represents how long it took your LLM application to finish executing. However, if you're trying to measure something else, like the latency for only the retrieval part of your RAG pipeline, feel free to supply that number instead of the overall latency.
-
-```python
-test_case = LLMTestCase(
-    input="...",
-    actual_output="...",
-    # Replace this with the actual latency it took your
-    # LLM (application) to generate the actual output
-    latency=10.4
-)
-```
-
-:::info
-The only `deepeval` metric that uses the `latency` parameter is the [`LatencyMetric`.](metrics-latency)
-:::
-
-## Cost
-
-The `cost` is an **optional** parameter that represents the token cost for a given execution of your LLM application. However, similar to `latency`, the `cost` parameter does not strictly have to be the total completion cost (eg., it could be the embedding cost), nor does it have to be in any set currency.
-
-```python
-test_case = LLMTestCase(
-    input="...",
-    actual_output="...",
-    # Replace this with the actual cost it took your
-    # LLM (application) to generate the actual output
-    cost=0.78
-)
-```
-
-:::info
-Similar to the `LatencyMetric`, the [`CostMetric`](metrics-cost) is the only `deepeval` metric that uses the `cost` parameter.
 :::
 
 ## Assert A Test Case
