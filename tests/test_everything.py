@@ -20,7 +20,6 @@ from deepeval.metrics import (
     ToxicityMetric,
     GEval,
     SummarizationMetric,
-    JudgementalGPT,
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
