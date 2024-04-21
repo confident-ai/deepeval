@@ -6,8 +6,9 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
+    initialize_model,
 )
-from deepeval.models import GPTModel, DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
 )
@@ -34,12 +35,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
-        if isinstance(model, DeepEvalBaseLLM):
-            self.using_native_model = False
-            self.model = model
-        else:
-            self.using_native_model = True
-            self.model = GPTModel(model=model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.strict_mode = strict_mode
