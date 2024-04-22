@@ -174,9 +174,7 @@ def execute_test_cases(
         ):  # for now, don't use cache when it is a conversation
             cached_test_case = test_run_cache_manager.get_cached_test_case(
                 test_case,
-                test_run.hyperparameters,
-                test_run.model,
-                test_run.user_prompt_template,
+                test_run.hyperparameters
             )
 
         ##### Metric Calculation #####
@@ -252,15 +250,11 @@ def execute_test_cases(
                 test_case,
                 new_cached_test_case,
                 test_run.hyperparameters,
-                test_run.model,
-                test_run.user_prompt_template,
             )
             test_run_cache_manager.cache_test_case(
                 test_case,
                 new_cached_test_case,
                 test_run.hyperparameters,
-                test_run.model,
-                test_run.user_prompt_template,
                 to_temp=True,
             )
 
@@ -290,8 +284,6 @@ async def a_execute_test_cases(
             cached_test_case = test_run_cache_manager.get_cached_test_case(
                 test_case,
                 test_run.hyperparameters,
-                test_run.model,
-                test_run.user_prompt_template,
             )
 
         ##### Metric Calculation #####
@@ -346,15 +338,11 @@ async def a_execute_test_cases(
                 test_case,
                 new_cached_test_case,
                 test_run.hyperparameters,
-                test_run.model,
-                test_run.user_prompt_template,
             )
             test_run_cache_manager.cache_test_case(
                 test_case,
                 new_cached_test_case,
                 test_run.hyperparameters,
-                test_run.model,
-                test_run.user_prompt_template,
                 to_temp=True,
             )
 

@@ -50,8 +50,6 @@ class CachedTestCase(BaseModel):
         default_factory=lambda: []
     )
     hyperparameters: Optional[str] = Field(None)
-    model: Optional[str] = Field(None)
-    user_prompt_template: Optional[str] = Field(None)
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -98,9 +96,7 @@ class TestRunCacheManager:
     def get_cached_test_case(
         self,
         test_case: LLMTestCase,
-        hyperparameters: Union[Dict, None],
-        model: str,
-        user_prompt_template: str,
+        hyperparameters: Union[Dict, None]
     ) -> Union[CachedTestCase, None]:
         if self.disable_write_cache:
             return None
@@ -113,8 +109,6 @@ class TestRunCacheManager:
             LLMTestCaseParams.CONTEXT.value: test_case.context,
             LLMTestCaseParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
             "hyperparameters": hyperparameters,
-            "model": model,
-            "user_prompt_template": user_prompt_template,
         }
         test_case_cache_key = serialize(cache_dict)
         cached_test_case = cached_test_run.get_cached_api_test_case(
@@ -127,8 +121,6 @@ class TestRunCacheManager:
         test_case: LLMTestCase,
         new_cache_test_case: CachedTestCase,
         hyperparameters: Union[Dict, None],
-        model: str,
-        user_prompt_template: str,
         to_temp: bool = False,
     ):
         if self.disable_write_cache:
@@ -140,8 +132,6 @@ class TestRunCacheManager:
             LLMTestCaseParams.CONTEXT.value: test_case.context,
             LLMTestCaseParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
             "hyperparameters": hyperparameters,
-            "model": model,
-            "user_prompt_template": user_prompt_template,
         }
         test_case_cache_key = serialize(cache_dict)
         cached_test_run = self.get_cached_test_run(from_temp=to_temp)
