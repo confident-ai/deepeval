@@ -173,8 +173,7 @@ def execute_test_cases(
             test_case, LLMTestCase
         ):  # for now, don't use cache when it is a conversation
             cached_test_case = test_run_cache_manager.get_cached_test_case(
-                test_case,
-                test_run.hyperparameters
+                test_case, test_run.hyperparameters
             )
 
         ##### Metric Calculation #####

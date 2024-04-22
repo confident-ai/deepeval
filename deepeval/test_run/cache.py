@@ -94,9 +94,7 @@ class TestRunCacheManager:
         self.temp_cache_file_name: str = TEMP_CACHE_FILE_NAME
 
     def get_cached_test_case(
-        self,
-        test_case: LLMTestCase,
-        hyperparameters: Union[Dict, None]
+        self, test_case: LLMTestCase, hyperparameters: Union[Dict, None]
     ) -> Union[CachedTestCase, None]:
         if self.disable_write_cache:
             return None

@@ -35,8 +35,8 @@ def log_hyperparameters(model: str, prompt_template: str):
 
         def modified_hyperparameters():
             base_hyperparameters = func()
-            base_hyperparameters['model'] = model
-            base_hyperparameters['prompt template'] = prompt_template
+            base_hyperparameters["model"] = model
+            base_hyperparameters["prompt template"] = prompt_template
             return base_hyperparameters
 
         hyperparameters = process_hyperparameters(modified_hyperparameters())
