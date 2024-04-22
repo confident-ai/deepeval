@@ -100,10 +100,6 @@ class TestRun(BaseModel):
         default_factory=lambda: [], alias="metricsScores"
     )
     hyperparameters: Optional[Dict[Any, Any]] = Field(None)
-    model: Optional[str] = Field(None)
-    user_prompt_template: Optional[str] = Field(
-        None, alias="userPromptTemplate"
-    )
     test_passed: Optional[int] = Field(None, alias="testPassed")
     test_failed: Optional[int] = Field(None, alias="testFailed")
     run_duration: float = Field(0.0, alias="runDuration")
