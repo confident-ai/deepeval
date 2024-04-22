@@ -1,5 +1,6 @@
 import json
-from typing import Any, Optional, List, Union
+from typing import Any, Optional, List, Union, Tuple
+from deepeval.models import GPTModel, DeepEvalBaseLLM
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -13,7 +14,7 @@ def validate_conversational_test_case(
     test_case: ConversationalTestCase,
     metric: BaseMetric,
 ) -> LLMTestCase:
-    if len(test_case.messages) is 0:
+    if len(test_case.messages) == 0:
         error_str = "'messages' in conversational test case cannot be empty."
         metric.error = error_str
         raise ValueError(error_str)
@@ -62,3 +63,19 @@ def trimAndLoadJson(
         raise ValueError(error_str)
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
+
+
+def initialize_model(
+    model: Optional[Union[str, DeepEvalBaseLLM, GPTModel]] = None,
+) -> Tuple[DeepEvalBaseLLM, bool]:
+    """
+    Returns a tuple of (initialized DeepEvalBaseLLM, using_native_model boolean)
+    """
+    # If model is a GPTModel, it should be deemed as using native model
+    if isinstance(model, GPTModel):
+        return model, True
+    # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
+    if isinstance(model, DeepEvalBaseLLM):
+        return model, False
+    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
+    return GPTModel(model=model), True

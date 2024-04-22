@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 
 
 class MetricMetadata(BaseModel):
@@ -32,6 +32,11 @@ class LLMApiTestCase(BaseModel):
     # make optional, not all test cases in a conversation will be evaluated
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     order: Union[int, None] = Field(None)
+    # These should map 1 to 1 from golden
+    additional_metadata: Optional[Dict] = Field(
+        None, alias="additionalMetadata"
+    )
+    comments: Optional[str] = Field(None)
 
     def update(self, metric_metadata: MetricMetadata):
         if self.metrics_metadata is None:

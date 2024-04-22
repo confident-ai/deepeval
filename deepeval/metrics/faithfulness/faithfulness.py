@@ -13,8 +13,9 @@ from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
+    initialize_model,
 )
-from deepeval.models import GPTModel, DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.telemetry import capture_metric_type
@@ -41,12 +42,7 @@ class FaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
-        if isinstance(model, DeepEvalBaseLLM):
-            self.using_native_model = False
-            self.model = model
-        else:
-            self.using_native_model = True
-            self.model = GPTModel(model=model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
