@@ -16,6 +16,7 @@ from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
+    initialize_model,
 )
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
@@ -84,6 +85,7 @@ class GEval(BaseMetric):
             )
 
         self.criteria = criteria
+        self.model, self.using_native_model = initialize_model(model)
         if isinstance(model, DeepEvalBaseLLM):
             self.using_native_model = False
             self.model = model
