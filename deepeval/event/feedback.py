@@ -14,6 +14,14 @@ def send_feedback(
     raise_expection: Optional[bool] = False,
 ) -> str:
     try:
+        if rating is None and expected_response is None and explanation is None:
+            raise ValueError(
+                "'rating', 'expected_response', and 'explanation' cannot all be None."
+            )
+
+        if rating < 0 or rating > 10:
+            raise ValueError("'rating' must be between 0 and 10, inclusive.")
+
         api_event = APIFeedback(
             eventId=event_id,
             provider=provider,
