@@ -16,9 +16,8 @@ from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
-    initialize_model,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import GPTModel, DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
 from deepeval.metrics.indicator import metric_progress_indicator
 
@@ -85,7 +84,12 @@ class GEval(BaseMetric):
             )
 
         self.criteria = criteria
-        self.model, self.using_native_model = initialize_model(model)
+        if isinstance(model, DeepEvalBaseLLM):
+            self.using_native_model = False
+            self.model = model
+        else:
+            self.using_native_model = True
+            self.model = GPTModel(model=model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
         self.threshold = 1 if strict_mode else threshold
@@ -196,9 +200,14 @@ class GEval(BaseMetric):
             value = getattr(test_case, param.value)
             text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
 
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params
+        )
+
         prompt = GEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
+            parameters=g_eval_params_str
         )
 
         try:
@@ -240,9 +249,14 @@ class GEval(BaseMetric):
             value = getattr(test_case, param.value)
             text += f"{param.value}: {value} \n\n"
 
+        g_eval_params_str = construct_g_eval_params_string(
+                    self.evaluation_params
+                )
+        
         prompt = GEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
+            parameters=g_eval_params_str,
         )
 
         try:
@@ -375,3 +389,5 @@ class GEval(BaseMetric):
     @property
     def __name__(self):
         return f"{self.name} (GEval)"
+
+
