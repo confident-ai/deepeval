@@ -1,26 +1,6 @@
 from typing import Optional, List, Dict
 from deepeval.api import Api, Endpoints
-from pydantic import BaseModel, Field
-
-
-class APIEvent(BaseModel):
-    name: str = Field(..., alias="name")
-    model: str
-    input: str
-    response: str
-    retrieval_context: Optional[List[str]] = Field(
-        None, alias="retrievalContext"
-    )
-    completion_time: Optional[float] = Field(None, alias="completionTime")
-    token_usage: Optional[float] = Field(None, alias="tokenUsage")
-    token_cost: Optional[float] = Field(None, alias="tokenCost")
-    distinct_id: Optional[str] = Field(None, alias="distinctId")
-    conversation_id: Optional[str] = Field(None, alias="conversationId")
-    additional_data: Optional[Dict] = Field(None, alias="additionalData")
-
-
-class EventHttpResponse(BaseModel):
-    eventId: str
+from deepeval.event.api import APIEvent, EventHttpResponse
 
 
 def track(
@@ -35,7 +15,8 @@ def track(
     distinct_id: Optional[str] = None,
     conversation_id: Optional[str] = None,
     additional_data: Optional[Dict] = None,
-    fail_silently: Optional[bool] = True,
+    fail_silently: Optional[bool] = False,
+    raise_expection: Optional[bool] = False,
     run_async: Optional[bool] = True,
 ) -> str:
     try:
@@ -66,5 +47,10 @@ def track(
         response = EventHttpResponse(eventId=result["eventId"])
         return response.eventId
     except Exception as e:
-        if not fail_silently:
+        if fail_silently:
+            return
+
+        if raise_expection:
             raise (e)
+        else:
+            print(str(e))
