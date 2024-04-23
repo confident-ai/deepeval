@@ -11,7 +11,7 @@ def send_feedback(
     expected_response: Optional[str] = None,
     explanation: Optional[str] = None,
     fail_silently: Optional[bool] = False,
-    raise_expection: Optional[bool] = False,
+    raise_expection: Optional[bool] = True,
 ) -> str:
     try:
         if rating is None and expected_response is None and explanation is None:

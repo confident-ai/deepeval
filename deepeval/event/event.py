@@ -16,10 +16,17 @@ def track(
     conversation_id: Optional[str] = None,
     additional_data: Optional[Dict] = None,
     fail_silently: Optional[bool] = False,
-    raise_expection: Optional[bool] = False,
+    raise_expection: Optional[bool] = True,
     run_async: Optional[bool] = True,
 ) -> str:
     try:
+        if additional_data and not all(
+            isinstance(value, str) for value in additional_data.values()
+        ):
+            raise ValueError(
+                "All values in the 'additional_data' dictionary must of type string."
+            )
+
         api_event = APIEvent(
             name=event_name,
             model=model,
