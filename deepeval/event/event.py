@@ -14,7 +14,8 @@ def track(
     token_cost: Optional[float] = None,
     distinct_id: Optional[str] = None,
     conversation_id: Optional[str] = None,
-    additional_data: Optional[Dict] = None,
+    additional_data: Optional[Dict[str, str]] = None,
+    hyperparameters: Optional[Dict[str, str]] = {},
     fail_silently: Optional[bool] = False,
     raise_expection: Optional[bool] = True,
     run_async: Optional[bool] = True,
@@ -24,12 +25,20 @@ def track(
             isinstance(value, str) for value in additional_data.values()
         ):
             raise ValueError(
-                "All values in the 'additional_data' dictionary must of type string."
+                "All values in the 'additional_data' must of type string."
             )
+
+        if hyperparameters and not all(
+            isinstance(value, str) for value in hyperparameters.values()
+        ):
+            raise ValueError(
+                "All values in the 'hyperparameters' must of type string."
+            )
+
+        hyperparameters["model"] = model
 
         api_event = APIEvent(
             name=event_name,
-            model=model,
             input=input,
             response=response,
             retrievalContext=retrieval_context,
@@ -39,6 +48,7 @@ def track(
             distinctId=distinct_id,
             conversationId=conversation_id,
             additionalData=additional_data,
+            hyperparameters=hyperparameters,
         )
         api = Api()
         try:
