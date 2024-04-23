@@ -83,6 +83,7 @@ from deepeval.synthesizer import Synthesizer
 synthesizer = Synthesizer()
 dataset = EvaluationDataset()
 dataset.generate_goldens_from_docs(
+    synthesizer=synthesizer,
     document_paths=['example_1.txt', 'example_2.docx', 'example_3.pdf'],
     max_goldens_per_document=2
 )
