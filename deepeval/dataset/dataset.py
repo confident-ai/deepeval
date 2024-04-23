@@ -1,11 +1,13 @@
 from typing import List, Optional, Union
 from dataclasses import dataclass, field
 from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
 import json
 import csv
 import webbrowser
 import os
 import datetime
+import time
 
 from deepeval.metrics import BaseMetric
 from deepeval.api import Api, Endpoints
@@ -343,38 +345,57 @@ class EvaluationDataset:
     def pull(self, alias: str, auto_convert_goldens_to_test_cases: bool = True):
         if is_confident():
             api = Api()
-            result = api.get_request(
-                endpoint=Endpoints.DATASET_ENDPOINT.value,
-                params={"alias": alias},
-            )
-
-            response = DatasetHttpResponse(
-                goldens=result["goldens"],
-                conversationalGoldens=result["conversationalGoldens"],
-                datasetId=result["datasetId"],
-            )
-
-            self._alias = alias
-            self._id = response.datasetId
-
-            if auto_convert_goldens_to_test_cases:
-                llm_test_cases = convert_goldens_to_test_cases(
-                    response.goldens, alias, response.datasetId
+            with Progress(
+                SpinnerColumn(style="rgb(106,0,255)"),
+                TextColumn("[progress.description]{task.description}"),
+                transient=False,
+            ) as progress:
+                task_id = progress.add_task(
+                    f"Pulling [rgb(106,0,255)]'{alias}'[/rgb(106,0,255)] from Confident AI...",
+                    total=100,
                 )
-                conversational_test_cases = (
-                    convert_convo_goldens_to_convo_test_cases(
-                        response.conversational_goldens,
-                        alias,
-                        response.datasetId,
+                start_time = time.perf_counter()
+                result = api.get_request(
+                    endpoint=Endpoints.DATASET_ENDPOINT.value,
+                    params={"alias": alias},
+                )
+
+                response = DatasetHttpResponse(
+                    goldens=result["goldens"],
+                    conversationalGoldens=result["conversationalGoldens"],
+                    datasetId=result["datasetId"],
+                )
+
+                self._alias = alias
+                self._id = response.datasetId
+
+                if auto_convert_goldens_to_test_cases:
+                    llm_test_cases = convert_goldens_to_test_cases(
+                        response.goldens, alias, response.datasetId
                     )
+                    conversational_test_cases = (
+                        convert_convo_goldens_to_convo_test_cases(
+                            response.conversational_goldens,
+                            alias,
+                            response.datasetId,
+                        )
+                    )
+                    self._llm_test_cases.extend(llm_test_cases)
+                    self._conversational_test_cases.extend(
+                        conversational_test_cases
+                    )
+                else:
+                    self.goldens = response.goldens
+                    self.conversational_goldens = (
+                        response.conversational_goldens
+                    )
+
+                end_time = time.perf_counter()
+                time_taken = format(end_time - start_time, ".2f")
+                progress.update(
+                    task_id,
+                    description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
                 )
-                self._llm_test_cases.extend(llm_test_cases)
-                self._conversational_test_cases.extend(
-                    conversational_test_cases
-                )
-            else:
-                self.goldens = response.goldens
-                self.conversational_goldens = response.conversational_goldens
         else:
             raise Exception(
                 "Run `deepeval login` to pull dataset from Confident AI"
