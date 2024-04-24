@@ -24,8 +24,6 @@ def send_feedback(
 
         if rating < 0 or rating > 10:
             raise ValueError("'rating' must be between 0 and 10, inclusive.")
-        
-
 
         api_event = APIFeedback(
             eventId=event_id,
