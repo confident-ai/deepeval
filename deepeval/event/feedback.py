@@ -14,6 +14,9 @@ def send_feedback(
     raise_expection: Optional[bool] = True,
 ) -> str:
     try:
+        if provider != "user" and provider != "reviewer":
+            raise ValueError("'provider' must be either 'user' or 'reviewer'.")
+
         if rating is None and expected_response is None and explanation is None:
             raise ValueError(
                 "'rating', 'expected_response', and 'explanation' cannot all be None."
@@ -21,6 +24,8 @@ def send_feedback(
 
         if rating < 0 or rating > 10:
             raise ValueError("'rating' must be between 0 and 10, inclusive.")
+        
+
 
         api_event = APIFeedback(
             eventId=event_id,
