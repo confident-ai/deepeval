@@ -1,12 +1,12 @@
 ---
 id: confident-ai-evals-in-production
-title: Evals in Production
-sidebar_label: Evals in Production
+title: Monitoring in Production
+sidebar_label: Monitoring in Production
 ---
 
 ## Quick Summary
 
-`deepeval` allows you to live monitor LLM responses in production, which you can enable real-time evaluations on. By tracking responses, you can leverage our hosted evaluation infrastructure to identify unsatisfactory LLM responses, have human annotators send feedback to such responses, and improve your evaluation dataset over time.
+`deepeval` allows you to live monitor LLM responses in production, which you can **enable real-time evaluations** on. By monitoring responses, you can leverage our hosted evaluation infrastructure to identify unsatisfactory LLM responses, have human annotators send feedback to such responses, and improve your evaluation dataset over time.
 
 ## Monitoring Live Responses
 
@@ -50,7 +50,7 @@ There are four mandatory and ten optional parameters when using the `track()` fu
 Please do **NOT** provide placeholder values for optional parameters. Leave it blank instead.
 :::
 
-Tracking events allow you to monitor LLM responses in production. The `track()` function returns an `event_id` upon a successful API request to Confident's servers.
+The `track()` function returns an `event_id` upon a successful API request to Confident's servers, which you can later use to send human feedback regarding a particular LLM response you've tracked.
 
 ```python
 import deepeval
@@ -58,7 +58,7 @@ import deepeval
 event_id = deepeval.track(...)
 ```
 
-You can use this `event_id` to send human feedback regarding a particular LLM response.
+**Congratulations!** With a few lines of code, `deepeval` will now automatically log all LLM responses in production to Confident AI.
 
 ## Sending Human Feedback
 
@@ -69,11 +69,12 @@ There are two types of feedback:
 - **User provided feedback.** A user feedback, is feedback provided by your end users. If you're building a discord bot for example, this will likely be the users interacting with your discord bot on a daily basis.
 - **Reviewer provided feedback.** A reviewer feedback, is feedback provided by your LLM quality assurance personnel, whoever they might be. These might be data annotators and labellers, or even domain experts that checking the quality of LLM responses in production.
 
-Using an `event_id` returned from `track()`, here's how you can send feedback to Confident:
+Using the `event_id` returned from `track()`, here's how you can send feedback to Confident:
 
 ```python
 import deepeval
-...
+
+event_id = deepeval.track(...)
 
 deepeval.send_feedback(
     event_id=event_id,
