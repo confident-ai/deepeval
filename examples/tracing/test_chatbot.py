@@ -75,28 +75,28 @@ class Chatbot:
 #     llm
 
 
-
 import pytest
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric
 
 chatbot = Chatbot()
-chatbot.query(user_input=input)
-print(get_trace_stack())
+# chatbot.query(user_input=input)
+# print(get_trace_stack())
 
-# def test_hallucination():
-#     context = [
-#         "Be a natural-born citizen of the United States.",
-#         "Be at least 35 years old.",
-#         "Have been a resident of the United States for 14 years.",
-#     ]
-#     input = "What are the requimrents to be president?"
 
-#     metric = HallucinationMetric(threshold=0.8)
-#     test_case = LLMTestCase(
-#         input=input,
-#         actual_output=chatbot.query(user_input=input),
-#         context=context,
-#     )
-#     assert_test(test_case, [metric])
+def test_hallucination():
+    context = [
+        "Be a natural-born citizen of the United States.",
+        "Be at least 35 years old.",
+        "Have been a resident of the United States for 14 years.",
+    ]
+    input = "What are the requimrents to be president?"
+
+    metric = HallucinationMetric(threshold=0.8)
+    test_case = LLMTestCase(
+        input=input,
+        actual_output=chatbot.query(user_input=input),
+        context=context,
+    )
+    assert_test(test_case, [metric])

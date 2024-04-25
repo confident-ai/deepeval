@@ -1,4 +1,8 @@
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, set_global_handler
+from llama_index.core import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    set_global_handler,
+)
 from deepeval.integrations.llama_index import DeepEvalToxicityEvaluator
 
 set_global_handler("deepeval")
