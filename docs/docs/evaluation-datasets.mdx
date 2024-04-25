@@ -30,12 +30,7 @@ second_test_case = LLMTestCase(input="...", actual_output="...")
 
 test_cases = [first_test_case, second_test_case]
 
-dataset = EvaluationDataset(
-    # alias is optional, but helps you
-    # identify your dataset on Confident AI
-    alias="My first dataset",
-    test_cases=test_cases
-)
+dataset = EvaluationDataset(test_cases=test_cases)
 ```
 
 You can also append a test case to an `EvaluationDataset` through the `test_cases` instance variable:
@@ -60,12 +55,7 @@ second_golden = Golden(input="...")
 
 goldens = [first_golden, second_golden]
 
-dataset = EvaluationDataset(
-    # alias is optional, but helps you
-    # identify your dataset on Confident AI
-    alias="My first dataset",
-    goldens=goldens
-)
+dataset = EvaluationDataset(goldens=goldens)
 ```
 
 :::note
