@@ -1,14 +1,14 @@
 ---
 id: confident-ai-evals-in-production
-title: Evals in Production
-sidebar_label: Evals in Production
+title: Monitoring in Production
+sidebar_label: Monitoring in Production
 ---
 
 ## Quick Summary
 
-`deepeval` allows you to live monitor LLM responses in production, which you can enable real-time evaluations on. By tracking responses, you can leverage our hosted evaluation infrastructure to identify unsatisfactory LLM responses, have human annotators send feedback to such responses, and improve your evaluation dataset over time.
+`deepeval` allows you to live monitor LLM responses in production, which you can **enable real-time evaluations** on. By monitoring responses, you can leverage our hosted evaluation infrastructure to identify unsatisfactory LLM responses, have human annotators send feedback to such responses, and improve your evaluation dataset over time.
 
-## Monitor Live Responses
+## Monitoring Live Responses
 
 To monitor LLM responses, use the `deepeval.track(...)` method in your LLM application to start tracking responses.
 
@@ -22,38 +22,82 @@ deepeval.track(
     model="gpt-4",
     input="input",
     response="response",
-    distinct_id="...",
-    conversation_id="...",
-    # for RAG pipelines
-    retrieval_context=["..."],
-    completion_time=8.23,
-    token_usage=134,
-    token_cost=0.23,
-    fail_silently=True
+    hyperparameters={
+        "prompt template": "...",
+        "temperature": "3"
+    }
 )
 ```
 
-The `track()` function takes in the following arguments:
+There are four mandatory and ten optional parameters when using the `track()` function to monitor responses in production:
 
-- `event_name`: type `str` specifying the event tracked
-- `model`: type `str` specifying the name of the LLM model used
-- `input`: type `str`
-- `response`: type `str`
-- [Optional] `distinct_id`: type `str` to identify **end users** using your LLM application
-- [Optional] `conversation_id`: type `str` to **group together multiple messages** under a single conversation thread
-- [Optional] `completion_time`: type `float` that indicates how many **seconds** it took your LLM application to complete
-- [Optional] `retrieval_context`: type `list[str]` that indicates the context that were retrieved in your RAG pipeline
+- `event_name`: type `str` specifying the type of event tracked.
+- `model`: type `str` specifying the name of the LLM model used.
+- `input`: type `str`.
+- `response`: type `str`.
+- [Optional] `retrieval_context`: type `list[str]` that indicates the context that were retrieved in your RAG pipeline.
+- [Optional] `additional_data`: type `dict[str,str]`. You can provide a dictionary to specify any additional data associated with the response.
+- [Optional] `hyperparameters`: type `dict[str,str]`. You can provide a dictionary to specify any additional hyperparamters used to generate the response.
+- [Optional] `distinct_id`: type `str` to identify **end users** using your LLM application.
+- [Optional] `conversation_id`: type `str` to **group together multiple messages** under a single conversation thread.
+- [Optional] `completion_time`: type `float` that indicates how many **seconds** it took your LLM application to complete.
 - [Optional] `token_usage`: type `float`
 - [Optional] `token_cost`: type `float`
-- [Optional] `fail_silently`: type `bool`, defaults to True. You should try setting this to `False` if your events are not logging properly.
+- [Optional] `fail_silently`: type `bool`. You should set this to `False` in development to check if tracking is working properly. Defaulted to `False`.
+- [Optional] `raise_expection`: type `bool`. You should set this to `False` in production if you don't want to raise expections in production. Defaulted to `True`.
 
 :::caution
 Please do **NOT** provide placeholder values for optional parameters. Leave it blank instead.
 :::
 
-## Send Human Feedback
+The `track()` function returns an `event_id` upon a successful API request to Confident's servers, which you can later use to send human feedback regarding a particular LLM response you've tracked.
 
-_coming soon..._
+```python
+import deepeval
+
+event_id = deepeval.track(...)
+```
+
+**Congratulations!** With a few lines of code, `deepeval` will now automatically log all LLM responses in production to Confident AI.
+
+## Sending Human Feedback
+
+`deepeval` allows you to send human feedback for a particular LLM response by specifying an `event_id` returned through the `track()` function.
+
+There are two types of feedback:
+
+- **User provided feedback.** A user feedback, is feedback provided by your end users. If you're building a discord bot for example, this will likely be the users interacting with your discord bot on a daily basis.
+- **Reviewer provided feedback.** A reviewer feedback, is feedback provided by your LLM quality assurance personnel, whoever they might be. These might be data annotators and labellers, or even domain experts that checking the quality of LLM responses in production.
+
+Using the `event_id` returned from `track()`, here's how you can send feedback to Confident:
+
+```python
+import deepeval
+
+event_id = deepeval.track(...)
+
+deepeval.send_feedback(
+    event_id=event_id,
+    provider="user",
+    rating=6,
+    explanation="...",
+    expected_response="..."
+)
+```
+
+There are three mandatory and four optional parameters when using the `send_feedback()` function:
+
+- `event_id`: a string representing the `event_id` returned from the `deepeval.track()` function.
+- `provider`: a string of either `"user"` **OR** `"reviewer"` to specify the type of feedback provider.
+- [Optional] `rating`: an integar ranging from 0 - 10, inclusive.
+- [Optional] `explanation`: a string that serves as the explanation for the given rating.
+- [Optional] `expected_response`: a string representing what the ideal response is.
+- [Optional] `fail_silently`: a boolean which when set to `True` will neither print nor raise any exceptions on error. Defaulted to `False`.
+- [Optional] `raise_expection`: a boolean which when set to `True` will not raise any expections on error. Defaulted to `True`.
+
+:::info
+Although `rating`, `explanation`, and `expected_response` are all optional, you **MUST** provide at least one of the three to send feedback.
+:::
 
 ## Responses on Confident AI
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "0.21.32"
+version = "0.21.34"
 description = "The Evaluation Framework for LLMs"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -50,3 +50,9 @@ line-length = 80
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "-m 'not skip_test'"
+markers = [
+    "skip_test: skip the test",
+]
