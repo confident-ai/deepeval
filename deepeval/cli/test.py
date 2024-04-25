@@ -75,6 +75,12 @@ def run(
         "-i",
         help="Whether to ignore errors or not",
     ),
+    mark: Optional[str] = typer.Option(
+        None,
+        "--mark",
+        "-m",
+        help="List of marks to run the tests with.",
+    ),
 ):
     """Run a test"""
     delete_file_if_exists(TEMP_FILE_NAME)
@@ -118,6 +124,9 @@ def run(
         pytest_args.extend(["--count", str(repeat)])
         if repeat < 1:
             raise ValueError("The repeat argument must be at least 1.")
+
+    if mark:
+        pytest_args.extend(["-m", mark])
 
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])
