@@ -49,6 +49,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         trace_id: Optional[str] = None,
         trace_map: Optional[Dict[str, List[str]]] = None,
     ) -> None:
+        print(trace_manager.get_trace_stack())
         return
 
     def on_event_start(
@@ -62,6 +63,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         trace_instance = self.create_trace_instance(event_type)
         self.event_map[event_id] = trace_instance
         trace_manager.append_to_trace_stack(trace_instance)
+        print(trace_instance)
         return
 
     def on_event_end(
@@ -75,6 +77,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         trace_instance.executionTime = (
             perf_counter() - trace_instance.executionTime
         )
+        print(payload, "END @@@@@@@@")
         input_kwargs = {}
         if payload is not None:
             for event in EventPayload:
@@ -102,6 +105,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         current_time = perf_counter()
         type = self.convert_event_type_to_deepeval_trace_type(event_type)
         name = event_type.capitalize()
+        # Do stuff here
         trace_instance_input = {"args": None, "kwargs": None}
         if event_type == CBEventType.LLM:
             trace_instance = LlmTrace(

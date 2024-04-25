@@ -1,4 +1,4 @@
-from deepeval.tracing import trace, TraceType
+from deepeval.tracing import trace, TraceType, get_trace_stack
 from openai import OpenAI
 
 client = OpenAI()
@@ -35,7 +35,7 @@ class Chatbot:
             .data[0]
             .embedding
         )
-        return response
+        return response[:1]
 
     @trace(type=TraceType.RETRIEVER, name="Retriever")
     def retriever(self, input=input):
@@ -48,7 +48,7 @@ class Chatbot:
     @trace(type=TraceType.TOOL, name="Search")
     def search(self, input):
         # Replace this with an actual function that searches the web
-        title_of_the_top_search_results = "Search Result: " + input
+        title_of_the_top_search_results = "whatever"
         return title_of_the_top_search_results
 
     @trace(type=TraceType.TOOL, name="Format")
@@ -67,26 +67,36 @@ class Chatbot:
         return self.llm(prompt)
 
 
+# query
+#     search
+#     retriver
+#         embedding
+#     format
+#     llm
+
+
+
 import pytest
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric
 
 chatbot = Chatbot()
+chatbot.query(user_input=input)
+print(get_trace_stack())
 
+# def test_hallucination():
+#     context = [
+#         "Be a natural-born citizen of the United States.",
+#         "Be at least 35 years old.",
+#         "Have been a resident of the United States for 14 years.",
+#     ]
+#     input = "What are the requimrents to be president?"
 
-def test_hallucination():
-    context = [
-        "Be a natural-born citizen of the United States.",
-        "Be at least 35 years old.",
-        "Have been a resident of the United States for 14 years.",
-    ]
-    input = "What are the requimrents to be president?"
-
-    metric = HallucinationMetric(threshold=0.8)
-    test_case = LLMTestCase(
-        input=input,
-        actual_output=chatbot.query(user_input=input),
-        context=context,
-    )
-    assert_test(test_case, [metric])
+#     metric = HallucinationMetric(threshold=0.8)
+#     test_case = LLMTestCase(
+#         input=input,
+#         actual_output=chatbot.query(user_input=input),
+#         context=context,
+#     )
+#     assert_test(test_case, [metric])

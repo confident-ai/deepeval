@@ -606,7 +606,8 @@ class TestRunManager:
 
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
-        self.post_test_run(test_run)
+        print(test_run)
+        # self.post_test_run(test_run)
 
 
 test_run_manager = TestRunManager()
