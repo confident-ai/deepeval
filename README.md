@@ -196,7 +196,7 @@ print(answer_relevancy_metric.reason)
 
 Note that some metrics are for RAG pipelines, while others are for fine-tuning. Make sure to use our docs to pick the right one for your use case.
 
-## Evaluting a Dataset / Test Cases in Bulk
+## Evaluating a Dataset / Test Cases in Bulk
 
 In DeepEval, a dataset is simply a collection of test cases. Here is how you can evaluate these in bulk:
 
