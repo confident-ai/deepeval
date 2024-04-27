@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from functools import wraps
-from typing import Any, Callable, List, Union, Optional
+from typing import Any, Callable, List, Union, Optional, Dict
 from time import perf_counter
 import traceback
 from inspect import signature
@@ -26,6 +26,7 @@ class TraceStatus(Enum):
 @dataclass
 class LlmMetadata:
     model: str
+    messages: List[Dict[str, str]]
 
 
 @dataclass
@@ -85,6 +86,7 @@ class TraceManager:
 
     def set_dict_trace_stack(self, dict_trace_stack):
         self._local.dict_trace_stack = dict_trace_stack
+        print(dict_trace_stack)
 
     def get_and_reset_dict_trace_stack(self):
         dict_trace_stack = getattr(self._local, "dict_trace_stack", None)
