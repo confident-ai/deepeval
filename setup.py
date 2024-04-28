@@ -29,7 +29,7 @@ setup(
         "langchain_openai",
         "ragas",
         "docx2txt~=0.8",
-        "importlib-metadata~=6.0.2",
+        "importlib-metadata>=6.0.2",
         "tenacity~=8.2.3",
     ],
     extras_require={
