@@ -25,14 +25,14 @@ class TraceStatus(Enum):
 
 @dataclass
 class LlmMetadata:
-    model: str
-    messages: List[Dict[str, str]]
-
+    model: Optional[str]
+    token_count: Optional[Dict[str, int]]
+    hyperparameters: Optional[Dict[str, Any]]
+    output_messages: Optional[List[Dict[str, str]]]
 
 @dataclass
 class EmbeddingMetadata:
-    model: str
-
+    model: Optional[str]
 
 @dataclass
 class BaseTrace:
@@ -85,8 +85,8 @@ class TraceManager:
         self.get_trace_stack().append(trace_instance)
 
     def set_dict_trace_stack(self, dict_trace_stack):
-        self._local.dict_trace_stack = dict_trace_stack
         print(dict_trace_stack)
+        self._local.dict_trace_stack = dict_trace_stack
 
     def get_and_reset_dict_trace_stack(self):
         dict_trace_stack = getattr(self._local, "dict_trace_stack", None)
