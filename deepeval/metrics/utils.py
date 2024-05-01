@@ -50,12 +50,13 @@ def check_llm_test_case_params(
 def trimAndLoadJson(
     input_string: str, metric: Optional[BaseMetric] = None
 ) -> Any:
+    input_string = input_string.replace("```json","```")
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
     jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
 
     try:
-        return json.loads(jsonStr)
+        return json.loads([jsonStr])
     except json.JSONDecodeError:
         error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
         if metric is not None:
