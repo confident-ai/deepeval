@@ -79,3 +79,8 @@ def initialize_model(
         return model, False
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return GPTModel(model=model), True
+
+def fixJson(json_str, model: Optional[Union[str, DeepEvalBaseLLM, GPTModel]] = None):
+    prompt = f"fix this json and return only json : ````{json_str}```"
+    res = model.generate(prompt)
+    return prompt

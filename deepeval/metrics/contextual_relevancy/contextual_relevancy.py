@@ -6,6 +6,7 @@ from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
+    fixJson,
     check_llm_test_case_params,
     initialize_model,
 )
@@ -173,11 +174,13 @@ class ContextualRelevancyMetric(BaseMetric):
         verdicts = []
         if self.using_native_model:
             for res, _ in results:
+                res = fixJson(self.model, res)
                 data = trimAndLoadJson(res, self)
                 verdict = ContextualRelevancyVerdict(**data)
                 verdicts.append(verdict)
         else:
             for res in results:
+                res = fixJson(self.model, res),
                 data = trimAndLoadJson(res, self)
                 verdict = ContextualRelevancyVerdict(**data)
                 verdicts.append(verdict)
@@ -197,6 +200,7 @@ class ContextualRelevancyMetric(BaseMetric):
                 self.evaluation_cost += cost
             else:
                 res = self.model.generate(prompt)
+            res = fixJson(self.model, res),
             data = trimAndLoadJson(res, self)
             verdict = ContextualRelevancyVerdict(**data)
             verdicts.append(verdict)

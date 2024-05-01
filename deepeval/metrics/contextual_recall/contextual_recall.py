@@ -5,6 +5,7 @@ from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
+    fixJson,
     check_llm_test_case_params,
     initialize_model,
 )
@@ -178,6 +179,7 @@ class ContextualRecallMetric(BaseMetric):
             self.evaluation_cost += cost
         else:
             res = await self.model.a_generate(prompt)
+        res = fixJson(self.model, res),
         data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualRecallVerdict(**item) for item in data["verdicts"]
@@ -195,6 +197,7 @@ class ContextualRecallMetric(BaseMetric):
             self.evaluation_cost += cost
         else:
             res = self.model.generate(prompt)
+        res = fixJson(self.model, res),
         data = trimAndLoadJson(res, self)
         verdicts = [
             ContextualRecallVerdict(**item) for item in data["verdicts"]

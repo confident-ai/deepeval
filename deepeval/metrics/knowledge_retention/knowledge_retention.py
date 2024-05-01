@@ -6,6 +6,7 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
+    fixJson,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -105,6 +106,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 res, _ = self.model.generate(prompt)
             else:
                 res = self.model.generate(prompt)
+            res = fixJson(self.model, res)
             data = trimAndLoadJson(res, self)
             verdict = KnowledgeRetentionVerdict(index=index, **data)
             verdicts.append(verdict)
@@ -131,6 +133,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 res, _ = self.model.generate(prompt)
             else:
                 res = self.model.generate(prompt)
+            res = fixJson(self.model, res)
             data = trimAndLoadJson(res, self)
             knowledge = Knowledge(data=data)
             knowledges.append(knowledge)
