@@ -1,27 +1,27 @@
-from typing import List, Optional, Union
-from pydantic import BaseModel, Field
 import asyncio
+from typing import List, Optional, Union
 
-from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-    ConversationalTestCase,
-)
+from pydantic import BaseModel, Field
+
 from deepeval.metrics import BaseMetric
-from deepeval.utils import get_or_create_event_loop
-from deepeval.metrics.utils import (
-    validate_conversational_test_case,
-    trimAndLoadJson,
-    check_llm_test_case_params,
-    initialize_model,
-)
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.utils import (
+    check_llm_test_case_params,
+    initialize_model,
+    trimAndLoadJson,
+    validate_conversational_test_case,
+)
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.telemetry import capture_metric_type
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
+)
+from deepeval.utils import get_or_create_event_loop
 
 required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
     LLMTestCaseParams.RETRIEVAL_CONTEXT,
 ]
@@ -48,9 +48,7 @@ class FaithfulnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
 
-    def measure(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
-    ) -> float:
+    def measure(self, test_case: Union[LLMTestCase, ConversationalTestCase]) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)

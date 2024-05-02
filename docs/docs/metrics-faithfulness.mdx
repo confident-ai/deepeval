@@ -16,7 +16,6 @@ Although similar to the `HallucinationMetric`, the faithfulness metric in `deepe
 
 To use the `FaithfulnessMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
-- `input`
 - `actual_output`
 - `retrieval_context`
 
@@ -39,7 +38,6 @@ metric = FaithfulnessMetric(
     include_reason=True
 )
 test_case = LLMTestCase(
-    input="What if these shoes don't fit?",
     actual_output=actual_output,
     retrieval_context=retrieval_context
 )
