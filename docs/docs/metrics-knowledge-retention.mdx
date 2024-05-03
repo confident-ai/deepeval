@@ -116,15 +116,15 @@ There are three optional parameters when creating a `KnowledgeRetentionMetric`:
 - [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-turbo'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
 
 ## How Is It Calculated?
 
 The `KnowledgeRetentionMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Messages with Knowledge Attritions}}{\text{Total Number of Messages}}" />
+<Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Messages with Knowledge Retentions}}{\text{Total Number of Messages}}" />
 
-The `KnowledgeRetentionMetric` first uses an LLM to extract knowledge gained throughout `messages`, before using the same LLM to determine whether each corresponding LLM responses indicates an inability to recall said knowledge.
+The `KnowledgeRetentionMetric` first uses an LLM to extract knowledge gained throughout `messages`, before using the same LLM to determine whether each corresponding LLM responses indicates an ability to recall said knowledge.
 
 :::info
 Unlike other metrics, the `KnowledgeRetentionMetric` is still in beta, and we would love to hear any suggestions on our [discord channel.](https://discord.com/invite/a3K9c8GRGt)

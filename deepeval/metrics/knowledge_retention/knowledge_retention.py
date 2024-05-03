@@ -83,7 +83,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         retention_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict.strip().lower() == "yes":
                 retention_count += 1
 
         score = retention_count / number_of_verdicts
