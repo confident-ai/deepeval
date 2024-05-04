@@ -7,6 +7,9 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from typing import Any
 
 from deepeval.integrations.llama_index import DeepEvalToxicityEvaluator, LlamaIndexCallbackHandler
+from deepeval.metrics import ToxicityMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
 
 ###########################################################
 # set up integration
@@ -46,14 +49,17 @@ index = VectorStoreIndex(nodes)
 # Build query engine
 query_engine = index.as_query_engine(similarity_top_k=5)
 
-def query(user_input):
-    res = query_engine.query(user_input)
-    #evaluator = DeepEvalToxicityEvaluator()
-    #result = evaluator.evaluate_response(query=user_input, response=res)
-    #print(result)
-    return res.response
+user_input = "what does your company do"
+res = query_engine.query(user_input)
+test_case = LLMTestCase(
+    input=user_input,
+    actual_output=res.response,
+)
 
-while True:
-    user_input = input("Enter your question: ")
-    response = query(user_input)
-    print("Bot response:", response)
+# evaluator = DeepEvalToxicityEvaluator()
+# result = evaluator.evaluate_response(query=user_input, response=res)
+# print(result)
+
+metric = ToxicityMetric(threshold=0.5)
+evaluate([test_case], [metric])
+

@@ -12,6 +12,7 @@ from typing import (
 )
 from time import perf_counter
 import json
+import traceback
 
 from llama_index.core.bridge.pydantic import BaseModel
 from llama_index.core.callbacks.base_handler import BaseCallbackHandler
@@ -51,10 +52,10 @@ events_to_ignore = [
     #CBEventType.SYNTHESIZE,
     CBEventType.TREE,
     CBEventType.SUB_QUESTION,
-    CBEventType.TEMPLATING,
+    #CBEventType.TEMPLATING,
     CBEventType.FUNCTION_CALL,
     #CBEventType.RERANKING,
-    CBEventType.EXCEPTION,
+    #CBEventType.EXCEPTION,
     #CBEventType.AGENT_STEP,
 ]
 
@@ -62,6 +63,8 @@ events_to_ignore = [
 class LlamaIndexCallbackHandler(BaseCallbackHandler):
     def __init__(self) -> None:
         self.event_map = {}
+        self._templating_parent_id = {}
+        self._templating_payloads = {}
         super().__init__(
             event_starts_to_ignore=events_to_ignore,
             event_ends_to_ignore=events_to_ignore,
@@ -87,12 +90,12 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         parent_id: str = "",
         **kwargs: Any,
     ) -> str:
-      
-        processed_payload = self.process_payload(event_type, payload, False)
+
+        processed_payload = self.process_payload(event_type, event_id, parent_id, payload, True)
         trace_instance = self.create_trace_instance(event_type, processed_payload)
         self.event_map[event_id] = trace_instance
         trace_manager.append_to_trace_stack(trace_instance)
-
+        
         return
 
     def on_event_end(
@@ -100,11 +103,12 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         event_type: CBEventType,
         payload: Optional[Dict[str, Any]] = None,
         event_id: str = "",
+        parent_id: str = "",
         **kwargs: Any,
     ) -> None:
         
         trace_instance = self.event_map[event_id]
-        processed_payload = self.process_payload(event_type, payload, True)
+        processed_payload = self.process_payload(event_type, event_id, parent_id, payload, True)
         trace_instance = self.update_trace_instance(trace_instance, event_type, processed_payload)
         current_trace_stack = trace_manager.get_trace_stack()
 
@@ -131,8 +135,19 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         type = self.convert_event_type_to_deepeval_trace_type(event_type)
         name = event_type.capitalize()
         trace_instance_input = {"args": None, "kwargs": None}
+        
+        if 'exception' in processed_payload:
+            trace_instance = GenericTrace(
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=trace_instance_input,
+                output={'exception': processed_payload['exception']},
+                status=TraceStatus.ERROR,
+                traces=[],
+            )
 
-        if event_type == CBEventType.LLM:
+        elif event_type == CBEventType.LLM:
             trace_instance = LlmTrace(
                 type=type,
                 executionTime=current_time,
@@ -144,10 +159,13 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 llmMetadata=LlmMetadata(
                     model=processed_payload["llm_model_name"],
                     hyperparameters=processed_payload["llm_hyperparameters"],
-                    output_messages=None,
-                    token_count=None
+                    outputMessages=None,
+                    token_count=None,
+                    llmPromptTemplate=processed_payload.get("llm_prompt_template"),
+                    llmPromptTemplateVariables=processed_payload.get("llm_prompt_template_variables")
                     ),
             )
+
         elif event_type == CBEventType.EMBEDDING:
             trace_instance = EmbeddingTrace(
                 type=type,
@@ -161,6 +179,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     model=processed_payload["embedding_model_name"],
                 ),
             )
+
         elif event_type == CBEventType.RETRIEVE:
             trace_instance = GenericTrace(
                 type=type,
@@ -171,6 +190,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 status=TraceStatus.SUCCESS,
                 traces=[],
             )
+
         elif event_type == CBEventType.QUERY:
             trace_instance = GenericTrace(
                 type=type,
@@ -181,6 +201,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 status=TraceStatus.SUCCESS,
                 traces=[],
             )
+
         elif event_type == CBEventType.SYNTHESIZE:
             trace_instance = GenericTrace(
                 type=type,
@@ -191,6 +212,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 status=TraceStatus.SUCCESS,
                 traces=[],
             )
+
         else:
             trace_instance = GenericTrace(
                 type=type,
@@ -201,9 +223,8 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 status=TraceStatus.SUCCESS,
                 traces=[],
             )
-
         return trace_instance
-    
+
     def update_trace_instance(
             self, 
             trace_instance: BaseTrace,
@@ -215,10 +236,13 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             perf_counter() - trace_instance.executionTime
         )
         
-        if event_type == CBEventType.LLM:
+        if 'exception' in processed_payload:
+            trace_instance.output = {'exception': processed_payload['exception']}
+
+        elif event_type == CBEventType.LLM:
             trace_instance.output = processed_payload['output_value']
-            trace_instance.llmMetadata.output_messages = processed_payload['llm_output_messages']
-            trace_instance.llmMetadata.token_count = {
+            trace_instance.llmMetadata.outputMessages = processed_payload['llm_output_messages']
+            trace_instance.llmMetadata.tokenCount = {
                  "prompt": processed_payload['llm_token_prompt_count'],
                  "completion": processed_payload['llm_token_count_completion'],
                  "total": processed_payload['llm_token_count_total']
@@ -251,18 +275,37 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             return TraceType.RETRIEVER
         elif event_type == CBEventType.EMBEDDING:
             return TraceType.EMBEDDING
+        elif event_type == CBEventType.CHUNKING:
+            return TraceType.CHUNKING
+        elif event_type == CBEventType.NODE_PARSING:
+            return TraceType.NODE_PARSING
+        elif event_type == CBEventType.SYNTHESIZE:
+            return TraceType.SYNTHESIZE
+        elif event_type == CBEventType.QUERY:
+            return TraceType.QUERY
+        elif event_type == CBEventType.RERANKING:
+            return TraceType.RERANKING
+        elif event_type == CBEventType.AGENT_STEP:
+            return TraceType.AGENT_STEP
+
         return event_type.value.capitalize()
 
 
     def process_payload(
         self, 
         event_type: CBEventType,
+        event_id: str, 
+        parent_id: str,
         payload: Optional[Dict[str, Any]] = None,
         is_event_end: bool = True,
     ):
         attributes={}
         if payload == None:
             return attributes
+        
+        exception = payload.get(EventPayload.EXCEPTION)
+        if exception:
+            attributes['exception'] = exception
 
         #########################
         # ignore these events
@@ -370,6 +413,29 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     invocation_parameters["model"] = model_name
                     attributes["llm_hyperparameters"] = json.dumps(invocation_parameters)
         
+        ###########################
+        # process templates
+        payloads = [payload.copy()]
+        if is_event_end == False:
+            if event_type is CBEventType.TEMPLATING:
+                    self._templating_parent_id[event_id] = parent_id
+                    if payloads:
+                        if parent_id in self._templating_payloads:
+                            self._templating_payloads[parent_id].extend(payloads)
+                        else:
+                            self._templating_payloads[parent_id] = payloads
+
+            if event_type is CBEventType.LLM:
+                for templating_payload in self._templating_payloads.pop(parent_id, ()):
+                    attributes.update(self._template_attributes(templating_payload))
+        else:
+            if event_type is CBEventType.TEMPLATING:
+                if (parent_id := self._templating_parent_id.pop(event_id, None)) and payload:
+                    if parent_id in self._templating_payloads:
+                        self._templating_payloads[parent_id].append(payload)
+                    else:
+                        self._templating_payloads[parent_id] = [payload]
+            
         return attributes
     
     ##################################################
@@ -399,6 +465,14 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             yield from self._get_token_counts_from_mapping(usage)
         elif isinstance(usage, object):
             yield from self._get_token_counts_from_object(usage)
+    
+    def _template_attributes(
+            self,
+            payload: Dict[str, Any]) -> Iterator[Tuple[str, Any]]:
+        if template := payload.get(EventPayload.TEMPLATE):
+            yield "llm_prompt_template", template
+        if template_vars := payload.get(EventPayload.TEMPLATE_VARS):
+            yield "llm_prompt_template_variables", json.dumps(template_vars)
             
     def _get_token_counts_from_object(self, usage: object) -> Iterator[Tuple[str, Any]]:
         if (prompt_tokens := getattr(usage, "prompt_tokens", None)) is not None:

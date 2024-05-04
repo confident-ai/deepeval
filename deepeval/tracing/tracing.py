@@ -15,20 +15,26 @@ class TraceType(Enum):
     EMBEDDING = "Embedding"
     TOOL = "Tool"
     AGENT = "Agent"
+    AGENT_STEP = "Agent Step"
     CHAIN = "Chain"
-
+    CHUNKING = "Chunking"
+    NODE_PARSING = "Node Parsing"
+    SYNTHESIZE = "Synthesize"
+    QUERY = "Query"
+    RERANKING = "Reranking"
 
 class TraceStatus(Enum):
     SUCCESS = "Success"
     ERROR = "Error"
-
 
 @dataclass
 class LlmMetadata:
     model: Optional[str]
     token_count: Optional[Dict[str, int]]
     hyperparameters: Optional[Dict[str, Any]]
-    output_messages: Optional[List[Dict[str, str]]]
+    outputMessages: Optional[List[Dict[str, str]]]
+    llmPromptTemplate: Optional[Any]
+    llmPromptTemplateVariables: Optional[Any]
 
 @dataclass
 class EmbeddingMetadata:
@@ -48,7 +54,7 @@ class BaseTrace:
 @dataclass
 class LlmTrace(BaseTrace):
     input: str
-    llmMetadata: LlmMetadata = None
+    llmMetadata: LlmMetadata
 
 
 @dataclass
@@ -85,7 +91,6 @@ class TraceManager:
         self.get_trace_stack().append(trace_instance)
 
     def set_dict_trace_stack(self, dict_trace_stack):
-        print(dict_trace_stack)
         self._local.dict_trace_stack = dict_trace_stack
 
     def get_and_reset_dict_trace_stack(self):
