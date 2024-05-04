@@ -30,7 +30,7 @@ class TraceStatus(Enum):
 @dataclass
 class LlmMetadata:
     model: Optional[str]
-    token_count: Optional[Dict[str, int]]
+    tokenCount: Optional[Dict[str, int]]
     hyperparameters: Optional[Dict[str, Any]]
     outputMessages: Optional[List[Dict[str, str]]]
     llmPromptTemplate: Optional[Any]
