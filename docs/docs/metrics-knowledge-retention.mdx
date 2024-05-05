@@ -122,7 +122,7 @@ There are three optional parameters when creating a `KnowledgeRetentionMetric`:
 
 The `KnowledgeRetentionMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Messages without Knowledge Retentions}}{\text{Total Number of Messages}}" />
+<Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Messages without Knowledge Attritions}}{\text{Total Number of Messages}}" />
 
 The `KnowledgeRetentionMetric` first uses an LLM to extract knowledge gained throughout `messages`, before using the same LLM to determine whether each corresponding LLM responses indicates an inability to recall said knowledge.
 
