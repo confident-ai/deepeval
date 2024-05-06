@@ -134,10 +134,32 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         current_time = perf_counter()
         type = self.convert_event_type_to_deepeval_trace_type(event_type)
         name = event_type.capitalize()
+<<<<<<< Updated upstream
         trace_instance_input = {"args": None, "kwargs": None}
+<<<<<<< Updated upstream
         
         if 'exception' in processed_payload:
             trace_instance = GenericTrace(
+=======
+        if event_type == CBEventType.LLM:
+=======
+        trace_instance_input = None
+        
+        if 'exception' in processed_payload:
+            trace_instance = GenericTrace(
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=trace_instance_input,
+                output={'exception': processed_payload['exception']},
+                status=TraceStatus.ERROR,
+                traces=[],
+            )
+
+        elif event_type == CBEventType.LLM:
+>>>>>>> Stashed changes
+            trace_instance = LlmTrace(
+>>>>>>> Stashed changes
                 type=type,
                 executionTime=current_time,
                 name=name,
@@ -156,14 +178,28 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 output=None,
                 status=TraceStatus.SUCCESS,
                 traces=[],
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+                llmMetadata=LlmMetadata(model="None"),
+=======
+>>>>>>> Stashed changes
                 llmMetadata=LlmMetadata(
                     model=processed_payload["llm_model_name"],
                     hyperparameters=processed_payload["llm_hyperparameters"],
                     outputMessages=None,
+<<<<<<< Updated upstream
                     token_count=None,
                     llmPromptTemplate=processed_payload.get("llm_prompt_template"),
                     llmPromptTemplateVariables=processed_payload.get("llm_prompt_template_variables")
                     ),
+=======
+                    tokenCount=None,
+                    llmPromptTemplate=processed_payload.get("llm_prompt_template"),
+                    llmPromptTemplateVariables=processed_payload.get("llm_prompt_template_variables")
+                    ),
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
             )
 
         elif event_type == CBEventType.EMBEDDING:
@@ -225,6 +261,11 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             )
         return trace_instance
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
     def update_trace_instance(
             self, 
             trace_instance: BaseTrace,
@@ -250,8 +291,17 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         elif event_type == CBEventType.EMBEDDING:
             embeddings = processed_payload['embeddings']
+<<<<<<< Updated upstream
             trace_instance.output = {item['embedding_text']: len(item['embedding_vector']) for item in embeddings}
             trace_instance.input = {'embedding_text': [t['embedding_text'] for t in embeddings]}
+=======
+            trace_instance.output = [
+                {
+                    'embedding_text': item['embedding_text'],
+                    'embedding_vector_length': len(item['embedding_vector'])
+                } for item in embeddings]
+            trace_instance.input = [t['embedding_text'] for t in embeddings]
+>>>>>>> Stashed changes
 
         elif event_type == CBEventType.RETRIEVE:
             documents = processed_payload['retrieval_documents']
@@ -265,6 +315,10 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         
         return trace_instance
             
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
     def convert_event_type_to_deepeval_trace_type(
         self, event_type: CBEventType
     ):
