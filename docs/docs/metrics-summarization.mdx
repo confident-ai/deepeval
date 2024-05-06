@@ -8,6 +8,10 @@ import Equation from "@site/src/components/equation";
 
 The summarization metric uses LLMs to determine whether your LLM (application) is generating factually correct summaries while including the neccessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `actual_output`.
 
+:::note
+The `SummarizationMetric` is the only default metric in `deepeval` that is not cacheable.
+:::
+
 ## Required Arguments
 
 To use the `SummarizationMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:

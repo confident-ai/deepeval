@@ -6,6 +6,10 @@ sidebar_label: G-Eval
 
 G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most verstile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
 
+:::info
+You can run **[real-time evaluations in production](confident-ai-evals-in-production)** on metrics such as `GEval` using [Confident AI.](https://app.confident-ai.com)
+:::
+
 ## Required Arguments
 
 To use the `GEval`, you'll have to provide the following arguments when creating an `LLMTestCase`:
@@ -23,11 +27,15 @@ To create a custom metric that uses LLMs for evaluation, simply instantiate an `
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
-coherence_metric = GEval(
-    name="Coherence",
-    criteria="Coherence - determine if the actual output is coherent with the input.",
+correctness_metric = GEval(
+    name="Correctness",
+    criteria="Determine whether the actual output is factually correct based on the expected output.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
-    evaluation_steps=["Check whether the sentences in 'actual output' aligns with that in 'input'"],
+    evaluation_steps=[
+        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
+        "You should also heavily penalize omission of detail",
+        "Vague language, or contradicting OPINIONS, are OK"
+    ],
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 ```
@@ -37,7 +45,7 @@ There are three mandatory and five optional parameters required when instantiati
 - `name`: name of metric
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
-- [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
+- [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, `GEval` will generate a series of `evaluation_steps` on your behalf based on the provided `criteria`. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-turbo'.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
@@ -54,17 +62,24 @@ from deepeval.test_case import LLMTestCase
 ...
 
 test_case = LLMTestCase(
-    input="The sun is shining bright today",
-    actual_output="The weather's getting really hot."
+    input="The dog chased the cat up the tree, who ran up the tree?",
+    actual_output="It depends, some might consider the cat, while others might argue the dog.",
+    expected_output="The cat."
 )
 
-coherence_metric.measure(test_case)
-print(coherence_metric.score)
-print(coherence_metric.reason)
+correctness_metric.measure(test_case)
+print(correctness_metric.score)
+print(correctness_metric.reason)
 ```
 
-:::tip
-Did you know that in the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the authors used the the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation?
+## How Is It Calculated?
 
-This step was introduced in the paper because it minimizes bias in LLM scoring. **This normalization is handled by `deepeval` by default** (unless you're using a custom model).
+G-Eval is a two-step algorithm that first generates a series of `evaluation_steps` using chain of thoughts (CoTs) based on the given `criteria`, before using the generated steps to determine the final score using the parameters presented in an `LLMTestCase`.
+
+When you provide `evaluation_steps`, the `GEval` metric skips the first step and uses the provided steps to determine the final score instead.
+
+:::tip Did Your Know?
+In the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the authors used the the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation?
+
+This step was introduced in the paper because it minimizes bias in LLM scoring. **This normalization step is automatically handled by `deepeval` by default** (unless you're using a custom model).
 :::

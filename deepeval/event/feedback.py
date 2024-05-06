@@ -7,7 +7,7 @@ from deepeval.event.api import APIFeedback
 def send_feedback(
     event_id: str,
     provider: str,
-    rating: Optional[int] = None,
+    rating: int,
     expected_response: Optional[str] = None,
     explanation: Optional[str] = None,
     fail_silently: Optional[bool] = False,
@@ -16,11 +16,6 @@ def send_feedback(
     try:
         if provider != "user" and provider != "reviewer":
             raise ValueError("'provider' must be either 'user' or 'reviewer'.")
-
-        if rating is None and expected_response is None and explanation is None:
-            raise ValueError(
-                "'rating', 'expected_response', and 'explanation' cannot all be None."
-            )
 
         if rating < 0 or rating > 10:
             raise ValueError("'rating' must be between 0 and 10, inclusive.")

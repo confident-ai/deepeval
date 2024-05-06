@@ -89,15 +89,11 @@ There are three mandatory and four optional parameters when using the `send_feed
 
 - `event_id`: a string representing the `event_id` returned from the `deepeval.track()` function.
 - `provider`: a string of either `"user"` **OR** `"reviewer"` to specify the type of feedback provider.
-- [Optional] `rating`: an integar ranging from 0 - 10, inclusive.
+- `rating`: an integar ranging from 0 - 10, inclusive.
 - [Optional] `explanation`: a string that serves as the explanation for the given rating.
 - [Optional] `expected_response`: a string representing what the ideal response is.
 - [Optional] `fail_silently`: a boolean which when set to `True` will neither print nor raise any exceptions on error. Defaulted to `False`.
 - [Optional] `raise_expection`: a boolean which when set to `True` will not raise any expections on error. Defaulted to `True`.
-
-:::info
-Although `rating`, `explanation`, and `expected_response` are all optional, you **MUST** provide at least one of the three to send feedback.
-:::
 
 ## Responses on Confident AI
 

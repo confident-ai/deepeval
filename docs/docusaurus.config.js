@@ -32,6 +32,7 @@ module.exports = async function createConfigAsync() {
       locales: ['en'],
     },
     plugins: [
+      'docusaurus-plugin-sass',
       [
         "posthog-docusaurus",
         {
@@ -56,7 +57,7 @@ module.exports = async function createConfigAsync() {
             rehypePlugins: [rehypeKatexModule],
           },
           theme: {
-            customCss: require.resolve('./src/css/custom.css'),
+            customCss: require.resolve('./src/css/custom.scss'),
           },
           gtag: {
             trackingID: 'G-N2EGDDYG9M',

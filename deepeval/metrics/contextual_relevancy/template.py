@@ -38,7 +38,7 @@ Example Input: "When what was some of Einstein's achievements?"
 Example:
 {{
     "verdict": "no",
-    "sentence": "Although the context contains information about Einstein winning the Nobel Prize, it irrelevantly includes 'There was a cat' when it has nothing to do with Einstein's achievements."
+    "reason": "Although the context contains information about Einstein winning the Nobel Prize, it irrelevantly includes 'There was a cat' when it has nothing to do with Einstein's achievements."
 }}
 **
 
