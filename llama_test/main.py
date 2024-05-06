@@ -1,4 +1,4 @@
-from chatbot import query
+from llama_test.test_chatbot import query
 
 while True:
     user_input = input("Enter your question: ")

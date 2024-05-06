@@ -503,6 +503,7 @@ class TestRunManager:
                 endpoint=Endpoints.TEST_RUN_ENDPOINT.value,
                 body=body,
             )
+            print(body)
             response = TestRunHttpResponse(
                 testRunId=result["testRunId"],
                 projectId=result["projectId"],
