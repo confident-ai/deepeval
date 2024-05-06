@@ -196,9 +196,13 @@ class GEval(BaseMetric):
             value = getattr(test_case, param.value)
             text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
 
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params
+        )
         prompt = GEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
+            parameters=g_eval_params_str,
         )
 
         try:
@@ -240,9 +244,14 @@ class GEval(BaseMetric):
             value = getattr(test_case, param.value)
             text += f"{param.value}: {value} \n\n"
 
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params
+        )
+
         prompt = GEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
             text=text,
+            parameters=g_eval_params_str,
         )
 
         try:
