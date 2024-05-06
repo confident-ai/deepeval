@@ -130,9 +130,7 @@ def create_api_test_case(
         )
     elif isinstance(test_case, ConversationalTestCase):
         return ConversationalApiTestCase(
-            name=os.getenv(
-                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
-            ),
+            name=os.getenv(PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"),
             success=True,
             metricsMetadata=None,
             runDuration=0,
@@ -186,9 +184,7 @@ def execute_test_cases(
             metric_metadata = None
             # cached_tet_case will always be false for conversationals
             if cached_test_case is not None:
-                cached_metric_data = Cache.get_metric_data(
-                    metric, cached_test_case
-                )
+                cached_metric_data = Cache.get_metric_data(metric, cached_test_case)
                 if cached_metric_data:
                     metric_metadata = cached_metric_data.metric_metadata
 
@@ -226,9 +222,7 @@ def execute_test_cases(
                 )
                 updated_cached_metric_data = CachedMetricData(
                     metric_metadata=cache_metric_metadata,
-                    metric_configuration=Cache.create_metric_configuration(
-                        metric
-                    ),
+                    metric_configuration=Cache.create_metric_configuration(metric),
                 )
                 new_cached_test_case.cached_metrics_data.append(
                     updated_cached_metric_data
@@ -242,9 +236,7 @@ def execute_test_cases(
         test_run_manager.update_test_run(api_test_case, test_case)
 
         ### Cache Test Run ###
-        if isinstance(
-            test_case, LLMTestCase
-        ):  # only cache if not conversational
+        if isinstance(test_case, LLMTestCase):  # only cache if not conversational
             test_run_cache_manager.cache_test_case(
                 test_case,
                 new_cached_test_case,
@@ -299,9 +291,7 @@ async def a_execute_test_cases(
 
             if isinstance(test_case, ConversationalTestCase):
                 # index hardcoded as the last message for now
-                api_test_case.update(
-                    metric_metadata, len(test_case.messages) - 1
-                )
+                api_test_case.update(metric_metadata, len(test_case.messages) - 1)
             else:
                 api_test_case.update(metric_metadata)
 
@@ -314,9 +304,7 @@ async def a_execute_test_cases(
                 )
                 updated_cached_metric_data = CachedMetricData(
                     metric_metadata=cache_metric_metadata,
-                    metric_configuration=Cache.create_metric_configuration(
-                        metric
-                    ),
+                    metric_configuration=Cache.create_metric_configuration(metric),
                 )
                 new_cached_test_case.cached_metrics_data.append(
                     updated_cached_metric_data
@@ -330,9 +318,7 @@ async def a_execute_test_cases(
         test_run_manager.update_test_run(api_test_case, test_case)
 
         ### Cache Test Run ###
-        if isinstance(
-            test_case, LLMTestCase
-        ):  # only cache if not conversational
+        if isinstance(test_case, LLMTestCase):  # only cache if not conversational
             test_run_cache_manager.cache_test_case(
                 test_case,
                 new_cached_test_case,
@@ -358,7 +344,6 @@ def assert_test(
     metrics: List[BaseMetric],
     run_async: bool = True,
 ):
-
     # TODO: keep this for now, blocking conversational metrics like KR
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
@@ -500,3 +485,31 @@ def print_test_result(test_result: TestResult):
     print(f"  - expected output: {test_result.expected_output}")
     print(f"  - context: {test_result.context}")
     print(f"  - retrieval context: {test_result.retrieval_context}")
+
+
+def aggregate_metric_pass_rates(test_results: List[TestResult]):
+    metric_counts = {}
+    metric_successes = {}
+
+    for result in test_results:
+        for metric in result.metrics:
+            metric_name = metric.__class__.__name__
+            if metric_name not in metric_counts:
+                metric_counts[metric_name] = 0
+                metric_successes[metric_name] = 0
+            metric_counts[metric_name] += 1
+            if metric.success:
+                metric_successes[metric_name] += 1
+
+    metric_pass_rates = {
+        metric: (metric_successes[metric] / metric_counts[metric])
+        for metric in metric_counts
+    }
+
+    print("\n" + "=" * 70 + "\n")
+    print("Aggregate Metric Pass Rates\n")
+    for metric, pass_rate in metric_pass_rates.items():
+        print(f"{metric}: {pass_rate:.2%} pass rate")
+    print("\n" + "=" * 70 + "\n")
+
+    return metric_pass_rates

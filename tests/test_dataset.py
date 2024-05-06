@@ -4,7 +4,23 @@ import pytest
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import HallucinationMetric
 from deepeval import assert_test, evaluate
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.evaluate import aggregate_metric_pass_rates, TestResult
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+
+
+class StubMetric(BaseMetric):
+    def __init__(self, _success: bool, _name: str):
+        self.success = _success
+        self.name = _name
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return self.name
 
 
 def test_create_dataset():
@@ -34,33 +50,36 @@ def test_create_dataset():
     assert len(dataset.test_cases) == 10, "Test Cases not loaded from JSON"
 
 
-# test_case = LLMTestCase(
-#     input="What if these shoes don't fit?",
-#     # Replace this with the actual output from your LLM application
-#     actual_output="We offer a 30-day full refund at no extra costs.",
-#     context=["All customers are eligible for a 30 day full refund at no extra costs."]
-# )
-# dataset = EvaluationDataset(alias="123", test_cases=[test_case])
+def test_aggregate_metric_pass_rates():
+    test_results = [
+        TestResult(
+            success=True,
+            metrics=[
+                StubMetric(_success=True, _name="AnswerRelevancyMetric"),
+                StubMetric(_success=True, _name="BiasMetric"),
+            ],
+            input="some input",
+            actual_output="some output",
+            expected_output="expected output",
+            context=["context"],
+            retrieval_context=["retrieval context"],
+        ),
+        TestResult(
+            success=True,
+            metrics=[
+                StubMetric(_success=False, _name="AnswerRelevancyMetric"),
+                StubMetric(_success=True, _name="BiasMetric"),
+            ],
+            input="another input",
+            actual_output="another output",
+            expected_output="another expected output",
+            context=["another context"],
+            retrieval_context=["another retrieval context"],
+        ),
+    ]
 
-# @pytest.mark.parametrize(
-#     "test_case",
-#     dataset,
-# )
-# def test_test_dataset(test_case: LLMTestCase):
-#     metric = HallucinationMetric(threshold=0.5)
-#     assert_test(test_case, [metric])
-
-
-# dataset = EvaluationDataset()
-# dataset.pull("Testa")
-# print(dataset.test_cases)
-# @pytest.mark.parametrize(
-#     "test_case",
-#     dataset,
-# )
-# def test_customer_chatbot(test_case: LLMTestCase):
-#     hallucination_metric = HallucinationMetric(threshold=0.3)
-#     assert_test(test_case, [hallucination_metric])
-
-# dataset = EvaluationDataset()
-# dataset.pull(alias="Evals Dataset")
+    expected_result = {"AnswerRelevancyMetric": 0.5, "BiasMetric": 1.0}
+    result = aggregate_metric_pass_rates(test_results)
+    assert (
+        result == expected_result
+    ), "The aggregate metric pass rates do not match the expected values."
