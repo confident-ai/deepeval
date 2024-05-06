@@ -3,7 +3,7 @@ from deepeval.api import Api, Endpoints
 from deepeval.event.api import APIEvent, EventHttpResponse
 
 
-def track(
+async def track(
     event_name: str,
     model: str,
     input: str,
@@ -18,25 +18,27 @@ def track(
     hyperparameters: Optional[Dict[str, str]] = {},
     fail_silently: Optional[bool] = False,
     raise_expection: Optional[bool] = True,
-    run_async: Optional[bool] = True,
-) -> str:
+    run_async: Optional[bool] = True
+) -> Optional[str]:
     try:
+        # Check data types for additional_data and hyperparameters
         if additional_data and not all(
             isinstance(value, str) for value in additional_data.values()
         ):
             raise ValueError(
-                "All values in the 'additional_data' must of type string."
+                "All values in 'additional_data' must be of type string."
             )
 
         if hyperparameters and not all(
             isinstance(value, str) for value in hyperparameters.values()
         ):
             raise ValueError(
-                "All values in the 'hyperparameters' must of type string."
+                "All values in 'hyperparameters' must be of type string."
             )
 
         hyperparameters["model"] = model
 
+        # Prepare the event data
         api_event = APIEvent(
             name=event_name,
             input=input,
@@ -50,24 +52,37 @@ def track(
             additionalData=additional_data,
             hyperparameters=hyperparameters,
         )
-        api = Api()
+        
+        # Try to serialize the event using Pydantic's model_dump (or dict for older versions)
         try:
             body = api_event.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
-            # Pydantic version below 2.0
+            # Fallback for older Pydantic versions
             body = api_event.dict(by_alias=True, exclude_none=True)
 
-        result = api.post_request(
-            endpoint=Endpoints.EVENT_ENDPOINT.value,
-            body=body,
-        )
-        response = EventHttpResponse(eventId=result["eventId"])
-        return response.eventId
+        # Create an instance of the Api class to use its post_request or post_request_async
+        api = Api()
+
+        if run_async:
+            # Asynchronous request
+            result = await api.post_request_async(Endpoints.EVENT_ENDPOINT.value, body=body)
+        else:
+            # Synchronous request
+            result = api.post_request(Endpoints.EVENT_ENDPOINT.value, body=body)
+
+        # Parse the response and return the event ID
+        if result is not None:
+            event_id = result.get("eventId")
+            return event_id
+        else:
+            return None
+
     except Exception as e:
         if fail_silently:
-            return
+            return None
 
         if raise_expection:
-            raise (e)
+            raise e
         else:
             print(str(e))
+            return None
