@@ -4,11 +4,9 @@ from .tracing import (
     get_trace_stack,
     TraceType,
     TraceStatus,
-    BaseTrace,
     LlmTrace,
     EmbeddingTrace,
     GenericTrace,
     LlmMetadata,
     EmbeddingMetadata,
 )
-

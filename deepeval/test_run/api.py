@@ -37,7 +37,6 @@ class LLMApiTestCase(BaseModel):
         None, alias="additionalMetadata"
     )
     comments: Optional[str] = Field(None)
-    traceStack: Optional[dict] = Field(None)
 
     def update(self, metric_metadata: MetricMetadata):
         if self.metrics_metadata is None:

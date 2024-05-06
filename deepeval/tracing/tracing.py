@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from functools import wraps
-from typing import Any, Callable, List, Union, Optional, Dict
+from typing import Any, Callable, List, Union, Optional
 from time import perf_counter
 import traceback
 from inspect import signature
@@ -15,30 +15,23 @@ class TraceType(Enum):
     EMBEDDING = "Embedding"
     TOOL = "Tool"
     AGENT = "Agent"
-    AGENT_STEP = "Agent Step"
     CHAIN = "Chain"
-    CHUNKING = "Chunking"
-    NODE_PARSING = "Node Parsing"
-    SYNTHESIZE = "Synthesize"
-    QUERY = "Query"
-    RERANKING = "Reranking"
+
 
 class TraceStatus(Enum):
     SUCCESS = "Success"
     ERROR = "Error"
 
+
 @dataclass
 class LlmMetadata:
-    model: Optional[str]
-    tokenCount: Optional[Dict[str, int]]
-    hyperparameters: Optional[Dict[str, Any]]
-    outputMessages: Optional[List[Dict[str, str]]]
-    llmPromptTemplate: Optional[Any]
-    llmPromptTemplateVariables: Optional[Any]
+    model: str
+
 
 @dataclass
 class EmbeddingMetadata:
-    model: Optional[str]
+    model: str
+
 
 @dataclass
 class BaseTrace:
@@ -54,7 +47,7 @@ class BaseTrace:
 @dataclass
 class LlmTrace(BaseTrace):
     input: str
-    llmMetadata: LlmMetadata
+    llmMetadata: LlmMetadata = None
 
 
 @dataclass
