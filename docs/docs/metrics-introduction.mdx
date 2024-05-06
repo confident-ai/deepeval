@@ -208,7 +208,7 @@ print(mistral_7b.generate("Write me a joke"))
 Note that for this particular implementation, we initialized our `Mistral7B` model with an additional `tokenizer` parameter, as this is required in the decoding step of the `generate()` method.
 
 :::info
-You'll notice we simply reused `generate()` in `a_generate()`, because unfortunately there's no asynchronous interface for Hugging Face's `transformers` library, and would make all metric executions a synchronous, blocking process.
+You'll notice we simply reused `generate()` in `a_generate()`, because unfortunately there's no asynchronous interface for Hugging Face's `transformers` library, which would make all metric executions a synchronous, blocking process.
 
 However, you can try offloading the generation process to a separate thread instead:
 

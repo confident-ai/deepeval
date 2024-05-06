@@ -75,7 +75,7 @@ deepeval test run test_example.py
 - The variable `retrieval_context` contains the retrieved context from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an default metric provided by `deepeval` for you to evaluate your LLM output's relevancy based on the provided retrieval context.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
-:::info
+:::tip
 You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running the `AnswerRelevancyMetric`, since the `AnswerRelevancyMetric` is an LLM-evaluated metric.
 
 To use **ANY** custom LLM of your choice, [check out this part of the docs](evaluation-introduction#using-a-custom-llm).
@@ -135,7 +135,7 @@ print(correctness_metric.score, correctness_metric.reason)
 Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjuction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](metrics-llm-evals)
 
 :::tip
-If you wish to customize your metrics a bit more, you can choose to implement your own metric. You can find a full tutorial [here](metrics-custom), but here's a quick example of how you can create a metric that is **NOT** evaluated using LLMs:
+If you wish to customize your metrics a bit more, you can choose to implement your own metric. You can find [a comprehensive step-by-step guide here](guides-building-custom-metrics), but here's a quick example of how you can create a metric that is **NOT** evaluated using LLMs:
 
 ```python
 from deepeval.scorer import Scorer

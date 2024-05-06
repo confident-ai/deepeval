@@ -78,8 +78,8 @@ G-Eval is a two-step algorithm that first generates a series of `evaluation_step
 
 When you provide `evaluation_steps`, the `GEval` metric skips the first step and uses the provided steps to determine the final score instead.
 
-:::tip
-Did you know that in the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the authors used the the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation?
+:::tip Did Your Know?
+In the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the authors used the the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation?
 
 This step was introduced in the paper because it minimizes bias in LLM scoring. **This normalization step is automatically handled by `deepeval` by default** (unless you're using a custom model).
 :::
