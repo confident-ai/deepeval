@@ -360,7 +360,6 @@ def assert_test(
     metrics: List[BaseMetric],
     run_async: bool = True,
 ):
-
     # TODO: keep this for now, blocking conversational metrics like KR
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
@@ -503,3 +502,31 @@ def print_test_result(test_result: TestResult):
     print(f"  - expected output: {test_result.expected_output}")
     print(f"  - context: {test_result.context}")
     print(f"  - retrieval context: {test_result.retrieval_context}")
+
+
+def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
+    metric_counts = {}
+    metric_successes = {}
+
+    for result in test_results:
+        for metric in result.metrics:
+            metric_name = metric.__class__.__name__
+            if metric_name not in metric_counts:
+                metric_counts[metric_name] = 0
+                metric_successes[metric_name] = 0
+            metric_counts[metric_name] += 1
+            if metric.success:
+                metric_successes[metric_name] += 1
+
+    metric_pass_rates = {
+        metric: (metric_successes[metric] / metric_counts[metric])
+        for metric in metric_counts
+    }
+
+    print("\n" + "=" * 70 + "\n")
+    print("Aggregate Metric Pass Rates\n")
+    for metric, pass_rate in metric_pass_rates.items():
+        print(f"{metric}: {pass_rate:.2%} pass rate")
+    print("\n" + "=" * 70 + "\n")
+
+    return metric_pass_rates
