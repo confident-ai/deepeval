@@ -1,0 +1,90 @@
+---
+# id: guides-regression-testing-in-cicd
+title: Regression Testing LLM Systems in CI/CD
+sidebar_label: Regression Testing in CI/CD
+---
+
+Regression testing ensures your LLM systems doesn't degrade in performance over time, and there is no better place to do it than in CI/CD environments. `deepeval` allows anyone to easily regression test outputs of LLM systems (such as RAG pipelines, or even just an LLM itself) in the CLI through its deep integration with Pytest via the `deepeval test run` command.
+
+:::info
+This guide will show how you can include `deepeval` in your CI/CD pipelines, using GitHub Actions as an example.
+:::
+
+## Creating Your Test File
+
+`deepeval` treats rows in an evaluation dataset as unit test cases, and a wide range of research backed LLM evaluation metrics, which you can define in a `test_<name>.py` file to implement your regression test.
+
+```python title="test_file.py"
+import pytest
+from deepeval import assert_test
+from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
+
+first_test_case = LLMTestCase(input="...", actual_output="...")
+second_test_case = LLMTestCase(input="...", actual_output="...")
+dataset = EvaluationDataset(
+    test_cases=[first_test_case, second_test_case]
+)
+
+@pytest.mark.parametrize(
+    "test_case",
+    dataset,
+)
+def test_example(test_case: LLMTestCase):
+    metric = AnswerRelevancyMetric(threshold=0.5)
+    assert_test(test_case, [metric])
+```
+
+:::tip
+In the example shown above, the `LLMTestCase`s are hardcoded for demonstration purposes only. Instead, you should aim to choose one of the [three ways `deepeval` offers to load a dataset](evaluation-datasets#load-an-existing-dataset) in a more scalable way.
+:::
+
+To check that your test file is working, run `deepeval test run`:
+
+```console
+deepeval test run test_file.py
+```
+
+## Setting Up Your YAML File
+
+To set up a GitHub workflow that triggers `deepeval test run` on every pull or push request, define a `.yaml` file:
+
+```yaml title=".github/workflows/regression.yml"
+name: LLM Regression Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        run: poetry install --no-root
+
+      - name: Run DeepEval Unit Tests
+        run: poetry run deepeval test run test_file.py
+```
+
+**Congratulations 🎉!** You've now setup an automated regression testing suite in under 30 lines of code.
+
+:::note
+Although we only showed GitHub workflows in this guide, it will be extremely similar even if you're using another CI/CD environment such as Travis CI or CircleCI.
+
+You should also note that you don't have to strictly use poetry, and you may need to configure additional environment variables such as an `OPENAI_API_KEY` if you're using GPT models for evaluation and a `CONFIDENT_API_KEY` if you're using Confident AI to keep track of testing results.
+:::

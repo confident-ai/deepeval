@@ -161,76 +161,6 @@ metric = AnswerRelevancyMetric(model=azure_openai)
 While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globally for all LLM-Evals, a custom LLM has to be set each time you instantiate a metric. Remember to provide your custom LLM instance through the `model` parameter for metrics you wish to use it for.
 :::
 
-### Google VertexAI Example
-
-Here is an example of creating a custom Google's [Gemini](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/model-versioning#stable-version) model through langchain's `ChatVertexAI` module for evaluation:
-
-```python
-from langchain_google_vertexai import (
-    ChatVertexAI,
-    HarmBlockThreshold,
-    HarmCategory
-)
-
-from deepeval.models.base_model import DeepEvalBaseLLM
-
-class GoogleVertexAIDeepEval(DeepEvalBaseLLM):
-    """Class to implement Vertex AI for DeepEval"""
-    def __init__(self, model):
-        self.model = model
-
-    def load_model(self):
-        return self.model
-
-    def generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        return chat_model.invoke(prompt).content
-
-    async def a_generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        res = await chat_model.ainvoke(prompt)
-        return res.content
-
-    def get_model_name(self):
-        return "Vertex AI Model"
-
-# Initilialize safety filters for vertex model
-# This is important to ensure no evaluation responses are blocked
-safety_settings = {
-    HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-}
-
-#TODO : Add values for project and location below
-custom_model_gemini = ChatVertexAI(
-    model_name="gemini-1.0-pro-002"
-    , safety_settings=safety_settings
-    , project= "<project-id>"
-    , location= "<region>" #example : us-central1
-)
-
-# initiatialize the Deepeval wrapper class
-vertexai_gemini = GoogleVertexAIDeepEval(model=custom_model_gemini)
-print(vertexai_gemini.generate("Write me a joke"))
-```
-
-:::
-
-To use it for evaluation for an LLM-Eval:
-
-```python
-from deepeval.metrics import AnswerRelevancyMetric
-...
-
-#Set the model to vertexai_gemini
-metric = AnswerRelevancyMetric(model=vertexai_gemini)
-```
-
-:::
-
 ### Mistral 7B Example
 
 Here is an example of creating a custom [Mistral 7B model](https://huggingface.co/docs/transformers/model_doc/mistral) through Hugging Face's `transformers` library for evaluation:
@@ -313,6 +243,70 @@ metric = AnswerRelevancyMetric(model=mistral_7b)
 :::tip
 You need to specify the custom evaluation model you created via the `model` argument when creating a metric.
 :::
+
+### Google VertexAI Example
+
+Here is an example of creating a custom Google's [Gemini](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/model-versioning#stable-version) model through langchain's `ChatVertexAI` module for evaluation:
+
+```python
+from langchain_google_vertexai import (
+    ChatVertexAI,
+    HarmBlockThreshold,
+    HarmCategory
+)
+from deepeval.models.base_model import DeepEvalBaseLLM
+
+class GoogleVertexAI(DeepEvalBaseLLM):
+    """Class to implement Vertex AI for DeepEval"""
+    def __init__(self, model):
+        self.model = model
+
+    def load_model(self):
+        return self.model
+
+    def generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        return chat_model.invoke(prompt).content
+
+    async def a_generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        res = await chat_model.ainvoke(prompt)
+        return res.content
+
+    def get_model_name(self):
+        return "Vertex AI Model"
+
+# Initilialize safety filters for vertex model
+# This is important to ensure no evaluation responses are blocked
+safety_settings = {
+    HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
+    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+}
+
+#TODO : Add values for project and location below
+custom_model_gemini = ChatVertexAI(
+    model_name="gemini-1.0-pro-002"
+    , safety_settings=safety_settings
+    , project= "<project-id>"
+    , location= "<region>" #example : us-central1
+)
+
+# initiatialize the  wrapper class
+vertexai_gemini = GoogleVertexAI(model=custom_model_gemini)
+print(vertexai_gemini.generate("Write me a joke"))
+```
+
+To use it for evaluation for an LLM-Eval:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+metric = AnswerRelevancyMetric(model=vertexai_gemini)
+```
 
 ### AWS Bedrock Example
 

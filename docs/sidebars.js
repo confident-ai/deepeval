@@ -70,7 +70,7 @@ module.exports = {
     {
       type: "category",
       label: "Guides",
-      items: ["guides-rag-evaluation", "guides-building-custom-metrics"],
+      items: ["guides-regression-testing-in-cicd","guides-rag-evaluation", "guides-building-custom-metrics"],
       collapsed: false,
     },
     {
