@@ -20,8 +20,4 @@ from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 #     RAGASContextualRelevancyMetric,
 #     RAGASContextualPrecisionMetric,
 #     RAGASAnswerRelevancyMetric,
-#     RAGASConcisenessMetric as ConcisenessMetric,
-#     RAGASCorrectnessMetric as CorrectnessMetric,
-#     RAGASCoherenceMetric as CoherenceMetric,
-#     RAGASMaliciousnessMetric as MaliciousnessMetric,
 # )
