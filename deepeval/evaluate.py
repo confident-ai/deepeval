@@ -459,8 +459,7 @@ def evaluate(
         for test_result in test_results:
             print_test_result(test_result)
 
-        print("")
-        print("-" * 70)
+        aggregate_metric_pass_rates(test_results)
 
     test_run_manager.wrap_up_test_run(run_duration, display_table=False)
     return test_results
@@ -524,7 +523,7 @@ def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     }
 
     print("\n" + "=" * 70 + "\n")
-    print("Aggregate Metric Pass Rates\n")
+    print("Overall Metric Pass Rates\n")
     for metric, pass_rate in metric_pass_rates.items():
         print(f"{metric}: {pass_rate:.2%} pass rate")
     print("\n" + "=" * 70 + "\n")
