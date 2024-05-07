@@ -444,7 +444,7 @@ class EvaluationDataset:
         )
 
     # TODO: add save test cases as well
-    def save_as(self, file_type: str, directory: str):
+    def save_as(self, file_type: str, directory: str) -> str:
         if file_type not in valid_file_types:
             raise ValueError(
                 f"Invalid file type. Available file types to save as: {', '.join(type for type in valid_file_types)}"
@@ -495,3 +495,4 @@ class EvaluationDataset:
                     )
 
         print(f"Evaluation dataset saved at {full_file_path}!")
+        return full_file_path
