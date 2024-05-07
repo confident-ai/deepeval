@@ -17,7 +17,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.telemetry import capture_metric_type
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -70,7 +69,6 @@ class AnswerRelevancyMetric(BaseMetric):
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
-                capture_metric_type(self.__name__)
                 return self.score
 
     async def a_measure(
@@ -95,7 +93,6 @@ class AnswerRelevancyMetric(BaseMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
-            capture_metric_type(self.__name__)
             return self.score
 
     async def _a_generate_reason(self, input: str) -> str:

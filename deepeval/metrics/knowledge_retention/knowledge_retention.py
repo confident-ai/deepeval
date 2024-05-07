@@ -13,7 +13,6 @@ from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.telemetry import capture_metric_type
 
 
 class Knowledge(BaseModel):
@@ -54,7 +53,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
-            capture_metric_type(self.__name__)
             return self.score
 
     def _generate_reason(self, score: float) -> str:

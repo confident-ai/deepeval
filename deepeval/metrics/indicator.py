@@ -10,6 +10,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import show_indicator
 from deepeval.test_run.cache import CachedTestCase, Cache
+from deepeval.telemetry import capture_metric_type
 
 
 def format_metric_description(
@@ -36,21 +37,22 @@ def metric_progress_indicator(
     total: int = 9999,
     transient: bool = True,
 ):
-    console = Console(file=sys.stderr)  # Direct output to standard error
-    if _show_indicator and show_indicator():
-        with Progress(
-            SpinnerColumn(style="rgb(106,0,255)"),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,  # Use the custom console
-            transient=transient,
-        ) as progress:
-            progress.add_task(
-                description=format_metric_description(metric, async_mode),
-                total=total,
-            )
+    with capture_metric_type(metric.__name__):
+        console = Console(file=sys.stderr)  # Direct output to standard error
+        if _show_indicator and show_indicator():
+            with Progress(
+                SpinnerColumn(style="rgb(106,0,255)"),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,  # Use the custom console
+                transient=transient,
+            ) as progress:
+                progress.add_task(
+                    description=format_metric_description(metric, async_mode),
+                    total=total,
+                )
+                yield
+        else:
             yield
-    else:
-        yield
 
 
 async def measure_metric_task(

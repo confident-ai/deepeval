@@ -15,7 +15,7 @@ from deepeval.utils import (
     set_should_use_cache,
 )
 from deepeval.test_run import invoke_test_run_end_hook
-from deepeval.telemetry import capture_evaluation_count
+from deepeval.telemetry import capture_evaluation_run
 from deepeval.utils import set_is_running_deepeval
 
 app = typer.Typer(name="test")
@@ -132,8 +132,8 @@ def run(
     pytest_args.extend(["-p", "plugins"])
 
     start_time = time.perf_counter()
-    retcode = pytest.main(pytest_args)
-    capture_evaluation_count()
+    with capture_evaluation_run("deepeval test run"):
+        retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
     test_run_manager.wrap_up_test_run(run_duration)

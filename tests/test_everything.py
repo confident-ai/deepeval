@@ -82,7 +82,7 @@ being composed mostly of rock and metal.
 strict_mode = False
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -114,7 +114,7 @@ def test_everything():
         input="What is this",
         actual_output="this is a latte",
         expected_output="this is a mocha",
-        # retrieval_context=["I love coffee"],
+        retrieval_context=["I love coffee"],
         context=["I love coffee"],
     )
     c_test_case = ConversationalTestCase(messages=[test_case, test_case])

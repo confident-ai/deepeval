@@ -1,7 +1,14 @@
+from contextlib import contextmanager
 import os
 import socket
 import sys
 import sentry_sdk
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 
 
 def telemetry_opt_out():
@@ -16,16 +23,6 @@ def blocked_by_firewall():
         return True
 
 
-def capture_evaluation_count():
-    if not telemetry_opt_out():
-        sentry_sdk.capture_message("evaluation ran!")
-
-
-def capture_metric_type(metric_name: str):
-    if not telemetry_opt_out():
-        sentry_sdk.capture_message(metric_name)
-
-
 if not telemetry_opt_out():
     sentry_sdk.init(
         dsn="https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
@@ -35,6 +32,26 @@ if not telemetry_opt_out():
         attach_stacktrace=False,  # Don't attach stack traces to messages
         default_integrations=False,  # Disable Sentry's default integrations
     )
+
+    # Set up the Tracer Provider
+    trace.set_tracer_provider(TracerProvider())
+    tracer_provider = trace.get_tracer_provider()
+
+    # New Relic License Key and OTLP Endpoint
+    NEW_RELIC_LICENSE_KEY = "1711c684db8a30361a7edb0d0398772cFFFFNRAL"
+    NEW_RELIC_OTLP_ENDPOINT = "https://otlp.nr-data.net:4317"
+    otlp_exporter = OTLPSpanExporter(
+        endpoint=NEW_RELIC_OTLP_ENDPOINT,
+        headers={"api-key": NEW_RELIC_LICENSE_KEY},
+    )
+
+    # Add the OTLP exporter to the span processor
+    span_processor = BatchSpanProcessor(otlp_exporter)
+    tracer_provider.add_span_processor(span_processor)
+
+    # Create a tracer for your application
+    tracer = trace.get_tracer(__name__)
+
 
 if (
     os.getenv("ERROR_REPORTING") == "YES"
@@ -48,3 +65,21 @@ if (
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
 
     sys.excepthook = handle_exception
+
+
+@contextmanager
+def capture_evaluation_run(type: str):
+    if not telemetry_opt_out():
+        with tracer.start_as_current_span(f"Ran {type}") as span:
+            yield span
+    else:
+        yield
+
+
+@contextmanager
+def capture_metric_type(metric_name: str, _track: bool = True):
+    if not telemetry_opt_out() and _track:
+        with tracer.start_as_current_span(metric_name) as span:
+            yield span
+    else:
+        yield

@@ -8,7 +8,6 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.telemetry import capture_metric_type
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
@@ -71,7 +70,6 @@ class ToxicityMetric(BaseMetric):
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
                 self.score = self.score
-                capture_metric_type(self.__name__)
                 return self.score
 
     async def a_measure(
@@ -98,7 +96,6 @@ class ToxicityMetric(BaseMetric):
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
             self.score = self.score
-            capture_metric_type(self.__name__)
             return self.score
 
     async def _a_generate_reason(self) -> str:

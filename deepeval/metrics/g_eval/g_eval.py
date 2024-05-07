@@ -19,7 +19,6 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.telemetry import capture_metric_type
 from deepeval.metrics.indicator import metric_progress_indicator
 
 G_EVAL_PARAMS = {
@@ -119,7 +118,6 @@ class GEval(BaseMetric):
                     else self.score
                 )
                 self.success = self.score >= self.threshold
-                capture_metric_type(self.__name__)
                 return self.score
 
     async def a_measure(
@@ -149,7 +147,6 @@ class GEval(BaseMetric):
                 else self.score
             )
             self.success = self.score >= self.threshold
-            capture_metric_type(self.__name__)
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
