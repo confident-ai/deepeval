@@ -10,7 +10,6 @@ from .faithfulness.faithfulness import FaithfulnessMetric
 from .contextual_recall.contextual_recall import ContextualRecallMetric
 from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
-
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 
 # from .ragas_metric import (
@@ -21,8 +20,4 @@ from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 #     RAGASContextualRelevancyMetric,
 #     RAGASContextualPrecisionMetric,
 #     RAGASAnswerRelevancyMetric,
-#     RAGASConcisenessMetric as ConcisenessMetric,
-#     RAGASCorrectnessMetric as CorrectnessMetric,
-#     RAGASCoherenceMetric as CoherenceMetric,
-#     RAGASMaliciousnessMetric as MaliciousnessMetric,
 # )

@@ -31,6 +31,9 @@ setup(
         "docx2txt~=0.8",
         "importlib-metadata>=6.0.2",
         "tenacity~=8.2.3",
+        "opentelemetry-api>=1.14.0,<2.0.0",
+        "opentelemetry-sdk>=1.14.0,<2.0.0",
+        "opentelemetry-exporter-otlp-proto-grpc>=1.24.0,<2.0.0",
     ],
     extras_require={
         "dev": ["black"],

@@ -6,10 +6,6 @@ from deepeval.metrics.ragas import (
     RAGASContextualRelevancyMetric,
     RAGASFaithfulnessMetric,
     RAGASContextualRecallMetric,
-    ConcisenessMetric,
-    CorrectnessMetric,
-    CoherenceMetric,
-    MaliciousnessMetric,
     RAGASAnswerRelevancyMetric,
 )
 from deepeval import assert_test
@@ -56,10 +52,6 @@ def test_everything():
     metric1 = RAGASContextualRelevancyMetric()
     metric2 = RAGASFaithfulnessMetric()
     metric3 = RAGASContextualRecallMetric()
-    metric4 = ConcisenessMetric()
-    metric5 = CorrectnessMetric()
-    metric6 = CoherenceMetric()
-    metric7 = MaliciousnessMetric()
     metric8 = RAGASAnswerRelevancyMetric(embeddings=embeddings)
     metric9 = RAGASContextualPrecisionMetric()
     metric10 = RagasMetric(
@@ -68,8 +60,8 @@ def test_everything():
     assert_test(
         test_case,
         [
-            # metric1,
-            # metric2,
+            metric1,
+            metric2,
             # metric3,
             # metric4,
             # metric5,

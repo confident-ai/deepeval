@@ -17,7 +17,6 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.hallucination.template import HallucinationTemplate
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.telemetry import capture_metric_type
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -70,7 +69,6 @@ class HallucinationMetric(BaseMetric):
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
-                capture_metric_type(self.__name__)
                 return self.score
 
     async def a_measure(
@@ -94,7 +92,6 @@ class HallucinationMetric(BaseMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
-            capture_metric_type(self.__name__)
             return self.score
 
     async def _a_generate_reason(self):
