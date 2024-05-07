@@ -506,7 +506,7 @@ def print_test_result(test_result: TestResult):
 
 
 
-def aggregate_metric_pass_rates(test_results: List[TestResult]):
+def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     metric_counts = {}
     metric_successes = {}
 
