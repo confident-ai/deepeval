@@ -4,7 +4,7 @@ title: Regression Testing LLM Systems in CI/CD
 sidebar_label: Regression Testing in CI/CD
 ---
 
-Regression testing ensures your LLM systems doesn't degrade in performance over time, and there is no better place to do it than in CI/CD environments. `deepeval` allows anyone to easily regression test outputs of LLM systems (such as RAG pipelines, or even just an LLM itself) in the CLI through its deep integration with Pytest via the `deepeval test run` command.
+Regression testing ensures your LLM systems doesn't degrade in performance over time, and there is no better place to do it than in CI/CD environments. `deepeval` allows anyone to easily regression test outputs of LLM systems (which can be RAG pipelines, or even just an LLM itself) in the CLI through its deep integration with Pytest via the `deepeval test run` command.
 
 :::info
 This guide will show how you can include `deepeval` in your CI/CD pipelines, using GitHub Actions as an example.
@@ -86,5 +86,5 @@ jobs:
 :::note
 Although we only showed GitHub workflows in this guide, it will be extremely similar even if you're using another CI/CD environment such as Travis CI or CircleCI.
 
-You should also note that you don't have to strictly use poetry, and you may need to configure additional environment variables such as an `OPENAI_API_KEY` if you're using GPT models for evaluation and a `CONFIDENT_API_KEY` if you're using Confident AI to keep track of testing results.
+You should also note that you don't have to strictly use poetry (as shown in the example above) to install dependencies, and you may need to configure additional environment variables such as an `OPENAI_API_KEY` if you're using GPT models for evaluation and a `CONFIDENT_API_KEY` if you're using Confident AI to keep track of testing results.
 :::
