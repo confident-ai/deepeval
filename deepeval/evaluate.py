@@ -130,7 +130,9 @@ def create_api_test_case(
         )
     elif isinstance(test_case, ConversationalTestCase):
         return ConversationalApiTestCase(
-            name=os.getenv(PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"),
+            name=os.getenv(
+                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
+            ),
             success=True,
             metricsMetadata=None,
             runDuration=0,
@@ -185,7 +187,9 @@ def execute_test_cases(
                 metric_metadata = None
                 # cached_tet_case will always be false for conversationals
                 if cached_test_case is not None:
-                    cached_metric_data = Cache.get_metric_data(metric, cached_test_case)
+                    cached_metric_data = Cache.get_metric_data(
+                        metric, cached_test_case
+                    )
                     if cached_metric_data:
                         metric_metadata = cached_metric_data.metric_metadata
 
@@ -223,7 +227,9 @@ def execute_test_cases(
                     )
                     updated_cached_metric_data = CachedMetricData(
                         metric_metadata=cache_metric_metadata,
-                        metric_configuration=Cache.create_metric_configuration(metric),
+                        metric_configuration=Cache.create_metric_configuration(
+                            metric
+                        ),
                     )
                     new_cached_test_case.cached_metrics_data.append(
                         updated_cached_metric_data
@@ -237,7 +243,9 @@ def execute_test_cases(
             test_run_manager.update_test_run(api_test_case, test_case)
 
             ### Cache Test Run ###
-            if isinstance(test_case, LLMTestCase):  # only cache if not conversational
+            if isinstance(
+                test_case, LLMTestCase
+            ):  # only cache if not conversational
                 test_run_cache_manager.cache_test_case(
                     test_case,
                     new_cached_test_case,
@@ -293,12 +301,14 @@ async def a_execute_test_cases(
 
                 if isinstance(test_case, ConversationalTestCase):
                     # index hardcoded as the last message for now
-                    api_test_case.update(metric_metadata, len(test_case.messages) - 1)
+                    api_test_case.update(
+                        metric_metadata, len(test_case.messages) - 1
+                    )
                 else:
                     api_test_case.update(metric_metadata)
 
-                if (
-                    metric.error is None and isinstance(test_case, LLMTestCase)
+                if metric.error is None and isinstance(
+                    test_case, LLMTestCase
                 ):  # Only save to cache if metric didn't error AND is not conversational
                     cache_metric_metadata = create_metric_metadata(metric)
                     cache_metric_metadata.evaluation_cost = (
@@ -306,7 +316,9 @@ async def a_execute_test_cases(
                     )
                     updated_cached_metric_data = CachedMetricData(
                         metric_metadata=cache_metric_metadata,
-                        metric_configuration=Cache.create_metric_configuration(metric),
+                        metric_configuration=Cache.create_metric_configuration(
+                            metric
+                        ),
                     )
                     new_cached_test_case.cached_metrics_data.append(
                         updated_cached_metric_data
@@ -320,7 +332,9 @@ async def a_execute_test_cases(
             test_run_manager.update_test_run(api_test_case, test_case)
 
             ### Cache Test Run ###
-            if isinstance(test_case, LLMTestCase):  # only cache if not conversational
+            if isinstance(
+                test_case, LLMTestCase
+            ):  # only cache if not conversational
                 test_run_cache_manager.cache_test_case(
                     test_case,
                     new_cached_test_case,
