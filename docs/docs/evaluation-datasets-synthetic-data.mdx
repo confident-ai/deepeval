@@ -116,7 +116,7 @@ Except for an additional option to accept a custom `Synthesizer` as argument, th
 
 You can optionally specify a custom `Synthesizer` when calling `generate_goldens_from_docs` and `generate_goldens` through the `EvaluationDataset` interface if for example, you wish to use a custom LLM to generate synthetic data. If no `Synthesizer` is provided, the default `Synthesizer` configuration is used.
 
-To begin, optionally create custom `Synthesizer`:
+To begin, optionally create a custom `Synthesizer`:
 
 ```python
 from deepeval.synthesizer import Synthesizer
