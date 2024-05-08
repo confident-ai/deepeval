@@ -1,14 +1,14 @@
 from typing import (
-    Any, 
-    Dict, 
-    List, 
-    Optional, 
-    Union, 
-    Iterable, 
+    Any,
+    Dict,
+    List,
+    Optional,
+    Union,
+    Iterable,
     Iterator,
     Tuple,
     Mapping,
-    cast
+    cast,
 )
 from time import perf_counter
 import json
@@ -43,20 +43,20 @@ from deepeval.tracing import (
 from deepeval.utils import dataclass_to_dict
 
 events_to_ignore = [
-    #CBEventType.CHUNKING,
-    #CBEventType.NODE_PARSING,
-    #CBEventType.EMBEDDING,
-    #CBEventType.LLM,
-    #CBEventType.QUERY,
-    #CBEventType.RETRIEVE,
-    #CBEventType.SYNTHESIZE,
+    # CBEventType.CHUNKING,
+    # CBEventType.NODE_PARSING,
+    # CBEventType.EMBEDDING,
+    # CBEventType.LLM,
+    # CBEventType.QUERY,
+    # CBEventType.RETRIEVE,
+    # CBEventType.SYNTHESIZE,
     CBEventType.TREE,
     CBEventType.SUB_QUESTION,
-    #CBEventType.TEMPLATING,
+    # CBEventType.TEMPLATING,
     CBEventType.FUNCTION_CALL,
-    #CBEventType.RERANKING,
-    #CBEventType.EXCEPTION,
-    #CBEventType.AGENT_STEP,
+    # CBEventType.RERANKING,
+    # CBEventType.EXCEPTION,
+    # CBEventType.AGENT_STEP,
 ]
 
 
@@ -91,11 +91,15 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> str:
 
-        processed_payload = self.process_payload(event_type, event_id, parent_id, payload, True)
-        trace_instance = self.create_trace_instance(event_type, processed_payload)
+        processed_payload = self.process_payload(
+            event_type, event_id, parent_id, payload, True
+        )
+        trace_instance = self.create_trace_instance(
+            event_type, processed_payload
+        )
         self.event_map[event_id] = trace_instance
         trace_manager.append_to_trace_stack(trace_instance)
-        
+
         return
 
     def on_event_end(
@@ -106,10 +110,14 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         parent_id: str = "",
         **kwargs: Any,
     ) -> None:
-        
+
         trace_instance = self.event_map[event_id]
-        processed_payload = self.process_payload(event_type, event_id, parent_id, payload, True)
-        trace_instance = self.update_trace_instance(trace_instance, event_type, processed_payload)
+        processed_payload = self.process_payload(
+            event_type, event_id, parent_id, payload, True
+        )
+        trace_instance = self.update_trace_instance(
+            trace_instance, event_type, processed_payload
+        )
         current_trace_stack = trace_manager.get_trace_stack()
 
         if len(current_trace_stack) > 1:
@@ -122,27 +130,27 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_manager.clear_trace_stack()
         else:
             trace_manager.pop_trace_stack()
-        
+
         return
 
     def create_trace_instance(
-        self, 
+        self,
         event_type: CBEventType,
         processed_payload: Optional[Dict[str, Any]] = None,
     ) -> Union[EmbeddingTrace, LlmMetadata, GenericTrace]:
-        
+
         current_time = perf_counter()
         type = self.convert_event_type_to_deepeval_trace_type(event_type)
         name = event_type.capitalize()
         trace_instance_input = None
-        
-        if 'exception' in processed_payload:
+
+        if "exception" in processed_payload:
             trace_instance = GenericTrace(
                 type=type,
                 executionTime=current_time,
                 name=name,
                 input=trace_instance_input,
-                output={'exception': processed_payload['exception']},
+                output={"exception": processed_payload["exception"]},
                 status=TraceStatus.ERROR,
                 traces=[],
             )
@@ -152,7 +160,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 type=type,
                 executionTime=current_time,
                 name=name,
-                input=processed_payload['llm_input_messages'],
+                input=processed_payload["llm_input_messages"],
                 output=None,
                 status=TraceStatus.SUCCESS,
                 traces=[],
@@ -161,9 +169,13 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     hyperparameters=processed_payload["llm_hyperparameters"],
                     outputMessages=None,
                     tokenCount=None,
-                    llmPromptTemplate=processed_payload.get("llm_prompt_template"),
-                    llmPromptTemplateVariables=processed_payload.get("llm_prompt_template_variables")
+                    llmPromptTemplate=processed_payload.get(
+                        "llm_prompt_template"
                     ),
+                    llmPromptTemplateVariables=processed_payload.get(
+                        "llm_prompt_template_variables"
+                    ),
+                ),
             )
 
         elif event_type == CBEventType.EMBEDDING:
@@ -185,7 +197,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 type=type,
                 executionTime=current_time,
                 name=name,
-                input=processed_payload['input_value'],
+                input=processed_payload["input_value"],
                 output=None,
                 status=TraceStatus.SUCCESS,
                 traces=[],
@@ -196,7 +208,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 type=type,
                 executionTime=current_time,
                 name=name,
-                input=processed_payload['input_value'],
+                input=processed_payload["input_value"],
                 output=None,
                 status=TraceStatus.SUCCESS,
                 traces=[],
@@ -207,7 +219,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 type=type,
                 executionTime=current_time,
                 name=name,
-                input=processed_payload['input_value'],
+                input=processed_payload["input_value"],
                 output=None,
                 status=TraceStatus.SUCCESS,
                 traces=[],
@@ -226,49 +238,54 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         return trace_instance
 
     def update_trace_instance(
-            self, 
-            trace_instance: BaseTrace,
-            event_type: CBEventType,
-            processed_payload: Optional[Dict[str, Any]] = None,
-        ) -> Union[EmbeddingTrace, LlmMetadata, GenericTrace]:
-        
+        self,
+        trace_instance: BaseTrace,
+        event_type: CBEventType,
+        processed_payload: Optional[Dict[str, Any]] = None,
+    ) -> Union[EmbeddingTrace, LlmMetadata, GenericTrace]:
+
         trace_instance.executionTime = (
             perf_counter() - trace_instance.executionTime
         )
-        
-        if 'exception' in processed_payload:
-            trace_instance.output = {'exception': processed_payload['exception']}
+
+        if "exception" in processed_payload:
+            trace_instance.output = {
+                "exception": processed_payload["exception"]
+            }
 
         elif event_type == CBEventType.LLM:
-            trace_instance.output = processed_payload['output_value']
-            trace_instance.llmMetadata.outputMessages = processed_payload['llm_output_messages']
+            trace_instance.output = processed_payload["output_value"]
+            trace_instance.llmMetadata.outputMessages = processed_payload[
+                "llm_output_messages"
+            ]
             trace_instance.llmMetadata.tokenCount = {
-                 "prompt": processed_payload['llm_token_prompt_count'],
-                 "completion": processed_payload['llm_token_count_completion'],
-                 "total": processed_payload['llm_token_count_total']
+                "prompt": processed_payload["llm_token_prompt_count"],
+                "completion": processed_payload["llm_token_count_completion"],
+                "total": processed_payload["llm_token_count_total"],
             }
 
         elif event_type == CBEventType.EMBEDDING:
-            embeddings = processed_payload['embeddings']
+            embeddings = processed_payload["embeddings"]
             trace_instance.output = [
                 {
-                    'embedding_text': item['embedding_text'],
-                    'embedding_vector_length': len(item['embedding_vector'])
-                } for item in embeddings]
-            trace_instance.input = [t['embedding_text'] for t in embeddings]
+                    "embedding_text": item["embedding_text"],
+                    "embedding_vector_length": len(item["embedding_vector"]),
+                }
+                for item in embeddings
+            ]
+            trace_instance.input = [t["embedding_text"] for t in embeddings]
 
         elif event_type == CBEventType.RETRIEVE:
-            documents = processed_payload['retrieval_documents']
+            documents = processed_payload["retrieval_documents"]
             trace_instance.output = documents
 
         elif event_type == CBEventType.QUERY:
-            trace_instance.output = processed_payload['output_value']
+            trace_instance.output = processed_payload["output_value"]
 
         elif event_type == CBEventType.SYNTHESIZE:
-            trace_instance.output = processed_payload['output_value']
-        
+            trace_instance.output = processed_payload["output_value"]
+
         return trace_instance
-            
 
     def convert_event_type_to_deepeval_trace_type(
         self, event_type: CBEventType
@@ -295,44 +312,42 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         return event_type.value.capitalize()
 
-
     def process_payload(
-        self, 
+        self,
         event_type: CBEventType,
-        event_id: str, 
+        event_id: str,
         parent_id: str,
         payload: Optional[Dict[str, Any]] = None,
         is_event_end: bool = True,
     ):
-        attributes={}
+        attributes = {}
         if payload == None:
             return attributes
-        
+
         exception = payload.get(EventPayload.EXCEPTION)
         if exception:
-            attributes['exception'] = exception
+            attributes["exception"] = exception
 
         #########################
         # ignore these events
         if event_type in (CBEventType.NODE_PARSING, CBEventType.CHUNKING):
             return attributes
-    
+
         #########################
         # process embedding vectors
         chunks = payload.get(EventPayload.CHUNKS)
         embeddings = payload.get(EventPayload.EMBEDDINGS)
         if chunks and embeddings:
             attributes["embeddings"] = [
-            {"embedding_text": text, 
-             "embedding_vector": vector}
-            for text, vector in zip(chunks, embeddings)
-        ]
-        
+                {"embedding_text": text, "embedding_vector": vector}
+                for text, vector in zip(chunks, embeddings)
+            ]
+
         #########################
         # process retrieval documents
         nodes = payload.get(EventPayload.NODES)
         if event_type is not CBEventType.RERANKING and nodes:
-            attributes['retrieval_documents'] = self.process_nodes(nodes)
+            attributes["retrieval_documents"] = self.process_nodes(nodes)
 
         #########################
         # process input (query string, prompts, messages)
@@ -341,32 +356,42 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         messages = payload.get(EventPayload.MESSAGES)
 
         if event_type is not CBEventType.RERANKING and query_str:
-            attributes['input_value'] = query_str
+            attributes["input_value"] = query_str
         if prompt:
-            attributes['llm_prompts'] = [prompt]
+            attributes["llm_prompts"] = [prompt]
         if messages:
             if event_type is CBEventType.LLM:
                 llm_msgs = [self.process_message(m) for m in messages]
                 attributes["llm_input_messages"] = llm_msgs
             elif event_type is CBEventType.AGENT_STEP and len(messages):
                 msg = messages[0]
-                str_msg = msg.content if isinstance(msg, ChatMessage) else str(msg)
+                str_msg = (
+                    msg.content if isinstance(msg, ChatMessage) else str(msg)
+                )
                 attributes["input_value"] = str_msg
 
         #########################
         # process response (still need to process token)
-        response = payload.get(EventPayload.RESPONSE) or payload.get(EventPayload.COMPLETION)
+        response = payload.get(EventPayload.RESPONSE) or payload.get(
+            EventPayload.COMPLETION
+        )
 
         if response:
             attributes.update(self._get_response_output(response))
             if hasattr(response, "raw"):
                 raw = response.raw
-                assert isinstance(raw, Mapping), f"raw must be Mapping, found {type(raw)}"
+                assert isinstance(
+                    raw, Mapping
+                ), f"raw must be Mapping, found {type(raw)}"
                 attributes.update(self._get_output_messages(raw))
                 if "usage" in raw:
                     attributes.update(self._get_token_counts(raw["usage"]))
-            
-            if (additional_kwargs := getattr(response, "additional_kwargs", None)) is not None:
+
+            if (
+                additional_kwargs := getattr(
+                    response, "additional_kwargs", None
+                )
+            ) is not None:
                 attributes.update(self._get_token_counts(additional_kwargs))
 
         ###########################
@@ -389,7 +414,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     attributes["reranker_output_documents"] = processed_nodes
                 else:
                     attributes["reranker_input_documents"] = processed_nodes
-            
+
         ###########################
         # process tool
         tool = payload.get(EventPayload.TOOL)
@@ -397,9 +422,11 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         if tool:
             tool_metadata = cast(ToolMetadata, tool)
-            tool_parameters = tool_metadata.to_openai_tool()["function"]["parameters"]
-            attributes['tool_name'] = tool_metadata.name
-            attributes['tool_description'] = tool_metadata.description
+            tool_parameters = tool_metadata.to_openai_tool()["function"][
+                "parameters"
+            ]
+            attributes["tool_name"] = tool_metadata.name
+            attributes["tool_description"] = tool_metadata.description
 
         if tool_parameters:
             attributes["tool_parameters"] = json.dumps(tool_parameters)
@@ -410,39 +437,49 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         if serialized:
             if event_type is CBEventType.EMBEDDING:
                 if model_name := serialized.get("model_name"):
-                    attributes['embedding_model_name'] = model_name
+                    attributes["embedding_model_name"] = model_name
             if event_type is CBEventType.LLM:
                 if model_name := serialized.get("model"):
-                    attributes['llm_model_name'] = model_name
-                    invocation_parameters = self._extract_invocation_parameters(serialized)
+                    attributes["llm_model_name"] = model_name
+                    invocation_parameters = self._extract_invocation_parameters(
+                        serialized
+                    )
                     invocation_parameters["model"] = model_name
-                    attributes["llm_hyperparameters"] = json.dumps(invocation_parameters)
-        
+                    attributes["llm_hyperparameters"] = json.dumps(
+                        invocation_parameters
+                    )
+
         ###########################
         # process templates
         payloads = [payload.copy()]
         if is_event_end == False:
             if event_type is CBEventType.TEMPLATING:
-                    self._templating_parent_id[event_id] = parent_id
-                    if payloads:
-                        if parent_id in self._templating_payloads:
-                            self._templating_payloads[parent_id].extend(payloads)
-                        else:
-                            self._templating_payloads[parent_id] = payloads
+                self._templating_parent_id[event_id] = parent_id
+                if payloads:
+                    if parent_id in self._templating_payloads:
+                        self._templating_payloads[parent_id].extend(payloads)
+                    else:
+                        self._templating_payloads[parent_id] = payloads
 
             if event_type is CBEventType.LLM:
-                for templating_payload in self._templating_payloads.pop(parent_id, ()):
-                    attributes.update(self._template_attributes(templating_payload))
+                for templating_payload in self._templating_payloads.pop(
+                    parent_id, ()
+                ):
+                    attributes.update(
+                        self._template_attributes(templating_payload)
+                    )
         else:
             if event_type is CBEventType.TEMPLATING:
-                if (parent_id := self._templating_parent_id.pop(event_id, None)) and payload:
+                if (
+                    parent_id := self._templating_parent_id.pop(event_id, None)
+                ) and payload:
                     if parent_id in self._templating_payloads:
                         self._templating_payloads[parent_id].append(payload)
                     else:
                         self._templating_payloads[parent_id] = [payload]
-            
+
         return attributes
-    
+
     ##################################################
     ########### additional helper functions ##########
     ##################################################
@@ -453,7 +490,9 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             if content := message.content:
                 yield "output_value", content
             else:
-                yield "output_value", json.dumps(message.additional_kwargs, cls=_CustomJSONEncoder)
+                yield "output_value", json.dumps(
+                    message.additional_kwargs, cls=_CustomJSONEncoder
+                )
         elif isinstance(response, Response):
             if response.response:
                 yield "output_value", response.response
@@ -464,40 +503,45 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             yield "output_value", str(response)
 
     def _get_token_counts(
-            self,
-            usage: Union[object, Mapping[str, Any]]) -> Iterator[Tuple[str, Any]]:
+        self, usage: Union[object, Mapping[str, Any]]
+    ) -> Iterator[Tuple[str, Any]]:
         if isinstance(usage, Mapping):
             yield from self._get_token_counts_from_mapping(usage)
         elif isinstance(usage, object):
             yield from self._get_token_counts_from_object(usage)
-    
+
     def _template_attributes(
-            self,
-            payload: Dict[str, Any]) -> Iterator[Tuple[str, Any]]:
+        self, payload: Dict[str, Any]
+    ) -> Iterator[Tuple[str, Any]]:
         if template := payload.get(EventPayload.TEMPLATE):
             yield "llm_prompt_template", template
         if template_vars := payload.get(EventPayload.TEMPLATE_VARS):
             yield "llm_prompt_template_variables", json.dumps(template_vars)
-            
-    def _get_token_counts_from_object(self, usage: object) -> Iterator[Tuple[str, Any]]:
+
+    def _get_token_counts_from_object(
+        self, usage: object
+    ) -> Iterator[Tuple[str, Any]]:
         if (prompt_tokens := getattr(usage, "prompt_tokens", None)) is not None:
             yield "llm_token_prompt_count", prompt_tokens
-        if (completion_tokens := getattr(usage, "completion_tokens", None)) is not None:
+        if (
+            completion_tokens := getattr(usage, "completion_tokens", None)
+        ) is not None:
             yield "llm_token_count_completion", completion_tokens
         if (total_tokens := getattr(usage, "total_tokens", None)) is not None:
             yield "llm_token_count_total", total_tokens
 
     def _get_token_counts_from_mapping(
-            self, 
+        self,
         usage_mapping: Mapping[str, Any],
     ) -> Iterator[Tuple[str, Any]]:
         if (prompt_tokens := usage_mapping.get("prompt_tokens")) is not None:
             yield "llm_token_prompt_count", prompt_tokens
-        if (completion_tokens := usage_mapping.get("completion_tokens")) is not None:
+        if (
+            completion_tokens := usage_mapping.get("completion_tokens")
+        ) is not None:
             yield "llm_token_count_completion", completion_tokens
         if (total_tokens := usage_mapping.get("total_tokens")) is not None:
             yield "llm_token_count_total", total_tokens
-
 
     def process_nodes(self, nodes) -> Dict[str, Optional[str]]:
         processed_nodes = [
@@ -511,47 +555,59 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     else {}
                 ),
             }
-            for node_with_score in nodes]
+            for node_with_score in nodes
+        ]
         return processed_nodes
-
 
     def process_message(self, message: Any) -> Dict[str, Optional[str]]:
         if isinstance(message, ChatMessage):
             message_attributes = {
-                'message_role': message.role.value,
-                'message_content': message.content,
+                "message_role": message.role.value,
+                "message_content": message.content,
             }
             # Parse the kwargs to extract the function name and parameters for function calling
             # NB: these additional kwargs exist both for 'agent' and 'function' roles
             if "name" in message.additional_kwargs:
-                message_attributes['message_name'] = message.additional_kwargs["name"]
+                message_attributes["message_name"] = message.additional_kwargs[
+                    "name"
+                ]
             if tool_calls := message.additional_kwargs.get("tool_calls"):
                 assert isinstance(
                     tool_calls, Iterable
                 ), f"tool_calls must be Iterable, found {type(tool_calls)}"
                 message_tool_calls = []
                 for tool_call in tool_calls:
-                    if message_tool_call := dict(self._get_tool_call(tool_call)):
+                    if message_tool_call := dict(
+                        self._get_tool_call(tool_call)
+                    ):
                         message_tool_calls.append(message_tool_call)
                 if message_tool_calls:
-                    message_attributes["message_tool_calls"] = message_tool_calls
+                    message_attributes["message_tool_calls"] = (
+                        message_tool_calls
+                    )
             return message_attributes
 
         return {
-            'message_role': "user",  # assume user if not ChatMessage
-            'message_content': str(message),
+            "message_role": "user",  # assume user if not ChatMessage
+            "message_content": str(message),
         }
-    
+
     def _get_tool_call(self, tool_call: object) -> Iterator[Tuple[str, Any]]:
         if function := getattr(tool_call, "function", None):
             if name := getattr(function, "name", None):
-                assert isinstance(name, str), f"name must be str, found {type(name)}"
+                assert isinstance(
+                    name, str
+                ), f"name must be str, found {type(name)}"
                 yield "tool_call_function_name", name
             if arguments := getattr(function, "arguments", None):
-                assert isinstance(arguments, str), f"arguments must be str, found {type(arguments)}"
+                assert isinstance(
+                    arguments, str
+                ), f"arguments must be str, found {type(arguments)}"
                 yield "tool_call_function_arguments_json", arguments
 
-    def _extract_invocation_parameters(self, serialized: Mapping[str, Any]) -> Dict[str, Any]:
+    def _extract_invocation_parameters(
+        self, serialized: Mapping[str, Any]
+    ) -> Dict[str, Any]:
         # FIXME: this is only based on openai. Other models have different parameters.
         if not hasattr(serialized, "get"):
             return {}
@@ -563,25 +619,33 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             if (value := serialized.get(key)) is not None:
                 invocation_parameters[key] = value
         return invocation_parameters
-    
-    def _get_output_messages(self, raw: Mapping[str, Any]) -> Iterator[Tuple[str, Any]]:
+
+    def _get_output_messages(
+        self, raw: Mapping[str, Any]
+    ) -> Iterator[Tuple[str, Any]]:
         assert hasattr(raw, "get"), f"raw must be Mapping, found {type(raw)}"
         if not (choices := raw.get("choices")):
             return
-        assert isinstance(choices, Iterable), f"choices must be Iterable, found {type(choices)}"
+        assert isinstance(
+            choices, Iterable
+        ), f"choices must be Iterable, found {type(choices)}"
         if messages := [
             dict(self._get_message(message))
             for choice in choices
             if (message := getattr(choice, "message", None)) is not None
         ]:
             yield "llm_output_messages", messages
-    
+
     def _get_message(self, message: object) -> Iterator[Tuple[str, Any]]:
         if role := getattr(message, "role", None):
-            assert isinstance(role, str), f"content must be str, found {type(role)}"
+            assert isinstance(
+                role, str
+            ), f"content must be str, found {type(role)}"
             yield "message_role", role
         if content := getattr(message, "content", None):
-            assert isinstance(content, str), f"content must be str, found {type(content)}"
+            assert isinstance(
+                content, str
+            ), f"content must be str, found {type(content)}"
             yield "message_content", content
         if tool_calls := getattr(message, "tool_calls", None):
             assert isinstance(
@@ -593,7 +657,8 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     message_tool_calls.append(message_tool_call)
             if message_tool_calls:
                 yield "message_tool_calls", message_tool_calls
-            
+
+
 class _CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj: object) -> Any:
         try:

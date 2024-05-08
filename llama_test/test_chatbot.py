@@ -6,7 +6,10 @@ from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from typing import Any
 
-from deepeval.integrations.llama_index import DeepEvalToxicityEvaluator, LlamaIndexCallbackHandler
+from deepeval.integrations.llama_index import (
+    DeepEvalToxicityEvaluator,
+    LlamaIndexCallbackHandler,
+)
 from deepeval.metrics import ToxicityMetric
 from deepeval.test_case import LLMTestCase
 from deepeval import evaluate
@@ -15,16 +18,20 @@ from deepeval import evaluate
 # set up integration
 ###########################################################
 
+
 # set llama index global handler
 def deepeval_callback_handler(**eval_params: Any) -> BaseCallbackHandler:
     return LlamaIndexCallbackHandler(**eval_params)
+
 
 def set_global_handler(eval_mode: str, **eval_params: Any) -> None:
     """Set global eval handlers."""
     if eval_mode == "deepeval":
         handler = deepeval_callback_handler(**eval_params)
         import llama_index.core
+
         llama_index.core.global_handler = handler
+
 
 set_global_handler("deepeval")
 
@@ -39,9 +46,7 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-ada-002")
 # Generate nodes from documents
 documents = SimpleDirectoryReader("data").load_data()
 node_parser = SentenceSplitter(chunk_size=200, chunk_overlap=20)
-nodes = node_parser.get_nodes_from_documents(
-    documents, show_progress=True
-)
+nodes = node_parser.get_nodes_from_documents(documents, show_progress=True)
 
 # Define embedding model
 index = VectorStoreIndex(nodes)

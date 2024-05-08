@@ -23,9 +23,11 @@ class TraceType(Enum):
     QUERY = "Query"
     RERANKING = "Reranking"
 
+
 class TraceStatus(Enum):
     SUCCESS = "Success"
     ERROR = "Error"
+
 
 @dataclass
 class LlmMetadata:
@@ -36,9 +38,11 @@ class LlmMetadata:
     llmPromptTemplate: Optional[Any]
     llmPromptTemplateVariables: Optional[Any]
 
+
 @dataclass
 class EmbeddingMetadata:
     model: Optional[str]
+
 
 @dataclass
 class BaseTrace:
