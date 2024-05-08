@@ -5,7 +5,9 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from typing import Any
+from llama_index.core.callbacks.base import CallbackManager
 
+from deepeval.tracing import get_trace_stack
 from deepeval.integrations.llama_index import (
     DeepEvalToxicityEvaluator,
     LlamaIndexCallbackHandler,
@@ -53,17 +55,27 @@ index = VectorStoreIndex(nodes)
 
 # Build query engine
 query_engine = index.as_query_engine(similarity_top_k=5)
+chat_engine = index.as_chat_engine()
 
-user_input = "what does your company do"
-res = query_engine.query(user_input)
-test_case = LLMTestCase(
-    input=user_input,
-    actual_output=res.response,
-)
+callback_manager = CallbackManager()
+
+while True:
+    user_input = input("Enter your question: ")
+    response = query_engine.query(user_input)
+    # response = chat_engine.chat(user_input)
+    print("Bot response:", response)
+    print("@@@@@@@")
+    # print(get_trace_stack())
+
+# test_case = LLMTestCase(
+#     input=user_input,
+#     actual_output=res.response,
+# )
+
 
 # evaluator = DeepEvalToxicityEvaluator()
 # result = evaluator.evaluate_response(query=user_input, response=res)
 # print(result)
 
-metric = ToxicityMetric(threshold=0.5)
-evaluate([test_case], [metric])
+# metric = ToxicityMetric(threshold=0.5)
+# evaluate([test_case], [metric])
