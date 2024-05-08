@@ -14,9 +14,11 @@ A test case is a blueprint provided by `deepeval` to unit test LLM outputs based
 - [Optional] `context`
 - [Optional] `retrieval_context`
 
-Except for `actual_output`, all parameters should originate from your evaluation dataset (if you have one). Here's an example implementation of a test case:
+Here's an example implementation of a test case:
 
 ```python
+from deepeval.test_case import LLMTestCase
+
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     expected_output="You're eligible for a 30 day refund at no extra cost.",
@@ -26,61 +28,55 @@ test_case = LLMTestCase(
 )
 ```
 
-**Note that only `input` and `actual_output` are mandatory.**
+:::info
+Since `deepeval` is an LLM evaluation framework, the ** `input` and `actual_output` are always mandatory.** However, this does not mean they are necessarily used for evaluation.
 
-However, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
-
-Let's go through the purpsoe of each parameter.
+Additionally, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
+:::
 
 ## Input
 
-An input mimics a user interacting with your LLM application. The input is usually a prompt composed of dynamic data embedded in a prompt template.
+The `input` mimics a user interacting with your LLM application. The input is the direct input to your prompt template, and so **SHOULD NOT CONTAIN** your prompt template.
 
 ```python
-prompt_template = """
-    Impersonate a dog when replying to the text below.
-
-    {text}
-"""
-
-prompt = prompt_template.format(text="Who's a good boy?")
+from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
-    input=prompt,
+    input="Why did the chicken cross the road?",
     # Replace this with your actual LLM application
-    actual_output="ruff ruff ruff"
+    actual_output="Quite frankly, I don't want to know..."
 )
 ```
 
+:::tip
+
+Hyperparameters such as **prompt templates are independent variables that you try to optimize for** based on the metric scores you get from evaluation, which is why you should never include it as part of a test case. Another way to think about it is for a given `input`, which prompt template would give you the best `actual_output`.
+
+:::
+
 ## Actual Output
 
-An actual output is simply the output your LLM application returns for a given input. This is what your users are going to interact with. Typcailly, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
-
-Expanding on the previous example:
+The `actual_output` is simply what your LLM application returns for a given input. This is what your users are going to interact with. Typcailly, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
 
 ```python
 # A hypothetical LLM application example
 import chatbot
 
-prompt_template = """
-    Impersonate a dog when replying to the text below.
-
-    {text}
-"""
-
-prompt = prompt_template.format(text="Who's a good boy?")
+input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
-    input=prompt,
-    # Replace this with your actual LLM application
-    actual_output=chatbot.run(prompt)
+    input=input,
+    actual_output=chatbot.run(input)
 )
-
 ```
+
+:::note
+You may also choose to evaluate with precomputed `actual_output`s, instead of generating `actual_output`s at evaluation time.
+:::
 
 ## Expected Output
 
-An expected output is literally what you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
+The `expected_output` is literally what you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
 
 The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](metrics-introduction)
 
@@ -88,19 +84,12 @@ The expected output doesn't have to exactly match the actual output in order for
 # A hypothetical LLM application example
 import chatbot
 
-prompt_template = """
-    Impersonate a dog when replying to the text below.
-
-    {text}
-"""
-
-prompt = prompt_template.format(text="Who's a good boy?")
+input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
-    input=prompt,
-    # Replace this with your actual LLM application
-    actual_output=chatbot.run(prompt),
-    expected_output="Me, ruff!"
+    input=input,
+    actual_output=chatbot.run(input),
+    expected_output="To get to the other side!"
 )
 ```
 
@@ -108,7 +97,7 @@ test_case = LLMTestCase(
 
 The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant to a specific input. Context allows your LLM to generate customized outputs that are outside the scope of the data it was trained on.
 
-In RAG applications, contextual information is typically stored in your selected vector database. Conversely, for a fine-tuning use case, this data is usually found in training datasets used to fine-tune your model. Providing the appropriate contextual information when constructing your evaluation dataset is one of the most challenging part of evaluating LLMs, since data in your knowledge base can constantly be changing.
+In RAG applications, contextual information is typically stored in your selected vector database, which is represented by `retrieval_context` in an `LLMTestCase` and is not to be confused with `context`. Conversely, for a fine-tuning use case, this data is usually found in training datasets used to fine-tune your model. Providing the appropriate contextual information when constructing your evaluation dataset is one of the most challenging part of evaluating LLMs, since data in your knowledge base can constantly be changing.
 
 Unlike other parameters, a context accepts a list of strings.
 
@@ -116,22 +105,13 @@ Unlike other parameters, a context accepts a list of strings.
 # A hypothetical LLM application example
 import chatbot
 
-prompt_template = """
-    Impersonate a dog named Rocky when replying to the text below.
-
-    {text}
-"""
-
-prompt = prompt_template.format(text="Who's a good boy?")
-
-context = ["Rocky is a good boy."]
+input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
-    input=prompt,
-    # Replace this with your actual LLM application
-    actual_output=chatbot.run(prompt),
-    expected_output="Me, ruff!",
-    context=context
+    input=input,
+    actual_output=chatbot.run(input),
+    expected_output="To get to the other side!",
+    context=["The chicken wanted to cross the road."]
 )
 ```
 
@@ -147,28 +127,19 @@ The `retrieval_context` is an **optional** parameter that represents your RAG pi
 # A hypothetical LLM application example
 import chatbot
 
-prompt_template = """
-    Impersonate a dog named Rocky when replying to the text below.
-
-    {text}
-"""
-
-prompt = prompt_template.format(text="Who's a good boy?")
-
-# Replace this with the actual retrieved context from your RAG pipeline
-retrieval_context = ["Rocky is a good cat."]
+input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
-    input=prompt,
-    # Replace this with your actual LLM application
-    actual_output=chatbot.run(prompt),
-    expected_output="Me, ruff!",
-    retrieval_context=retrieval_context
+    input=input,
+    actual_output=chatbot.run(input),
+    expected_output="To get to the other side!",
+    context=["The chicken wanted to cross the road."],
+    retrieval_context=["The chicken liked the other side of the road better"]
 )
 ```
 
 :::note
-Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results.
+Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results. So, while they might look similar at times, they are not the same.
 :::
 
 ## Assert A Test Case
@@ -190,36 +161,12 @@ from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
 
-prompt_template = """
-    Impersonate a dog named Rocky when replying to the text below.
-
-    {text}
-"""
-
-def test_case_1():
-    prompt = prompt_template.format(text="Who's a good boy?")
-    context = ["Rocky is a good boy."]
-
+def test_assert_example():
+    input = "Why did the chicken cross the road?"
     test_case = LLMTestCase(
-        input=prompt,
-        # Replace this with your actual LLM application
-        actual_output=chatbot.run(prompt),
-        expected_output="Me, ruff!",
-        context=context
-    )
-    metric = HallucinationMetric(threshold=0.7)
-    assert_test(test_case, metrics=[metric])
-
-def test_case_2():
-    prompt = prompt_template.format(text="Who's a good boy?")
-    context = ["Rocky is a good boy."]
-
-    test_case = LLMTestCase(
-        input=prompt,
-        # Replace this with your actual LLM application
-        actual_output=chatbot.run(prompt),
-        expected_output="Me, ruff!",
-        context=context
+        input=input,
+        actual_output=chatbot.run(input),
+        context=["The chicken wanted to cross the road."],
     )
     metric = HallucinationMetric(threshold=0.7)
     assert_test(test_case, metrics=[metric])
@@ -252,35 +199,14 @@ from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
 
-prompt_template = """
-    Impersonate a dog named Rocky when replying to the text below.
-
-    {text}
-"""
-
-prompt = prompt_template.format(text="Who's a good boy?")
-context = ["Rocky is a good boy."]
-
-first_test_case = LLMTestCase(
-    input=prompt,
-    # Replace this with your actual LLM application
-    actual_output=chatbot.run(prompt),
-    expected_output="Me, ruff!",
-    context=context
+test_case = LLMTestCase(
+    input=input,
+    actual_output=chatbot.run(input),
+    context=["The chicken wanted to cross the road."],
 )
-
-second_test_case = LLMTestCase(
-    input=prompt,
-    # Replace this with your actual LLM application
-    actual_output=chatbot.run(prompt),
-    expected_output="Me, ruff!",
-    context=context
-)
-
-test_cases = [first_test_case, second_test_case]
 
 metric = HallucinationMetric(threshold=0.7)
-evaluate(test_cases, [metric])
+evaluate([test_case], [metric])
 ```
 
 There are two mandatory and four optional arguments when calling the `evaluate()` function:
