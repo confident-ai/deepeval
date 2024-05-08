@@ -6,7 +6,7 @@ sidebar_label: Datasets
 
 ## Quick Summary
 
-In `deepeval`, an evaluation dataset, or just dataset, is a collection of `LLMTestCase`s. There are two approaches to evaluating datasets in `deepeval`:
+In `deepeval`, an evaluation dataset, or just dataset, is a collection of `LLMTestCase`s and/or `Golden`s. There are two approaches to evaluating datasets in `deepeval`:
 
 1. using `@pytest.mark.parametrize` and `assert_test`
 2. using `evaluate`
@@ -68,19 +68,32 @@ A `Golden` and `LLMTestCase` contains almost an identical class signature, so te
 
 ```python
 from deepeval.dataset import EvaluationDataset
-from deepeval.synthesizer import Synthesizer
 
-synthesizer = Synthesizer()
 dataset = EvaluationDataset()
 dataset.generate_goldens_from_docs(
+    document_paths=['example.txt', 'example.docx', 'example.pdf'],
+    max_goldens_per_document=2
+)
+```
+
+Under the hood, an `EvaluationDataset` generates goldens using to `deepeval`'s `Synthesizer`. You can customize the `Synthesizer` used to generate goldens within an `EvaluationDataset`.
+
+```python
+from deepeval.dataset import EvaluationDataset
+from deepeval.synthesizer import Synthesizer
+...
+
+# Use gpt-3.5-turbo instead
+synthesizer = Synthesizer(model="gpt-3.5-turbo")
+dataset.generate_goldens_from_docs(
     synthesizer=synthesizer,
-    document_paths=['example_1.txt', 'example_2.docx', 'example_3.pdf'],
+    document_paths=['example.pdf'],
     max_goldens_per_document=2
 )
 ```
 
 :::info
-The `Synthesizer` uses a series of evolution techniques to complicate and make generated goldens more realistic to human prepared data. For more information on how the `Synthesizer` works, visit the [synthesizer section.](evaluation-datasets-synthetic-data)
+`deepeval`'s `Synthesizer` uses a series of evolution techniques to complicate and make generated goldens more realistic to human prepared data. For more information on how `deepeval`'s `Synthesizer` works, visit the [synthesizer section.](evaluation-datasets-synthetic-data)
 :::
 
 ## Load an Existing Dataset

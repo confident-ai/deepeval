@@ -3,7 +3,7 @@ import os
 import csv
 import json
 from threading import Lock
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
@@ -31,13 +31,11 @@ class Synthesizer:
         multithreading: bool = True,
     ):
         self.model, self.using_native_model = initialize_model(model)
-
-        # self.embedder = embedder
         self.generator_model = self.model.get_model_name()
         self.multithreading = multithreading
-        # self.batch_size = batch_size
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
+        # self.embedder = embedder
 
     def _evolve_text(
         self,
@@ -56,14 +54,14 @@ class Synthesizer:
             EvolutionTemplate.hypothetical_scenario_evolution,
         ]
         if enable_breadth_evolve:
-            evolution_method.append(EvolutionTemplate.in_breadth_evolution)
+            evolution_methods.append(EvolutionTemplate.in_breadth_evolution)
 
         evolved_text = text
         for _ in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
             prompt = evolution_method(input=evolved_text, context=context)
             if self.using_native_model:
-                evolved_text, _ = self.model.generate(prompt)
+                evolved_text, cost = self.model.generate(prompt)
             else:
                 evolved_text = self.model.generate(prompt)
 
@@ -73,6 +71,7 @@ class Synthesizer:
         self,
         context: List[str],
         goldens: List[Golden],
+        include_expected_output: bool,
         max_goldens_per_context: int,
         lock: Lock,
         num_evolutions: int,
@@ -80,19 +79,19 @@ class Synthesizer:
         source_files: Optional[List[str]],
         index: int,
     ):
-        prompt = SynthesizerTemplate.generate_synthetic_data(
+        prompt = SynthesizerTemplate.generate_synthetic_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
         )
         if self.using_native_model:
-            res, _ = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt)
         else:
             res = self.model.generate(prompt)
+
         data = trimAndLoadJson(res)
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
+
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
-            # TODO: evolution
-            # Note: skip multithreading for now
             evolved_input = self._evolve_text(
                 data.input,
                 context=context,
@@ -105,6 +104,18 @@ class Synthesizer:
             golden = Golden(
                 input=evolved_input, context=context, sourceFile=source_file
             )
+
+            if include_expected_output:
+                prompt = SynthesizerTemplate.generate_synthetic_expected_output(
+                    input=golden.input, context="\n".join(golden.context)
+                )
+                if self.using_native_model:
+                    res, cost = self.model.generate(prompt)
+                else:
+                    res = self.model.generate(prompt)
+
+                golden.expected_output = res
+
             temp_goldens.append(golden)
 
         with lock:
@@ -113,6 +124,7 @@ class Synthesizer:
     def generate_goldens(
         self,
         contexts: List[List[str]],
+        include_expected_output: bool = False,
         max_goldens_per_context: int = 2,
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
@@ -132,6 +144,7 @@ class Synthesizer:
                             self._generate,
                             context,
                             goldens,
+                            include_expected_output,
                             max_goldens_per_context,
                             lock,
                             num_evolutions,
@@ -146,14 +159,16 @@ class Synthesizer:
                         future.result()
             else:
                 for i, context in enumerate(contexts):
-                    prompt = SynthesizerTemplate.generate_synthetic_data(
+                    prompt = SynthesizerTemplate.generate_synthetic_inputs(
                         context=context,
                         max_goldens_per_context=max_goldens_per_context,
                     )
+
                     if self.using_native_model:
-                        res, _ = self.model.generate(prompt)
+                        res, cost = self.model.generate(prompt)
                     else:
                         res = self.model.generate(prompt)
+
                     data = trimAndLoadJson(res)
                     synthetic_data = [
                         SyntheticData(**item) for item in data["data"]
@@ -175,6 +190,19 @@ class Synthesizer:
                             context=context,
                             source_file=source_file,
                         )
+
+                        if include_expected_output:
+                            prompt = SynthesizerTemplate.generate_synthetic_expected_output(
+                                input=golden.input,
+                                context="\n".join(golden.context),
+                            )
+                            if self.using_native_model:
+                                res, cost = self.model.generate(prompt)
+                            else:
+                                res = self.model.generate(prompt)
+
+                            golden.expected_output = res
+
                         goldens.append(golden)
 
             self.synthetic_goldens.extend(goldens)
@@ -183,6 +211,7 @@ class Synthesizer:
     def generate_goldens_from_docs(
         self,
         document_paths: List[str],
+        include_expected_output: bool = False,
         max_goldens_per_document: int = 5,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
@@ -212,6 +241,7 @@ class Synthesizer:
 
             return self.generate_goldens(
                 contexts,
+                include_expected_output,
                 max_goldens_per_context,
                 num_evolutions,
                 enable_breadth_evolve,
@@ -219,7 +249,7 @@ class Synthesizer:
                 _show_indicator=False,
             )
 
-    def save_as(self, file_type: str, directory: str):
+    def save_as(self, file_type: str, directory: str) -> str:
         if file_type not in valid_file_types:
             raise ValueError(
                 f"Invalid file type. Available file types to save as: {', '.join(type for type in valid_file_types)}"
@@ -270,3 +300,4 @@ class Synthesizer:
                     )
 
         print(f"Synthetic goldens saved at {full_file_path}!")
+        return full_file_path

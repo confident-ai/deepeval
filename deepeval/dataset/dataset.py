@@ -403,14 +403,19 @@ class EvaluationDataset:
 
     def generate_goldens(
         self,
-        synthesizer: BaseSynthesizer,
         contexts: List[List[str]],
+        synthesizer: BaseSynthesizer = None,
         max_goldens_per_context: int = 2,
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
         source_files: Optional[List[str]] = None,
         _show_indicator: bool = True,
     ):
+        from deepeval.synthesizer import Synthesizer
+
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+
         self.goldens.extend(
             synthesizer.generate_goldens(
                 contexts=contexts,
@@ -424,14 +429,19 @@ class EvaluationDataset:
 
     def generate_goldens_from_docs(
         self,
-        synthesizer: BaseSynthesizer,
         document_paths: List[str],
+        synthesizer: BaseSynthesizer = None,
         max_goldens_per_document: int = 5,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
     ):
+        from deepeval.synthesizer import Synthesizer
+
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+
         self.goldens.extend(
             synthesizer.generate_goldens_from_docs(
                 document_paths=document_paths,

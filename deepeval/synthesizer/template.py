@@ -1,6 +1,6 @@
 class SynthesizerTemplate:
     @staticmethod
-    def generate_synthetic_data(context, max_goldens_per_context):
+    def generate_synthetic_inputs(context, max_goldens_per_context):
         return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
             The `input` can either be a question or a statement that can be addressed by the given context.
 
@@ -26,7 +26,7 @@ class SynthesizerTemplate:
             You should NOT incorporate any prior knowledge you have and take each context at face value.
             You MUST include at least one statement as the input.
             `input` MUST be a STRING.
-            You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting reptitive.
+            You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting reptitive.
             **
 
             Max Goldens Per Context:
@@ -37,6 +37,23 @@ class SynthesizerTemplate:
 
             JSON:
             """
+
+    @staticmethod
+    def generate_synthetic_expected_output(input, context):
+        return f"""Given the input, which may or may not be a question, generate a response using information presented in context.
+
+**
+IMPORTANT: Please make sure to generate a response that is concise and straight to the point, and uses supporting information in context.
+**
+
+Context:
+{context}
+
+Input:
+{input}
+
+Generated Response:
+"""
 
 
 ######################################################################################################
