@@ -17,8 +17,8 @@ def send_feedback(
         if provider != "user" and provider != "reviewer":
             raise ValueError("'provider' must be either 'user' or 'reviewer'.")
 
-        if rating < 0 or rating > 5:
-            raise ValueError("'rating' must be between 0 and 5, inclusive.")
+        if rating < 1 or rating > 5:
+            raise ValueError("'rating' must be between 1 and 5, inclusive.")
 
         api_event = APIFeedback(
             eventId=event_id,
