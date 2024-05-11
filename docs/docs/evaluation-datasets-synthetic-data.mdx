@@ -9,7 +9,7 @@ sidebar_label: Synthesizer
 `deepeval` offers a data `Synthesizer` for anyone to easily generate evaluation datasets from scratch. The `Synthesizer` class is a synthetic data generator that first uses an LLM to generate a series of `input`s, before evolving each `input` to make them more complex and realistic. These evolved inputs are then used to create a **list of synthetic `Golden`s**, which makes up your synthetic `EvaluationDataset`.
 
 :::tip Did You Know?
-`deepeval`'s `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of [Eval-Struct and WizardML.](https://arxiv.org/abs/2304.12244)
+`deepeval`'s `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244)
 
 For those interested, here is a [great article on how `deepeval`'s synthesizer was built.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
 :::
