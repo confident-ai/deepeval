@@ -208,7 +208,7 @@ class RougeMetric(BaseMetric):
         self.scorer = Scorer()
 
     def measure(self, test_case: LLMTestCase):
-        self.score = scorer.rouge_score(
+        self.score = Scorer.rouge_score(
             prediction=test_case.actual_output,
             target=test_case.expected_output,
             score_type="rouge1"
@@ -230,7 +230,9 @@ class RougeMetric(BaseMetric):
 ```
 
 :::note
-Although you're free to implement your own rouge scorer, you'll notice that although not documented, `deepeval` additionally offers a `scorer` module for more traditional NLP scoring method and can be found [here.](https://github.com/confident-ai/deepeval/blob/main/deepeval/scorer/scorer.py)
+Be sure to `pip install rouge-score` if not already installed on your environment.
+
+Although you're free to implement your own rouge scorer, you'll notice that while not documented, `deepeval` additionally offers a `scorer` module for more traditional NLP scoring method and can be found [here.](https://github.com/confident-ai/deepeval/blob/main/deepeval/scorer/scorer.py)
 :::
 
 You can now run this custom metric as a standalone in a few lines of code:
