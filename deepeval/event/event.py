@@ -1,6 +1,14 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
+from pydantic import BaseModel
+
 from deepeval.api import Api, Endpoints
-from deepeval.event.api import APIEvent, EventHttpResponse
+from deepeval.event.api import (
+    APIEvent,
+    EventHttpResponse,
+    CustomPropertyType,
+    CustomProperty,
+    Link,
+)
 
 
 def track(
@@ -14,19 +22,33 @@ def track(
     token_cost: Optional[float] = None,
     distinct_id: Optional[str] = None,
     conversation_id: Optional[str] = None,
-    additional_data: Optional[Dict[str, str]] = None,
+    additional_data: Optional[Dict[str, Union[str, Link, Dict]]] = None,
     hyperparameters: Optional[Dict[str, str]] = {},
     fail_silently: Optional[bool] = False,
     raise_expection: Optional[bool] = True,
     run_async: Optional[bool] = True,
 ) -> str:
     try:
-        if additional_data and not all(
-            isinstance(value, str) for value in additional_data.values()
-        ):
-            raise ValueError(
-                "All values in the 'additional_data' must of type string."
-            )
+        custom_properties = None
+        if additional_data:
+            custom_properties = {}
+            for key, value in additional_data.items():
+                if isinstance(value, str):
+                    custom_properties[key] = CustomProperty(
+                        value=value, type=CustomPropertyType.TEXT
+                    )
+                elif isinstance(value, dict):
+                    custom_properties[key] = CustomProperty(
+                        value=value, type=CustomPropertyType.JSON
+                    )
+                elif isinstance(value, Link):
+                    custom_properties[key] = CustomProperty(
+                        value=value.value, type=CustomPropertyType.LINK
+                    )
+                else:
+                    raise ValueError(
+                        "All values in 'additional_data' must be either of type 'string', 'Link', or 'dict'."
+                    )
 
         if hyperparameters and not all(
             isinstance(value, str) for value in hyperparameters.values()
@@ -47,7 +69,7 @@ def track(
             tokenCost=token_cost,
             distinctId=distinct_id,
             conversationId=conversation_id,
-            additionalData=additional_data,
+            customProperties=custom_properties,
             hyperparameters=hyperparameters,
         )
         api = Api()
