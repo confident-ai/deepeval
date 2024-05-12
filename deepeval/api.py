@@ -24,7 +24,7 @@ HTTP_RETRY_ALLOWED_METHODS = frozenset({"GET", "POST", "DELETE"})
 class Endpoints(Enum):
     DATASET_ENDPOINT = "/v1/dataset"
     TEST_RUN_ENDPOINT = "/v1/test-run"
-    EVENT_ENDPOINT = "/v1/test"
+    EVENT_ENDPOINT = "/v1/event"
     FEEDBACK_ENDPOINT = "/v1/feedback"
 
 
