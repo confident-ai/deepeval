@@ -147,7 +147,7 @@ class RougeMetric(BaseMetric):
         self.scorer = Scorer()
 
     def measure(self, test_case: LLMTestCase):
-        self.score = scorer.rouge_score(
+        self.score = self.scorer.rouge_score(
             prediction=test_case.actual_output,
             target=test_case.expected_output,
             score_type="rouge1"
