@@ -38,9 +38,6 @@ class APIEvent(BaseModel):
     )
     hyperparameters: Optional[Dict] = Field(None)
 
-    # TODO: deprecate
-    additional_data: Optional[Dict] = Field(None, alias="additionalData")
-
     class Config:
         use_enum_values = True
 

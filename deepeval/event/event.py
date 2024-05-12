@@ -71,8 +71,6 @@ def track(
             conversationId=conversation_id,
             customProperties=custom_properties,
             hyperparameters=hyperparameters,
-            # TODO: deprecate
-            additionalData=additional_data,
         )
         api = Api()
         try:
@@ -81,7 +79,6 @@ def track(
             # Pydantic version below 2.0
             body = api_event.dict(by_alias=True, exclude_none=True)
 
-        print(body)
         result = api.post_request(
             endpoint=Endpoints.EVENT_ENDPOINT.value,
             body=body,
