@@ -21,11 +21,7 @@ deepeval.track(
     event_name="Chatbot",
     model="gpt-4",
     input="input",
-    response="response",
-    hyperparameters={
-        "prompt template": "...",
-        "temperature": "3"
-    }
+    response="response"
 )
 ```
 
@@ -36,7 +32,7 @@ There are four mandatory and ten optional parameters when using the `track()` fu
 - `input`: type `str`.
 - `response`: type `str`.
 - [Optional] `retrieval_context`: type `list[str]` that indicates the context that were retrieved in your RAG pipeline.
-- [Optional] `additional_data`: type `dict[str,str]`. You can provide a dictionary to specify any additional data associated with the response.
+- [Optional] `additional_data`: type `dict[str, Union[str, dict, Link]]`. [See below](confident-ai-evals-in-production#tracking-additional-custom-data) for further details.
 - [Optional] `hyperparameters`: type `dict[str,str]`. You can provide a dictionary to specify any additional hyperparamters used to generate the response.
 - [Optional] `distinct_id`: type `str` to identify **end users** using your LLM application.
 - [Optional] `conversation_id`: type `str` to **group together multiple messages** under a single conversation thread.
@@ -59,6 +55,52 @@ event_id = deepeval.track(...)
 ```
 
 **Congratulations!** With a few lines of code, `deepeval` will now automatically log all LLM responses in production to Confident AI.
+
+### Tracking Custom Hyperparameters
+
+In addition to tracking which `model` was used to generate each response, you can also associate any custom hyperparameters you wish to each response you're tracking.
+
+```python
+import deepeval
+
+deepeval.track(
+    ...
+    model="gpt-4",
+    hyperparameters={
+        "prompt template": "...",
+        "temperature": "3"
+    }
+)
+```
+
+:::info
+Logging hyperparameters allows you to more easily filter and search for different responses on Confident AI.
+:::
+
+### Tracking Additional Custom Data
+
+Similar to hyperparameters, you can easily associate custom additional data for each response.
+
+```python
+import deepeval
+from deepeval.events.api import Link
+
+deepeval.track(
+    ...
+    additional_data={
+        "Example Data": "...",
+        # the Link class allows you to access the link directly on Confident AI
+        "Example Link": Link(value="https://www.youtube.com"),
+        "Example Json": {"Any Key": "Any Value"}
+    },
+)
+```
+
+Note that you can log either text, a `Link`, or any custom dict (as shown in the "Example Json"). Similar to hyperparameter, you can also filter and search for different responses based on the provided custom data.
+
+:::tip Did you know?
+Although you can technically log a link as a native string, the `Link(value="...")` class allows you to access said link directly on Confident AI.
+:::
 
 ## Sending Human Feedback
 
