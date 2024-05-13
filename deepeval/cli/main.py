@@ -104,6 +104,24 @@ def set_azure_openai_env(
     )
 
 
+@app.command(name="set-azure-openai-embedding")
+def set_azure_openai_embedding_env(
+    azure_embedding_deployment_name: str = typer.Option(
+        ...,
+        "--embedding-deployment-name",
+        help="Azure embedding deployment name",
+    ),
+):
+    KEY_FILE_HANDLER.write_key(
+        KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
+        azure_embedding_deployment_name,
+    )
+
+    print(
+        ":raising_hands: Congratulations! You're now using Azure OpenAI Embedding for Dataset Synthesizer."
+    )
+
+
 @app.command(name="unset-azure-openai")
 def unset_azure_openai_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_OPENAI_API_KEY)

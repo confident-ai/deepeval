@@ -40,26 +40,18 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             openai_api_version = KEY_FILE_HANDLER.fetch_data(
                 KeyValues.OPENAI_API_VERSION
             )
-            azure_deployment = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_DEPLOYMENT_NAME
+            azure_embedding_deployment = KEY_FILE_HANDLER.fetch_data(
+                KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
             )
             azure_endpoint = KEY_FILE_HANDLER.fetch_data(
                 KeyValues.AZURE_OPENAI_ENDPOINT
             )
 
-            model_version = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_MODEL_VERSION
-            )
-
-            if model_version is None:
-                model_version = ""
-
             return AzureOpenAIEmbeddings(
                 openai_api_version=openai_api_version,
-                azure_deployment=azure_deployment,
+                azure_deployment=azure_embedding_deployment,
                 azure_endpoint=azure_endpoint,
                 openai_api_key=openai_api_key,
-                model_version=model_version,
             )
 
         return OpenAIEmbeddings(model=self.model_name)
