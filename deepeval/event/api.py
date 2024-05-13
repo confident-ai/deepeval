@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 
 
 class APIEvent(BaseModel):
@@ -15,8 +15,8 @@ class APIEvent(BaseModel):
     distinct_id: Optional[str] = Field(None, alias="distinctId")
     conversation_id: Optional[str] = Field(None, alias="conversationId")
     additional_data: Optional[Dict] = Field(None, alias="additionalData")
+    trace_stack: Optional[Dict] = Field(None, alias="traceStack")
     hyperparameters: Optional[Dict] = Field(None)
-
 
 class APIFeedback(BaseModel):
     provider: str
@@ -24,7 +24,6 @@ class APIFeedback(BaseModel):
     rating: Optional[int]
     expected_response: Optional[str] = Field(alias="expectedResponse")
     explanation: Optional[str] = Field(None)
-
 
 class EventHttpResponse(BaseModel):
     eventId: str

@@ -13,6 +13,10 @@ from deepeval.event import track
 ### Trace Types ########################################
 ########################################################
 
+class TraceProvider(Enum):
+  LLAMA_INDEX = "Llama_index"
+  CUSTOM = "Custom"
+
 class TraceType(Enum):
     LLM = "LLM"
     RETRIEVER = "Retriever"
@@ -123,15 +127,16 @@ trace_manager = TraceManager()
 ########################################################
 
 class Tracer:
-    def __init__(self, trace_type: str, **params: Optional[Dict]):
-        self.trace_type = trace_type
+    def __init__(self, trace_type: TraceType, **params: Optional[Dict]):
+        self.trace_type: TraceType = trace_type
         self.params = params
         self.start_time = None
         self.execution_time = None
-        self.output = None
         self.metadata = None
-        self.track_params: Optional[Dict] = None
         self.status_results = {}
+        self.output = None
+        self.track_params: Optional[Dict] = None
+        self.is_tracking: bool = False
 
     def __enter__(self):
         # start timer
@@ -159,12 +164,12 @@ class Tracer:
         # Check if an exception occurred within the `with` block
         if exc_type is not None:
             self.status_results = {
-                'status': 'ERROR',
+                'status': 'Error',
                 'exception_type': exc_type.__name__,
                 'message': str(exc_val)
             }
         else:
-            self.status_results['status'] = 'SUCCESS'
+            self.status_results['status'] = 'Success'
 
         self.update_trace_instance()
         current_trace_stack = trace_manager.get_trace_stack_copy()
@@ -179,35 +184,34 @@ class Tracer:
             dict_representation = dataclass_to_dict(current_trace_stack[0])
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
-            print(dict_representation)
 
             # # send event to deepeval
-            # track(
-            #     event_name=self.track_params['event_name'],
-            #     model=self.track_params['model'],
-            #     input=self.track_params['input'],
-            #     response=self.track_params['response'],
-            #     retrieval_context=self.track_params['retrieval_context'],
-            #     completion_time=self.track_params['completion_time'],
-            #     token_usage=self.track_params['token_usage'],
-            #     token_cost=self.track_params['token_cost'],
-            #     distinct_id=self.track_params['distinct_id'],
-            #     conversation_id=self.track_params['conversation_id'],
-            #     additional_data=self.track_params['additional_data'],
-            #     hyperparameters=self.track_params['hyperparameters'],
-            #     fail_silently=self.track_params['fail_silently'],
-            #     raise_expection=self.track_params['raise_expection'],
-            #     run_async=self.track_params['run_async'],
-            # )
-
-            
+            if self.is_tracking:
+                track(
+                    event_name=self.track_params['event_name'] or self.trace_type.value,
+                    model=self.track_params['model'],
+                    input=self.track_params['input'],
+                    response=self.track_params['response'],
+                    retrieval_context=self.track_params['retrieval_context'],
+                    completion_time=self.track_params['completion_time'] or self.execution_time,
+                    token_usage=self.track_params['token_usage'],
+                    token_cost=self.track_params['token_cost'],
+                    distinct_id=self.track_params['distinct_id'],
+                    conversation_id=self.track_params['conversation_id'],
+                    additional_data=self.track_params['additional_data'],
+                    hyperparameters=self.track_params['hyperparameters'],
+                    fail_silently=self.track_params['fail_silently'],
+                    raise_exception=self.track_params['raise_exception'],
+                    run_async=self.track_params['run_async'],
+                    trace_stack=dict_representation
+                )
         else:
             trace_manager.pop_trace_stack()
     
     def create_trace_instance(self, trace_type, **params):
         if trace_type == TraceType.LLM:
             return LlmTrace(
-                type=trace_type, 
+                type=trace_type.value, 
                 executionTime=0, 
                 name=params.get('name', ''), 
                 input=params.get('input', None), 
@@ -218,7 +222,7 @@ class Tracer:
         
         elif trace_type == TraceType.EMBEDDING:
             return EmbeddingTrace(
-                type=trace_type, 
+                type=trace_type.value, 
                 executionTime=0, 
                 ame=params.get('name', ''), 
                 input=params.get('input', None), 
@@ -228,7 +232,7 @@ class Tracer:
                 embeddingMetadata=params.get('embeddingMetadata', None))
         else:
             return GenericTrace(
-                type=trace_type, 
+                type=trace_type.value, 
                 executionTime=0, 
                 name=params.get('name', ''), 
                 input=params.get('input', None),
@@ -264,6 +268,8 @@ class Tracer:
             self.metadata = LlmMetadata()
         elif not metadata and self.trace_type == TraceType.EMBEDDING:
             self.metadata = EmbeddingMetadata()
+        else:
+            self.metadata = metadata
     
     def track(
         self,
@@ -280,9 +286,10 @@ class Tracer:
         additional_data: Optional[Dict[str, str]] = None,
         hyperparameters: Optional[Dict[str, str]] = {},
         fail_silently: Optional[bool] = False,
-        raise_expection: Optional[bool] = True,
+        raise_exception: Optional[bool] = True,
         run_async: Optional[bool] = True,
     ):
+        self.is_tracking = True
         self.track_params = {
         "event_name": event_name,
         "model": model,
@@ -297,6 +304,6 @@ class Tracer:
         "additional_data": additional_data,
         "hyperparameters": hyperparameters,
         "fail_silently": fail_silently,
-        "raise_exception": raise_expection,
+        "raise_exception": raise_exception,
         "run_async": run_async
     }

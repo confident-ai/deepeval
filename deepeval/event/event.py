@@ -1,7 +1,6 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from deepeval.api import Api, Endpoints
 from deepeval.event.api import APIEvent, EventHttpResponse
-
 
 def track(
     event_name: str,
@@ -16,8 +15,9 @@ def track(
     conversation_id: Optional[str] = None,
     additional_data: Optional[Dict[str, str]] = None,
     hyperparameters: Optional[Dict[str, str]] = {},
+    trace_stack: Optional[Dict[str, Any]] = None,
     fail_silently: Optional[bool] = False,
-    raise_expection: Optional[bool] = True,
+    raise_exception: Optional[bool] = True,
     run_async: Optional[bool] = True,
 ) -> str:
     try:
@@ -36,7 +36,6 @@ def track(
             )
 
         hyperparameters["model"] = model
-
         api_event = APIEvent(
             name=event_name,
             input=input,
@@ -49,6 +48,7 @@ def track(
             conversationId=conversation_id,
             additionalData=additional_data,
             hyperparameters=hyperparameters,
+            traceStack=trace_stack
         )
         api = Api()
         try:
@@ -56,7 +56,7 @@ def track(
         except AttributeError:
             # Pydantic version below 2.0
             body = api_event.dict(by_alias=True, exclude_none=True)
-
+        
         result = api.post_request(
             endpoint=Endpoints.EVENT_ENDPOINT.value,
             body=body,
@@ -67,7 +67,7 @@ def track(
         if fail_silently:
             return
 
-        if raise_expection:
+        if raise_exception:
             raise (e)
         else:
             print(str(e))

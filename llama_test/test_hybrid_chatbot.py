@@ -57,20 +57,25 @@ class RAGPipeline:
             # set parameters
             llm_trace.set_parameters(
                 output=output,
-                # metadata=LlmMetadata(
-                #     model='gpt-4-turbo-preview',
-                # )
+                metadata=LlmMetadata(
+                     model='gpt-4-turbo-preview',
+                )
             )
         
             return output
 
     async def aquery(self, query_text):
-        with Tracer(trace_type="QUERY") as query_trace:
+        with Tracer(trace_type=TraceType.QUERY) as query_trace:
             context = self.retrieve_context(query_text)
             response = await self.generate_completion(query_text, context)
 
             query_trace.set_parameters(
                 output=response,
+            )
+            query_trace.track(
+                input=query_text,
+                response=response,
+                model='gpt-4-turbo-preview',
             )
         
             return response
@@ -81,9 +86,9 @@ class RAGPipeline:
 
 user_inputs = [
     "what does your company do",
-    "when were you incorporated",
-    "what is your company name",
-    "what are your products",
+    #"when were you incorporated",
+    #"what is your company name",
+    #"what are your products",
     #"do you offer support",
     #"what are your services"
 ]
