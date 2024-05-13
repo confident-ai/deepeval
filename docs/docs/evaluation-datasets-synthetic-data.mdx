@@ -29,7 +29,7 @@ There are two optional parameters when creating a `Synthesizer`:
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
 - [Optional] `multithreading`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 
-## Using Synthesizer as a Standalone
+## Using Synthesizer As A Standalone
 
 There are 2 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
 
@@ -39,6 +39,10 @@ There are 2 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Gold
 ### Generating From Documents
 
 To generate synthetic `Golden`s from documents, simply provide a list of document paths:
+
+:::info
+The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
+:::
 
 ```python
 from deepeval.synthesizer import Synthesizer
@@ -60,15 +64,30 @@ There are one mandatory and six optional parameters when using the `generate_gol
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
 - [Optional] `enable_breadth_evolve`: a boolean which when set to `True`, introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
 
-:::info
-The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
+:::note
+`deepeval` uses an LLM and an embedder model during context and query generation during data synthesization. You can choose to use Azure's OpenAI models if you wish by running the following commands in the terminal:
+
+```console
+deepeval set-azure-openai --openai-endpoint=<endpoint> \
+    --openai-api-key=<api_key> \
+    --deployment-name=<deployment_name> \
+    --openai-api-version=<openai_api_version> \
+    --model-version=<model_version>
+```
+
+Then, run this to set the Azure OpenAI embedder:
+
+```console
+deepeval set-azure-openai-embedding --embedding_deployment-name=<embedding_deployment_name>
+```
+
 :::
 
 ### Generating From Provided Contexts
 
 `deepeval` also allows you to generate synthetic `Goldens` from a manually provided a list of context instead of directly generating from your documents.
 
-:::note
+:::tip
 This is especially helpful if you already have an indexed and/or embedded knowledge base. For example, if you already have documents parsed and stored in an existing vector database, you may consider handling the logic to retrieve text chunks yourself.
 :::
 
