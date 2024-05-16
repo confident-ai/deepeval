@@ -1,42 +1,46 @@
 class SynthesizerTemplate:
     @staticmethod
-    def generate_synthetic_inputs(context, max_goldens_per_context):
+    def generate_synthetic_inputs(
+        context, max_goldens_per_context, example=None
+    ):
+        if example is None:
+            example = """Example max goldens per context: 2
+Example context: ["Einstein won the Nobel Prize for his discovery of penicillin.", "Einstein won the Nobel Prize in 1968."]
+Example JSON:
+{{
+    "data": [
+        {{
+            "input": "What was Einstein known for?"
+        }},
+        {{
+            "input": "Einstein was a smart guy huh"
+        }}
+    ]  
+}}"""
+
         return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
-            The `input` can either be a question or a statement that can be addressed by the given context.
+The `input` can either be a question or a statement that can be addressed by the given context.
 
-            **
-            IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
-            You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting reptitive.
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
+You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting reptitive.
 
-            Example context: ["Einstein won the Nobel Prize for his discovery of penicillin.", "Einstein won the Nobel Prize in 1968."]
-            Example max goldens per context: 2
-            Example JSON:
-            {{
-                "data": [
-                    {{
-                        "input": "What was Einstein known for?"
-                    }},
-                    {{
-                        "input": "Einstein was a smart guy huh"
-                    }}
-                ]  
-            }}
+{example}
 
+You should NOT incorporate any prior knowledge you have and take each context at face value.
+You MUST include at least one statement as the input.
+`input` MUST be a STRING.
+You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting reptitive.
+**
 
-            You should NOT incorporate any prior knowledge you have and take each context at face value.
-            You MUST include at least one statement as the input.
-            `input` MUST be a STRING.
-            You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting reptitive.
-            **
+Max Goldens Per Context:
+{max_goldens_per_context}
 
-            Max Goldens Per Context:
-            {max_goldens_per_context}
+Context:
+{context}
 
-            Context:
-            {context}
-
-            JSON:
-            """
+JSON:
+"""
 
     @staticmethod
     def generate_synthetic_expected_output(input, context):
