@@ -8,8 +8,28 @@ from openai import AsyncOpenAI
 import asyncio
 import os
 
+from deepeval.tracing import Tracer, TraceType, LlmMetadata
 from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
-from deepeval.tracing import Tracer, TraceType, LlmMetadata, EmbeddingMetadata
+
+########################################################
+### Integration ########################################
+########################################################
+
+def deepeval_callback_handler(**eval_params: Any) -> BaseCallbackHandler:
+    return LlamaIndexCallbackHandler(**eval_params)
+
+def set_global_handler(eval_mode: str, **eval_params: Any) -> None:
+    """Set global eval handlers."""
+    if eval_mode == "deepeval":
+        handler = deepeval_callback_handler(**eval_params)
+        import llama_index.core
+        llama_index.core.global_handler = handler
+
+set_global_handler("deepeval")
+
+###########################################################
+# set up RAG pipeline
+###########################################################
 
 class RAGPipeline:
     def __init__(self, model_name="gpt-4-turbo-preview", top_k=5, chunk_size=200, chunk_overlap=20, min_similarity=0.5, data_dir="data"):
@@ -29,12 +49,12 @@ class RAGPipeline:
         self.model_name = model_name
 
     def retrieve_context(self, query):
-        with Tracer(trace_type=TraceType.RETRIEVER) as retriever_trace:
+        with Tracer(trace_type=TraceType.LLAMA_WRAPPER) as llama_wrapper_trace:
             nodes = self.retriever.retrieve(query)
             combined_nodes = "\n".join([node.get_content() for node in nodes])
               
             # set parameters
-            retriever_trace.set_parameters(
+            llama_wrapper_trace.set_parameters(
                 output=combined_nodes
             )
 
@@ -81,16 +101,16 @@ class RAGPipeline:
             return response
         
 # ###########################################################
-# # test chatbot
+# # test chatbot event tracking
 # ###########################################################
 
 user_inputs = [
     "what does your company do",
-    #"when were you incorporated",
-    #"what is your company name",
-    #"what are your products",
-    #"do you offer support",
-    #"what are your services"
+    "when were you incorporated",
+    "what is your company name",
+    "what are your products",
+    "do you offer support",
+    "what are your services"
 ]
 
 async def query_and_print(engine: RAGPipeline, query: str):
@@ -106,3 +126,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+# ###########################################################
+# # test chatbot evaluation
+# ###########################################################

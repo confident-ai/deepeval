@@ -1,7 +1,8 @@
+from llama_index.core.callbacks.base_handler import BaseCallbackHandler
 from contextvars import ContextVar
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Union, Optional, Dict
+from typing import Any, List, Union, Optional, Dict, Set
 from time import perf_counter
 import inspect
 import time
@@ -14,23 +15,35 @@ from deepeval.event import track
 ########################################################
 
 class TraceProvider(Enum):
-  LLAMA_INDEX = "Llama_index"
+  LLAMA_INDEX = "LlamaIndex"
   CUSTOM = "Custom"
+  HYBRID = "Hybrid"
 
 class TraceType(Enum):
-    LLM = "LLM"
-    RETRIEVER = "Retriever"
-    EMBEDDING = "Embedding"
-    TOOL = "Tool"
     AGENT = "Agent"
     AGENT_STEP = "Agent Step"
     CHAIN = "Chain"
     CHUNKING = "Chunking"
+    EMBEDDING = "Embedding"
+    LLM = "LLM"
     NODE_PARSING = "Node Parsing"
-    SYNTHESIZE = "Synthesize"
     QUERY = "Query"
     RERANKING = "Reranking"
+    RETRIEVER = "Retriever"
+    SYNTHESIZE = "Synthesize"
+    TOOL = "Tool"
 
+    LLAMA_WRAPPER = "LlamaIndex Wrapper"
+    LLAMA_INDEX_AGENT_STEP = "LlamaIndex Agent Step"
+    LLAMA_INDEX_CHAIN = "LlamaIndex Chain"
+    LLAMA_INDEX_CHUNKING = "LlamaIndex Chunking"
+    LLAMA_INDEX_EMBEDDING = "LlamaIndex Embedding"
+    LLAMA_INDEX_LLM = "LlamaIndex LLM"
+    LLAMA_INDEX_NODE_PARSING = "LlamaIndex Node Parsing"
+    LLAMA_INDEX_QUERY = "LlamaIndex Query"
+    LLAMA_INDEX_RERANKING = "Reranking"
+    LLAMA_INDEX_RETRIEVER = "LlamaIndex Retriever"
+    LLAMA_INDEX_SYNTHESIZE = "LlamaIndex Synthesize"
 
 class TraceStatus(Enum):
     SUCCESS = "Success"
@@ -80,15 +93,17 @@ class GenericTrace(BaseTrace):
 Metadata = Union[EmbeddingMetadata, LlmMetadata]
 TraceData = Union[LlmTrace, EmbeddingTrace, GenericTrace]
 TraceStack = List[TraceData]
+TraceProviders = Set[TraceProvider]
 
 # Context variable to maintain an isolated stack for each async task
 trace_stack_var: ContextVar[TraceStack] = ContextVar('trace_stack', default=[])
 dict_trace_stack_var = ContextVar("dict_trace_stack", default=None)
+trace_providers_var: ContextVar[TraceProviders] = ContextVar("trace_providers", default=set())
 
 ########################################################
-### Trace Manager ######################################
+### ContextVar Managers ################################
 ########################################################
-
+    
 class TraceManager:
     def get_trace_stack(self):
         return trace_stack_var.get()
@@ -155,6 +170,14 @@ class Tracer:
         trace_instance = self.create_trace_instance(self.trace_type, **self.params)
         trace_manager.append_to_trace_stack(trace_instance)
 
+        # trace providers
+        trace_providers = trace_providers_var.get().copy()
+        if self.trace_type == TraceType.LLAMA_WRAPPER:
+            trace_providers.add(TraceProvider.LLAMA_INDEX)
+        else:
+            trace_providers.add(TraceProvider.CUSTOM)
+        trace_providers_var.set(trace_providers)
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -185,6 +208,16 @@ class Tracer:
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
 
+            print(dict_representation)
+            
+            trace_provider = TraceProvider.CUSTOM
+            trace_providers = trace_providers_var.get()
+            if len(trace_providers) >= 1:
+                trace_provider = TraceProvider.HYBRID
+            elif len(trace_providers) == 1 and trace_providers[0] == TraceType.LLAMA_WRAPPER:
+                trace_provider = TraceProvider.LLAMA_INDEX
+            print(trace_provider)
+
             # # send event to deepeval
             if self.is_tracking:
                 track(
@@ -201,9 +234,10 @@ class Tracer:
                     additional_data=self.track_params['additional_data'],
                     hyperparameters=self.track_params['hyperparameters'],
                     fail_silently=self.track_params['fail_silently'],
-                    raise_exception=self.track_params['raise_exception'],
+                    #raise_exception=self.track_params['raise_exception'],
                     run_async=self.track_params['run_async'],
-                    trace_stack=dict_representation
+                    trace_stack=dict_representation,
+                    #trace_provider=trace_provider.value
                 )
         else:
             trace_manager.pop_trace_stack()

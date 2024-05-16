@@ -1,6 +1,14 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
+from pydantic import BaseModel
+
 from deepeval.api import Api, Endpoints
-from deepeval.event.api import APIEvent, EventHttpResponse
+from deepeval.event.api import (
+    APIEvent,
+    EventHttpResponse,
+    CustomPropertyType,
+    CustomProperty,
+    Link,
+)
 
 def track(
     event_name: str,
@@ -13,20 +21,35 @@ def track(
     token_cost: Optional[float] = None,
     distinct_id: Optional[str] = None,
     conversation_id: Optional[str] = None,
-    additional_data: Optional[Dict[str, str]] = None,
+    additional_data: Optional[Dict[str, Union[str, Link, Dict]]] = None,
     hyperparameters: Optional[Dict[str, str]] = {},
-    trace_stack: Optional[Dict[str, Any]] = None,
     fail_silently: Optional[bool] = False,
-    raise_exception: Optional[bool] = True,
+    raise_expection: Optional[bool] = True,
     run_async: Optional[bool] = True,
+    trace_stack: Optional[Dict[str, Any]] = None,
+    trace_provider: Optional[str] = None
 ) -> str:
     try:
-        if additional_data and not all(
-            isinstance(value, str) for value in additional_data.values()
-        ):
-            raise ValueError(
-                "All values in the 'additional_data' must of type string."
-            )
+        custom_properties = None
+        if additional_data:
+            custom_properties = {}
+            for key, value in additional_data.items():
+                if isinstance(value, str):
+                    custom_properties[key] = CustomProperty(
+                        value=value, type=CustomPropertyType.TEXT
+                    )
+                elif isinstance(value, dict):
+                    custom_properties[key] = CustomProperty(
+                        value=value, type=CustomPropertyType.JSON
+                    )
+                elif isinstance(value, Link):
+                    custom_properties[key] = CustomProperty(
+                        value=value.value, type=CustomPropertyType.LINK
+                    )
+                else:
+                    raise ValueError(
+                        "All values in 'additional_data' must be either of type 'string', 'Link', or 'dict'."
+                    )
 
         if hyperparameters and not all(
             isinstance(value, str) for value in hyperparameters.values()
@@ -36,6 +59,7 @@ def track(
             )
 
         hyperparameters["model"] = model
+
         api_event = APIEvent(
             name=event_name,
             input=input,
@@ -46,9 +70,10 @@ def track(
             tokenCost=token_cost,
             distinctId=distinct_id,
             conversationId=conversation_id,
-            additionalData=additional_data,
+            customProperties=custom_properties,
             hyperparameters=hyperparameters,
-            traceStack=trace_stack
+            traceStack=trace_stack,
+            traceProvider=trace_provider
         )
         api = Api()
         try:
@@ -56,7 +81,7 @@ def track(
         except AttributeError:
             # Pydantic version below 2.0
             body = api_event.dict(by_alias=True, exclude_none=True)
-        
+
         result = api.post_request(
             endpoint=Endpoints.EVENT_ENDPOINT.value,
             body=body,
@@ -67,7 +92,7 @@ def track(
         if fail_silently:
             return
 
-        if raise_exception:
+        if raise_expection:
             raise (e)
         else:
             print(str(e))

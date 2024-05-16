@@ -1,6 +1,6 @@
 from .tracing import (
 #     trace,
-     trace_manager,
+#     trace_manager,
      get_trace_stack,
 #     BaseTrace,
 #     TraceStatus,
@@ -13,6 +13,7 @@ from .tracing import (
 
 from .tracer import (
     Tracer,
+    trace_manager,
     TraceType,
     BaseTrace,
     TraceStatus,

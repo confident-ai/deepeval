@@ -72,7 +72,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
     def start_trace(self, trace_id: Optional[str] = None) -> None:
         self.event_map = {}
-        trace_manager.clear_trace_stack()
+        #trace_manager.clear_trace_stack()
         return
 
     def end_trace(
@@ -90,7 +90,6 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         parent_id: str = "",
         **kwargs: Any,
     ) -> str:
-
         processed_payload = self.process_payload(
             event_type, event_id, parent_id, payload, True
         )
@@ -117,12 +116,14 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         )
         trace_instance = self.update_trace_instance(
             trace_instance, event_type, processed_payload
-        )
-        current_trace_stack = trace_manager.get_trace_stack()
+        )        
+        current_trace_stack = trace_manager.get_trace_stack_copy()
+        #trace_instance = current_trace_stack[-1]
 
         if len(current_trace_stack) > 1:
             parent_trace = current_trace_stack[-2]
             parent_trace.traces.append(trace_instance)
+            trace_manager.set_trace_stack(current_trace_stack)
 
         if len(current_trace_stack) == 1:
             dict_representation = dataclass_to_dict(current_trace_stack[0])
@@ -292,23 +293,23 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
     ):
         # TODO: add more types
         if event_type == CBEventType.LLM:
-            return TraceType.LLM
+            return TraceType.LLAMA_INDEX_LLM
         elif event_type == CBEventType.RETRIEVE:
-            return TraceType.RETRIEVER
+            return TraceType.LLAMA_INDEX_RETRIEVER
         elif event_type == CBEventType.EMBEDDING:
-            return TraceType.EMBEDDING
+            return TraceType.LLAMA_INDEX_EMBEDDING
         elif event_type == CBEventType.CHUNKING:
-            return TraceType.CHUNKING
+            return TraceType.LLAMA_INDEX_CHUNKING
         elif event_type == CBEventType.NODE_PARSING:
-            return TraceType.NODE_PARSING
+            return TraceType.LLAMA_INDEX_NODE_PARSING
         elif event_type == CBEventType.SYNTHESIZE:
-            return TraceType.SYNTHESIZE
+            return TraceType.LLAMA_INDEX_SYNTHESIZE
         elif event_type == CBEventType.QUERY:
-            return TraceType.QUERY
+            return TraceType.LLAMA_INDEX_QUERY
         elif event_type == CBEventType.RERANKING:
-            return TraceType.RERANKING
+            return TraceType.LLAMA_INDEX_RERANKING
         elif event_type == CBEventType.AGENT_STEP:
-            return TraceType.AGENT_STEP
+            return TraceType.LLAMA_INDEX_AGENT_STEP
 
         return event_type.value.capitalize()
 
