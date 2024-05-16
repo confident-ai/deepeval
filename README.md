@@ -116,7 +116,7 @@ touch test_chatbot.py
 Open `test_chatbot.py` and write your first test case using DeepEval:
 
 ```python
-import pytest
+#import pytest
 from deepeval import assert_test
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
