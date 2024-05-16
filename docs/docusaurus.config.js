@@ -74,6 +74,10 @@ module.exports = async function createConfigAsync() {
           'sha384-odtC+0UGzzFL/6PNoE8rX/SPcQDXBJ+uRepguP4QkPCm2LBxH3FA3y+fKSiJ+AmM',
         crossorigin: 'anonymous',
       },
+      {
+        href: 'https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@500&display=swap',
+        type: 'text/css',
+      },
     ],
     themeConfig:
       /** @type {import('@docusaurus/preset-classic').ThemeConfig} */

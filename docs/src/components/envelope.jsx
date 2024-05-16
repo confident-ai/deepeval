@@ -7,13 +7,12 @@ function Envelope(props) {
     <div className={styles.letterContainer} onClick={() => {window.open('https://confident-ai.com', '_blank');}}>
         <div className={styles.letterImage}>
             <div className={styles.animatedMail}>
-            <div className={styles.backFold}></div>
+            <div className={styles.backFold}/>
             <div className={styles.letter}>
                 <div className={styles.letterBorder}></div>
                 <div className={styles.letterTitle}>Delivered by</div>
                 <div className={styles.letterContext}>
-                {/* <img src="icons/bowtie.svg"/> */}
-                <span>Confident AI</span>
+                    <span class="lexend-deca" style={{fontSize: "16px"}}>Confident AI</span>
                 </div>
                 <div className={styles.letterStamp}>
                 <div className={styles.letterStampInner}></div>
