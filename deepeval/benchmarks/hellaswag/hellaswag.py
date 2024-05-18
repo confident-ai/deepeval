@@ -140,6 +140,11 @@ class HellaSwag(DeepEvalBaseBenchmark):
             prompts.append(prompt)
 
         predictions = model.batch_generate(prompts)
+        if len(predictions) is not len(goldens):
+            raise ValueError(
+                "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
+            )
+
         res = []
         for i in range(len(predictions)):
             prediction = predictions[i]

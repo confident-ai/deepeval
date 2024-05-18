@@ -116,7 +116,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         # Define Metric
         if mode == TruthfulQAMode.MC1:
             score = self.scorer.exact_match_score(
-                golden.expected_output, prediction[0]
+                golden.expected_output, prediction
             )
         elif mode == TruthfulQAMode.MC2:
             score = self.scorer.truth_identification_score(
@@ -139,6 +139,10 @@ class TruthfulQA(DeepEvalBaseBenchmark):
             )
             prompts.append(prompt)
         predictions = model.batch_generate(prompts)
+        if len(predictions) is not len(goldens):
+            raise ValueError(
+                "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
+            )
 
         res = []
         for i in range(len(predictions)):
