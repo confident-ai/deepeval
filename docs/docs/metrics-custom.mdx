@@ -31,7 +31,7 @@ class LatencyMetric(BaseMetric):
 
     def measure(self, test_case: LLMTestCase):
         # Set self.success and self.score in the "measure" method
-        self.success = test_case.latency <= self.threshold
+        self.success = test_case.additional_metadata["latency"] <= self.threshold
         if self.success:
             self.score = 1
         else:
@@ -42,6 +42,9 @@ class LatencyMetric(BaseMetric):
         self.reason = "Too slow!"
         return self.score
 
+    async def a_measure(self, test_case: LLMTestCase):
+        return self.measure(test_case)
+    
     def is_successful(self):
         return self.success
 
@@ -69,6 +72,6 @@ from deepeval.test_case import LLMTestCase
 
 # Note that we pass in latency since the measure method requires it for evaluation
 latency_metric = LatencyMetric(max_seconds=10.0)
-test_case = LLMTestCase(input="...", actual_output="...", latency=8.3)
+test_case = LLMTestCase(input="...", actual_output="...", additional_metadata={"latency": 8.5})
 evaluate([test_case], [latency_metric])
 ```
