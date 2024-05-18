@@ -8,6 +8,7 @@ from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.mmlu.task import MMLUTask
 from deepeval.benchmarks.mmlu.template import MMLUTemplate
+from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
 
 
@@ -24,11 +25,14 @@ class MMLU(DeepEvalBaseBenchmark):
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+    def evaluate(
+        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
+    ) -> Dict:
         overall_correct_predictions = 0
         overall_total_predictions = 0
         predictions_row = []
         scores_row = []
+        use_batch = should_use_batch(model, batch_size)
 
         for task in self.tasks:
             goldens = self.load_benchmark_dataset(task)
@@ -37,14 +41,38 @@ class MMLU(DeepEvalBaseBenchmark):
             overall_total_predictions += len(goldens)
 
             # Calculate task accuracy
-            for golden in tqdm(goldens, desc=f"Processing {task.value}"):
-                prediction, score = self.predict(model, task, golden).values()
-                if score:
-                    task_correct_predictions += 1
-                    overall_correct_predictions += 1
-                predictions_row.append(
-                    (task.value, golden.input, prediction, score)
-                )
+            if use_batch:
+                for i in tqdm(
+                    range(0, len(goldens), batch_size),
+                    desc=f"Batch Processing {task.value} (batch_size={batch_size})",
+                ):
+                    goldens_batch = goldens[i : i + batch_size]
+                    batch_predictions = self.batch_predict(
+                        model, task, goldens_batch
+                    )
+                    for golden, prediction_dict in zip(
+                        goldens_batch, batch_predictions
+                    ):
+                        prediction = prediction_dict["prediction"]
+                        score = prediction_dict["score"]
+                        if score:
+                            task_correct_predictions += 1
+                            overall_correct_predictions += 1
+                        predictions_row.append(
+                            (task.value, golden.input, prediction, score)
+                        )
+            else:
+                for golden in tqdm(goldens, desc=f"Processing {task.value}"):
+                    prediction, score = self.predict(
+                        model, task, golden
+                    ).values()
+                    if score:
+                        task_correct_predictions += 1
+                        overall_correct_predictions += 1
+                    predictions_row.append(
+                        (task.value, golden.input, prediction, score)
+                    )
+
             task_accuracy = task_correct_predictions / task_total_predictions
             print(f"MMLU Task Accuracy (task={task.value}): {task_accuracy}")
             scores_row.append((task.value, task_accuracy))
@@ -78,13 +106,48 @@ class MMLU(DeepEvalBaseBenchmark):
             task=task,
             n_shots=self.n_shots,
         )
-        prediction = model.generate(prompt)[0]
+
+        prediction = model.generate(prompt)
+        # For native models, shouldn't happen but just in case
+        if isinstance(prediction, tuple):
+            prediction = prediction[0]
 
         # Define Metric
         score = self.scorer.exact_match_score(
             golden.expected_output, prediction
         )
         return {"prediction": prediction, "score": score}
+
+    def batch_predict(
+        self, model: DeepEvalBaseLLM, task: MMLUTask, goldens: List[Golden]
+    ) -> List[Dict]:
+        # Define prompt template
+        assert (
+            self.shots_dataset != None
+        ), "Example dataset is empty. Call load_benchmark."
+
+        prompts = []
+        for golden in goldens:
+            prompt: dict = MMLUTemplate.generate_output(
+                train_set=self.shots_dataset,
+                input=golden.input,
+                task=task,
+                n_shots=self.n_shots,
+            )
+            prompts.append(prompt)
+
+        predictions = model.batch_generate(prompts)
+        res = []
+        for i in range(len(predictions)):
+            prediction = predictions[i]
+            golden = goldens[i]
+            # Define Metric
+            score = self.scorer.exact_match_score(
+                golden.expected_output, prediction
+            )
+            res.append({"prediction": prediction, "score": score})
+
+        return res
 
     def load_benchmark_dataset(self, task: MMLUTask) -> List[Golden]:
         # If dataset has been previously loaded, load from

@@ -9,11 +9,11 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.truthful_qa.task import TruthfulQATask
 from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
 from deepeval.benchmarks.truthful_qa.template import TruthfulQATemplate
+from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
 
 
 class TruthfulQA(DeepEvalBaseBenchmark):
-
     def __init__(
         self,
         tasks: List[TruthfulQATask] = None,
@@ -31,11 +31,14 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+    def evaluate(
+        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
+    ) -> Dict:
         overall_correct_predictions = 0
         overall_total_predictions = 0
         predictions_row = []
         scores_row = []
+        use_batch = should_use_batch(model, batch_size)
 
         for task in self.tasks:
             goldens = self.load_benchmark_dataset(task, self.mode)
@@ -44,16 +47,38 @@ class TruthfulQA(DeepEvalBaseBenchmark):
             overall_total_predictions += len(goldens)
 
             # Calculate task accuracy
-            for golden in tqdm(goldens, desc=f"Processing {task.value}"):
-                prediction, score = self.predict(
-                    model, golden, self.mode
-                ).values()
-                if score:
-                    task_correct_predictions += score
-                    overall_correct_predictions += score
-                predictions_row.append(
-                    (task.value, golden.input, prediction, score)
-                )
+            if use_batch:
+                for i in tqdm(
+                    range(0, len(goldens), batch_size),
+                    desc=f"Batch Processing {task.value} (batch_size={batch_size})",
+                ):
+                    goldens_batch = goldens[i : i + batch_size]
+                    batch_predictions = self.batch_predict(
+                        model, goldens_batch, self.mode
+                    )
+                    for golden, prediction_dict in zip(
+                        goldens_batch, batch_predictions
+                    ):
+                        prediction = prediction_dict["prediction"]
+                        score = prediction_dict["score"]
+                        if score:
+                            task_correct_predictions += 1
+                            overall_correct_predictions += 1
+                        predictions_row.append(
+                            (task.value, golden.input, prediction, score)
+                        )
+            else:
+                for golden in tqdm(goldens, desc=f"Processing {task.value}"):
+                    prediction, score = self.predict(
+                        model, golden, self.mode
+                    ).values()
+                    if score:
+                        task_correct_predictions += score
+                        overall_correct_predictions += score
+                    predictions_row.append(
+                        (task.value, golden.input, prediction, score)
+                    )
+
             task_accuracy = task_correct_predictions / task_total_predictions
             print(
                 f"TruthfulQA Task Accuracy (task={task.value}): {task_accuracy}"
@@ -84,21 +109,53 @@ class TruthfulQA(DeepEvalBaseBenchmark):
             input=golden.input, mode=mode
         )
         prediction = model.generate(prompt)
+        # For native models, shouldn't happen but just in case
+        if isinstance(prediction, tuple):
+            prediction = prediction[0]
 
         # Define Metric
         if mode == TruthfulQAMode.MC1:
             score = self.scorer.exact_match_score(
-                prediction[0], golden.expected_output
+                golden.expected_output, prediction[0]
             )
-
-        if mode == TruthfulQAMode.MC2:
-            prediction = model.generate(prompt)
-            # Define Metric
+        elif mode == TruthfulQAMode.MC2:
             score = self.scorer.truth_identification_score(
                 golden.expected_output, prediction
             )
 
         return {"prediction": prediction, "score": score}
+
+    def batch_predict(
+        self,
+        model: DeepEvalBaseLLM,
+        goldens: List[Golden],
+        mode: TruthfulQAMode,
+    ) -> List[Dict]:
+        # Define prompt template
+        prompts = []
+        for golden in goldens:
+            prompt: dict = TruthfulQATemplate.generate_output(
+                input=golden.input, mode=mode
+            )
+            prompts.append(prompt)
+        predictions = model.batch_generate(prompts)
+
+        res = []
+        for i in range(len(predictions)):
+            prediction = predictions[i]
+            golden = goldens[i]
+            # Define Metric
+            if mode == TruthfulQAMode.MC1:
+                score = self.scorer.exact_match_score(
+                    golden.expected_output, prediction
+                )
+            elif mode == TruthfulQAMode.MC2:
+                score = self.scorer.truth_identification_score(
+                    golden.expected_output, prediction
+                )
+            res.append({"prediction": prediction, "score": score})
+
+        return res
 
     def load_benchmark_dataset(
         self, task: TruthfulQATask, mode: TruthfulQAMode
