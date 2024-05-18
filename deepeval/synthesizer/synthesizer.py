@@ -90,9 +90,6 @@ class Synthesizer:
         data = trimAndLoadJson(res)
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
 
-        print(synthetic_data)
-        return
-
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
             evolved_input = self._evolve_text(

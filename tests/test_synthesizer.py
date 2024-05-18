@@ -172,11 +172,99 @@ CREATE TABLE customers (
 )
 """
 
-# synthesizer = Synthesizer()
-# synthesizer.generate_goldens(
-#     contexts=[[json_customer_table, schema]],
-#     max_goldens_per_context=5,
-#     include_expected_output=True,
-#     criteria=""
+function = """
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+
+def test_llm():
+    test_case = LLMTestCase()
+    metric = AnswerRelevancyMetric()
+    assert_test(test_case, [metric])
+"""
+
+synthesizer = Synthesizer()
+synthesizer.generate_goldens(
+    contexts=[[function]],
+    max_goldens_per_context=5,
+    include_expected_output=True,
+)
+synthesizer.save_as(file_type="json", directory="./results")
+
+
+# for specific use cases, we need the synthesizer to generate inputs that USES
+# the context to implicitly generate a specific form of expected output, rather than asking about 
+# the context itself (since this will always generate text form expected output)
+
+# example:
+# TEXT TO SQL:
+# context = """
+# /* {"schema": "main", "catalog": "memory", "description": "A table of customers who have made purchases, including their city"} */
+# CREATE TABLE customers (
+#     -- {"description": "The Customer City, where the customer company is located. Also called \'customer segment\'."}
+#     City VARCHAR,
+#     -- {"description": "A unique identifier for each customer in the data model."}
+#     Id VARCHAR PRIMARY KEY,
+#     -- {"description": "A field indicating the state where the customer is located."}
+#     State VARCHAR,
+#     -- This column is a Calculated Field
+#     -- column expression: max(orders.PurchaseTimestamp)
+#     LatestRecord DATE,
+#     -- This column is a Calculated Field
+#     -- column expression: min(orders.PurchaseTimestamp)
+#     FirstRecord DATE,
+#     -- This column is a Calculated Field
+#     -- column expression: sum(orders.Size) > 2
+#     VIP BOOLEAN,
+#     -- This column is a Calculated Field
+#     -- column expression: count(orders.OrderId)
+#     OrderCount BIGINT,
+#     -- This column is a Calculated Field
+#     -- column expression: sum(orders.OrderBalance)
+#     Debit DOUBLE,
+#     -- This column is a Calculated Field
+#     -- column expression: count(orders.IsReviewed = TRUE) / count(DISTINCT orders.OrderId)
+#     ReviewRate DOUBLE
 # )
-# synthesizer.save_as(file_type="json", directory="./results")
+# """
+
+
+# Non-use case specific:
+# Input: How is the VIP column calculated?
+# Expected Output: It is calculated via count(orders.size) > 2
+# ^this is non use case specific because for a text-sql use case, we need the
+# expected output to be in sql, since we are going to evaluate whether the sql is correct 
+# but you'll see that the input does not prompt for this. It simply asks about the content of
+# the context
+
+
+# Use case specific:
+# Input: How many customers are VIPs?
+# Expected Output: 
+# SELECT COUNT(*) AS VIP_Customers
+# FROM customers
+# WHERE VIP = TRUE;
+
+
+
+# CODING:
+# context = """
+# from deepeval.test_case import LLMTestCase
+# from deepeval.metrics import AnswerRelevancyMetric
+
+# def test_llm():
+#     test_case = LLMTestCase()
+#     metric = AnswerRelevancyMetric()
+#     assert_test(test_case, [metric])
+# """
+
+
+# Non-use case specific:
+# input: How does test_llm utilize LLMTestCase and AnswerRelevancyMetric in its assertion process?
+# expected output: The `test_llm` function creates instances of `LLMTestCase` and `AnswerRelevancyMetric`, 
+# then uses these instances in an assertion process through the `assert_test` function.
+
+# Use Case specific:
+# input: Implement me LLMTestCase interface. Assume the answer relevancy metric will be used to to 
+# measure an LLMTestCase based on its input and actual output.
+# expected output:
+# code here...
