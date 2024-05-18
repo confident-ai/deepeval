@@ -8,6 +8,7 @@ from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard.template import BigBenchHardTemplate
+from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
 
 
@@ -30,11 +31,14 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+    def evaluate(
+        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
+    ) -> Dict:
         overall_correct_predictions = 0
         overall_total_predictions = 0
         predictions_row = []
         scores_row = []
+        use_batch = should_use_batch(model, batch_size)
 
         for task in self.tasks:
             goldens = self.load_benchmark_dataset(task)
@@ -42,15 +46,39 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             task_total_predictions = len(goldens)
             overall_total_predictions += len(goldens)
 
-            # Calculate task accuracy
-            for golden in tqdm(goldens, desc=f"Processing {task.value}"):
-                prediction, score = self.predict(model, task, golden).values()
-                if score:
-                    task_correct_predictions += 1
-                    overall_correct_predictions += 1
-                predictions_row.append(
-                    (task.value, golden.input, prediction, score)
-                )
+            if use_batch:
+                for i in tqdm(
+                    range(0, len(goldens), batch_size),
+                    desc=f"Batch Processing {task.value} (batch_size={batch_size})",
+                ):
+                    goldens_batch = goldens[i : i + batch_size]
+                    batch_predictions = self.batch_predict(
+                        model, task, goldens_batch
+                    )
+                    for golden, prediction_dict in zip(
+                        goldens_batch, batch_predictions
+                    ):
+                        prediction = prediction_dict["prediction"]
+                        score = prediction_dict["score"]
+                        if score:
+                            task_correct_predictions += 1
+                            overall_correct_predictions += 1
+                        predictions_row.append(
+                            (task.value, golden.input, prediction, score)
+                        )
+            else:
+                # Calculate task accuracy
+                for golden in tqdm(goldens, desc=f"Processing {task.value}"):
+                    prediction, score = self.predict(
+                        model, task, golden
+                    ).values()
+                    if score:
+                        task_correct_predictions += 1
+                        overall_correct_predictions += 1
+                    predictions_row.append(
+                        (task.value, golden.input, prediction, score)
+                    )
+
             task_accuracy = task_correct_predictions / task_total_predictions
             print(
                 f"Big Bench Hard Task Accuracy (task={task.value}): {task_accuracy}"
@@ -84,7 +112,10 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             enable_cot=self.enable_cot,
         )
         prediction = model.generate(prompt)
+        if isinstance(prediction, tuple):
+            prediction = prediction[0]
         prediction = prediction.split()[-1]
+        # WARNING: doesn't work. Should use regex to isolate true and false instead
         prediction = prediction[:-1] if self.enable_cot else prediction
 
         # Define Metric
@@ -92,6 +123,43 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             golden.expected_output, prediction
         )
         return {"prediction": prediction, "score": score}
+
+    def batch_predict(
+        self,
+        model: DeepEvalBaseLLM,
+        task: BigBenchHardTask,
+        goldens: List[Golden],
+    ) -> List[Dict]:
+        prompts = []
+        for golden in goldens:
+            prompt: dict = BigBenchHardTemplate.generate_output(
+                input=golden.input,
+                task=task,
+                n_shots=self.n_shots,
+                enable_cot=self.enable_cot,
+            )
+            prompts.append(prompt)
+
+        predictions = model.batch_generate(prompts)
+        if len(predictions) is not len(goldens):
+            raise ValueError(
+                "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
+            )
+
+        res = []
+        for i in range(len(predictions)):
+            prediction = predictions[i]
+            prediction = prediction.split()[-1]
+            prediction = prediction[:-1] if self.enable_cot else prediction
+            golden = goldens[i]
+
+            # Define Metric
+            score = self.scorer.exact_match_score(
+                golden.expected_output, prediction
+            )
+            res.append({"prediction": prediction, "score": score})
+
+        return res
 
     def load_benchmark_dataset(self, task: BigBenchHardTask) -> List[Golden]:
         # load from hugging face

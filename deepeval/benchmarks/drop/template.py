@@ -19,8 +19,6 @@ class DROPTemplate:
                 type=type
             )
         )
-
-        print(prompt)
         return prompt
 
     @staticmethod

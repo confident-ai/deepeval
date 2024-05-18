@@ -61,6 +61,14 @@ class DeepEvalBaseLLM(ABC):
         """
         pass
 
+    def batch_generate(self, *args, **kwargs) -> List[str]:
+        """Runs the model to output LLM responses.
+
+        Returns:
+            A list of strings.
+        """
+        raise AttributeError
+
     @abstractmethod
     async def get_model_name(self, *args, **kwargs) -> str:
         pass

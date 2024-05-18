@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import List, TypeVar, Generic, List
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 
 
 T = TypeVar("T")
