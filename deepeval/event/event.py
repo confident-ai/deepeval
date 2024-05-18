@@ -2,6 +2,7 @@ from typing import Optional, List, Dict, Union
 from pydantic import BaseModel
 
 from deepeval.api import Api, Endpoints
+from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.event.api import (
     APIEvent,
     EventHttpResponse,
@@ -50,13 +51,7 @@ def track(
                         "All values in 'additional_data' must be either of type 'string', 'Link', or 'dict'."
                     )
 
-        if hyperparameters and not all(
-            isinstance(value, str) for value in hyperparameters.values()
-        ):
-            raise ValueError(
-                "All values in the 'hyperparameters' must of type string."
-            )
-
+        hyperparameters = process_hyperparameters(hyperparameters)
         hyperparameters["model"] = model
 
         api_event = APIEvent(
