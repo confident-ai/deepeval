@@ -33,7 +33,7 @@ There are four mandatory and ten optional parameters when using the `track()` fu
 - `response`: type `str`.
 - [Optional] `retrieval_context`: type `list[str]` that indicates the context that were retrieved in your RAG pipeline.
 - [Optional] `additional_data`: type `dict[str, Union[str, dict, Link]]`. [See below](confident-ai-evals-in-production#tracking-additional-custom-data) for further details.
-- [Optional] `hyperparameters`: type `dict[str,str]`. You can provide a dictionary to specify any additional hyperparamters used to generate the response.
+- [Optional] `hyperparameters`: type `dict[str, Union[str, int, float]]`. You can provide a dictionary to specify any additional hyperparamters used to generate the response.
 - [Optional] `distinct_id`: type `str` to identify **end users** using your LLM application.
 - [Optional] `conversation_id`: type `str` to **group together multiple messages** under a single conversation thread.
 - [Optional] `completion_time`: type `float` that indicates how many **seconds** it took your LLM application to complete.
@@ -68,7 +68,8 @@ deepeval.track(
     model="gpt-4",
     hyperparameters={
         "prompt template": "...",
-        "temperature": "3"
+        "temperature": 1,
+        "chunk size": 500
     }
 )
 ```
