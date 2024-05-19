@@ -39,6 +39,7 @@ from deepeval.tracing import (
     LlmMetadata,
     EmbeddingMetadata,
     TraceType,
+    TraceProvider
 )
 from deepeval.utils import dataclass_to_dict
 
@@ -147,6 +148,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         if "exception" in processed_payload:
             trace_instance = GenericTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
                 type=type,
                 executionTime=current_time,
                 name=name,
@@ -158,6 +160,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         elif event_type == CBEventType.LLM:
             trace_instance = LlmTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
                 type=type,
                 executionTime=current_time,
                 name=name,
@@ -181,6 +184,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         elif event_type == CBEventType.EMBEDDING:
             trace_instance = EmbeddingTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
                 type=type,
                 executionTime=current_time,
                 name=name,
@@ -195,6 +199,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         elif event_type == CBEventType.RETRIEVE:
             trace_instance = GenericTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
                 type=type,
                 executionTime=current_time,
                 name=name,
@@ -206,6 +211,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         elif event_type == CBEventType.QUERY:
             trace_instance = GenericTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
                 type=type,
                 executionTime=current_time,
                 name=name,
@@ -217,6 +223,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         elif event_type == CBEventType.SYNTHESIZE:
             trace_instance = GenericTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
                 type=type,
                 executionTime=current_time,
                 name=name,
@@ -228,6 +235,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         else:
             trace_instance = GenericTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
                 type=type,
                 executionTime=current_time,
                 name=name,

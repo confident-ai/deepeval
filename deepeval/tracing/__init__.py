@@ -22,4 +22,5 @@ from .tracer import (
     GenericTrace,
     LlmMetadata,
     EmbeddingMetadata,
+    TraceProvider
 )

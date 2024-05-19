@@ -51,6 +51,8 @@ class RAGPipeline:
     def retrieve_context(self, query):
         with Tracer(trace_type=TraceType.LLAMA_WRAPPER) as llama_wrapper_trace:
             nodes = self.retriever.retrieve(query)
+
+
             combined_nodes = "\n".join([node.get_content() for node in nodes])
               
             # set parameters
@@ -92,6 +94,7 @@ class RAGPipeline:
             query_trace.set_parameters(
                 output=response,
             )
+
             query_trace.track(
                 input=query_text,
                 response=response,
@@ -106,11 +109,11 @@ class RAGPipeline:
 
 user_inputs = [
     "what does your company do",
-    "when were you incorporated",
-    "what is your company name",
-    "what are your products",
-    "do you offer support",
-    "what are your services"
+    #"when were you incorporated",
+    #"what is your company name",
+    #"what are your products",
+    #"do you offer support",
+    #"what are your services"
 ]
 
 async def query_and_print(engine: RAGPipeline, query: str):

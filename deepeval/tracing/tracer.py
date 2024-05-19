@@ -73,6 +73,7 @@ class BaseTrace:
     input: dict
     output: dict
     status: TraceStatus
+    traceProvider: TraceProvider
     traces: List["TraceData"]
 
 
@@ -246,6 +247,7 @@ class Tracer:
         if trace_type == TraceType.LLM:
             return LlmTrace(
                 type=trace_type.value, 
+                traceProvider=TraceProvider.CUSTOM,
                 executionTime=0, 
                 name=params.get('name', ''), 
                 input=params.get('input', None), 
@@ -257,6 +259,7 @@ class Tracer:
         elif trace_type == TraceType.EMBEDDING:
             return EmbeddingTrace(
                 type=trace_type.value, 
+                traceProvider=TraceProvider.CUSTOM,
                 executionTime=0, 
                 ame=params.get('name', ''), 
                 input=params.get('input', None), 
@@ -267,6 +270,7 @@ class Tracer:
         else:
             return GenericTrace(
                 type=trace_type.value, 
+                traceProvider=TraceProvider.CUSTOM,
                 executionTime=0, 
                 name=params.get('name', ''), 
                 input=params.get('input', None),
