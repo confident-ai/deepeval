@@ -143,7 +143,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         current_time = perf_counter()
         type = self.convert_event_type_to_deepeval_trace_type(event_type)
-        name = event_type.capitalize()
+        name = event_type
         trace_instance_input = None
 
         if "exception" in processed_payload:
