@@ -9,7 +9,9 @@ sidebar_label: Synthesizer
 `deepeval` offers a data `Synthesizer` for anyone to easily generate evaluation datasets from scratch. The `Synthesizer` class is a synthetic data generator that first uses an LLM to generate a series of `input`s, before evolving each `input` to make them more complex and realistic. These evolved inputs are then used to create a **list of synthetic `Golden`s**, which makes up your synthetic `EvaluationDataset`.
 
 :::tip Did You Know?
-`deepeval`'s `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of Eval-Struct and WizardML. For further details, [read the original paper here](https://arxiv.org/abs/2304.12244).
+`deepeval`'s `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244)
+
+For those interested, here is a [great article on how `deepeval`'s synthesizer was built.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
 :::
 
 ## Creating An Synthesizer
@@ -24,10 +26,10 @@ synthesizer = Synthesizer()
 
 There are two optional parameters when creating a `Synthesizer`:
 
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4-0125-preview'.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 - [Optional] `multithreading`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 
-## Using Synthesizer as a Standalone
+## Using Synthesizer As A Standalone
 
 There are 2 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
 
@@ -37,6 +39,10 @@ There are 2 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Gold
 ### Generating From Documents
 
 To generate synthetic `Golden`s from documents, simply provide a list of document paths:
+
+:::info
+The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
+:::
 
 ```python
 from deepeval.synthesizer import Synthesizer
@@ -58,15 +64,30 @@ There are one mandatory and six optional parameters when using the `generate_gol
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
 - [Optional] `enable_breadth_evolve`: a boolean which when set to `True`, introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
 
-:::info
-The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
+:::note
+`deepeval` uses an LLM and an embedder model during context and query generation during data synthesization. You can choose to use Azure's OpenAI models if you wish by running the following commands in the terminal:
+
+```console
+deepeval set-azure-openai --openai-endpoint=<endpoint> \
+    --openai-api-key=<api_key> \
+    --deployment-name=<deployment_name> \
+    --openai-api-version=<openai_api_version> \
+    --model-version=<model_version>
+```
+
+Then, run this to set the Azure OpenAI embedder:
+
+```console
+deepeval set-azure-openai-embedding --embedding_deployment-name=<embedding_deployment_name>
+```
+
 :::
 
 ### Generating From Provided Contexts
 
 `deepeval` also allows you to generate synthetic `Goldens` from a manually provided a list of context instead of directly generating from your documents.
 
-:::note
+:::tip
 This is especially helpful if you already have an indexed and/or embedded knowledge base. For example, if you already have documents parsed and stored in an existing vector database, you may consider handling the logic to retrieve text chunks yourself.
 :::
 

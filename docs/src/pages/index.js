@@ -29,8 +29,7 @@ class ConfidentEnvelope extends React.Component {
           <div className={styles.letterBorder}></div>
           <div className={styles.letterTitle}>Delivered by</div>
           <div className={styles.letterContext}>
-            {/* <img src="icons/bowtie.svg"/> */}
-            <span>Confident AI</span>
+            <span class="lexend-deca" style={{fontSize: "16px"}}>Confident AI</span>
           </div>
           <div className={styles.letterStamp}>
             <div className={styles.letterStampInner}></div>

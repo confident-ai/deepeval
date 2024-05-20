@@ -10,6 +10,7 @@ from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
 
 valid_gpt_models = [
+    "gpt-4o",
     "gpt-4-turbo",
     "gpt-4-turbo-preview",
     "gpt-4-0125-preview",
@@ -24,7 +25,7 @@ valid_gpt_models = [
     "gpt-3.5-turbo-0125",
 ]
 
-default_gpt_model = "gpt-4-turbo"
+default_gpt_model = "gpt-4o"
 
 
 class GPTModel(DeepEvalBaseLLM):

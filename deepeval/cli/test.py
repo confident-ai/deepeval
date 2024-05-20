@@ -3,6 +3,7 @@ import pytest
 import typer
 import os
 import json
+import sys
 from typing_extensions import Annotated
 from typing import Optional
 
@@ -133,11 +134,14 @@ def run(
 
     start_time = time.perf_counter()
     with capture_evaluation_run("deepeval test run"):
-        retcode = pytest.main(pytest_args)
+        pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
     test_run_manager.wrap_up_test_run(run_duration)
 
     invoke_test_run_end_hook()
 
-    return retcode
+    if pytest_retcode == 1:
+        sys.exit(1)
+
+    return pytest_retcode
