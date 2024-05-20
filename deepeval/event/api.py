@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Union
 from enum import Enum
 
-
 class Link(BaseModel):
     value: str
 
@@ -36,12 +35,14 @@ class APIEvent(BaseModel):
     custom_properties: Optional[Dict[str, CustomProperty]] = Field(
         None, alias="customProperties"
     )
+    trace_stack: Optional[Dict] = Field(None, alias="traceStack")
+    trace_provider: Optional[str] = Field(None, alias="traceProvider")
     hyperparameters: Optional[Dict] = Field(None)
 
     class Config:
         use_enum_values = True
 
-
+        
 class APIFeedback(BaseModel):
     provider: str
     event_id: str = Field(alias="eventId")

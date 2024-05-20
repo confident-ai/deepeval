@@ -1,13 +1,27 @@
 from .tracing import (
-    trace,
+#     trace,
+#     trace_manager,
+     get_trace_stack,
+#     BaseTrace,
+#     TraceStatus,
+#     LlmTrace,
+#     EmbeddingTrace,
+#     GenericTrace,
+#     LlmMetadata,
+#     EmbeddingMetadata,
+)
+
+from .tracer import (
+    Tracer,
     trace_manager,
-    get_trace_stack,
-    BaseTrace,
     TraceType,
+    LlamaIndexTraceType,
+    BaseTrace,
     TraceStatus,
     LlmTrace,
     EmbeddingTrace,
     GenericTrace,
     LlmMetadata,
     EmbeddingMetadata,
+    TraceProvider
 )
