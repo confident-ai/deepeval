@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Union
 from enum import Enum
 
+
 class Link(BaseModel):
     value: str
 
@@ -42,7 +43,7 @@ class APIEvent(BaseModel):
     class Config:
         use_enum_values = True
 
-        
+
 class APIFeedback(BaseModel):
     provider: str
     event_id: str = Field(alias="eventId")

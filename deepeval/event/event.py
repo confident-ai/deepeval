@@ -1,6 +1,4 @@
-
-from typing import Optional, List, Dict, Union
-from pydantic import BaseModel
+from typing import Optional, List, Dict, Union, Any
 
 from deepeval.api import Api, Endpoints
 from deepeval.test_run.hyperparameters import process_hyperparameters
@@ -22,6 +20,7 @@ from deepeval.event.api import (
     Link,
 )
 
+
 def track(
     event_name: str,
     model: str,
@@ -39,7 +38,7 @@ def track(
     raise_expection: Optional[bool] = True,
     run_async: Optional[bool] = True,
     trace_stack: Optional[Dict[str, Any]] = None,
-    trace_provider: Optional[str] = None
+    trace_provider: Optional[str] = None,
 ) -> str:
     try:
         custom_properties = None
@@ -62,7 +61,6 @@ def track(
                     raise ValueError(
                         "All values in 'additional_data' must be either of type 'string', 'Link', or 'dict'."
                     )
-
 
         hyperparameters = process_hyperparameters(hyperparameters)
         hyperparameters["model"] = model

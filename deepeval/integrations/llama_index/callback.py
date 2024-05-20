@@ -40,7 +40,7 @@ from deepeval.tracing import (
     EmbeddingMetadata,
     TraceType,
     TraceProvider,
-    LlamaIndexTraceType
+    LlamaIndexTraceType,
 )
 from deepeval.utils import dataclass_to_dict
 
@@ -74,7 +74,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
     def start_trace(self, trace_id: Optional[str] = None) -> None:
         self.event_map = {}
-        #trace_manager.clear_trace_stack()
+        # trace_manager.clear_trace_stack()
         return
 
     def end_trace(
@@ -118,9 +118,9 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         )
         trace_instance = self.update_trace_instance(
             trace_instance, event_type, processed_payload
-        )        
+        )
         current_trace_stack = trace_manager.get_trace_stack_copy()
-        #trace_instance = current_trace_stack[-1]
+        # trace_instance = current_trace_stack[-1]
 
         if len(current_trace_stack) > 1:
             parent_trace = current_trace_stack[-2]
