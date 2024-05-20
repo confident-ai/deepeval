@@ -15,13 +15,12 @@ from deepeval.event import track
 ########################################################
 
 class TraceProvider(Enum):
-  LLAMA_INDEX = "LlamaIndex"
-  CUSTOM = "Custom"
-  HYBRID = "Hybrid"
+    LLAMA_INDEX = "LlamaIndex"
+    CUSTOM = "Custom"
+    HYBRID = "Hybrid"
 
 class TraceType(Enum):
     AGENT = "Agent"
-    AGENT_STEP = "Agent Step"
     CHAIN = "Chain"
     CHUNKING = "Chunking"
     EMBEDDING = "Embedding"
@@ -33,37 +32,33 @@ class TraceType(Enum):
     SYNTHESIZE = "Synthesize"
     TOOL = "Tool"
 
-    LLAMA_WRAPPER = "LlamaIndex Wrapper"
-    LLAMA_INDEX_AGENT_STEP = "LlamaIndex Agent Step"
-    LLAMA_INDEX_CHAIN = "LlamaIndex Chain"
-    LLAMA_INDEX_CHUNKING = "LlamaIndex Chunking"
-    LLAMA_INDEX_EMBEDDING = "LlamaIndex Embedding"
-    LLAMA_INDEX_LLM = "LlamaIndex LLM"
-    LLAMA_INDEX_NODE_PARSING = "LlamaIndex Node Parsing"
-    LLAMA_INDEX_QUERY = "LlamaIndex Query"
+class LlamaIndexTraceType(Enum):
+    LLAMA_INDEX_AGENT_STEP = "Agent Step"
+    LLAMA_INDEX_CHAIN = "Chain"
+    LLAMA_INDEX_CHUNKING = "Chunking"
+    LLAMA_INDEX_EMBEDDING = "Embedding"
+    LLAMA_INDEX_LLM = "LLM"
+    LLAMA_INDEX_NODE_PARSING = "Node Parsing"
+    LLAMA_INDEX_QUERY = "Query"
     LLAMA_INDEX_RERANKING = "Reranking"
-    LLAMA_INDEX_RETRIEVER = "LlamaIndex Retriever"
-    LLAMA_INDEX_SYNTHESIZE = "LlamaIndex Synthesize"
+    LLAMA_INDEX_RETRIEVER = "Retriever"
+    LLAMA_INDEX_SYNTHESIZE = "Synthesize"
 
 class TraceStatus(Enum):
     SUCCESS = "Success"
     ERROR = "Error"
 
-
 @dataclass
 class LlmMetadata:
     model: Optional[str] = None
     tokenCount: Optional[Dict[str, int]] = None
-    hyperparameters: Optional[Dict[str, Any]] = None
     outputMessages: Optional[List[Dict[str, str]]] = None
     llmPromptTemplate: Optional[Any] = None
     llmPromptTemplateVariables: Optional[Any] = None
 
-
 @dataclass
 class EmbeddingMetadata:
     model: Optional[str] = None
-
 
 @dataclass
 class BaseTrace:
@@ -71,21 +66,18 @@ class BaseTrace:
     executionTime: float
     name: str
     input: dict
-    output: dict
+    output: Any
     status: TraceStatus
     traceProvider: TraceProvider
     traces: List["TraceData"]
-
 
 @dataclass
 class LlmTrace(BaseTrace):
     llmMetadata: LlmMetadata
 
-
 @dataclass
 class EmbeddingTrace(BaseTrace):
     embeddingMetadata: EmbeddingMetadata
-
 
 @dataclass
 class GenericTrace(BaseTrace):
@@ -94,12 +86,10 @@ class GenericTrace(BaseTrace):
 Metadata = Union[EmbeddingMetadata, LlmMetadata]
 TraceData = Union[LlmTrace, EmbeddingTrace, GenericTrace]
 TraceStack = List[TraceData]
-TraceProviders = Set[TraceProvider]
 
 # Context variable to maintain an isolated stack for each async task
 trace_stack_var: ContextVar[TraceStack] = ContextVar('trace_stack', default=[])
 dict_trace_stack_var = ContextVar("dict_trace_stack", default=None)
-trace_providers_var: ContextVar[TraceProviders] = ContextVar("trace_providers", default=set())
 
 ########################################################
 ### ContextVar Managers ################################
@@ -143,9 +133,9 @@ trace_manager = TraceManager()
 ########################################################
 
 class Tracer:
-    def __init__(self, trace_type: TraceType, **params: Optional[Dict]):
-        self.trace_type: TraceType = trace_type
-        self.params = params
+    def __init__(self, trace_type: Union[TraceType, str]):
+        self.trace_type = trace_type if isinstance(trace_type, str) else trace_type.value
+        self.input_params = {}
         self.start_time = None
         self.execution_time = None
         self.metadata = None
@@ -161,23 +151,15 @@ class Tracer:
         # create input
         caller_frame = inspect.currentframe().f_back
         args, _, _, locals_ = inspect.getargvalues(caller_frame)
-        self.params['input'] = {arg: locals_[arg] for arg in args if arg not in ['self', 'cls']}
+        self.input_params['input'] = {arg: locals_[arg] for arg in args if arg not in ['self', 'cls']}
 
         # create name
         func_name = caller_frame.f_code.co_name 
-        self.params['name'] = func_name
+        self.input_params['name'] = func_name
 
         # append trace instance to stack
-        trace_instance = self.create_trace_instance(self.trace_type, **self.params)
+        trace_instance = self.create_trace_instance(self.trace_type, **self.input_params)
         trace_manager.append_to_trace_stack(trace_instance)
-
-        # trace providers
-        trace_providers = trace_providers_var.get().copy()
-        if self.trace_type == TraceType.LLAMA_WRAPPER:
-            trace_providers.add(TraceProvider.LLAMA_INDEX)
-        else:
-            trace_providers.add(TraceProvider.CUSTOM)
-        trace_providers_var.set(trace_providers)
 
         return self
 
@@ -209,20 +191,12 @@ class Tracer:
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
 
-            print(dict_representation)
+            #print(dict_representation)
             
-            trace_provider = TraceProvider.CUSTOM
-            trace_providers = trace_providers_var.get()
-            if len(trace_providers) >= 1:
-                trace_provider = TraceProvider.HYBRID
-            elif len(trace_providers) == 1 and trace_providers[0] == TraceType.LLAMA_WRAPPER:
-                trace_provider = TraceProvider.LLAMA_INDEX
-            print(trace_provider)
-
             # # send event to deepeval
             if self.is_tracking:
                 track(
-                    event_name=self.track_params['event_name'] or self.trace_type.value,
+                    event_name=self.track_params['event_name'] or self.trace_type,
                     model=self.track_params['model'],
                     input=self.track_params['input'],
                     response=self.track_params['response'],
@@ -235,18 +209,16 @@ class Tracer:
                     additional_data=self.track_params['additional_data'],
                     hyperparameters=self.track_params['hyperparameters'],
                     fail_silently=self.track_params['fail_silently'],
-                    #raise_exception=self.track_params['raise_exception'],
                     run_async=self.track_params['run_async'],
                     trace_stack=dict_representation,
-                    #trace_provider=trace_provider.value
                 )
         else:
             trace_manager.pop_trace_stack()
     
     def create_trace_instance(self, trace_type, **params):
-        if trace_type == TraceType.LLM:
+        if trace_type == TraceType.LLM.value:
             return LlmTrace(
-                type=trace_type.value, 
+                type=trace_type, 
                 traceProvider=TraceProvider.CUSTOM,
                 executionTime=0, 
                 name=params.get('name', ''), 
@@ -256,9 +228,9 @@ class Tracer:
                 traces=[], 
                 llmMetadata=params.get('llmMetadata', None))
         
-        elif trace_type == TraceType.EMBEDDING:
+        elif trace_type == TraceType.EMBEDDING.value:
             return EmbeddingTrace(
-                type=trace_type.value, 
+                type=trace_type, 
                 traceProvider=TraceProvider.CUSTOM,
                 executionTime=0, 
                 ame=params.get('name', ''), 
@@ -269,7 +241,7 @@ class Tracer:
                 embeddingMetadata=params.get('embeddingMetadata', None))
         else:
             return GenericTrace(
-                type=trace_type.value, 
+                type=trace_type, 
                 traceProvider=TraceProvider.CUSTOM,
                 executionTime=0, 
                 name=params.get('name', ''), 
@@ -289,32 +261,33 @@ class Tracer:
         current_trace.output = self.output
 
         # Update metadata in current_trace
-        if self.trace_type == TraceType.LLM:
+        if self.trace_type == TraceType.LLM.value:
             assert isinstance(self.metadata, LlmMetadata), "Metadata must be of type LlmMetadata for LLM trace type"
             current_trace.llmMetadata=self.metadata
 
-        elif self.trace_type == TraceType.EMBEDDING:
+        elif self.trace_type == TraceType.EMBEDDING.value:
             assert isinstance(self.metadata, EmbeddingMetadata), "Metadata must be of type EmbeddingMetadata for EMBEDDING trace type"
             current_trace.embeddingMetadata=self.metadata
+
 
         trace_manager.set_trace_stack(current_stack)
     
     def set_parameters(self, output: Any, metadata: Optional[Metadata]=None):
         self.output = output
 
-        if not metadata and self.trace_type == TraceType.LLM:
+        if not metadata and self.trace_type == TraceType.LLM.value:
             self.metadata = LlmMetadata()
-        elif not metadata and self.trace_type == TraceType.EMBEDDING:
+        elif not metadata and self.trace_type == TraceType.EMBEDDING.value:
             self.metadata = EmbeddingMetadata()
         else:
             self.metadata = metadata
-    
+
     def track(
         self,
-        event_name: Optional[str] = None,
-        model: Optional[str] = None,
-        input: Optional[str] = None,
-        response: Optional[str] = None,
+        event_name: str = None,
+        model: str = None,
+        input: str = None,
+        response: str = None,
         retrieval_context: Optional[List[str]] = None,
         completion_time: Optional[float] = None,
         token_usage: Optional[float] = None,

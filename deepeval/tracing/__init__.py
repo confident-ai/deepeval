@@ -15,6 +15,7 @@ from .tracer import (
     Tracer,
     trace_manager,
     TraceType,
+    LlamaIndexTraceType,
     BaseTrace,
     TraceStatus,
     LlmTrace,

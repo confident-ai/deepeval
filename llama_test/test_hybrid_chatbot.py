@@ -1,8 +1,9 @@
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-from llama_index.core import set_global_handler
 from llama_index.core.callbacks.base_handler import BaseCallbackHandler
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.core import set_global_handler
+
 from typing import Any
 from openai import AsyncOpenAI
 import asyncio
@@ -48,18 +49,13 @@ class RAGPipeline:
         self.retriever = self.index.as_retriever(similarity_top_k=top_k, similarity_cutoff=min_similarity)
         self.model_name = model_name
 
-    def retrieve_context(self, query):
-        with Tracer(trace_type=TraceType.LLAMA_WRAPPER) as llama_wrapper_trace:
+    def format_nodes(self, query):
+        with Tracer(trace_type=TraceType.NODE_PARSING) as llama_wrapper_trace:
             nodes = self.retriever.retrieve(query)
-
-
             combined_nodes = "\n".join([node.get_content() for node in nodes])
-              
-            # set parameters
-            llama_wrapper_trace.set_parameters(
-                output=combined_nodes
-            )
 
+            # set parameters
+            llama_wrapper_trace.set_parameters(combined_nodes)
             return combined_nodes
 
     async def generate_completion(self, prompt, context):
@@ -79,33 +75,27 @@ class RAGPipeline:
             # set parameters
             llm_trace.set_parameters(
                 output=output,
-                metadata=LlmMetadata(
-                     model='gpt-4-turbo-preview',
-                )
+                metadata=LlmMetadata(model='gpt-4-turbo-preview')
             )
-        
             return output
 
     async def aquery(self, query_text):
         with Tracer(trace_type=TraceType.QUERY) as query_trace:
-            context = self.retrieve_context(query_text)
+            context = self.format_nodes(query_text)
             response = await self.generate_completion(query_text, context)
 
-            query_trace.set_parameters(
-                output=response,
-            )
-
+            # set parameters and track event
+            query_trace.set_parameters(response)
             query_trace.track(
                 input=query_text,
                 response=response,
                 model='gpt-4-turbo-preview',
             )
-        
             return response
         
-# ###########################################################
-# # test chatbot event tracking
-# ###########################################################
+#############################################################
+### test chatbot event tracking
+#############################################################
 
 user_inputs = [
     "what does your company do",
@@ -129,7 +119,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-# ###########################################################
-# # test chatbot evaluation
-# ###########################################################

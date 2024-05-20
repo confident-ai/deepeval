@@ -64,13 +64,18 @@ module.exports = {
         "confident-ai-debug-evaluations",
         "confident-ai-github-actions",
         "confident-ai-evals-in-production",
+        "confident-ai-tracer",
       ],
       collapsed: false,
     },
     {
       type: "category",
       label: "Guides",
-      items: ["guides-regression-testing-in-cicd","guides-rag-evaluation", "guides-building-custom-metrics"],
+      items: [
+        "guides-regression-testing-in-cicd",
+        "guides-rag-evaluation",
+        "guides-building-custom-metrics",
+      ],
       collapsed: false,
     },
     {

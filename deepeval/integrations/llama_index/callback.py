@@ -39,7 +39,8 @@ from deepeval.tracing import (
     LlmMetadata,
     EmbeddingMetadata,
     TraceType,
-    TraceProvider
+    TraceProvider,
+    LlamaIndexTraceType
 )
 from deepeval.utils import dataclass_to_dict
 
@@ -170,7 +171,6 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 traces=[],
                 llmMetadata=LlmMetadata(
                     model=processed_payload["llm_model_name"],
-                    hyperparameters=processed_payload["llm_hyperparameters"],
                     outputMessages=None,
                     tokenCount=None,
                     llmPromptTemplate=processed_payload.get(
@@ -301,23 +301,23 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
     ):
         # TODO: add more types
         if event_type == CBEventType.LLM:
-            return TraceType.LLAMA_INDEX_LLM
+            return LlamaIndexTraceType.LLAMA_INDEX_LLM
         elif event_type == CBEventType.RETRIEVE:
-            return TraceType.LLAMA_INDEX_RETRIEVER
+            return LlamaIndexTraceType.LLAMA_INDEX_RETRIEVER
         elif event_type == CBEventType.EMBEDDING:
-            return TraceType.LLAMA_INDEX_EMBEDDING
+            return LlamaIndexTraceType.LLAMA_INDEX_EMBEDDING
         elif event_type == CBEventType.CHUNKING:
-            return TraceType.LLAMA_INDEX_CHUNKING
+            return LlamaIndexTraceType.LLAMA_INDEX_CHUNKING
         elif event_type == CBEventType.NODE_PARSING:
-            return TraceType.LLAMA_INDEX_NODE_PARSING
+            return LlamaIndexTraceType.LLAMA_INDEX_NODE_PARSING
         elif event_type == CBEventType.SYNTHESIZE:
-            return TraceType.LLAMA_INDEX_SYNTHESIZE
+            return LlamaIndexTraceType.LLAMA_INDEX_SYNTHESIZE
         elif event_type == CBEventType.QUERY:
-            return TraceType.LLAMA_INDEX_QUERY
+            return LlamaIndexTraceType.LLAMA_INDEX_QUERY
         elif event_type == CBEventType.RERANKING:
-            return TraceType.LLAMA_INDEX_RERANKING
+            return LlamaIndexTraceType.LLAMA_INDEX_RERANKING
         elif event_type == CBEventType.AGENT_STEP:
-            return TraceType.LLAMA_INDEX_AGENT_STEP
+            return LlamaIndexTraceType.LLAMA_INDEX_AGENT_STEP
 
         return event_type.value.capitalize()
 

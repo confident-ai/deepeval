@@ -61,6 +61,7 @@ def track(
         hyperparameters["model"] = model
 
         api_event = APIEvent(
+            traceProvider=trace_provider,
             name=event_name,
             input=input,
             response=response,
@@ -73,7 +74,6 @@ def track(
             customProperties=custom_properties,
             hyperparameters=hyperparameters,
             traceStack=trace_stack,
-            traceProvider=trace_provider
         )
         api = Api()
         try:
