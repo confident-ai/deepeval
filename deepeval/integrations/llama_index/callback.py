@@ -301,23 +301,23 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
     ):
         # TODO: add more types
         if event_type == CBEventType.LLM:
-            return LlamaIndexTraceType.LLAMA_INDEX_LLM
+            return LlamaIndexTraceType.LLM
         elif event_type == CBEventType.RETRIEVE:
-            return LlamaIndexTraceType.LLAMA_INDEX_RETRIEVER
+            return LlamaIndexTraceType.RETRIEVER
         elif event_type == CBEventType.EMBEDDING:
-            return LlamaIndexTraceType.LLAMA_INDEX_EMBEDDING
+            return LlamaIndexTraceType.EMBEDDING
         elif event_type == CBEventType.CHUNKING:
-            return LlamaIndexTraceType.LLAMA_INDEX_CHUNKING
+            return LlamaIndexTraceType.CHUNKING
         elif event_type == CBEventType.NODE_PARSING:
-            return LlamaIndexTraceType.LLAMA_INDEX_NODE_PARSING
+            return LlamaIndexTraceType.NODE_PARSING
         elif event_type == CBEventType.SYNTHESIZE:
-            return LlamaIndexTraceType.LLAMA_INDEX_SYNTHESIZE
+            return LlamaIndexTraceType.SYNTHESIZE
         elif event_type == CBEventType.QUERY:
-            return LlamaIndexTraceType.LLAMA_INDEX_QUERY
+            return LlamaIndexTraceType.QUERY
         elif event_type == CBEventType.RERANKING:
-            return LlamaIndexTraceType.LLAMA_INDEX_RERANKING
+            return LlamaIndexTraceType.RERANKING
         elif event_type == CBEventType.AGENT_STEP:
-            return LlamaIndexTraceType.LLAMA_INDEX_AGENT_STEP
+            return LlamaIndexTraceType.AGENT_STEP
 
         return event_type.value.capitalize()
 

@@ -1,11 +1,9 @@
-from llama_index.core.callbacks.base_handler import BaseCallbackHandler
 from contextvars import ContextVar
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Union, Optional, Dict, Set
+from typing import Any, List, Union, Optional, Dict
 from time import perf_counter
 import inspect
-import time
 
 from deepeval.utils import dataclass_to_dict
 from deepeval.event import track
@@ -16,9 +14,9 @@ from deepeval.event import track
 
 
 class TraceProvider(Enum):
-    LLAMA_INDEX = "LlamaIndex"
-    CUSTOM = "Custom"
-    HYBRID = "Hybrid"
+    LLAMA_INDEX = "LLAMA_INDEX"
+    CUSTOM = "CUSTOM"
+    HYBRID = "HYBRID"
 
 
 class TraceType(Enum):
@@ -36,16 +34,16 @@ class TraceType(Enum):
 
 
 class LlamaIndexTraceType(Enum):
-    LLAMA_INDEX_AGENT_STEP = "Agent Step"
-    LLAMA_INDEX_CHAIN = "Chain"
-    LLAMA_INDEX_CHUNKING = "Chunking"
-    LLAMA_INDEX_EMBEDDING = "Embedding"
-    LLAMA_INDEX_LLM = "LLM"
-    LLAMA_INDEX_NODE_PARSING = "Node Parsing"
-    LLAMA_INDEX_QUERY = "Query"
-    LLAMA_INDEX_RERANKING = "Reranking"
-    LLAMA_INDEX_RETRIEVER = "Retriever"
-    LLAMA_INDEX_SYNTHESIZE = "Synthesize"
+    AGENT_STEP = "Agent Step"
+    CHAIN = "Chain"
+    CHUNKING = "Chunking"
+    EMBEDDING = "Embedding"
+    LLM = "LLM"
+    NODE_PARSING = "Node Parsing"
+    QUERY = "Query"
+    RERANKING = "Reranking"
+    RETRIEVER = "Retriever"
+    SYNTHESIZE = "Synthesize"
 
 
 class TraceStatus(Enum):
