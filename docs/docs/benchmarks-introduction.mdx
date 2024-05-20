@@ -11,11 +11,16 @@ LLM benchmarking provides a standardized way to quantify LLM performances across
 - BIG-Bench Hard
 - HellaSwag
 - MMLU (Massive Multitask Language Understanding)
+- DROP
+- TruthfulQA
+- HumanEval
+- GSM8K
 
 To benchmark your LLM, you will need to wrap your LLM implementation (which could be anything such as a simple API call to OpenAI, or a Hugging Face transformers model) within `deepeval`'s `DeepEvalBaseLLM` class. Visit the [custom models section](metrics-introduction#using-a-custom-llm) for a detailed guide on how to create a custom model object.
 
 :::info
-In `deepeval`, anyone can benchmark any LLM of their choice in just a few lines of code.
+In `deepeval`, anyone can benchmark **ANY** LLM of their choice in just a few lines of code. All benchmarks offered by `deepeval` follows the implementation of their original research papers.
+
 :::
 
 ## What are LLM Benchmarks?
@@ -36,7 +41,9 @@ A target label in a benchmark dataset is simply the `expected_output` in `deepev
 
 Below is an example of how to evaluate a [Mistral 7B model](https://huggingface.co/docs/transformers/model_doc/mistral) (exposed through Hugging Face's `transformers` library) against the `MMLU` benchmark.
 
-Start by creating a custom model by inheriting the `DeepEvalBaseLLM` class (visit the [custom models section](metrics-introduction#using-a-custom-llm) for a full guide on how to create a custom model):
+### Create A Custom LLM
+
+Start by creating a custom model which **you will be benchmarking** by inheriting the `DeepEvalBaseLLM` class (visit the [custom models section](metrics-introduction#using-a-custom-llm) for a full guide on how to create a custom model):
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -68,6 +75,17 @@ class Mistral7B(DeepEvalBaseLLM):
     async def a_generate(self, prompt: str) -> str:
         return self.generate(prompt)
 
+    # This is optional.
+    def batch_generate(self, promtps: List[str]) -> List[str]:
+        model = self.load_model()
+        device = "cuda" # the device to load the model onto
+
+        model_inputs = self.tokenizer(promtps, return_tensors="pt").to(device)
+        model.to(device)
+
+        generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
+        return self.tokenizer.batch_decode(generated_ids)
+
     def get_model_name(self):
         return "Mistral 7B"
 
@@ -77,6 +95,10 @@ tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
 mistral_7b = Mistral7B(model=model, tokenizer=tokenizer)
 print(mistral_7b("Write me a joke"))
 ```
+
+:::tip
+Notice you can also **optionally** define a `batch_generate()` method if your LLM offers an API to generate outputs in batches.
+:::
 
 Next, define a MMLU benchmark using the `MMLU` class:
 
@@ -92,14 +114,18 @@ Lastly, call the `evaluate()` method to benchmark your custom LLM:
 ```python
 ...
 
-results = benchmark.evaluate(model=mistral_7b)
+# When you set batch_size, outputs for benchmarks will be generated in batches
+# if `batch_generate()` is implemented for your custom LLM
+results = benchmark.evaluate(model=mistral_7b, batch_size=5)
 print("Overall Score: ", results)
 ```
 
 ✅ **Congraulations! You can now evaluate any custom LLM of your choice on all LLM benchmarks offered by `deepeval`.**
 
-:::info
-All benchmarks offered by `deepeval` follows the implementation of the original research papers.
+:::tip
+When you set `batch_size`, outputs for benchmarks will be generated in batches if `batch_generate()` is implemented for your custom LLM. This can speed up benchmarking by a lot.
+
+The `batch_size` parameter is available for all benchmarks **except** for `HumanEval` and `GSM8K`.
 :::
 
 After running an evaluation, you can access the results in multiple ways to analyze the performance of your model. This includes the overall score, task-specific scores, and details about each prediction.
