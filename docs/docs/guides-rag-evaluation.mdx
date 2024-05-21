@@ -25,7 +25,7 @@ Remember, the retriever is responsible for the retrieval step, while the generat
 The retrieval step typically involves:
 
 1. **Vectorizing the initial input into an embedding**, using an embedding model of your choice (eg. OpenAI's `text-embedding-3-large` model).
-2. **Performing a vector secrch** (by using the previously embedded input) on the vector store that contains your vectorized knowledge base, to retrieve the top-K most "similar" vectorized text chunks in your vector store.
+2. **Performing a vector search** (by using the previously embedded input) on the vector store that contains your vectorized knowledge base, to retrieve the top-K most "similar" vectorized text chunks in your vector store.
 3. **Rerank the retrieved nodes**. The initial ranking provided by the vector search might not always align perfectly with the specific relevance for your specific use-case.
 
 :::tip
