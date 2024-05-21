@@ -194,6 +194,30 @@ print(answer_relevancy_metric.score)
 print(answer_relevancy_metric.reason)
 ```
 
+## Configurable Evaluation Metrics with YAML
+
+With DeepEval, you can conveniently specify and manage your evaluation metrics using a YAML configuration file. This allows for simpler adjustments of metrics' parameters without modifying the codebase.
+
+Refer to the `config.yaml` file for guidance on configuring your metrics.
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
+test_case = LLMTestCase(
+    input="What if these shoes don't fit?",
+    # Replace this with the actual output from your LLM application
+    actual_output="We offer a 30-day full refund at no extra costs.",
+    # Replace this with the expected output from your RAG generator
+    expected_output = "You are eligible for a 30 day full refund at no extra cost.",
+    retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
+)
+# Use config.yaml to define metrics for evaluation
+evaluate([test_case], config_path="config.yaml")
+```
+
 Note that some metrics are for RAG pipelines, while others are for fine-tuning. Make sure to use our docs to pick the right one for your use case.
 
 ## Evaluating a Dataset / Test Cases in Bulk
