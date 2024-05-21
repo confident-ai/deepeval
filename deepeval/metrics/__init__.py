@@ -12,6 +12,7 @@ from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 
+from .loader import MetricsLoader
 # from .ragas_metric import (
 #     RagasMetric,
 #     RAGASAnswerRelevancyMetric,

@@ -1,0 +1,29 @@
+metrics:
+  answer_relevancy:
+    threshold: 0.7
+    model: gpt-4-turbo
+    include_reason: true
+  faithfulness:
+    threshold: 0.7
+    model: gpt-4-turbo
+    include_reason: true
+  contextual_precision:
+    threshold: 0.7
+    model: gpt-4-turbo
+    include_reason: true
+  contextual_recall:
+    threshold: 0.7
+    model: gpt-4-turbo
+    include_reason: true
+  contextual_relevancy:
+    threshold: 0.7
+    model: gpt-4-turbo
+    include_reason: true
+  geval:
+    name: geval
+    threshold: 0.5
+    model: gpt-4-turbo
+    criteria: "Coherence - determine if the actual output is coherent with the input."
+    evaluation_params:
+      - input
+      - actual_output

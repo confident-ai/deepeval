@@ -1,4 +1,5 @@
 import json
+import yaml
 from typing import Any, Optional, List, Union, Tuple
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 
@@ -79,3 +80,12 @@ def initialize_model(
         return model, False
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return GPTModel(model=model), True
+
+
+class ConfigLoader:
+    def __init__(self, config_path):
+        with open(config_path, 'r') as file:
+            self.config = yaml.load(file, Loader=yaml.FullLoader)
+
+    def get_metrics_config(self):
+        return self.config.get('metrics', {})
