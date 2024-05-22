@@ -439,6 +439,24 @@ deepeval test run test_example.py
 
 The `@deepeval.log_hyperparameters` decorator helps Confident AI keep track of the hyperparameters used when generating the `actual_output`s for a particular test run. This allows you to **identify which combination of hyperparameters gives the best evaluation metric results over time.**
 
+:::tip
+You can also log hyperparameters via the `evaluate()` function:
+
+```python
+from deepeval import evaluate
+...
+
+evaluate(
+    test_cases=[...],
+    metrics=[...],
+    hyperparameters={"model": "gpt4o", "prompt template": "..."}
+)
+```
+
+Feel free to execute this in a nested for loop to figure out the best hyperparameter combination!
+
+:::
+
 ### Monitoring LLM Responses
 
 Confident AI allows anyone to **monitor and evaluate LLM responses in real-time.** A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
