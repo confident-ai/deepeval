@@ -482,7 +482,7 @@ class EvaluationDataset:
                         "actual_output": golden.actual_output,
                         "expected_output": golden.expected_output,
                         "context": golden.context,
-                        "source_file": golden.source_file
+                        "source_file": golden.source_file,
                     }
                     for golden in self.goldens
                 ]
@@ -492,7 +492,13 @@ class EvaluationDataset:
             with open(full_file_path, "w", newline="") as file:
                 writer = csv.writer(file)
                 writer.writerow(
-                    ["input", "actual_output", "expected_output", "context", "source_file"]
+                    [
+                        "input",
+                        "actual_output",
+                        "expected_output",
+                        "context",
+                        "source_file",
+                    ]
                 )
                 for golden in self.goldens:
                     writer.writerow(
@@ -501,7 +507,7 @@ class EvaluationDataset:
                             golden.actual_output,
                             golden.expected_output,
                             "|".join(golden.context),
-                            golden.source_file
+                            golden.source_file,
                         ]
                     )
 
