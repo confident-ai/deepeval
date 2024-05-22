@@ -132,7 +132,9 @@ class Synthesizer:
         _show_indicator: bool = True,
     ) -> List[Golden]:
         with synthesizer_progress_context(
-            self.generator_model, _show_indicator
+            self.generator_model,
+            contexts * max_goldens_per_context,
+            _show_indicator,
         ):
             goldens: List[Golden] = []
             if self.multithreading:
