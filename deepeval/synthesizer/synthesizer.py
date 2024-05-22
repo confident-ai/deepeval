@@ -132,7 +132,9 @@ class Synthesizer:
         _show_indicator: bool = True,
     ) -> List[Golden]:
         with synthesizer_progress_context(
-            self.generator_model, _show_indicator
+            self.generator_model,
+            contexts * max_goldens_per_context,
+            _show_indicator,
         ):
             goldens: List[Golden] = []
             if self.multithreading:
@@ -277,6 +279,7 @@ class Synthesizer:
                         "actual_output": golden.actual_output,
                         "expected_output": golden.expected_output,
                         "context": golden.context,
+                        "source_file": golden.source_file,
                     }
                     for golden in self.synthetic_goldens
                 ]
@@ -286,16 +289,22 @@ class Synthesizer:
             with open(full_file_path, "w", newline="") as file:
                 writer = csv.writer(file)
                 writer.writerow(
-                    ["input", "actual_output", "expected_output", "context"]
+                    [
+                        "input",
+                        "actual_output",
+                        "expected_output",
+                        "context",
+                        "source_file",
+                    ]
                 )
                 for golden in self.synthetic_goldens:
-                    context_str = "|".join(golden.context)
                     writer.writerow(
                         [
                             golden.input,
                             golden.actual_output,
                             golden.expected_output,
-                            context_str,
+                            "|".join(golden.context),
+                            golden.source_file,
                         ]
                     )
 
