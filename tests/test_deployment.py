@@ -23,7 +23,7 @@ class FakeMetric(BaseMetric):
         return self.score
 
     async def a_measure(self, test_case: LLMTestCase):
-        self.score = random.uniform(0.0, 1.0)
+        self.score = random.uniform(0.5, 1.0)
         self.success = self.score >= self.threshold
         # You can also optionally set a reason for the score returned.
         # This is particularly useful for a score computed using LLMs
