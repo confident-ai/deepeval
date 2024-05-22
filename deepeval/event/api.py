@@ -36,6 +36,8 @@ class APIEvent(BaseModel):
     custom_properties: Optional[Dict[str, CustomProperty]] = Field(
         None, alias="customProperties"
     )
+    trace_stack: Optional[Dict] = Field(None, alias="traceStack")
+    trace_provider: Optional[str] = Field(None, alias="traceProvider")
     hyperparameters: Optional[Dict] = Field(None)
 
     class Config:

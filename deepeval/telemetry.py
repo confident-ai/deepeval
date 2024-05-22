@@ -83,3 +83,14 @@ def capture_metric_type(metric_name: str, _track: bool = True):
             yield span
     else:
         yield
+
+
+@contextmanager
+def capture_synthesizer_run(max_generations: int = None):
+    if not telemetry_opt_out() and max_generations is not None:
+        with tracer.start_as_current_span(
+            f"Invokved synthesizer ({max_generations})"
+        ) as span:
+            yield span
+    else:
+        yield

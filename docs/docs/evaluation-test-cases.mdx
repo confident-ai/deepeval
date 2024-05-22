@@ -50,7 +50,38 @@ test_case = LLMTestCase(
 
 :::tip
 
-Hyperparameters such as **prompt templates are independent variables that you try to optimize for** based on the metric scores you get from evaluation, which is why you should never include it as part of a test case. Another way to think about it is for a given `input`, which prompt template would give you the best `actual_output`.
+You should **NOT** include prompt templates as part of a test case because hyperparameters such as **prompt templates are independent variables that you try to optimize for** based on the metric scores you get from evaluation.
+
+If you're logged into Confident AI, you can associate hyperparameters such as prompt templates with each test run to easily figure out which prompt template gives the best `actual_output`s for a given `input`:
+
+```console
+deepeval login
+```
+
+```python title="test_file.py"
+import deepeval
+from deepeval import assert_test
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+
+def test_llm():
+    test_case = LLMTestCase(input="...", actual_output="...")
+    answer_relevancy_metric = AnswerRelevancyMetric()
+    assert_test(test_case, [answer_relevancy_metric])
+
+# You should aim to make these values dynamic
+@deepeval.log_hyperparameters(model="gpt-4o", prompt_template="...")
+def hyperparameters():
+    # You can also return an empty dict {} if there's no additional parameters to log
+    return {
+        "temperature": 1,
+        "chunk size": 500
+    }
+```
+
+```console
+deepeval test run test_file.py
+```
 
 :::
 

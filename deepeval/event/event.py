@@ -1,8 +1,17 @@
-from typing import Optional, List, Dict, Union
-from pydantic import BaseModel
+from typing import Optional, List, Dict, Union, Any
 
 from deepeval.api import Api, Endpoints
 from deepeval.test_run.hyperparameters import process_hyperparameters
+from deepeval.event.api import (
+    APIEvent,
+    EventHttpResponse,
+    CustomPropertyType,
+    CustomProperty,
+    Link,
+)
+
+
+from deepeval.api import Api, Endpoints
 from deepeval.event.api import (
     APIEvent,
     EventHttpResponse,
@@ -28,6 +37,8 @@ def track(
     fail_silently: Optional[bool] = False,
     raise_expection: Optional[bool] = True,
     run_async: Optional[bool] = True,
+    trace_stack: Optional[Dict[str, Any]] = None,
+    trace_provider: Optional[str] = None,
 ) -> str:
     try:
         custom_properties = None
@@ -55,6 +66,7 @@ def track(
         hyperparameters["model"] = model
 
         api_event = APIEvent(
+            traceProvider=trace_provider,
             name=event_name,
             input=input,
             response=response,
@@ -66,6 +78,7 @@ def track(
             conversationId=conversation_id,
             customProperties=custom_properties,
             hyperparameters=hyperparameters,
+            traceStack=trace_stack,
         )
         api = Api()
         try:

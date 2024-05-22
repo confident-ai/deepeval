@@ -3,6 +3,7 @@ from typing import List, Optional, Union, Dict
 import time
 from dataclasses import dataclass
 
+from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
     drop_and_copy,
     get_or_create_event_loop,
@@ -418,6 +419,7 @@ def assert_test(
 def evaluate(
     test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
     metrics: Optional[List[BaseMetric]] = None,
+    hyperparameters: Optional[Dict[str, Union[str, int, float]]] = None,
     run_async: bool = True,
     show_indicator: bool = True,
     print_results: bool = True,
@@ -434,6 +436,17 @@ def evaluate(
         print("Loading metrics from config.")
         metrics_evaluator = MetricsLoader(config_path=config_path)
         metrics = metrics_evaluator.get_metrics_list()
+
+    if hyperparameters is not None:
+        if (
+            hyperparameters.get("model") is None
+            or hyperparameters.get("prompt template") is None
+        ):
+            raise ValueError(
+                "A `model` and `prompt template` key must be provided when logging `hyperparameters`."
+            )
+        hyperparameters = process_hyperparameters(hyperparameters)
+
     set_indicator(show_indicator)
 
     # TODO: keep this for now, blocking conversational metrics like KR
@@ -475,6 +488,9 @@ def evaluate(
 
         aggregate_metric_pass_rates(test_results)
 
+    test_run = test_run_manager.get_test_run()
+    test_run.hyperparameters = hyperparameters
+    test_run_manager.save_test_run()
     test_run_manager.wrap_up_test_run(run_duration, display_table=False)
     return test_results
 
