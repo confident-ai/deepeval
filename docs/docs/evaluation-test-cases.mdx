@@ -188,6 +188,7 @@ Similar to Pytest, `deepeval` allows you to assert any test case you create by c
 ```python title="test_assert_example.py"
 # A hypothetical LLM application example
 import chatbot
+import deepeval
 from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
@@ -201,6 +202,18 @@ def test_assert_example():
     )
     metric = HallucinationMetric(threshold=0.7)
     assert_test(test_case, metrics=[metric])
+
+
+# Optional. Log hyperparameters to pick the best hyperparameter for your LLM application
+# using Confident AI. (run `deepeval login` in the CLI to login)
+@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
+def hyperparameters():
+    # Return a dict to log additional hyperparameters.
+    # You can also return an empty dict {} if there's no additional parameters to log
+    return {
+        "temperature": 1,
+        "chunk size": 500
+    }
 ```
 
 There are two mandatory and one optional parameter when calling the `assert_test()` function:
@@ -244,6 +257,7 @@ There are two mandatory and four optional arguments when calling the `evaluate()
 
 - `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics of type `BaseMetric`
+- [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for eac test case. Defaulted to `False`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
@@ -251,4 +265,23 @@ There are two mandatory and four optional arguments when calling the `evaluate()
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the progress indicator for each individual metric. Defaulted to `True`.
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
 
-Similar to `assert_test`, `evaluate` allows you to log and view test results on Confident AI. For more examples of `evaluate`, visit the [datasets section](evaluation-datasets).
+:::tip DID YOU KNOW?
+Similar to `assert_test`, `evaluate` allows you to log and view test results and the hyperparameters associated with each on Confident AI.
+
+```console
+deepeval login
+```
+
+```python
+from deepeval import evaluate
+...
+
+evaluate(
+    test_cases=[test_case],
+    metrics=[metric],
+    hyperparameters={"model": "gpt4o", "prompt template": "..."}
+)
+```
+
+For more examples of `evaluate`, visit the [datasets section](evaluation-datasets).
+:::
