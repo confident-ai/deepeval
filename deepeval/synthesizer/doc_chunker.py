@@ -16,7 +16,7 @@ from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 
 
 class Chunk(BaseModel):
-    id: str = Field(str(uuid.uuid4()))
+    id: str
     content: str
     embedding: List[float]
     source_file: str
@@ -76,6 +76,7 @@ class DocumentChunker:
         chunks = []
         for i in range(len(raw_chunks)):
             chunk = Chunk(
+                id=str(uuid.uuid4()),
                 content=contents[i],
                 embedding=embeddings[i],
                 source_file=path,

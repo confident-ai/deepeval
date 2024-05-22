@@ -20,21 +20,22 @@ def test_synthesizer():
     synthesizer.save_as(file_type="json", directory="./results")
 
 
-# module_b_dir = os.path.dirname(os.path.realpath(__file__))
+module_b_dir = os.path.dirname(os.path.realpath(__file__))
 
-# file_path = os.path.join(module_b_dir, "synthesizer_data", "pdf_example.pdf")
-# synthesizer = Synthesizer(model="gpt-4")
+file_path1 = os.path.join(module_b_dir, "synthesizer_data", "pdf_example.pdf")
+file_path2 = os.path.join(module_b_dir, "synthesizer_data", "docx_example.docx")
+file_path3 = os.path.join(module_b_dir, "synthesizer_data", "txt_example.txt")
+synthesizer = Synthesizer()
 # synthesizer.generate_goldens_from_docs(
-#     synthesizer=synthesizer,
-#     document_paths=[file_path],
+#     document_paths=[file_path1, file_path2, file_path3],
 #     max_goldens_per_document=2,
 # )
 # synthesizer.save_as(file_type="json", directory="./results")
 
-# dataset = EvaluationDataset()
-# dataset.generate_goldens_from_docs(
-#     synthesizer=synthesizer,
-#     document_paths=[file_path],
-#     max_goldens_per_document=2,
-# )
-# dataset.save_as(file_type="json", directory="./results")
+dataset = EvaluationDataset()
+dataset.generate_goldens_from_docs(
+    synthesizer=synthesizer,
+    document_paths=[file_path1, file_path2, file_path3],
+    max_goldens_per_document=2,
+)
+dataset.save_as(file_type="json", directory="./results")
