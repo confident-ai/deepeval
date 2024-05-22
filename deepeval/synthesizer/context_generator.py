@@ -118,7 +118,7 @@ class ContextGenerator:
         path: str,
         query_chunk: Chunk,
         n: int,
-        threshold: float = 0.5,
+        threshold: float = 0.7,
     ) -> List[Chunk]:
         document_chunks = self.source_files_to_chunks_map[path]
 
