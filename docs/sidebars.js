@@ -74,6 +74,7 @@ module.exports = {
       items: [
         "guides-regression-testing-in-cicd",
         "guides-rag-evaluation",
+        "guides-optimizing-hyperparameters",
         "guides-building-custom-metrics",
       ],
       collapsed: false,
