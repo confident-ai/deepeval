@@ -481,10 +481,23 @@ class TestRunManager:
         console = Console()
 
         if is_confident() and self.disable_request is False:
-            BATCH_SIZE = 50
+            BATCH_SIZE = 60
+            CONVERSATIONAL_BATCH_SIZE = BATCH_SIZE // 3
+
             initial_batch = test_run.test_cases[:BATCH_SIZE]
             remaining_test_cases = test_run.test_cases[BATCH_SIZE:]
-            if len(remaining_test_cases) > 0:
+
+            initial_conversational_batch = test_run.conversational_test_cases[
+                :CONVERSATIONAL_BATCH_SIZE
+            ]
+            remaining_conversational_test_cases = (
+                test_run.conversational_test_cases[CONVERSATIONAL_BATCH_SIZE:]
+            )
+
+            if (
+                len(remaining_test_cases) > 0
+                or len(remaining_conversational_test_cases) > 0
+            ):
                 console.print(
                     "Sending a large test run to Confident, this might take a bit longer than usual..."
                 )
@@ -493,6 +506,7 @@ class TestRunManager:
             ### POST REQUEST ###
             ####################
             test_run.test_cases = initial_batch
+            test_run.conversational_test_cases = initial_conversational_batch
             try:
                 body = test_run.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
@@ -512,12 +526,38 @@ class TestRunManager:
             ################################################
             ### Send the remaining test cases in batches ###
             ################################################
-            for i in range(0, len(remaining_test_cases), BATCH_SIZE):
-                body = None
+            max_iterations = (
+                max(
+                    len(remaining_test_cases),
+                    len(remaining_conversational_test_cases),
+                )
+                // CONVERSATIONAL_BATCH_SIZE
+            )
+            for i in range(0, max_iterations + 1):
+                test_case_index = (
+                    i * CONVERSATIONAL_BATCH_SIZE * 3
+                )  # Multiply by 3 to match the conversational batch step
+                test_case_batch = remaining_test_cases[
+                    test_case_index : test_case_index + BATCH_SIZE
+                ]
+
+                # Adjusting for conversational_test_cases
+                conversational_index = i * CONVERSATIONAL_BATCH_SIZE
+                conversational_batch = remaining_conversational_test_cases[
+                    conversational_index : conversational_index
+                    + CONVERSATIONAL_BATCH_SIZE
+                ]
+
+                if len(test_case_batch) == 0 and len(conversational_batch) == 0:
+                    break
+
                 remaining_test_run = RemainingTestRun(
                     testRunId=response.testRunId,
-                    testCases=remaining_test_cases[i : i + BATCH_SIZE],
+                    testCases=test_case_batch,
+                    conversationalTestCases=conversational_batch,
                 )
+
+                body = None
                 try:
                     body = remaining_test_run.model_dump(
                         by_alias=True, exclude_none=True
@@ -534,8 +574,7 @@ class TestRunManager:
                         body=body,
                     )
                 except Exception as e:
-                    remaining_count = len(remaining_test_cases) - i
-                    message = f"Unexpected error when sending the last {remaining_count} test cases. Incomplete test run available at {link}"
+                    message = f"Unexpected error when sending some test cases. Incomplete test run available at {link}"
                     raise Exception(message) from e
 
             console.print(
