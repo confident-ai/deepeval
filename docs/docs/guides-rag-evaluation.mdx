@@ -90,7 +90,7 @@ All metrics in `deepeval` allows you to set passing `threshold`s, turn on `stric
 
 - [`ContextualPrecisionMetric`](metrics-contextual-precision)
 - [`ContextualRecallMetric`](metrics-contextual-recall)
-- [`ContextualRelevancyMetric`](<(metrics-contextual-relevancy)>)
+- [`ContextualRelevancyMetric`](metrics-contextual-relevancy)
 
 :::
 
@@ -160,7 +160,7 @@ Using these metrics, you can easily see how changes to different hyperparameters
 In reality, the hyperparameters for the generator isn't as clear-cut as hyperparameters in the retriever.
 :::
 
-_(To evaluate generation on customized criteria, you should use the [`GEval`](evaluation-llm-eval) metric instead, which covers all custom use cases.)_
+_(To evaluate generation on customized criteria, you should use the [`GEval`](metrics-llm-evals) metric instead, which covers all custom use cases.)_
 
 Similar to retrieval metrics, using these scores in conjucation will best align with human expectations of what a good LLM output looks like.
 
@@ -248,7 +248,7 @@ print("Score: ", dark_humor.score)
 print("Reason: ", dark_humor.reason)
 ```
 
-You can visit the [`GEval` page](evaluation-llm-eval) to learn more about this metric.
+You can visit the [`GEval` page](metrics-llm-evals) to learn more about this metric.
 
 ## E2E RAG Evaluation
 
