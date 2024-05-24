@@ -261,30 +261,30 @@ class Tracer:
                 traces=[],
                 embeddingMetadata=params.get("embeddingMetadata", None),
             )
-        elif trace_type == TraceType.RETRIEVER.value:
-            return RetrieverTrace(
-                type=trace_type,
-                traceProvider=TraceProvider.CUSTOM,
-                executionTime=0,
-                ame=params.get("name", ""),
-                input=params.get("input", None),
-                output=None,
-                status=TraceStatus.SUCCESS,
-                traces=[],
-                retrieverMetadata=params.get("retrieverMetadata", None),
-            )
-        elif trace_type == TraceType.RERANKING.value:
-            return RerankingTrace(
-                type=trace_type,
-                traceProvider=TraceProvider.CUSTOM,
-                executionTime=0,
-                ame=params.get("name", ""),
-                input=params.get("input", None),
-                output=None,
-                status=TraceStatus.SUCCESS,
-                traces=[],
-                rerankingMetadata=params.get("rerankingMetadata", None),
-            )
+        # elif trace_type == TraceType.RETRIEVER.value:
+        #     return RetrieverTrace(
+        #         type=trace_type,
+        #         traceProvider=TraceProvider.CUSTOM,
+        #         executionTime=0,
+        #         ame=params.get("name", ""),
+        #         input=params.get("input", None),
+        #         output=None,
+        #         status=TraceStatus.SUCCESS,
+        #         traces=[],
+        #         retrieverMetadata=params.get("retrieverMetadata", None),
+        #     )
+        # elif trace_type == TraceType.RERANKING.value:
+        #     return RerankingTrace(
+        #         type=trace_type,
+        #         traceProvider=TraceProvider.CUSTOM,
+        #         executionTime=0,
+        #         ame=params.get("name", ""),
+        #         input=params.get("input", None),
+        #         output=None,
+        #         status=TraceStatus.SUCCESS,
+        #         traces=[],
+        #         rerankingMetadata=params.get("rerankingMetadata", None),
+        #     )
         else:
             return GenericTrace(
                 type=trace_type,
@@ -320,17 +320,17 @@ class Tracer:
             ), "Metadata must be of type EmbeddingMetadata for the EMBEDDING trace type"
             current_trace.embeddingMetadata = self.metadata
 
-        elif self.trace_type == TraceType.RETRIEVER.value:
-            assert isinstance(
-                self.metadata, RetrieverMetadata
-            ), "Metadata must be of type RetrieverMetadata for the RETRIEVER trace type"
-            current_trace.retrieverMetadata = self.metadata
+        # elif self.trace_type == TraceType.RETRIEVER.value:
+        #     assert isinstance(
+        #         self.metadata, RetrieverMetadata
+        #     ), "Metadata must be of type RetrieverMetadata for the RETRIEVER trace type"
+        #     current_trace.retrieverMetadata = self.metadata
 
-        elif self.trace_type == TraceType.RERANKING.value:
-            assert isinstance(
-                self.metadata, RerankingMetadata
-            ), "Metadata must be of type RerankingMetadata for the RERANKING trace type"
-            current_trace.rerankingMetadata = self.metadata
+        # elif self.trace_type == TraceType.RERANKING.value:
+        #     assert isinstance(
+        #         self.metadata, RerankingMetadata
+        #     ), "Metadata must be of type RerankingMetadata for the RERANKING trace type"
+        #     current_trace.rerankingMetadata = self.metadata
 
         trace_manager.set_trace_stack(current_stack)
 
@@ -343,10 +343,10 @@ class Tracer:
                 self.metadata = LlmMetadata()
             elif self.trace_type == TraceType.EMBEDDING.value:
                 self.metadata = EmbeddingMetadata()
-            elif self.trace_type == TraceType.RETRIEVER.value:
-                self.metadata = RetrieverMetadata()
-            elif self.trace_type == TraceType.RERANKING.value:
-                self.metadata = RerankingMetadata()
+            # elif self.trace_type == TraceType.RETRIEVER.value:
+            #     self.metadata = RetrieverMetadata()
+            # elif self.trace_type == TraceType.RERANKING.value:
+            #     self.metadata = RerankingMetadata()
         else:
             self.metadata = metadata
 
