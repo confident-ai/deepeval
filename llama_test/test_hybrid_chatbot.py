@@ -108,12 +108,13 @@ class RAGPipeline:
             response = await self.generate_completion(query_text, context)
 
             # set parameters and track event
+            print("WHAT")
             query_trace.set_parameters(response)
-            query_trace.track(
-                input=query_text,
-                response=response,
-                model="gpt-4-turbo-preview",
-            )
+            # query_trace.track(
+            #     input=query_text,
+            #     response=response,
+            #     model="gpt-4-turbo-preview",
+            # )
             return response
 
 

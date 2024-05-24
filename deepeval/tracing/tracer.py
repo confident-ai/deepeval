@@ -63,6 +63,17 @@ class LlmMetadata:
 @dataclass
 class EmbeddingMetadata:
     model: Optional[str] = None
+    embedding_dimension: Optional[int] = None
+
+
+@dataclass
+class RetrieverMetadata:
+    top_k: Optional[int] = None
+
+
+@dataclass
+class RerankingMetadata:
+    model: Optional[str] = None
 
 
 @dataclass
@@ -88,12 +99,26 @@ class EmbeddingTrace(BaseTrace):
 
 
 @dataclass
+class RetrieverTrace(BaseTrace):
+    retrieverMetadata: RetrieverMetadata
+
+
+@dataclass
+class RerankingTrace(BaseTrace):
+    rerankingMetadata: RerankingMetadata
+
+
+@dataclass
 class GenericTrace(BaseTrace):
     type: str
 
 
-Metadata = Union[EmbeddingMetadata, LlmMetadata]
-TraceData = Union[LlmTrace, EmbeddingTrace, GenericTrace]
+Metadata = Union[
+    EmbeddingMetadata, LlmMetadata, RetrieverMetadata, RerankingMetadata
+]
+TraceData = Union[
+    LlmTrace, EmbeddingTrace, RetrieverTrace, RerankingTrace, GenericTrace
+]
 TraceStack = List[TraceData]
 
 # Context variable to maintain an isolated stack for each async task
@@ -156,7 +181,6 @@ class Tracer:
         self.status_results = {}
         self.output = None
         self.track_params: Optional[Dict] = None
-        self.is_tracking: bool = False
 
     def __enter__(self):
         # start timer
@@ -208,30 +232,6 @@ class Tracer:
             dict_representation = dataclass_to_dict(current_trace_stack[0])
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
-
-            # print(dict_representation)
-
-            # # send event to deepeval
-            if self.is_tracking:
-                track(
-                    event_name=self.track_params["event_name"]
-                    or self.trace_type,
-                    model=self.track_params["model"],
-                    input=self.track_params["input"],
-                    response=self.track_params["response"],
-                    retrieval_context=self.track_params["retrieval_context"],
-                    completion_time=self.track_params["completion_time"]
-                    or self.execution_time,
-                    token_usage=self.track_params["token_usage"],
-                    token_cost=self.track_params["token_cost"],
-                    distinct_id=self.track_params["distinct_id"],
-                    conversation_id=self.track_params["conversation_id"],
-                    additional_data=self.track_params["additional_data"],
-                    hyperparameters=self.track_params["hyperparameters"],
-                    fail_silently=self.track_params["fail_silently"],
-                    run_async=self.track_params["run_async"],
-                    trace_stack=dict_representation,
-                )
         else:
             trace_manager.pop_trace_stack()
 
@@ -261,6 +261,30 @@ class Tracer:
                 traces=[],
                 embeddingMetadata=params.get("embeddingMetadata", None),
             )
+        # elif trace_type == TraceType.RETRIEVER.value:
+        #     return RetrieverTrace(
+        #         type=trace_type,
+        #         traceProvider=TraceProvider.CUSTOM,
+        #         executionTime=0,
+        #         ame=params.get("name", ""),
+        #         input=params.get("input", None),
+        #         output=None,
+        #         status=TraceStatus.SUCCESS,
+        #         traces=[],
+        #         retrieverMetadata=params.get("retrieverMetadata", None),
+        #     )
+        # elif trace_type == TraceType.RERANKING.value:
+        #     return RerankingTrace(
+        #         type=trace_type,
+        #         traceProvider=TraceProvider.CUSTOM,
+        #         executionTime=0,
+        #         ame=params.get("name", ""),
+        #         input=params.get("input", None),
+        #         output=None,
+        #         status=TraceStatus.SUCCESS,
+        #         traces=[],
+        #         rerankingMetadata=params.get("rerankingMetadata", None),
+        #     )
         else:
             return GenericTrace(
                 type=trace_type,
@@ -287,24 +311,42 @@ class Tracer:
         if self.trace_type == TraceType.LLM.value:
             assert isinstance(
                 self.metadata, LlmMetadata
-            ), "Metadata must be of type LlmMetadata for LLM trace type"
+            ), "Metadata must be of type LlmMetadata for the LLM trace type"
             current_trace.llmMetadata = self.metadata
 
         elif self.trace_type == TraceType.EMBEDDING.value:
             assert isinstance(
                 self.metadata, EmbeddingMetadata
-            ), "Metadata must be of type EmbeddingMetadata for EMBEDDING trace type"
+            ), "Metadata must be of type EmbeddingMetadata for the EMBEDDING trace type"
             current_trace.embeddingMetadata = self.metadata
+
+        # elif self.trace_type == TraceType.RETRIEVER.value:
+        #     assert isinstance(
+        #         self.metadata, RetrieverMetadata
+        #     ), "Metadata must be of type RetrieverMetadata for the RETRIEVER trace type"
+        #     current_trace.retrieverMetadata = self.metadata
+
+        # elif self.trace_type == TraceType.RERANKING.value:
+        #     assert isinstance(
+        #         self.metadata, RerankingMetadata
+        #     ), "Metadata must be of type RerankingMetadata for the RERANKING trace type"
+        #     current_trace.rerankingMetadata = self.metadata
 
         trace_manager.set_trace_stack(current_stack)
 
+    # change to attributes and custom attributes
     def set_parameters(self, output: Any, metadata: Optional[Metadata] = None):
         self.output = output
 
-        if not metadata and self.trace_type == TraceType.LLM.value:
-            self.metadata = LlmMetadata()
-        elif not metadata and self.trace_type == TraceType.EMBEDDING.value:
-            self.metadata = EmbeddingMetadata()
+        if not metadata:
+            if self.trace_type == TraceType.LLM.value:
+                self.metadata = LlmMetadata()
+            elif self.trace_type == TraceType.EMBEDDING.value:
+                self.metadata = EmbeddingMetadata()
+            # elif self.trace_type == TraceType.RETRIEVER.value:
+            #     self.metadata = RetrieverMetadata()
+            # elif self.trace_type == TraceType.RERANKING.value:
+            #     self.metadata = RerankingMetadata()
         else:
             self.metadata = metadata
 
@@ -326,7 +368,8 @@ class Tracer:
         raise_exception: Optional[bool] = True,
         run_async: Optional[bool] = True,
     ):
-        self.is_tracking = True
+        # deepeval.track directly
+
         self.track_params = {
             "event_name": event_name,
             "model": model,
