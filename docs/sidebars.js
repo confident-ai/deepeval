@@ -64,7 +64,7 @@ module.exports = {
         "confident-ai-debug-evaluations",
         "confident-ai-github-actions",
         "confident-ai-evals-in-production",
-        "confident-ai-tracer",
+        "confident-ai-tracing",
       ],
       collapsed: false,
     },

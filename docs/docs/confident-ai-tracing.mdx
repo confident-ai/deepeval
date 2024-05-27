@@ -1,22 +1,124 @@
 ---
-id: confident-ai-tracer
-title: Tracing in Production
-sidebar_label: Tracing in Production
+id: confident-ai-tracing
+title: LLM Tracing
+sidebar_label: LLM Tracing
 ---
 
 ## Quick Summary
 
-Confident AI uses "tracing" to help debug unsatisfactory evaluation results. Tracing in the context of evaluating LLM applications provides a quick and easy way for you to identify why certain test cases are failing on specific metrics.
+LLM tracing allows you to easily debug LLM applications for both production monitoring and development evaluation environments at a component level. You should consider setting up tracing because tracing allows you to easily:
 
-From chunking to embedding, retrieval to generation, tracing allows you to debug your LLM application pipeline at a component level.
+- **debug failing test cases** (ie. figure out how unsatisfactory `actual_output`s are generated during evaluation).
+- **understand (in real-time) how LLM responses are generated** when monitoring in production.
+
+:::info
+Confident AI is **NOT** tied to or vendor-locked into any LLM provider or framework, which means you can trace literally any LLM application of your choice.
+:::
 
 ![ok](https://d2lsxfc3p6r9rv.cloudfront.net/tracing.png)
 
-## Tracer Object
+## Tracing Integrations
 
-The `Tracer` object in `deepeval` is a Context Manager that allows you to easily track the input and outputs of different components in your retrieval pipeline that make up your LLM application with a simple `with` block. The `Tracer` context manager accepts only 1 argument: `trace_type`.
+:::note
+If your LLM application was built using a hybrid approach (eg., a bit of `langchain`, and bit of `llama_index`, and maybe a bit of custom LLM API calling), you'll want to consider [custom tracing instead.](confident-ai-tracing#custom-tracing)
+:::
 
-### Trace Type
+### LlamaIndex
+
+You can setup tracing for LLM applications built with LlamaIndex in 1 line of code:
+
+```python
+from llama_index.core import set_global_handler
+
+set_global_handler("deepeval")
+```
+
+:::info
+The `set_global_handler()` function tells `llama_index` to trace via `deepeval`, which means LLM tracing will automatically be enabled and viewable on Confident AI for each `llama_index` query:
+
+```python
+...
+
+query_engine.query("...")
+```
+
+:::
+
+## Custom Tracing
+
+Custom tracing allows you to more flexibly define which part of your LLM application you want traced. There are a two main scenarios where custom tracing comes in handy:
+
+- your LLM application wasn't built on any frameworks
+- your LLM applicationi was built on multiple frameworks
+
+In `deepeval`, tracing a particular **component** in your LLM application is as simple as adding a `with` block along with `deepeval`'s `Tracer` in python.
+
+```python
+from deepeval.tracing import Tracer, TraceType
+...
+
+with Tracer(trace_type=TraceType.LLM) as llm_trace:
+    response = openai.ChatCompletion.create(
+                model='gpt-4o',
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "..."},
+                ],
+            )
+    llm_response = response.choices[0].message.content
+    print(llm_response)
+```
+
+:::tip DID YOU KNOW?
+Nesting `with` blocks in python allows `deepeval` to recognize the trace hierarchy in your LLM application. For example, this trace structure:
+
+```python
+from deepeval.tracing import Tracer, TraceType
+
+with Tracer(trace_type="My LLM Application") as custom_trace:
+    ...
+    with Tracer(trace_type=TraceType.RETRIEVER) as retriever_trace:
+        ...
+        with Trace(trace_type=TraceType.EMBEDDING) as embedding_trace:
+            ...
+    with Tracer(trace_type=TraceType.LLM) as llm_trace:
+        ...
+```
+
+This particular nested `with` block will give the following structure:
+
+```console
+My LLM Application
+|
+| --- Retriever
+|     |
+|     Embedding
+|
+| --- LLM
+*
+```
+
+:::
+
+You'll notice the `Tracer` accepts a `trace_type` argument. The `trace_type` argument accepts either a `str` (for custom types of traces), or `TraceType`.
+
+### `TraceType.LLM`
+
+### `TraceType.EMBEDDING`
+
+### `TraceType.RETRIEVER`
+
+### `TraceType.RERANKING`
+
+### `TraceType.SYNTHESIZE`
+
+### `TraceType.TOOL`
+
+### `TraceType.QUERY`
+
+### `TraceType.AGENT`
+
+### `TraceType.CHAIN`
 
 The `trace_type` parameter is an easy way for you to classify components in your pipeline and can either be of type `TraceType`, or `str` (for custom types). Here are all the `TraceType`s that `deepeval` offers.
 
