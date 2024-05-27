@@ -20,8 +20,12 @@ from .tracer import (
     TraceStatus,
     LlmTrace,
     EmbeddingTrace,
+    RetrieverTrace,
+    RerankingTrace,
     GenericTrace,
     LlmMetadata,
     EmbeddingMetadata,
+    RetrieverMetadata,
+    RerankingMetadata,
     TraceProvider,
 )
