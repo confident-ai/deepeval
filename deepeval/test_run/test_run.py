@@ -79,6 +79,9 @@ class RemainingTestRun(BaseModel):
     test_cases: List[LLMApiTestCase] = Field(
         alias="testCases", default_factory=lambda: []
     )
+    conversational_test_cases: List[ConversationalApiTestCase] = Field(
+        alias="conversationalTestCases", default_factory=lambda: []
+    )
 
 
 class TestRun(BaseModel):
