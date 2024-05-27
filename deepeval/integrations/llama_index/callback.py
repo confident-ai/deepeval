@@ -270,7 +270,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         trace_instance: BaseTrace,
         event_type: CBEventType,
         processed_payload: Optional[Dict[str, Any]] = None,
-    ) -> Union[EmbeddingTrace, LlmMetadata, RetrieverTrace, GenericTrace]:
+    ) -> Union[EmbeddingTrace, LlmTrace, RetrieverTrace, GenericTrace]:
 
         trace_instance.executionTime = (
             perf_counter() - trace_instance.executionTime
