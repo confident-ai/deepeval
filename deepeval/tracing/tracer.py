@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, List, Union, Optional, Dict
 from time import perf_counter
+from pydantic import BaseModel, Field
 import inspect
 
 from deepeval.utils import dataclass_to_dict
@@ -15,6 +16,7 @@ from deepeval.event import track
 
 class TraceProvider(Enum):
     LLAMA_INDEX = "LLAMA_INDEX"
+    DEFAULT = "DEFAULT"
     CUSTOM = "CUSTOM"
     HYBRID = "HYBRID"
 
@@ -51,29 +53,31 @@ class TraceStatus(Enum):
     ERROR = "Error"
 
 
-@dataclass
-class LlmMetadata:
+class LlmMetadata(BaseModel):
     model: Optional[str] = None
-    tokenCount: Optional[Dict[str, int]] = None
-    outputMessages: Optional[List[Dict[str, str]]] = None
-    llmPromptTemplate: Optional[Any] = None
-    llmPromptTemplateVariables: Optional[Any] = None
+    token_count: Optional[Dict[str, int]] = Field(None, alias="tokenCount")
+    output_messages: Optional[List[Dict[str, str]]] = Field(
+        None, alias="outputMessages"
+    )
+    prompt_template: Optional[Any] = Field(None, alias="promptTemplate")
+    prompt_template_variables: Optional[Any] = Field(
+        None, alias="promptTemplateVariables"
+    )
 
 
-@dataclass
-class EmbeddingMetadata:
+class EmbeddingMetadata(BaseModel):
     model: Optional[str] = None
-    embedding_dimension: Optional[int] = None
+    vector_length: Optional[int] = Field(None, alias="vectorLength")
 
 
-@dataclass
-class RetrieverMetadata:
-    top_k: Optional[int] = None
+class RetrieverMetadata(BaseModel):
+    top_k: Optional[int] = Field(None, alias="topK")
+    average_chunk_size: Optional[int] = Field(None, alias="averageChunkSize")
 
 
-@dataclass
-class RerankingMetadata:
+class RerankingMetadata(BaseModel):
     model: Optional[str] = None
+    top_k: Optional[int] = Field(None, alias="topK")
 
 
 @dataclass
@@ -170,10 +174,13 @@ trace_manager = TraceManager()
 
 
 class Tracer:
+    # IMPORTANT: framework callback integrations does NOT use this Tracer
     def __init__(self, trace_type: Union[TraceType, str]):
-        self.trace_type = (
-            trace_type if isinstance(trace_type, str) else trace_type.value
-        )
+        self.trace_type = trace_type
+        if isinstance(self.trace_type, TraceType):
+            self.trace_provider = TraceProvider.DEFAULT
+        else:
+            self.trace_provider = TraceProvider.CUSTOM
         self.input_params = {}
         self.start_time = None
         self.execution_time = None
@@ -181,6 +188,7 @@ class Tracer:
         self.status_results = {}
         self.output = None
         self.track_params: Optional[Dict] = None
+        self.is_tracking = False
 
     def __enter__(self):
         # start timer
@@ -199,13 +207,26 @@ class Tracer:
 
         # append trace instance to stack
         trace_instance = self.create_trace_instance(
-            self.trace_type, **self.input_params
+            self.trace_type, self.trace_provider, **self.input_params
         )
         trace_manager.append_to_trace_stack(trace_instance)
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        # Check metadata was set
+        if self.metadata is None:
+            if self.trace_provider == TraceProvider.DEFAULT:
+                if (
+                    self.trace_type == TraceType.LLM
+                    or self.trace_type == TraceType.EMBEDDING
+                    or self.trace_type == TraceType.RETRIEVER
+                    or self.trace_type == TraceType.RERANKING
+                ):
+                    raise ValueError(
+                        f"`set_parameters` was not called before the end of a {self.trace_type} trace type."
+                    )
+
         # Stop the span timing and calculate execution time
         self.execution_time = perf_counter() - self.start_time
 
@@ -232,63 +253,101 @@ class Tracer:
             dict_representation = dataclass_to_dict(current_trace_stack[0])
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
+
+            if self.is_tracking:
+                track(
+                    event_name=self.track_params["event_name"]
+                    or self.trace_type,
+                    model=self.track_params["model"],
+                    input=self.track_params["input"],
+                    response=self.track_params["response"],
+                    retrieval_context=self.track_params["retrieval_context"],
+                    completion_time=self.track_params["completion_time"]
+                    or self.execution_time,
+                    token_usage=self.track_params["token_usage"],
+                    token_cost=self.track_params["token_cost"],
+                    distinct_id=self.track_params["distinct_id"],
+                    conversation_id=self.track_params["conversation_id"],
+                    additional_data=self.track_params["additional_data"],
+                    hyperparameters=self.track_params["hyperparameters"],
+                    fail_silently=self.track_params["fail_silently"],
+                    run_async=self.track_params["run_async"],
+                    trace_stack=dict_representation,
+                )
         else:
             trace_manager.pop_trace_stack()
 
-    def create_trace_instance(self, trace_type, **params):
-        if trace_type == TraceType.LLM.value:
-            return LlmTrace(
-                type=trace_type,
-                traceProvider=TraceProvider.CUSTOM,
-                executionTime=0,
-                name=params.get("name", ""),
-                input=params.get("input", None),
-                output=None,
-                status=TraceStatus.SUCCESS,
-                traces=[],
-                llmMetadata=params.get("llmMetadata", None),
-            )
+    def create_trace_instance(
+        self,
+        trace_type: Union[TraceType, str],
+        trace_provier: TraceProvider,
+        **params,
+    ):
+        if trace_provier == TraceProvider.DEFAULT:
+            if trace_type == TraceType.LLM:
+                return LlmTrace(
+                    type=trace_type,
+                    traceProvider=trace_provier,
+                    executionTime=0,
+                    name=params.get("name", ""),
+                    input=params.get("input", None),
+                    output=None,
+                    status=TraceStatus.SUCCESS,
+                    traces=[],
+                    llmMetadata=params.get("llmMetadata", None),
+                )
 
-        elif trace_type == TraceType.EMBEDDING.value:
-            return EmbeddingTrace(
-                type=trace_type,
-                traceProvider=TraceProvider.CUSTOM,
-                executionTime=0,
-                ame=params.get("name", ""),
-                input=params.get("input", None),
-                output=None,
-                status=TraceStatus.SUCCESS,
-                traces=[],
-                embeddingMetadata=params.get("embeddingMetadata", None),
-            )
-        # elif trace_type == TraceType.RETRIEVER.value:
-        #     return RetrieverTrace(
-        #         type=trace_type,
-        #         traceProvider=TraceProvider.CUSTOM,
-        #         executionTime=0,
-        #         ame=params.get("name", ""),
-        #         input=params.get("input", None),
-        #         output=None,
-        #         status=TraceStatus.SUCCESS,
-        #         traces=[],
-        #         retrieverMetadata=params.get("retrieverMetadata", None),
-        #     )
-        # elif trace_type == TraceType.RERANKING.value:
-        #     return RerankingTrace(
-        #         type=trace_type,
-        #         traceProvider=TraceProvider.CUSTOM,
-        #         executionTime=0,
-        #         ame=params.get("name", ""),
-        #         input=params.get("input", None),
-        #         output=None,
-        #         status=TraceStatus.SUCCESS,
-        #         traces=[],
-        #         rerankingMetadata=params.get("rerankingMetadata", None),
-        #     )
-        else:
+            elif trace_type == TraceType.EMBEDDING:
+                return EmbeddingTrace(
+                    type=trace_type,
+                    traceProvider=trace_provier,
+                    executionTime=0,
+                    ame=params.get("name", ""),
+                    input=params.get("input", None),
+                    output=None,
+                    status=TraceStatus.SUCCESS,
+                    traces=[],
+                    embeddingMetadata=params.get("embeddingMetadata", None),
+                )
+            elif trace_type == TraceType.RETRIEVER:
+                return RetrieverTrace(
+                    type=trace_type,
+                    traceProvider=trace_provier,
+                    executionTime=0,
+                    ame=params.get("name", ""),
+                    input=params.get("input", None),
+                    output=None,
+                    status=TraceStatus.SUCCESS,
+                    traces=[],
+                    retrieverMetadata=params.get("retrieverMetadata", None),
+                )
+            elif trace_type == TraceType.RERANKING:
+                return RerankingTrace(
+                    type=trace_type,
+                    traceProvider=trace_provier,
+                    executionTime=0,
+                    ame=params.get("name", ""),
+                    input=params.get("input", None),
+                    output=None,
+                    status=TraceStatus.SUCCESS,
+                    traces=[],
+                    rerankingMetadata=params.get("rerankingMetadata", None),
+                )
+            else:
+                return GenericTrace(
+                    type=trace_type,
+                    traceProvider=trace_provier,
+                    executionTime=0,
+                    name=params.get("name", ""),
+                    input=params.get("input", None),
+                    output=None,
+                    status=TraceStatus.SUCCESS,
+                    traces=[],
+                )
+        elif trace_provier == TraceProvider.CUSTOM:
             return GenericTrace(
                 type=trace_type,
-                traceProvider=TraceProvider.CUSTOM,
+                traceProvider=trace_provier,
                 executionTime=0,
                 name=params.get("name", ""),
                 input=params.get("input", None),
@@ -307,30 +366,31 @@ class Tracer:
         current_trace.status = self.status_results["status"]
         current_trace.output = self.output
 
-        # Update metadata in current_trace
-        if self.trace_type == TraceType.LLM.value:
-            assert isinstance(
-                self.metadata, LlmMetadata
-            ), "Metadata must be of type LlmMetadata for the LLM trace type"
-            current_trace.llmMetadata = self.metadata
+        # Update metadata in current_trace for default trace provider
+        if self.trace_provider == TraceProvider.DEFAULT:
+            if self.trace_type == TraceType.LLM:
+                assert isinstance(
+                    self.metadata, LlmMetadata
+                ), "Metadata must be of type LlmMetadata for the LLM trace type"
+                current_trace.llmMetadata = self.metadata
 
-        elif self.trace_type == TraceType.EMBEDDING.value:
-            assert isinstance(
-                self.metadata, EmbeddingMetadata
-            ), "Metadata must be of type EmbeddingMetadata for the EMBEDDING trace type"
-            current_trace.embeddingMetadata = self.metadata
+            elif self.trace_type == TraceType.EMBEDDING:
+                assert isinstance(
+                    self.metadata, EmbeddingMetadata
+                ), "Metadata must be of type EmbeddingMetadata for the EMBEDDING trace type"
+                current_trace.embeddingMetadata = self.metadata
 
-        # elif self.trace_type == TraceType.RETRIEVER.value:
-        #     assert isinstance(
-        #         self.metadata, RetrieverMetadata
-        #     ), "Metadata must be of type RetrieverMetadata for the RETRIEVER trace type"
-        #     current_trace.retrieverMetadata = self.metadata
+            elif self.trace_type == TraceType.RETRIEVER:
+                assert isinstance(
+                    self.metadata, RetrieverMetadata
+                ), "Metadata must be of type RetrieverMetadata for the RETRIEVER trace type"
+                current_trace.retrieverMetadata = self.metadata
 
-        # elif self.trace_type == TraceType.RERANKING.value:
-        #     assert isinstance(
-        #         self.metadata, RerankingMetadata
-        #     ), "Metadata must be of type RerankingMetadata for the RERANKING trace type"
-        #     current_trace.rerankingMetadata = self.metadata
+            elif self.trace_type == TraceType.RERANKING:
+                assert isinstance(
+                    self.metadata, RerankingMetadata
+                ), "Metadata must be of type RerankingMetadata for the RERANKING trace type"
+                current_trace.rerankingMetadata = self.metadata
 
         trace_manager.set_trace_stack(current_stack)
 
@@ -339,14 +399,15 @@ class Tracer:
         self.output = output
 
         if not metadata:
-            if self.trace_type == TraceType.LLM.value:
-                self.metadata = LlmMetadata()
-            elif self.trace_type == TraceType.EMBEDDING.value:
-                self.metadata = EmbeddingMetadata()
-            # elif self.trace_type == TraceType.RETRIEVER.value:
-            #     self.metadata = RetrieverMetadata()
-            # elif self.trace_type == TraceType.RERANKING.value:
-            #     self.metadata = RerankingMetadata()
+            if self.trace_provider == TraceProvider.DEFAULT:
+                if self.trace_type == TraceType.LLM:
+                    self.metadata = LlmMetadata()
+                elif self.trace_type == TraceType.EMBEDDING:
+                    self.metadata = EmbeddingMetadata()
+                elif self.trace_type == TraceType.RETRIEVER:
+                    self.metadata = RetrieverMetadata()
+                elif self.trace_type == TraceType.RERANKING:
+                    self.metadata = RerankingMetadata()
         else:
             self.metadata = metadata
 
@@ -368,8 +429,7 @@ class Tracer:
         raise_exception: Optional[bool] = True,
         run_async: Optional[bool] = True,
     ):
-        # deepeval.track directly
-
+        self.is_tracking = True
         self.track_params = {
             "event_name": event_name,
             "model": model,

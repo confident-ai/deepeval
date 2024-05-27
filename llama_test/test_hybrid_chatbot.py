@@ -71,12 +71,12 @@ class RAGPipeline:
         self.model_name = model_name
 
     def format_nodes(self, query):
-        with Tracer(trace_type=TraceType.NODE_PARSING) as llama_wrapper_trace:
+        with Tracer(trace_type="Custom Type") as llama_wrapper_trace:
             nodes = self.retriever.retrieve(query)
             combined_nodes = "\n".join([node.get_content() for node in nodes])
 
             # set parameters
-            llama_wrapper_trace.set_parameters(combined_nodes)
+            # llama_wrapper_trace.set_parameters(combined_nodes)
             return combined_nodes
 
     async def generate_completion(self, prompt, context):
@@ -110,11 +110,11 @@ class RAGPipeline:
             # set parameters and track event
             print("WHAT")
             query_trace.set_parameters(response)
-            # query_trace.track(
-            #     input=query_text,
-            #     response=response,
-            #     model="gpt-4-turbo-preview",
-            # )
+            query_trace.track(
+                input=query_text,
+                response=response,
+                model="gpt-4-turbo-preview",
+            )
             return response
 
 
