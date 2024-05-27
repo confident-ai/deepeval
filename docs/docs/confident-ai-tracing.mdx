@@ -44,7 +44,7 @@ query_engine.query("...")
 
 :::
 
-## Custom Tracing
+## Setup Custom Tracing
 
 Custom tracing allows you to more flexibly define which part of your LLM application you want traced. There are a two main scenarios where custom tracing comes in handy:
 
@@ -100,27 +100,7 @@ My LLM Application
 
 :::
 
-You'll notice the `Tracer` accepts a `trace_type` argument. The `trace_type` argument accepts either a `str` (for custom types of traces), or `TraceType`.
-
-### `TraceType.LLM`
-
-### `TraceType.EMBEDDING`
-
-### `TraceType.RETRIEVER`
-
-### `TraceType.RERANKING`
-
-### `TraceType.SYNTHESIZE`
-
-### `TraceType.TOOL`
-
-### `TraceType.QUERY`
-
-### `TraceType.AGENT`
-
-### `TraceType.CHAIN`
-
-The `trace_type` parameter is an easy way for you to classify components in your pipeline and can either be of type `TraceType`, or `str` (for custom types). Here are all the `TraceType`s that `deepeval` offers.
+You'll notice the `Tracer` accepts a `trace_type` argument. The `trace_type` argument accepts either a `str` (for custom types of traces), or `TraceType`. The `trace_type` parameter is an easy way for you to classify components in your LLM pipeline and here are all the `TraceType`s that `deepeval` offers.
 
 - `TraceType.AGENT`
 - `TraceType.CHAIN`
@@ -133,176 +113,102 @@ The `trace_type` parameter is an easy way for you to classify components in your
 - `TraceType.SYNTHESIZE`
 - `TraceType.TOOL`
 
-```python
-from deepeval.tracing import Tracer, TraceType
-
-def llm(messages):
-    with Tracer(trace_type=TraceType.LLM) as llm_trace:
-        ...
-        return llm_output
-```
+Before the end of some `with` blocks for some `trace_type`s, as you'll learn later, **requires** you to call the `set_parameters()` method to set additional attribute associated with your trace. For example, you'll need to set the `model` name of the LLM used for an `LLM` `TraceType` via the `set_parameters()` method.
 
 :::info
-It is not necessary to define a `TraceType` ENUM for `trace_type`, as `trace_type` also accepts any string. However, there is no UI support for custom trace types as opposed to the ones defined above.
-
+Although you can technically use custom traces for all `trace_type`s to avoid the trouble of setting trace specific attributes, `deepeval`'s default approach provides you with a better UI on Confident AI.
 :::
 
-### Set Parameters (Output and Metadata)
+### `TraceType.LLM`
 
-Before the end of each function, you **must** call the `set_parameter` method from the resource descriptor (`llm_trace` in the example above) in order to track the function output and any associated metadata. `set_parameter` accepts two arguments:
-
-- [Required] `output`: The output of your function, equivalent to the return value.
-- [Optional] `metadata`: The metadata associated with the trace. The argument is available only if you are defining a `Tracer` object with `trace_type` as `TraceType.EMBEDDING` or `TraceType.LLM`.
-
-The example below defines an LLM `with` block and sets the output and metadata with the model name.
+The `LLM` `TraceType` should be reserved for components where LLM generation happens.
 
 ```python
 from deepeval.tracing import Tracer, TraceType, LlmMetadata
-import openai
+...
 
-def llm(input_prompt):
-    # defining the with block with trace_type TraceType.LLM
-    with Tracer(trace_type=TraceType.LLM) as llm_trace:
+with Tracer(trace_type=TraceType.LLM) as llm_trace:
+    response = openai.ChatCompletion.create(
+                model='gpt-4o',
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "..."},
+                ],
+            )
+    llm_response = response.choices[0].message.content
+    print(llm_response)
 
-        # constructing the LLM response
-        response = openai.ChatCompletion.create(
-                    model='gpt-4-turbo-preview',
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": "You are a helpful assistant.",
-                        },
-                        {"role": "user", "content": input_prompt},
-                    ],
-                )
-        output = response.choices[0].message.content
-
-        # calling set_parameters before the return statement
-        llm_trace.set_parameters(
-            output=output,
-            metadata=LlmMetadata(model='gpt-4-turbo-preview')
-        )
-
-        return output
-
+    # Don't forget to set attributes for the LLM trace type
+    llm_trace.set_parameters(
+        output=llm_response,
+        metadata=LlmMetadata(model='gpt-4o')
+    )
 ```
+
+### `TraceType.EMBEDDING`
+
+The `EMBEDDING` `TraceType` should be reserved for components where text is embedded into its vector representation.
+
+```python
+from deepeval.tracing import Tracer, TraceType
+...
+
+with Tracer(trace_type=TraceType.EMBEDDING) as embedding_trace:
+    response = openai.embeddings.create(
+                input="Your text string goes here",
+                model="text-embedding-3-small"
+            )
+    vector = response.data[0].embedding
+    print(vector)
+```
+
+### `TraceType.RETRIEVER`
+
+The `RETRIEVER` `TraceType` should be reserved for components where nodes/text chunks/documents are retrieved based based on some vector embedding (as is often the case for RAG applications).
+
+```python
+from typing import List
+from deepeval.tracing import Tracer, TraceType
+...
+
+with Tracer(trace_type=TraceType.RETRIEVER) as retriever_trace:
+    ...
+
+    retrieval_nodes : List[str] = get_nodes_in_vector_database(vector)
+    print(retrieval_nodes)
+```
+
+### `TraceType.RERANKING`
+
+The `RERANKING` `TraceType` should be reserved for components where nodes/text chunks/documents are reranked **POST** retrieval (ie., this should be contained within the `RETRIEVER`).
+
+```python
+from typing import List
+from deepeval.tracing import Tracer, TraceType
+...
+
+with Tracer(trace_type=TraceType.RERANKING) as reranking_trace:
+    ...
+
+    reranked_nodes : List[str] = rerank_nodes(retrieval_nodes)
+    print(reranked_nodes)
+```
+
+### `TraceType.SYNTHESIZE`
+
+### `TraceType.TOOL`
+
+### `TraceType.QUERY`
+
+### `TraceType.AGENT`
+
+### `TraceType.CHAIN`
 
 :::tip
-Defining the `metadata` for LLM and EMBEDDING traces will help you **easily view** these parameters on the confident-AI platform.
+Remember, you can also supply a custom `str` as `trace_type` for custom trace types.
 :::
 
-The metadata for `TraceType.EMBEDDING` is the `EmbeddingMetadata` class, which consists of 1 optional variable: `model` of type string.
-The metadata for `TraceType.LLM` is the `LlmMetadata` class, which consists of 5 optional variables:
-
-- `model`: string
-- `tokenCount`: dictionary with string keys and integer values
-- `outputMessages`: dictionary with string keys and string values
-- `llmPromptTemplate`: not enforced
-- `llmPromptTemplateVariables`: not enforced
-
-## Setup Custom Tracing
-
-In the previous section, you learned how to set up tracing for a** single function**. This section will
-teach you how to set up tracing for your **entire custom pipeline**. First, import the `Tracer` object, `TraceType`, and the necessary metadata types from `deepeval.tracing` and set up the corresponding `with` blocks inside the functions/methods that make up your LLM pipeline.
-
-Here's an implementation for a hypothetical LLM application utilizing `deepeval`'s tracing support using `Tracer` objects through `with` blocks:
-
-```python title="test_chatbot.py"
-from deepeval.tracing import Tracer, TraceType, LlmMetadata, EmbeddingMetadata
-import openai
-
-class Chatbot:
-    def __init__(self):
-        pass
-
-    def llm(self, input_var):
-        with Tracer(trace_type=TraceType.LLM) as llm_trace:
-            response = openai.ChatCompletion.create(
-                        model='gpt-4-turbo-preview',
-                        messages=[
-                            {
-                                "role": "system",
-                                "content": "You are a helpful assistant.",
-                            },
-                            {"role": "user", "content": input_var},
-                        ],
-                    )
-            output = response.choices[0].message.content
-
-            # calling set_parameters before the return statement
-            llm_trace.set_parameters(
-                output=output,
-                metadata=LlmMetadata(model='gpt-4-turbo-preview')
-            )
-            return output
-
-    def get_embedding(self, input_var):
-        with Tracer(trace_type=TraceType.EMBEDDING) as embedding_trace:
-            response = openai.Embedding.create(
-                input=input_var,
-                model="text-embedding-ada-002"
-            )
-            output =  response['data'][0]['embedding']
-
-            # calling set_parameters before the return statement
-            embedding_trace.set_parameters(
-                output=output,
-                metadata=EmbeddingMetadata(model="text-embedding-ada-002")
-            )
-            return output
-
-    def retriever(self, input_var):
-        with Tracer(trace_type=TraceType.RETRIEVER) as retriever_trace:
-            embedding = self.get_embedding(input_var)
-            # Replace this with an actual vector search that uses embedding
-            list_of_retrieved_nodes = ["Retrieval Node 1", "Retrieval Node 2"]
-
-            # calling set_parameters before the return statement
-            embedding_trace.set_parameters(list_of_retrieved_nodes)
-            return list_of_retrieved_nodes
-
-    def search(self, input):
-        with Tracer(trace_type=TraceType.TOOL) as tool_trace:
-            # Replace this with an actual function that searches the web
-            title_of_the_top_search_results = "Search Result: " + input
-
-            # calling set_parameters before the return statement
-            tool_trace.set_parameters(title_of_the_top_search_results)
-            return title_of_the_top_search_results`
-
-
-    def format(self, retrieval_nodes, input):
-        with Tracer(trace_type=TraceType.TOOL) as tool_trace:
-            prompt = "You are a helpful assistant, based on the following information: \n"
-            for node in retrieval_nodes:
-                prompt += node + "\n"
-            prompt += "Generate an unbiased response for " + input + "."
-
-            # calling set_parameters before the return statement
-            tool_trace.set_parameters(prompt)
-            return prompt
-
-    def query(self, user_input):
-        with Tracer(trace_type=TraceType.AGENT) as tool_trace:
-            top_result_title = self.search(user_input)
-            retrieval_results = self.retriever(top_result_title)
-            prompt = self.format(retrieval_results, top_result_title)
-            output = self.llm(prompt)
-
-            # calling set_parameters before the return statement
-            tool_trace.set_parameters(output)
-            tool_trace.track(
-                event_name="Chatbot",
-                model='gpt-4-turbo-preview',
-                input=user_input,
-                response=output,
-            )
-            return output
-```
-
-Setting up the with blocks using the `Tracer` object will automatically log LLM traces each time `chatbot.query()` (the outermost function of the example RAG pipeline) is called. This will allow you to debug failing test cases by **inspecting individual trace stacks** on the Confident AI platform.
-
-### Tracking
+## Tracing During Monitoring in Production
 
 You might also notice that before the return statement in `chatbot.query()`, we call `tool_trace.track()` to track each event with the associated trace data. It is **absolutely necessary** to call this method because your trace data **will not be recorded without it**. This tracking method has the same exact arguments (and types) as `deepeval.track`. You can learn more about `deepeval.track` and tracking events [here.](confident-ai-evals-in-production#monitoring-live-responses)
 
@@ -325,18 +231,6 @@ You might also notice that before the return statement in `chatbot.query()`, we 
 :::note
 This means that currently, tracing only works if you're tracking evaluations using the `track` method, and generating `actual_output`s from your LLM application at evaluation time (ie. tracing does not work with pre-computed outputs).
 :::
-
-### Async Support
-
-`deepeval` also supports asynchronous operations by tracking traces using context variables. This allows you to define your query function as an async function and simultaneously track different traces without interfering with each other.
-
-```python
-# calling set_parameters before the return statement
-async def query(self, user_input):
-    with Tracer(trace_type=TraceType.AGENT) as tool_trace:
-        ...
-        return output
-```
 
 # LlamaIndex Tracing
 
