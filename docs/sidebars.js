@@ -61,10 +61,10 @@ module.exports = {
         "confident-ai-manage-datasets",
         "confident-ai-evaluate-datasets",
         "confident-ai-analyze-evaluations",
-        "confident-ai-debug-evaluations",
         "confident-ai-github-actions",
         "confident-ai-evals-in-production",
-        "confident-ai-tracing",
+        // "confident-ai-tracing",
+        "confident-ai-tracing-placeholder"
       ],
       collapsed: false,
     },
