@@ -30,7 +30,7 @@ class TraceStatus(Enum):
 
 
 @dataclass
-class LlmMetadata:
+class LlmAttributes:
     model: Optional[str]
     tokenCount: Optional[Dict[str, int]] = None
     hyperparameters: Optional[Dict[str, Any]] = None
@@ -40,7 +40,7 @@ class LlmMetadata:
 
 
 @dataclass
-class EmbeddingMetadata:
+class EmbeddingAttributes:
     model: Optional[str]
 
 
@@ -58,12 +58,12 @@ class BaseTrace:
 @dataclass
 class LlmTrace(BaseTrace):
     input: str
-    llmMetadata: LlmMetadata
+    llmAttributes: LlmAttributes
 
 
 @dataclass
 class EmbeddingTrace(BaseTrace):
-    embeddingMetadata: EmbeddingMetadata
+    embeddingAttributes: EmbeddingAttributes
 
 
 @dataclass
@@ -183,7 +183,7 @@ def trace(
                     output=None,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    llmMetadata=LlmMetadata(model=model),
+                    llmAttributes=LlmAttributes(model=model),
                 )
             elif type == TraceType.EMBEDDING:
                 trace_instance = EmbeddingTrace(
@@ -194,7 +194,7 @@ def trace(
                     output=None,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    embeddingMetadata=EmbeddingMetadata(model=model),
+                    embeddingAttributes=EmbeddingAttributes(model=model),
                 )
             else:
                 trace_instance = GenericTrace(

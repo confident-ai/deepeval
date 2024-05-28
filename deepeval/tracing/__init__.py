@@ -7,8 +7,8 @@ from .tracing import (
     #     LlmTrace,
     #     EmbeddingTrace,
     #     GenericTrace,
-    #     LlmMetadata,
-    #     EmbeddingMetadata,
+    #     LlmAttributes,
+    #     EmbeddingAttributes,
 )
 
 from .tracer import (
@@ -23,9 +23,9 @@ from .tracer import (
     RetrieverTrace,
     RerankingTrace,
     GenericTrace,
-    LlmMetadata,
-    EmbeddingMetadata,
-    RetrieverMetadata,
-    RerankingMetadata,
+    LlmAttributes,
+    EmbeddingAttributes,
+    RetrieverAttributes,
+    RerankingAttributes,
     TraceProvider,
 )

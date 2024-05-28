@@ -113,7 +113,7 @@ You'll notice the `Tracer` accepts a `trace_type` argument. The `trace_type` arg
 - `TraceType.SYNTHESIZE`
 - `TraceType.TOOL`
 
-Before the end of some `with` blocks for some `trace_type`s, as you'll learn later, **requires** you to call the `set_parameters()` method to set additional attribute associated with your trace. For example, you'll need to set the `model` name of the LLM used for an `LLM` `TraceType` via the `set_parameters()` method.
+Before the end of some `with` blocks for some `trace_type`s, as you'll learn later, **requires** you to call the `set_parameters()` method to set additional attributes associated with your trace. For example, you'll need to set the `model` name of the LLM used for an `LLM` `TraceType` via the `set_parameters()` method.
 
 :::info
 Although you can technically use custom traces for all `trace_type`s to avoid the trouble of setting trace specific attributes, `deepeval`'s default approach provides you with a better UI on Confident AI.
@@ -124,7 +124,7 @@ Although you can technically use custom traces for all `trace_type`s to avoid th
 The `LLM` `TraceType` should be reserved for components where LLM generation happens.
 
 ```python
-from deepeval.tracing import Tracer, TraceType, LlmMetadata
+from deepeval.tracing import Tracer, TraceType, LlmAttributes
 ...
 
 with Tracer(trace_type=TraceType.LLM) as llm_trace:
@@ -139,18 +139,27 @@ with Tracer(trace_type=TraceType.LLM) as llm_trace:
     print(llm_response)
 
     # Don't forget to set attributes for the LLM trace type
-    llm_trace.set_parameters(
-        output=llm_response,
-        metadata=LlmMetadata(model='gpt-4o')
-    )
+    llm_trace.set_parameters(output=llm_response, metadata=LlmAttributes(model='gpt-4o'))
 ```
+
+Additionally, `set_attributes()` must be called with the following parameters:
+
+- `attributes`: an instance of `LlmAttributes`
+- `custom_attributes`: a custom dictionary to log any additional data associated with the current trace
+
+The `LlmAttributes` accepts the following arguments:
+
+- [Optional] `model`: a string specifying the model name of the LLM used for generation
+- [Optional] `prompt`: a string specifying the input prompt
+- [Optional] `promptTemplate`: a string specifying the prompt template used to construct the `prompt`
+- [Optional] `response`: a string representing the LLM response generated
 
 ### `TraceType.EMBEDDING`
 
 The `EMBEDDING` `TraceType` should be reserved for components where text is embedded into its vector representation.
 
 ```python
-from deepeval.tracing import Tracer, TraceType
+from deepeval.tracing import Tracer, TraceType, EmbeddingAttributes
 ...
 
 with Tracer(trace_type=TraceType.EMBEDDING) as embedding_trace:
@@ -161,6 +170,17 @@ with Tracer(trace_type=TraceType.EMBEDDING) as embedding_trace:
     vector = response.data[0].embedding
     print(vector)
 ```
+
+Additionally, `set_parameters()` must be called with the following parameters:
+
+- `attributes`: an instance of `EmbeddingAttributes`
+- `custom_attributes`: a custom dictionary to log any additional data associated with the current trace
+
+The `EmbeddingAttributes` accepts the following arguments:
+
+- [Optional] `model`: a string specifying the model name of the embedding model used
+- [Optional] `input_text`: a string specifying the text that was embedded
+- [Optional] `vector_length`: an integer representing the length of the vector
 
 ### `TraceType.RETRIEVER`
 
@@ -333,7 +353,7 @@ class RAGPipeline:
             # set parameters
             llm_trace.set_parameters(
                 output=output,
-                metadata=LlmMetadata(model='gpt-4-turbo-preview')
+                metadata=LlmAttributes(model='gpt-4-turbo-preview')
             )
             return output
 

@@ -53,29 +53,44 @@ class TraceStatus(Enum):
     ERROR = "Error"
 
 
-class LlmMetadata(BaseModel):
-    model: Optional[str] = None
-    token_count: Optional[Dict[str, int]] = Field(None, alias="tokenCount")
+class LlmAttributes(BaseModel):
+    # Input
+    prompt_template: Optional[str] = Field(None)
+
+    # Output
     output_messages: Optional[List[Dict[str, str]]] = Field(
         None, alias="outputMessages"
     )
+    response: Optional[str] = Field(None)
+
+    # Basic metadata
+    model: Optional[str] = None
+    token_count: Optional[Dict[str, int]] = Field(None, alias="tokenCount")
     prompt_template: Optional[Any] = Field(None, alias="promptTemplate")
     prompt_template_variables: Optional[Any] = Field(
         None, alias="promptTemplateVariables"
     )
 
 
-class EmbeddingMetadata(BaseModel):
-    model: Optional[str] = None
+
+
+class EmbeddingAttributes(BaseModel):
+    # Input
+    input_text: Optional[str] = None
+
+    # Output
     vector_length: Optional[int] = Field(None, alias="vectorLength")
 
+    # Basic metadata
+    model: Optional[str] = None
 
-class RetrieverMetadata(BaseModel):
+
+class RetrieverAttributes(BaseModel):
     top_k: Optional[int] = Field(None, alias="topK")
     average_chunk_size: Optional[int] = Field(None, alias="averageChunkSize")
 
 
-class RerankingMetadata(BaseModel):
+class RerankingAttributes(BaseModel):
     model: Optional[str] = None
     top_k: Optional[int] = Field(None, alias="topK")
 
@@ -94,22 +109,22 @@ class BaseTrace:
 
 @dataclass
 class LlmTrace(BaseTrace):
-    llmMetadata: LlmMetadata
+    llmAttributes: LlmAttributes
 
 
 @dataclass
 class EmbeddingTrace(BaseTrace):
-    embeddingMetadata: EmbeddingMetadata
+    embeddingAttributes: EmbeddingAttributes
 
 
 @dataclass
 class RetrieverTrace(BaseTrace):
-    retrieverMetadata: RetrieverMetadata
+    retrieverAttributes: RetrieverAttributes
 
 
 @dataclass
 class RerankingTrace(BaseTrace):
-    rerankingMetadata: RerankingMetadata
+    rerankingAttributes: RerankingAttributes
 
 
 @dataclass
@@ -117,8 +132,8 @@ class GenericTrace(BaseTrace):
     type: str
 
 
-Metadata = Union[
-    EmbeddingMetadata, LlmMetadata, RetrieverMetadata, RerankingMetadata
+Attributes = Union[
+    EmbeddingAttributes, LlmAttributes, RetrieverAttributes, RerankingAttributes
 ]
 TraceData = Union[
     LlmTrace, EmbeddingTrace, RetrieverTrace, RerankingTrace, GenericTrace
@@ -184,9 +199,9 @@ class Tracer:
         self.input_params = {}
         self.start_time = None
         self.execution_time = None
-        self.metadata = None
+        self.attributes = None
+        self.custom_attributes = None
         self.status_results = {}
-        self.output = None
         self.track_params: Optional[Dict] = None
         self.is_tracking = False
 
@@ -214,8 +229,8 @@ class Tracer:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Check metadata was set
-        if self.metadata is None:
+        # Check attributes was set
+        if self.attributes is None:
             if self.trace_provider == TraceProvider.DEFAULT:
                 if (
                     self.trace_type == TraceType.LLM
@@ -224,7 +239,7 @@ class Tracer:
                     or self.trace_type == TraceType.RERANKING
                 ):
                     raise ValueError(
-                        f"`set_parameters` was not called before the end of a {self.trace_type} trace type."
+                        f"`set_attributes` was not called before the end of a {self.trace_type} trace type."
                     )
 
         # Stop the span timing and calculate execution time
@@ -294,7 +309,7 @@ class Tracer:
                     output=None,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    llmMetadata=params.get("llmMetadata", None),
+                    llmAttributes=params.get("llmAttributes", None),
                 )
 
             elif trace_type == TraceType.EMBEDDING:
@@ -307,7 +322,7 @@ class Tracer:
                     output=None,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    embeddingMetadata=params.get("embeddingMetadata", None),
+                    embeddingAttributes=params.get("embeddingAttributes", None),
                 )
             elif trace_type == TraceType.RETRIEVER:
                 return RetrieverTrace(
@@ -319,7 +334,7 @@ class Tracer:
                     output=None,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    retrieverMetadata=params.get("retrieverMetadata", None),
+                    retrieverAttributes=params.get("retrieverAttributes", None),
                 )
             elif trace_type == TraceType.RERANKING:
                 return RerankingTrace(
@@ -331,7 +346,7 @@ class Tracer:
                     output=None,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    rerankingMetadata=params.get("rerankingMetadata", None),
+                    rerankingAttributes=params.get("rerankingAttributes", None),
                 )
             else:
                 return GenericTrace(
@@ -366,50 +381,50 @@ class Tracer:
         current_trace.status = self.status_results["status"]
         current_trace.output = self.output
 
-        # Update metadata in current_trace for default trace provider
+        # Update attributes in current_trace for default trace provider
         if self.trace_provider == TraceProvider.DEFAULT:
             if self.trace_type == TraceType.LLM:
                 assert isinstance(
-                    self.metadata, LlmMetadata
-                ), "Metadata must be of type LlmMetadata for the LLM trace type"
-                current_trace.llmMetadata = self.metadata
+                    self.attributes, LlmAttributes
+                ), "Attributes must be of type LlmAttributes for the LLM trace type"
+                current_trace.llmAttributes = self.attributes
 
             elif self.trace_type == TraceType.EMBEDDING:
                 assert isinstance(
-                    self.metadata, EmbeddingMetadata
-                ), "Metadata must be of type EmbeddingMetadata for the EMBEDDING trace type"
-                current_trace.embeddingMetadata = self.metadata
+                    self.attributes, EmbeddingAttributes
+                ), "Attributes must be of type EmbeddingAttributes for the EMBEDDING trace type"
+                current_trace.embeddingAttributes = self.attributes
 
             elif self.trace_type == TraceType.RETRIEVER:
                 assert isinstance(
-                    self.metadata, RetrieverMetadata
-                ), "Metadata must be of type RetrieverMetadata for the RETRIEVER trace type"
-                current_trace.retrieverMetadata = self.metadata
+                    self.attributes, RetrieverAttributes
+                ), "Attributes must be of type RetrieverAttributes for the RETRIEVER trace type"
+                current_trace.retrieverAttributes = self.attributes
 
             elif self.trace_type == TraceType.RERANKING:
                 assert isinstance(
-                    self.metadata, RerankingMetadata
-                ), "Metadata must be of type RerankingMetadata for the RERANKING trace type"
-                current_trace.rerankingMetadata = self.metadata
+                    self.attributes, RerankingAttributes
+                ), "Attributes must be of type RerankingAttributes for the RERANKING trace type"
+                current_trace.rerankingAttributes = self.attributes
 
         trace_manager.set_trace_stack(current_stack)
 
     # change to attributes and custom attributes
-    def set_parameters(self, output: Any, metadata: Optional[Metadata] = None):
-        self.output = output
-
-        if not metadata:
+    def set_attributes(self, attributes: Optional[Attributes] = None, custom_attributes: Optional[dict] = None):
+        if not attributes:
             if self.trace_provider == TraceProvider.DEFAULT:
                 if self.trace_type == TraceType.LLM:
-                    self.metadata = LlmMetadata()
+                    self.attributes = LlmAttributes()
                 elif self.trace_type == TraceType.EMBEDDING:
-                    self.metadata = EmbeddingMetadata()
+                    self.attributes = EmbeddingAttributes()
                 elif self.trace_type == TraceType.RETRIEVER:
-                    self.metadata = RetrieverMetadata()
+                    self.attributes = RetrieverAttributes()
                 elif self.trace_type == TraceType.RERANKING:
-                    self.metadata = RerankingMetadata()
+                    self.attributes = RerankingAttributes()
         else:
-            self.metadata = metadata
+            self.attributes = attributes
+
+        self.custom_attributes = custom_attributes
 
     def track(
         self,

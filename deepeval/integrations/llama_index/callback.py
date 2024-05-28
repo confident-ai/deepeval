@@ -38,10 +38,10 @@ from deepeval.tracing import (
     RerankingTrace,
     RetrieverTrace,
     TraceStatus,
-    LlmMetadata,
-    EmbeddingMetadata,
-    RerankingMetadata,
-    RetrieverMetadata,
+    LlmAttributes,
+    EmbeddingAttributes,
+    RerankingAttributes,
+    RetrieverAttributes,
     TraceType,
     TraceProvider,
     LlamaIndexTraceType,
@@ -144,7 +144,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         self,
         event_type: CBEventType,
         processed_payload: Optional[Dict[str, Any]] = None,
-    ) -> Union[EmbeddingTrace, LlmMetadata, GenericTrace]:
+    ) -> Union[EmbeddingTrace, LlmAttributes, GenericTrace]:
 
         current_time = perf_counter()
         type = self.convert_event_type_to_deepeval_trace_type(event_type)
@@ -173,7 +173,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 output=None,
                 status=TraceStatus.SUCCESS,
                 traces=[],
-                llmMetadata=LlmMetadata(
+                llmAttributes=LlmAttributes(
                     model=processed_payload["llm_model_name"],
                     outputMessages=None,
                     tokenCount=None,
@@ -194,7 +194,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 output=None,
                 status=TraceStatus.SUCCESS,
                 traces=[],
-                embeddingMetadata=EmbeddingMetadata(
+                embeddingAttributes=EmbeddingAttributes(
                     model=processed_payload["embedding_model_name"],
                 ),
             )
@@ -209,7 +209,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 output=None,
                 status=TraceStatus.SUCCESS,
                 traces=[],
-                retrieverMetadata=RetrieverMetadata(),
+                retrieverAttributes=RetrieverAttributes(),
             )
 
         elif event_type == CBEventType.RERANKING:
@@ -222,7 +222,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 output=None,
                 status=TraceStatus.SUCCESS,
                 traces=[],
-                rerankingMetadata=RerankingMetadata(
+                rerankingAttributes=RerankingAttributes(
                     model=processed_payload["reranker_model_name"],
                     topK=processed_payload["reranker_top_k"],
                 ),
@@ -283,10 +283,10 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         elif event_type == CBEventType.LLM:
             trace_instance.output = processed_payload["output_value"]
-            trace_instance.llmMetadata.output_messages = processed_payload[
+            trace_instance.llmAttributes.output_messages = processed_payload[
                 "llm_output_messages"
             ]
-            trace_instance.llmMetadata.token_count = {
+            trace_instance.llmAttributes.token_count = {
                 "prompt": processed_payload["llm_token_prompt_count"],
                 "completion": processed_payload["llm_token_count_completion"],
                 "total": processed_payload["llm_token_count_total"],
@@ -304,7 +304,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_instance.input = [t["embedding_text"] for t in embeddings]
 
             # NOTE: dirty hack
-            trace_instance.embeddingMetadata.vector_length = len(
+            trace_instance.embeddingAttributes.vector_length = len(
                 embeddings[0]["embedding_vector"]
             )
 
@@ -314,8 +314,8 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             total_chunk_length = 0
             for document in documents:
                 total_chunk_length += len(document["document_content"])
-            trace_instance.retrieverMetadata.top_k = len(documents)
-            trace_instance.retrieverMetadata.average_chunk_size = (
+            trace_instance.retrieverAttributes.top_k = len(documents)
+            trace_instance.retrieverAttributes.average_chunk_size = (
                 total_chunk_length // len(documents)
             )
 

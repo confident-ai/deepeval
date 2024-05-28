@@ -9,7 +9,7 @@ from openai import AsyncOpenAI
 import asyncio
 import os
 
-from deepeval.tracing import Tracer, TraceType, LlmMetadata
+from deepeval.tracing import Tracer, TraceType, LlmAttributes
 from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
 
 ########################################################
@@ -98,7 +98,7 @@ class RAGPipeline:
 
             # set parameters
             llm_trace.set_parameters(
-                output=output, metadata=LlmMetadata(model="gpt-4-turbo-preview")
+                output=output, metadata=LlmAttributes(model="gpt-4-turbo-preview")
             )
             return output
 
