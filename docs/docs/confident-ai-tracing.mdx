@@ -90,12 +90,12 @@ This particular nested `with` block will give the following structure:
 ```console
 My LLM Application
 |
-| --- Retriever
+* --- Retriever
 |     |
-|     Embedding
+|     * --- Embedding
 |
-| --- LLM
-*
+* --- LLM
+|
 ```
 
 :::
@@ -164,7 +164,7 @@ with Tracer(trace_type=TraceType.EMBEDDING) as embedding_trace:
             )
     vector = response.data[0].embedding
 
-    # Don't forget to set metadata for the LLM trace type
+    # Don't forget to set metadata for the embedding trace type
     embedding_trace.set_parameters(output={}, metadata=EmbeddingMetadata(model='text-embedding-3-small'))
 ```
 
@@ -190,7 +190,7 @@ with Tracer(trace_type=TraceType.RETRIEVER) as retriever_trace:
     ...
     retrieval_nodes : List[str] = get_nodes_in_vector_database(vector, k)
 
-    # Don't forget to set metadata for the LLM trace type
+    # Don't forget to set metadata for the retriever trace type
     retriever_trace.set_parameters(output={}, metadata=RetrieverMetadata(top_k=len(retrieval_nodes)))
 ```
 
@@ -216,7 +216,7 @@ with Tracer(trace_type=TraceType.RERANKING) as reranking_trace:
     ...
     reranked_nodes : List[str] = rerank_nodes(retrieval_nodes)
 
-    # Don't forget to set metadata for the LLM trace type
+    # Don't forget to set metadata for the reranking trace type
     reranking_trace.set_parameters(output={}, metadata=RetrieverMetadata(top_k=len(reranked_nodes)))
 ```
 
@@ -317,20 +317,21 @@ _to be documented..._
 
 ## Full Advanced Hybrid Tracing Example
 
-Lastly, `deepeval` supports **hybrid tracing**, combining custom tracing with LlamaIndex. To do so, set up custom tracing as you normally would. Simply import `set_global_handler` from `llama_index.core` and set it to ‘deepeval’. `deepeval` will handle all the logic behind the scenes and automatically nest the LlamaIndex traces in the correct trace positions.
+Lastly, `deepeval` supports **hybrid tracing**, which is particularly helpful if you are using a combination of frameworks to build your LLM application.
+
+In this example, we'll setup hybrid tracing on a RAG pipeline built using LlamaIndex and some raw OpenAI APIs. To do so, simply import `set_global_handler` from `llama_index.core` and set it to ‘deepeval’. `deepeval` will handle all the logic behind the scenes and automatically nest the LlamaIndex traces in the correct trace positions.
 
 Here's how you can set it up:
 
 ```python title="test_hybrid_chatbot.py"
-# llama_index dependencies
-from llama_index.core.callbacks.base_handler import BaseCallbackHandler
+import os
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.openai import OpenAIEmbedding
 from openai import AsyncOpenAI
-
 from llama_index.core import set_global_handler
-set_global_handler("deepeval")
+
+from deepeval.tracing import Tracer, TraceType, LlmMetadata
 
 class RAGPipeline:
     def __init__(self, model_name="gpt-4-turbo-preview", top_k=5, chunk_size=200, chunk_overlap=20, min_similarity=0.5, data_dir="data"):
