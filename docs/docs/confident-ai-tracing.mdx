@@ -113,7 +113,7 @@ You'll notice the `Tracer` accepts a `trace_type` argument. The `trace_type` arg
 - `TraceType.SYNTHESIZE`
 - `TraceType.TOOL`
 
-Before the end of some `with` blocks for some `trace_type`s, as you'll learn later, **requires** you to call the `set_parameters()` method to set additional attribute associated with your trace. For example, you'll need to set the `model` name of the LLM used for an `LLM` `TraceType` via the `set_parameters()` method.
+Before the end of some `with` blocks for some `trace_type`s, as you'll learn later, **requires** you to call the `set_parameters()` method to set additional attributes associated with your trace. For example, you'll need to set the `model` name of the LLM used for an `LLM` `TraceType` via the `set_parameters()` method.
 
 :::info
 Although you can technically use custom traces for all `trace_type`s to avoid the trouble of setting trace specific attributes, `deepeval`'s default approach provides you with a better UI on Confident AI.
@@ -125,7 +125,6 @@ The `LLM` `TraceType` should be reserved for components where LLM generation hap
 
 ```python
 from deepeval.tracing import Tracer, TraceType, LlmMetadata
-...
 
 with Tracer(trace_type=TraceType.LLM) as llm_trace:
     response = openai.ChatCompletion.create(
@@ -138,20 +137,25 @@ with Tracer(trace_type=TraceType.LLM) as llm_trace:
     llm_response = response.choices[0].message.content
     print(llm_response)
 
-    # Don't forget to set attributes for the LLM trace type
-    llm_trace.set_parameters(
-        output=llm_response,
-        metadata=LlmMetadata(model='gpt-4o')
-    )
+    # Don't forget to set metadata for the LLM trace type
+    llm_trace.set_parameters(output=llm_response, metadata=LlmMetadata(model='gpt-4o'))
 ```
+
+Additionally, `set_parameters()` must be called with the following parameters:
+
+- `metadata`: an instance of `LlmMetadata`
+- `output`: a string to specify the LLM response generated
+
+The `LlmMetadata` accepts the following arguments:
+
+- [Optional] `model`: a string specifying the model name of the LLM used for generation
 
 ### `TraceType.EMBEDDING`
 
 The `EMBEDDING` `TraceType` should be reserved for components where text is embedded into its vector representation.
 
 ```python
-from deepeval.tracing import Tracer, TraceType
-...
+from deepeval.tracing import Tracer, TraceType, EmbeddingMetadata
 
 with Tracer(trace_type=TraceType.EMBEDDING) as embedding_trace:
     response = openai.embeddings.create(
@@ -159,8 +163,20 @@ with Tracer(trace_type=TraceType.EMBEDDING) as embedding_trace:
                 model="text-embedding-3-small"
             )
     vector = response.data[0].embedding
-    print(vector)
+
+    # Don't forget to set metadata for the LLM trace type
+    embedding_trace.set_parameters(output={}, metadata=EmbeddingMetadata(model='text-embedding-3-small'))
 ```
+
+Additionally, `set_parameters()` must be called with the following parameters:
+
+- `metadata`: an instance of `EmbeddingMetadata`
+- `output`: any custom dictionary
+
+The `EmbeddingMetadata` accepts the following arguments:
+
+- [Optional] `model`: a string specifying the model name of the embedding model used
+- [Optional] `vector_length`: an integer representing the length of the vector
 
 ### `TraceType.RETRIEVER`
 
@@ -169,14 +185,24 @@ The `RETRIEVER` `TraceType` should be reserved for components where nodes/text c
 ```python
 from typing import List
 from deepeval.tracing import Tracer, TraceType
-...
 
 with Tracer(trace_type=TraceType.RETRIEVER) as retriever_trace:
     ...
+    retrieval_nodes : List[str] = get_nodes_in_vector_database(vector, k)
 
-    retrieval_nodes : List[str] = get_nodes_in_vector_database(vector)
-    print(retrieval_nodes)
+    # Don't forget to set metadata for the LLM trace type
+    retriever_trace.set_parameters(output={}, metadata=RetrieverMetadata(top_k=len(retrieval_nodes)))
 ```
+
+Additionally, `set_parameters()` must be called with the following parameters:
+
+- `metadata`: an instance of `RetrieverMetadata`
+- `output`: any custom dictionary
+
+The `RetrieverMetadata` accepts the following arguments:
+
+- [Optional] `top_k`: an integer representing the number of text chunk retrieved
+- [Optional] `average_chunk_size`: an integer representing the average chunk size of the retrieved text chunks
 
 ### `TraceType.RERANKING`
 
@@ -185,24 +211,83 @@ The `RERANKING` `TraceType` should be reserved for components where nodes/text c
 ```python
 from typing import List
 from deepeval.tracing import Tracer, TraceType
-...
 
 with Tracer(trace_type=TraceType.RERANKING) as reranking_trace:
     ...
-
     reranked_nodes : List[str] = rerank_nodes(retrieval_nodes)
-    print(reranked_nodes)
+
+    # Don't forget to set metadata for the LLM trace type
+    reranking_trace.set_parameters(output={}, metadata=RetrieverMetadata(top_k=len(reranked_nodes)))
 ```
+
+Additionally, `set_parameters()` must be called with the following parameters:
+
+- `metadata`: an instance of `RerankingMetadata`
+- `output`: any custom dictionary
+
+The `RerankingMetadata` accepts the following arguments:
+
+- [Optional] `model`: a string specifying the model name of the reranker model used
+- [Optional] `top_k`: an integer representing the number of text chunk retrieved
 
 ### `TraceType.SYNTHESIZE`
 
+:::caution
+From this point onwards, the following `TraceType`s are still in beta mode, so we'll just be showing examples of how it can be used.
+:::
+
+```python
+from typing import List
+from deepeval.tracing import Tracer, TraceType
+
+with Tracer(trace_type=TraceType.SYNTHESIZE) as syntheisze_trace:
+    ...
+    syntheisze_trace.set_parameters(output={"custom dict": "to log additional data"})
+```
+
 ### `TraceType.TOOL`
+
+```python
+from typing import List
+from deepeval.tracing import Tracer, TraceType
+
+with Tracer(trace_type=TraceType.TOOL) as tool_trace:
+    ...
+    tool_trace.set_parameters(output={"custom dict": "to log additional data"})
+```
 
 ### `TraceType.QUERY`
 
+```python
+from typing import List
+from deepeval.tracing import Tracer, TraceType
+
+with Tracer(trace_type=TraceType.QUERY) as query_trace:
+    ...
+    query_trace.set_parameters(output={"custom dict": "to log additional data"})
+```
+
 ### `TraceType.AGENT`
 
+```python
+from typing import List
+from deepeval.tracing import Tracer, TraceType
+
+with Tracer(trace_type=TraceType.AGENT) as agent_trace:
+    ...
+    agent_trace.set_parameters(output={"custom dict": "to log additional data"})
+```
+
 ### `TraceType.CHAIN`
+
+```python
+from typing import List
+from deepeval.tracing import Tracer, TraceType
+
+with Tracer(trace_type=TraceType.CHAIN) as chain_trace:
+    ...
+    chain_trace.set_parameters(output={"custom dict": "to log additional data"})
+```
 
 :::tip
 Remember, you can also supply a custom `str` as `trace_type` for custom trace types.
@@ -210,70 +295,27 @@ Remember, you can also supply a custom `str` as `trace_type` for custom trace ty
 
 ## Tracing During Monitoring in Production
 
-You might also notice that before the return statement in `chatbot.query()`, we call `tool_trace.track()` to track each event with the associated trace data. It is **absolutely necessary** to call this method because your trace data **will not be recorded without it**. This tracking method has the same exact arguments (and types) as `deepeval.track`. You can learn more about `deepeval.track` and tracking events [here.](confident-ai-evals-in-production#monitoring-live-responses)
+To enable tracing for production response monitoring, you'll need to call the `track()` method at the end of the root trace `with` block. This method has the same exact arguments (and types) as `deepeval.track()`. You can learn more about `deepeval.track` in production monitoring [here.](confident-ai-evals-in-production#monitoring-live-responses)
 
 ```python
-# calling set_parameters before the return statement
-    def query(self, user_input):
-        with Tracer(trace_type=TraceType.AGENT) as tool_trace:
-            ...
-            tool_trace.set_parameters(output)
-            # you must call tool_trace.track() before returning the output
-            tool_trace.track(
-                event_name="Chatbot",
-                model='gpt-4-turbo-preview',
-                input=user_input,
-                response=output,
-            )
-            return output
+from deepeval.tracing import Tracer, TraceType
+
+with Tracer(trace_type=TraceType.AGENT) as agent_trace:
+    ...
+
+    agent_trace.track(
+        event_name="Chatbot",
+        model='gpt-4-turbo-preview',
+        input=user_input,
+        response=output,
+    )
 ```
 
-:::note
-This means that currently, tracing only works if you're tracking evaluations using the `track` method, and generating `actual_output`s from your LLM application at evaluation time (ie. tracing does not work with pre-computed outputs).
-:::
+## Tracing During Evaluation in development
 
-# LlamaIndex Tracing
+_to be documented..._
 
-`deepeval` also supports automated tracing for RAG pipelines utilizing LlamaIndex with just **a few lines of code**. First, import `set_global_handler` from `llama_index.core` and set it to ‘deepeval’. Then, define a function to query from your query engine with a custom `trace_type` using the `Tracer` with block, and you’re done!
-
-```python title="test_llama_index_chatbot.py"
-# llama_index pipeline dependencies
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
-from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.llms.openai import OpenAI
-
-from llama_index.core import set_global_handler
-set_global_handler("deepeval")
-
-# set up your llama_index pipeline
-Settings.llm = OpenAI(model="gpt-4-turbo-preview")
-Settings.embed_model = OpenAIEmbedding(model="text-embedding-ada-002")
-
-documents = SimpleDirectoryReader("data").load_data()
-node_parser = SentenceSplitter(chunk_size=200, chunk_overlap=20)
-nodes = node_parser.get_nodes_from_documents(
-    documents, show_progress=True
-)
-
-index = VectorStoreIndex(nodes)
-query_engine = index.as_query_engine(similarity_top_k=5)
-
-# define chatbot function with custom trace_type
-def chatbot(input):
-    with Tracer(trace_type="Chatbot") as chatbot_trace:
-        res = query_engine.query(input).response
-        chatbot_trace.set_parameters(res)
-        chatbot_trace.track(
-                event_name='llama_index chatbot'
-                input=input,
-                response=res,
-                model='gpt-4-turbo-preview',
-            )
-        return res
-```
-
-## Setup Hybrid Tracing (Custom + LLamaIndex)
+## Full Advanced Hybrid Tracing Example
 
 Lastly, `deepeval` supports **hybrid tracing**, combining custom tracing with LlamaIndex. To do so, set up custom tracing as you normally would. Simply import `set_global_handler` from `llama_index.core` and set it to ‘deepeval’. `deepeval` will handle all the logic behind the scenes and automatically nest the LlamaIndex traces in the correct trace positions.
 

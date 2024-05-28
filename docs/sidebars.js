@@ -63,8 +63,7 @@ module.exports = {
         "confident-ai-analyze-evaluations",
         "confident-ai-github-actions",
         "confident-ai-evals-in-production",
-        // "confident-ai-tracing",
-        "confident-ai-tracing-placeholder"
+        "confident-ai-tracing",
       ],
       collapsed: false,
     },
