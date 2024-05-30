@@ -261,8 +261,6 @@ class Tracer:
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
 
-            print(dict_representation)
-
             if self.is_tracking:
                 track(
                     event_name=self.track_params["event_name"]
