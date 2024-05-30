@@ -95,21 +95,28 @@ class BaseTrace:
 @dataclass
 class LlmTrace(BaseTrace):
     llmMetadata: LlmMetadata
+    #ouptut: str
 
 
 @dataclass
 class EmbeddingTrace(BaseTrace):
     embeddingMetadata: EmbeddingMetadata
+    #output: List[Dict[str, any]]
 
 
 @dataclass
 class RetrieverTrace(BaseTrace):
     retrieverMetadata: RetrieverMetadata
+    #ouptut: List[Dict[str, any]]
 
 
 @dataclass
 class RerankingTrace(BaseTrace):
     rerankingMetadata: RerankingMetadata
+    # output List[Dict[str, any]]
+
+# Synthesize output: str
+# Other llama_index types: None
 
 
 @dataclass
@@ -253,6 +260,8 @@ class Tracer:
             dict_representation = dataclass_to_dict(current_trace_stack[0])
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
+
+            print(dict_representation)
 
             if self.is_tracking:
                 track(
