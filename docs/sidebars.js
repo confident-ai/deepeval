@@ -75,6 +75,7 @@ module.exports = {
         "guides-rag-evaluation",
         "guides-optimizing-hyperparameters",
         "guides-building-custom-metrics",
+        "guides-answer-correctness-metric",
       ],
       collapsed: false,
     },
