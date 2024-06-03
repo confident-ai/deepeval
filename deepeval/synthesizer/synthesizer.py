@@ -36,6 +36,37 @@ class Synthesizer:
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
         # self.embedder = embedder
+    
+    def evolve(
+        self,
+        queries: List[str],
+        num_evolutions: int,
+        enable_breadth_evolve: bool = True,
+    ) -> List[str]:
+        # List of method references from EvolutionTemplate
+        evolution_methods = [
+            EvolutionTemplate.reasoning_evolution,
+            EvolutionTemplate.multi_context_evolution,
+            EvolutionTemplate.concretizing_evolution,
+            EvolutionTemplate.constrained_evolution,
+            EvolutionTemplate.comparative_question_evolution,
+            EvolutionTemplate.hypothetical_scenario_evolution,
+        ]
+        if enable_breadth_evolve:
+            evolution_methods.append(EvolutionTemplate.in_breadth_evolution)
+
+        evolved_queries = [q for q in queries]
+        for _ in range(num_evolutions):
+            for i in range(len(queries)):
+                evolution_method = random.choice(evolution_methods)
+                prompt = evolution_method(input=queries[i-1], context="make the input more complex, drawing from your knowledge base")
+                if self.using_native_model:
+                    evolved_query, cost = self.model.generate(prompt)
+                else:
+                    evolved_query = self.model.generate(prompt)
+                evolved_queries.append(evolved_query)
+
+        return evolved_queries
 
     def _evolve_text(
         self,
