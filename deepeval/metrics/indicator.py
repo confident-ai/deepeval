@@ -5,6 +5,7 @@ import sys
 from typing import List, Optional, Union
 import time
 import asyncio
+import threading
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
@@ -29,30 +30,59 @@ def format_metric_description(
     return f"✨ You're running DeepEval's latest [rgb(106,0,255)]{metric.__name__} Metric[/rgb(106,0,255)]! [rgb(55,65,81)](using {metric.evaluation_model}, strict={metric.strict_mode}, async_mode={run_async})...[/rgb(55,65,81)]"
 
 
+
+# Initialize console and progress with the console
+console = Console(file=sys.stderr)
+progress = Progress(
+    SpinnerColumn(style="rgb(106,0,255)"),
+    TextColumn("[progress.description]{task.description}"),
+    console=console,
+    transient=True
+)
+
+# A lock to safely update task count
+lock = threading.Lock()
+active_tasks = 0
+
+def start_progress():
+    with lock:
+        global active_tasks
+        if active_tasks == 0:
+            progress.start()
+        active_tasks += 1
+
+def stop_progress():
+    with lock:
+        global active_tasks
+        active_tasks -= 1
+        if active_tasks == 0:
+            progress.stop()
+
 @contextmanager
-def metric_progress_indicator(
-    metric: BaseMetric,
-    async_mode: Optional[bool] = None,
-    _show_indicator: bool = True,
-    total: int = 9999,
-    transient: bool = True,
-):
-    with capture_metric_type(metric.__name__):
-        console = Console(file=sys.stderr)  # Direct output to standard error
-        if _show_indicator and show_indicator():
-            with Progress(
-                SpinnerColumn(style="rgb(106,0,255)"),
-                TextColumn("[progress.description]{task.description}"),
-                console=console,  # Use the custom console
-                transient=transient,
-            ) as progress:
-                progress.add_task(
-                    description=format_metric_description(metric, async_mode),
-                    total=total,
+def metric_progress_indicator(metric, async_mode=None, _show_indicator=True, total=9999):
+    if _show_indicator and show_indicator():
+        start_progress() 
+        with capture_metric_type(metric.__name__):
+            start_time = time.perf_counter()
+            task_id = progress.add_task(
+                description=format_metric_description(metric, async_mode),
+                total=total,
+            )
+            try:
+                yield task_id
+            finally:
+                end_time = time.perf_counter()
+                time_taken = format(end_time - start_time, ".2f")
+                progress.update(task_id, completed=total)
+                progress.update(
+                    task_id,
+                    description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
                 )
-                yield
-        else:
-            yield
+                progress.stop_task(task_id)
+                stop_progress()
+    else:
+        yield None
+
 
 
 async def measure_metric_task(

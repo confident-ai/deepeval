@@ -37,6 +37,7 @@ class FaithfulnessMetric(BaseMetric):
     _verdicts: ContextVar[List[FaithfulnessVerdict]] = ContextVar('verdicts', default=[])
     _score: ContextVar[float] = ContextVar('score', default=0)
     _reason: ContextVar[str] = ContextVar('reason', default="")
+    _success: ContextVar[bool] = ContextVar('success', default=False)
 
     def __init__(
         self,
@@ -68,6 +69,9 @@ class FaithfulnessMetric(BaseMetric):
     @property
     def reason(self) -> str:
         return self._reason.get()
+    @property
+    def success(self) -> str:
+        return self._success.get()
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -113,7 +117,7 @@ class FaithfulnessMetric(BaseMetric):
             self._claims.set(claims)
 
             verdicts  = await self._a_generate_verdicts()
-            self.verdicts.set(verdicts)
+            self._verdicts.set(verdicts)
 
             score = self._calculate_score()
             self._score.set(score)
@@ -121,7 +125,9 @@ class FaithfulnessMetric(BaseMetric):
             reason = await self._a_generate_reason()
             self._reason.set(reason)
 
-            self.success = self.score >= self.threshold
+            success = self.score >= self.threshold
+            self._success.set(success)
+
             return self.score
 
     async def _a_generate_reason(self) -> str:
