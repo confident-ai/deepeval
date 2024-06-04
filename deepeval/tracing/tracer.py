@@ -95,25 +95,26 @@ class BaseTrace:
 @dataclass
 class LlmTrace(BaseTrace):
     llmMetadata: LlmMetadata
-    #ouptut: str
+    # ouptut: str
 
 
 @dataclass
 class EmbeddingTrace(BaseTrace):
     embeddingMetadata: EmbeddingMetadata
-    #output: List[Dict[str, any]]
+    # output: List[Dict[str, any]]
 
 
 @dataclass
 class RetrieverTrace(BaseTrace):
     retrieverMetadata: RetrieverMetadata
-    #ouptut: List[Dict[str, any]]
+    # ouptut: List[Dict[str, any]]
 
 
 @dataclass
 class RerankingTrace(BaseTrace):
     rerankingMetadata: RerankingMetadata
     # output List[Dict[str, any]]
+
 
 # Synthesize output: str
 # Other llama_index types: None

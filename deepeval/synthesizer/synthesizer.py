@@ -36,7 +36,7 @@ class Synthesizer:
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
         # self.embedder = embedder
-    
+
     def evolve(
         self,
         queries: List[str],
@@ -59,7 +59,10 @@ class Synthesizer:
         for _ in range(num_evolutions):
             for i in range(len(queries)):
                 evolution_method = random.choice(evolution_methods)
-                prompt = evolution_method(input=queries[i-1], context="make the input more complex, drawing from your knowledge base")
+                prompt = evolution_method(
+                    input=queries[i - 1],
+                    context="make the input more complex, drawing from your knowledge base",
+                )
                 if self.using_native_model:
                     evolved_query, cost = self.model.generate(prompt)
                 else:
