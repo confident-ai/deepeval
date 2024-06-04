@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 import asyncio
@@ -30,8 +31,13 @@ class FaithfulnessVerdict(BaseModel):
     verdict: str
     reason: str = Field(default=None)
 
-
 class FaithfulnessMetric(BaseMetric):
+    _truths: ContextVar[List[str]] = ContextVar('truths', default=[])
+    _claims: ContextVar[List[str]] = ContextVar('claims', default=[])
+    _verdicts: ContextVar[List[FaithfulnessVerdict]] = ContextVar('verdicts', default=[])
+    _score: ContextVar[float] = ContextVar('score', default=0)
+    _reason: ContextVar[str] = ContextVar('reason', default="")
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -46,6 +52,22 @@ class FaithfulnessMetric(BaseMetric):
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
+    
+    @property
+    def truths(self) -> List[str]:
+        return self._truths.get()
+    @property
+    def claims(self) -> List[str]:
+        return self._claims.get()
+    @property
+    def verdicts(self) -> List[FaithfulnessVerdict]:
+        return self._verdicts.get()
+    @property
+    def score(self) -> float:
+        return self._score.get()
+    @property
+    def reason(self) -> str:
+        return self._reason.get()
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -83,13 +105,22 @@ class FaithfulnessMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.truths, self.claims = await asyncio.gather(
+            truths, claims = await asyncio.gather(
                 self._a_generate_truths(test_case.retrieval_context),
                 self._a_generate_claims(test_case.actual_output),
             )
-            self.verdicts = await self._a_generate_verdicts()
-            self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason()
+            self._truths.set(truths)
+            self._claims.set(claims)
+
+            verdicts  = await self._a_generate_verdicts()
+            self.verdicts.set(verdicts)
+
+            score = self._calculate_score()
+            self._score.set(score)
+
+            reason = await self._a_generate_reason()
+            self._reason.set(reason)
+
             self.success = self.score >= self.threshold
             return self.score
 
@@ -243,3 +274,50 @@ class FaithfulnessMetric(BaseMetric):
     @property
     def __name__(self):
         return "Faithfulness"
+
+##########################################################
+##########################################################
+##########################################################
+
+import asyncio
+
+async def single_eval_call(
+        metric: BaseMetric,
+        test_case: LLMTestCase):
+    score = await metric.a_measure(test_case)
+    print(metric.score)
+    print(metric.reason)
+
+async def test_g_eval():
+    metric = FaithfulnessMetric(
+    threshold=0.7,
+    model="gpt-4",
+    include_reason=True
+    )
+
+    test_cases = [
+        LLMTestCase(
+           input="What if these shoes don't fit?",
+           actual_output="We offer a 30-day full refund at no extra cost.",
+           retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
+        ),
+        LLMTestCase(
+           input="What if I don't like these shoes?",
+           actual_output = "Whatever",
+           retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
+        ),
+        LLMTestCase(
+           input="What colors do you have?",
+           actual_output="We dont have blue, red, or green.",
+           retrieval_context = ["We offer blue, red, and green."]
+        ),
+        LLMTestCase(
+           input="What brands do you offer?",
+           actual_output="We have Nike, but not Adidas",
+           retrieval_context = ["Nike and Adidas."]
+        ),
+    ]
+    await asyncio.gather(*(single_eval_call(metric, test_case) for test_case in test_cases))
+
+if __name__ == "__main__":
+    asyncio.run(test_g_eval())
