@@ -1,3 +1,4 @@
+import logging
 import openai
 
 from typing import Optional, Tuple
@@ -8,6 +9,13 @@ from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
+
+
+def log_retry_error(retry_state):
+    logging.error(
+        f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
+    )
+
 
 valid_gpt_models = [
     "gpt-4o",
@@ -95,6 +103,7 @@ class GPTModel(DeepEvalBaseLLM):
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
+        after=log_retry_error,
     )
     def generate(self, prompt: str) -> Tuple[str, float]:
         chat_model = self.load_model()
@@ -105,6 +114,7 @@ class GPTModel(DeepEvalBaseLLM):
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
+        after=log_retry_error,
     )
     async def a_generate(self, prompt: str) -> Tuple[str, float]:
         chat_model = self.load_model()
@@ -115,6 +125,7 @@ class GPTModel(DeepEvalBaseLLM):
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
+        after=log_retry_error,
     )
     def generate_raw_response(
         self, prompt: str, **kwargs
@@ -130,6 +141,7 @@ class GPTModel(DeepEvalBaseLLM):
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
+        after=log_retry_error,
     )
     async def a_generate_raw_response(
         self, prompt: str, **kwargs
@@ -145,6 +157,7 @@ class GPTModel(DeepEvalBaseLLM):
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
+        after=log_retry_error,
     )
     def generate_samples(
         self, prompt: str, n: int, temperature: float
