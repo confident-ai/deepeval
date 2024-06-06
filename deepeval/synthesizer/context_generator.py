@@ -18,9 +18,13 @@ class ContextGenerator:
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         multithreading: bool = False,
+        embedder: DeepEvalBaseEmbeddingModel = None, 
     ):
 
-        self.embedder: DeepEvalBaseEmbeddingModel = OpenAIEmbeddingModel()
+        if embedder is None:
+            self.embedder: DeepEvalBaseEmbeddingModel = OpenAIEmbeddingModel()
+        else:
+            self.embedder = embedder
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
