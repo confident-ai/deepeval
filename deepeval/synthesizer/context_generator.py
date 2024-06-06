@@ -18,7 +18,7 @@ class ContextGenerator:
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         multithreading: bool = False,
-        embedder: DeepEvalBaseEmbeddingModel = None, 
+        embedder: DeepEvalBaseEmbeddingModel = None,
     ):
 
         if embedder is None:
