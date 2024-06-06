@@ -52,7 +52,7 @@ def trimAndLoadJson(
 ) -> Any:
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
-    
+
     if end == 0 and start != -1:
         input_string = input_string + "}"
         end = len(input_string)
