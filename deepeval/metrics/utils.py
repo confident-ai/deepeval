@@ -54,6 +54,10 @@ def trimAndLoadJson(
     end = input_string.rfind("}") + 1
     jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
 
+    if start != -1 and end == 0:
+        input_string = input_string + "}"
+        end = len(input_string)
+
     try:
         return json.loads(jsonStr)
     except json.JSONDecodeError:
