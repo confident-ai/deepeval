@@ -1,2 +1,2 @@
 from .dataset import EvaluationDataset
-from .golden import Golden
+from .golden import Golden, ConversationalGolden

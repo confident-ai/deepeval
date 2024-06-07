@@ -305,7 +305,7 @@ class EvaluationDataset:
                 )
             )
 
-    def push(self, alias: str):
+    def push(self, alias: str, overwrite: Optional[bool] = None):
         if len(self.test_cases) == 0 and len(self.goldens) == 0:
             raise ValueError(
                 "Unable to push empty dataset to Confident AI, there must be at least one test case or golden in dataset"
@@ -314,13 +314,18 @@ class EvaluationDataset:
             goldens = self.goldens
             goldens.extend(convert_test_cases_to_goldens(self.test_cases))
             api_dataset = APIDataset(
-                alias=alias, overwrite=False, goldens=goldens
+                alias=alias,
+                overwrite=overwrite,
+                goldens=goldens,
+                conversationalGoldens=self.conversational_goldens,
             )
             try:
                 body = api_dataset.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
                 # Pydantic version below 2.0
                 body = api_dataset.dict(by_alias=True, exclude_none=True)
+
+            print(body)
             api = Api()
             result = api.post_request(
                 endpoint=Endpoints.DATASET_ENDPOINT.value,
