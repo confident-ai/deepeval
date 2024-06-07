@@ -69,8 +69,15 @@ After creating your `EvaluationDataset`, all you have to do is push it to Confid
 dataset.push(alias="My Confident Dataset")
 ```
 
-:::danger
-Pushing a dataset to Confident overwrites existing datasets with the same `alias`
+:::tip Did you know?
+You can choose to overwrite or append to an existing dataset if an existing dataset with the same alias already exist.
+
+```python
+dataset.push(alias="My Confident Dataset", overwrite=False)
+```
+
+`deepeval` will prompt you in the terminal if no value for `overwrite` is provided.
+
 :::
 
 ## Create Your Dataset on Confident AI
