@@ -13,12 +13,11 @@ from deepeval.scorer import Scorer
 
 
 class MMLU(DeepEvalBaseBenchmark):
-    def __init__(self, tasks: List[MMLUTask] = None, n_shots: int = 5):
+    def __init__(self, tasks: List[MMLUTask] = None, n_shots: int = 5, **kwargs):
         assert n_shots <= 5, "MMLU only supports n_shots <= 5"
-        super().__init__()
+        super().__init__(**kwargs)
         self.tasks: List[MMLUTask] = list(MMLUTask) if tasks is None else tasks
         self.scorer = Scorer()
-        self.dataset: Dataset = None
         self.shots_dataset: List[Dict] = None
         self.n_shots: int = n_shots
         self.predictions: Optional[pd.DataFrame] = None
