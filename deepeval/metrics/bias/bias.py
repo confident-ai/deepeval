@@ -82,18 +82,51 @@ class BiasMetric(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                (
+                    opinions,
+                    verdicts,
+                    score,
+                    reason,
+                    success
+                ) = loop.run_until_complete(
+                    self._measure_async(test_case)
                 )
+                self._opinions.set(opinions)
+                self._verdicts.set(verdicts)
+                self._score.set(score)
+                self._reason.set(reason)
+                self._success.set(success)
             else:
-                self.opinions: List[str] = self._generate_opinions(
+                opinions: List[str] = self._generate_opinions(
                     test_case.actual_output
                 )
-                self.verdicts: List[BiasVerdict] = self._generate_verdicts()
-                self.score = self._calculate_score()
-                self.reason = self._generate_reason()
-                self.success = self.score <= self.threshold
+                self._opinions.set(opinions)
+                
+                verdicts: List[BiasVerdict] = self._generate_verdicts()
+                self._verdicts.set(verdicts)
+
+                score = self._calculate_score()
+                self._score.set(score)
+
+                reason = self._generate_reason()
+                self._reason.set(reason)
+
+                success = self.score <= self.threshold
+                self._success.set(success)
+
                 return self.score
+    
+    async def _measure_async(
+            self,
+            test_case: Union[LLMTestCase, ConversationalTestCase]):
+        await self.a_measure(test_case, _show_indicator=False)
+        return (
+            self.opinions,
+            self.verdicts,
+            self.score,
+            self.reason,
+            self.success
+            )
 
     async def a_measure(
         self,

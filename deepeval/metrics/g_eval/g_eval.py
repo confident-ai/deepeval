@@ -1,5 +1,5 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
-
+from contextvars import ContextVar
 from typing import Optional, List, Tuple, Union, Dict
 from pydantic import BaseModel
 from langchain.schema import AIMessage
@@ -53,6 +53,12 @@ class GEvalResponse(BaseModel):
 
 
 class GEval(BaseMetric):
+
+    _evaluation_steps: ContextVar[List[str]] = ContextVar('evaluation_steps', default=[])
+    _score: ContextVar[float] = ContextVar('score', default=0)
+    _reason: ContextVar[str] = ContextVar('reason', default="")
+    _success: ContextVar[bool] = ContextVar('success', default=False)
+    
     def __init__(
         self,
         name: str,
@@ -86,11 +92,24 @@ class GEval(BaseMetric):
         self.criteria = criteria
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
-        self.evaluation_steps = evaluation_steps
+        self._evaluation_steps.set(evaluation_steps)
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
 
+    @property
+    def evaluation_steps(self) -> List[str]:
+        return self._evaluation_steps.get()
+    @property
+    def score(self) -> float:
+        return self._score.get()
+    @property
+    def reason(self) -> str:
+        return self._reason.get()
+    @property
+    def success(self) -> str:
+        return self._success.get()
+    
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
@@ -102,23 +121,48 @@ class GEval(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                (
+                    evaluation_steps,
+                    score,
+                    reason,
+                    success
+                ) = loop.run_until_complete(
+                    self._measure_async(test_case)
                 )
+                self._evaluation_steps.set(evaluation_steps)
+                self._score.set(score)
+                self._reason.set(reason)
+                self._success.set(success)
             else:
-                self.evaluation_steps: List[str] = (
+                evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
+                self._evaluation_steps.set(evaluation_steps)
+
                 g_score, reason = self.evaluate(test_case)
-                self.reason = reason
-                self.score = float(g_score) / 10
-                self.score = (
+                self._reason.set(reason)
+                self._score.set(float(g_score) / 10)
+                self._score.set(
                     0
                     if self.strict_mode and self.score < self.threshold
                     else self.score
                 )
-                self.success = self.score >= self.threshold
+
+                success = self.score >= self.threshold
+                self._success.set(success)
+
                 return self.score
+            
+    async def _measure_async(
+            self,
+            test_case: Union[LLMTestCase, ConversationalTestCase]):
+        await self.a_measure(test_case, _show_indicator=False)
+        return (
+            self.evaluation_steps,
+            self.score,
+            self.reason,
+            self.success
+            )
 
     async def a_measure(
         self,
@@ -135,18 +179,23 @@ class GEval(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.evaluation_steps: List[str] = (
+            evaluation_steps: List[str] = (
                 await self._a_generate_evaluation_steps()
             )
+            self._evaluation_steps.set(evaluation_steps)
+
             g_score, reason = await self._a_evaluate(test_case)
-            self.reason = reason
-            self.score = float(g_score) / 10
-            self.score = (
+            self._reason.set(reason)
+            self._score.set(float(g_score) / 10)
+            self._score.set(
                 0
                 if self.strict_mode and self.score < self.threshold
                 else self.score
             )
-            self.success = self.score >= self.threshold
+            
+            success = self.score >= self.threshold
+            self._success.set(success)
+
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
@@ -381,3 +430,4 @@ class GEval(BaseMetric):
     @property
     def __name__(self):
         return f"{self.name} (GEval)"
+

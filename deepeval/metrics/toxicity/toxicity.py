@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 
@@ -32,6 +33,13 @@ class ToxicityVerdict(BaseModel):
 
 
 class ToxicityMetric(BaseMetric):
+
+    _opinions: ContextVar[List[str]] = ContextVar('opinions', default=[])
+    _verdicts: ContextVar[List[ToxicityVerdict]] = ContextVar('verdicts', default=[])
+    _score: ContextVar[float] = ContextVar('score', default=0)
+    _reason: ContextVar[str] = ContextVar('reason', default="")
+    _success: ContextVar[bool] = ContextVar('success', default=False)
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -47,6 +55,22 @@ class ToxicityMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
 
+    @property
+    def opinions(self) -> List[str]:
+        return self._opinions.get()
+    @property
+    def verdicts(self) -> List[ToxicityVerdict]:
+        return self._verdicts.get()
+    @property
+    def score(self) -> float:
+        return self._score.get()
+    @property
+    def reason(self) -> str:
+        return self._reason.get()
+    @property
+    def success(self) -> str:
+        return self._success.get()
+    
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
@@ -58,19 +82,51 @@ class ToxicityMetric(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                (
+                    opinions,
+                    verdicts,
+                    score,
+                    reason,
+                    success
+                ) = loop.run_until_complete(
+                    self._measure_async(test_case)
                 )
+                self._opinions.set(opinions)
+                self._verdicts.set(verdicts)
+                self._score.set(score)
+                self._reason.set(reason)
+                self._success.set(success)
             else:
-                self.opinions: List[str] = self._generate_opinions(
+                opinions: List[str] = self._generate_opinions(
                     test_case.actual_output
                 )
-                self.verdicts: List[ToxicityVerdict] = self._generate_verdicts()
-                self.score = self._calculate_score()
-                self.reason = self._generate_reason()
-                self.success = self.score <= self.threshold
-                self.score = self.score
+                self._opinions.set(opinions)
+
+                verdicts: List[ToxicityVerdict] = self._generate_verdicts()
+                self._verdicts.set(verdicts)
+
+                score = self._calculate_score()
+                self._score.set(score)
+
+                reason = self._generate_reason()
+                self._reason.set(reason)
+
+                success = self.score <= self.threshold
+                self._success.set(success)
+
                 return self.score
+            
+    async def _measure_async(
+            self,
+            test_case: Union[LLMTestCase, ConversationalTestCase]):
+        await self.a_measure(test_case, _show_indicator=False)
+        return (
+            self.opinions,
+            self.verdicts,
+            self.score,
+            self.reason,
+            self.success
+        )
 
     async def a_measure(
         self,
@@ -85,17 +141,25 @@ class ToxicityMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.opinions: List[str] = await self._a_generate_opinions(
+            opinions: List[str] = await self._a_generate_opinions(
                 test_case.actual_output
             )
-            self.verdicts: List[ToxicityVerdict] = (
+            self._opinions.set(opinions)
+
+            verdicts: List[ToxicityVerdict] = (
                 await self._a_generate_verdicts()
             )
+            self._verdicts.set(verdicts)
 
-            self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason()
-            self.success = self.score <= self.threshold
-            self.score = self.score
+            score = self._calculate_score()
+            self._score.set(score)
+
+            reason = await self._a_generate_reason()
+            self._reason.set(reason)
+
+            success = self.score <= self.threshold
+            self._success.set(success)
+
             return self.score
 
     async def _a_generate_reason(self) -> str:

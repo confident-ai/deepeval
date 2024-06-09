@@ -26,7 +26,6 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.RETRIEVAL_CONTEXT,
 ]
 
-
 class FaithfulnessVerdict(BaseModel):
     verdict: str
     reason: str = Field(default=None)
@@ -84,18 +83,56 @@ class FaithfulnessMetric(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                (
+                    truths,
+                    claims,
+                    verdicts,
+                    score,
+                    reason,
+                    success
+                ) = loop.run_until_complete(
+                    self._measure_async(test_case)
                 )
+                self._truths.set(truths)
+                self._claims.set(claims)
+                self._verdicts.set(verdicts)
+                self._score.set(score)
+                self._reason.set(reason)
+                self._success.set(success)
             else:
-                self.truths = self._generate_truths(test_case.retrieval_context)
-                self.claims = self._generate_claims(test_case.actual_output)
-                self.verdicts = self._generate_verdicts()
-                self.score = self._calculate_score()
-                self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
-                return self.score
+                truths = self._generate_truths(test_case.retrieval_context)
+                self._truths.set(truths)
 
+                claims = self._generate_claims(test_case.actual_output)
+                self._claims.set(claims)
+                
+                verdicts = self._generate_verdicts()
+                self._verdicts.set(verdicts)
+
+                score = self._calculate_score()
+                self._score.set(score)
+
+                reason = self._generate_reason()
+                self._reason.set(reason)
+
+                success = self.score >= self.threshold
+                self._success.set(success)
+                
+                return self.score
+            
+    async def _measure_async(
+            self,
+            test_case: Union[LLMTestCase, ConversationalTestCase]):
+        await self.a_measure(test_case, _show_indicator=False)
+        return (
+            self.truths,
+            self.claims, 
+            self.verdicts, 
+            self.score, 
+            self.reason, 
+            self.success
+            )
+    
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
@@ -272,58 +309,11 @@ class FaithfulnessMetric(BaseMetric):
             self.success = False
         else:
             try:
-                self.success = self.score >= self.threshold
+                self._success.set(self.score >= self.threshold)
             except:
-                self.success = False
+                self._success.set(False)
         return self.success
 
     @property
     def __name__(self):
         return "Faithfulness"
-
-##########################################################
-##########################################################
-##########################################################
-
-import asyncio
-
-async def single_eval_call(
-        metric: BaseMetric,
-        test_case: LLMTestCase):
-    score = await metric.a_measure(test_case)
-    print(metric.score)
-    print(metric.reason)
-
-async def test_g_eval():
-    metric = FaithfulnessMetric(
-    threshold=0.7,
-    model="gpt-4",
-    include_reason=True
-    )
-
-    test_cases = [
-        LLMTestCase(
-           input="What if these shoes don't fit?",
-           actual_output="We offer a 30-day full refund at no extra cost.",
-           retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
-        ),
-        LLMTestCase(
-           input="What if I don't like these shoes?",
-           actual_output = "Whatever",
-           retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
-        ),
-        LLMTestCase(
-           input="What colors do you have?",
-           actual_output="We dont have blue, red, or green.",
-           retrieval_context = ["We offer blue, red, and green."]
-        ),
-        LLMTestCase(
-           input="What brands do you offer?",
-           actual_output="We have Nike, but not Adidas",
-           retrieval_context = ["Nike and Adidas."]
-        ),
-    ]
-    await asyncio.gather(*(single_eval_call(metric, test_case) for test_case in test_cases))
-
-if __name__ == "__main__":
-    asyncio.run(test_g_eval())

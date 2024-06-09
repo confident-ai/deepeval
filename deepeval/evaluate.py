@@ -283,6 +283,7 @@ async def a_execute_test_cases(
     test_run_cache_manager.disable_write_cache = save_to_disk == False
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
+
     for index, test_case in enumerate(test_cases):
         with capture_evaluation_run("test case"):
             cached_test_case = None

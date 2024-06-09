@@ -1,4 +1,5 @@
-from typing import List, Optional, Union
+from contextvars import ContextVar
+from typing import List, Optional, Union, Dict
 from enum import Enum
 from pydantic import BaseModel, Field
 import asyncio
@@ -45,6 +46,18 @@ class ScoreType(Enum):
 
 
 class SummarizationMetric(BaseMetric):
+
+    _truths: ContextVar[List[str]] = ContextVar('truths', default=[])
+    _claims: ContextVar[List[str]] = ContextVar('claims', default=[])
+    _coverage_verdicts: ContextVar[List[SummarizationCoverageVerdict]] = ContextVar('coverage_verdicts', default=[])
+    _alignment_verdicts: ContextVar[List[SummarizationAlignmentVerdict]] = ContextVar('alignment_verdicts', default=[])
+    _coverage_score: ContextVar[float] = ContextVar('coverage_score', default=[])
+    _alignment_score: ContextVar[float] = ContextVar('alignment_score', default=[])
+    _score_breakdown: ContextVar[Dict] = ContextVar('score_breakdown', default=[])
+    _score: ContextVar[float] = ContextVar('score', default=0)
+    _reason: ContextVar[str] = ContextVar('reason', default="")
+    _success: ContextVar[bool] = ContextVar('success', default=False)
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -69,6 +82,37 @@ class SummarizationMetric(BaseMetric):
         self.n = n
         self.strict_mode = strict_mode
 
+    @property
+    def truths(self) -> List[str]:
+        return self._truths.get()
+    @property
+    def claims(self) -> List[str]:
+        return self._claims.get()
+    @property
+    def coverage_verdicts(self) -> List[SummarizationCoverageVerdict]:
+        return self._coverage_verdicts.get()
+    @property
+    def alignment_verdicts(self) -> List[SummarizationAlignmentVerdict]:
+        return self._alignment_verdicts.get()
+    @property
+    def coverage_score(self) -> float:
+        return self._coverage_score.get()
+    @property
+    def alignment_score(self) -> float:
+        return self._alignment_score.get()
+    @property
+    def score_breakdown(self) -> Dict:
+        return self._score_breakdown.get()
+    @property
+    def score(self) -> float:
+        return self._score.get()
+    @property
+    def reason(self) -> str:
+        return self._reason.get()
+    @property
+    def success(self) -> str:
+        return self._success.get()
+
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
@@ -80,30 +124,89 @@ class SummarizationMetric(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                (
+                    truths, 
+                    claims, 
+                    coverage_verdicts, 
+                    alignment_verdicts, 
+                    coverage_score,
+                    alignment_score,
+                    score_breakdown,
+                    score,
+                    reason,
+                    success                
+                    ) = loop.run_until_complete(
+                    self._measure_async(test_case)
                 )
+                self._truths.set(truths)
+                self._claims.set(claims)
+                self._coverage_verdicts.set(coverage_verdicts)
+                self._alignment_verdicts.set(alignment_verdicts)
+                self._coverage_score.set(coverage_score)
+                self._alignment_score.set(alignment_score)
+                self._score_breakdown.set(score_breakdown)
+                self._score.set(score)
+                self._reason.set(reason)
+                self._success.set(success)
+
             else:
-                self.truths: List[str] = self._generate_claims(test_case.input)
-                self.claims: List[str] = self._generate_claims(
+                truths: List[str] = self._generate_claims(test_case.input)
+                self._truths.set(truths)
+                
+                claims: List[str] = self._generate_claims(
                     test_case.actual_output
                 )
-                self.coverage_verdicts: List[SummarizationCoverageVerdict] = (
+                self._claims.set(claims)
+
+                coverage_verdicts: List[SummarizationCoverageVerdict] = (
                     self._generate_coverage_verdicts(test_case)
                 )
-                self.alignment_verdicts: List[SummarizationAlignmentVerdict] = (
+                self._coverage_verdicts.set(coverage_verdicts)
+
+                alignment_verdicts: List[SummarizationAlignmentVerdict] = (
                     self._generate_alignment_verdicts()
                 )
+                self._alignment_verdicts.set(alignment_verdicts)
+
                 alignment_score = self._calculate_score(ScoreType.ALIGNMENT)
+                self._alignment_score.set(alignment_score)
+
                 coverage_score = self._calculate_score(ScoreType.COVERAGE)
-                self.score_breakdown = {
+                self._coverage_score.set(coverage_score)
+
+                score_breakdown = {
                     ScoreType.ALIGNMENT.value: alignment_score,
                     ScoreType.COVERAGE.value: coverage_score,
                 }
-                self.score = min(alignment_score, coverage_score)
-                self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold
+                self._score_breakdown.set(score_breakdown)
+
+                score = min(alignment_score, coverage_score)
+                self._score.set(score)
+
+                reason = self._generate_reason()
+                self._reason.set(reason)
+
+                success = self.score >= self.threshold
+                self._success.set(success)
+            
                 return self.score
+            
+    async def _measure_async(
+            self,
+            test_case: Union[LLMTestCase, ConversationalTestCase]):
+        await self.a_measure(test_case, _show_indicator=False)
+        return (
+            self.truths, 
+            self.claims, 
+            self.coverage_verdicts,
+            self.alignment_verdicts, 
+            self.coverage_score,
+            self.alignment_score,
+            self.score_breakdown,
+            self.score,
+            self.reason,
+            self.success
+            )
 
     async def a_measure(
         self,
@@ -120,26 +223,44 @@ class SummarizationMetric(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.truths, self.claims = await asyncio.gather(
+            truths, claims = await asyncio.gather(
                 self._a_generate_claims(test_case.input),
                 self._a_generate_claims(test_case.actual_output),
             )
+            self._truths.set(truths)
+            self._claims.set(claims)
+            
             (
-                self.coverage_verdicts,
-                self.alignment_verdicts,
+                coverage_verdicts,
+                alignment_verdicts,
             ) = await asyncio.gather(
                 self._a_generate_coverage_verdicts(test_case),
                 self._a_generate_alignment_verdicts(),
             )
+            self._coverage_verdicts.set(coverage_verdicts)
+            self._alignment_verdicts.set(alignment_verdicts)
+
             alignment_score = self._calculate_score(ScoreType.ALIGNMENT)
+            self._alignment_score.set(alignment_score)
+
             coverage_score = self._calculate_score(ScoreType.COVERAGE)
-            self.score_breakdown = {
+            self._coverage_score.set(coverage_score)
+
+            score_breakdown = {
                 ScoreType.ALIGNMENT.value: alignment_score,
                 ScoreType.COVERAGE.value: coverage_score,
             }
-            self.score = min(alignment_score, coverage_score)
-            self.reason = await self._a_generate_reason()
-            self.success = self.score >= self.threshold
+            self._score_breakdown.set(score_breakdown)
+
+            score = min(alignment_score, coverage_score)
+            self._score.set(score)
+
+            reason = await self._a_generate_reason()
+            self._reason.set(reason)
+
+            success = self.score >= self.threshold
+            self._success.set(success)
+
             return self.score
 
     async def _a_generate_reason(self) -> str:

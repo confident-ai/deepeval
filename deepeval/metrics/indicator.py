@@ -51,7 +51,7 @@ def start_progress():
             progress.start()
         active_tasks += 1
 
-def stop_progress():
+def update_progress():
     with lock:
         global active_tasks
         active_tasks -= 1
@@ -59,29 +59,42 @@ def stop_progress():
             progress.stop()
 
 @contextmanager
-def metric_progress_indicator(metric, async_mode=None, _show_indicator=True, total=9999):
-    if _show_indicator and show_indicator():
-        start_progress() 
-        with capture_metric_type(metric.__name__):
-            start_time = time.perf_counter()
-            task_id = progress.add_task(
-                description=format_metric_description(metric, async_mode),
-                total=total,
-            )
-            try:
-                yield task_id
-            finally:
-                end_time = time.perf_counter()
-                time_taken = format(end_time - start_time, ".2f")
-                progress.update(task_id, completed=total)
-                progress.update(
-                    task_id,
-                    description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
+def metric_progress_indicator(metric, async_mode=False, _show_indicator=True, total=9999):
+    with capture_metric_type(metric.__name__):
+        if _show_indicator and show_indicator():
+            if async_mode==False:
+                with Progress(
+                    SpinnerColumn(style="rgb(106,0,255)"),
+                    TextColumn("[progress.description]{task.description}"),
+                    console=console,  # Use the custom console
+                    transient=True,
+                ) as progress_sync:
+                    progress_sync.add_task(
+                        description=format_metric_description(metric, async_mode),
+                        total=total,
+                    )
+                    yield
+            else:
+                start_progress() 
+                start_time = time.perf_counter()
+                task_id = progress.add_task(
+                    description=format_metric_description(metric, async_mode),
+                    total=total,
                 )
-                progress.stop_task(task_id)
-                stop_progress()
-    else:
-        yield None
+                try:
+                    yield task_id
+                finally:
+                    end_time = time.perf_counter()
+                    time_taken = format(end_time - start_time, ".2f")
+                    progress.update(task_id, completed=total)
+                    progress.update(
+                        task_id,
+                        description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
+                    )
+                    progress.stop_task(task_id)
+                    update_progress()
+        else:
+            yield None
 
 
 
