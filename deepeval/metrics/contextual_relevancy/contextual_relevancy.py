@@ -262,11 +262,11 @@ class ContextualRelevancyMetric(BaseMetric):
             self.success = False
         else:
             try:
-                self.success = self.score >= self.threshold
+                self._success.set(self.score >= self.threshold)
             except:
-                self.success = False
+                self._success.set(False)
         return self.success
-
+    
     @property
     def __name__(self):
         return "Contextual Relevancy"

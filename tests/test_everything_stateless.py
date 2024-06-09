@@ -156,14 +156,14 @@ async def test_async():
     tasks = []
     for i, test_case in enumerate(test_cases):
         if i % 2 == 0:  # Even index
-            tasks.append(single_async_call(metric1, test_case))
+            tasks.append(single_async_call(metric3, test_case))
         else:  # Odd index
-            tasks.append(single_async_call(metric2, test_case))
+            tasks.append(single_async_call(metric4, test_case))
 
     # Execute all tasks asynchronously
     await asyncio.gather(*tasks)
 
-#asyncio.run(test_async())
+asyncio.run(test_async())
 
 # ##########################################################
 # # measure in sync mode
