@@ -15,6 +15,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.dataset.golden import Golden
+from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 
 valid_file_types = ["csv", "json"]
 
@@ -27,7 +28,7 @@ class Synthesizer:
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        # embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
+        embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
         multithreading: bool = True,
     ):
         self.model, self.using_native_model = initialize_model(model)
@@ -35,7 +36,7 @@ class Synthesizer:
         self.multithreading = multithreading
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
-        # self.embedder = embedder
+        self.embedder = embedder
 
     def evolve(
         self,
@@ -261,6 +262,7 @@ class Synthesizer:
                     chunk_size,
                     chunk_overlap,
                     multithreading=self.multithreading,
+                    embedder=self.embedder,
                 )
 
             max_goldens_per_context = 2
