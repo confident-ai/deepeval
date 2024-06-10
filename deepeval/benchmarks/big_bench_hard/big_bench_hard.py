@@ -18,9 +18,10 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         tasks: List[BigBenchHardTask] = None,
         n_shots: int = 3,
         enable_cot: bool = True,
+        **kwargs
     ):
         assert n_shots <= 3, "BBH only supports n_shots <= 3"
-        super().__init__()
+        super().__init__(**kwargs)
         self.tasks: List[BigBenchHardTask] = (
             list(BigBenchHardTask) if tasks is None else tasks
         )
@@ -162,8 +163,12 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         return res
 
     def load_benchmark_dataset(self, task: BigBenchHardTask) -> List[Golden]:
-        # load from hugging face
-        dataset = load_dataset("lukaemon/bbh", task.value)
+        if self.dataset:
+            dataset = self.dataset
+        else:
+            # load from hugging face
+            dataset = load_dataset("lukaemon/bbh", task.value)
+
         goldens: List[Golden] = []
         for data in dataset["test"]:
             golden = Golden(input=data["input"], expectedOutput=data["target"])

@@ -18,14 +18,15 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         self,
         tasks: List[TruthfulQATask] = None,
         mode: TruthfulQAMode = TruthfulQAMode.MC1,
+        **kwargs
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.tasks: List[TruthfulQATask] = (
             list(TruthfulQATask) if tasks is None else tasks
         )
         self.mode: TruthfulQAMode = mode
         self.scorer = Scorer()
-        self.mc_dataset: Dataset = None
+        self.mc_dataset: Dataset = self.dataset
 
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None

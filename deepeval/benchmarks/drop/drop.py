@@ -15,12 +15,11 @@ DELIMITER = ","
 
 
 class DROP(DeepEvalBaseBenchmark):
-    def __init__(self, tasks: List[DROPTask] = None, n_shots: int = 5):
+    def __init__(self, tasks: List[DROPTask] = None, n_shots: int = 5, **kwargs):
         assert n_shots <= 5, "DROP only supports n_shots <= 5"
-        super().__init__()
+        super().__init__(**kwargs)
         self.tasks: List[DROPTask] = list(DROPTask) if tasks is None else tasks
         self.scorer = Scorer()
-        self.dataset: Dataset = None
         self.shots_dataset: List[Dict] = None
         self.n_shots: int = n_shots
         self.predictions: Optional[pd.DataFrame] = None
