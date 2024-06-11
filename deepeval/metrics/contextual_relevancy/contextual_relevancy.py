@@ -72,35 +72,22 @@ class ContextualRelevancyMetric(BaseMetric):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 (
-                    verdicts,
-                    score,
-                    reason,
-                    success
+                    self.verdicts,
+                    self.score,
+                    self.reason,
+                    self.success
                 ) = loop.run_until_complete(
                     self._measure_async(test_case)
                 )
-                self.verdicts = verdicts
-                self.score = score
-                self.reason = reason
-                self.success = success
-                
             else:
-                verdicts: List[ContextualRelevancyVerdict] = (
+                self.verdicts = (
                     self._generate_verdicts(
                         test_case.input, test_case.retrieval_context
                     )
                 )
-                self.verdicts = verdicts
-
-                score = self._calculate_score()
-                self.score = score
-
-                reason = self._generate_reason(test_case.input)
-                self.reason = reason
-
-                success = self.score >= self.threshold
-                self.success = success
-
+                self.score = self._calculate_score()
+                self.reason = self._a_generate_reason(test_case.input)
+                self.success = self.score >= self.threshold     
                 return self.score
     
     async def _measure_async(
@@ -129,22 +116,14 @@ class ContextualRelevancyMetric(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            verdicts: List[ContextualRelevancyVerdict] = (
+            self.verdicts = (
                 await self._a_generate_verdicts(
                     test_case.input, test_case.retrieval_context
                 )
             )
-            self.verdicts = verdicts
-
-            score = self._calculate_score()
-            self.score = score
-
-            reason = await self._a_generate_reason(test_case.input)
-            self.reason = reason
-
-            success = self.score >= self.threshold
-            self.success = success
-
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason(test_case.input)
+            self.success = self.score >= self.threshold    
             return self.score
 
     async def _a_generate_reason(self, input: str):

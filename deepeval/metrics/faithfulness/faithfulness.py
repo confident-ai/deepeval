@@ -84,40 +84,22 @@ class FaithfulnessMetric(BaseMetric):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 (
-                    truths,
-                    claims,
-                    verdicts,
-                    score,
-                    reason,
-                    success
+                    self.truths,
+                    self.claims,
+                    self.verdicts,
+                    self.score,
+                    self.reason,
+                    self.success
                 ) = loop.run_until_complete(
                     self._measure_async(test_case)
                 )
-                self.truths = truths
-                self.claims = claims
-                self.verdicts = verdicts
-                self.score = score
-                self.reason = reason
-                self.success = success
             else:
-                truths = self._generate_truths(test_case.retrieval_context)
-                self.truths = truths
-
-                claims = self._generate_claims(test_case.actual_output)
-                self.claims = claims
-                
-                verdicts = self._generate_verdicts()
-                self.verdicts = verdicts
-
-                score = self._calculate_score()
-                self.score = score
-
-                reason = self._generate_reason()
-                self.reason = reason
-
-                success = self.score >= self.threshold
-                self.success = success
-                
+                self.truths = self._generate_truths(test_case.retrieval_context)
+                self.claims = self._generate_claims(test_case.actual_output)                
+                self.verdicts = self._generate_verdicts()
+                self.score = self._calculate_score()
+                self.reason = self._generate_reason()
+                self.success = self.score >= self.threshold                
                 return self.score
             
     async def _measure_async(
@@ -146,25 +128,14 @@ class FaithfulnessMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            truths, claims = await asyncio.gather(
+            self.truths, self.claims = await asyncio.gather(
                 self._a_generate_truths(test_case.retrieval_context),
                 self._a_generate_claims(test_case.actual_output),
             )
-            self.truths = truths
-            self.claims = claims
-
-            verdicts  = await self._a_generate_verdicts()
-            self.verdicts = verdicts
-
-            score = self._calculate_score()
-            self.score = score
-
-            reason = await self._a_generate_reason()
-            self.reason = reason
-
-            success = self.score >= self.threshold
-            self.success = success
-
+            self.verdicts  = await self._a_generate_verdicts()
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason()
+            self.success = self.score >= self.threshold
             return self.score
 
     async def _a_generate_reason(self) -> str:

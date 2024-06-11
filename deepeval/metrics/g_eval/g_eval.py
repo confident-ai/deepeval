@@ -113,23 +113,17 @@ class GEval(BaseMetric):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 (
-                    evaluation_steps,
-                    score,
-                    reason,
-                    success
+                    self.evaluation_steps,
+                    self.score,
+                    self.reason,
+                    self.success
                 ) = loop.run_until_complete(
                     self._measure_async(test_case)
                 )
-                self.evaluation_steps = evaluation_steps
-                self.score = score
-                self.reason = reason
-                self.success = success
             else:
-                evaluation_steps: List[str] = (
+                self.evaluation_steps = (
                     self._generate_evaluation_steps()
                 )
-                self.evaluation_steps = evaluation_steps
-
                 g_score, reason = self.evaluate(test_case)
                 self.reason = reason
                 self.score = float(g_score) / 10
@@ -138,10 +132,7 @@ class GEval(BaseMetric):
                     if self.strict_mode and self.score < self.threshold
                     else self.score
                 )
-
-                success = self.score >= self.threshold
-                self.success = success
-
+                self.success = self.score >= self.threshold
                 return self.score
             
     async def _measure_async(
@@ -170,11 +161,9 @@ class GEval(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            evaluation_steps: List[str] = (
+            self.evaluation_steps = (
                 await self._a_generate_evaluation_steps()
             )
-            self.evaluation_steps = evaluation_steps
-
             g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
             self.score = float(g_score) / 10
@@ -183,10 +172,7 @@ class GEval(BaseMetric):
                 if self.strict_mode and self.score < self.threshold
                 else self.score
             )
-            
-            success = self.score >= self.threshold
-            self.success = success
-
+            self.success = self.score >= self.threshold
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:

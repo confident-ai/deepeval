@@ -78,40 +78,22 @@ class AnswerRelevancyMetric(BaseMetric):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 (
-                    statements, 
-                    verdicts, 
-                    score, 
-                    reason, 
-                    success
+                    self.statements, 
+                    self.verdicts, 
+                    self.score, 
+                    self.reason, 
+                    self.success
                 ) = loop.run_until_complete(
                     self._measure_async(test_case)
                 )
-                self.statements = statements
-                self.verdicts = verdicts
-                self.score = score
-                self.reason = reason
-                self.success = success
-
             else:
-                statements: List[str] = self._generate_statements(
+                self.statements = self._generate_statements(
                     test_case.actual_output
                 )
-                self.statements = statements
-
-                verdicts: List[AnswerRelvancyVerdict] = (
-                    self._generate_verdicts(test_case.input)
-                )
-                self.verdicts = verdicts
-
-                score = self._calculate_score()
-                self.score = score
-
-                reason = self._generate_reason(test_case.input)
-                self.reason = reason
-
-                success = self.score >= self.threshold
-                self.success = success
-                
+                self.verdicts = self._generate_verdicts(test_case.input)
+                self.score = self._calculate_score()
+                self.reason = self._generate_reason(test_case.input)
+                self.success = self.score >= self.threshold                
                 return self.score
     
     async def _measure_async(
@@ -139,25 +121,15 @@ class AnswerRelevancyMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            statements: List[str] = await self._a_generate_statements(
+            self.statements = await self._a_generate_statements(
                 test_case.actual_output
             )
-            self.statements = statements
-
-            verdicts: List[AnswerRelvancyVerdict] = (
+            self.verdicts = (
                 await self._a_generate_verdicts(test_case.input)
             )
-            self.verdicts = verdicts
-
-            score = self._calculate_score()
-            self.score = score
-
-            reason = await self._a_generate_reason(test_case.input)
-            self.reason = reason
-
-            success = self.score >= self.threshold
-            self.success = success
-    
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason(test_case.input)
+            self.success = self.score >= self.threshold    
             return self.score
 
     async def _a_generate_reason(self, input: str) -> str:

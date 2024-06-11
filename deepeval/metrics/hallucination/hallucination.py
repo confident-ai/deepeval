@@ -68,34 +68,22 @@ class HallucinationMetric(BaseMetric):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 (
-                    verdicts,
-                    score,
-                    reason,
-                    success
+                    self.verdicts,
+                    self.score,
+                    self.reason,
+                    self.success
                 ) = loop.run_until_complete(
                     self._measure_async(test_case)
                 )
-                self.verdicts = verdicts
-                self.score = score
-                self.reason = reason
-                self.success = success
             else:
-                verdicts: List[HallucinationVerdict] = (
+                self.verdicts = (
                     self._generate_verdicts(
                         test_case.actual_output, test_case.context
                     )
                 )
-                self.verdicts = verdicts
-
-                score = self._calculate_score()
-                self.score = score
-
-                reason = self._generate_reason()
-                self.reason = reason
-
-                success = self.score <= self.threshold
-                self.success = success
-
+                self.score = self._calculate_score()
+                self.reason = self._generate_reason()
+                self.success = self.score <= self.threshold
                 return self.score
     
     async def _measure_async(
@@ -122,22 +110,14 @@ class HallucinationMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            verdicts: List[HallucinationVerdict] = (
+            self.verdicts = (
                 await self._a_generate_verdicts(
                     test_case.actual_output, test_case.context
                 )
             )
-            self.verdicts = verdicts
-
-            score = self._calculate_score()
-            self.score = score
-
-            reason = await self._a_generate_reason()
-            self.reason = reason
-
-            success = self.score <= self.threshold
-            self.success = success
-
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason()
+            self.success = self.score <= self.threshold
             return self.score
 
     async def _a_generate_reason(self):

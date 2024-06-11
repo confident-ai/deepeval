@@ -68,7 +68,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             )
             knowledge_retention_score = self._calculate_score()
             self.reason = self._generate_reason(knowledge_retention_score)
-
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
             return self.score
