@@ -3,7 +3,7 @@ import os
 import csv
 import json
 from threading import Lock
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
@@ -32,7 +32,6 @@ class Synthesizer:
         multithreading: bool = True,
     ):
         self.model, self.using_native_model = initialize_model(model)
-        self.generator_model = self.model.get_model_name()
         self.multithreading = multithreading
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
@@ -167,7 +166,8 @@ class Synthesizer:
         _show_indicator: bool = True,
     ) -> List[Golden]:
         with synthesizer_progress_context(
-            self.generator_model,
+            self.model.get_model_name(),
+            self.embedder.get_model_name(),
             contexts * max_goldens_per_context,
             _show_indicator,
         ):
@@ -255,7 +255,11 @@ class Synthesizer:
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
     ):
-        with synthesizer_progress_context(self.generator_model):
+        with synthesizer_progress_context(
+            self.model.get_model_name(),
+            self.embedder.get_model_name(),
+            max_goldens_per_document * document_paths,
+        ):
             if self.context_generator is None:
                 self.context_generator = ContextGenerator(
                     document_paths,

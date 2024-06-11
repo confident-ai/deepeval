@@ -56,19 +56,19 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         return OpenAIEmbeddings(model=self.model_name)
 
-    def embed_query(self, text: str) -> List[float]:
+    def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
         return embedding_model.embed_query(text)
 
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    def embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
         return embedding_model.embed_documents(texts)
 
-    async def aembed_query(self, text: str) -> List[float]:
+    async def aembed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
         return await embedding_model.aembed_query(text)
 
-    async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
+    async def aembed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
         return await embedding_model.aembed_documents(texts)
 
@@ -81,35 +81,3 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             return "azure openai"
         elif self.model_name:
             return self.model_name
-
-
-############################
-###### Example Usage #######
-############################
-
-"""
-import time
-import asyncio
-
-async def async_main(model):
-    start_async = time.time()
-    async_result = await model.aembed_query('test')
-    end_async = time.time()
-    
-    print(f"Asynchronous Execution time: {end_async - start_async} seconds")
-
-def main():
-    model = OpenAIEmbeddingModel()
-
-    start_sync = time.time()
-    sync_result = model.embed_query('test')
-    end_sync = time.time()
-
-    print(f"Synchronous Execution time: {end_sync - start_sync} seconds")
-
-    # Call the asynchronous part using asyncio.run
-    asyncio.run(async_main(model))
-
-if __name__ == "__main__":
-    main()
-"""

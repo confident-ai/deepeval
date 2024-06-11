@@ -18,7 +18,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         tasks: List[BigBenchHardTask] = None,
         n_shots: int = 3,
         enable_cot: bool = True,
-        **kwargs
+        **kwargs,
     ):
         assert n_shots <= 3, "BBH only supports n_shots <= 3"
         super().__init__(**kwargs)

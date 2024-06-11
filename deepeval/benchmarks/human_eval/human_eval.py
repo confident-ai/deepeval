@@ -11,7 +11,9 @@ from deepeval.scorer import Scorer
 
 
 class HumanEval(DeepEvalBaseBenchmark):
-    def __init__(self, tasks: List[HumanEvalTask] = None, n: int = 200, **kwargs):
+    def __init__(
+        self, tasks: List[HumanEvalTask] = None, n: int = 200, **kwargs
+    ):
 
         super().__init__(**kwargs)
         self.tasks: List[HumanEvalTask] = (

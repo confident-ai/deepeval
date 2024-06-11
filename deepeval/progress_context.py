@@ -24,22 +24,21 @@ def progress_context(
 @contextmanager
 def synthesizer_progress_context(
     evaluation_model: str,
+    embedder: str,
     max_generations: str = None,
     _show_indicator: bool = True,
-    total: int = 9999,
-    transient: bool = True,
 ):
     with capture_synthesizer_run(max_generations):
-        description = f"✨ 🍰 ✨ You're generating goldens using DeepEval's latest Synthesizer (using {evaluation_model})! This may take a while..."
+        description = f"✨ 🍰 ✨ You're generating goldens using DeepEval's latest Synthesizer (using {evaluation_model} and {embedder})! This may take a while..."
         console = Console(file=sys.stderr)  # Direct output to standard error
         if _show_indicator:
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
                 console=console,  # Use the custom console
-                transient=transient,
+                transient=True,
             ) as progress:
-                progress.add_task(description=description, total=total)
+                progress.add_task(description=description, total=9999)
                 yield
         else:
             yield
