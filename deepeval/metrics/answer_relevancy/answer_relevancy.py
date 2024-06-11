@@ -32,11 +32,11 @@ class AnswerRelvancyVerdict(BaseModel):
 
 class AnswerRelevancyMetric(BaseMetric):
 
-    _statements: ContextVar[List[str]] = ContextVar('statements', default=[])
-    _verdicts: ContextVar[List[AnswerRelvancyVerdict]] = ContextVar('verdicts', default=[])
-    _score: ContextVar[float] = ContextVar('score', default=0)
-    _reason: ContextVar[str] = ContextVar('reason', default="")
-    _success: ContextVar[bool] = ContextVar('success', default=False)
+    _statements: ContextVar[Optional[List[str]]] = ContextVar('statements', default=None)
+    _verdicts: ContextVar[Optional[List[AnswerRelvancyVerdict]]] = ContextVar('verdicts', default=None)
+    _score: ContextVar[Optional[float]] = ContextVar('score', default=None)
+    _reason: ContextVar[Optional[str]] = ContextVar('reason', default=None)
+    _success: ContextVar[Optional[bool]] = ContextVar('success', default=None)
 
     def __init__(
         self,
@@ -54,19 +54,19 @@ class AnswerRelevancyMetric(BaseMetric):
         self.strict_mode = strict_mode
     
     @property
-    def statements(self) -> List[str]:
+    def statements(self) -> Optional[List[str]]:
         return self._statements.get()
     @property
-    def verdicts(self) -> List[AnswerRelvancyVerdict]:
+    def verdicts(self) -> Optional[List[AnswerRelvancyVerdict]]:
         return self._verdicts.get()
     @property
-    def score(self) -> float:
+    def score(self) -> Optional[float]:
         return self._score.get()
     @property
-    def reason(self) -> str:
+    def reason(self) -> Optional[str]:
         return self._reason.get()
     @property
-    def success(self) -> str:
+    def success(self) -> Optional[str]:
         return self._success.get()
 
     def measure(
@@ -297,21 +297,3 @@ class AnswerRelevancyMetric(BaseMetric):
     @property
     def __name__(self):
         return "Answer Relevancy"
-    
-
-##########################################################
-##########################################################
-##########################################################
-
-
-
-
-
-
-# import asyncio
-
-
-
-
-# if __name__ == "__main__":
-#     asyncio.run(test_g_eval())

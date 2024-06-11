@@ -54,10 +54,10 @@ class GEvalResponse(BaseModel):
 
 class GEval(BaseMetric):
 
-    _evaluation_steps: ContextVar[List[str]] = ContextVar('evaluation_steps', default=[])
-    _score: ContextVar[float] = ContextVar('score', default=0)
-    _reason: ContextVar[str] = ContextVar('reason', default="")
-    _success: ContextVar[bool] = ContextVar('success', default=False)
+    _evaluation_steps: ContextVar[Optional[List[str]]] = ContextVar('evaluation_steps', default=None)
+    _score: ContextVar[Optional[float]] = ContextVar('score', default=None)
+    _reason: ContextVar[Optional[str]] = ContextVar('reason', default=None)
+    _success: ContextVar[Optional[bool]] = ContextVar('success', default=None)
     
     def __init__(
         self,
@@ -98,16 +98,16 @@ class GEval(BaseMetric):
         self.async_mode = async_mode
 
     @property
-    def evaluation_steps(self) -> List[str]:
+    def evaluation_steps(self) -> Optional[List[str]]:
         return self._evaluation_steps.get()
     @property
-    def score(self) -> float:
+    def score(self) -> Optional[float]:
         return self._score.get()
     @property
-    def reason(self) -> str:
+    def reason(self) -> Optional[str]:
         return self._reason.get()
     @property
-    def success(self) -> str:
+    def success(self) -> Optional[str]:
         return self._success.get()
     
     def measure(

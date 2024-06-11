@@ -31,12 +31,12 @@ class FaithfulnessVerdict(BaseModel):
     reason: str = Field(default=None)
 
 class FaithfulnessMetric(BaseMetric):
-    _truths: ContextVar[List[str]] = ContextVar('truths', default=[])
-    _claims: ContextVar[List[str]] = ContextVar('claims', default=[])
-    _verdicts: ContextVar[List[FaithfulnessVerdict]] = ContextVar('verdicts', default=[])
-    _score: ContextVar[float] = ContextVar('score', default=0)
-    _reason: ContextVar[str] = ContextVar('reason', default="")
-    _success: ContextVar[bool] = ContextVar('success', default=False)
+    _truths: ContextVar[Optional[List[str]]] = ContextVar('truths', default=None)
+    _claims: ContextVar[Optional[List[str]]] = ContextVar('claims', default=None)
+    _verdicts: ContextVar[Optional[List[FaithfulnessVerdict]]] = ContextVar('verdicts', default=None)
+    _score: ContextVar[Optional[float]] = ContextVar('score', default=None)
+    _reason: ContextVar[Optional[str]] = ContextVar('reason', default=None)
+    _success: ContextVar[Optional[bool]] = ContextVar('success', default=None)
 
     def __init__(
         self,
@@ -54,22 +54,22 @@ class FaithfulnessMetric(BaseMetric):
         self.strict_mode = strict_mode
     
     @property
-    def truths(self) -> List[str]:
+    def truths(self) -> Optional[List[str]]:
         return self._truths.get()
     @property
-    def claims(self) -> List[str]:
+    def claims(self) -> Optional[List[str]]:
         return self._claims.get()
     @property
-    def verdicts(self) -> List[FaithfulnessVerdict]:
+    def verdicts(self) -> Optional[List[FaithfulnessVerdict]]:
         return self._verdicts.get()
     @property
-    def score(self) -> float:
+    def score(self) -> Optional[float]:
         return self._score.get()
     @property
-    def reason(self) -> str:
+    def reason(self) -> Optional[str]:
         return self._reason.get()
     @property
-    def success(self) -> str:
+    def success(self) -> Optional[str]:
         return self._success.get()
 
     def measure(

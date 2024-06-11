@@ -32,10 +32,10 @@ class HallucinationVerdict(BaseModel):
 
 class HallucinationMetric(BaseMetric):
 
-    _verdicts: ContextVar[List[HallucinationTemplate]] = ContextVar('verdicts', default=[])
-    _score: ContextVar[float] = ContextVar('score', default=0)
-    _reason: ContextVar[str] = ContextVar('reason', default="")
-    _success: ContextVar[bool] = ContextVar('success', default=False)
+    _verdicts: ContextVar[Optional[List[HallucinationTemplate]]] = ContextVar('verdicts', default=None)
+    _score: ContextVar[Optional[float]] = ContextVar('score', default=None)
+    _reason: ContextVar[Optional[str]] = ContextVar('reason', default=None)
+    _success: ContextVar[Optional[bool]] = ContextVar('success', default=None)
 
     def __init__(
         self,
@@ -53,16 +53,16 @@ class HallucinationMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     @property
-    def verdicts(self) -> List[HallucinationVerdict]:
+    def verdicts(self) -> Optional[List[HallucinationVerdict]]:
         return self._verdicts.get()
     @property
-    def score(self) -> float:
+    def score(self) -> Optional[float]:
         return self._score.get()
     @property
-    def reason(self) -> str:
+    def reason(self) -> Optional[str]:
         return self._reason.get()
     @property
-    def success(self) -> str:
+    def success(self) -> Optional[str]:
         return self._success.get()
 
     def measure(

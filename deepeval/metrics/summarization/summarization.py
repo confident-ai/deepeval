@@ -47,16 +47,16 @@ class ScoreType(Enum):
 
 class SummarizationMetric(BaseMetric):
 
-    _truths: ContextVar[List[str]] = ContextVar('truths', default=[])
-    _claims: ContextVar[List[str]] = ContextVar('claims', default=[])
-    _coverage_verdicts: ContextVar[List[SummarizationCoverageVerdict]] = ContextVar('coverage_verdicts', default=[])
-    _alignment_verdicts: ContextVar[List[SummarizationAlignmentVerdict]] = ContextVar('alignment_verdicts', default=[])
-    _coverage_score: ContextVar[float] = ContextVar('coverage_score', default=[])
-    _alignment_score: ContextVar[float] = ContextVar('alignment_score', default=[])
-    _score_breakdown: ContextVar[Dict] = ContextVar('score_breakdown', default=[])
-    _score: ContextVar[float] = ContextVar('score', default=0)
-    _reason: ContextVar[str] = ContextVar('reason', default="")
-    _success: ContextVar[bool] = ContextVar('success', default=False)
+    _truths: ContextVar[Optional[List[str]]] = ContextVar('truths', default=None)
+    _claims: ContextVar[Optional[List[str]]] = ContextVar('claims', default=None)
+    _coverage_verdicts: ContextVar[Optional[List[SummarizationCoverageVerdict]]] = ContextVar('coverage_verdicts', default=None)
+    _alignment_verdicts: ContextVar[Optional[List[SummarizationAlignmentVerdict]]] = ContextVar('alignment_verdicts', default=None)
+    _coverage_score: ContextVar[Optional[float]] = ContextVar('coverage_score', default=None)
+    _alignment_score: ContextVar[Optional[float]] = ContextVar('alignment_score', default=None)
+    _score_breakdown: ContextVar[Optional[Dict]] = ContextVar('score_breakdown', default=None)
+    _score: ContextVar[Optional[float]] = ContextVar('score', default=None)
+    _reason: ContextVar[Optional[str]] = ContextVar('reason', default=None)
+    _success: ContextVar[Optional[bool]] = ContextVar('success', default=None)
 
     def __init__(
         self,
@@ -83,31 +83,31 @@ class SummarizationMetric(BaseMetric):
         self.strict_mode = strict_mode
 
     @property
-    def truths(self) -> List[str]:
+    def truths(self) -> Optional[List[str]]:
         return self._truths.get()
     @property
-    def claims(self) -> List[str]:
+    def claims(self) -> Optional[List[str]]:
         return self._claims.get()
     @property
-    def coverage_verdicts(self) -> List[SummarizationCoverageVerdict]:
+    def coverage_verdicts(self) -> Optional[List[SummarizationCoverageVerdict]]:
         return self._coverage_verdicts.get()
     @property
-    def alignment_verdicts(self) -> List[SummarizationAlignmentVerdict]:
+    def alignment_verdicts(self) -> Optional[List[SummarizationAlignmentVerdict]]:
         return self._alignment_verdicts.get()
     @property
-    def coverage_score(self) -> float:
+    def coverage_score(self) -> Optional[float]:
         return self._coverage_score.get()
     @property
-    def alignment_score(self) -> float:
+    def alignment_score(self) -> Optional[float]:
         return self._alignment_score.get()
     @property
-    def score_breakdown(self) -> Dict:
+    def score_breakdown(self) -> Optional[Dict]:
         return self._score_breakdown.get()
     @property
-    def score(self) -> float:
+    def score(self) -> Optional[float]:
         return self._score.get()
     @property
-    def reason(self) -> str:
+    def reason(self) -> Optional[str]:
         return self._reason.get()
     @property
     def success(self) -> str:
