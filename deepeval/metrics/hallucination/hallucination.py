@@ -249,7 +249,7 @@ class HallucinationMetric(BaseMetric):
             self.success = False
         else:
             try:
-                self._success.set(self.score >= self.threshold)
+                self._success.set(self.score <= self.threshold)
             except:
                 self._success.set(False)
         return self.success
