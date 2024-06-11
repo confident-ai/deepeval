@@ -208,7 +208,7 @@ def test_sync():
         else:  # Odd index
             tasks.append(single_sync_call(metric1, test_case))
 
-test_sync()
+#test_sync()
 
 # ##########################################################
 # # measure in async mode
@@ -228,24 +228,24 @@ def test_sync_in_async():
     strict_mode = False
     metrics = [
         AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode, async_mode=async_mode),
-        # FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        # ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        # ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        # ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        # BiasMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        # ToxicityMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        # HallucinationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        # SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        # GEval(
-        #     name="Coherence",
-        #     criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
-        #     evaluation_params=[
-        #         LLMTestCaseParams.INPUT,
-        #         LLMTestCaseParams.ACTUAL_OUTPUT,
-        #         LLMTestCaseParams.RETRIEVAL_CONTEXT,
-        #     ],
-        #     async_mode=True  # Assuming it allows synchronous operations
-        # )
+        FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+        ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+        ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+        ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+        BiasMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+        ToxicityMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+        HallucinationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+        SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+        GEval(
+            name="Coherence",
+            criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+            evaluation_params=[
+                LLMTestCaseParams.INPUT,
+                LLMTestCaseParams.ACTUAL_OUTPUT,
+                LLMTestCaseParams.RETRIEVAL_CONTEXT,
+            ],
+            async_mode=True  # Assuming it allows synchronous operations
+        )
     ]
 
     tasks = []
@@ -259,7 +259,7 @@ test_sync_in_async()
 # # evaluate
 # ##########################################################
 
-async_mode = False
+async_mode = True
 strict_mode = False
 metric1 = AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode, async_mode=async_mode)
 metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)

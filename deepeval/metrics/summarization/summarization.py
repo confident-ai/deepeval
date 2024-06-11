@@ -168,8 +168,7 @@ class SummarizationMetric(BaseMetric):
                 self.reason = self._generate_reason()
                 self.success = self.score >= self.threshold   
                 if verbose:
-                    print(f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: 
-                          {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}")          
+                    print(f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}")          
                 return self.score
             
     async def _measure_async(
@@ -228,8 +227,7 @@ class SummarizationMetric(BaseMetric):
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
             if verbose:
-                print(f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: 
-                      {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}")         
+                print(f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}")         
             return self.score
 
     async def _a_generate_reason(self) -> str:

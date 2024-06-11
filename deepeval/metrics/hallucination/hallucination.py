@@ -59,7 +59,7 @@ class HallucinationMetric(BaseMetric):
     def measure(
         self, 
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool
+        verbose: bool = True
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
