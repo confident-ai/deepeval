@@ -13,11 +13,11 @@ class BaseMetric:
     evaluation_cost: Optional[float] = None
 
     def __init__(self):
-        self._score = ContextVar(f'{self.__class__.__name__}_score', default=None)
-        self._score_breakdown = ContextVar(f'{self.__class__.__name__}_score_breakdown', default=None)
-        self._reason = ContextVar(f'{self.__class__.__name__}_reason', default=None)
-        self._success = ContextVar(f'{self.__class__.__name__}_success', default=None)
-        self._error = ContextVar(f'{self.__class__.__name__}_error', default=None)
+        self._score: ContextVar[Optional[float]] = ContextVar(f'{self.__class__.__name__}_score', default=None)
+        self._score_breakdown: ContextVar[Optional[Dict]] = ContextVar(f'{self.__class__.__name__}_score_breakdown', default=None)
+        self._reason: ContextVar[Optional[str]] = ContextVar(f'{self.__class__.__name__}_reason', default=None)
+        self._success: ContextVar[Optional[bool]] = ContextVar(f'{self.__class__.__name__}_success', default=None)
+        self._error: ContextVar[Optional[str]] = ContextVar(f'{self.__class__.__name__}_error', default=None)
 
     @property
     def score(self) -> Optional[float]:

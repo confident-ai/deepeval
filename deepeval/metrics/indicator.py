@@ -6,13 +6,13 @@ from typing import List, Optional, Union
 import time
 import asyncio
 import threading
+import contextvars
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
-from deepeval.utils import show_indicator
+from deepeval.utils import show_indicator, capture_contextvars, update_contextvars
 from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
-
 
 def format_metric_description(
     metric: BaseMetric, async_mode: Optional[bool] = None
@@ -96,8 +96,6 @@ def metric_progress_indicator(metric, async_mode=False, _show_indicator=True, to
         else:
             yield None
 
-
-
 async def measure_metric_task(
     task_id,
     progress,
@@ -105,6 +103,7 @@ async def measure_metric_task(
     test_case: Union[LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
+    metric_states: dict
 ):
     while not progress.finished:
         start_time = time.perf_counter()
@@ -148,6 +147,10 @@ async def measure_metric_task(
             task_id,
             description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]{finish_text}! ({time_taken}s)",
         )
+
+        context_vars = capture_contextvars(metric)
+        metric_states[metric] = context_vars
+        
         break
 
 
@@ -157,6 +160,8 @@ async def measure_metrics_with_indicator(
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
 ):
+    metric_states = {}
+
     if show_indicator():
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
@@ -179,9 +184,11 @@ async def measure_metrics_with_indicator(
                         test_case,
                         cached_test_case,
                         ignore_errors,
+                        metric_states
                     )
                 )
             await asyncio.gather(*tasks)
+            
     else:
         tasks = []
         for metric in metrics:
@@ -222,3 +229,9 @@ async def measure_metrics_with_indicator(
                         raise
 
         await asyncio.gather(*tasks)
+
+    # Update the metrics with the states captured from the tasks
+    for metric in metrics:
+        context_vars = metric_states[metric]
+        update_contextvars(metric, context_vars)
+

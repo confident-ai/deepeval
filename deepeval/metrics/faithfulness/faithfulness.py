@@ -73,7 +73,9 @@ class FaithfulnessMetric(BaseMetric):
         self._verdicts.set(value)
 
     def measure(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+        self, 
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool = True
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -91,7 +93,7 @@ class FaithfulnessMetric(BaseMetric):
                     self.reason,
                     self.success
                 ) = loop.run_until_complete(
-                    self._measure_async(test_case)
+                    self._measure_async(test_case, verbose)
                 )
             else:
                 self.truths = self._generate_truths(test_case.retrieval_context)
@@ -99,13 +101,16 @@ class FaithfulnessMetric(BaseMetric):
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold                
+                self.success = self.score >= self.threshold
+                if verbose:
+                    print(f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}")                        
                 return self.score
             
     async def _measure_async(
             self,
-            test_case: Union[LLMTestCase, ConversationalTestCase]):
-        await self.a_measure(test_case, _show_indicator=False)
+            test_case: Union[LLMTestCase, ConversationalTestCase],
+            verbose: bool):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
         return (
             self.truths,
             self.claims, 
@@ -119,6 +124,7 @@ class FaithfulnessMetric(BaseMetric):
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -136,6 +142,8 @@ class FaithfulnessMetric(BaseMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
+            if verbose:
+                    print(f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}")          
             return self.score
 
     async def _a_generate_reason(self) -> str:
@@ -282,7 +290,7 @@ class FaithfulnessMetric(BaseMetric):
             try:
                 self.success = self.score >= self.threshold
             except:
-                self._success = False
+                self.success = False
         return self.success
 
     @property

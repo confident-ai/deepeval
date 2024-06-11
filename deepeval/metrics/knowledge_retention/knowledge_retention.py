@@ -57,7 +57,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     def verdicts(self, value: Optional[List[KnowledgeRetentionVerdict]]):
         self._verdicts.set(value)
 
-    def measure(self, test_case: ConversationalTestCase):
+    def measure(self, test_case: ConversationalTestCase, verbose: bool = True):
         validate_conversational_test_case(test_case, self)
         with metric_progress_indicator(self):
             self.knowledges = self._generate_knowledges(
@@ -70,6 +70,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             self.reason = self._generate_reason(knowledge_retention_score)
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
+            if verbose:
+                print(f"knowledges: {self.knowledges}\nverdicts: {self.verdicts}")                        
             return self.score
 
     def _generate_reason(self, score: float) -> str:

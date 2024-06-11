@@ -23,7 +23,7 @@ from deepeval.test_run import (
     ConversationalApiTestCase,
     MetricMetadata,
 )
-from deepeval.utils import get_is_running_deepeval, set_indicator
+from deepeval.utils import get_is_running_deepeval, set_indicator, capture_contextvars, update_contextvars
 from deepeval.test_run.cache import (
     test_run_cache_manager,
     Cache,
@@ -277,6 +277,7 @@ async def a_execute_test_cases(
     metrics: List[BaseMetric],
     ignore_errors: bool,
     use_cache: bool,
+    metric_states: List[dict],
     save_to_disk: bool = False,
 ) -> List[TestResult]:
     test_results: List[TestResult] = []
@@ -303,7 +304,12 @@ async def a_execute_test_cases(
             await measure_metrics_with_indicator(
                 metrics, test_case, cached_test_case, ignore_errors
             )
+            
+            metric_states.append({})
             for metric in metrics:
+                context_vars = capture_contextvars(metric)
+                metric_states[index][metric.__name__] = context_vars
+
                 metric_metadata = create_metric_metadata(metric)
 
                 if isinstance(test_case, ConversationalTestCase):
@@ -450,6 +456,7 @@ def evaluate(
     if print_results:
         print("Evaluating test cases...")
 
+    metric_states = []
     with capture_evaluation_run("evaluate()"):
         if run_async:
             loop = get_or_create_event_loop()
@@ -460,8 +467,14 @@ def evaluate(
                     ignore_errors=ignore_errors,
                     use_cache=use_cache,
                     save_to_disk=write_cache,
+                    metric_states=metric_states
                 )
             )
+            for idx, test_result in enumerate(test_results):
+                for metric in test_result.metrics:
+                    context_vars = metric_states[idx][metric.__name__]
+                    update_contextvars(metric, context_vars)
+
         else:
             test_results = execute_test_cases(
                 test_cases,

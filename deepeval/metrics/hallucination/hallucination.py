@@ -41,7 +41,7 @@ class HallucinationMetric(BaseMetric):
         strict_mode: bool = False,
     ):
         super().__init__()
-        self._verdicts: ContextVar[Optional[List[HallucinationTemplate]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
+        self._verdicts: ContextVar[Optional[List[HallucinationVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -54,10 +54,12 @@ class HallucinationMetric(BaseMetric):
         return self._verdicts.get()
     @verdicts.setter
     def verdicts(self, value: Optional[List[HallucinationVerdict]]):
-        self._score.set(value)
+        self._verdicts.set(value)
 
     def measure(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+        self, 
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -73,23 +75,24 @@ class HallucinationMetric(BaseMetric):
                     self.reason,
                     self.success
                 ) = loop.run_until_complete(
-                    self._measure_async(test_case)
+                    self._measure_async(test_case, verbose)
                 )
             else:
-                self.verdicts = (
-                    self._generate_verdicts(
+                self.verdicts = self._generate_verdicts(
                         test_case.actual_output, test_case.context
-                    )
-                )
+                        )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
+                if verbose:
+                    print(f"verdicts: {self.verdicts}")  
                 return self.score
     
     async def _measure_async(
             self,
-            test_case: Union[LLMTestCase, ConversationalTestCase]):
-        await self.a_measure(test_case, _show_indicator=False)
+            test_case: Union[LLMTestCase, ConversationalTestCase],
+            verbose: bool):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
         return (
             self.verdicts,
             self.score,
@@ -101,6 +104,7 @@ class HallucinationMetric(BaseMetric):
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
+        verbose: bool = True
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -110,14 +114,14 @@ class HallucinationMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.verdicts = (
-                await self._a_generate_verdicts(
+            self.verdicts = await self._a_generate_verdicts(
                     test_case.actual_output, test_case.context
                 )
-            )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
+            if verbose:
+                print(f"verdicts: {self.verdicts}") 
             return self.score
 
     async def _a_generate_reason(self):
