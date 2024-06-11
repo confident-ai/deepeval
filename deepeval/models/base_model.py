@@ -98,7 +98,7 @@ class DeepEvalBaseEmbeddingModel(ABC):
         pass
 
     @abstractmethod
-    async def aembed_text(self, *args, **kwargs) -> List[float]:
+    async def a_embed_text(self, *args, **kwargs) -> List[float]:
         """Runs the model to generate text embeddings.
 
         Returns:
@@ -116,7 +116,7 @@ class DeepEvalBaseEmbeddingModel(ABC):
         pass
 
     @abstractmethod
-    async def aembed_texts(self, *args, **kwargs) -> List[List[float]]:
+    async def a_embed_texts(self, *args, **kwargs) -> List[List[float]]:
         """Runs the model to generate list of text embeddings.
 
         Returns:

@@ -5,10 +5,11 @@ from deepeval.models import DeepEvalBaseEmbeddingModel, OpenAIEmbeddingModel
 
 def initialize_embedding_model(
     model: Union[str, DeepEvalBaseEmbeddingModel] = None,
-) -> DeepEvalBaseEmbeddingModel:
-    if isinstance(model, DeepEvalBaseEmbeddingModel):
-        return model
-    elif isinstance(model, str):
+) -> Union[DeepEvalBaseEmbeddingModel, None]:
+    if isinstance(model, str):
         return OpenAIEmbeddingModel(model=model)
+    elif isinstance(model, DeepEvalBaseEmbeddingModel):
+        return model
     else:
-        return OpenAIEmbeddingModel()
+        # None
+        return None

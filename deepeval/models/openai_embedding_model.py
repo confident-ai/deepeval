@@ -64,11 +64,11 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         embedding_model = self.load_model()
         return embedding_model.embed_documents(texts)
 
-    async def aembed_text(self, text: str) -> List[float]:
+    async def a_embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
         return await embedding_model.aembed_query(text)
 
-    async def aembed_texts(self, texts: List[str]) -> List[List[float]]:
+    async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
         return await embedding_model.aembed_documents(texts)
 

@@ -15,12 +15,12 @@ class ContextGenerator:
     def __init__(
         self,
         document_paths: List[str],
+        embedder: DeepEvalBaseEmbeddingModel,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         multithreading: bool = False,
-        embedder: Union[str, DeepEvalBaseEmbeddingModel] = None,
     ):
-        self.embedder = initialize_embedding_model(embedder)
+        self.embedder = embedder
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
