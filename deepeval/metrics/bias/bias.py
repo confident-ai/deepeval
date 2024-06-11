@@ -34,12 +34,6 @@ class BiasVerdict(BaseModel):
 
 class BiasMetric(BaseMetric):
 
-    _opinions: ContextVar[Optional[List[str]]] = ContextVar('opinions', default=None)
-    _verdicts: ContextVar[Optional[List[BiasVerdict]]] = ContextVar('verdicts', default=None)
-    _score: ContextVar[Optional[float]] = ContextVar('score', default=None)
-    _reason: ContextVar[Optional[str]] = ContextVar('reason', default=None)
-    _success: ContextVar[Optional[bool]] = ContextVar('success', default=None)
-
     def __init__(
         self,
         threshold: float = 0.5,
@@ -48,6 +42,9 @@ class BiasMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
     ):
+        super().__init__()
+        self._opinions: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_opinions', default=None)
+        self._verdicts: ContextVar[Optional[List[BiasVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -68,27 +65,6 @@ class BiasMetric(BaseMetric):
     @verdicts.setter
     def verdicts(self, value: Optional[List[BiasVerdict]]):
         self._verdicts.set(value)
-
-    @property
-    def score(self) -> Optional[float]:
-        return self._score.get()
-    @score.setter
-    def score(self, value: Optional[float]):
-        self._score.set(value)
-
-    @property
-    def reason(self) -> Optional[str]:
-        return self._reason.get()
-    @reason.setter
-    def reason(self, value: Optional[str]):
-        self._reason.set(value)
-
-    @property
-    def success(self) -> Optional[bool]:
-        return self._success.get()
-    @success.setter
-    def success(self, value: Optional[bool]):
-        self._success.set(value)
     
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]

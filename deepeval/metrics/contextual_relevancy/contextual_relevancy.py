@@ -36,11 +36,6 @@ class ContextualRelevancyVerdict(BaseModel):
 
 class ContextualRelevancyMetric(BaseMetric):
 
-    _verdicts: ContextVar[Optional[List[ContextualRelevancyVerdict]]] = ContextVar('verdicts', default=None)
-    _score: ContextVar[Optional[float]] = ContextVar('score', default=None)
-    _reason: ContextVar[Optional[str]] = ContextVar('reason', default=None)
-    _success: ContextVar[Optional[bool]] = ContextVar('success', default=None)
-
     def __init__(
         self,
         threshold: float = 0.5,
@@ -49,6 +44,8 @@ class ContextualRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
     ):
+        super().__init__()
+        self._verdicts: ContextVar[Optional[List[ContextualRelevancyVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)        
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -62,28 +59,7 @@ class ContextualRelevancyMetric(BaseMetric):
     @verdicts.setter
     def verdicts(self, value: Optional[List[ContextualRelevancyVerdict]]):
         self._verdicts.set(value)
-
-    @property
-    def score(self) -> Optional[float]:
-        return self._score.get()
-    @score.setter
-    def score(self, value: Optional[float]):
-        self._score.set(value)
-
-    @property
-    def reason(self) -> Optional[str]:
-        return self._reason.get()
-    @reason.setter
-    def reason(self, value: Optional[str]):
-        self._reason.set(value)
-
-    @property
-    def success(self) -> Optional[bool]:
-        return self._success.get()
-    @success.setter
-    def success(self, value: Optional[bool]):
-        self._success.set(value)
-    
+        
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:

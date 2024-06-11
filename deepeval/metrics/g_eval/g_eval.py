@@ -53,12 +53,7 @@ class GEvalResponse(BaseModel):
 
 
 class GEval(BaseMetric):
-
-    _evaluation_steps: ContextVar[Optional[List[str]]] = ContextVar('evaluation_steps', default=None)
-    _score: ContextVar[Optional[float]] = ContextVar('score', default=None)
-    _reason: ContextVar[Optional[str]] = ContextVar('reason', default=None)
-    _success: ContextVar[Optional[bool]] = ContextVar('success', default=None)
-    
+   
     def __init__(
         self,
         name: str,
@@ -70,6 +65,8 @@ class GEval(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
     ):
+        super().__init__()
+        self._evaluation_steps: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_evaluation_steps', default=None)
         self.name = name
         self.evaluation_params = evaluation_params
 
@@ -103,27 +100,6 @@ class GEval(BaseMetric):
     @evaluation_steps.setter
     def evaluation_steps(self, value: Optional[List[str]]):
         self._evaluation_steps.set(value)
-
-    @property
-    def score(self) -> Optional[float]:
-        return self._score.get()
-    @score.setter
-    def score(self, value: Optional[float]):
-        self._score.set(value)
-    
-    @property
-    def reason(self) -> Optional[str]:
-        return self._reason.get()
-    @reason.setter
-    def reason(self, value: Optional[str]):
-        self._reason.set(value)
-
-    @property
-    def success(self) -> Optional[bool]:
-        return self._success.get()
-    @success.setter
-    def success(self, value: Optional[bool]):
-        self._success.set(value)
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
