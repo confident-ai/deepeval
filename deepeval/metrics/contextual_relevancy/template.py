@@ -4,6 +4,17 @@ class ContextualRelevancyTemplate:
         return f"""Based on the given input, reasons for why the retrieval context is irrelevant to the input, and the contextual relevancy score (the closer to 1 the better), please generate a CONCISE reason for the score.
 In your reason, you should quote data provided in the reasons for irrelevancy to support your point.
 
+** 
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{{
+    "reason": "The score is <contextual_relevancy_score> because <your_reason>."
+}}
+
+If the score is 1, keep it short and say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
+**
+
+
 Contextual Relevancy Score:
 {score}
 
@@ -13,15 +24,7 @@ Input:
 Reasons for why the retrieval context is irrelevant to the input:
 {irrelevancies}
 
-Example:
-The score is <contextual_relevancy_score> because <your_reason>.
-
-** 
-IMPORTANT:
-If the score is 1, keep it short and say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
-**
-
-Reason:
+JSON:
 """
 
     @staticmethod

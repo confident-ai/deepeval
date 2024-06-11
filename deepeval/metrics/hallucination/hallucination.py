@@ -113,11 +113,13 @@ class HallucinationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
         else:
-            res = await self.model.a_generate(prompt)
-        return res
+            res = self.model.generate(prompt)
+
+        data = trimAndLoadJson(res, self)
+        return data["reason"]
 
     def _generate_reason(self):
         if self.include_reason is False:
@@ -142,7 +144,9 @@ class HallucinationMetric(BaseMetric):
             self.evaluation_cost += cost
         else:
             res = self.model.generate(prompt)
-        return res
+
+        data = trimAndLoadJson(res, self)
+        return data["reason"]
 
     async def _a_generate_verdicts(
         self, actual_output: str, contexts: List[str]
