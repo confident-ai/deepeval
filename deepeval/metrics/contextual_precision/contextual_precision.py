@@ -60,15 +60,30 @@ class ContextualPrecisionMetric(BaseMetric):
     @property
     def verdicts(self) -> Optional[List[ContextualPrecisionVerdict]]:
         return self._verdicts.get()
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[ContextualPrecisionVerdict]]):
+        self._verdicts.set(value)
+
     @property
     def score(self) -> Optional[float]:
         return self._score.get()
+    @score.setter
+    def score(self, value: Optional[float]):
+        self._score.set(value)
+
     @property
     def reason(self) -> Optional[str]:
         return self._reason.get()
+    @reason.setter
+    def reason(self, value: Optional[str]):
+        self._reason.set(value)
+
     @property
-    def success(self) -> Optional[str]:
+    def success(self) -> Optional[bool]:
         return self._success.get()
+    @success.setter
+    def success(self, value: Optional[bool]):
+        self._success.set(value)
     
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -89,10 +104,10 @@ class ContextualPrecisionMetric(BaseMetric):
                 ) = loop.run_until_complete(
                     self._measure_async(test_case)
                 )
-                self._verdicts.set(verdicts)
-                self._score.set(score)
-                self._reason.set(reason)
-                self._success.set(success)
+                self.verdicts = verdicts
+                self.score = score
+                self.reason = reason
+                self.success = success
             else:
                 verdicts: List[ContextualPrecisionVerdict] = (
                     self._generate_verdicts(
@@ -101,16 +116,16 @@ class ContextualPrecisionMetric(BaseMetric):
                         test_case.retrieval_context,
                     )
                 )
-                self._verdicts.set(verdicts)
+                self.verdicts = verdicts
 
                 score = self._calculate_score()
-                self._score.set(score)
+                self.score = score
 
                 reason = self._generate_reason(test_case.input)
-                self._reason.set(reason)
-                
+                self.reason = reason
+
                 success = self.score >= self.threshold
-                self._success.set(success)
+                self.success = success
 
                 return self.score
             
@@ -147,16 +162,16 @@ class ContextualPrecisionMetric(BaseMetric):
                     test_case.retrieval_context,
                 )
             )
-            self._verdicts.set(verdicts)
+            self.verdicts = verdicts
 
             score = self._calculate_score()
-            self._score.set(score)
+            self.score = score
 
             reason = await self._a_generate_reason(test_case.input)
-            self._reason.set(reason)
+            self.reason = reason
 
             success = self.score >= self.threshold
-            self._success.set(success)
+            self.success = success
             
             return self.score
 
@@ -269,9 +284,9 @@ class ContextualPrecisionMetric(BaseMetric):
             self.success = False
         else:
             try:
-                self._success.set(self.score >= self.threshold)
+                self.success = self.score >= self.threshold
             except:
-                self._success.set(False)
+                self.success = False
         return self.success
     
     @property

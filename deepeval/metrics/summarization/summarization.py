@@ -85,33 +85,72 @@ class SummarizationMetric(BaseMetric):
     @property
     def truths(self) -> Optional[List[str]]:
         return self._truths.get()
+    @truths.setter
+    def truths(self, value: Optional[List[str]]):
+        self._truths.set(value)
+
     @property
     def claims(self) -> Optional[List[str]]:
         return self._claims.get()
+    @claims.setter
+    def claims(self, value: Optional[List[str]]):
+        self._claims.set(value)
+
     @property
     def coverage_verdicts(self) -> Optional[List[SummarizationCoverageVerdict]]:
         return self._coverage_verdicts.get()
+    @coverage_verdicts.setter
+    def coverage_verdicts(self, value: Optional[List[SummarizationCoverageVerdict]]):
+        self._coverage_verdicts.set(value)
+
     @property
     def alignment_verdicts(self) -> Optional[List[SummarizationAlignmentVerdict]]:
         return self._alignment_verdicts.get()
+    @alignment_verdicts.setter
+    def alignment_verdicts(self, value: Optional[List[SummarizationAlignmentVerdict]]):
+        self._alignment_verdicts.set(value)
+
     @property
     def coverage_score(self) -> Optional[float]:
         return self._coverage_score.get()
+    @coverage_score.setter
+    def coverage_score(self, value: Optional[float]):
+        self._coverage_score.set(value)
+
     @property
     def alignment_score(self) -> Optional[float]:
         return self._alignment_score.get()
+    @alignment_score.setter
+    def alignment_score(self, value: Optional[float]):
+        self._alignment_score.set(value)
+
     @property
     def score_breakdown(self) -> Optional[Dict]:
         return self._score_breakdown.get()
+    @score_breakdown.setter
+    def score_breakdown(self, value: Optional[Dict]):
+        self._score_breakdown.set(value)
+
     @property
     def score(self) -> Optional[float]:
         return self._score.get()
+    @score.setter
+    def score(self, value: Optional[float]):
+        self._score.set(value)
+
     @property
     def reason(self) -> Optional[str]:
         return self._reason.get()
+    @reason.setter
+    def reason(self, value: Optional[str]):
+        self._reason.set(value)
+
     @property
-    def success(self) -> str:
+    def success(self) -> bool:
         return self._success.get()
+    @success.setter
+    def success(self, value: Optional[bool]):
+        self._success.set(value)
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -138,56 +177,56 @@ class SummarizationMetric(BaseMetric):
                     ) = loop.run_until_complete(
                     self._measure_async(test_case)
                 )
-                self._truths.set(truths)
-                self._claims.set(claims)
-                self._coverage_verdicts.set(coverage_verdicts)
-                self._alignment_verdicts.set(alignment_verdicts)
-                self._coverage_score.set(coverage_score)
-                self._alignment_score.set(alignment_score)
-                self._score_breakdown.set(score_breakdown)
-                self._score.set(score)
-                self._reason.set(reason)
-                self._success.set(success)
+                self.truths = truths
+                self.claims = claims
+                self.coverage_verdicts = coverage_verdicts
+                self.alignment_verdicts = alignment_verdicts
+                self.coverage_score = coverage_score
+                self.alignment_score = alignment_score
+                self.score_breakdown = score_breakdown
+                self.score = score
+                self.reason = reason
+                self.success = success
 
             else:
                 truths: List[str] = self._generate_claims(test_case.input)
-                self._truths.set(truths)
+                self.truths = truths
                 
                 claims: List[str] = self._generate_claims(
                     test_case.actual_output
                 )
-                self._claims.set(claims)
+                self.claims = claims
 
                 coverage_verdicts: List[SummarizationCoverageVerdict] = (
                     self._generate_coverage_verdicts(test_case)
                 )
-                self._coverage_verdicts.set(coverage_verdicts)
+                self.coverage_verdicts = coverage_verdicts
 
                 alignment_verdicts: List[SummarizationAlignmentVerdict] = (
                     self._generate_alignment_verdicts()
                 )
-                self._alignment_verdicts.set(alignment_verdicts)
+                self.alignment_verdicts = alignment_verdicts
 
                 alignment_score = self._calculate_score(ScoreType.ALIGNMENT)
-                self._alignment_score.set(alignment_score)
+                self.alignment_score = alignment_score
 
                 coverage_score = self._calculate_score(ScoreType.COVERAGE)
-                self._coverage_score.set(coverage_score)
+                self.coverage_score = coverage_score
 
                 score_breakdown = {
                     ScoreType.ALIGNMENT.value: alignment_score,
                     ScoreType.COVERAGE.value: coverage_score,
                 }
-                self._score_breakdown.set(score_breakdown)
+                self.score_breakdown = score_breakdown
 
                 score = min(alignment_score, coverage_score)
-                self._score.set(score)
+                self.score = score
 
                 reason = self._generate_reason()
-                self._reason.set(reason)
+                self.reason = reason
 
                 success = self.score >= self.threshold
-                self._success.set(success)
+                self.success = success
             
                 return self.score
             
@@ -547,9 +586,9 @@ class SummarizationMetric(BaseMetric):
             self.success = False
         else:
             try:
-                self._success.set(self.score >= self.threshold)
+                self.success = self.score >= self.threshold
             except:
-                self._success.set(False)
+                self.success = False
         return self.success
 
     @property

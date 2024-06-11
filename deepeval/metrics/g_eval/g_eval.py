@@ -100,16 +100,31 @@ class GEval(BaseMetric):
     @property
     def evaluation_steps(self) -> Optional[List[str]]:
         return self._evaluation_steps.get()
+    @evaluation_steps.setter
+    def evaluation_steps(self, value: Optional[List[str]]):
+        self._evaluation_steps.set(value)
+
     @property
     def score(self) -> Optional[float]:
         return self._score.get()
+    @score.setter
+    def score(self, value: Optional[float]):
+        self._score.set(value)
+    
     @property
     def reason(self) -> Optional[str]:
         return self._reason.get()
+    @reason.setter
+    def reason(self, value: Optional[str]):
+        self._reason.set(value)
+
     @property
-    def success(self) -> Optional[str]:
+    def success(self) -> Optional[bool]:
         return self._success.get()
-    
+    @success.setter
+    def success(self, value: Optional[bool]):
+        self._success.set(value)
+
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
@@ -129,27 +144,27 @@ class GEval(BaseMetric):
                 ) = loop.run_until_complete(
                     self._measure_async(test_case)
                 )
-                self._evaluation_steps.set(evaluation_steps)
-                self._score.set(score)
-                self._reason.set(reason)
-                self._success.set(success)
+                self.evaluation_steps = evaluation_steps
+                self.score = score
+                self.reason = reason
+                self.success = success
             else:
                 evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
-                self._evaluation_steps.set(evaluation_steps)
+                self.evaluation_steps = evaluation_steps
 
                 g_score, reason = self.evaluate(test_case)
-                self._reason.set(reason)
-                self._score.set(float(g_score) / 10)
-                self._score.set(
+                self.reason = reason
+                self.score = float(g_score) / 10
+                self.score = (
                     0
                     if self.strict_mode and self.score < self.threshold
                     else self.score
                 )
 
                 success = self.score >= self.threshold
-                self._success.set(success)
+                self.success = success
 
                 return self.score
             
@@ -182,19 +197,19 @@ class GEval(BaseMetric):
             evaluation_steps: List[str] = (
                 await self._a_generate_evaluation_steps()
             )
-            self._evaluation_steps.set(evaluation_steps)
+            self.evaluation_steps = evaluation_steps
 
             g_score, reason = await self._a_evaluate(test_case)
-            self._reason.set(reason)
-            self._score.set(float(g_score) / 10)
-            self._score.set(
+            self.reason = reason
+            self.score = float(g_score) / 10
+            self.score = (
                 0
                 if self.strict_mode and self.score < self.threshold
                 else self.score
             )
             
             success = self.score >= self.threshold
-            self._success.set(success)
+            self.success = success
 
             return self.score
 
@@ -422,9 +437,9 @@ class GEval(BaseMetric):
             self.success = False
         else:
             try:
-                self._success.set(self.score >= self.threshold)
+                self.success = self.score >= self.threshold
             except:
-                self._success.set(False)
+                self.success = False
         return self.success
 
     @property
