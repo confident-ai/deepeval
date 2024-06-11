@@ -60,10 +60,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     def measure(self, test_case: ConversationalTestCase):
         validate_conversational_test_case(test_case, self)
         with metric_progress_indicator(self):
-            self.knowledges: List[Knowledge] = self._generate_knowledges(
+            self.knowledges = self._generate_knowledges(
                 test_case
             )
-            self.verdicts: List[KnowledgeRetentionVerdict] = (
+            self.verdicts = (
                 self._generate_verdicts(test_case)
             )
             knowledge_retention_score = self._calculate_score()
