@@ -18,7 +18,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         self,
         tasks: List[TruthfulQATask] = None,
         mode: TruthfulQAMode = TruthfulQAMode.MC1,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.tasks: List[TruthfulQATask] = (

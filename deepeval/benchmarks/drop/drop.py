@@ -15,7 +15,9 @@ DELIMITER = ","
 
 
 class DROP(DeepEvalBaseBenchmark):
-    def __init__(self, tasks: List[DROPTask] = None, n_shots: int = 5, **kwargs):
+    def __init__(
+        self, tasks: List[DROPTask] = None, n_shots: int = 5, **kwargs
+    ):
         assert n_shots <= 5, "DROP only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[DROPTask] = list(DROPTask) if tasks is None else tasks

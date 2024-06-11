@@ -4,6 +4,7 @@ from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
 )
 from deepeval.models.gpt_model import GPTModel
+from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
 
 # TODO: uncomment out once fixed
 # from deepeval.models.summac_model import SummaCModels

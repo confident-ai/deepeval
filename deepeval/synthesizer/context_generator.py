@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union, Optional
 import random
 
 from deepeval.synthesizer.doc_chunker import (
@@ -7,24 +7,20 @@ from deepeval.synthesizer.doc_chunker import (
     Chunk,
     get_embedding_similarity,
 )
-from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.synthesizer.utils import initialize_embedding_model
 
 
 class ContextGenerator:
     def __init__(
         self,
         document_paths: List[str],
+        embedder: DeepEvalBaseEmbeddingModel,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         multithreading: bool = False,
-        embedder: DeepEvalBaseEmbeddingModel = None,
     ):
-
-        if embedder is None:
-            self.embedder: DeepEvalBaseEmbeddingModel = OpenAIEmbeddingModel()
-        else:
-            self.embedder = embedder
+        self.embedder = embedder
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
@@ -131,7 +127,7 @@ class ContextGenerator:
 
         # Confine n random chunks in case not enough chunks
         n = min(n, len(document_chunks))
-        query_embedding = self.embedder.embed_query(query_chunk.content)
+        query_embedding = self.embedder.embed_text(query_chunk.content)
         similar_chunks = None
 
         similarities = []

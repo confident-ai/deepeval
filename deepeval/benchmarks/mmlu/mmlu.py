@@ -13,7 +13,9 @@ from deepeval.scorer import Scorer
 
 
 class MMLU(DeepEvalBaseBenchmark):
-    def __init__(self, tasks: List[MMLUTask] = None, n_shots: int = 5, **kwargs):
+    def __init__(
+        self, tasks: List[MMLUTask] = None, n_shots: int = 5, **kwargs
+    ):
         assert n_shots <= 5, "MMLU only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[MMLUTask] = list(MMLUTask) if tasks is None else tasks
