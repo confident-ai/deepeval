@@ -119,20 +119,20 @@ def test_everything():
     )
     c_test_case = ConversationalTestCase(messages=[test_case, test_case])
     assert_test(
-        c_test_case,
+        test_case,
         [
             metric1,
-            # metric2,
-            # metric3,
-            # metric4,
-            # metric5,
-            # metric6,
-            # metric7,
-            # metric8,
-            # metric9,
+            metric2,
+            metric3,
+            metric4,
+            metric5,
+            metric6,
+            metric7,
+            metric8,
+            metric9,
             metric10,
         ],
-        # run_async=False,
+        run_async=False,
     )
 
 

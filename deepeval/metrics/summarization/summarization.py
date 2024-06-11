@@ -175,14 +175,17 @@ class SummarizationMetric(BaseMetric):
 {questions}
 
 """
-        prompt += """Reason:"""
+        prompt += """JSON:
+"""
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
         else:
-            res = await self.model.a_generate(prompt)
-        return res
+            res = self.model.generate(prompt)
+
+        data = trimAndLoadJson(res, self)
+        return data["reason"]
 
     def _generate_reason(self) -> str:
         if self.include_reason is False:
@@ -217,13 +220,17 @@ class SummarizationMetric(BaseMetric):
 {questions}
 
 """
-        prompt += """Reason:"""
+        prompt += """JSON:
+"""
+
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
         else:
             res = self.model.generate(prompt)
-        return res
+
+        data = trimAndLoadJson(res, self)
+        return data["reason"]
 
     def _calculate_score(self, score_type: ScoreType) -> float:
         if score_type == ScoreType.ALIGNMENT:

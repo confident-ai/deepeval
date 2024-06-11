@@ -9,6 +9,17 @@ A supportive reason is the reason why a certain sentence in the original expecte
 An unsupportive reason is the reason why a certain sentence in the original expected output cannot be attributed to anything in the retrieval context.
 In your reason, you should related supportive/unsupportive reasons to the sentence number in expected output, and info regarding the node number in retrieval context to support your final reason. The first mention of "node(s)" should specify "node(s) in retrieval context)".
 
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{{
+    "reason": "The score is <contextual_recall_score> because <your_reason>."
+}}
+
+DO NOT mention 'supportive reasons' and 'unsupportive reasons' in your reason, these terms are just here for you to understand the broader scope of things.
+If the score is 1, keep it short and say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
+**
+
 Contextual Recall Score:
 {score}
 
@@ -21,15 +32,7 @@ Supportive Reasons:
 Unsupportive Reasons:
 {unsupportive_reasons}
 
-Example:
-The score is <contextual_recall_score> because <your_reason>.
-
-**
-IMPORTANT: DO NOT mention 'supportive reasons' and 'unsupportive reasons' in your reason, these terms are just here for you to understand the broader scope of things.
-If the score is 1, keep it short and say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
-**
-
-Reason:
+JSON:
 """
 
     @staticmethod
