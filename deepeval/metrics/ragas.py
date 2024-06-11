@@ -24,6 +24,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
         _track: bool = True,
     ):
+        super.__init__()
         self.threshold = threshold
         self.model = model
         self._track = _track

@@ -69,7 +69,7 @@ class FaithfulnessMetric(BaseMetric):
     def verdicts(self) -> Optional[List[FaithfulnessVerdict]]:
         return self._verdicts.get()
     @verdicts.setter
-    def verdicts(self, value: Optional[List['FaithfulnessVerdict']]):
+    def verdicts(self, value: Optional[List[FaithfulnessVerdict]]):
         self._verdicts.set(value)
 
     def measure(

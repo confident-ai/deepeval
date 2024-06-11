@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from typing import Optional, Union, Dict, List
 from pydantic import BaseModel, Field
 
@@ -33,11 +34,28 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         include_reason: bool = True,
         strict_mode: bool = False,
     ):
+        super().__init__()
+        self._knowledges: ContextVar[Optional[List[Knowledge]]] = ContextVar(f'{self.__class__.__name__}_truths', default=None)
+        self._verdicts: ContextVar[Optional[List[KnowledgeRetentionVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.strict_mode = strict_mode
+    
+    @property
+    def knowledges(self) -> Optional[List[Knowledge]]:
+        return self._knowledges.get()
+    @knowledges.setter
+    def claims(self, value: Optional[List[Knowledge]]):
+        self._claims.set(value)
+
+    @property
+    def verdicts(self) -> Optional[List[KnowledgeRetentionVerdict]]:
+        return self._verdicts.get()
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[KnowledgeRetentionVerdict]]):
+        self._verdicts.set(value)
 
     def measure(self, test_case: ConversationalTestCase):
         validate_conversational_test_case(test_case, self)
@@ -140,7 +158,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
+                self.success = self.score >= self.threshold
             except:
                 self.success = False
         return self.success
