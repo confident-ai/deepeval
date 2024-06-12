@@ -13,6 +13,7 @@ def convert_test_cases_to_goldens(
             "actualOutput": test_case.actual_output,
             "expectedOutput": test_case.expected_output,
             "context": test_case.context,
+            "retrievalContext": test_case.context,
         }
         goldens.append(Golden(**golden))
     return goldens
