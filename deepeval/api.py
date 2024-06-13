@@ -12,7 +12,7 @@ from enum import Enum
 from deepeval.constants import API_KEY_ENV
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 
-API_BASE_URL = "https://app.confident-ai.com/api"
+API_BASE_URL = "https://api.confident-ai.com"
 
 # Parameters for HTTP retry
 HTTP_TOTAL_RETRIES = 3  # Number of total retries
@@ -139,7 +139,7 @@ class Api:
         data=None,
     ):
         """Generic HTTP request method with error handling."""
-        url = f"{self.base_api_url}/{endpoint}"
+        url = f"{self.base_api_url}{endpoint}"
         res = self._http_request(
             method,
             url,
@@ -280,7 +280,7 @@ class Api:
         data=None,
     ):
         """Generic asynchronous HTTP request method with error handling."""
-        url = f"{self.base_api_url}/{endpoint}"
+        url = f"{self.base_api_url}{endpoint}"
         async with ClientSession() as session:
             try:
                 # Preparing the request body for file uploads if files are present

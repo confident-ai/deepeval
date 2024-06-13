@@ -13,14 +13,15 @@ from deepeval.scorer import Scorer
 
 
 class HellaSwag(DeepEvalBaseBenchmark):
-    def __init__(self, tasks: List[HellaSwagTask] = None, n_shots: int = 10):
+    def __init__(
+        self, tasks: List[HellaSwagTask] = None, n_shots: int = 10, **kwargs
+    ):
         assert n_shots <= 15, "HellaSwag only supports n_shots <= 15."
-        super().__init__()
+        super().__init__(**kwargs)
         self.tasks: List[HellaSwagTask] = (
             list(HellaSwagTask) if tasks is None else tasks
         )
         self.scorer = Scorer()
-        self.dataset: Dataset = None
         self.shots_dataset: List[Dict] = None
         self.n_shots = n_shots
         self.predictions: Optional[pd.DataFrame] = None

@@ -3,8 +3,14 @@ class KnowledgeRetentionTemplate:
     def generate_reason(attritions, score):
         return f"""Given a list of attritions, which highlights forgetfulness in the LLM response and knowledge established previously in the conversation, use it to CONCISELY provide a reason for the knowledge retention score. Note that The knowledge retention score ranges from 0 - 1, and the higher the better.
 
-**
-IMPORTANT: Please include as much factual information in attritions as possible when generating a reason.
+** 
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{{
+    "reason": "The score is <knowledge_retention_score> because <your_reason>."
+}}
+
+Please include or quote as much factual information in attritions as possible when generating a reason.
 **
         
 Attritions:
@@ -13,10 +19,7 @@ Attritions:
 Knowledge Retention Score:
 {score}
 
-Example:
-The score is <knowledge_retention_score> because <your_reason>.
-
-Reason:
+JSON:
 """
 
     @staticmethod

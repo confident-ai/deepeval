@@ -152,12 +152,15 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
         )
+
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
         else:
-            res = await self.model.a_generate(prompt)
-        return res
+            res = self.model.generate(prompt)
+
+        data = trimAndLoadJson(res, self)
+        return data["reason"]
 
     def _generate_reason(self, input: str):
         if self.include_reason is False:
@@ -172,12 +175,15 @@ class ContextualPrecisionMetric(BaseMetric):
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
         )
+
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
         else:
             res = self.model.generate(prompt)
-        return res
+
+        data = trimAndLoadJson(res, self)
+        return data["reason"]
 
     async def _a_generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]

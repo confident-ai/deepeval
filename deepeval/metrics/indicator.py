@@ -126,12 +126,21 @@ async def measure_metric_task(
                 tc = test_case.messages[len(test_case.messages) - 1]
             else:
                 tc = test_case
+
             try:
                 await metric.a_measure(tc, _show_indicator=False)
                 finish_text = "Done"
             except TypeError:
-                await metric.a_measure(tc)
-                finish_text = "Done"
+                try:
+                    await metric.a_measure(tc)
+                    finish_text = "Done"
+                except Exception as e:
+                    if ignore_errors:
+                        metric.error = str(e)
+                        metric.success = False  # Override metric success
+                        finish_text = "Errored"
+                    else:
+                        raise
             except Exception as e:
                 if ignore_errors:
                     metric.error = str(e)
@@ -218,20 +227,29 @@ async def measure_metrics_with_indicator(
                     tc = test_case.messages[len(test_case.messages) - 1]
                 else:
                     tc = test_case
-                try:
-                    tasks.append(metric.a_measure(tc, _show_indicator=False))
-                except TypeError:
-                    tasks.append(metric.a_measure(tc))
-                except Exception as e:
-                    if ignore_errors:
-                        metric.error = str(e)
-                    else:
-                        raise
+
+                tasks.append(safe_a_measure(metric, tc, ignore_errors))
 
         await asyncio.gather(*tasks)
+
 
     # Update the metrics with the states captured from the tasks
     for metric in metrics:
         context_vars = metric_states[metric]
         update_contextvars(metric, context_vars)
 
+
+async def safe_a_measure(
+    metric: BaseMetric, tc: LLMTestCase, ignore_errors: bool
+):
+    try:
+        try:
+            await metric.a_measure(tc, _show_indicator=False)
+        except TypeError:
+            await metric.a_measure(tc)
+    except Exception as e:
+        if ignore_errors:
+            metric.error = str(e)
+            metric.success = False  # Assuming you want to set success to False
+        else:
+            raise

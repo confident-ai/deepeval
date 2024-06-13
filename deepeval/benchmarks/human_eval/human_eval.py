@@ -11,14 +11,15 @@ from deepeval.scorer import Scorer
 
 
 class HumanEval(DeepEvalBaseBenchmark):
-    def __init__(self, tasks: List[HumanEvalTask] = None, n: int = 200):
+    def __init__(
+        self, tasks: List[HumanEvalTask] = None, n: int = 200, **kwargs
+    ):
 
-        super().__init__()
+        super().__init__(**kwargs)
         self.tasks: List[HumanEvalTask] = (
             list(HumanEvalTask) if tasks is None else tasks
         )
         self.scorer = Scorer()
-        self.dataset: Dataset = None
 
         self.temperature = 0.8
         self.n = n

@@ -28,6 +28,11 @@ There are two optional parameters when creating a `Synthesizer`:
 
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 - [Optional] `multithreading`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
+- [Optional] `embedder`: a string specifying which of OpenAI's embedding models to use, **OR** [any custom embedding model](#using-a-custom-embedding-model) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
+
+:::info
+As you'll learn later, an embedding model is only used when using the `generate_goldens_from_docs()` method, so don't worry about the `embedder` parameter too much unless you're looking to use your own embedding model.
+:::
 
 ## Using Synthesizer As A Standalone
 
@@ -63,25 +68,6 @@ There are one mandatory and six optional parameters when using the `generate_gol
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during context extraction. Defaulted to 0.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
 - [Optional] `enable_breadth_evolve`: a boolean which when set to `True`, introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
-
-:::note
-`deepeval` uses an LLM and an embedder model during context and query generation during data synthesization. You can choose to use Azure's OpenAI models if you wish by running the following commands in the terminal:
-
-```console
-deepeval set-azure-openai --openai-endpoint=<endpoint> \
-    --openai-api-key=<api_key> \
-    --deployment-name=<deployment_name> \
-    --openai-api-version=<openai_api_version> \
-    --model-version=<model_version>
-```
-
-Then, run this to set the Azure OpenAI embedder:
-
-```console
-deepeval set-azure-openai-embedding --embedding_deployment-name=<embedding_deployment_name>
-```
-
-:::
 
 ### Generating From Provided Contexts
 
@@ -184,3 +170,102 @@ saved_path = dataset.save_as(
 :::tip
 The `save_as()` method returns a string to the path the dataset was saved to, just in case you need to use it in code later on.
 :::
+
+## Using a Custom Embedding Model
+
+:::info
+Under the hood, only the `generate_goldens_from_docs()` method uses an embedding model. This is becuase in order to generate goldens from documents, the `Synthesizer` uses cosine similarity to generate the relevant context needed for data synthesization.
+:::
+
+### Using Azure OpenAI
+
+You can use Azure's OpenAI embedding models by running the following commands in the CLI:
+
+```console
+deepeval set-azure-openai --openai-endpoint=<endpoint> \
+    --openai-api-key=<api_key> \
+    --deployment-name=<deployment_name> \
+    --openai-api-version=<openai_api_version> \
+    --model-version=<model_version>
+```
+
+Then, run this to set the Azure OpenAI embedder:
+
+```console
+deepeval set-azure-openai-embedding --embedding_deployment-name=<embedding_deployment_name>
+```
+
+:::tip Did You Know?
+The first command configures `deepeval` to use Azure OpenAI LLM globally, while the second command configures `deepeval` to use Azure OpenAI's embedding models globally.
+:::
+
+### Using Any Custom Model
+
+Alternatively, you can also create a custom embedding model in code by inheriting the base `DeepEvalBaseEmbeddingModel` class. Here is an example of using the same custom Azure OpenAI embedding model but created in code instead using langchain's `langchain_openai` module:
+
+```python
+from typing import List, Optional
+from langchain_openai import AzureOpenAIEmbeddings
+from deepeval.models import DeepEvalBaseEmbeddingModel
+
+class CustomEmbeddingModel(DeepEvalBaseEmbeddingModel):
+    def __init__(self):
+        pass
+
+    def load_model(self):
+        return AzureOpenAIEmbeddings(
+            openai_api_version="...",
+            azure_deployment="...",
+            azure_endpoint="...",
+            openai_api_key="...",
+        )
+
+    def embed_text(self, text: str) -> List[float]:
+        embedding_model = self.load_model()
+        return embedding_model.embed_query(text)
+
+    def embed_texts(self, texts: List[str]) -> List[List[float]]:
+        embedding_model = self.load_model()
+        return embedding_model.embed_documents(texts)
+
+    async def a_embed_text(self, text: str) -> List[float]:
+        embedding_model = self.load_model()
+        return await embedding_model.aembed_query(text)
+
+    async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
+        embedding_model = self.load_model()
+        return await embedding_model.aembed_documents(texts)
+
+    def get_model_name(self):
+        "Custom Azure Embedding Model"
+```
+
+When creating a custom embedding model, you should **ALWAYS**:
+
+- inherit `DeepEvalBaseEmbeddingModel`.
+- implement the `get_model_name()` method, which simply returns a string representing your custom model name.
+- implement the `load_model()` method, which will be responsible for returning the model object instance.
+- implement the `embed_text()` method with **one and only one** parameter of type `str` as the text to be embedded, and returns a vector of type `List[float]`. We called `embedding_model.embed_query(prompt)` to access the embedded text in this particular example, but this could be different depending on the implementation of your custom model object.
+- implement the `embed_texts()` method with **one and only one** parameter of type `List[str]` as the list of strings text to be embedded, and return a list of vectors of type `List[List[float]]`.
+- implement the asynchronous `a_embed_text()` and `a_embed_texts()` method, with the same function signature as their respective synchronous versions. Since this is an asynchronous method, remember to use `async/await`.
+
+:::note
+If an asynchronous version of your embedding model does not exist, simply reuse the synchronous implementation:
+
+```python
+class CustomEmbeddingModel(DeepEvalBaseEmbeddingModel):
+    ...
+    async def a_embed_text(self, text: str) -> List[float]:
+        return self.embed_text(text)
+```
+
+:::
+
+Lastly, provide the custom embedding model through the `embedder` parameter when creating a `Synthesizer`:
+
+```python
+from deepeval.synthesizer import Synthesizer
+...
+
+synthesizer = Synthesizer(embedder=CustomEmbeddingModel())
+```

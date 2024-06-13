@@ -3,7 +3,7 @@ import os
 import csv
 import json
 from threading import Lock
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
@@ -11,10 +11,13 @@ import math
 
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
 from deepeval.synthesizer.context_generator import ContextGenerator
+from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.dataset.golden import Golden
+from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.models import OpenAIEmbeddingModel
 
 valid_file_types = ["csv", "json"]
 
@@ -27,15 +30,14 @@ class Synthesizer:
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        # embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
+        embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
         multithreading: bool = True,
     ):
         self.model, self.using_native_model = initialize_model(model)
-        self.generator_model = self.model.get_model_name()
         self.multithreading = multithreading
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
-        # self.embedder = embedder
+        self.embedder = initialize_embedding_model(embedder)
 
     def evolve(
         self,
@@ -166,7 +168,8 @@ class Synthesizer:
         _show_indicator: bool = True,
     ) -> List[Golden]:
         with synthesizer_progress_context(
-            self.generator_model,
+            self.model.get_model_name(),
+            None,
             contexts * max_goldens_per_context,
             _show_indicator,
         ):
@@ -254,12 +257,20 @@ class Synthesizer:
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
     ):
-        with synthesizer_progress_context(self.generator_model):
+        if self.embedder is None:
+            self.embedder = OpenAIEmbeddingModel()
+
+        with synthesizer_progress_context(
+            self.model.get_model_name(),
+            self.embedder.get_model_name(),
+            max_goldens_per_document * len(document_paths),
+        ):
             if self.context_generator is None:
                 self.context_generator = ContextGenerator(
                     document_paths,
-                    chunk_size,
-                    chunk_overlap,
+                    embedder=self.embedder,
+                    chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap,
                     multithreading=self.multithreading,
                 )
 

@@ -12,6 +12,20 @@ The processes of retrieving relevant context, is carried out by the **retriever*
 
 Since a satisfactory LLM output depends entirely on the quality of the retriever and generator, RAG evaluation focuses on evaluating the retriever and generator in your RAG pipeline seperately. This also allows for easier debugging and to pinpoint issues on a component level.
 
+<div
+  style={{
+    marginTop: "30px",
+    marginBottom: "60px",
+    display: "flex",
+    justifyContent: "center",
+  }}
+>
+  <img
+    id="rag-evaluation"
+    src="https://d2lsxfc3p6r9rv.cloudfront.net/rag-pipeline.svg"
+  />
+</div>
+
 ## Common Pitfalls in RAG Pipelines
 
 A RAG pipeline involves a retrieval and generation step, which is influenced by your choice of hyperparameters. Hyperparameters include things like the embedding model to use for retrieval, the number of nodes to retrieve (we'll just be referring to just as "top-K" from here onwards), LLM temperature, prompt template, etc.
