@@ -30,6 +30,39 @@ from deepeval.dataset import EvaluationDataset
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test, evaluate
 
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCase
+
+# Inherit BaseMetric
+class LatencyMetric(BaseMetric):
+    # This metric by default checks if the latency is greater than 10 seconds
+    def __init__(self, max_seconds: int=10):
+        super().__init__()
+        self.threshold = max_seconds
+
+    def measure(self, test_case: LLMTestCase):
+        # Set self.success and self.score in the "measure" method
+        self.success = test_case.additional_metadata["latency"] <= self.threshold
+        if self.success:
+            self.score = 1
+        else:
+            self.score = 0
+
+        # You can also optionally set a reason for the score returned.
+        # This is particularly useful for a score computed using LLMs
+        self.reason = "Too slow!"
+        return self.score
+
+    async def a_measure(self, test_case: LLMTestCase):
+        return self.measure(test_case)
+    
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Latency"
+
 #########################################################
 # test cases
 ##########################################################
@@ -40,6 +73,7 @@ test_case_1 = LLMTestCase(
         expected_output="This is a mocha.",
         retrieval_context=["I love coffee."],
         context=["I love coffee."],
+        additional_metadata={"latency": 6}
     )
 
 test_case_2 = LLMTestCase(
@@ -48,6 +82,7 @@ test_case_2 = LLMTestCase(
         expected_output="This is a latte.",
         retrieval_context=["I love coffee."],
         context=["I love coffee."],
+        additional_metadata={"latency": 7}
     )
 
 test_case_3 = LLMTestCase(
@@ -56,6 +91,7 @@ test_case_3 = LLMTestCase(
         expected_output="No, we only have latte and americano",
         retrieval_context=["I love coffee."],
         context=["Our drinks include latte and americano"],
+        additional_metadata={"latency": 9}
     )
 
 test_case_4 = LLMTestCase(
@@ -63,7 +99,8 @@ test_case_4 = LLMTestCase(
         actual_output="We don't have almond milk.",
         expected_output="Yes, we can make an americano with almond milk.",
         retrieval_context=["We have soy and oat milk."],
-        context=["We offer various milk options, including almond milk."]
+        context=["We offer various milk options, including almond milk."],
+        additional_metadata={"latency": 9}
     )
 
 test_case_5 = LLMTestCase(
@@ -71,7 +108,8 @@ test_case_5 = LLMTestCase(
         actual_output="Our espresso is mild.",
         expected_output="Yes, our espresso is quite strong.",
         retrieval_context=["Some customers find our coffee mild."],
-        context=["Our espresso is known for its strong flavor."]
+        context=["Our espresso is known for its strong flavor."],
+        additional_metadata={"latency": 10}
     )
 
 test_case_6 = LLMTestCase(
@@ -79,7 +117,8 @@ test_case_6 = LLMTestCase(
         actual_output="We have cakes and cookies.",
         expected_output="We have cakes, cookies, and brownies.",
         retrieval_context=["Our cafe offers cookies and brownies."],
-        context=["Our dessert options include cakes, cookies, and brownies."]
+        context=["Our dessert options include cakes, cookies, and brownies."],
+        additional_metadata={"latency": 6}
     )
 
 test_case_7 = LLMTestCase(
@@ -87,7 +126,8 @@ test_case_7 = LLMTestCase(
         actual_output="Breakfast is only served until 11 AM.",
         expected_output="Yes, we serve breakfast all day.",
         retrieval_context=["Breakfast times are usually until noon."],
-        context=["Breakfast is available all day at our cafe."]
+        context=["Breakfast is available all day at our cafe."],
+        additional_metadata={"latency": 7}
     )
 
 test_case_8 = LLMTestCase(
@@ -95,7 +135,8 @@ test_case_8 = LLMTestCase(
         actual_output="We have vegan salads.",
         expected_output="We offer vegan salads and smoothies.",
         retrieval_context=["We recently started offering vegan dishes."],
-        context=["We have vegan salads and smoothies on our menu."]
+        context=["We have vegan salads and smoothies on our menu."],
+        additional_metadata={"latency": 8}
     )
 
 test_case_9 = LLMTestCase(
@@ -103,7 +144,8 @@ test_case_9 = LLMTestCase(
         actual_output="There is no parking available.",
         expected_output="Yes, there is a parking lot right behind the cafe.",
         retrieval_context=["Street parking can be hard to find."],
-        context=["Parking is available behind the cafe."]
+        context=["Parking is available behind the cafe."],
+        additional_metadata={"latency": 9}
     )
 
 test_cases = [
@@ -122,183 +164,18 @@ test_cases = [
 # a_measure 
 ##########################################################
 
-async def single_async_call(
-        metric: BaseMetric,
-        test_case: LLMTestCase):
-    await metric.a_measure(test_case, verbose=True)
-    print("metric: " + metric.__name__)
-    print("score: " + str(metric.score))
-    print("reason: " + metric.reason)
+# async def single_async_call(
+#         metric: BaseMetric,
+#         test_case: LLMTestCase):
+#     await metric.a_measure(test_case)
+#     print("metric: " + metric.__name__)
+#     print("score: " + str(metric.score))
+#     print("reason: " + metric.reason)
 
-async def test_async():
-    # metrics
-    strict_mode = False
-    metric1 = AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
-    metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
-    metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
-    metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
-    metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
-    metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode)
-    metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
-    metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
-    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode)
-    metric10 = GEval(
-        name="Coherence",
-        criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
-        evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
-            LLMTestCaseParams.RETRIEVAL_CONTEXT,
-        ],
-    )
-
-    # Prepare the list of metrics based on even and odd indexed test cases
-    tasks = []
-    for i, test_case in enumerate(test_cases):
-        if i % 2 == 0:  # Even index
-            tasks.append(single_async_call(metric1, test_case))
-        else:  # Odd index
-            tasks.append(single_async_call(metric1, test_case))
-
-    # Execute all tasks asynchronously
-    await asyncio.gather(*tasks)
-
-#asyncio.run(test_async())
-
-# ##########################################################
-# # measure in sync mode
-# ##########################################################
-
-def single_sync_call(
-        metric: BaseMetric,
-        test_case: LLMTestCase):
-    metric.measure(test_case)
-    print("metric: " + metric.__name__)
-    print("score: " + str(metric.score))
-    print("reason: " + metric.reason)
-
-def test_sync():
-    # metrics
-    strict_mode = False
-    metric1 = AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode, async_mode=False)
-    metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
-    metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
-    metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
-    metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
-    metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
-    metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
-    metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
-    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
-    metric10 = GEval(
-        name="Coherence",
-        criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
-        evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
-            LLMTestCaseParams.RETRIEVAL_CONTEXT,
-        ],
-        async_mode=False
-    )
-
-    # Prepare the list of metrics based on even and odd indexed test cases
-    tasks = []
-    for i, test_case in enumerate(test_cases):
-        if i % 2 == 0:  # Even index
-            tasks.append(single_sync_call(metric1, test_case))
-        else:  # Odd index
-            tasks.append(single_sync_call(metric1, test_case))
-
-#test_sync()
-
-# ##########################################################
-# # measure in async mode
-# ##########################################################
-
-def single_sync_in_async_call(
-        metric: BaseMetric,
-        test_case: LLMTestCase):
-    metric.measure(test_case)
-    print("metric: " + metric.__name__)
-    print("score: " + str(metric.score))
-    print("reason: " + metric.reason)
-
-def test_sync_in_async():
-    # metrics
-    async_mode = False
-    strict_mode = False
-    metrics = [
-        AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode, async_mode=async_mode),
-        FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        BiasMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        ToxicityMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        HallucinationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
-        GEval(
-            name="Coherence",
-            criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
-            evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
-                LLMTestCaseParams.RETRIEVAL_CONTEXT,
-            ],
-            async_mode=True  # Assuming it allows synchronous operations
-        )
-    ]
-
-    tasks = []
-    # Test every metric on every test case
-    for metric in metrics:
-        tasks.append(single_sync_in_async_call(metric, test_case_1))
-
-#test_sync_in_async()
-
-# ##########################################################
-# # evaluate
-# ##########################################################
-
-async_mode = True
-strict_mode = False
-metric1 = AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode, async_mode=async_mode)
-metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
-metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
-metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
-metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
-metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
-metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
-metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
-metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
-metric10 = GEval(
-    name="Coherence",
-    criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
-    evaluation_params=[
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
-        LLMTestCaseParams.RETRIEVAL_CONTEXT,
-    ],
-    async_mode=False
-)
-    
-dataset = EvaluationDataset(test_cases=test_cases)
-dataset.evaluate([metric1, metric2])
-#evaluate(dataset, [metric1, metric2])
-#evaluate(dataset, [metric10, metric2], run_async=False, show_indicator=True)
-
-# ##########################################################
-# # deep eval test run
-# ##########################################################
-# strict_mode = False
-
-# #@pytest.mark.skip(reason="openai is expensive")
-# def test_everything():
-#     metric1 = AnswerRelevancyMetric(
-#         threshold=0.1,
-#         strict_mode=strict_mode,
-#         async_mode=False,
-#         model="gpt-4-0125-preview",
-#     )
+# async def test_async():
+#     # metrics
+#     strict_mode = False
+#     metric1 = AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
 #     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
 #     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
 #     metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
@@ -315,90 +192,261 @@ dataset.evaluate([metric1, metric2])
 #             LLMTestCaseParams.ACTUAL_OUTPUT,
 #             LLMTestCaseParams.RETRIEVAL_CONTEXT,
 #         ],
-#         strict_mode=strict_mode,
-#         model="gpt-4-0125-preview",
 #     )
+#     custom_metric = LatencyMetric(max_seconds=8)
 
-#     test_case = LLMTestCase(
-#         input="What is this",
-#         actual_output="this is a latte",
-#         expected_output="this is a mocha",
-#         retrieval_context=["I love coffee"],
-#         context=["I love coffee"],
-#     )
-#     c_test_case = ConversationalTestCase(messages=[test_case, test_case])
-#     assert_test(
-#         c_test_case,
-#         [
-#             metric1,
-#             # metric2,
-#             # metric3,
-#             # metric4,
-#             # metric5,
-#             # metric6,
-#             # metric7,
-#             # metric8,
-#             # metric9,
-#             metric10,
+#     # Prepare the list of metrics based on even and odd indexed test cases
+#     tasks = []
+#     for i, test_case in enumerate(test_cases):
+#         if i % 2 == 0:  # Even index
+#             tasks.append(single_async_call(custom_metric, test_case))
+#         else:  # Odd index
+#             tasks.append(single_async_call(metric1, test_case))
+
+#     # Execute all tasks asynchronously
+#     await asyncio.gather(*tasks)
+
+# asyncio.run(test_async())
+
+# # ##########################################################
+# # # measure in sync mode
+# # ##########################################################
+
+# def single_sync_call(
+#         metric: BaseMetric,
+#         test_case: LLMTestCase):
+#     metric.measure(test_case)
+#     print("metric: " + metric.__name__)
+#     print("score: " + str(metric.score))
+#     print("reason: " + metric.reason)
+
+# def test_sync():
+#     # metrics
+#     strict_mode = False
+#     metric1 = AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode, async_mode=False)
+#     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
+#     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
+#     metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
+#     metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
+#     metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
+#     metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
+#     metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
+#     metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
+#     metric10 = GEval(
+#         name="Coherence",
+#         criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+#         evaluation_params=[
+#             LLMTestCaseParams.INPUT,
+#             LLMTestCaseParams.ACTUAL_OUTPUT,
+#             LLMTestCaseParams.RETRIEVAL_CONTEXT,
 #         ],
-#         # run_async=False,
+#         async_mode=False
 #     )
+#     custom_metric = LatencyMetric(max_seconds=8)
 
+#     # Prepare the list of metrics based on even and odd indexed test cases
+#     tasks = []
+#     for i, test_case in enumerate(test_cases):
+#         if i % 2 == 0:  # Even index
+#             tasks.append(single_sync_call(custom_metric, test_case))
+#         else:  # Odd index
+#             tasks.append(single_sync_call(metric1, test_case))
 
-# @pytest.mark.skip(reason="openadi is expensive")
-# def test_everything_2():
-#     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
-#     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
-#     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
-#     metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
-#     metric5 = ContextualRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
-#     metric6 = BiasMetric(threshold=0.2, strict_mode=strict_mode)
-#     metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
-#     metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
-#     metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, n=2)
-#     metric10 = (
+# test_sync()
+
+# # ##########################################################
+# # # measure in async mode
+# # ##########################################################
+
+# def single_sync_in_async_call(
+#         metric: BaseMetric,
+#         test_case: LLMTestCase):
+#     metric.measure(test_case)
+#     print("metric: " + metric.__name__)
+#     print("score: " + str(metric.score))
+#     print("reason: " + metric.reason)
+
+# def test_sync_in_async():
+#     # metrics
+#     async_mode = False
+#     strict_mode = False
+#     metrics = [
+#         AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode, async_mode=async_mode),
+#         FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+#         ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+#         ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+#         ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+#         BiasMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+#         ToxicityMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+#         HallucinationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
+#         SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
 #         GEval(
 #             name="Coherence",
-#             criteria="Coherence - determine if the actual output is coherent with the input.",
+#             criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
 #             evaluation_params=[
 #                 LLMTestCaseParams.INPUT,
 #                 LLMTestCaseParams.ACTUAL_OUTPUT,
+#                 LLMTestCaseParams.RETRIEVAL_CONTEXT,
 #             ],
-#             strict_mode=True,
+#             async_mode=True  # Assuming it allows synchronous operations
 #         ),
-#     )
-#     metric11 = RagasMetric(
-#         threshold=0.5, model="gpt-3.5-turbo", embeddings=OpenAIEmbeddings()
-#     )
+#         LatencyMetric(max_seconds=8)
+#     ]
 
-#     test_case = LLMTestCase(
-#         input="What is this again?",
-#         actual_output="this is a latte",
-#         expected_output="this is a mocha",
-#         retrieval_context=["I love coffee"],
-#         context=["I love coffee"],
-#     )
-#     assert_test(
-#         test_case,
-#         [
-#             metric1,
-#             metric2,
-#             metric3,
-#             metric4,
-#             # metric5,
-#             metric6,
-#             # metric7,
-#             # metric8,
-#             # metric9,
-#             # metric10,
-#             # metric11,
-#         ],
-#         run_async=False,
-#     )
+#     tasks = []
+#     # Test every metric on every test case
+#     for metric in metrics:
+#         tasks.append(single_sync_in_async_call(metric, test_case_1))
 
+# #test_sync_in_async()
 
-# @deepeval.log_hyperparameters(
-#     model="gpt-4", prompt_template="another template!"
+# # ##########################################################
+# # # evaluate
+# # ##########################################################
+
+# async_mode = True
+# strict_mode = False
+# metric1 = AnswerRelevancyMetric(threshold=0.1, strict_mode=strict_mode, async_mode=async_mode)
+# metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
+# metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
+# metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
+# metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
+# metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
+# metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
+# metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode)
+# metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
+# metric10 = GEval(
+#     name="Coherence",
+#     criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+#     evaluation_params=[
+#         LLMTestCaseParams.INPUT,
+#         LLMTestCaseParams.ACTUAL_OUTPUT,
+#         LLMTestCaseParams.RETRIEVAL_CONTEXT,
+#     ],
+#     async_mode=False
 # )
-# def hyperparameters():
-#     return {"chunk_size": 600, "temperature": 1}
+# custom_metric = LatencyMetric(max_seconds=8)
+    
+# #dataset = EvaluationDataset(test_cases=test_cases)
+# #dataset.evaluate([metric1, custom_metric])
+# #evaluate(dataset, [metric1, metric2])
+# #evaluate(dataset, [metric10, metric2], run_async=False, show_indicator=True)
+
+##########################################################
+# deep eval test run
+##########################################################
+strict_mode = False
+
+#@pytest.mark.skip(reason="openai is expensive")
+def test_everything():
+    metric1 = AnswerRelevancyMetric(
+        threshold=0.1,
+        strict_mode=strict_mode,
+        async_mode=False,
+        model="gpt-4-0125-preview",
+    )
+    metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
+    metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
+    metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
+    metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
+    metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode)
+    metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
+    metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
+    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode)
+    metric10 = GEval(
+        name="Coherence",
+        criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+            LLMTestCaseParams.RETRIEVAL_CONTEXT,
+        ],
+        strict_mode=strict_mode,
+        model="gpt-4-0125-preview",
+    )
+
+    test_case = LLMTestCase(
+        input="What is this",
+        actual_output="this is a latte",
+        expected_output="this is a mocha",
+        retrieval_context=["I love coffee"],
+        context=["I love coffee"],
+    )
+    c_test_case = ConversationalTestCase(messages=[test_case, test_case])
+    assert_test(
+        c_test_case,
+        [
+            metric1,
+            # metric2,
+            # metric3,
+            # metric4,
+            # metric5,
+            # metric6,
+            # metric7,
+            # metric8,
+            # metric9,
+            metric10,
+        ],
+        # run_async=False,
+    )
+
+
+@pytest.mark.skip(reason="openadi is expensive")
+def test_everything_2():
+    metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
+    metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
+    metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
+    metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
+    metric5 = ContextualRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
+    metric6 = BiasMetric(threshold=0.2, strict_mode=strict_mode)
+    metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
+    metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
+    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, n=2)
+    metric10 = (
+        GEval(
+            name="Coherence",
+            criteria="Coherence - determine if the actual output is coherent with the input.",
+            evaluation_params=[
+                LLMTestCaseParams.INPUT,
+                LLMTestCaseParams.ACTUAL_OUTPUT,
+            ],
+            strict_mode=True,
+        ),
+    )
+    metric11 = RagasMetric(
+        threshold=0.5, model="gpt-3.5-turbo", embeddings=OpenAIEmbeddings()
+    )
+    custom_metric = LatencyMetric(max_seconds=8)
+
+    test_case = LLMTestCase(
+        input="What is this again?",
+        actual_output="this is a latte",
+        expected_output="this is a mocha",
+        retrieval_context=["I love coffee"],
+        context=["I love coffee"],
+    )
+    assert_test(
+        test_case,
+        [
+            metric1,
+            metric2,
+            metric3,
+            metric4,
+            # metric5,
+            metric6,
+            custom_metric
+            # metric7,
+            # metric8,
+            # metric9,
+            # metric10,
+            # metric11,
+        ],
+        run_async=False,
+    )
+
+
+@deepeval.log_hyperparameters(
+    model="gpt-4", prompt_template="another template!"
+)
+def hyperparameters():
+    return {"chunk_size": 600, "temperature": 1}

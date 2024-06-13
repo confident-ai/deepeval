@@ -405,7 +405,7 @@ def assert_test(
 
         failed_metrics_str = ", ".join(
             [
-                f"{metrics_metadata.__name__} (score: {metrics_metadata.score}, threshold: {metrics_metadata.threshold}, strict: {metrics_metadata.strict_mode}, error: {metrics_metadata.error})"
+                f"{metrics_metadata.metric} (score: {metrics_metadata.score}, threshold: {metrics_metadata.threshold}, strict: {metrics_metadata.strict_mode}, error: {metrics_metadata.error})"
                 for metrics_metadata in failed_metrics_metadata
             ]
         )
