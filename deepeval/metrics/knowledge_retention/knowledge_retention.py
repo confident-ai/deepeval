@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     initialize_model,
@@ -75,8 +76,12 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
             if self.verbose_mode:
-                print(
-                    f"knowledges: {self.knowledges}\nverdicts: {self.verdicts}\n"
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Knowledges:\n{self.knowledges}",
+                        f"Verdicts:\n{self.verdicts}",
+                    ],
                 )
             return self.score
 

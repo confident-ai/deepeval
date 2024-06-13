@@ -84,3 +84,11 @@ def initialize_model(
         return model, False
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return GPTModel(model=model), True
+
+
+def print_intermediate_steps(metric: str, steps: List[str]):
+    print("=" * 50)
+    print(f"{metric} Verbose Print\n")
+    for step in steps:
+        print(step)
+    print("=" * 50)

@@ -10,6 +10,7 @@ from deepeval.test_case import (
 from deepeval.metrics import BaseMetric
 from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -86,7 +87,12 @@ class HallucinationMetric(BaseMetric):
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
                 if self.verbose_mode:
-                    print(f"verdicts: {self.verdicts}\n")
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Verdicts:\n{self.verdicts}",
+                        ],
+                    )
                 return self.score
 
     async def a_measure(
@@ -111,7 +117,12 @@ class HallucinationMetric(BaseMetric):
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
             if self.verbose_mode:
-                print(f"verdicts: {self.verdicts}\n")
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Verdicts:\n{self.verdicts}",
+                    ],
+                )
             return self.score
 
     async def _measure_async(

@@ -11,6 +11,7 @@ from deepeval.test_case import (
 from deepeval.metrics import BaseMetric
 from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -118,8 +119,13 @@ class FaithfulnessMetric(BaseMetric):
                 self.reason = self._generate_reason()
                 self.success = self.score >= self.threshold
                 if self.verbose_mode:
-                    print(
-                        f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n"
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Truths:\n{self.truths}",
+                            f"Claims:\n{self.claims}",
+                            f"Verdicts:\n{self.verdicts}",
+                        ],
                     )
                 return self.score
 
@@ -147,8 +153,13 @@ class FaithfulnessMetric(BaseMetric):
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
             if self.verbose_mode:
-                print(
-                    f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n"
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Truths:\n{self.truths}",
+                        f"Claims:\n{self.claims}",
+                        f"Verdicts:\n{self.verdicts}",
+                    ],
                 )
             return self.score
 

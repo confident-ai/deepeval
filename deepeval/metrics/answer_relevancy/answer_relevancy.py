@@ -8,6 +8,7 @@ from deepeval.metrics.utils import (
     trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    print_intermediate_steps,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -99,8 +100,12 @@ class AnswerRelevancyMetric(BaseMetric):
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
                 if self.verbose_mode:
-                    print(
-                        f"statements: {self.statements}\nverdicts: {self.verdicts}\n"
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Statements:\n{self.statements}\n",
+                            f"Verdicts:\n{self.verdicts}",
+                        ],
                     )
                 return self.score
 
@@ -127,8 +132,12 @@ class AnswerRelevancyMetric(BaseMetric):
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
             if self.verbose_mode:
-                print(
-                    f"statements: {self.statements}\nverdicts: {self.verdicts}\nscore: {self.score}, success: {self.success}, reason: {self.reason}\n"
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Statements:\n{self.statements}\n",
+                        f"Verdicts:\n{self.verdicts}",
+                    ],
                 )
             return self.score
 

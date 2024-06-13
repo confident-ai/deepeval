@@ -308,7 +308,6 @@ async def a_execute_test_cases(
 
             for metric in metrics:
                 metric_metadata = create_metric_metadata(metric)
-                print(metric_metadata)
                 if isinstance(test_case, ConversationalTestCase):
                     # index hardcoded as the last message for now
                     api_test_case.update(

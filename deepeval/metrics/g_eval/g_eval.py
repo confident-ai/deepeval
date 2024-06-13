@@ -14,6 +14,7 @@ from deepeval.test_case import (
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -138,7 +139,12 @@ class GEval(BaseMetric):
                 )
                 self.success = self.score >= self.threshold
                 if self.verbose_mode:
-                    print(f"evaluation_steps: {self.evaluation_steps}\n")
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Evaluation Steps:\n{self.evaluation_steps}",
+                        ],
+                    )
                 return self.score
 
     async def a_measure(
@@ -169,7 +175,12 @@ class GEval(BaseMetric):
             )
             self.success = self.score >= self.threshold
             if self.verbose_mode:
-                print(f"evaluation_steps: {self.evaluation_steps}\n")
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Evaluation Steps:\n{self.evaluation_steps}",
+                    ],
+                )
             return self.score
 
     async def _measure_async(

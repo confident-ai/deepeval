@@ -12,6 +12,7 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -100,8 +101,12 @@ class ToxicityMetric(BaseMetric):
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
                 if self.verbose_mode:
-                    print(
-                        f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n"
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Opinions:\n{self.opinions}",
+                            f"Verdicts:\n{self.verdicts}",
+                        ],
                     )
                 return self.score
 
@@ -128,7 +133,13 @@ class ToxicityMetric(BaseMetric):
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
             if self.verbose_mode:
-                print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Opinions:\n{self.opinions}",
+                        f"Verdicts:\n{self.verdicts}",
+                    ],
+                )
             return self.score
 
     async def _measure_async(

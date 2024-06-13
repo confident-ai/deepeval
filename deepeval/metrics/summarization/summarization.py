@@ -13,6 +13,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -192,8 +193,15 @@ class SummarizationMetric(BaseMetric):
                 self.reason = self._generate_reason()
                 self.success = self.score >= self.threshold
                 if self.verbose_mode:
-                    print(
-                        f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}\n"
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Truths:\n{self.truths}",
+                            f"Claims:\n{self.claims}",
+                            f"Assessment Questions:\n{self.assessment_questions}",
+                            f"Coverage Verdicts:\n{self.coverage_verdicts}",
+                            f"Alignment Verdicts:\n{self.alignment_verdicts}",
+                        ],
                     )
                 return self.score
 
@@ -234,8 +242,15 @@ class SummarizationMetric(BaseMetric):
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
             if self.verbose_mode:
-                print(
-                    f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}\n"
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Truths:\n{self.truths}",
+                        f"Claims:\n{self.claims}",
+                        f"Assessment Questions:\n{self.assessment_questions}",
+                        f"Coverage Verdicts:\n{self.coverage_verdicts}",
+                        f"Alignment Verdicts:\n{self.alignment_verdicts}",
+                    ],
                 )
             return self.score
 
