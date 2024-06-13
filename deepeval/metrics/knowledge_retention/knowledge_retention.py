@@ -14,6 +14,7 @@ from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.utils import generate_uuid
 
 
 class Knowledge(BaseModel):
@@ -35,17 +36,22 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         strict_mode: bool = False,
     ):
         super().__init__()
-        self._knowledges: ContextVar[Optional[List[Knowledge]]] = ContextVar(f'{self.__class__.__name__}_truths', default=None)
-        self._verdicts: ContextVar[Optional[List[KnowledgeRetentionVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
+        self._knowledges: ContextVar[Optional[List[Knowledge]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._verdicts: ContextVar[
+            Optional[List[KnowledgeRetentionVerdict]]
+        ] = ContextVar(generate_uuid(), default=None)
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.strict_mode = strict_mode
-    
+
     @property
     def knowledges(self) -> Optional[List[Knowledge]]:
         return self._knowledges.get()
+
     @knowledges.setter
     def claims(self, value: Optional[List[Knowledge]]):
         self._claims.set(value)
@@ -53,6 +59,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     @property
     def verdicts(self) -> Optional[List[KnowledgeRetentionVerdict]]:
         return self._verdicts.get()
+
     @verdicts.setter
     def verdicts(self, value: Optional[List[KnowledgeRetentionVerdict]]):
         self._verdicts.set(value)
@@ -60,18 +67,16 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     def measure(self, test_case: ConversationalTestCase, verbose: bool = True):
         validate_conversational_test_case(test_case, self)
         with metric_progress_indicator(self):
-            self.knowledges = self._generate_knowledges(
-                test_case
-            )
-            self.verdicts = (
-                self._generate_verdicts(test_case)
-            )
+            self.knowledges = self._generate_knowledges(test_case)
+            self.verdicts = self._generate_verdicts(test_case)
             knowledge_retention_score = self._calculate_score()
             self.reason = self._generate_reason(knowledge_retention_score)
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
             if verbose:
-                print(f"knowledges: {self.knowledges}\nverdicts: {self.verdicts}\n")                        
+                print(
+                    f"knowledges: {self.knowledges}\nverdicts: {self.verdicts}\n"
+                )
             return self.score
 
     def _generate_reason(self, score: float) -> str:

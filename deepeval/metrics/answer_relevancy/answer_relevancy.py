@@ -2,7 +2,7 @@ from contextvars import ContextVar
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
@@ -41,32 +41,38 @@ class AnswerRelevancyMetric(BaseMetric):
         strict_mode: bool = False,
     ):
         super().__init__()
-        self._statements: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_statements', default=None)
-        self._verdicts: ContextVar[Optional[List[AnswerRelvancyVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
+        self._statements: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._verdicts: ContextVar[Optional[List[AnswerRelvancyVerdict]]] = (
+            ContextVar(generate_uuid(), default=None)
+        )
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
-    
+
     @property
     def statements(self) -> Optional[List[str]]:
         return self._statements.get()
+
     @statements.setter
     def statements(self, value: Optional[List[str]]):
         self._statements.set(value)
-        
+
     @property
     def verdicts(self) -> Optional[List[AnswerRelvancyVerdict]]:
         return self._verdicts.get()
+
     @verdicts.setter
     def verdicts(self, value: Optional[List[AnswerRelvancyVerdict]]):
         self._verdicts.set(value)
 
     def measure(
-        self, 
-        test_case: Union[LLMTestCase, ConversationalTestCase], 
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
         verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
@@ -78,11 +84,11 @@ class AnswerRelevancyMetric(BaseMetric):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 (
-                    self.statements, 
-                    self.verdicts, 
-                    self.score, 
-                    self.reason, 
-                    self.success
+                    self.statements,
+                    self.verdicts,
+                    self.score,
+                    self.reason,
+                    self.success,
                 ) = loop.run_until_complete(
                     self._measure_async(test_case, verbose)
                 )
@@ -95,27 +101,30 @@ class AnswerRelevancyMetric(BaseMetric):
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
                 if verbose:
-                    print(f"statements: {self.statements}\nverdicts: {self.verdicts}\n")                
+                    print(
+                        f"statements: {self.statements}\nverdicts: {self.verdicts}\n"
+                    )
                 return self.score
-    
+
     async def _measure_async(
-            self,
-            test_case: Union[LLMTestCase, ConversationalTestCase],
-            verbose: bool):
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
         await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
         return (
-            self.statements, 
-            self.verdicts, 
-            self.score, 
-            self.reason, 
-            self.success
-            )
+            self.statements,
+            self.verdicts,
+            self.score,
+            self.reason,
+            self.success,
+        )
 
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        verbose: bool = True
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -128,14 +137,14 @@ class AnswerRelevancyMetric(BaseMetric):
             self.statements = await self._a_generate_statements(
                 test_case.actual_output
             )
-            self.verdicts = (
-                await self._a_generate_verdicts(test_case.input)
-            )
+            self.verdicts = await self._a_generate_verdicts(test_case.input)
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
             if verbose:
-                print(f"statements: {self.statements}\nverdicts: {self.verdicts}\nscore: {self.score}, success: {self.success}\n")
+                print(
+                    f"statements: {self.statements}\nverdicts: {self.verdicts}\nscore: {self.score}, success: {self.success}\n"
+                )
             return self.score
 
     async def _a_generate_reason(self, input: str) -> str:

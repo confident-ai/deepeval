@@ -10,9 +10,14 @@ import contextvars
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
-from deepeval.utils import show_indicator, capture_contextvars, update_contextvars
+from deepeval.utils import (
+    show_indicator,
+    capture_contextvars,
+    update_contextvars,
+)
 from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
+
 
 def format_metric_description(
     metric: BaseMetric, async_mode: Optional[bool] = None
@@ -30,14 +35,13 @@ def format_metric_description(
     return f"✨ You're running DeepEval's latest [rgb(106,0,255)]{metric.__name__} Metric[/rgb(106,0,255)]! [rgb(55,65,81)](using {metric.evaluation_model}, strict={metric.strict_mode}, async_mode={run_async})...[/rgb(55,65,81)]"
 
 
-
 # Initialize console and progress with the console
 console = Console(file=sys.stderr)
 progress = Progress(
     SpinnerColumn(style="rgb(106,0,255)"),
     TextColumn("[progress.description]{task.description}"),
     console=console,
-    transient=True
+    transient=True,
 )
 
 # A lock to safely update task count
@@ -58,8 +62,11 @@ progress = Progress(
 #         if active_tasks == 0:
 #             progress.stop()
 
+
 @contextmanager
-def metric_progress_indicator(metric, async_mode=False, _show_indicator=True, total=9999):
+def metric_progress_indicator(
+    metric, async_mode=False, _show_indicator=True, total=9999
+):
     with capture_metric_type(metric.__name__):
         if _show_indicator and show_indicator():
             # if async_mode==False:
@@ -75,7 +82,7 @@ def metric_progress_indicator(metric, async_mode=False, _show_indicator=True, to
                 )
                 yield
             # else:
-            #     start_progress() 
+            #     start_progress()
             #     start_time = time.perf_counter()
             #     task_id = progress.add_task(
             #         description=format_metric_description(metric, async_mode),
@@ -96,6 +103,7 @@ def metric_progress_indicator(metric, async_mode=False, _show_indicator=True, to
         else:
             yield None
 
+
 async def measure_metric_task(
     task_id,
     progress,
@@ -103,7 +111,7 @@ async def measure_metric_task(
     test_case: Union[LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
-    metric_states: dict
+    metric_states: dict,
 ):
     while not progress.finished:
         start_time = time.perf_counter()
@@ -159,7 +167,7 @@ async def measure_metric_task(
 
         context_vars = capture_contextvars(metric)
         metric_states[metric] = context_vars
-        
+
         break
 
 
@@ -193,11 +201,11 @@ async def measure_metrics_with_indicator(
                         test_case,
                         cached_test_case,
                         ignore_errors,
-                        metric_states
+                        metric_states,
                     )
                 )
             await asyncio.gather(*tasks)
-            
+
     else:
         tasks = []
         for metric in metrics:
@@ -231,7 +239,6 @@ async def measure_metrics_with_indicator(
                 tasks.append(safe_a_measure(metric, tc, ignore_errors))
 
         await asyncio.gather(*tasks)
-
 
     # Update the metrics with the states captured from the tasks
     for metric in metrics:

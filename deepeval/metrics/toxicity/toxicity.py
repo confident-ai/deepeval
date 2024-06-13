@@ -10,7 +10,7 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
@@ -43,8 +43,12 @@ class ToxicityMetric(BaseMetric):
         strict_mode: bool = False,
     ):
         super().__init__()
-        self._opinions: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_opinions', default=None)
-        self._verdicts: ContextVar[Optional[List[ToxicityVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
+        self._opinions: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._verdicts: ContextVar[Optional[List[ToxicityVerdict]]] = (
+            ContextVar(generate_uuid(), default=None)
+        )
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -55,6 +59,7 @@ class ToxicityMetric(BaseMetric):
     @property
     def opinions(self) -> Optional[List[str]]:
         return self._opinions.get()
+
     @opinions.setter
     def opinions(self, value: Optional[List[str]]):
         self._opinions.set(value)
@@ -62,14 +67,15 @@ class ToxicityMetric(BaseMetric):
     @property
     def verdicts(self) -> Optional[List[ToxicityVerdict]]:
         return self._verdicts.get()
+
     @verdicts.setter
-    def verdicts(self, value: Optional[List['ToxicityVerdict']]):
+    def verdicts(self, value: Optional[List["ToxicityVerdict"]]):
         self._verdicts.set(value)
-        
+
     def measure(
-        self, 
+        self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool = True
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -84,41 +90,41 @@ class ToxicityMetric(BaseMetric):
                     self.verdicts,
                     self.score,
                     self.reason,
-                    self.success
+                    self.success,
                 ) = loop.run_until_complete(
                     self._measure_async(test_case, verbose)
                 )
             else:
-                self.opinions = self._generate_opinions(
-                    test_case.actual_output
-                )
+                self.opinions = self._generate_opinions(test_case.actual_output)
                 self.verdicts: List[ToxicityVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
                 if verbose:
-                    print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")  
+                    print(
+                        f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n"
+                    )
                 return self.score
-            
+
     async def _measure_async(
-            self,
-            test_case: Union[LLMTestCase, ConversationalTestCase],
-            verbose: bool
-            ):
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
         await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
         return (
             self.opinions,
             self.verdicts,
             self.score,
             self.reason,
-            self.success
+            self.success,
         )
 
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        verbose: bool = True
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -131,14 +137,12 @@ class ToxicityMetric(BaseMetric):
             self.opinions = await self._a_generate_opinions(
                 test_case.actual_output
             )
-            self.verdicts = (
-                await self._a_generate_verdicts()
-            )
+            self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
-            if verbose: 
-                print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")                  
+            if verbose:
+                print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")
             return self.score
 
     async def _a_generate_reason(self) -> str:
@@ -259,6 +263,7 @@ class ToxicityMetric(BaseMetric):
             except:
                 self.success = False
         return self.success
+
     @property
     def __name__(self):
         return "Toxicity"

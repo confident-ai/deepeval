@@ -1,4 +1,5 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
+
 from contextvars import ContextVar
 from typing import Optional, List, Tuple, Union, Dict
 from pydantic import BaseModel
@@ -11,7 +12,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.metrics.g_eval.template import GEvalTemplate
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
@@ -53,7 +54,7 @@ class GEvalResponse(BaseModel):
 
 
 class GEval(BaseMetric):
-   
+
     def __init__(
         self,
         name: str,
@@ -66,7 +67,9 @@ class GEval(BaseMetric):
         strict_mode: bool = False,
     ):
         super().__init__()
-        self._evaluation_steps: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_evaluation_steps', default=None)
+        self._evaluation_steps: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
         self.name = name
         self.evaluation_params = evaluation_params
 
@@ -97,14 +100,15 @@ class GEval(BaseMetric):
     @property
     def evaluation_steps(self) -> Optional[List[str]]:
         return self._evaluation_steps.get()
+
     @evaluation_steps.setter
     def evaluation_steps(self, value: Optional[List[str]]):
         self._evaluation_steps.set(value)
 
     def measure(
-        self, 
+        self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool = True
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -118,14 +122,12 @@ class GEval(BaseMetric):
                     self.evaluation_steps,
                     self.score,
                     self.reason,
-                    self.success
+                    self.success,
                 ) = loop.run_until_complete(
                     self._measure_async(test_case, verbose)
                 )
             else:
-                self.evaluation_steps = (
-                    self._generate_evaluation_steps()
-                )
+                self.evaluation_steps = self._generate_evaluation_steps()
                 g_score, reason = self.evaluate(test_case)
                 self.reason = reason
                 self.score = float(g_score) / 10
@@ -136,26 +138,22 @@ class GEval(BaseMetric):
                 )
                 self.success = self.score >= self.threshold
                 if verbose:
-                    print(f"evaluation_steps: {self.evaluation_steps}\n")          
+                    print(f"evaluation_steps: {self.evaluation_steps}\n")
                 return self.score
-            
+
     async def _measure_async(
-            self,
-            test_case: Union[LLMTestCase, ConversationalTestCase],
-            verbose: bool):
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
         await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (
-            self.evaluation_steps,
-            self.score,
-            self.reason,
-            self.success
-            )
+        return (self.evaluation_steps, self.score, self.reason, self.success)
 
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        verbose: bool = True
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -167,9 +165,7 @@ class GEval(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.evaluation_steps = (
-                await self._a_generate_evaluation_steps()
-            )
+            self.evaluation_steps = await self._a_generate_evaluation_steps()
             g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
             self.score = float(g_score) / 10
@@ -180,7 +176,7 @@ class GEval(BaseMetric):
             )
             self.success = self.score >= self.threshold
             if verbose:
-                print(f"evaluation_steps: {self.evaluation_steps}\n")        
+                print(f"evaluation_steps: {self.evaluation_steps}\n")
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
@@ -415,4 +411,3 @@ class GEval(BaseMetric):
     @property
     def __name__(self):
         return f"{self.name} (GEval)"
-

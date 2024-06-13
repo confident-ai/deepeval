@@ -14,9 +14,14 @@ from dataclasses import asdict, is_dataclass
 import re
 import asyncio
 import nest_asyncio
+import uuid
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
+
+def generate_uuid() -> str:
+    return str(uuid.uuid4())
 
 
 def serialize_dict_with_sorting(obj):
@@ -157,7 +162,7 @@ def get_deployment_configs() -> Optional[Dict]:
 def is_confident():
     confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
     return confident_api_key is not None
-    
+
 
 def capture_contextvars(single_obj):
     contextvars_dict = {}
@@ -172,7 +177,7 @@ def update_contextvars(single_obj, contextvars_dict):
     for attr, (context_var, value) in contextvars_dict.items():
         context_var.set(value)
         setattr(single_obj, attr, context_var)
-        
+
 
 def drop_and_copy(obj, drop_attrs):
     # Function to drop attributes from a single object

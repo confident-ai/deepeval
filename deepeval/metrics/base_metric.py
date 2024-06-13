@@ -1,8 +1,11 @@
 from abc import abstractmethod
 from contextvars import ContextVar
 from typing import Optional, Dict
+import uuid
 
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.utils import generate_uuid
+
 
 class BaseMetric:
 
@@ -13,15 +16,26 @@ class BaseMetric:
     evaluation_cost: Optional[float] = None
 
     def __init__(self):
-        self._score: ContextVar[Optional[float]] = ContextVar(f'{self.__class__.__name__}_score', default=None)
-        self._score_breakdown: ContextVar[Optional[Dict]] = ContextVar(f'{self.__class__.__name__}_score_breakdown', default=None)
-        self._reason: ContextVar[Optional[str]] = ContextVar(f'{self.__class__.__name__}_reason', default=None)
-        self._success: ContextVar[Optional[bool]] = ContextVar(f'{self.__class__.__name__}_success', default=None)
-        self._error: ContextVar[Optional[str]] = ContextVar(f'{self.__class__.__name__}_error', default=None)
+        self._score: ContextVar[Optional[float]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._score_breakdown: ContextVar[Optional[Dict]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._reason: ContextVar[Optional[str]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._success: ContextVar[Optional[bool]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._error: ContextVar[Optional[str]] = ContextVar(
+            generate_uuid(), default=None
+        )
 
     @property
     def score(self) -> Optional[float]:
         return self._score.get()
+
     @score.setter
     def score(self, value: Optional[float]) -> None:
         self._score.set(value)
@@ -29,6 +43,7 @@ class BaseMetric:
     @property
     def score_breakdown(self) -> Optional[Dict]:
         return self._score_breakdown.get()
+
     @score_breakdown.setter
     def score_breakdown(self, value: Optional[Dict]) -> None:
         self._score_breakdown.set(value)
@@ -36,6 +51,7 @@ class BaseMetric:
     @property
     def reason(self) -> Optional[str]:
         return self._reason.get()
+
     @reason.setter
     def reason(self, value: Optional[str]) -> None:
         self._reason.set(value)
@@ -43,6 +59,7 @@ class BaseMetric:
     @property
     def success(self) -> Optional[bool]:
         return self._success.get()
+
     @success.setter
     def success(self, value: Optional[bool]) -> None:
         self._success.set(value)
@@ -50,6 +67,7 @@ class BaseMetric:
     @property
     def error(self) -> Optional[str]:
         return self._error.get()
+
     @error.setter
     def error(self, value: Optional[str]) -> None:
         self._error.set(value)
@@ -57,6 +75,7 @@ class BaseMetric:
     @property
     def error(self) -> Optional[str]:
         return self._error.get()
+
     @error.setter
     def error(self, value: Optional[str]) -> None:
         self._error.set(value)
@@ -64,6 +83,7 @@ class BaseMetric:
     @property
     def threshold(self) -> float:
         return self._threshold
+
     @threshold.setter
     def threshold(self, value: float):
         self._threshold = value
@@ -95,14 +115,15 @@ class BaseConversationalMetric:
     async_mode: bool = False
 
     def __init__(self):
-        self._score = ContextVar(f'{self.__class__.__name__}_score', default=None)
-        self._score_breakdown = ContextVar(f'{self.__class__.__name__}_score_breakdown', default=None)
-        self._reason = ContextVar(f'{self.__class__.__name__}_reason', default=None)
-        self._error = ContextVar(f'{self.__class__.__name__}_error', default=None)
+        self._score = ContextVar(generate_uuid(), default=None)
+        self._score_breakdown = ContextVar(generate_uuid(), default=None)
+        self._reason = ContextVar(generate_uuid(), default=None)
+        self._error = ContextVar(generate_uuid(), default=None)
 
     @property
     def score(self) -> Optional[float]:
         return self._score.get()
+
     @score.setter
     def score(self, value: Optional[float]) -> None:
         self._score.set(value)
@@ -110,6 +131,7 @@ class BaseConversationalMetric:
     @property
     def score_breakdown(self) -> Optional[Dict]:
         return self._score_breakdown.get()
+
     @score_breakdown.setter
     def score_breakdown(self, value: Optional[Dict]) -> None:
         self._score_breakdown.set(value)
@@ -117,6 +139,7 @@ class BaseConversationalMetric:
     @property
     def reason(self) -> Optional[str]:
         return self._reason.get()
+
     @reason.setter
     def reason(self, value: Optional[str]) -> None:
         self._reason.set(value)
@@ -124,6 +147,7 @@ class BaseConversationalMetric:
     @property
     def error(self) -> Optional[str]:
         return self._error.get()
+
     @error.setter
     def error(self, value: Optional[str]) -> None:
         self._error.set(value)
@@ -131,6 +155,7 @@ class BaseConversationalMetric:
     @property
     def threshold(self) -> float:
         return self._threshold
+
     @threshold.setter
     def threshold(self, value: float):
         self._threshold = value

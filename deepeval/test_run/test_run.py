@@ -303,9 +303,7 @@ class TestRunManager:
     def save_test_run(self):
         if self.save_to_disk:
             try:
-                with portalocker.Lock(
-                    self.temp_file_name, mode="w"
-                ) as file:
+                with portalocker.Lock(self.temp_file_name, mode="w") as file:
                     self.test_run = self.test_run.save(file)
             except portalocker.exceptions.LockException:
                 print(

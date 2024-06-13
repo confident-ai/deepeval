@@ -3,7 +3,7 @@ from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import asyncio
 
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
@@ -45,7 +45,9 @@ class ContextualRelevancyMetric(BaseMetric):
         strict_mode: bool = False,
     ):
         super().__init__()
-        self._verdicts: ContextVar[Optional[List[ContextualRelevancyVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)        
+        self._verdicts: ContextVar[
+            Optional[List[ContextualRelevancyVerdict]]
+        ] = ContextVar(generate_uuid(), default=None)
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -56,14 +58,15 @@ class ContextualRelevancyMetric(BaseMetric):
     @property
     def verdicts(self) -> Optional[List[ContextualRelevancyVerdict]]:
         return self._verdicts.get()
+
     @verdicts.setter
     def verdicts(self, value: Optional[List[ContextualRelevancyVerdict]]):
         self._verdicts.set(value)
-        
+
     def measure(
-        self, 
+        self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool = True
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -73,44 +76,35 @@ class ContextualRelevancyMetric(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                (
-                    self.verdicts,
-                    self.score,
-                    self.reason,
-                    self.success
-                ) = loop.run_until_complete(
-                    self._measure_async(test_case, verbose)
+                (self.verdicts, self.score, self.reason, self.success) = (
+                    loop.run_until_complete(
+                        self._measure_async(test_case, verbose)
+                    )
                 )
             else:
-                self.verdicts = (
-                    self._generate_verdicts(
-                        test_case.input, test_case.retrieval_context
-                    )
+                self.verdicts = self._generate_verdicts(
+                    test_case.input, test_case.retrieval_context
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
                 if verbose:
-                    print(f"verdicts: {self.verdicts}\n")    
+                    print(f"verdicts: {self.verdicts}\n")
                 return self.score
-    
+
     async def _measure_async(
-            self,
-            test_case: Union[LLMTestCase, ConversationalTestCase],
-            verbose: bool):
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
         await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (
-            self.verdicts,
-            self.score,
-            self.reason,
-            self.success
-            )
+        return (self.verdicts, self.score, self.reason, self.success)
 
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        verbose: bool = True
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -122,16 +116,14 @@ class ContextualRelevancyMetric(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.verdicts = (
-                await self._a_generate_verdicts(
-                    test_case.input, test_case.retrieval_context
-                )
+            self.verdicts = await self._a_generate_verdicts(
+                test_case.input, test_case.retrieval_context
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
             if verbose:
-                print(f"verdicts: {self.verdicts}\n")    
+                print(f"verdicts: {self.verdicts}\n")
             return self.score
 
     async def _a_generate_reason(self, input: str):
@@ -248,7 +240,7 @@ class ContextualRelevancyMetric(BaseMetric):
             except:
                 self.success = False
         return self.success
-    
+
     @property
     def __name__(self):
         return "Contextual Relevancy"

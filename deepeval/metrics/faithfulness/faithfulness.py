@@ -9,7 +9,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
@@ -26,12 +26,14 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.RETRIEVAL_CONTEXT,
 ]
 
+
 class FaithfulnessVerdict(BaseModel):
     verdict: str
     reason: str = Field(default=None)
 
+
 class FaithfulnessMetric(BaseMetric):
-    
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -41,19 +43,26 @@ class FaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
     ):
         super().__init__()
-        self._truths: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_truths', default=None)
-        self._claims: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_claims', default=None)
-        self._verdicts: ContextVar[Optional[List[FaithfulnessVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
+        self._truths: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._claims: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._verdicts: ContextVar[Optional[List[FaithfulnessVerdict]]] = (
+            ContextVar(generate_uuid(), default=None)
+        )
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
-    
+
     @property
     def truths(self) -> Optional[List[str]]:
         return self._truths.get()
+
     @truths.setter
     def truths(self, value: Optional[List[str]]):
         self._truths.set(value)
@@ -61,6 +70,7 @@ class FaithfulnessMetric(BaseMetric):
     @property
     def claims(self) -> Optional[List[str]]:
         return self._claims.get()
+
     @claims.setter
     def claims(self, value: Optional[List[str]]):
         self._claims.set(value)
@@ -68,14 +78,15 @@ class FaithfulnessMetric(BaseMetric):
     @property
     def verdicts(self) -> Optional[List[FaithfulnessVerdict]]:
         return self._verdicts.get()
+
     @verdicts.setter
     def verdicts(self, value: Optional[List[FaithfulnessVerdict]]):
         self._verdicts.set(value)
 
     def measure(
-        self, 
+        self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool = True
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -91,35 +102,38 @@ class FaithfulnessMetric(BaseMetric):
                     self.verdicts,
                     self.score,
                     self.reason,
-                    self.success
+                    self.success,
                 ) = loop.run_until_complete(
                     self._measure_async(test_case, verbose)
                 )
             else:
                 self.truths = self._generate_truths(test_case.retrieval_context)
-                self.claims = self._generate_claims(test_case.actual_output)                
+                self.claims = self._generate_claims(test_case.actual_output)
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score >= self.threshold
                 if verbose:
-                    print(f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n")                        
+                    print(
+                        f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n"
+                    )
                 return self.score
-            
+
     async def _measure_async(
-            self,
-            test_case: Union[LLMTestCase, ConversationalTestCase],
-            verbose: bool):
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
         await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
         return (
             self.truths,
-            self.claims, 
-            self.verdicts, 
-            self.score, 
-            self.reason, 
-            self.success
-            )
-    
+            self.claims,
+            self.verdicts,
+            self.score,
+            self.reason,
+            self.success,
+        )
+
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
@@ -138,12 +152,14 @@ class FaithfulnessMetric(BaseMetric):
                 self._a_generate_truths(test_case.retrieval_context),
                 self._a_generate_claims(test_case.actual_output),
             )
-            self.verdicts  = await self._a_generate_verdicts()
+            self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
             if verbose:
-                    print(f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n")          
+                print(
+                    f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n"
+                )
             return self.score
 
     async def _a_generate_reason(self) -> str:
