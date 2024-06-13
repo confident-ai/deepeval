@@ -85,7 +85,7 @@ class HallucinationMetric(BaseMetric):
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
                 if verbose:
-                    print(f"verdicts: {self.verdicts}")  
+                    print(f"verdicts: {self.verdicts}\n")  
                 return self.score
     
     async def _measure_async(
@@ -121,7 +121,7 @@ class HallucinationMetric(BaseMetric):
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
             if verbose:
-                print(f"verdicts: {self.verdicts}") 
+                print(f"verdicts: {self.verdicts}\n") 
             return self.score
 
     async def _a_generate_reason(self):

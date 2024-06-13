@@ -71,7 +71,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
             if verbose:
-                print(f"knowledges: {self.knowledges}\nverdicts: {self.verdicts}")                        
+                print(f"knowledges: {self.knowledges}\nverdicts: {self.verdicts}\n")                        
             return self.score
 
     def _generate_reason(self, score: float) -> str:

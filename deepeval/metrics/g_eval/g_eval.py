@@ -136,7 +136,7 @@ class GEval(BaseMetric):
                 )
                 self.success = self.score >= self.threshold
                 if verbose:
-                    print(f"evaluation_steps: {self.evaluation_steps}")          
+                    print(f"evaluation_steps: {self.evaluation_steps}\n")          
                 return self.score
             
     async def _measure_async(
@@ -180,7 +180,7 @@ class GEval(BaseMetric):
             )
             self.success = self.score >= self.threshold
             if verbose:
-                print(f"evaluation_steps: {self.evaluation_steps}")        
+                print(f"evaluation_steps: {self.evaluation_steps}\n")        
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:

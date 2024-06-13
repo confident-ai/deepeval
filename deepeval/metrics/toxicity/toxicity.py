@@ -97,7 +97,7 @@ class ToxicityMetric(BaseMetric):
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
                 if verbose:
-                    print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}")  
+                    print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")  
                 return self.score
             
     async def _measure_async(
@@ -138,7 +138,7 @@ class ToxicityMetric(BaseMetric):
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
             if verbose: 
-                print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}")                  
+                print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")                  
             return self.score
 
     async def _a_generate_reason(self) -> str:

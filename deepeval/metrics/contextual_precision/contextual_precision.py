@@ -94,7 +94,7 @@ class ContextualPrecisionMetric(BaseMetric):
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
                 if verbose:
-                    print(f"verdicts: {self.verdicts}")                
+                    print(f"verdicts: {self.verdicts}\n")                
                 return self.score
             
     async def _measure_async(
@@ -136,7 +136,7 @@ class ContextualPrecisionMetric(BaseMetric):
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
             if verbose:
-                print(f"verdicts: {self.verdicts}")                                   
+                print(f"verdicts: {self.verdicts}\n")                                   
             return self.score
 
     async def _a_generate_reason(self, input: str):

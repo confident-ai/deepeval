@@ -95,7 +95,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
                 if verbose:
-                    print(f"statements: {self.statements}\nverdicts: {self.verdicts}")                
+                    print(f"statements: {self.statements}\nverdicts: {self.verdicts}\n")                
                 return self.score
     
     async def _measure_async(
@@ -135,7 +135,7 @@ class AnswerRelevancyMetric(BaseMetric):
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
             if verbose:
-                print(f"statements: {self.statements}\nverdicts: {self.verdicts}\nscore: {self.score}, success: {self.success}")
+                print(f"statements: {self.statements}\nverdicts: {self.verdicts}\nscore: {self.score}, success: {self.success}\n")
             return self.score
 
     async def _a_generate_reason(self, input: str) -> str:

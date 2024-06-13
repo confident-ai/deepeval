@@ -253,7 +253,7 @@ def test_sync_in_async():
     for metric in metrics:
         tasks.append(single_sync_in_async_call(metric, test_case_1))
 
-test_sync_in_async()
+#test_sync_in_async()
 
 # ##########################################################
 # # evaluate
@@ -282,7 +282,7 @@ metric10 = GEval(
 )
     
 dataset = EvaluationDataset(test_cases=test_cases)
-#dataset.evaluate([metric1, metric2])
+dataset.evaluate([metric1, metric2])
 #evaluate(dataset, [metric1, metric2])
 #evaluate(dataset, [metric10, metric2], run_async=False, show_indicator=True)
 

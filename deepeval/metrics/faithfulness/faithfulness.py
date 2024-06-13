@@ -103,7 +103,7 @@ class FaithfulnessMetric(BaseMetric):
                 self.reason = self._generate_reason()
                 self.success = self.score >= self.threshold
                 if verbose:
-                    print(f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}")                        
+                    print(f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n")                        
                 return self.score
             
     async def _measure_async(
@@ -143,7 +143,7 @@ class FaithfulnessMetric(BaseMetric):
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
             if verbose:
-                    print(f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}")          
+                    print(f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n")          
             return self.score
 
     async def _a_generate_reason(self) -> str:
