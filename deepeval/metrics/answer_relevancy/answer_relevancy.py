@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 
@@ -30,6 +31,7 @@ class AnswerRelvancyVerdict(BaseModel):
 
 
 class AnswerRelevancyMetric(BaseMetric):
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -38,15 +40,34 @@ class AnswerRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
     ):
+        super().__init__()
+        self._statements: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_statements', default=None)
+        self._verdicts: ContextVar[Optional[List[AnswerRelvancyVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
+    
+    @property
+    def statements(self) -> Optional[List[str]]:
+        return self._statements.get()
+    @statements.setter
+    def statements(self, value: Optional[List[str]]):
+        self._statements.set(value)
+        
+    @property
+    def verdicts(self) -> Optional[List[AnswerRelvancyVerdict]]:
+        return self._verdicts.get()
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[AnswerRelvancyVerdict]]):
+        self._verdicts.set(value)
 
     def measure(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+        self, 
+        test_case: Union[LLMTestCase, ConversationalTestCase], 
+        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -56,25 +77,45 @@ class AnswerRelevancyMetric(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                (
+                    self.statements, 
+                    self.verdicts, 
+                    self.score, 
+                    self.reason, 
+                    self.success
+                ) = loop.run_until_complete(
+                    self._measure_async(test_case, verbose)
                 )
             else:
-                self.statements: List[str] = self._generate_statements(
+                self.statements = self._generate_statements(
                     test_case.actual_output
                 )
-                self.verdicts: List[AnswerRelvancyVerdict] = (
-                    self._generate_verdicts(test_case.input)
-                )
+                self.verdicts = self._generate_verdicts(test_case.input)
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
+                if verbose:
+                    print(f"statements: {self.statements}\nverdicts: {self.verdicts}\n")                
                 return self.score
+    
+    async def _measure_async(
+            self,
+            test_case: Union[LLMTestCase, ConversationalTestCase],
+            verbose: bool):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        return (
+            self.statements, 
+            self.verdicts, 
+            self.score, 
+            self.reason, 
+            self.success
+            )
 
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
+        verbose: bool = True
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -84,15 +125,17 @@ class AnswerRelevancyMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.statements: List[str] = await self._a_generate_statements(
+            self.statements = await self._a_generate_statements(
                 test_case.actual_output
             )
-            self.verdicts: List[AnswerRelvancyVerdict] = (
+            self.verdicts = (
                 await self._a_generate_verdicts(test_case.input)
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
+            if verbose:
+                print(f"statements: {self.statements}\nverdicts: {self.verdicts}\nscore: {self.score}, success: {self.success}\n")
             return self.score
 
     async def _a_generate_reason(self, input: str) -> str:

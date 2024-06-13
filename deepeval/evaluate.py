@@ -23,7 +23,7 @@ from deepeval.test_run import (
     ConversationalApiTestCase,
     MetricMetadata,
 )
-from deepeval.utils import get_is_running_deepeval, set_indicator
+from deepeval.utils import get_is_running_deepeval, set_indicator, capture_contextvars, update_contextvars
 from deepeval.test_run.cache import (
     test_run_cache_manager,
     Cache,
@@ -38,7 +38,7 @@ class TestResult:
     """Returned from run_test"""
 
     success: bool
-    metrics: List[BaseMetric]
+    metrics_metadatas: List[MetricMetadata]
     input: str
     actual_output: str
     expected_output: str
@@ -75,7 +75,6 @@ def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
 
 def create_test_result(
     test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
-    metrics: List[BaseMetric],
 ) -> TestResult:
     if isinstance(test_case, ConversationalApiTestCase):
         tc = test_case.messages[len(test_case.messages) - 1]
@@ -84,7 +83,7 @@ def create_test_result(
 
     return TestResult(
         success=tc.success,
-        metrics=metrics,
+        metrics_metadatas=tc.metrics_metadata,
         input=tc.input,
         actual_output=tc.actual_output,
         expected_output=tc.expected_output,
@@ -264,9 +263,7 @@ def execute_test_cases(
                     to_temp=True,
                 )
 
-            test_result = create_test_result(
-                api_test_case, drop_and_copy(metrics, ["model", "embeddings"])
-            )
+            test_result = create_test_result(api_test_case)
             test_results.append(test_result)
 
     return test_results
@@ -283,6 +280,7 @@ async def a_execute_test_cases(
     test_run_cache_manager.disable_write_cache = save_to_disk == False
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
+
     for index, test_case in enumerate(test_cases):
         with capture_evaluation_run("test case"):
             cached_test_case = None
@@ -302,9 +300,9 @@ async def a_execute_test_cases(
             await measure_metrics_with_indicator(
                 metrics, test_case, cached_test_case, ignore_errors
             )
+            
             for metric in metrics:
                 metric_metadata = create_metric_metadata(metric)
-
                 if isinstance(test_case, ConversationalTestCase):
                     # index hardcoded as the last message for now
                     api_test_case.update(
@@ -353,9 +351,7 @@ async def a_execute_test_cases(
                     to_temp=True,
                 )
 
-            test_result = create_test_result(
-                api_test_case, drop_and_copy(metrics, ["model", "embeddings"])
-            )
+            test_result = create_test_result(api_test_case)
             test_results.append(test_result)
 
     return test_results
@@ -392,25 +388,25 @@ def assert_test(
         )[0]
 
     if not test_result.success:
-        failed_metrics: List[BaseMetric] = []
+        failed_metrics_metadata: List[MetricMetadata] = []
         # even for conversations, test_result right now is just the
         # result for the last message
-        for metric in test_result.metrics:
-            if metric.error is not None:
-                failed_metrics.append(metric)
+        for metrics_metadata in test_result.metrics_metadatas:
+            if metrics_metadata.error is not None:
+                failed_metrics_metadata.append(metrics_metadata)
             else:
                 # This try block is for user defined custom metrics,
                 # which might not handle the score == undefined case elegantly
                 try:
-                    if not metric.is_successful():
-                        failed_metrics.append(metric)
+                    if not metrics_metadata.success:
+                        failed_metrics_metadata.append(metrics_metadata)
                 except:
-                    failed_metrics.append(metric)
+                    failed_metrics_metadata.append(metrics_metadata)
 
         failed_metrics_str = ", ".join(
             [
-                f"{metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, error: {metric.error})"
-                for metric in failed_metrics
+                f"{metrics_metadata.metric} (score: {metrics_metadata.score}, threshold: {metrics_metadata.threshold}, strict: {metrics_metadata.strict_mode}, error: {metrics_metadata.error})"
+                for metrics_metadata in failed_metrics_metadata
             ]
         )
         raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
@@ -449,6 +445,7 @@ def evaluate(
     if print_results:
         print("Evaluating test cases...")
 
+    metric_states = []
     with capture_evaluation_run("evaluate()"):
         if run_async:
             loop = get_or_create_event_loop()
@@ -489,30 +486,30 @@ def print_test_result(test_result: TestResult):
     print("")
     print("=" * 70 + "\n")
     print("Metrics Summary\n")
-    for metric in test_result.metrics:
+    for metrics_metadata in test_result.metrics_metadatas:
         successful = True
-        if metric.error is not None:
+        if metrics_metadata.error is not None:
             successful = False
         else:
             # This try block is for user defined custom metrics,
             # which might not handle the score == undefined case elegantly
             try:
-                if not metric.is_successful():
+                if not metrics_metadata.success:
                     successful = False
             except:
                 successful = False
 
         if not successful:
             print(
-                f"  - ❌ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason}, error: {metric.error})"
+                f"  - ❌ {metrics_metadata.metric} (score: {metrics_metadata.score}, threshold: {metrics_metadata.threshold}, strict: {metrics_metadata.strict_mode}, evaluation model: {metrics_metadata.evaluation_model}, reason: {metrics_metadata.reason}, error: {metrics_metadata.error})"
             )
         else:
             print(
-                f"  - ✅ {metric.__name__} (score: {metric.score}, threshold: {metric.threshold}, strict: {metric.strict_mode}, evaluation model: {metric.evaluation_model}, reason: {metric.reason}, error: {metric.error})"
+                f"  - ✅ {metrics_metadata.metric} (score: {metrics_metadata.score}, threshold: {metrics_metadata.threshold}, strict: {metrics_metadata.strict_mode}, evaluation model: {metrics_metadata.evaluation_model}, reason: {metrics_metadata.reason}, error: {metrics_metadata.error})"
             )
-        if metric.score_breakdown:
-            for metric_name, score in metric.score_breakdown.items():
-                print(f"      - {metric_name} (score: {score})")
+        # if metrics_metadata.score_breakdown:
+        #     for metric_name, score in metrics_metadata.score_breakdown.items():
+        #         print(f"      - {metric_name} (score: {score})")
 
     print("")
     print("For test case:\n")
@@ -528,13 +525,13 @@ def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     metric_successes = {}
 
     for result in test_results:
-        for metric in result.metrics:
-            metric_name = metric.__class__.__name__
+        for metrics_metadata in result.metrics_metadatas:
+            metric_name = metrics_metadata.metric
             if metric_name not in metric_counts:
                 metric_counts[metric_name] = 0
                 metric_successes[metric_name] = 0
             metric_counts[metric_name] += 1
-            if metric.success:
+            if metrics_metadata.success:
                 metric_successes[metric_name] += 1
 
     metric_pass_rates = {

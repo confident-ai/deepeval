@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from enum import Enum
 import copy
 import os
@@ -156,7 +157,22 @@ def get_deployment_configs() -> Optional[Dict]:
 def is_confident():
     confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
     return confident_api_key is not None
+    
 
+def capture_contextvars(single_obj):
+    contextvars_dict = {}
+    for attr in dir(single_obj):
+        attr_value = getattr(single_obj, attr, None)
+        if isinstance(attr_value, ContextVar):
+            contextvars_dict[attr] = (attr_value, attr_value.get())
+    return contextvars_dict
+
+
+def update_contextvars(single_obj, contextvars_dict):
+    for attr, (context_var, value) in contextvars_dict.items():
+        context_var.set(value)
+        setattr(single_obj, attr, context_var)
+        
 
 def drop_and_copy(obj, drop_attrs):
     # Function to drop attributes from a single object
@@ -168,23 +184,48 @@ def drop_and_copy(obj, drop_attrs):
                 delattr(single_obj, attr)
         return temp_attrs
 
+    # Function to remove ContextVar attributes from a single object
+    def remove_contextvars(single_obj):
+        temp_contextvars = {}
+        for attr in dir(single_obj):
+            if isinstance(getattr(single_obj, attr, None), ContextVar):
+                temp_contextvars[attr] = getattr(single_obj, attr)
+                delattr(single_obj, attr)
+        return temp_contextvars
+
+    # Function to restore ContextVar attributes to a single object
+    def restore_contextvars(single_obj, contextvars):
+        for attr, value in contextvars.items():
+            setattr(single_obj, attr, value)
+
     # Check if obj is iterable (but not a string)
     if isinstance(obj, Iterable) and not isinstance(obj, str):
         copied_objs = []
         for item in obj:
             temp_attrs = drop_attrs_from_single_obj(item, drop_attrs)
-            copied_objs.append(copy.deepcopy(item))
-            # Restore attributes to the original item
+            temp_contextvars = remove_contextvars(item)
+            copied_obj = copy.deepcopy(item)
+            restore_contextvars(copied_obj, temp_contextvars)
+
+            # Restore attributes to the original object
             for attr, value in temp_attrs.items():
                 setattr(item, attr, value)
+            restore_contextvars(item, temp_contextvars)
+
+            copied_objs.append(copied_obj)
+
         return copied_objs
     else:
-        # If obj is not iterable, apply directly
         temp_attrs = drop_attrs_from_single_obj(obj, drop_attrs)
+        temp_contextvars = remove_contextvars(obj)
         copied_obj = copy.deepcopy(obj)
+        restore_contextvars(copied_obj, temp_contextvars)
+
         # Restore attributes to the original object
         for attr, value in temp_attrs.items():
             setattr(obj, attr, value)
+        restore_contextvars(obj, temp_contextvars)
+
         return copied_obj
 
 

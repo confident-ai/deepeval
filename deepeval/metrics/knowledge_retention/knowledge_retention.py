@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from typing import Optional, Union, Dict, List
 from pydantic import BaseModel, Field
 
@@ -33,26 +34,44 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         include_reason: bool = True,
         strict_mode: bool = False,
     ):
+        super().__init__()
+        self._knowledges: ContextVar[Optional[List[Knowledge]]] = ContextVar(f'{self.__class__.__name__}_truths', default=None)
+        self._verdicts: ContextVar[Optional[List[KnowledgeRetentionVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.strict_mode = strict_mode
+    
+    @property
+    def knowledges(self) -> Optional[List[Knowledge]]:
+        return self._knowledges.get()
+    @knowledges.setter
+    def claims(self, value: Optional[List[Knowledge]]):
+        self._claims.set(value)
 
-    def measure(self, test_case: ConversationalTestCase):
+    @property
+    def verdicts(self) -> Optional[List[KnowledgeRetentionVerdict]]:
+        return self._verdicts.get()
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[KnowledgeRetentionVerdict]]):
+        self._verdicts.set(value)
+
+    def measure(self, test_case: ConversationalTestCase, verbose: bool = True):
         validate_conversational_test_case(test_case, self)
         with metric_progress_indicator(self):
-            self.knowledges: List[Knowledge] = self._generate_knowledges(
+            self.knowledges = self._generate_knowledges(
                 test_case
             )
-            self.verdicts: List[KnowledgeRetentionVerdict] = (
+            self.verdicts = (
                 self._generate_verdicts(test_case)
             )
             knowledge_retention_score = self._calculate_score()
             self.reason = self._generate_reason(knowledge_retention_score)
-
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
+            if verbose:
+                print(f"knowledges: {self.knowledges}\nverdicts: {self.verdicts}\n")                        
             return self.score
 
     def _generate_reason(self, score: float) -> str:
@@ -140,7 +159,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
+                self.success = self.score >= self.threshold
             except:
                 self.success = False
         return self.success

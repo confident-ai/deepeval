@@ -288,7 +288,6 @@ class TestRunManager:
                 with portalocker.Lock(
                     self.temp_file_name,
                     mode="r",
-                    timeout=5,
                     flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
                 ) as file:
                     self.test_run = self.test_run.load(file)
@@ -305,7 +304,7 @@ class TestRunManager:
         if self.save_to_disk:
             try:
                 with portalocker.Lock(
-                    self.temp_file_name, mode="w", timeout=5
+                    self.temp_file_name, mode="w"
                 ) as file:
                     self.test_run = self.test_run.save(file)
             except portalocker.exceptions.LockException:
@@ -324,7 +323,6 @@ class TestRunManager:
                 with portalocker.Lock(
                     self.temp_file_name,
                     mode="r+",
-                    timeout=5,
                     flags=portalocker.LOCK_EX,
                 ) as file:
                     file.seek(0)

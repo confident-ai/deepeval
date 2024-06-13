@@ -1,5 +1,5 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
-
+from contextvars import ContextVar
 from typing import Optional, List, Tuple, Union, Dict
 from pydantic import BaseModel
 from langchain.schema import AIMessage
@@ -53,6 +53,7 @@ class GEvalResponse(BaseModel):
 
 
 class GEval(BaseMetric):
+   
     def __init__(
         self,
         name: str,
@@ -64,6 +65,8 @@ class GEval(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
     ):
+        super().__init__()
+        self._evaluation_steps: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_evaluation_steps', default=None)
         self.name = name
         self.evaluation_params = evaluation_params
 
@@ -86,13 +89,22 @@ class GEval(BaseMetric):
         self.criteria = criteria
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
-        self.evaluation_steps = evaluation_steps
+        self._evaluation_steps.set(evaluation_steps)
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
 
+    @property
+    def evaluation_steps(self) -> Optional[List[str]]:
+        return self._evaluation_steps.get()
+    @evaluation_steps.setter
+    def evaluation_steps(self, value: Optional[List[str]]):
+        self._evaluation_steps.set(value)
+
     def measure(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+        self, 
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool = True
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -102,11 +114,16 @@ class GEval(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                (
+                    self.evaluation_steps,
+                    self.score,
+                    self.reason,
+                    self.success
+                ) = loop.run_until_complete(
+                    self._measure_async(test_case, verbose)
                 )
             else:
-                self.evaluation_steps: List[str] = (
+                self.evaluation_steps = (
                     self._generate_evaluation_steps()
                 )
                 g_score, reason = self.evaluate(test_case)
@@ -118,12 +135,27 @@ class GEval(BaseMetric):
                     else self.score
                 )
                 self.success = self.score >= self.threshold
+                if verbose:
+                    print(f"evaluation_steps: {self.evaluation_steps}\n")          
                 return self.score
+            
+    async def _measure_async(
+            self,
+            test_case: Union[LLMTestCase, ConversationalTestCase],
+            verbose: bool):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        return (
+            self.evaluation_steps,
+            self.score,
+            self.reason,
+            self.success
+            )
 
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
+        verbose: bool = True
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -135,7 +167,7 @@ class GEval(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.evaluation_steps: List[str] = (
+            self.evaluation_steps = (
                 await self._a_generate_evaluation_steps()
             )
             g_score, reason = await self._a_evaluate(test_case)
@@ -147,6 +179,8 @@ class GEval(BaseMetric):
                 else self.score
             )
             self.success = self.score >= self.threshold
+            if verbose:
+                print(f"evaluation_steps: {self.evaluation_steps}\n")        
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
@@ -373,7 +407,7 @@ class GEval(BaseMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
+                self.success = self.score >= self.threshold
             except:
                 self.success = False
         return self.success
@@ -381,3 +415,4 @@ class GEval(BaseMetric):
     @property
     def __name__(self):
         return f"{self.name} (GEval)"
+

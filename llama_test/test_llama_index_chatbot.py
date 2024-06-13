@@ -9,6 +9,7 @@ import asyncio
 
 from deepeval.tracing import Tracer, TraceType
 from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
+import deepeval.tracing
 
 ###########################################################
 # set up integration
