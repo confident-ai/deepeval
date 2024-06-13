@@ -41,58 +41,58 @@ progress = Progress(
 )
 
 # A lock to safely update task count
-lock = threading.Lock()
-active_tasks = 0
+# lock = threading.Lock()
+# active_tasks = 0
 
-def start_progress():
-    with lock:
-        global active_tasks
-        if active_tasks == 0:
-            progress.start()
-        active_tasks += 1
+# def start_progress():
+#     with lock:
+#         global active_tasks
+#         if active_tasks == 0:
+#             progress.start()
+#         active_tasks += 1
 
-def update_progress():
-    with lock:
-        global active_tasks
-        active_tasks -= 1
-        if active_tasks == 0:
-            progress.stop()
+# def update_progress():
+#     with lock:
+#         global active_tasks
+#         active_tasks -= 1
+#         if active_tasks == 0:
+#             progress.stop()
 
 @contextmanager
 def metric_progress_indicator(metric, async_mode=False, _show_indicator=True, total=9999):
     with capture_metric_type(metric.__name__):
         if _show_indicator and show_indicator():
-            if async_mode==False:
-                with Progress(
-                    SpinnerColumn(style="rgb(106,0,255)"),
-                    TextColumn("[progress.description]{task.description}"),
-                    console=console,  # Use the custom console
-                    transient=True,
-                ) as progress_sync:
-                    progress_sync.add_task(
-                        description=format_metric_description(metric, async_mode),
-                        total=total,
-                    )
-                    yield
-            else:
-                start_progress() 
-                start_time = time.perf_counter()
-                task_id = progress.add_task(
+            # if async_mode==False:
+            with Progress(
+                SpinnerColumn(style="rgb(106,0,255)"),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,  # Use the custom console
+                transient=True,
+            ) as progress_sync:
+                progress_sync.add_task(
                     description=format_metric_description(metric, async_mode),
                     total=total,
                 )
-                try:
-                    yield task_id
-                finally:
-                    end_time = time.perf_counter()
-                    time_taken = format(end_time - start_time, ".2f")
-                    progress.update(task_id, completed=total)
-                    progress.update(
-                        task_id,
-                        description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
-                    )
-                    progress.stop_task(task_id)
-                    update_progress()
+                yield
+            # else:
+            #     start_progress() 
+            #     start_time = time.perf_counter()
+            #     task_id = progress.add_task(
+            #         description=format_metric_description(metric, async_mode),
+            #         total=total,
+            #     )
+            #     try:
+            #         yield task_id
+            #     finally:
+            #         end_time = time.perf_counter()
+            #         time_taken = format(end_time - start_time, ".2f")
+            #         progress.update(task_id, completed=total)
+            #         progress.update(
+            #             task_id,
+            #             description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
+            #         )
+            #         progress.stop_task(task_id)
+            #         update_progress()
         else:
             yield None
 
