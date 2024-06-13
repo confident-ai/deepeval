@@ -16,22 +16,21 @@ class BaseMetric:
     include_reason: bool = False
     evaluation_cost: Optional[float] = None
 
-    def __init__(self):
-        self._score: ContextVar[Optional[float]] = ContextVar(
-            generate_uuid(), default=None
-        )
-        self._score_breakdown: ContextVar[Optional[Dict]] = ContextVar(
-            generate_uuid(), default=None
-        )
-        self._reason: ContextVar[Optional[str]] = ContextVar(
-            generate_uuid(), default=None
-        )
-        self._success: ContextVar[Optional[bool]] = ContextVar(
-            generate_uuid(), default=None
-        )
-        self._error: ContextVar[Optional[str]] = ContextVar(
-            generate_uuid(), default=None
-        )
+    _score: ContextVar[Optional[float]] = ContextVar(
+        generate_uuid(), default=None
+    )
+    _score_breakdown: ContextVar[Optional[Dict]] = ContextVar(
+        generate_uuid(), default=None
+    )
+    _reason: ContextVar[Optional[str]] = ContextVar(
+        generate_uuid(), default=None
+    )
+    _success: ContextVar[Optional[bool]] = ContextVar(
+        generate_uuid(), default=None
+    )
+    _error: ContextVar[Optional[str]] = ContextVar(
+        generate_uuid(), default=None
+    )
 
     @property
     def score(self) -> Optional[float]:

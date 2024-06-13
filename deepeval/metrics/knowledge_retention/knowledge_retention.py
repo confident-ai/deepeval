@@ -52,7 +52,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        super().__init__()
         self._knowledges: ContextVar[Optional[List[Knowledge]]] = ContextVar(
             generate_uuid(), default=None
         )

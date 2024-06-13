@@ -56,7 +56,6 @@ class AnswerRelevancyMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        super().__init__()
         self._statements: ContextVar[Optional[List[str]]] = ContextVar(
             generate_uuid(), default=None
         )
@@ -129,7 +128,7 @@ class AnswerRelevancyMetric(BaseMetric):
             self.success = self.score >= self.threshold
             if self.verbose_mode:
                 print(
-                    f"statements: {self.statements}\nverdicts: {self.verdicts}\nscore: {self.score}, success: {self.success}\n"
+                    f"statements: {self.statements}\nverdicts: {self.verdicts}\nscore: {self.score}, success: {self.success}, reason: {self.reason}\n"
                 )
             return self.score
 
