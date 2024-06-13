@@ -124,7 +124,7 @@ class EvolutionTemplate:
         return (
             EvolutionTemplate.base_instruction
             + f"""
-            1. If `Inpur` can be solved with just a few simple thinking processes, you can rewrite it to explicitly request multiple-step reasoning.
+            1. If `Input` can be solved with just a few simple thinking processes, you can rewrite it to explicitly request multiple-step reasoning.
             2. `Rewritten Input` should require readers to make multiple logical connections or inferences.
             3. `Rewritten Input` should be concise and understandable by humans.
             4. `Rewritten Input` should not contain phrases like  'based on the provided context' or 'according to the context'.
