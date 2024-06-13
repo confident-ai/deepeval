@@ -23,7 +23,12 @@ from deepeval.test_run import (
     ConversationalApiTestCase,
     MetricMetadata,
 )
-from deepeval.utils import get_is_running_deepeval, set_indicator, capture_contextvars, update_contextvars
+from deepeval.utils import (
+    get_is_running_deepeval,
+    set_indicator,
+    capture_contextvars,
+    update_contextvars,
+)
 from deepeval.test_run.cache import (
     test_run_cache_manager,
     Cache,
@@ -300,7 +305,7 @@ async def a_execute_test_cases(
             await measure_metrics_with_indicator(
                 metrics, test_case, cached_test_case, ignore_errors
             )
-            
+
             for metric in metrics:
                 metric_metadata = create_metric_metadata(metric)
                 if isinstance(test_case, ConversationalTestCase):

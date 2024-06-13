@@ -80,6 +80,7 @@ being composed mostly of rock and metal.
 """
 
 strict_mode = False
+verbose_mode = True
 
 
 @pytest.mark.skip(reason="openai is expensive")
@@ -89,15 +90,32 @@ def test_everything():
         strict_mode=strict_mode,
         async_mode=False,
         model="gpt-4-0125-preview",
+        verbose_mode=True,
     )
-    metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
-    metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
-    metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
-    metric5 = ContextualRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
-    metric6 = BiasMetric(threshold=0.5, strict_mode=strict_mode)
-    metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
-    metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
-    metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode)
+    metric2 = FaithfulnessMetric(
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+    )
+    metric3 = ContextualPrecisionMetric(
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+    )
+    metric4 = ContextualRecallMetric(
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+    )
+    metric5 = ContextualRelevancyMetric(
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+    )
+    metric6 = BiasMetric(
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+    )
+    metric7 = ToxicityMetric(
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+    )
+    metric8 = HallucinationMetric(
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+    )
+    metric9 = SummarizationMetric(
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+    )
     metric10 = GEval(
         name="Coherence",
         criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
@@ -108,6 +126,7 @@ def test_everything():
         ],
         strict_mode=strict_mode,
         model="gpt-4-0125-preview",
+        verbose_mode=verbose_mode,
     )
 
     test_case = LLMTestCase(

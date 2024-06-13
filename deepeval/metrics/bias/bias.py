@@ -10,8 +10,9 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -33,6 +34,21 @@ class BiasVerdict(BaseModel):
 
 
 class BiasMetric(BaseMetric):
+    @property
+    def opinions(self) -> Optional[List[str]]:
+        return self._opinions.get()
+
+    @opinions.setter
+    def opinions(self, value: Optional[List[str]]):
+        self._opinions.set(value)
+
+    @property
+    def verdicts(self) -> Optional[List[BiasVerdict]]:
+        return self._verdicts.get()
+
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[BiasVerdict]]):
+        self._verdicts.set(value)
 
     def __init__(
         self,
@@ -41,35 +57,25 @@ class BiasMetric(BaseMetric):
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
+        verbose_mode: bool = False,
     ):
-        super().__init__()
-        self._opinions: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_opinions', default=None)
-        self._verdicts: ContextVar[Optional[List[BiasVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
+        self._opinions: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._verdicts: ContextVar[Optional[List[BiasVerdict]]] = ContextVar(
+            generate_uuid(), default=None
+        )
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
+        self.verbose_mode = verbose_mode
 
-    @property
-    def opinions(self) -> Optional[List[str]]:
-        return self._opinions.get()
-    @opinions.setter
-    def opinions(self, value: Optional[List[str]]):
-        self._opinions.set(value)
-
-    @property
-    def verdicts(self) -> Optional[List[BiasVerdict]]:
-        return self._verdicts.get()
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[BiasVerdict]]):
-        self._verdicts.set(value)
-    
     def measure(
-        self, 
+        self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -84,40 +90,30 @@ class BiasMetric(BaseMetric):
                     self.verdicts,
                     self.score,
                     self.reason,
-                    self.success
-                ) = loop.run_until_complete(
-                    self._measure_async(test_case, verbose)
-                )
+                    self.success,
+                ) = loop.run_until_complete(self._measure_async(test_case))
             else:
-                self.opinions = self._generate_opinions(
+                self.opinions: List[str] = self._generate_opinions(
                     test_case.actual_output
                 )
-                self.verdicts = self._generate_verdicts()
+                self.verdicts: List[BiasVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
-                if verbose:
-                    print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")                                    
+                if self.verbose_mode:
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Opinions:\n{self.opinions}\n",
+                            f"Verdicts:\n{self.verdicts}",
+                        ],
+                    )
                 return self.score
-    
-    async def _measure_async(
-            self,
-            test_case: Union[LLMTestCase, ConversationalTestCase],
-            verbose: bool):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (
-            self.opinions,
-            self.verdicts,
-            self.score,
-            self.reason,
-            self.success
-            )
 
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -129,14 +125,34 @@ class BiasMetric(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.opinions = await self._a_generate_opinions(test_case.actual_output)
-            self.verdicts = await self._a_generate_verdicts()            
+            self.opinions: List[str] = await self._a_generate_opinions(
+                test_case.actual_output
+            )
+            self.verdicts: List[BiasVerdict] = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
-            if verbose:
-                    print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")                
+            if self.verbose_mode:
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Opinions:\n{self.opinions}\n",
+                        f"Verdicts:\n{self.verdicts}",
+                    ],
+                )
             return self.score
+
+    async def _measure_async(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ):
+        await self.a_measure(test_case, _show_indicator=False)
+        return (
+            self.opinions,
+            self.verdicts,
+            self.score,
+            self.reason,
+            self.success,
+        )
 
     async def _a_generate_reason(self) -> str:
         if self.include_reason is False:

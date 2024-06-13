@@ -11,8 +11,9 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, generate_uuid
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -47,6 +48,60 @@ class ScoreType(Enum):
 
 class SummarizationMetric(BaseMetric):
 
+    @property
+    def truths(self) -> Optional[List[str]]:
+        return self._truths.get()
+
+    @truths.setter
+    def truths(self, value: Optional[List[str]]):
+        self._truths.set(value)
+
+    @property
+    def claims(self) -> Optional[List[str]]:
+        return self._claims.get()
+
+    @claims.setter
+    def claims(self, value: Optional[List[str]]):
+        self._claims.set(value)
+
+    @property
+    def coverage_verdicts(self) -> Optional[List[SummarizationCoverageVerdict]]:
+        return self._coverage_verdicts.get()
+
+    @coverage_verdicts.setter
+    def coverage_verdicts(
+        self, value: Optional[List[SummarizationCoverageVerdict]]
+    ):
+        self._coverage_verdicts.set(value)
+
+    @property
+    def alignment_verdicts(
+        self,
+    ) -> Optional[List[SummarizationAlignmentVerdict]]:
+        return self._alignment_verdicts.get()
+
+    @alignment_verdicts.setter
+    def alignment_verdicts(
+        self, value: Optional[List[SummarizationAlignmentVerdict]]
+    ):
+        self._alignment_verdicts.set(value)
+
+    @property
+    def coverage_score(self) -> Optional[float]:
+        return self._coverage_score.get()
+
+    @coverage_score.setter
+    def coverage_score(self, value: Optional[float]):
+        self._coverage_score.set(value)
+
+    @property
+    def alignment_score(self) -> Optional[float]:
+        return self._alignment_score.get()
+
+    @alignment_score.setter
+    def alignment_score(self, value: Optional[float]):
+        self._alignment_score.set(value)
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -56,14 +111,26 @@ class SummarizationMetric(BaseMetric):
         include_reason: bool = True,
         async_mode=True,
         strict_mode: bool = False,
+        verbose_mode: bool = False,
     ):
-        super().__init__()
-        self._truths: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_truths', default=None)
-        self._claims: ContextVar[Optional[List[str]]] = ContextVar(f'{self.__class__.__name__}_claims', default=None)
-        self._coverage_verdicts: ContextVar[Optional[List[SummarizationCoverageVerdict]]] = ContextVar(f'{self.__class__.__name__}_coverage_verdicts', default=None)
-        self._alignment_verdicts: ContextVar[Optional[List[SummarizationAlignmentVerdict]]] = ContextVar(f'{self.__class__.__name__}_alignment_verdicts', default=None)
-        self._coverage_score: ContextVar[Optional[float]] = ContextVar(f'{self.__class__.__name__}_coverage_score', default=None)
-        self._alignment_score: ContextVar[Optional[float]] = ContextVar(f'{self.__class__.__name__}_alignment_score', default=None)
+        self._truths: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._claims: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._coverage_verdicts: ContextVar[
+            Optional[List[SummarizationCoverageVerdict]]
+        ] = ContextVar(generate_uuid(), default=None)
+        self._alignment_verdicts: ContextVar[
+            Optional[List[SummarizationAlignmentVerdict]]
+        ] = ContextVar(generate_uuid(), default=None)
+        self._coverage_score: ContextVar[Optional[float]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._alignment_score: ContextVar[Optional[float]] = ContextVar(
+            generate_uuid(), default=None
+        )
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -73,57 +140,15 @@ class SummarizationMetric(BaseMetric):
         else:
             self.assessment_questions = assessment_questions
 
-        self.async_mode = async_mode
         self.include_reason = include_reason
         self.n = n
         self.strict_mode = strict_mode
-
-    @property
-    def truths(self) -> Optional[List[str]]:
-        return self._truths.get()
-    @truths.setter
-    def truths(self, value: Optional[List[str]]):
-        self._truths.set(value)
-
-    @property
-    def claims(self) -> Optional[List[str]]:
-        return self._claims.get()
-    @claims.setter
-    def claims(self, value: Optional[List[str]]):
-        self._claims.set(value)
-
-    @property
-    def coverage_verdicts(self) -> Optional[List[SummarizationCoverageVerdict]]:
-        return self._coverage_verdicts.get()
-    @coverage_verdicts.setter
-    def coverage_verdicts(self, value: Optional[List[SummarizationCoverageVerdict]]):
-        self._coverage_verdicts.set(value)
-
-    @property
-    def alignment_verdicts(self) -> Optional[List[SummarizationAlignmentVerdict]]:
-        return self._alignment_verdicts.get()
-    @alignment_verdicts.setter
-    def alignment_verdicts(self, value: Optional[List[SummarizationAlignmentVerdict]]):
-        self._alignment_verdicts.set(value)
-
-    @property
-    def coverage_score(self) -> Optional[float]:
-        return self._coverage_score.get()
-    @coverage_score.setter
-    def coverage_score(self, value: Optional[float]):
-        self._coverage_score.set(value)
-
-    @property
-    def alignment_score(self) -> Optional[float]:
-        return self._alignment_score.get()
-    @alignment_score.setter
-    def alignment_score(self, value: Optional[float]):
-        self._alignment_score.set(value)
+        self.async_mode = async_mode
+        self.verbose_mode = verbose_mode
 
     def measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool = True
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -134,21 +159,19 @@ class SummarizationMetric(BaseMetric):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 (
-                    self.truths, 
-                    self.claims, 
-                    self.coverage_verdicts, 
-                    self.alignment_verdicts, 
+                    self.truths,
+                    self.claims,
+                    self.coverage_verdicts,
+                    self.alignment_verdicts,
                     self.coverage_score,
                     self.alignment_score,
                     self.score_breakdown,
                     self.score,
                     self.reason,
-                    self.success                
-                    ) = loop.run_until_complete(
-                    self._measure_async(test_case, verbose)
-                )
+                    self.success,
+                ) = loop.run_until_complete(self._measure_async(test_case))
             else:
-                self.truths: List[str] = self._generate_claims(test_case.input)                
+                self.truths: List[str] = self._generate_claims(test_case.input)
                 self.claims: List[str] = self._generate_claims(
                     test_case.actual_output
                 )
@@ -158,7 +181,9 @@ class SummarizationMetric(BaseMetric):
                 self.alignment_verdicts: List[SummarizationAlignmentVerdict] = (
                     self._generate_alignment_verdicts()
                 )
-                self.alignment_score = self._calculate_score(ScoreType.ALIGNMENT)
+                self.alignment_score = self._calculate_score(
+                    ScoreType.ALIGNMENT
+                )
                 self.coverage_score = self._calculate_score(ScoreType.COVERAGE)
                 self.score_breakdown = {
                     ScoreType.ALIGNMENT.value: self.alignment_score,
@@ -166,34 +191,24 @@ class SummarizationMetric(BaseMetric):
                 }
                 self.score = min(self.alignment_score, self.coverage_score)
                 self.reason = self._generate_reason()
-                self.success = self.score >= self.threshold   
-                if verbose:
-                    print(f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}\n")          
+                self.success = self.score >= self.threshold
+                if self.verbose_mode:
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Truths:\n{self.truths}",
+                            f"Claims:\n{self.claims}",
+                            f"Assessment Questions:\n{self.assessment_questions}",
+                            f"Coverage Verdicts:\n{self.coverage_verdicts}",
+                            f"Alignment Verdicts:\n{self.alignment_verdicts}",
+                        ],
+                    )
                 return self.score
-            
-    async def _measure_async(
-            self,
-            test_case: Union[LLMTestCase, ConversationalTestCase],
-            verbose: bool):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (
-            self.truths, 
-            self.claims, 
-            self.coverage_verdicts,
-            self.alignment_verdicts, 
-            self.coverage_score,
-            self.alignment_score,
-            self.score_breakdown,
-            self.score,
-            self.reason,
-            self.success
-            )
 
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        verbose: bool = True
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -208,7 +223,7 @@ class SummarizationMetric(BaseMetric):
             self.truths, self.claims = await asyncio.gather(
                 self._a_generate_claims(test_case.input),
                 self._a_generate_claims(test_case.actual_output),
-            )            
+            )
             (
                 self.coverage_verdicts,
                 self.alignment_verdicts,
@@ -226,9 +241,36 @@ class SummarizationMetric(BaseMetric):
             self.score = min(self.alignment_score, self.coverage_score)
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
-            if verbose:
-                print(f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}\n")         
+            if self.verbose_mode:
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Truths:\n{self.truths}",
+                        f"Claims:\n{self.claims}",
+                        f"Assessment Questions:\n{self.assessment_questions}",
+                        f"Coverage Verdicts:\n{self.coverage_verdicts}",
+                        f"Alignment Verdicts:\n{self.alignment_verdicts}",
+                    ],
+                )
             return self.score
+
+    async def _measure_async(
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+    ):
+        await self.a_measure(test_case, _show_indicator=False)
+        return (
+            self.truths,
+            self.claims,
+            self.coverage_verdicts,
+            self.alignment_verdicts,
+            self.coverage_score,
+            self.alignment_score,
+            self.score_breakdown,
+            self.score,
+            self.reason,
+            self.success,
+        )
 
     async def _a_generate_reason(self) -> str:
         if self.include_reason is False:

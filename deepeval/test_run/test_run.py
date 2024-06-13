@@ -303,9 +303,7 @@ class TestRunManager:
     def save_test_run(self):
         if self.save_to_disk:
             try:
-                with portalocker.Lock(
-                    self.temp_file_name, mode="w"
-                ) as file:
+                with portalocker.Lock(self.temp_file_name, mode="w") as file:
                     self.test_run = self.test_run.save(file)
             except portalocker.exceptions.LockException:
                 print(
@@ -513,6 +511,7 @@ class TestRunManager:
             except AttributeError:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
+
             api = Api()
             result = api.post_request(
                 endpoint=Endpoints.TEST_RUN_ENDPOINT.value,

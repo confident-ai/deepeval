@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     initialize_model,
@@ -14,6 +15,7 @@ from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.utils import generate_uuid
 
 
 class Knowledge(BaseModel):
@@ -27,25 +29,10 @@ class KnowledgeRetentionVerdict(BaseModel):
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):
-    def __init__(
-        self,
-        threshold: float = 0.5,
-        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        include_reason: bool = True,
-        strict_mode: bool = False,
-    ):
-        super().__init__()
-        self._knowledges: ContextVar[Optional[List[Knowledge]]] = ContextVar(f'{self.__class__.__name__}_truths', default=None)
-        self._verdicts: ContextVar[Optional[List[KnowledgeRetentionVerdict]]] = ContextVar(f'{self.__class__.__name__}_verdicts', default=None)
-        self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
-        self.include_reason = include_reason
-        self.strict_mode = strict_mode
-    
     @property
     def knowledges(self) -> Optional[List[Knowledge]]:
         return self._knowledges.get()
+
     @knowledges.setter
     def claims(self, value: Optional[List[Knowledge]]):
         self._claims.set(value)
@@ -53,25 +40,49 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
     @property
     def verdicts(self) -> Optional[List[KnowledgeRetentionVerdict]]:
         return self._verdicts.get()
+
     @verdicts.setter
     def verdicts(self, value: Optional[List[KnowledgeRetentionVerdict]]):
         self._verdicts.set(value)
 
-    def measure(self, test_case: ConversationalTestCase, verbose: bool = True):
+    def __init__(
+        self,
+        threshold: float = 0.5,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        include_reason: bool = True,
+        strict_mode: bool = False,
+        verbose_mode: bool = False,
+    ):
+        self._knowledges: ContextVar[Optional[List[Knowledge]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._verdicts: ContextVar[
+            Optional[List[KnowledgeRetentionVerdict]]
+        ] = ContextVar(generate_uuid(), default=None)
+        self.threshold = 1 if strict_mode else threshold
+        self.model, self.using_native_model = initialize_model(model)
+        self.evaluation_model = self.model.get_model_name()
+        self.include_reason = include_reason
+        self.strict_mode = strict_mode
+        self.verbose_mode = verbose_mode
+
+    def measure(self, test_case: ConversationalTestCase):
         validate_conversational_test_case(test_case, self)
         with metric_progress_indicator(self):
-            self.knowledges = self._generate_knowledges(
-                test_case
-            )
-            self.verdicts = (
-                self._generate_verdicts(test_case)
-            )
+            self.knowledges = self._generate_knowledges(test_case)
+            self.verdicts = self._generate_verdicts(test_case)
             knowledge_retention_score = self._calculate_score()
             self.reason = self._generate_reason(knowledge_retention_score)
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
-            if verbose:
-                print(f"knowledges: {self.knowledges}\nverdicts: {self.verdicts}\n")                        
+            if self.verbose_mode:
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Knowledges:\n{self.knowledges}",
+                        f"Verdicts:\n{self.verdicts}",
+                    ],
+                )
             return self.score
 
     def _generate_reason(self, score: float) -> str:
