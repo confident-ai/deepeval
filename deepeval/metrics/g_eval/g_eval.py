@@ -55,6 +55,14 @@ class GEvalResponse(BaseModel):
 
 class GEval(BaseMetric):
 
+    @property
+    def evaluation_steps(self) -> Optional[List[str]]:
+        return self._evaluation_steps.get()
+
+    @evaluation_steps.setter
+    def evaluation_steps(self, value: Optional[List[str]]):
+        self._evaluation_steps.set(value)
+
     def __init__(
         self,
         name: str,
@@ -92,18 +100,10 @@ class GEval(BaseMetric):
         self.criteria = criteria
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
-        self._evaluation_steps.set(evaluation_steps)
+        self.evaluation_steps = evaluation_steps
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
-
-    @property
-    def evaluation_steps(self) -> Optional[List[str]]:
-        return self._evaluation_steps.get()
-
-    @evaluation_steps.setter
-    def evaluation_steps(self, value: Optional[List[str]]):
-        self._evaluation_steps.set(value)
 
     def measure(
         self,

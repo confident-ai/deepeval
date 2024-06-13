@@ -35,6 +35,13 @@ class ContextualRelevancyVerdict(BaseModel):
 
 
 class ContextualRelevancyMetric(BaseMetric):
+    @property
+    def verdicts(self) -> Optional[List[ContextualRelevancyVerdict]]:
+        return self._verdicts.get()
+
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[ContextualRelevancyVerdict]]):
+        self._verdicts.set(value)
 
     def __init__(
         self,
@@ -54,14 +61,6 @@ class ContextualRelevancyMetric(BaseMetric):
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
-
-    @property
-    def verdicts(self) -> Optional[List[ContextualRelevancyVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[ContextualRelevancyVerdict]]):
-        self._verdicts.set(value)
 
     def measure(
         self,

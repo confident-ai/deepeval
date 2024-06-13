@@ -28,6 +28,22 @@ class KnowledgeRetentionVerdict(BaseModel):
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):
+    @property
+    def knowledges(self) -> Optional[List[Knowledge]]:
+        return self._knowledges.get()
+
+    @knowledges.setter
+    def claims(self, value: Optional[List[Knowledge]]):
+        self._claims.set(value)
+
+    @property
+    def verdicts(self) -> Optional[List[KnowledgeRetentionVerdict]]:
+        return self._verdicts.get()
+
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[KnowledgeRetentionVerdict]]):
+        self._verdicts.set(value)
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -47,22 +63,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.strict_mode = strict_mode
-
-    @property
-    def knowledges(self) -> Optional[List[Knowledge]]:
-        return self._knowledges.get()
-
-    @knowledges.setter
-    def claims(self, value: Optional[List[Knowledge]]):
-        self._claims.set(value)
-
-    @property
-    def verdicts(self) -> Optional[List[KnowledgeRetentionVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[KnowledgeRetentionVerdict]]):
-        self._verdicts.set(value)
 
     def measure(self, test_case: ConversationalTestCase, verbose: bool = True):
         validate_conversational_test_case(test_case, self)

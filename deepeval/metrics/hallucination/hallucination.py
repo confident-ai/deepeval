@@ -33,6 +33,14 @@ class HallucinationVerdict(BaseModel):
 
 class HallucinationMetric(BaseMetric):
 
+    @property
+    def verdicts(self) -> Optional[List[HallucinationVerdict]]:
+        return self._verdicts.get()
+
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[HallucinationVerdict]]):
+        self._verdicts.set(value)
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -51,14 +59,6 @@ class HallucinationMetric(BaseMetric):
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
-
-    @property
-    def verdicts(self) -> Optional[List[HallucinationVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[HallucinationVerdict]]):
-        self._verdicts.set(value)
 
     def measure(
         self,

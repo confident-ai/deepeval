@@ -33,6 +33,21 @@ class ToxicityVerdict(BaseModel):
 
 
 class ToxicityMetric(BaseMetric):
+    @property
+    def opinions(self) -> Optional[List[str]]:
+        return self._opinions.get()
+
+    @opinions.setter
+    def opinions(self, value: Optional[List[str]]):
+        self._opinions.set(value)
+
+    @property
+    def verdicts(self) -> Optional[List[ToxicityVerdict]]:
+        return self._verdicts.get()
+
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[ToxicityVerdict]]):
+        self._verdicts.set(value)
 
     def __init__(
         self,
@@ -55,22 +70,6 @@ class ToxicityMetric(BaseMetric):
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
-
-    @property
-    def opinions(self) -> Optional[List[str]]:
-        return self._opinions.get()
-
-    @opinions.setter
-    def opinions(self, value: Optional[List[str]]):
-        self._opinions.set(value)
-
-    @property
-    def verdicts(self) -> Optional[List[ToxicityVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List["ToxicityVerdict"]]):
-        self._verdicts.set(value)
 
     def measure(
         self,

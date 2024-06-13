@@ -31,6 +31,21 @@ class AnswerRelvancyVerdict(BaseModel):
 
 
 class AnswerRelevancyMetric(BaseMetric):
+    @property
+    def statements(self) -> Optional[List[str]]:
+        return self._statements.get()
+
+    @statements.setter
+    def statements(self, value: Optional[List[str]]):
+        self._statements.set(value)
+
+    @property
+    def verdicts(self) -> Optional[List[AnswerRelvancyVerdict]]:
+        return self._verdicts.get()
+
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[AnswerRelvancyVerdict]]):
+        self._verdicts.set(value)
 
     def __init__(
         self,
@@ -53,22 +68,6 @@ class AnswerRelevancyMetric(BaseMetric):
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
-
-    @property
-    def statements(self) -> Optional[List[str]]:
-        return self._statements.get()
-
-    @statements.setter
-    def statements(self, value: Optional[List[str]]):
-        self._statements.set(value)
-
-    @property
-    def verdicts(self) -> Optional[List[AnswerRelvancyVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[AnswerRelvancyVerdict]]):
-        self._verdicts.set(value)
 
     def measure(
         self,

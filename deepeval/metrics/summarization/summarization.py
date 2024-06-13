@@ -47,49 +47,6 @@ class ScoreType(Enum):
 
 class SummarizationMetric(BaseMetric):
 
-    def __init__(
-        self,
-        threshold: float = 0.5,
-        n: int = 5,
-        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        assessment_questions: Optional[List[str]] = None,
-        include_reason: bool = True,
-        async_mode=True,
-        strict_mode: bool = False,
-    ):
-        super().__init__()
-        self._truths: ContextVar[Optional[List[str]]] = ContextVar(
-            generate_uuid(), default=None
-        )
-        self._claims: ContextVar[Optional[List[str]]] = ContextVar(
-            generate_uuid(), default=None
-        )
-        self._coverage_verdicts: ContextVar[
-            Optional[List[SummarizationCoverageVerdict]]
-        ] = ContextVar(generate_uuid(), default=None)
-        self._alignment_verdicts: ContextVar[
-            Optional[List[SummarizationAlignmentVerdict]]
-        ] = ContextVar(generate_uuid(), default=None)
-        self._coverage_score: ContextVar[Optional[float]] = ContextVar(
-            generate_uuid(), default=None
-        )
-        self._alignment_score: ContextVar[Optional[float]] = ContextVar(
-            generate_uuid(), default=None
-        )
-        self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
-
-        if assessment_questions is not None and len(assessment_questions) == 0:
-            self.assessment_questions = None
-        else:
-            self.assessment_questions = assessment_questions
-
-        self.async_mode = async_mode
-        self.include_reason = include_reason
-        self.n = n
-        self.strict_mode = strict_mode
-
     @property
     def truths(self) -> Optional[List[str]]:
         return self._truths.get()
@@ -143,6 +100,49 @@ class SummarizationMetric(BaseMetric):
     @alignment_score.setter
     def alignment_score(self, value: Optional[float]):
         self._alignment_score.set(value)
+
+    def __init__(
+        self,
+        threshold: float = 0.5,
+        n: int = 5,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        assessment_questions: Optional[List[str]] = None,
+        include_reason: bool = True,
+        async_mode=True,
+        strict_mode: bool = False,
+    ):
+        super().__init__()
+        self._truths: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._claims: ContextVar[Optional[List[str]]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._coverage_verdicts: ContextVar[
+            Optional[List[SummarizationCoverageVerdict]]
+        ] = ContextVar(generate_uuid(), default=None)
+        self._alignment_verdicts: ContextVar[
+            Optional[List[SummarizationAlignmentVerdict]]
+        ] = ContextVar(generate_uuid(), default=None)
+        self._coverage_score: ContextVar[Optional[float]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self._alignment_score: ContextVar[Optional[float]] = ContextVar(
+            generate_uuid(), default=None
+        )
+        self.threshold = 1 if strict_mode else threshold
+        self.model, self.using_native_model = initialize_model(model)
+        self.evaluation_model = self.model.get_model_name()
+
+        if assessment_questions is not None and len(assessment_questions) == 0:
+            self.assessment_questions = None
+        else:
+            self.assessment_questions = assessment_questions
+
+        self.async_mode = async_mode
+        self.include_reason = include_reason
+        self.n = n
+        self.strict_mode = strict_mode
 
     def measure(
         self,

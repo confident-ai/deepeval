@@ -34,6 +34,30 @@ class FaithfulnessVerdict(BaseModel):
 
 class FaithfulnessMetric(BaseMetric):
 
+    @property
+    def truths(self) -> Optional[List[str]]:
+        return self._truths.get()
+
+    @truths.setter
+    def truths(self, value: Optional[List[str]]):
+        self._truths.set(value)
+
+    @property
+    def claims(self) -> Optional[List[str]]:
+        return self._claims.get()
+
+    @claims.setter
+    def claims(self, value: Optional[List[str]]):
+        self._claims.set(value)
+
+    @property
+    def verdicts(self) -> Optional[List[FaithfulnessVerdict]]:
+        return self._verdicts.get()
+
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[FaithfulnessVerdict]]):
+        self._verdicts.set(value)
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -58,30 +82,6 @@ class FaithfulnessMetric(BaseMetric):
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
-
-    @property
-    def truths(self) -> Optional[List[str]]:
-        return self._truths.get()
-
-    @truths.setter
-    def truths(self, value: Optional[List[str]]):
-        self._truths.set(value)
-
-    @property
-    def claims(self) -> Optional[List[str]]:
-        return self._claims.get()
-
-    @claims.setter
-    def claims(self, value: Optional[List[str]]):
-        self._claims.set(value)
-
-    @property
-    def verdicts(self) -> Optional[List[FaithfulnessVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[FaithfulnessVerdict]]):
-        self._verdicts.set(value)
 
     def measure(
         self,

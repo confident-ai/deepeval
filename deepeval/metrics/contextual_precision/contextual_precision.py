@@ -36,6 +36,13 @@ class ContextualPrecisionVerdict(BaseModel):
 
 
 class ContextualPrecisionMetric(BaseMetric):
+    @property
+    def verdicts(self) -> Optional[List[ContextualPrecisionVerdict]]:
+        return self._verdicts.get()
+
+    @verdicts.setter
+    def verdicts(self, value: Optional[List[ContextualPrecisionVerdict]]):
+        self._verdicts.set(value)
 
     def __init__(
         self,
@@ -55,14 +62,6 @@ class ContextualPrecisionMetric(BaseMetric):
         self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
         self.strict_mode = strict_mode
-
-    @property
-    def verdicts(self) -> Optional[List[ContextualPrecisionVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[ContextualPrecisionVerdict]]):
-        self._verdicts.set(value)
 
     def measure(
         self,
