@@ -94,7 +94,9 @@ class ToxicityMetric(BaseMetric):
                     self._measure_async(test_case, verbose)
                 )
             else:
-                self.opinions = self._generate_opinions(test_case.actual_output)
+                self.opinions: List[str] = self._generate_opinions(
+                    test_case.actual_output
+                )
                 self.verdicts: List[ToxicityVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -104,20 +106,6 @@ class ToxicityMetric(BaseMetric):
                         f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n"
                     )
                 return self.score
-
-    async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool,
-    ):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (
-            self.opinions,
-            self.verdicts,
-            self.score,
-            self.reason,
-            self.success,
-        )
 
     async def a_measure(
         self,
@@ -133,16 +121,32 @@ class ToxicityMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.opinions = await self._a_generate_opinions(
+            self.opinions: List[str] = await self._a_generate_opinions(
                 test_case.actual_output
             )
-            self.verdicts = await self._a_generate_verdicts()
+            self.verdicts: List[ToxicityVerdict] = (
+                await self._a_generate_verdicts()
+            )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
             if verbose:
                 print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")
             return self.score
+
+    async def _measure_async(
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        return (
+            self.opinions,
+            self.verdicts,
+            self.score,
+            self.reason,
+            self.success,
+        )
 
     async def _a_generate_reason(self) -> str:
         if self.include_reason is False:

@@ -199,25 +199,6 @@ class SummarizationMetric(BaseMetric):
                     )
                 return self.score
 
-    async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool,
-    ):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (
-            self.truths,
-            self.claims,
-            self.coverage_verdicts,
-            self.alignment_verdicts,
-            self.coverage_score,
-            self.alignment_score,
-            self.score_breakdown,
-            self.score,
-            self.reason,
-            self.success,
-        )
-
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
@@ -260,6 +241,25 @@ class SummarizationMetric(BaseMetric):
                     f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}\n"
                 )
             return self.score
+
+    async def _measure_async(
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        return (
+            self.truths,
+            self.claims,
+            self.coverage_verdicts,
+            self.alignment_verdicts,
+            self.coverage_score,
+            self.alignment_score,
+            self.score_breakdown,
+            self.score,
+            self.reason,
+            self.success,
+        )
 
     async def _a_generate_reason(self) -> str:
         if self.include_reason is False:

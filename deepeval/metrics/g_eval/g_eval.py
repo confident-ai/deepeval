@@ -127,7 +127,9 @@ class GEval(BaseMetric):
                     self._measure_async(test_case, verbose)
                 )
             else:
-                self.evaluation_steps = self._generate_evaluation_steps()
+                self.evaluation_steps: List[str] = (
+                    self._generate_evaluation_steps()
+                )
                 g_score, reason = self.evaluate(test_case)
                 self.reason = reason
                 self.score = float(g_score) / 10
@@ -140,14 +142,6 @@ class GEval(BaseMetric):
                 if verbose:
                     print(f"evaluation_steps: {self.evaluation_steps}\n")
                 return self.score
-
-    async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool,
-    ):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (self.evaluation_steps, self.score, self.reason, self.success)
 
     async def a_measure(
         self,
@@ -165,7 +159,9 @@ class GEval(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.evaluation_steps = await self._a_generate_evaluation_steps()
+            self.evaluation_steps: List[str] = (
+                await self._a_generate_evaluation_steps()
+            )
             g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
             self.score = float(g_score) / 10
@@ -178,6 +174,14 @@ class GEval(BaseMetric):
             if verbose:
                 print(f"evaluation_steps: {self.evaluation_steps}\n")
             return self.score
+
+    async def _measure_async(
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        return (self.evaluation_steps, self.score, self.reason, self.success)
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:

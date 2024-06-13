@@ -79,8 +79,10 @@ class ContextualRecallMetric(BaseMetric):
                     )
                 )
             else:
-                self.verdicts = self._generate_verdicts(
-                    test_case.expected_output, test_case.retrieval_context
+                self.verdicts: List[ContextualRecallVerdict] = (
+                    self._generate_verdicts(
+                        test_case.expected_output, test_case.retrieval_context
+                    )
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.input)
@@ -88,14 +90,6 @@ class ContextualRecallMetric(BaseMetric):
                 if verbose:
                     print(f"verdicts: {self.verdicts}\n")
                 return self.score
-
-    async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool,
-    ):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (self.verdicts, self.score, self.reason, self.success)
 
     async def a_measure(
         self,
@@ -113,8 +107,10 @@ class ContextualRecallMetric(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.verdicts = await self._a_generate_verdicts(
-                test_case.expected_output, test_case.retrieval_context
+            self.verdicts: List[ContextualRecallVerdict] = (
+                await self._a_generate_verdicts(
+                    test_case.expected_output, test_case.retrieval_context
+                )
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
@@ -122,6 +118,14 @@ class ContextualRecallMetric(BaseMetric):
             if verbose:
                 print(f"verdicts: {self.verdicts}\n")
             return self.score
+
+    async def _measure_async(
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        return (self.verdicts, self.score, self.reason, self.success)
 
     async def _a_generate_reason(self, expected_output: str):
         if self.include_reason is False:

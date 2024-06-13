@@ -92,10 +92,12 @@ class AnswerRelevancyMetric(BaseMetric):
                     self._measure_async(test_case, verbose)
                 )
             else:
-                self.statements = self._generate_statements(
+                self.statements: List[str] = self._generate_statements(
                     test_case.actual_output
                 )
-                self.verdicts = self._generate_verdicts(test_case.input)
+                self.verdicts: List[AnswerRelvancyVerdict] = (
+                    self._generate_verdicts(test_case.input)
+                )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
@@ -104,20 +106,6 @@ class AnswerRelevancyMetric(BaseMetric):
                         f"statements: {self.statements}\nverdicts: {self.verdicts}\n"
                     )
                 return self.score
-
-    async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool,
-    ):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (
-            self.statements,
-            self.verdicts,
-            self.score,
-            self.reason,
-            self.success,
-        )
 
     async def a_measure(
         self,
@@ -133,10 +121,12 @@ class AnswerRelevancyMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.statements = await self._a_generate_statements(
+            self.statements: List[str] = await self._a_generate_statements(
                 test_case.actual_output
             )
-            self.verdicts = await self._a_generate_verdicts(test_case.input)
+            self.verdicts: List[AnswerRelvancyVerdict] = (
+                await self._a_generate_verdicts(test_case.input)
+            )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
@@ -145,6 +135,20 @@ class AnswerRelevancyMetric(BaseMetric):
                     f"statements: {self.statements}\nverdicts: {self.verdicts}\nscore: {self.score}, success: {self.success}\n"
                 )
             return self.score
+
+    async def _measure_async(
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        return (
+            self.statements,
+            self.verdicts,
+            self.score,
+            self.reason,
+            self.success,
+        )
 
     async def _a_generate_reason(self, input: str) -> str:
         if self.include_reason is False:

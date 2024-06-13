@@ -107,9 +107,15 @@ class FaithfulnessMetric(BaseMetric):
                     self._measure_async(test_case, verbose)
                 )
             else:
-                self.truths = self._generate_truths(test_case.retrieval_context)
-                self.claims = self._generate_claims(test_case.actual_output)
-                self.verdicts = self._generate_verdicts()
+                self.truths: List[str] = self._generate_truths(
+                    test_case.retrieval_context
+                )
+                self.claims: List[str] = self._generate_claims(
+                    test_case.actual_output
+                )
+                self.verdicts: List[FaithfulnessVerdict] = (
+                    self._generate_verdicts()
+                )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score >= self.threshold
@@ -118,21 +124,6 @@ class FaithfulnessMetric(BaseMetric):
                         f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n"
                     )
                 return self.score
-
-    async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool,
-    ):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
-        return (
-            self.truths,
-            self.claims,
-            self.verdicts,
-            self.score,
-            self.reason,
-            self.success,
-        )
 
     async def a_measure(
         self,
@@ -152,7 +143,9 @@ class FaithfulnessMetric(BaseMetric):
                 self._a_generate_truths(test_case.retrieval_context),
                 self._a_generate_claims(test_case.actual_output),
             )
-            self.verdicts = await self._a_generate_verdicts()
+            self.verdicts: List[FaithfulnessVerdict] = (
+                await self._a_generate_verdicts()
+            )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
@@ -161,6 +154,21 @@ class FaithfulnessMetric(BaseMetric):
                     f"truths: {self.truths}\nclaims: {self.claims}\nverdicts: {self.verdicts}\n"
                 )
             return self.score
+
+    async def _measure_async(
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        verbose: bool,
+    ):
+        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        return (
+            self.truths,
+            self.claims,
+            self.verdicts,
+            self.score,
+            self.reason,
+            self.success,
+        )
 
     async def _a_generate_reason(self) -> str:
         if self.include_reason is False:
