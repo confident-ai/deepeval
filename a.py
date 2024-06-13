@@ -14,6 +14,10 @@ test_case2 = LLMTestCase(
 
 # Define the metric
 metric1 = AnswerRelevancyMetric(verbose_mode=False)
+metric2 = AnswerRelevancyMetric(verbose_mode=True)
+
+metric1.measure(test_case1)
+metric2.measure(test_case2)
 
 # # Asynchronous function to measure relevancy concurrently
 # async def measure_relevancy():
@@ -26,4 +30,5 @@ metric1 = AnswerRelevancyMetric(verbose_mode=False)
 # print("This is printed after all asynchronous operations are complete.")
 
 
-evaluate([test_case1], [metric1])
+print(metric1.statements)
+print(metric2.statements)
