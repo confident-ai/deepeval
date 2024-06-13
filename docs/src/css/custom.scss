@@ -149,9 +149,29 @@ html[data-theme='dark'] #confident-workflow {
   filter: invert(100%);
 }
 
+#rag-evaluation {
+  margin-left: 140px;
+  width: 50%;
+}
+
+html[data-theme='dark'] #rag-evaluation {
+  filter: invert(100%);
+}
+
+@media (max-width: 1200px) {
+  #rag-evaluation {
+    width: 60%;
+  }
+}
+
 @media (max-width: 600px) {
   #confident-workflow {
     width: 100%!important
+  }
+
+  #rag-evaluation {
+    margin-left: 0!important;
+    width: 80%!important
   }
 }
 
