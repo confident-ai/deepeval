@@ -56,6 +56,7 @@ class BiasMetric(BaseMetric):
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
+        verbose_mode: bool = False,
     ):
         super().__init__()
         self._opinions: ContextVar[Optional[List[str]]] = ContextVar(
@@ -70,11 +71,11 @@ class BiasMetric(BaseMetric):
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
+        self.verbose_mode = verbose_mode
 
     def measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -90,9 +91,7 @@ class BiasMetric(BaseMetric):
                     self.score,
                     self.reason,
                     self.success,
-                ) = loop.run_until_complete(
-                    self._measure_async(test_case, verbose)
-                )
+                ) = loop.run_until_complete(self._measure_async(test_case))
             else:
                 self.opinions: List[str] = self._generate_opinions(
                     test_case.actual_output
@@ -101,7 +100,7 @@ class BiasMetric(BaseMetric):
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
-                if verbose:
+                if self.verbose_mode:
                     print(
                         f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n"
                     )
@@ -111,7 +110,6 @@ class BiasMetric(BaseMetric):
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -130,16 +128,14 @@ class BiasMetric(BaseMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
-            if verbose:
+            if self.verbose_mode:
                 print(f"opinions: {self.opinions}\nverdicts: {self.verdicts}\n")
             return self.score
 
     async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool,
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        await self.a_measure(test_case, _show_indicator=False)
         return (
             self.opinions,
             self.verdicts,

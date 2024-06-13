@@ -12,6 +12,7 @@ class BaseMetric:
     evaluation_model: Optional[str] = None
     strict_mode: bool = False
     async_mode: bool = True
+    verbose_mode: bool = False
     include_reason: bool = False
     evaluation_cost: Optional[float] = None
 
@@ -113,6 +114,7 @@ class BaseConversationalMetric:
     # Not changeable for now
     strict_mode: bool = False
     async_mode: bool = False
+    verbose_mode: bool = False
 
     def __init__(self):
         self._score = ContextVar(generate_uuid(), default=None)

@@ -110,6 +110,7 @@ class SummarizationMetric(BaseMetric):
         include_reason: bool = True,
         async_mode=True,
         strict_mode: bool = False,
+        verbose_mode: bool = False,
     ):
         super().__init__()
         self._truths: ContextVar[Optional[List[str]]] = ContextVar(
@@ -139,15 +140,15 @@ class SummarizationMetric(BaseMetric):
         else:
             self.assessment_questions = assessment_questions
 
-        self.async_mode = async_mode
         self.include_reason = include_reason
         self.n = n
         self.strict_mode = strict_mode
+        self.async_mode = async_mode
+        self.verbose_mode = verbose_mode
 
     def measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -168,9 +169,7 @@ class SummarizationMetric(BaseMetric):
                     self.score,
                     self.reason,
                     self.success,
-                ) = loop.run_until_complete(
-                    self._measure_async(test_case, verbose)
-                )
+                ) = loop.run_until_complete(self._measure_async(test_case))
             else:
                 self.truths: List[str] = self._generate_claims(test_case.input)
                 self.claims: List[str] = self._generate_claims(
@@ -193,7 +192,7 @@ class SummarizationMetric(BaseMetric):
                 self.score = min(self.alignment_score, self.coverage_score)
                 self.reason = self._generate_reason()
                 self.success = self.score >= self.threshold
-                if verbose:
+                if self.verbose_mode:
                     print(
                         f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}\n"
                     )
@@ -203,7 +202,6 @@ class SummarizationMetric(BaseMetric):
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -236,7 +234,7 @@ class SummarizationMetric(BaseMetric):
             self.score = min(self.alignment_score, self.coverage_score)
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
-            if verbose:
+            if self.verbose_mode:
                 print(
                     f"truths: {self.truths}\nclaims: {self.claims}\ncoverage_verdicts: {self.coverage_verdicts}\nalignment_verdicts: {self.alignment_verdicts}\n"
                 )
@@ -245,9 +243,8 @@ class SummarizationMetric(BaseMetric):
     async def _measure_async(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool,
     ):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        await self.a_measure(test_case, _show_indicator=False)
         return (
             self.truths,
             self.claims,

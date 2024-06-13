@@ -50,6 +50,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         strict_mode: bool = False,
+        verbose_mode: bool = False,
     ):
         super().__init__()
         self._knowledges: ContextVar[Optional[List[Knowledge]]] = ContextVar(
@@ -63,8 +64,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.strict_mode = strict_mode
+        self.verbose_mode = verbose_mode
 
-    def measure(self, test_case: ConversationalTestCase, verbose: bool = True):
+    def measure(self, test_case: ConversationalTestCase):
         validate_conversational_test_case(test_case, self)
         with metric_progress_indicator(self):
             self.knowledges = self._generate_knowledges(test_case)
@@ -73,7 +75,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             self.reason = self._generate_reason(knowledge_retention_score)
             self.success = knowledge_retention_score >= self.threshold
             self.score = knowledge_retention_score
-            if verbose:
+            if self.verbose_mode:
                 print(
                     f"knowledges: {self.knowledges}\nverdicts: {self.verdicts}\n"
                 )

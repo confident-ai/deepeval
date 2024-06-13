@@ -73,6 +73,7 @@ class GEval(BaseMetric):
         threshold: float = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
+        verbose_mode: bool = False,
     ):
         super().__init__()
         self._evaluation_steps: ContextVar[Optional[List[str]]] = ContextVar(
@@ -104,11 +105,11 @@ class GEval(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
+        self.verbose_mode = verbose_mode
 
     def measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -123,9 +124,7 @@ class GEval(BaseMetric):
                     self.score,
                     self.reason,
                     self.success,
-                ) = loop.run_until_complete(
-                    self._measure_async(test_case, verbose)
-                )
+                ) = loop.run_until_complete(self._measure_async(test_case))
             else:
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
@@ -139,7 +138,7 @@ class GEval(BaseMetric):
                     else self.score
                 )
                 self.success = self.score >= self.threshold
-                if verbose:
+                if self.verbose_mode:
                     print(f"evaluation_steps: {self.evaluation_steps}\n")
                 return self.score
 
@@ -147,7 +146,6 @@ class GEval(BaseMetric):
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        verbose: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -171,16 +169,14 @@ class GEval(BaseMetric):
                 else self.score
             )
             self.success = self.score >= self.threshold
-            if verbose:
+            if self.verbose_mode:
                 print(f"evaluation_steps: {self.evaluation_steps}\n")
             return self.score
 
     async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-        verbose: bool,
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ):
-        await self.a_measure(test_case, _show_indicator=False, verbose=verbose)
+        await self.a_measure(test_case, _show_indicator=False)
         return (self.evaluation_steps, self.score, self.reason, self.success)
 
     async def _a_generate_evaluation_steps(self) -> List[str]:

@@ -89,6 +89,7 @@ def test_everything():
         strict_mode=strict_mode,
         async_mode=False,
         model="gpt-4-0125-preview",
+        verbose_mode=True,
     )
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
     metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
