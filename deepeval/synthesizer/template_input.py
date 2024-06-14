@@ -1,3 +1,40 @@
+class InputSynthesizerTemplate:
+    @staticmethod
+    def generate_synthetic_inputs(subject: str, task: str, output_format: str, num_initial_goldens: int):
+        return f"""Generate a series of inputs from scratch based on the provided subject, task, and output format.
+        The inputs must align with the given subject and task description, and conform to specified output format.
+
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
+        You MUST TRY to generate {num_initial_goldens} data points.
+
+        Example subject: SQL queries querying a database called FAST_FOOD_RESTAURANTS
+        Example task: Test all the SQL probable statements
+        Example output format: SQL String
+        Example num initial prompts: 2
+        Example JSON:
+        {{
+            "data": [
+                {{
+                    "input": "SELECT * FROM menu"
+                }},
+                {{
+                    "input": "SELECT AVG(price) FROM menu;"
+                }}
+            ]  
+        }}
+
+        You MUST include at least one statement as the input. `input` MUST be of `{output_format}` format.
+        You MUST TRY to generate {num_initial_goldens} data points, unless the generated `input` is getting reptitive.
+        **
+
+        subject: {subject}
+        task: {task}
+        output format: {output_format}
+        num initial prompts: {num_initial_goldens}
+        JSON:
+        """
+
 ######################################################################################################
 ##### Approach similar to https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py ######
 ######################################################################################################
@@ -241,3 +278,5 @@ class InputEvolutionTemplate:
             Rewritten Input:
             """
         )
+
+ 
