@@ -43,7 +43,7 @@ class TestResult:
     """Returned from run_test"""
 
     success: bool
-    metrics_metadatas: List[MetricMetadata]
+    metrics_metadata: List[MetricMetadata]
     input: str
     actual_output: str
     expected_output: str
@@ -88,7 +88,7 @@ def create_test_result(
 
     return TestResult(
         success=tc.success,
-        metrics_metadatas=tc.metrics_metadata,
+        metrics_metadata=tc.metrics_metadata,
         input=tc.input,
         actual_output=tc.actual_output,
         expected_output=tc.expected_output,
@@ -396,17 +396,17 @@ def assert_test(
         failed_metrics_metadata: List[MetricMetadata] = []
         # even for conversations, test_result right now is just the
         # result for the last message
-        for metrics_metadata in test_result.metrics_metadatas:
-            if metrics_metadata.error is not None:
-                failed_metrics_metadata.append(metrics_metadata)
+        for metric_metadata in test_result.metrics_metadata:
+            if metric_metadata.error is not None:
+                failed_metrics_metadata.append(metric_metadata)
             else:
                 # This try block is for user defined custom metrics,
                 # which might not handle the score == undefined case elegantly
                 try:
-                    if not metrics_metadata.success:
-                        failed_metrics_metadata.append(metrics_metadata)
+                    if not metric_metadata.success:
+                        failed_metrics_metadata.append(metric_metadata)
                 except:
-                    failed_metrics_metadata.append(metrics_metadata)
+                    failed_metrics_metadata.append(metric_metadata)
 
         failed_metrics_str = ", ".join(
             [
@@ -491,26 +491,26 @@ def print_test_result(test_result: TestResult):
     print("")
     print("=" * 70 + "\n")
     print("Metrics Summary\n")
-    for metrics_metadata in test_result.metrics_metadatas:
+    for metric_metadata in test_result.metrics_metadata:
         successful = True
-        if metrics_metadata.error is not None:
+        if metric_metadata.error is not None:
             successful = False
         else:
             # This try block is for user defined custom metrics,
             # which might not handle the score == undefined case elegantly
             try:
-                if not metrics_metadata.success:
+                if not metric_metadata.success:
                     successful = False
             except:
                 successful = False
 
         if not successful:
             print(
-                f"  - ❌ {metrics_metadata.metric} (score: {metrics_metadata.score}, threshold: {metrics_metadata.threshold}, strict: {metrics_metadata.strict_mode}, evaluation model: {metrics_metadata.evaluation_model}, reason: {metrics_metadata.reason}, error: {metrics_metadata.error})"
+                f"  - ❌ {metric_metadata.metric} (score: {metric_metadata.score}, threshold: {metric_metadata.threshold}, strict: {metric_metadata.strict_mode}, evaluation model: {metric_metadata.evaluation_model}, reason: {metric_metadata.reason}, error: {metric_metadata.error})"
             )
         else:
             print(
-                f"  - ✅ {metrics_metadata.metric} (score: {metrics_metadata.score}, threshold: {metrics_metadata.threshold}, strict: {metrics_metadata.strict_mode}, evaluation model: {metrics_metadata.evaluation_model}, reason: {metrics_metadata.reason}, error: {metrics_metadata.error})"
+                f"  - ✅ {metric_metadata.metric} (score: {metric_metadata.score}, threshold: {metric_metadata.threshold}, strict: {metric_metadata.strict_mode}, evaluation model: {metric_metadata.evaluation_model}, reason: {metric_metadata.reason}, error: {metric_metadata.error})"
             )
         # if metrics_metadata.score_breakdown:
         #     for metric_name, score in metrics_metadata.score_breakdown.items():
@@ -530,13 +530,13 @@ def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     metric_successes = {}
 
     for result in test_results:
-        for metrics_metadata in result.metrics_metadatas:
-            metric_name = metrics_metadata.metric
+        for metric_metadata in result.metrics_metadata:
+            metric_name = metric_metadata.metric
             if metric_name not in metric_counts:
                 metric_counts[metric_name] = 0
                 metric_successes[metric_name] = 0
             metric_counts[metric_name] += 1
-            if metrics_metadata.success:
+            if metric_metadata.success:
                 metric_successes[metric_name] += 1
 
     metric_pass_rates = {
