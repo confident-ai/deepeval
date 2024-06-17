@@ -128,7 +128,7 @@ class FaithfulnessMetric(BaseMetric):
                         steps=[
                             f"Truths:\n{prettify_list(self.truths)}\n",
                             f"Claims:\n{prettify_list(self.claims)}\n",
-                            f"Verdicts:\n{self.verdicts}\n",
+                            f"Verdicts:\n{prettify_list(self.verdicts)}\n",
                             f"Score: {self.score}\nReason: {self.reason}",
                         ],
                     )

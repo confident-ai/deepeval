@@ -125,7 +125,7 @@ class HallucinationMetric(BaseMetric):
                 print_intermediate_steps(
                     self.__name__,
                     steps=[
-                        f"Verdicts:\n{self.verdicts}\n",
+                        f"Verdicts:\n{prettify_list(self.verdicts)}\n",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
