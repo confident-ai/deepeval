@@ -15,7 +15,7 @@ from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.utils import generate_uuid
+from deepeval.utils import generate_uuid, prettify_list
 
 
 class Knowledge(BaseModel):
@@ -79,8 +79,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 print_intermediate_steps(
                     self.__name__,
                     steps=[
-                        f"Knowledges:\n{self.knowledges}",
-                        f"Verdicts:\n{self.verdicts}",
+                        f"Knowledges:\n{prettify_list(self.knowledges)}\n",
+                        f"Verdicts:\n{prettify_list(self.verdicts)}\n",
+                        f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
             return self.score

@@ -3,7 +3,11 @@ from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import asyncio
 
-from deepeval.utils import get_or_create_event_loop, generate_uuid
+from deepeval.utils import (
+    get_or_create_event_loop,
+    generate_uuid,
+    prettify_list,
+)
 from deepeval.metrics.utils import (
     print_intermediate_steps,
     validate_conversational_test_case,
@@ -92,7 +96,8 @@ class ContextualRelevancyMetric(BaseMetric):
                     print_intermediate_steps(
                         self.__name__,
                         steps=[
-                            f"Verdicts:\n{self.verdicts}",
+                            f"Verdicts:\n{prettify_list(self.verdicts)}\n",
+                            f"Score: {self.score}\nReason: {self.reason}",
                         ],
                     )
                 return self.score
@@ -124,7 +129,8 @@ class ContextualRelevancyMetric(BaseMetric):
                 print_intermediate_steps(
                     self.__name__,
                     steps=[
-                        f"Verdicts:\n{self.verdicts}",
+                        f"Verdicts:\n{prettify_list(self.verdicts)}\n",
+                        f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
             return self.score

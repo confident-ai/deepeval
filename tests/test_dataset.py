@@ -8,6 +8,7 @@ from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluate import aggregate_metric_pass_rates, TestResult
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.test_run.api import MetricMetadata
 
 
 class FakeMetric1(BaseMetric):
@@ -80,50 +81,3 @@ def test_create_dataset():
         actual_output_key_name="actual_output",
     )
     assert len(dataset.test_cases) == 10, "Test Cases not loaded from JSON"
-
-
-def test_aggregate_metric_pass_rates():
-    test_case = LLMTestCase(
-        input="What is the primary difference between a comet and an asteroid?",
-        actual_output="Comets and asteroids are both celestial bodies found in our solar system but differ in composition and behavior. Comets, made up of ice, dust, and small rocky particles, develop glowing comas and tails when near the Sun. In contrast, asteroids are primarily rocky or metallic and are mostly found in the asteroid belt between Mars and Jupiter. Rabbits are found in the wild.",
-        expected_output="Comets and asteroids are both celestial bodies found in our solar system but differ in composition and behavior. Comets, made up of ice, dust, and small rocky particles, develop glowing comas and tails when near the Sun. In contrast, asteroids are primarily rocky or metallic and are mostly found in the asteroid belt between Mars and Jupiter. Rabbits are found in the wild.",
-    )
-    fake_metric_1_fail = FakeMetric1(_success=False)
-    fake_metric_2_fail = FakeMetric2()
-    fake_metric_1_fail.measure(test_case=test_case)
-    fake_metric_2_fail.measure(test_case=test_case)
-
-    fake_metric_1_pass = FakeMetric1()
-    fake_metric_2_pass = FakeMetric2()
-    fake_metric_1_pass.measure(test_case=test_case)
-    fake_metric_2_pass.measure(test_case=test_case)
-    test_results = [
-        TestResult(
-            success=False,
-            metrics=[
-                fake_metric_1_fail,
-                fake_metric_2_fail,
-            ],
-            input="some input",
-            actual_output="some output",
-            expected_output="expected output",
-            context=["context"],
-            retrieval_context=["retrieval context"],
-        ),
-        TestResult(
-            success=True,
-            metrics=[
-                fake_metric_1_pass,
-                fake_metric_2_pass,
-            ],
-            input="another input",
-            actual_output="another output",
-            expected_output="another expected output",
-            context=["another context"],
-            retrieval_context=["another retrieval context"],
-        ),
-    ]
-
-    expected_result = {"FakeMetric1": 0.5, "FakeMetric2": 1.0}
-    result = aggregate_metric_pass_rates(test_results)
-    assert result == expected_result

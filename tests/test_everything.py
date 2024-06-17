@@ -89,7 +89,6 @@ def test_everything():
         threshold=0.1,
         strict_mode=strict_mode,
         async_mode=False,
-        model="gpt-4-0125-preview",
         verbose_mode=True,
     )
     metric2 = FaithfulnessMetric(

@@ -11,7 +11,11 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.utils import get_or_create_event_loop, generate_uuid
+from deepeval.utils import (
+    get_or_create_event_loop,
+    generate_uuid,
+    prettify_list,
+)
 from deepeval.metrics.utils import (
     print_intermediate_steps,
     validate_conversational_test_case,
@@ -196,11 +200,12 @@ class SummarizationMetric(BaseMetric):
                     print_intermediate_steps(
                         self.__name__,
                         steps=[
-                            f"Truths:\n{self.truths}",
-                            f"Claims:\n{self.claims}",
-                            f"Assessment Questions:\n{self.assessment_questions}",
-                            f"Coverage Verdicts:\n{self.coverage_verdicts}",
-                            f"Alignment Verdicts:\n{self.alignment_verdicts}",
+                            f"Truths:\n{prettify_list(self.truths)}\n",
+                            f"Claims:\n{prettify_list(self.claims)}\n",
+                            f"Assessment Questions:\n{prettify_list(self.assessment_questions)}\n",
+                            f"Coverage Verdicts:\n{prettify_list(self.coverage_verdicts)}\n",
+                            f"Alignment Verdicts:\n{prettify_list(self.alignment_verdicts)}\n",
+                            f"Score: {self.score}\nReason: {self.reason}",
                         ],
                     )
                 return self.score
@@ -245,11 +250,12 @@ class SummarizationMetric(BaseMetric):
                 print_intermediate_steps(
                     self.__name__,
                     steps=[
-                        f"Truths:\n{self.truths}",
-                        f"Claims:\n{self.claims}",
-                        f"Assessment Questions:\n{self.assessment_questions}",
-                        f"Coverage Verdicts:\n{self.coverage_verdicts}",
-                        f"Alignment Verdicts:\n{self.alignment_verdicts}",
+                        f"Truths:\n{prettify_list(self.truths)}\n",
+                        f"Claims:\n{prettify_list(self.claims)}\n",
+                        f"Assessment Questions:\n{prettify_list(self.assessment_questions)}\n",
+                        f"Coverage Verdicts:\n{prettify_list(self.coverage_verdicts)}\n",
+                        f"Alignment Verdicts:\n{prettify_list(self.alignment_verdicts)}\n",
+                        f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
             return self.score
