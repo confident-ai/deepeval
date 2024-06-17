@@ -15,9 +15,26 @@ import re
 import asyncio
 import nest_asyncio
 import uuid
+from pydantic import BaseModel
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
+
+def prettify_list(lst):
+    formatted_elements = []
+    for item in lst:
+        if isinstance(item, str):
+            formatted_elements.append(f'"{item}"')
+        elif isinstance(item, BaseModel):
+            formatted_elements.append(
+                json.dumps(item.dict(), indent=4).replace("\n", "\n    ")
+            )
+        else:
+            formatted_elements.append(repr(item))  # Fallback for other types
+
+    formatted_list = ",\n    ".join(formatted_elements)
+    return f"[\n    {formatted_list}\n]"
 
 
 def generate_uuid() -> str:

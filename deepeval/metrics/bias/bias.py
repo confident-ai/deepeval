@@ -10,7 +10,11 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.utils import get_or_create_event_loop, generate_uuid
+from deepeval.utils import (
+    get_or_create_event_loop,
+    generate_uuid,
+    prettify_list,
+)
 from deepeval.metrics.utils import (
     print_intermediate_steps,
     validate_conversational_test_case,
@@ -104,8 +108,9 @@ class BiasMetric(BaseMetric):
                     print_intermediate_steps(
                         self.__name__,
                         steps=[
-                            f"Opinions:\n{self.opinions}\n",
-                            f"Verdicts:\n{self.verdicts}",
+                            f"Opinions:\n{prettify_list(self.opinions)}\n",
+                            f"Verdicts:\n{prettify_list(self.verdicts)}\n",
+                            f"Score: {self.score}\nReason: {self.reason}",
                         ],
                     )
                 return self.score
@@ -136,8 +141,9 @@ class BiasMetric(BaseMetric):
                 print_intermediate_steps(
                     self.__name__,
                     steps=[
-                        f"Opinions:\n{self.opinions}\n",
-                        f"Verdicts:\n{self.verdicts}",
+                        f"Opinions:\n{prettify_list(self.opinions)}\n",
+                        f"Verdicts:\n{prettify_list(self.verdicts)}\n",
+                        f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
             return self.score

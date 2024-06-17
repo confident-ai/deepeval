@@ -87,8 +87,13 @@ def initialize_model(
 
 
 def print_intermediate_steps(metric: str, steps: List[str]):
-    print("=" * 50)
-    print(f"{metric} Verbose Print\n")
-    for step in steps:
+    print("*" * 50)
+    print(f"{metric} Verbose Logs")
+    print("*" * 50)
+    print("")
+    for index, step in enumerate(steps):
         print(step)
-    print("=" * 50)
+        if index < len(steps) - 1:
+            print("")
+    print("")
+    print("=" * 70)
