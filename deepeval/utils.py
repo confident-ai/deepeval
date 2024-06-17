@@ -18,10 +18,11 @@ import uuid
 from pydantic import BaseModel
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
+def prettify_list(lst: List[Any]):
+    if len(lst) == 0:
+        return "[]"
 
-def prettify_list(lst):
     formatted_elements = []
     for item in lst:
         if isinstance(item, str):

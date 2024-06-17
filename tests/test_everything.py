@@ -83,13 +83,12 @@ strict_mode = False
 verbose_mode = True
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
         strict_mode=strict_mode,
         async_mode=False,
-        model="gpt-4-0125-preview",
         verbose_mode=True,
     )
     metric2 = FaithfulnessMetric(
