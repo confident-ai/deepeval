@@ -111,12 +111,13 @@ print(metric.score)
 print(metric.reason)
 ```
 
-There are three optional parameters when creating a `KnowledgeRetentionMetric`:
+There are five optional parameters when creating a `KnowledgeRetentionMetric`:
 
 - [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
 ## How Is It Calculated?
 

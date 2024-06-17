@@ -75,7 +75,7 @@ Note that the `model-version` is **optional**. If you ever wish to stop using Az
 deepeval unset-azure-openai
 ```
 
-## Using a Custom LLM
+## Using A Custom LLM
 
 `deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
 
@@ -360,7 +360,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 metric = AnswerRelevancyMetric(model=aws_bedrock)
 ```
 
-## Measuring a Metric
+## Measuring A Metric
 
 All metrics in `deepeval`, including [custom metrics that you create](metrics-custom):
 
@@ -368,9 +368,10 @@ All metrics in `deepeval`, including [custom metrics that you create](metrics-cu
 - can have its score accessed via `metric.score`, which ranges from 0 - 1
 - can have its score reason accessed via `metric.reason`
 - can have its status accessed via `metric.is_successful()`
-- can be used to evaluate test cases or entire datasets, with or without Pytest.
-- has a `threshold` that acts as the threshold for success. `metric.is_successful()` is only true if `metric.score` is above/below `threshold`.
-- has a `strict_mode` property, which enforces `metric.score` to a binary one
+- can be used to evaluate test cases or entire datasets, with or without Pytest
+- has a `threshold` that acts as the threshold for success. `metric.is_successful()` is only true if `metric.score` is above/below `threshold`
+- has a `strict_mode` property, which when turned on enforces `metric.score` to a binary one
+- has a `verbose_mode` property, which when turned on prints metric logs whenever a metric is executed
 
 In additional, all metrics in `deepeval` executes asynchronously by default. This behavior is something you can configure via the `async_mode` parameter when instantiating a metric.
 
@@ -477,3 +478,18 @@ async def long_running_function():
 
 asyncio.run(long_running_function())
 ```
+
+## Debugging A Metric
+
+You can turn on `verbose_mode` for **ANY** `deepeval` metric at metric initialization to debug a metric whenever the `measure()` or `a_measure()` method is called:
+
+```python
+...
+
+metric = AnswerRelevancyMetric(verbose_mode=True)
+metric.measure(test_case)
+```
+
+:::note
+Turning `verbose_mode` on will print the inner workings of a metric whenever `measure()` or `a_measure()` is called.
+:::

@@ -40,7 +40,7 @@ correctness_metric = GEval(
 )
 ```
 
-There are three mandatory and five optional parameters required when instantiating an `GEval` class:
+There are three mandatory and six optional parameters required when instantiating an `GEval` class:
 
 - `name`: name of metric
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
@@ -50,6 +50,7 @@ There are three mandatory and five optional parameters required when instantiati
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
 :::danger
 For accurate and valid results, only the parameters that are mentioned in `criteria` should be included as a member of `evaluation_params`.
