@@ -7,7 +7,20 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import generate_uuid
 
 
-class BaseMetric:
+class MetricMeta(type):
+    def __new__(cls, name, bases, attrs):
+        # Create the new class
+        new_class = super().__new__(cls, name, bases, attrs)
+        # Assign new ContextVar instances with unique identifiers
+        new_class._score = ContextVar(str(uuid.uuid4()), default=None)
+        new_class._score_breakdown = ContextVar(str(uuid.uuid4()), default=None)
+        new_class._reason = ContextVar(str(uuid.uuid4()), default=None)
+        new_class._success = ContextVar(str(uuid.uuid4()), default=None)
+        new_class._error = ContextVar(str(uuid.uuid4()), default=None)
+        return new_class
+
+
+class BaseMetric(metaclass=MetricMeta):
 
     evaluation_model: Optional[str] = None
     strict_mode: bool = False
@@ -15,22 +28,6 @@ class BaseMetric:
     verbose_mode: bool = False
     include_reason: bool = False
     evaluation_cost: Optional[float] = None
-
-    _score: ContextVar[Optional[float]] = ContextVar(
-        generate_uuid(), default=None
-    )
-    _score_breakdown: ContextVar[Optional[Dict]] = ContextVar(
-        generate_uuid(), default=None
-    )
-    _reason: ContextVar[Optional[str]] = ContextVar(
-        generate_uuid(), default=None
-    )
-    _success: ContextVar[Optional[bool]] = ContextVar(
-        generate_uuid(), default=None
-    )
-    _error: ContextVar[Optional[str]] = ContextVar(
-        generate_uuid(), default=None
-    )
 
     @property
     def score(self) -> Optional[float]:
