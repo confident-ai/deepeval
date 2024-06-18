@@ -193,10 +193,8 @@ def capture_contextvars(single_obj):
 
 
 def update_contextvars(single_obj, contextvars_dict):
-    print("******")
     for attr, (context_var, value) in contextvars_dict.items():
         context_var.set(value)
-        print(context_var)
         setattr(single_obj, attr, context_var)
 
 
