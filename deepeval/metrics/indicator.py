@@ -137,6 +137,7 @@ async def measure_metric_task(
 
             try:
                 await metric.a_measure(tc, _show_indicator=False)
+                print(metric.score, metric.reason)
                 finish_text = "Done"
             except TypeError:
                 try:
