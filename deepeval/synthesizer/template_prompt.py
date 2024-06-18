@@ -1,7 +1,7 @@
-class InputSynthesizerTemplate:
+class PromptSynthesizerTemplate:
     @staticmethod
-    def generate_synthetic_inputs(subject: str, task: str, output_format: str, num_initial_goldens: int):
-        return f"""Generate a series of inputs from scratch based on the provided subject, task, and output format.
+    def generate_synthetic_prompts(subject: str, task: str, output_format: str, num_initial_goldens: int):
+        return f"""Generate a series of input prompts from scratch based on the provided subject, task, and output format.
         The inputs must align with the given subject and task description, and conform to specified output format.
 
         **
@@ -42,7 +42,7 @@ class InputSynthesizerTemplate:
 # generate_deepen_prompt
 # "If #The Given Prompt# contains inquiries about certain issues, the depth and breadth of the inquiry can be increased."
 
-class InputEvolutionTemplate:
+class PromptEvolutionTemplate:
 
     base_instruction = """I want you to act as an input rewriter.
     Your object is the rewrite a given `input`. You MUST complicate the given `Input` using the following method:"""
@@ -50,7 +50,7 @@ class InputEvolutionTemplate:
     @staticmethod
     def reasoning_evolution(input):
         return (
-            InputEvolutionTemplate.base_instruction
+            PromptEvolutionTemplate.base_instruction
             + f"""
             1. If `Input` can be solved with just a few simple thinking processes, you can rewrite it to explicitly request multiple-step reasoning.
             2. `Rewritten Input` should require readers to make multiple logical connections or inferences.
@@ -89,7 +89,7 @@ class InputEvolutionTemplate:
     @staticmethod
     def concretizing_evolution(input):
         return (
-            InputEvolutionTemplate.base_instruction
+            PromptEvolutionTemplate.base_instruction
             + f"""
             1. Rewrite `Input` by replacing general concepts/inquiries with more specific ones.
             2. `Rewritten Input` should be concise and understandable by humans.
@@ -127,7 +127,7 @@ class InputEvolutionTemplate:
     @staticmethod
     def constrained_evolution(input):
         return (
-            InputEvolutionTemplate.base_instruction
+            PromptEvolutionTemplate.base_instruction
             + f"""
             1. Rewrite `Input` by adding at least one more constraints/requirements.
             2. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
@@ -164,7 +164,7 @@ class InputEvolutionTemplate:
     @staticmethod
     def comparative_question_evolution(input):
         return (
-            InputEvolutionTemplate.base_instruction
+            PromptEvolutionTemplate.base_instruction
             + f"""
             1. Rewrite `Input` to focus on comparing two or more entities, concepts, or processes.
             2. `Rewritten Input` should encourage a detailed comparison that highlights similarities and differences.
@@ -204,7 +204,7 @@ class InputEvolutionTemplate:
     @staticmethod
     def hypothetical_scenario_evolution(input):
         return (
-            InputEvolutionTemplate.base_instruction
+            PromptEvolutionTemplate.base_instruction
             + f"""
             1. Rewrite `Input` to include a hypothetical or speculative scenario.
             2. `Rewritten Input` should encourage the reader to apply knowledge to imagine or deduce outcomes.
@@ -243,7 +243,7 @@ class InputEvolutionTemplate:
     @staticmethod
     def in_breadth_evolution(input):
         return (
-            InputEvolutionTemplate.base_instruction
+            PromptEvolutionTemplate.base_instruction
             + f"""
             1. Rewrite `Input` to create a create a brand new prompt.
             2. `Rewritten Input` should belong to the same domain as the `input` but be even more rare.
