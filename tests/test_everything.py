@@ -128,6 +128,18 @@ def test_everything():
         verbose_mode=verbose_mode,
     )
 
+    metric11 = GEval(
+        name="Relevancy",
+        criteria="Relevancy - determine if the actual output is relevant with the input.",
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+        ],
+        strict_mode=strict_mode,
+        model="gpt-4-0125-preview",
+        verbose_mode=verbose_mode,
+    )
+
     test_case = LLMTestCase(
         input="What is this",
         actual_output="this is a latte",
@@ -140,15 +152,16 @@ def test_everything():
         test_case,
         [
             metric1,
-            metric2,
-            metric3,
-            metric4,
-            metric5,
+            # metric2,
+            # metric3,
+            # metric4,
+            # metric5,
             # metric6,
             # metric7,
             # metric8,
             # metric9,
-            # metric10,
+            metric10,
+            metric11,
         ],
         # run_async=False,
     )

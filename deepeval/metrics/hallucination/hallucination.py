@@ -55,6 +55,7 @@ class HallucinationMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
+        super().__init__()
         self._verdicts: ContextVar[Optional[List[HallucinationVerdict]]] = (
             ContextVar(generate_uuid(), default=None)
         )
