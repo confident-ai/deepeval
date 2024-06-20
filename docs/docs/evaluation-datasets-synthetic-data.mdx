@@ -36,12 +36,14 @@ As you'll learn later, an embedding model is only used when using the `generate_
 
 ## Using Synthesizer As A Standalone
 
-There are 2 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
+There are 4 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
 
 1. Generating synthetic `Golden`s using **context extracted from documents.**
 2. Generating synthetic `Golden`s from a **list of provided context.**
+3. Generating synthetic `Golden`s from a **list of provided prompts.**
+4. Generating synthetic `Golden`s from **scratch**
 
-### Generating From Documents
+### 1. Generating From Documents
 
 To generate synthetic `Golden`s from documents, simply provide a list of document paths:
 
@@ -59,7 +61,7 @@ synthesizer.generate_goldens_from_docs(
 )
 ```
 
-There are one mandatory and six optional parameters when using the `generate_goldens_from_docs` method:
+There are one mandatory and seven optional parameters when using the `generate_goldens_from_docs` method:
 
 - `document_paths`: a list strings, representing the path to the documents from which contexts will be extracted from. Supported documents types include: `.txt`, `.docx`, and `.pdf`.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
@@ -68,8 +70,9 @@ There are one mandatory and six optional parameters when using the `generate_gol
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during context extraction. Defaulted to 0.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
 - [Optional] `enable_breadth_evolve`: a boolean which when set to `True`, introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
+- [Optional] `evolution_types`: a list of `Evolution`, specifying methods used during data evolution. Defaulted to all `Evolution`s.
 
-### Generating From Provided Contexts
+### 2. Generating From Provided Contexts
 
 `deepeval` also allows you to generate synthetic `Goldens` from a manually provided a list of context instead of directly generating from your documents.
 
@@ -90,17 +93,84 @@ synthesizer.generate_goldens(
 )
 ```
 
-There are one mandatory and four optional parameters when using the `generate_goldens` method:
+There are one mandatory and five optional parameters when using the `generate_goldens` method:
 
 - `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
 - [Optional] `max_goldens_per_context`: the maximum number of golden data points to be generated from each context. Adjusting this parameter can influence the size of the resulting dataset. Defaulted to 2.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
 - [Optional] `enable_breadth_evolve`: a boolean indicating whether to enable breadth evolution strategies during data generation. When set to True, it introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
+- [Optional] `evolution_types`: a list of `Evolution`, specifying methods used during data evolution. Defaulted to all `Evolution`s.
 
 :::caution
-You can also optionally generate `expected_output`s alongside each golden, but you should always aim to cross-check any generated expected output.
+While the previous methods first use an LLM to generate a series of inputs based on the provided context before evolving them, `generate_goldens_from_inputs` simply evolves the provided list of inputs into more complex and diverse `Golden`s. It's also important to note that this method will only populate the input field of each generated `Golden`.
 :::
+
+### 3. Generating From Provided Prompts
+
+If your LLM application **does not rely on a retrieval context**, or if you simply wish to generate a synthetic dataset based on information outside your application's information database, `deepeval` also supports generating synthetic `Golden`s from an initial list of prompts, which serve as examples from which additional prompts will be generated.
+
+:::info
+While the previous methods first use an LLM to generate a series of inputs based on the provided context before evolving them, `generate_goldens_from_prompts` simply **evolves the provided list of prompts** into more complex and diverse `Golden`s. It's also important to note that this method will only populate the input field of each generated `Golden`.
+:::
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+synthesizer.generate_goldens_from_prompts(
+    prompts=[
+        "What is 2+2",
+        "Give me the solution to 12/5",
+        "5! = ?"
+    ],
+    num_evolutions=20
+)
+```
+
+There are one mandatory and three optional parameters when using the `generate_goldens_from_docs` method:
+
+- `prompts`: a list of strings, representing your initial list of example prompts.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each prompt. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial prompts. Defaulted to 1.
+- [Optional] `enable_breadth_evolve`: a boolean which when set to `True`, introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
+- [Optional] `evolution_types`: a list of `PromptEvolution`, specifying methods used during data evolution. Defaulted to all `PromptEvolution`s.
+
+### 4. Generating From Scratch
+
+If you do not have a list of example prompts, or wish to solely rely on an LLM generation for synthesis, you can also generate synthetic `Golden`s simply by specifying the subject, task, and output format you wish your prompts to follow.
+
+:::tip
+Generating goldens from scratch is especially helpful when you wish to **evaluate your LLM on a specific task**, such as red-teaming or text-to-SQL use cases!
+:::
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+synthesizer.generate_goldens_from_scratch(
+    subject="Harmful and toxic prompts, with emphasis on dark humor",
+    task="Red-team LLMs",
+    output_format="string",
+    num_initial_goldens=25,
+    num_evolutions=20
+)
+```
+
+This method is a **2-step function** that first generates a list of prompts about a given subject for a certain task and in a certain output format, before using the generated list of prompts to generate more prompts through data evolution.
+
+:::info
+The subject, task, and output format parameters are all strings that are inserted into a predefined prompt template, meaning these parameters are **flexible and will need to be iterated on** for optimal results.
+:::
+
+There are four mandatory and three optional parameters when using the `generate_goldens_from_docs` method:
+
+- `subject`: a string, specifying the subject and nature of your generated `Golden`s
+- `task`: a string, representing the purpose of these evaluation `Golden`s
+- `output_format`: a string, representing the expected output format. This is not equivalent to python `type`s but simply gives you more control over the structure of your synthetic data.
+- `num_initial_goldens`: the number of goldens generated before consequent evolutions
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated prompt. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
+- [Optional] `enable_breadth_evolve`: a boolean which when set to `True`, introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
+- [Optional] `evolution_types`: a list of `PromptEvolution`, specifying methods used during data evolution. Defaulted to all `PromptEvolution`s.
 
 ### Saving Generated Goldens
 
