@@ -1,4 +1,84 @@
 class SynthesizerTemplate:
+
+    @staticmethod
+    def generate_text2sql_inputs(context, max_goldens_per_context):
+        prompt = f"""Based on the given context, which is a SQL table schema, please generate a list of JSON objects with `input` keys.
+        The `input` can either be a question or a statement that can be addressed by the given schema.
+
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
+        You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting repetitive.
+
+        Example context: [
+            "Table: Customers",
+            "Column: CustomerID, Type: INT, Description: Unique identifier for each customer",
+            "Column: FirstName, Type: VARCHAR, Description: First name of the customer",
+            "Column: LastName, Type: VARCHAR, Description: Last name of the customer",
+            "Column: Email, Type: VARCHAR, Description: Email address of the customer",
+            "Column: PhoneNumber, Type: VARCHAR, Description: Contact number of the customer",
+            "Column: City, Type: VARCHAR, Description: City where the customer resides"
+        ]
+        Example max goldens per context: 2
+        Example JSON:
+        {{
+            "data": [
+                {{
+                    "input": "Show me all the customers who live in New York.",
+                }},
+                {{
+                    "input": "List the first and last names of all customers.",
+                }}
+            ]  
+        }}
+
+        You should NOT incorporate any prior knowledge you have and take each context at face value.
+        You MUST include at least one statement as the input.
+        `input` MUST be a STRING.
+        You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting repetitive.
+        **
+
+        Max Goldens Per Context:
+        {max_goldens_per_context}
+
+        Context:
+        {context}
+
+        JSON:
+        """
+        return prompt
+    
+    @staticmethod
+    def generate_text2sql_expected_output(input, context):
+        return f"""Given the input, which may be a question or a statement addressable by the schema provided in the context,
+        generate a JSON object with a key 'sql'. This key should contain the corresponding SQL statement that accurately and efficiently responds to the input.
+
+        **
+        IMPORTANT: The output must be in JSON format, with the 'sql' key only.
+
+        Example Context: [
+            "Table: Customers",
+            "Column: CustomerID, Type: INT, Description: Unique identifier for each customer",
+            "Column: FirstName, Type: VARCHAR, Description: First name of the customer",
+            "Column: LastName, Type: VARCHAR, Description: Last name of the customer",
+            "Column: Email, Type: VARCHAR, Description: Email address of the customer",
+            "Column: PhoneNumber, Type: VARCHAR, Description: Contact number of the customer",
+            "Column: City, Type: VARCHAR, Description: City where the customer resides"
+        ]
+        Example Input: "Show me all the customers who live in New York.",
+        Example JSON: {{
+            "sql": "SELECT * FROM Customers WHERE City = 'New York';"
+        }}
+
+        Context:
+        {context}
+
+        Input:
+        {input}
+
+        JSON:
+        """
+
+
     @staticmethod
     def generate_synthetic_inputs(context, max_goldens_per_context):
         return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
@@ -43,17 +123,17 @@ class SynthesizerTemplate:
         return f"""Given the input, which may or may not be a question, generate a response using information presented in context.
 
 **
-IMPORTANT: Please make sure to generate a response that is concise and straight to the point, and uses supporting information in context.
-**
+                IMPORTANT: Please make sure to generate a response that is concise and straight to the point, and uses supporting information in context.
+                **
 
-Context:
-{context}
+                Context:
+                {context}
 
-Input:
-{input}
+                Input:
+                {input}
 
-Generated Response:
-"""
+                Generated Response:
+                """
 
 
 ######################################################################################################
