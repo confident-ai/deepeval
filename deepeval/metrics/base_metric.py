@@ -7,21 +7,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import generate_uuid
 
 
-class MetricMeta(type):
-    def __new__(cls, name, bases, attrs):
-        # Create the new class
-        new_class = super().__new__(cls, name, bases, attrs)
-        # Assign new ContextVar instances with unique identifiers
-        new_class._score = ContextVar(str(uuid.uuid4()), default=None)
-        new_class._score_breakdown = ContextVar(str(uuid.uuid4()), default=None)
-        new_class._reason = ContextVar(str(uuid.uuid4()), default=None)
-        new_class._success = ContextVar(str(uuid.uuid4()), default=None)
-        new_class._error = ContextVar(str(uuid.uuid4()), default=None)
-        return new_class
-
-
-class BaseMetric(metaclass=MetricMeta):
-
+class BaseMetric:
     evaluation_model: Optional[str] = None
     strict_mode: bool = False
     async_mode: bool = True
@@ -84,6 +70,13 @@ class BaseMetric(metaclass=MetricMeta):
     @threshold.setter
     def threshold(self, value: float):
         self._threshold = value
+
+    def __init__(self):
+        self._score = ContextVar(str(uuid.uuid4()), default=None)
+        self._score_breakdown = ContextVar(str(uuid.uuid4()), default=None)
+        self._reason = ContextVar(str(uuid.uuid4()), default=None)
+        self._success = ContextVar(str(uuid.uuid4()), default=None)
+        self._error = ContextVar(str(uuid.uuid4()), default=None)
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:

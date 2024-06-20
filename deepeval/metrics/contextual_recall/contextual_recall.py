@@ -55,6 +55,7 @@ class ContextualRecallMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
+        super().__init__()
         self._verdicts: ContextVar[Optional[List[ContextualRecallVerdict]]] = (
             ContextVar(generate_uuid(), default=None)
         )

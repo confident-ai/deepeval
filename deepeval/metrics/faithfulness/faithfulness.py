@@ -72,6 +72,7 @@ class FaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
+        super().__init__()
         self._truths: ContextVar[Optional[List[str]]] = ContextVar(
             generate_uuid(), default=None
         )
