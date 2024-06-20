@@ -1,6 +1,6 @@
 import os
 import pytest
-from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer import Synthesizer, UseCase
 from deepeval.dataset import EvaluationDataset
 from deepeval.models import OpenAIEmbeddingModel
 
@@ -44,3 +44,53 @@ def test_synthesizer():
 #     max_goldens_per_document=2,
 # )
 # dataset.save_as(file_type="json", directory="./results")
+
+
+# table1 = """CREATE TABLE Students (
+#     StudentID INT PRIMARY KEY,
+#     FirstName VARCHAR(50),
+#     LastName VARCHAR(50),
+#     Email VARCHAR(100) UNIQUE,
+#     DateOfBirth DATE,
+#     Gender CHAR(1),
+#     Address VARCHAR(200),
+#     PhoneNumber VARCHAR(15)
+# );"""
+
+# table2 = """CREATE TABLE Courses (
+#     CourseID INT PRIMARY KEY,
+#     CourseName VARCHAR(100),
+#     TeacherID INT,
+#     Credits INT,
+#     DepartmentID INT,
+#     FOREIGN KEY (TeacherID) REFERENCES Teachers(TeacherID),
+#     FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+# );"""
+
+# table3 = """CREATE TABLE Enrollments (
+#     EnrollmentID INT PRIMARY KEY,
+#     StudentID INT,
+#     CourseID INT,
+#     EnrollmentDate DATE,
+#     Grade CHAR(2),
+#     FOREIGN KEY (StudentID) REFERENCES Students(StudentID),
+#     FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+# );"""
+
+# table4 = """CREATE TABLE Teachers (
+#     TeacherID INT PRIMARY KEY,
+#     FirstName VARCHAR(50),
+#     LastName VARCHAR(50),
+#     Email VARCHAR(100) UNIQUE,
+#     DepartmentID INT,
+#     FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+# );"""
+
+# contexts = [[table1, table2, table3, table4]]
+# synthesizer = Synthesizer()
+# text_to_sql_goldens = synthesizer.generate_goldens(
+#     max_goldens_per_context=15, contexts=contexts, use_case=UseCase.TEXT2SQL
+# )
+# for golden in text_to_sql_goldens:
+#     print("Input             : " + str(golden.input))
+#     print("Expected Output   : " + str(golden.expected_output))

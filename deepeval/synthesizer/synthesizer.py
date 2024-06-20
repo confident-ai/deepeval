@@ -11,14 +11,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
 import math
 
-sys.path.append(r"C:\Users\bombk\OneDrive\Documents\GitHub\deepeval")
-
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
 from deepeval.synthesizer.template_prompt import (
     PromptEvolutionTemplate,
     PromptSynthesizerTemplate,
 )
-
 from deepeval.synthesizer.context_generator import ContextGenerator
 from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.models import DeepEvalBaseLLM
@@ -299,6 +296,7 @@ class Synthesizer:
             self.model.get_model_name(),
             None,
             (num_initial_goldens + 1) * num_evolutions,
+            None,
             _show_indicator,
         ):
             goldens: List[Golden] = []
@@ -356,6 +354,7 @@ class Synthesizer:
             self.model.get_model_name(),
             None,
             len(prompts) * num_evolutions,
+            None,
             _show_indicator,
         ):
             goldens: List[Golden] = []
@@ -421,6 +420,7 @@ class Synthesizer:
                 self.model.get_model_name(),
                 None,
                 len(contexts) * max_goldens_per_context,
+                use_case.value,
                 _show_indicator,
             ):
                 goldens: List[Golden] = []
@@ -506,6 +506,7 @@ class Synthesizer:
                 self.model.get_model_name(),
                 None,
                 len(contexts) * max_goldens_per_context,
+                use_case.value,
                 _show_indicator,
             ):
 
@@ -684,54 +685,3 @@ class Synthesizer:
 
         print(f"Synthetic goldens saved at {full_file_path}!")
         return full_file_path
-
-
-if __name__ == "__main__":
-    table1 = """CREATE TABLE Students (
-        StudentID INT PRIMARY KEY,
-        FirstName VARCHAR(50),
-        LastName VARCHAR(50),
-        Email VARCHAR(100) UNIQUE,
-        DateOfBirth DATE,
-        Gender CHAR(1),
-        Address VARCHAR(200),
-        PhoneNumber VARCHAR(15)
-    );"""
-
-    table2 = """CREATE TABLE Courses (
-        CourseID INT PRIMARY KEY,
-        CourseName VARCHAR(100),
-        TeacherID INT,
-        Credits INT,
-        DepartmentID INT,
-        FOREIGN KEY (TeacherID) REFERENCES Teachers(TeacherID),
-        FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
-    );"""
-
-    table3 = """CREATE TABLE Enrollments (
-        EnrollmentID INT PRIMARY KEY,
-        StudentID INT,
-        CourseID INT,
-        EnrollmentDate DATE,
-        Grade CHAR(2),
-        FOREIGN KEY (StudentID) REFERENCES Students(StudentID),
-        FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
-    );"""
-
-    table4 = """CREATE TABLE Teachers (
-        TeacherID INT PRIMARY KEY,
-        FirstName VARCHAR(50),
-        LastName VARCHAR(50),
-        Email VARCHAR(100) UNIQUE,
-        DepartmentID INT,
-        FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
-    );"""
-
-    contexts = [[table1, table2, table3, table4]]
-    synthesizer = Synthesizer()
-    text_to_sql_goldens = synthesizer.generate_goldens(
-        max_goldens_per_context=15, contexts=contexts, use_case=UseCase.TEXT2SQL
-    )
-    for golden in text_to_sql_goldens:
-        print("Input             : " + str(golden.input))
-        print("Expected Output   : " + str(golden.expected_output))

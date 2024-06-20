@@ -26,13 +26,14 @@ def synthesizer_progress_context(
     evaluation_model: str,
     embedder: str = None,
     max_generations: str = None,
+    use_case: str = "QA",
     _show_indicator: bool = True,
 ):
     with capture_synthesizer_run(max_generations):
         if embedder is None:
-            description = f"✨ 🍰 ✨ You're generating up to {max_generations} goldens using DeepEval's latest Synthesizer (using {evaluation_model})! This may take a while..."
+            description = f"✨ 🍰 ✨ You're generating up to {max_generations} goldens using DeepEval's latest Synthesizer (using {evaluation_model}, use case={use_case})! This may take a while..."
         else:
-            description = f"✨ 🍰 ✨ You're generating up to {max_generations} goldens using DeepEval's latest Synthesizer (using {evaluation_model} and {embedder})! This may take a while..."
+            description = f"✨ 🍰 ✨ You're generating up to {max_generations} goldens using DeepEval's latest Synthesizer (using {evaluation_model} and {embedder}, use case={use_case})! This may take a while..."
         console = Console(file=sys.stderr)  # Direct output to standard error
         if _show_indicator:
             with Progress(
