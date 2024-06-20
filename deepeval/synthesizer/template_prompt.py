@@ -1,6 +1,8 @@
 class PromptSynthesizerTemplate:
     @staticmethod
-    def generate_synthetic_prompts(subject: str, task: str, output_format: str, num_initial_goldens: int):
+    def generate_synthetic_prompts(
+        subject: str, task: str, output_format: str, num_initial_goldens: int
+    ):
         return f"""Generate a series of input prompts from scratch based on the provided subject, task, and output format.
         The inputs must align with the given subject and task description, and conform to specified output format.
 
@@ -35,12 +37,14 @@ class PromptSynthesizerTemplate:
         JSON:
         """
 
+
 ######################################################################################################
 ##### Approach similar to https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py ######
 ######################################################################################################
 
 # generate_deepen_prompt
 # "If #The Given Prompt# contains inquiries about certain issues, the depth and breadth of the inquiry can be increased."
+
 
 class PromptEvolutionTemplate:
 
@@ -278,5 +282,3 @@ class PromptEvolutionTemplate:
             Rewritten Input:
             """
         )
-
- 

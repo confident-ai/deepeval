@@ -46,7 +46,7 @@ class SynthesizerTemplate:
         JSON:
         """
         return prompt
-    
+
     @staticmethod
     def generate_text2sql_expected_output(input, context):
         return f"""Given the input, which may be a question or a statement addressable by the schema provided in the context,
@@ -77,7 +77,6 @@ class SynthesizerTemplate:
 
         JSON:
         """
-
 
     @staticmethod
     def generate_synthetic_inputs(context, max_goldens_per_context):

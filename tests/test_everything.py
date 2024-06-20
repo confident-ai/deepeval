@@ -82,6 +82,7 @@ being composed mostly of rock and metal.
 strict_mode = False
 verbose_mode = True
 
+
 @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(

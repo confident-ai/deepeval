@@ -1,4 +1,3 @@
-
 import sys
 from typing import List, Optional, Union
 import os
@@ -15,7 +14,10 @@ import math
 sys.path.append(r"C:\Users\bombk\OneDrive\Documents\GitHub\deepeval")
 
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
-from deepeval.synthesizer.template_prompt import PromptEvolutionTemplate, PromptSynthesizerTemplate
+from deepeval.synthesizer.template_prompt import (
+    PromptEvolutionTemplate,
+    PromptSynthesizerTemplate,
+)
 
 from deepeval.synthesizer.context_generator import ContextGenerator
 from deepeval.synthesizer.utils import initialize_embedding_model
@@ -28,9 +30,11 @@ from deepeval.models import OpenAIEmbeddingModel
 
 valid_file_types = ["csv", "json"]
 
+
 class UseCase(Enum):
     QA = "QA"
     TEXT2SQL = "Text to SQL"
+
 
 class Evolution(Enum):
     REASONING = "Reasoning"
@@ -40,12 +44,14 @@ class Evolution(Enum):
     COMPARATIVE = "Comparative"
     HYPOTHETICAL = "Hypothetical"
 
+
 class PromptEvolution(Enum):
     REASONING = "Reasoning"
     CONCRETIZING = "Concretizing"
     CONSTRAINED = "Constrained"
     COMPARATIVE = "Comparative"
     HYPOTHETICAL = "Hypothetical"
+
 
 evolution_map = {
     "Reasoning": EvolutionTemplate.reasoning_evolution,
@@ -64,8 +70,10 @@ prompt_evolution_map = {
     "Hypothetical": PromptEvolutionTemplate.hypothetical_scenario_evolution,
 }
 
+
 class SyntheticData(BaseModel):
     input: str
+
 
 class Synthesizer:
     def __init__(
@@ -80,18 +88,22 @@ class Synthesizer:
         self.context_generator = None
         self.embedder = initialize_embedding_model(embedder)
 
-    
     def _evolve_text_from_prompt(
         self,
         text,
         num_evolutions: int,
         enable_breadth_evolve: bool,
-        evolution_types: List[PromptEvolution]
+        evolution_types: List[PromptEvolution],
     ) -> List[str]:
         # List of method references from EvolutionTemplate
-        evolution_methods = [prompt_evolution_map[evolution_type.value] for evolution_type in evolution_types]
+        evolution_methods = [
+            prompt_evolution_map[evolution_type.value]
+            for evolution_type in evolution_types
+        ]
         if enable_breadth_evolve:
-            evolution_methods.append(PromptEvolutionTemplate.in_breadth_evolution)
+            evolution_methods.append(
+                PromptEvolutionTemplate.in_breadth_evolution
+            )
 
         evolved_texts = [text]
         for i in range(num_evolutions):
@@ -104,7 +116,6 @@ class Synthesizer:
             evolved_texts.append(evolved_text)
 
         return evolved_texts
-    
 
     def _evolve_text_from_context(
         self,
@@ -112,10 +123,13 @@ class Synthesizer:
         context: List[str],
         num_evolutions: int,
         enable_breadth_evolve: bool,
-        evolution_types: List[Evolution]
+        evolution_types: List[Evolution],
     ) -> List[str]:
         # List of method references from EvolutionTemplate
-        evolution_methods = [evolution_map[evolution_type.value] for evolution_type in evolution_types]
+        evolution_methods = [
+            evolution_map[evolution_type.value]
+            for evolution_type in evolution_types
+        ]
         if enable_breadth_evolve:
             evolution_methods.append(EvolutionTemplate.in_breadth_evolution)
 
@@ -129,7 +143,6 @@ class Synthesizer:
                 evolved_text = self.model.generate(prompt)
 
         return evolved_text
-    
 
     def _generate_from_prompts(
         self,
@@ -138,16 +151,18 @@ class Synthesizer:
         lock: Lock,
         num_evolutions: int,
         enable_breadth_evolve: bool,
-        evolution_types: List[PromptEvolution]
+        evolution_types: List[PromptEvolution],
     ):
         temp_goldens: List[Golden] = []
         evolved_prompts = self._evolve_text_from_prompt(
             text=prompt,
             num_evolutions=num_evolutions,
             enable_breadth_evolve=enable_breadth_evolve,
-            evolution_types=evolution_types
+            evolution_types=evolution_types,
         )
-        new_goldens = [Golden(input=evolved_prompt) for evolved_prompt in evolved_prompts]
+        new_goldens = [
+            Golden(input=evolved_prompt) for evolved_prompt in evolved_prompts
+        ]
         temp_goldens.extend(new_goldens)
 
         with lock:
@@ -164,7 +179,7 @@ class Synthesizer:
         enable_breadth_evolve: bool,
         source_files: Optional[List[str]],
         index: int,
-        evolution_types: List[Evolution]
+        evolution_types: List[Evolution],
     ):
         prompt: List = SynthesizerTemplate.generate_synthetic_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
@@ -173,7 +188,7 @@ class Synthesizer:
             res, cost = self.model.generate(prompt)
         else:
             res = self.model.generate(prompt)
-        
+
         data = trimAndLoadJson(res)
         synthetic_data = [SyntheticData(**item) for item in data["data"]]
 
@@ -184,7 +199,7 @@ class Synthesizer:
                 context=context,
                 num_evolutions=num_evolutions,
                 enable_breadth_evolve=enable_breadth_evolve,
-                evolution_types=evolution_types
+                evolution_types=evolution_types,
             )
             source_file = (
                 source_files[index] if source_files is not None else None
@@ -208,7 +223,7 @@ class Synthesizer:
 
         with lock:
             goldens.extend(temp_goldens)
-    
+
     def _generate_text_to_sql(
         self,
         context: List[str],
@@ -231,9 +246,7 @@ class Synthesizer:
 
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
-            golden = Golden(
-                input=data.input, context=context
-            )
+            golden = Golden(input=data.input, context=context)
             if include_expected_output:
                 prompt = SynthesizerTemplate.generate_text2sql_expected_output(
                     input=golden.input, context="\n".join(golden.context)
@@ -253,7 +266,7 @@ class Synthesizer:
     def generate_goldens_from_scratch(
         self,
         subject: str,
-        task: str, 
+        task: str,
         output_format: str,
         num_initial_goldens: int,
         num_evolutions: int = 1,
@@ -265,12 +278,14 @@ class Synthesizer:
             PromptEvolution.CONSTRAINED,
             PromptEvolution.COMPARATIVE,
             PromptEvolution.HYPOTHETICAL,
-        ]
+        ],
     ) -> List[Golden]:
-    
+
         prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
-            subject=subject, task=task, output_format=output_format,
-            num_initial_goldens=num_initial_goldens
+            subject=subject,
+            task=task,
+            output_format=output_format,
+            num_initial_goldens=num_initial_goldens,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -299,14 +314,14 @@ class Synthesizer:
                             lock,
                             num_evolutions,
                             enable_breadth_evolve,
-                            evolution_types
+                            evolution_types,
                         ): prompt
                         for prompt in prompts
                     }
 
                     for future in as_completed(futures):
                         future.result()
-            else:                    
+            else:
                 for prompt in prompts:
                     evolved_prompts = self._evolve_text_from_input(
                         text=input,
@@ -314,12 +329,15 @@ class Synthesizer:
                         enable_breadth_evolve=enable_breadth_evolve,
                         evolution_types=evolution_types,
                     )
-                    new_goldens = [Golden(input=evolved_prompt) for evolved_prompt in evolved_prompts]
+                    new_goldens = [
+                        Golden(input=evolved_prompt)
+                        for evolved_prompt in evolved_prompts
+                    ]
                     goldens.extend(new_goldens)
 
             self.synthetic_goldens.extend(goldens)
             return goldens
-        
+
     def generate_goldens_from_prompts(
         self,
         prompts: List[str],
@@ -332,7 +350,7 @@ class Synthesizer:
             PromptEvolution.CONSTRAINED,
             PromptEvolution.COMPARATIVE,
             PromptEvolution.HYPOTHETICAL,
-        ]
+        ],
     ) -> List[Golden]:
         with synthesizer_progress_context(
             self.model.get_model_name(),
@@ -353,14 +371,14 @@ class Synthesizer:
                             lock,
                             num_evolutions,
                             enable_breadth_evolve,
-                            evolution_types
+                            evolution_types,
                         ): prompt
                         for prompt in prompts
                     }
 
                     for future in as_completed(futures):
                         future.result()
-            else:                    
+            else:
                 for prompt in prompts:
                     evolved_prompts = self._evolve_text_from_input(
                         text=prompt,
@@ -368,7 +386,10 @@ class Synthesizer:
                         enable_breadth_evolve=enable_breadth_evolve,
                         evolution_types=evolution_types,
                     )
-                    new_goldens = [Golden(input=evolved_prompt) for evolved_prompt in evolved_prompts]
+                    new_goldens = [
+                        Golden(input=evolved_prompt)
+                        for evolved_prompt in evolved_prompts
+                    ]
                     goldens.extend(new_goldens)
 
             self.synthetic_goldens.extend(goldens)
@@ -391,9 +412,9 @@ class Synthesizer:
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
         ],
-        use_case: UseCase = UseCase.QA
+        use_case: UseCase = UseCase.QA,
     ) -> List[Golden]:
-        
+
         if use_case == UseCase.QA:
 
             with synthesizer_progress_context(
@@ -419,7 +440,7 @@ class Synthesizer:
                                 enable_breadth_evolve,
                                 source_files,
                                 index,
-                                evolution_types
+                                evolution_types,
                             ): context
                             for index, context in enumerate(contexts)
                         }
@@ -448,7 +469,7 @@ class Synthesizer:
                                 context=context,
                                 num_evolutions=num_evolutions,
                                 enable_breadth_evolve=enable_breadth_evolve,
-                                evolution_types=evolution_types
+                                evolution_types=evolution_types,
                             )
                             source_file = (
                                 source_files[i]
@@ -477,7 +498,6 @@ class Synthesizer:
 
                 self.synthetic_goldens.extend(goldens)
                 return goldens
-            
 
         elif use_case == UseCase.TEXT2SQL:
 
@@ -488,7 +508,7 @@ class Synthesizer:
                 len(contexts) * max_goldens_per_context,
                 _show_indicator,
             ):
-                
+
                 goldens: List[Golden] = []
                 if self.multithreading:
                     lock = Lock()
@@ -563,7 +583,7 @@ class Synthesizer:
             Evolution.CONSTRAINED,
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
-        ]
+        ],
     ):
         if self.embedder is None:
             self.embedder = OpenAIEmbeddingModel()
@@ -602,7 +622,7 @@ class Synthesizer:
                 enable_breadth_evolve,
                 source_files,
                 _show_indicator=False,
-                evolution_types=evolution_types
+                evolution_types=evolution_types,
             )
 
     def save_as(self, file_type: str, directory: str) -> str:
@@ -665,10 +685,6 @@ class Synthesizer:
         print(f"Synthetic goldens saved at {full_file_path}!")
         return full_file_path
 
-    
-
-
-  
 
 if __name__ == "__main__":
     table1 = """CREATE TABLE Students (
@@ -711,12 +727,11 @@ if __name__ == "__main__":
         FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
     );"""
 
-    contexts=[[table1, table2, table3, table4]]
-    synthesizer=Synthesizer()
+    contexts = [[table1, table2, table3, table4]]
+    synthesizer = Synthesizer()
     text_to_sql_goldens = synthesizer.generate_goldens(
-        max_goldens_per_context=15,
-        contexts=contexts,
-        use_case = UseCase.TEXT2SQL)
+        max_goldens_per_context=15, contexts=contexts, use_case=UseCase.TEXT2SQL
+    )
     for golden in text_to_sql_goldens:
         print("Input             : " + str(golden.input))
         print("Expected Output   : " + str(golden.expected_output))
