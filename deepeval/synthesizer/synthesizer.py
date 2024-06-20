@@ -1,3 +1,4 @@
+
 import sys
 from typing import List, Optional, Union
 import os
@@ -10,6 +11,9 @@ import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
 import math
+
+sys.path.append(r"C:\Users\bombk\OneDrive\Documents\GitHub\deepeval")
+
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
 from deepeval.synthesizer.template_prompt import PromptEvolutionTemplate, PromptSynthesizerTemplate
 
@@ -23,6 +27,10 @@ from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.models import OpenAIEmbeddingModel
 
 valid_file_types = ["csv", "json"]
+
+class UseCase(Enum):
+    QA = "QA"
+    TEXT2SQL = "Text to SQL"
 
 class Evolution(Enum):
     REASONING = "Reasoning"
@@ -200,7 +208,7 @@ class Synthesizer:
 
         with lock:
             goldens.extend(temp_goldens)
-
+    
     def _generate_text_to_sql(
         self,
         context: List[str],
@@ -242,80 +250,7 @@ class Synthesizer:
         with lock:
             goldens.extend(temp_goldens)
 
-    def generate_text_to_sql_goldens(
-        self,
-        contexts: List[List[str]],
-        include_expected_output: bool = True,
-        max_goldens_per_context: int = 2,
-        _show_indicator: bool = True,
-    ) -> List[Golden]:
-        with synthesizer_progress_context(
-            self.model.get_model_name(),
-            None,
-            len(contexts) * max_goldens_per_context,
-            _show_indicator,
-        ):
-            
-            goldens: List[Golden] = []
-            if self.multithreading:
-                lock = Lock()
-
-                with ThreadPoolExecutor() as executor:
-                    futures = {
-                        executor.submit(
-                            self._generate_text_to_sql,
-                            context,
-                            goldens,
-                            include_expected_output,
-                            max_goldens_per_context,
-                            lock,
-                        ): context
-                        for context in contexts
-                    }
-
-                    for future in as_completed(futures):
-                        future.result()
-            else:
-                for i, context in enumerate(contexts):
-                    prompt = SynthesizerTemplate.generate_text2sql_inputs(
-                        context=context,
-                        max_goldens_per_context=max_goldens_per_context,
-                    )
-
-                    if self.using_native_model:
-                        res, cost = self.model.generate(prompt)
-                    else:
-                        res = self.model.generate(prompt)
-
-                    data = trimAndLoadJson(res)
-                    synthetic_data = [
-                        SyntheticData(**item) for item in data["data"]
-                    ]
-                    for data in synthetic_data:
-                        golden = Golden(
-                            input=data.input,
-                            context=context,
-                        )
-
-                        if include_expected_output:
-                            prompt = SynthesizerTemplate.generate_text2sql_expected_output(
-                                input=golden.input,
-                                context="\n".join(golden.context),
-                            )
-                            if self.using_native_model:
-                                res, cost = self.model.generate(prompt)
-                            else:
-                                res = self.model.generate(prompt)
-
-                            golden.expected_output = res
-
-                        goldens.append(golden)
-
-            self.synthetic_goldens.extend(goldens)
-            return goldens
-
-
-    def generate_goldens(
+    def generate_goldens_from_scratch(
         self,
         subject: str,
         task: str, 
@@ -455,138 +390,162 @@ class Synthesizer:
             Evolution.CONSTRAINED,
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
-        ]
+        ],
+        use_case: UseCase = UseCase.QA
     ) -> List[Golden]:
-        with synthesizer_progress_context(
-            self.model.get_model_name(),
-            None,
-            len(contexts) * max_goldens_per_context,
-            _show_indicator,
-        ):
-            goldens: List[Golden] = []
-            if self.multithreading:
-                lock = Lock()
-
-                with ThreadPoolExecutor() as executor:
-                    futures = {
-                        executor.submit(
-                            self._generate_from_contexts,
-                            context,
-                            goldens,
-                            include_expected_output,
-                            max_goldens_per_context,
-                            lock,
-                            num_evolutions,
-                            enable_breadth_evolve,
-                            source_files,
-                            index,
-                            evolution_types
-                        ): context
-                        for index, context in enumerate(contexts)
-                    }
-
-                    for future in as_completed(futures):
-                        future.result()
-            else:
-                for i, context in enumerate(contexts):
-                    prompt = SynthesizerTemplate.generate_synthetic_inputs(
-                        context=context,
-                        max_goldens_per_context=max_goldens_per_context,
-                    )
-
-                    if self.using_native_model:
-                        res, cost = self.model.generate(prompt)
-                    else:
-                        res = self.model.generate(prompt)
-
-                    data = trimAndLoadJson(res)
-                    synthetic_data = [
-                        SyntheticData(**item) for item in data["data"]
-                    ]
-                    for data in synthetic_data:
-                        evolved_input = self._evolve_text_from_context(
-                            data.input,
-                            context=context,
-                            num_evolutions=num_evolutions,
-                            enable_breadth_evolve=enable_breadth_evolve,
-                            evolution_types=evolution_types
-                        )
-                        source_file = (
-                            source_files[i]
-                            if source_files is not None
-                            else None
-                        )
-                        golden = Golden(
-                            input=evolved_input,
-                            context=context,
-                            source_file=source_file,
-                        )
-
-                        if include_expected_output:
-                            prompt = SynthesizerTemplate.generate_synthetic_expected_output(
-                                input=golden.input,
-                                context="\n".join(golden.context),
-                            )
-                            if self.using_native_model:
-                                res, cost = self.model.generate(prompt)
-                            else:
-                                res = self.model.generate(prompt)
-
-                            golden.expected_output = res
-
-                        goldens.append(golden)
-
-            self.synthetic_goldens.extend(goldens)
-            return goldens
         
-    def generate_goldens_from_docs(
-        self,
-        document_paths: List[str],
-        include_expected_output: bool = False,
-        max_goldens_per_document: int = 5,
-        chunk_size: int = 1024,
-        chunk_overlap: int = 0,
-        num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
-    ):
-        if self.embedder is None:
-            self.embedder = OpenAIEmbeddingModel()
+        if use_case == UseCase.QA:
 
-        with synthesizer_progress_context(
-            self.model.get_model_name(),
-            self.embedder.get_model_name(),
-            max_goldens_per_document * len(document_paths),
-        ):
-            if self.context_generator is None:
-                self.context_generator = ContextGenerator(
-                    document_paths,
-                    embedder=self.embedder,
-                    chunk_size=chunk_size,
-                    chunk_overlap=chunk_overlap,
-                    multithreading=self.multithreading,
-                )
+            with synthesizer_progress_context(
+                self.model.get_model_name(),
+                None,
+                len(contexts) * max_goldens_per_context,
+                _show_indicator,
+            ):
+                goldens: List[Golden] = []
+                if self.multithreading:
+                    lock = Lock()
 
-            max_goldens_per_context = 2
-            if max_goldens_per_document < max_goldens_per_context:
-                max_goldens_per_context = 1
+                    with ThreadPoolExecutor() as executor:
+                        futures = {
+                            executor.submit(
+                                self._generate_from_contexts,
+                                context,
+                                goldens,
+                                include_expected_output,
+                                max_goldens_per_context,
+                                lock,
+                                num_evolutions,
+                                enable_breadth_evolve,
+                                source_files,
+                                index,
+                                evolution_types
+                            ): context
+                            for index, context in enumerate(contexts)
+                        }
 
-            num_context = math.floor(
-                max_goldens_per_document / max_goldens_per_context
-            )
+                        for future in as_completed(futures):
+                            future.result()
+                else:
+                    for i, context in enumerate(contexts):
+                        prompt = SynthesizerTemplate.generate_synthetic_inputs(
+                            context=context,
+                            max_goldens_per_context=max_goldens_per_context,
+                        )
 
-            contexts, source_files = self.context_generator.generate_contexts(
-                num_context=num_context
-            )
+                        if self.using_native_model:
+                            res, cost = self.model.generate(prompt)
+                        else:
+                            res = self.model.generate(prompt)
 
-            return self.generate_goldens(
-                contexts,
-                include_expected_output,
-                max_goldens_per_context,
-                num_evolutions,
-                enable_breadth_evolve,
-                source_files,
-                _show_indicator=False,
-            )
+                        data = trimAndLoadJson(res)
+                        synthetic_data = [
+                            SyntheticData(**item) for item in data["data"]
+                        ]
+                        for data in synthetic_data:
+                            evolved_input = self._evolve_text_from_context(
+                                data.input,
+                                context=context,
+                                num_evolutions=num_evolutions,
+                                enable_breadth_evolve=enable_breadth_evolve,
+                                evolution_types=evolution_types
+                            )
+                            source_file = (
+                                source_files[i]
+                                if source_files is not None
+                                else None
+                            )
+                            golden = Golden(
+                                input=evolved_input,
+                                context=context,
+                                source_file=source_file,
+                            )
+
+                            if include_expected_output:
+                                prompt = SynthesizerTemplate.generate_synthetic_expected_output(
+                                    input=golden.input,
+                                    context="\n".join(golden.context),
+                                )
+                                if self.using_native_model:
+                                    res, cost = self.model.generate(prompt)
+                                else:
+                                    res = self.model.generate(prompt)
+
+                                golden.expected_output = res
+
+                            goldens.append(golden)
+
+                self.synthetic_goldens.extend(goldens)
+                return goldens
+            
+
+        elif use_case == UseCase.TEXT2SQL:
+
+            include_expected_output = True
+            with synthesizer_progress_context(
+                self.model.get_model_name(),
+                None,
+                len(contexts) * max_goldens_per_context,
+                _show_indicator,
+            ):
+                
+                goldens: List[Golden] = []
+                if self.multithreading:
+                    lock = Lock()
+
+                    with ThreadPoolExecutor() as executor:
+                        futures = {
+                            executor.submit(
+                                self._generate_text_to_sql,
+                                context,
+                                goldens,
+                                include_expected_output,
+                                max_goldens_per_context,
+                                lock,
+                            ): context
+                            for context in contexts
+                        }
+
+                        for future in as_completed(futures):
+                            future.result()
+                else:
+                    for i, context in enumerate(contexts):
+                        prompt = SynthesizerTemplate.generate_text2sql_inputs(
+                            context=context,
+                            max_goldens_per_context=max_goldens_per_context,
+                        )
+
+                        if self.using_native_model:
+                            res, cost = self.model.generate(prompt)
+                        else:
+                            res = self.model.generate(prompt)
+
+                        data = trimAndLoadJson(res)
+                        synthetic_data = [
+                            SyntheticData(**item) for item in data["data"]
+                        ]
+                        for data in synthetic_data:
+                            golden = Golden(
+                                input=data.input,
+                                context=context,
+                            )
+
+                            if include_expected_output:
+                                prompt = SynthesizerTemplate.generate_text2sql_expected_output(
+                                    input=golden.input,
+                                    context="\n".join(golden.context),
+                                )
+                                if self.using_native_model:
+                                    res, cost = self.model.generate(prompt)
+                                else:
+                                    res = self.model.generate(prompt)
+
+                                golden.expected_output = res
+
+                            goldens.append(golden)
+
+                self.synthetic_goldens.extend(goldens)
+                return goldens
 
     def generate_goldens_from_docs(
         self,
@@ -706,6 +665,10 @@ class Synthesizer:
         print(f"Synthetic goldens saved at {full_file_path}!")
         return full_file_path
 
+    
+
+
+  
 
 if __name__ == "__main__":
     table1 = """CREATE TABLE Students (
@@ -750,9 +713,10 @@ if __name__ == "__main__":
 
     contexts=[[table1, table2, table3, table4]]
     synthesizer=Synthesizer()
-    text_to_sql_goldens = synthesizer.generate_text_to_sql_goldens(
+    text_to_sql_goldens = synthesizer.generate_goldens(
         max_goldens_per_context=15,
-        contexts=contexts)
+        contexts=contexts,
+        use_case = UseCase.TEXT2SQL)
     for golden in text_to_sql_goldens:
         print("Input             : " + str(golden.input))
         print("Expected Output   : " + str(golden.expected_output))
