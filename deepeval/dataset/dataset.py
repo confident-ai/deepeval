@@ -364,11 +364,17 @@ class EvaluationDataset:
                     params={"alias": alias},
                 )
 
+                conversational_goldens = []
+                for cg in convert_keys_to_snake_case(
+                    result["conversationalGoldens"]
+                ):
+                    if "goldens" in cg:
+                        cg["messages"] = cg.pop("goldens")
+                    conversational_goldens.append(ConversationalGolden(**cg))
+
                 response = DatasetHttpResponse(
                     goldens=convert_keys_to_snake_case(result["goldens"]),
-                    conversationalGoldens=convert_keys_to_snake_case(
-                        result["conversationalGoldens"]
-                    ),
+                    conversationalGoldens=conversational_goldens,
                     datasetId=result["datasetId"],
                 )
 

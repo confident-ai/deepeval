@@ -34,6 +34,5 @@ class ConversationalGolden(BaseModel):
     comments: Optional[str] = Field(None)
     messages: List[Golden] = Field(
         default_factory=lambda: [],
-        validation_alias="goldens",
         serialization_alias="goldens",
     )
