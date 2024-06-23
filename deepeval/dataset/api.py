@@ -12,7 +12,7 @@ def to_snake_case(string: str) -> str:
 
 class APIDataset(BaseModel):
     alias: str
-    overwrite: bool
+    overwrite: Optional[bool] = None
     goldens: Optional[List[Golden]] = Field(default=[])
     conversational_goldens: Optional[List[ConversationalGolden]] = Field(
         default=[], alias="conversationalGoldens"
