@@ -44,7 +44,6 @@ class APIEvent(BaseModel):
         use_enum_values = True
 
 
-
 class APIFeedback(BaseModel):
     provider: str
     event_id: str = Field(alias="eventId")
