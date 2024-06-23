@@ -202,7 +202,7 @@ class Synthesizer:
                 source_files[index] if source_files is not None else None
             )
             golden = Golden(
-                input=evolved_input, context=context, sourceFile=source_file
+                input=evolved_input, context=context, source_file=source_file
             )
 
             if include_expected_output:

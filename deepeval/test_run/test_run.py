@@ -91,7 +91,7 @@ class TestRun(BaseModel):
     )
     deployment: Optional[bool] = Field(True)
     deployment_configs: Optional[DeploymentConfigs] = Field(
-        None, serialization_alias="deploymentConfigs"
+        None, alias="deploymentConfigs"
     )
     test_cases: List[LLMApiTestCase] = Field(
         alias="testCases", default_factory=lambda: []
@@ -100,19 +100,15 @@ class TestRun(BaseModel):
         alias="conversationalTestCases", default_factory=lambda: []
     )
     metrics_scores: List[MetricScores] = Field(
-        default_factory=lambda: [], serialization_alias="metricsScores"
+        default_factory=lambda: [], alias="metricsScores"
     )
     hyperparameters: Optional[Dict[Any, Any]] = Field(None)
-    test_passed: Optional[int] = Field(None, serialization_alias="testPassed")
-    test_failed: Optional[int] = Field(None, serialization_alias="testFailed")
-    run_duration: float = Field(0.0, serialization_alias="runDuration")
-    evaluation_cost: Union[float, None] = Field(
-        None, serialization_alias="evaluationCost"
-    )
-    dataset_alias: Optional[str] = Field(
-        None, serialization_alias="datasetAlias"
-    )
-    dataset_id: Optional[str] = Field(None, serialization_alias="datasetId")
+    test_passed: Optional[int] = Field(None, alias="testPassed")
+    test_failed: Optional[int] = Field(None, alias="testFailed")
+    run_duration: float = Field(0.0, alias="runDuration")
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+    dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
+    dataset_id: Optional[str] = Field(None, alias="datasetId")
 
     def add_test_case(
         self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
@@ -557,8 +553,8 @@ class TestRunManager:
 
                 remaining_test_run = RemainingTestRun(
                     testRunId=response.testRunId,
-                    testCases=test_case_batch,
-                    conversationalTestCases=conversational_batch,
+                    test_cases=test_case_batch,
+                    conversational_test_cases=conversational_batch,
                 )
 
                 body = None

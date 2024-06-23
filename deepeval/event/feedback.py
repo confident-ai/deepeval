@@ -21,10 +21,10 @@ def send_feedback(
             raise ValueError("'rating' must be between 1 and 5, inclusive.")
 
         api_event = APIFeedback(
-            eventId=event_id,
+            event_id=event_id,
             provider=provider,
             rating=rating,
-            expectedResponse=expected_response,
+            expected_response=expected_response,
             explanation=explanation,
         )
         api = Api()

@@ -76,14 +76,13 @@ def create_deepeval_dataset(dataset, sample_size):
     random_index_list = [
         random.randint(0, total_length) for _ in range(sample_size)
     ]
-    print(random_index_list)
     eval_dataset = [dataset[row] for row in random_index_list]
     goldens = []
     for row in eval_dataset:
         context = ["; ".join(row["context"]["contexts"])]
         golden = Golden(
             input=row["question"],
-            expectedOutput=row["long_answer"],
+            expected_output=row["long_answer"],
             context=context,
             retrieval_context=context,
         )

@@ -9,7 +9,7 @@ class APIDataset(BaseModel):
     overwrite: bool
     goldens: Optional[List[Golden]] = Field(default=[])
     conversational_goldens: Optional[List[ConversationalGolden]] = Field(
-        default=[], serialization_alias="conversationalGoldens"
+        default=[], alias="conversationalGoldens"
     )
 
 

@@ -22,28 +22,22 @@ class CustomProperty(BaseModel):
 
 
 class APIEvent(BaseModel):
-    name: str = Field(..., serialization_alias="name")
+    name: str = Field(..., alias="name")
     input: str
     response: str
     retrieval_context: Optional[List[str]] = Field(
-        None, serialization_alias="retrievalContext"
+        None, alias="retrievalContext"
     )
-    completion_time: Optional[float] = Field(
-        None, serialization_alias="completionTime"
-    )
-    token_usage: Optional[float] = Field(None, serialization_alias="tokenUsage")
-    token_cost: Optional[float] = Field(None, serialization_alias="tokenCost")
-    distinct_id: Optional[str] = Field(None, serialization_alias="distinctId")
-    conversation_id: Optional[str] = Field(
-        None, serialization_alias="conversationId"
-    )
+    completion_time: Optional[float] = Field(None, alias="completionTime")
+    token_usage: Optional[float] = Field(None, alias="tokenUsage")
+    token_cost: Optional[float] = Field(None, alias="tokenCost")
+    distinct_id: Optional[str] = Field(None, alias="distinctId")
+    conversation_id: Optional[str] = Field(None, alias="conversationId")
     custom_properties: Optional[Dict[str, CustomProperty]] = Field(
-        None, serialization_alias="customProperties"
+        None, alias="customProperties"
     )
-    trace_stack: Optional[Dict] = Field(None, serialization_alias="traceStack")
-    trace_provider: Optional[str] = Field(
-        None, serialization_alias="traceProvider"
-    )
+    trace_stack: Optional[Dict] = Field(None, alias="traceStack")
+    trace_provider: Optional[str] = Field(None, alias="traceProvider")
     hyperparameters: Optional[Dict] = Field(None)
 
     class Config:

@@ -8,45 +8,33 @@ class MetricMetadata(BaseModel):
     success: bool
     score: Optional[float] = None
     reason: Optional[str] = None
-    strict_mode: Optional[bool] = Field(False, serialization_alias="strictMode")
-    evaluation_model: Optional[str] = Field(
-        None, serialization_alias="evaluationModel"
-    )
+    strict_mode: Optional[bool] = Field(False, alias="strictMode")
+    evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
     error: Optional[str] = None
-    evaluation_cost: Union[float, None] = Field(
-        None, serialization_alias="evaluationCost"
-    )
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
 
 
 class LLMApiTestCase(BaseModel):
     name: str
     input: str
-    actual_output: str = Field(..., serialization_alias="actualOutput")
-    expected_output: Optional[str] = Field(
-        None, serialization_alias="expectedOutput"
-    )
+    actual_output: str = Field(..., alias="actualOutput")
+    expected_output: Optional[str] = Field(None, alias="expectedOutput")
     context: Optional[list] = Field(None)
-    retrieval_context: Optional[list] = Field(
-        None, serialization_alias="retrievalContext"
-    )
+    retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
     # make optional, not all test cases in a conversation will be evaluated
     success: Union[bool, None] = Field(None)
     # make optional, not all test cases in a conversation will be evaluated
     metrics_metadata: Union[List[MetricMetadata], None] = Field(
-        None, serialization_alias="metricsMetadata"
+        None, alias="metricsMetadata"
     )
     # make optional, not all test cases in a conversation will be evaluated
-    run_duration: Union[float, None] = Field(
-        None, serialization_alias="runDuration"
-    )
+    run_duration: Union[float, None] = Field(None, alias="runDuration")
     # make optional, not all test cases in a conversation will be evaluated
-    evaluation_cost: Union[float, None] = Field(
-        None, serialization_alias="evaluationCost"
-    )
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     order: Union[int, None] = Field(None)
     # These should map 1 to 1 from golden
     additional_metadata: Optional[Dict] = Field(
-        None, serialization_alias="additionalMetadata"
+        None, alias="additionalMetadata"
     )
     comments: Optional[str] = Field(None)
     traceStack: Optional[dict] = Field(None)
@@ -80,14 +68,12 @@ class ConversationalApiTestCase(BaseModel):
     success: bool
     # metrics_metadata can be None when we're not evaluating using conversational metrics
     metrics_metadata: Union[List[MetricMetadata], None] = Field(
-        None, serialization_alias="metricsMetadata"
+        None, alias="metricsMetadata"
     )
-    run_duration: float = Field(0.0, serialization_alias="runDuration")
-    evaluation_cost: Union[float, None] = Field(
-        None, serialization_alias="evaluationCost"
-    )
+    run_duration: float = Field(0.0, alias="runDuration")
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     messages: List[LLMApiTestCase] = Field(
-        default_factory=lambda: [], serialization_alias="testCases"
+        default_factory=lambda: [], alias="testCases"
     )
     order: Union[int, None] = Field(None)
 
