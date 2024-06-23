@@ -42,7 +42,7 @@ class FakeMetric(BaseMetric):
 dataset = EvaluationDataset()
 
 # Pull from Confident
-dataset.pull(alias="convo")
+dataset.pull(alias="test")
 
 
 @pytest.mark.parametrize(
