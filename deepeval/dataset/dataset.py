@@ -23,7 +23,7 @@ from deepeval.dataset.api import (
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
-from deepeval.utils import is_confident
+from deepeval.utils import convert_keys_to_snake_case, is_confident
 from deepeval.synthesizer.base_synthesizer import BaseSynthesizer
 
 valid_file_types = ["csv", "json"]
@@ -365,8 +365,10 @@ class EvaluationDataset:
                 )
 
                 response = DatasetHttpResponse(
-                    goldens=result["goldens"],
-                    conversationalGoldens=result["conversationalGoldens"],
+                    goldens=convert_keys_to_snake_case(result["goldens"]),
+                    conversationalGoldens=convert_keys_to_snake_case(
+                        result["conversationalGoldens"]
+                    ),
                     datasetId=result["datasetId"],
                 )
 
