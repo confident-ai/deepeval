@@ -171,7 +171,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
 
         goldens: List[Golden] = []
         for data in dataset["test"]:
-            golden = Golden(input=data["input"], expectedOutput=data["target"])
+            golden = Golden(input=data["input"], expected_output=data["target"])
             goldens.append(golden)
 
         return goldens

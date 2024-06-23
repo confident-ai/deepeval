@@ -175,10 +175,12 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 traces=[],
                 llmMetadata=LlmMetadata(
                     model=processed_payload["llm_model_name"],
-                    outputMessages=None,
-                    tokenCount=None,
-                    promptTemplate=processed_payload.get("llm_prompt_template"),
-                    promptTemplateVariables=processed_payload.get(
+                    output_messages=None,
+                    token_count=None,
+                    prompt_template=processed_payload.get(
+                        "llm_prompt_template"
+                    ),
+                    prompt_template_variables=processed_payload.get(
                         "llm_prompt_template_variables"
                     ),
                 ),
@@ -224,7 +226,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 traces=[],
                 rerankingMetadata=RerankingMetadata(
                     model=processed_payload["reranker_model_name"],
-                    topK=processed_payload["reranker_top_k"],
+                    top_k=processed_payload["reranker_top_k"],
                 ),
             )
 

@@ -195,14 +195,14 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                 input, expected_output = TruthfulQATemplate.format_mc1_question(
                     data
                 )
-                golden = Golden(input=input, expectedOutput=expected_output)
+                golden = Golden(input=input, expected_output=expected_output)
                 goldens.append(golden)
             elif mode == TruthfulQAMode.MC2:
                 input, expected_output = TruthfulQATemplate.format_mc2_question(
                     data
                 )
                 golden = Golden(
-                    input=input, expectedOutput=str(expected_output)
+                    input=input, expected_output=str(expected_output)
                 )
                 goldens.append(golden)
 

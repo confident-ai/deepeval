@@ -181,7 +181,7 @@ class DROP(DeepEvalBaseBenchmark):
             output = DELIMITER.join(tuple(data["answers_spans"]["spans"][0]))
             output_type = data["answers_spans"]["types"][0]
             golden = Golden(
-                input=input, expectedOutput=output, context=[output_type]
+                input=input, expected_output=output, context=[output_type]
             )
             goldens.append(golden)
 

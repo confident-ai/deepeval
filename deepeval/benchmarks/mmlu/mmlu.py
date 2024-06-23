@@ -179,6 +179,6 @@ class MMLU(DeepEvalBaseBenchmark):
         goldens: List[Golden] = []
         for data in dataset["test"]:
             input = MMLUTemplate.format_question(data, include_answer=False)
-            golden = Golden(input=input, expectedOutput=data["target"])
+            golden = Golden(input=input, expected_output=data["target"])
             goldens.append(golden)
         return goldens

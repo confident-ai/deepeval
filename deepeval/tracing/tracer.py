@@ -55,29 +55,37 @@ class TraceStatus(Enum):
 
 class LlmMetadata(BaseModel):
     model: Optional[str] = None
-    token_count: Optional[Dict[str, int]] = Field(None, alias="tokenCount")
-    output_messages: Optional[List[Dict[str, str]]] = Field(
-        None, alias="outputMessages"
+    token_count: Optional[Dict[str, int]] = Field(
+        None, serialization_alias="tokenCount"
     )
-    prompt_template: Optional[Any] = Field(None, alias="promptTemplate")
+    output_messages: Optional[List[Dict[str, str]]] = Field(
+        None, serialization_alias="outputMessages"
+    )
+    prompt_template: Optional[Any] = Field(
+        None, serialization_alias="promptTemplate"
+    )
     prompt_template_variables: Optional[Any] = Field(
-        None, alias="promptTemplateVariables"
+        None, serialization_alias="promptTemplateVariables"
     )
 
 
 class EmbeddingMetadata(BaseModel):
     model: Optional[str] = None
-    vector_length: Optional[int] = Field(None, alias="vectorLength")
+    vector_length: Optional[int] = Field(
+        None, serialization_alias="vectorLength"
+    )
 
 
 class RetrieverMetadata(BaseModel):
-    top_k: Optional[int] = Field(None, alias="topK")
-    average_chunk_size: Optional[int] = Field(None, alias="averageChunkSize")
+    top_k: Optional[int] = Field(None, serialization_alias="topK")
+    average_chunk_size: Optional[int] = Field(
+        None, serialization_alias="averageChunkSize"
+    )
 
 
 class RerankingMetadata(BaseModel):
     model: Optional[str] = None
-    top_k: Optional[int] = Field(None, alias="topK")
+    top_k: Optional[int] = Field(None, serialization_alias="topK")
 
 
 @dataclass

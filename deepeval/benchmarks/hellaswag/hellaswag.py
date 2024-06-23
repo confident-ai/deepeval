@@ -192,7 +192,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
                 data, include_answer=False
             )
             golden = Golden(
-                input=input, expectedOutput=choices[int(data["label"])]
+                input=input, expected_output=choices[int(data["label"])]
             )
             goldens.append(golden)
         return goldens

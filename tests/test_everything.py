@@ -80,7 +80,7 @@ being composed mostly of rock and metal.
 """
 
 strict_mode = False
-verbose_mode = True
+verbose_mode = False
 
 
 @pytest.mark.skip(reason="openai is expensive")
@@ -89,7 +89,7 @@ def test_everything():
         threshold=0.1,
         strict_mode=strict_mode,
         async_mode=False,
-        verbose_mode=True,
+        verbose_mode=verbose_mode,
     )
     metric2 = FaithfulnessMetric(
         threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode

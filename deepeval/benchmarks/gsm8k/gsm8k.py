@@ -98,7 +98,7 @@ class GSM8K(DeepEvalBaseBenchmark):
         for data in dataset["test"]:
             input = data["question"]
             output = GSM8KTemplate.format_answer(data)
-            golden = Golden(input=input, expectedOutput=output)
+            golden = Golden(input=input, expected_output=output)
             goldens.append(golden)
 
         return goldens

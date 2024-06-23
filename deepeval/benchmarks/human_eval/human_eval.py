@@ -118,6 +118,6 @@ class HumanEval(DeepEvalBaseBenchmark):
         )[0]
         # Construct test set
         golden = Golden(
-            input=test_set["prompt"], expectedOutput=test_set["test"]
+            input=test_set["prompt"], expected_output=test_set["test"]
         )
         return golden
