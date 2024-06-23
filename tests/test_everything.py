@@ -167,7 +167,7 @@ def test_everything():
     )
 
 
-# @pytest.mark.skip(reason="openadi is expensive")
+@pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)

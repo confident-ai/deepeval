@@ -553,8 +553,8 @@ class TestRunManager:
 
                 remaining_test_run = RemainingTestRun(
                     testRunId=response.testRunId,
-                    test_cases=test_case_batch,
-                    conversational_test_cases=conversational_batch,
+                    testCases=test_case_batch,
+                    conversationalTestCases=conversational_batch,
                 )
 
                 body = None
