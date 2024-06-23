@@ -4,12 +4,6 @@ from typing import Optional, List
 from deepeval.dataset.golden import Golden, ConversationalGolden
 
 
-def to_snake_case(string: str) -> str:
-    return "".join(
-        ["_" + i.lower() if i.isupper() else i for i in string]
-    ).lstrip("_")
-
-
 class APIDataset(BaseModel):
     alias: str
     overwrite: Optional[bool] = None

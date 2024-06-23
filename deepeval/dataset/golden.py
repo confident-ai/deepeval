@@ -2,12 +2,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, List
 
 
-def to_snake_case(string: str) -> str:
-    return "".join(
-        ["_" + i.lower() if i.isupper() else i for i in string]
-    ).lstrip("_")
-
-
 class Golden(BaseModel):
     input: str
     actual_output: Optional[str] = Field(
