@@ -106,7 +106,6 @@ class AnswerRelevancyMetric(BaseMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
-            print("Relevancy", self.score, self.reason)
             if self.verbose_mode:
                 print_intermediate_steps(
                     self.__name__,
