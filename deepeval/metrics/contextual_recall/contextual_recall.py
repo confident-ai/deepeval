@@ -1,8 +1,9 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -39,6 +40,7 @@ class ContextualRecallMetric(BaseMetric):
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
+        verbose_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -46,6 +48,7 @@ class ContextualRecallMetric(BaseMetric):
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
+        self.verbose_mode = verbose_mode
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -70,6 +73,14 @@ class ContextualRecallMetric(BaseMetric):
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.expected_output)
                 self.success = self.score >= self.threshold
+                if self.verbose_mode:
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Verdicts:\n{prettify_list(self.verdicts)}\n",
+                            f"Score: {self.score}\nReason: {self.reason}",
+                        ],
+                    )
                 return self.score
 
     async def a_measure(
@@ -97,6 +108,14 @@ class ContextualRecallMetric(BaseMetric):
                 test_case.expected_output
             )
             self.success = self.score >= self.threshold
+            if self.verbose_mode:
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Verdicts:\n{prettify_list(self.verdicts)}\n",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
             return self.score
 
     async def _a_generate_reason(self, expected_output: str):

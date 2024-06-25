@@ -11,8 +11,9 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.metrics.g_eval.template import GEvalTemplate
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
+    print_intermediate_steps,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -63,6 +64,7 @@ class GEval(BaseMetric):
         threshold: float = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
+        verbose_mode: bool = False,
     ):
         self.name = name
         self.evaluation_params = evaluation_params
@@ -90,6 +92,7 @@ class GEval(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
+        self.verbose_mode = verbose_mode
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -118,6 +121,14 @@ class GEval(BaseMetric):
                     else self.score
                 )
                 self.success = self.score >= self.threshold
+                if self.verbose_mode:
+                    print_intermediate_steps(
+                        self.__name__,
+                        steps=[
+                            f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}\n",
+                            f"Score: {self.score}\nReason: {self.reason}",
+                        ],
+                    )
                 return self.score
 
     async def a_measure(
@@ -147,6 +158,14 @@ class GEval(BaseMetric):
                 else self.score
             )
             self.success = self.score >= self.threshold
+            if self.verbose_mode:
+                print_intermediate_steps(
+                    self.__name__,
+                    steps=[
+                        f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}\n",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
