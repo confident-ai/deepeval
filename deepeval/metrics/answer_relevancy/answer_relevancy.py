@@ -1,18 +1,12 @@
-from contextvars import ContextVar
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 
-from deepeval.utils import (
-    get_or_create_event_loop,
-    generate_uuid,
-    prettify_list,
-)
+from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
-    print_intermediate_steps,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -36,22 +30,6 @@ class AnswerRelvancyVerdict(BaseModel):
 
 
 class AnswerRelevancyMetric(BaseMetric):
-    @property
-    def statements(self) -> Optional[List[str]]:
-        return self._statements.get()
-
-    @statements.setter
-    def statements(self, value: Optional[List[str]]):
-        self._statements.set(value)
-
-    @property
-    def verdicts(self) -> Optional[List[AnswerRelvancyVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[AnswerRelvancyVerdict]]):
-        self._verdicts.set(value)
-
     def __init__(
         self,
         threshold: float = 0.5,
@@ -59,22 +37,13 @@ class AnswerRelevancyMetric(BaseMetric):
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
-        verbose_mode: bool = False,
     ):
-        super().__init__()
-        self._statements: ContextVar[Optional[List[str]]] = ContextVar(
-            generate_uuid(), default=None
-        )
-        self._verdicts: ContextVar[Optional[List[AnswerRelvancyVerdict]]] = (
-            ContextVar(generate_uuid(), default=None)
-        )
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
-        self.verbose_mode = verbose_mode
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -87,13 +56,9 @@ class AnswerRelevancyMetric(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                (
-                    self.statements,
-                    self.verdicts,
-                    self.score,
-                    self.reason,
-                    self.success,
-                ) = loop.run_until_complete(self._measure_async(test_case))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.statements: List[str] = self._generate_statements(
                     test_case.actual_output
@@ -104,15 +69,6 @@ class AnswerRelevancyMetric(BaseMetric):
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
-                if self.verbose_mode:
-                    print_intermediate_steps(
-                        self.__name__,
-                        steps=[
-                            f"Statements:\n{prettify_list(self.statements)}\n",
-                            f"Verdicts:\n{prettify_list(self.verdicts)}\n",
-                            f"Score: {self.score}\nReason: {self.reason}",
-                        ],
-                    )
                 return self.score
 
     async def a_measure(
@@ -137,28 +93,7 @@ class AnswerRelevancyMetric(BaseMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
-            if self.verbose_mode:
-                print_intermediate_steps(
-                    self.__name__,
-                    steps=[
-                        f"Statements:\n{prettify_list(self.statements)}\n",
-                        f"Verdicts:\n{prettify_list(self.verdicts)}\n",
-                        f"Score: {self.score}\nReason: {self.reason}",
-                    ],
-                )
             return self.score
-
-    async def _measure_async(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
-    ):
-        await self.a_measure(test_case, _show_indicator=False)
-        return (
-            self.statements,
-            self.verdicts,
-            self.score,
-            self.reason,
-            self.success,
-        )
 
     async def _a_generate_reason(self, input: str) -> str:
         if self.include_reason is False:
