@@ -1,10 +1,7 @@
 from abc import abstractmethod
-from contextvars import ContextVar
 from typing import Optional, Dict
-import uuid
 
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
-from deepeval.utils import generate_uuid
 
 
 class BaseMetric:
