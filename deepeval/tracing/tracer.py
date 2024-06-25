@@ -13,131 +13,188 @@ from deepeval.event import track
 ### Trace Types ########################################
 ########################################################
 
-
 class TraceProvider(Enum):
     LLAMA_INDEX = "LLAMA_INDEX"
     DEFAULT = "DEFAULT"
     CUSTOM = "CUSTOM"
     HYBRID = "HYBRID"
 
-
 class TraceType(Enum):
     AGENT = "Agent"
     CHAIN = "Chain"
-    CHUNKING = "Chunking"
     EMBEDDING = "Embedding"
     LLM = "LLM"
-    NODE_PARSING = "Node Parsing"
     QUERY = "Query"
     RERANKING = "Reranking"
     RETRIEVER = "Retriever"
     SYNTHESIZE = "Synthesize"
     TOOL = "Tool"
 
-
 class LlamaIndexTraceType(Enum):
-    AGENT_STEP = "Agent Step"
+    AGENT = "Agent"
     CHAIN = "Chain"
-    CHUNKING = "Chunking"
     EMBEDDING = "Embedding"
     LLM = "LLM"
-    NODE_PARSING = "Node Parsing"
     QUERY = "Query"
     RERANKING = "Reranking"
     RETRIEVER = "Retriever"
     SYNTHESIZE = "Synthesize"
-
+    TOOL = "Tool"
 
 class TraceStatus(Enum):
     SUCCESS = "Success"
     ERROR = "Error"
 
+class RetrievalNode(BaseModel):
+    content: str
+    # Optional variables
+    id: Optional[str] = None
+    score: Optional[str] = None
+    source_file: Optional[str] = None
+
+########################################################
+### Metadata Types #####################################
+########################################################
+
+class AgentMetadata(BaseModel):
+    input: str
+    output: str
+    name: str
+    description: str
+
+class ChainMetadata(BaseModel):
+    input: str
+    output: str
+    # Optional variables
+    prompt_template: Optional[str] = Field(None, serialization_alias="promptTemplate")
+
+class EmbeddingMetadata(BaseModel):
+    embedding_text: str = Field(None, serialization_alias="embeddingText")
+    # Optional variables
+    model: Optional[str] = None
+    embedding_length: Optional[int] = Field(None, serialization_alias="embeddingLength")
 
 class LlmMetadata(BaseModel):
+    input_str: str = Field(None, serialization_alias="inputStr")
+    output_str: str = Field(None, serialization_alias="inputStr")
+    # Optional variables
     model: Optional[str] = None
-    token_count: Optional[Dict[str, int]] = Field(
-        None, serialization_alias="tokenCount"
-    )
-    output_messages: Optional[List[Dict[str, str]]] = Field(
-        None, serialization_alias="outputMessages"
-    )
-    prompt_template: Optional[Any] = Field(
-        None, serialization_alias="promptTemplate"
-    )
-    prompt_template_variables: Optional[Any] = Field(
+    total_token_count: Optional[int] = Field(None, serialization_alias="totalTokenCount")
+    prompt_token_count: Optional[int] = Field(None, serialization_alias="promptTokenCount")
+    completion_token_count: Optional[int] = Field(None, serialization_alias="completionTokenCount")
+    prompt_template: Optional[str] = Field(None, serialization_alias="promptTemplate")
+    prompt_template_variables: Optional[Dict[str:str]] = Field(
         None, serialization_alias="promptTemplateVariables"
     )
 
-
-class EmbeddingMetadata(BaseModel):
-    model: Optional[str] = None
-    vector_length: Optional[int] = Field(
-        None, serialization_alias="vectorLength"
-    )
-
+class QueryMetadata(BaseModel):
+    input: str
+    output: str
 
 class RetrieverMetadata(BaseModel):
+    nodes: List[RetrievalNode]
+    # Optional variables
     top_k: Optional[int] = Field(None, serialization_alias="topK")
-    average_chunk_size: Optional[int] = Field(
-        None, serialization_alias="averageChunkSize"
-    )
-
+    average_chunk_size: Optional[int] = Field(None, serialization_alias="averageChunkSize")
+    top_score: Optional[float] = Field(None, serialization_alias="topScore")
+    similarity_scorer: Optional[str] = Field(None, serialization_alias="similarityScorer")
 
 class RerankingMetadata(BaseModel):
+    input_nodes: List[RetrievalNode]
+    output_nodes: List[RetrievalNode]
+    # Optional variables
     model: Optional[str] = None
-    top_k: Optional[int] = Field(None, serialization_alias="topK")
+    top_n: Optional[int] = Field(None, serialization_alias="topN")
+    batch_size: Optional[int] = Field(None, serialization_alias="batchSize")
+    query_str: Optional[str] = Field(None, serialization_alias="queryStr")
 
+class SynthesizeMetadata(BaseModel):
+    user_query: str
+    response: str
+    # Optional variables
+    output_documents: List[RetrievalNode]
+
+class ToolMetadata(BaseModel):
+    name: str
+    description: str
+
+class GenericMetadata(BaseModel):
+    input: str
+    output: str
+
+########################################################
+### Trace Types #######################################
+########################################################
 
 @dataclass
 class BaseTrace:
     type: Union[TraceType, str]
     executionTime: float
     name: str
-    input: dict
-    output: Any
     status: TraceStatus
     traceProvider: TraceProvider
     traces: List["TraceData"]
 
+@dataclass
+class AgentTrace(BaseTrace):
+    agentMetadata: AgentMetadata
+    type: TraceType
 
 @dataclass
-class LlmTrace(BaseTrace):
-    llmMetadata: LlmMetadata
-    # ouptut: str
-
+class ChainTrace(BaseTrace):
+    chainMetadata: ChainMetadata
+    type: TraceType
 
 @dataclass
 class EmbeddingTrace(BaseTrace):
     embeddingMetadata: EmbeddingMetadata
-    # output: List[Dict[str, any]]
+    type: TraceType
 
+@dataclass
+class LlmTrace(BaseTrace):
+    llmMetadata: LlmMetadata
+    type: TraceType
 
+@dataclass
+class QueryTrace(BaseTrace):
+    queryMetadata: QueryMetadata
+    type: TraceType
+    
 @dataclass
 class RetrieverTrace(BaseTrace):
     retrieverMetadata: RetrieverMetadata
-    # ouptut: List[Dict[str, any]]
-
+    type: TraceType
 
 @dataclass
 class RerankingTrace(BaseTrace):
     rerankingMetadata: RerankingMetadata
-    # output List[Dict[str, any]]
-
-
-# Synthesize output: str
-# Other llama_index types: None
-
+    type: TraceType
 
 @dataclass
+class SynthesizeTrace(BaseTrace):
+    synthesizeMetadata: SynthesizeMetadata
+    type: TraceType
+
+@dataclass
+class ToolTrace(BaseTrace):
+    toolMetadata: ToolMetadata
+    type: TraceType
+    
+@dataclass
 class GenericTrace(BaseTrace):
+    genericMetadata: GenericMetadata
     type: str
 
-
 Metadata = Union[
-    EmbeddingMetadata, LlmMetadata, RetrieverMetadata, RerankingMetadata
+    AgentMetadata, ChainMetadata, EmbeddingMetadata, 
+    LlmMetadata, QueryMetadata, RerankingMetadata,
+    RerankingMetadata, RetrieverMetadata, SynthesizeMetadata,
+    ToolMetadata, GenericMetadata
 ]
 TraceData = Union[
-    LlmTrace, EmbeddingTrace, RetrieverTrace, RerankingTrace, GenericTrace
+    AgentTrace, ChainTrace, EmbeddingTrace, LlmTrace,
+    QueryTrace, RerankingTrace, RetrieverTrace,
+    SynthesizeTrace, ToolTrace, GenericTrace
 ]
 TraceStack = List[TraceData]
 
@@ -148,7 +205,6 @@ dict_trace_stack_var = ContextVar("dict_trace_stack", default=None)
 ########################################################
 ### ContextVar Managers ################################
 ########################################################
-
 
 class TraceManager:
     def get_trace_stack(self):
@@ -181,80 +237,64 @@ class TraceManager:
         dict_trace_stack_var.set(None)
         return dict_trace_stack
 
-
 trace_manager = TraceManager()
 
 ########################################################
 ### Tracer #############################################
 ########################################################
 
-
 class Tracer:
     # IMPORTANT: framework callback integrations does NOT use this Tracer
     def __init__(self, trace_type: Union[TraceType, str]):
-        self.trace_type = trace_type
+        self.trace_type: TraceType|str = trace_type
         if isinstance(self.trace_type, TraceType):
             self.trace_provider = TraceProvider.DEFAULT
         else:
             self.trace_provider = TraceProvider.CUSTOM
-        self.input_params = {}
-        self.start_time = None
-        self.execution_time = None
-        self.metadata = None
-        self.status_results = {}
-        self.output = None
+        self.name: str
+        self.start_time: float
+        self.execution_time: float
+        self.status: str
+        self.error: Optional[Dict[str:Any]] = None
+        self.metadata: Optional[Metadata] = None
         self.track_params: Optional[Dict] = None
-        self.is_tracking = False
+        self.is_tracking: bool = False
 
     def __enter__(self):
         # start timer
         self.start_time = perf_counter()
 
-        # create input
-        caller_frame = inspect.currentframe().f_back
-        args, _, _, locals_ = inspect.getargvalues(caller_frame)
-        self.input_params["input"] = {
-            arg: locals_[arg] for arg in args if arg not in ["self", "cls"]
-        }
-
         # create name
+        caller_frame = inspect.currentframe().f_back
         func_name = caller_frame.f_code.co_name
-        self.input_params["name"] = func_name
+        self.name = func_name
 
         # append trace instance to stack
-        trace_instance = self.create_trace_instance(
-            self.trace_type, self.trace_provider, **self.input_params
-        )
+        trace_instance: BaseTrace = self.create_trace_instance(self.trace_type, self.trace_provider)
         trace_manager.append_to_trace_stack(trace_instance)
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Check metadata was set
-        if self.metadata is None:
-            if self.trace_provider == TraceProvider.DEFAULT:
-                if (
-                    self.trace_type == TraceType.LLM
-                    or self.trace_type == TraceType.EMBEDDING
-                    or self.trace_type == TraceType.RETRIEVER
-                    or self.trace_type == TraceType.RERANKING
-                ):
-                    raise ValueError(
-                        f"`set_parameters` was not called before the end of a {self.trace_type} trace type."
-                    )
+        if self.metadata and self.trace_provider == TraceProvider.DEFAULT:
+            raise ValueError(
+                f"`set_parameters` was not called before the end of a {self.trace_type} trace type."
+            )
 
         # Stop the span timing and calculate execution time
         self.execution_time = perf_counter() - self.start_time
 
         # Check if an exception occurred within the `with` block
         if exc_type is not None:
-            self.status_results = {
+            self.status = 'Error'
+            self.error = {
                 "status": "Error",
                 "exception_type": exc_type.__name__,
                 "message": str(exc_val),
             }
         else:
-            self.status_results["status"] = "Success"
+            self.status = "Success"
 
         self.update_trace_instance()
         current_trace_stack = trace_manager.get_trace_stack_copy()
@@ -269,6 +309,8 @@ class Tracer:
             dict_representation = dataclass_to_dict(current_trace_stack[0])
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
+
+            print(dict_representation)
 
             if self.is_tracking:
                 track(
@@ -296,78 +338,96 @@ class Tracer:
     def create_trace_instance(
         self,
         trace_type: Union[TraceType, str],
-        trace_provier: TraceProvider,
-        **params,
+        trace_provider: TraceProvider,
     ):
-        if trace_provier == TraceProvider.DEFAULT:
-            if trace_type == TraceType.LLM:
-                return LlmTrace(
+        if trace_provider == TraceProvider.DEFAULT:
+            if trace_type == TraceType.AGENT:
+                return AgentTrace(
                     type=trace_type,
-                    traceProvider=trace_provier,
+                    traceProvider=trace_provider,
                     executionTime=0,
-                    name=params.get("name", ""),
-                    input=params.get("input", None),
-                    output=None,
+                    name=self.name,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    llmMetadata=params.get("llmMetadata", None),
+                    agentMetadata=None,
                 )
-
+            elif trace_type == TraceType.CHAIN:
+                return ChainTrace(
+                    type=trace_type,
+                    traceProvider=trace_provider,
+                    executionTime=0,
+                    name=self.name,
+                    status=TraceStatus.SUCCESS,
+                    traces=[],
+                    chainMetadata=None,
+                )
             elif trace_type == TraceType.EMBEDDING:
                 return EmbeddingTrace(
                     type=trace_type,
-                    traceProvider=trace_provier,
+                    traceProvider=trace_provider,
                     executionTime=0,
-                    name=params.get("name", ""),
-                    input=params.get("input", None),
-                    output=None,
+                    name=self.name,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    embeddingMetadata=params.get("embeddingMetadata", None),
+                    embeddingMetadata=None,
                 )
-            elif trace_type == TraceType.RETRIEVER:
-                return RetrieverTrace(
+            elif trace_type == TraceType.LLM:
+                return LlmTrace(
                     type=trace_type,
-                    traceProvider=trace_provier,
+                    traceProvider=trace_provider,
                     executionTime=0,
-                    name=params.get("name", ""),
-                    input=params.get("input", None),
-                    output=None,
+                    name=self.name,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    retrieverMetadata=params.get("retrieverMetadata", None),
+                    llmMetadata=None,
+                )
+            elif trace_type == TraceType.QUERY:
+                return QueryTrace(
+                    type=trace_type,
+                    traceProvider=trace_provider,
+                    executionTime=0,
+                    name=self.name,
+                    status=TraceStatus.SUCCESS,
+                    traces=[],
+                    queryMetadata=None,
                 )
             elif trace_type == TraceType.RERANKING:
                 return RerankingTrace(
                     type=trace_type,
-                    traceProvider=trace_provier,
+                    traceProvider=trace_provider,
                     executionTime=0,
-                    name=params.get("name", ""),
-                    input=params.get("input", None),
-                    output=None,
+                    name=self.name,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    rerankingMetadata=params.get("rerankingMetadata", None),
+                    rerankingMetadata=None,
                 )
-            else:
-                return GenericTrace(
+            elif trace_type == TraceType.RETRIEVER:
+                return RetrieverTrace(
                     type=trace_type,
-                    traceProvider=trace_provier,
+                    traceProvider=trace_provider,
                     executionTime=0,
-                    name=params.get("name", ""),
-                    input=params.get("input", None),
-                    output=None,
+                    name=self.name,
                     status=TraceStatus.SUCCESS,
                     traces=[],
+                    retrieverMetadata=None,
                 )
-        elif trace_provier == TraceProvider.CUSTOM:
+            elif trace_type == TraceType.SYNTHESIZE:
+                return SynthesizeTrace(
+                    type=trace_type,
+                    traceProvider=trace_provider,
+                    executionTime=0,
+                    name=self.name,
+                    status=TraceStatus.SUCCESS,
+                    traces=[],
+                    synthesizeMetadata=None
+                )
+            
+        elif trace_provider == TraceProvider.CUSTOM:
             return GenericTrace(
                 type=trace_type,
-                traceProvider=trace_provier,
+                traceProvider=trace_provider,
                 executionTime=0,
-                name=params.get("name", ""),
-                input=params.get("input", None),
-                output=None,
+                name=self.name,
                 status=TraceStatus.SUCCESS,
                 traces=[],
             )
@@ -379,53 +439,37 @@ class Tracer:
 
         # update current_trace
         current_trace.executionTime = self.execution_time
-        current_trace.status = self.status_results["status"]
-        current_trace.output = self.output
+        current_trace.status = self.status
 
-        # Update metadata in current_trace for default trace provider
-        if self.trace_provider == TraceProvider.DEFAULT:
-            if self.trace_type == TraceType.LLM:
-                assert isinstance(
-                    self.metadata, LlmMetadata
-                ), "Metadata must be of type LlmMetadata for the LLM trace type"
-                current_trace.llmMetadata = self.metadata
+        # Assert that the metadata is of the correct type and assign it to the current trace
+        trace_mapping = {
+            TraceType.AGENT: (AgentMetadata, 'agentMetadata'),
+            TraceType.CHAIN: (ChainMetadata, 'chainMetadata'),
+            TraceType.EMBEDDING: (LlmMetadata, 'llmMetadata'),
+            TraceType.LLM: (LlmMetadata, 'llmMetadata'),
+            TraceType.QUERY: (QueryMetadata, 'queryMetadata'),
+            TraceType.RETRIEVER: (RetrieverMetadata, 'retrieverMetadata'),
+            TraceType.RERANKING: (RerankingMetadata, 'rerankingMetadata'),
+            TraceType.SYNTHESIZE: (SynthesizeMetadata, 'synthesizeMetadata'),
+            TraceType.TOOL: (ToolMetadata, 'toolMetadata'),
+        }
+        metadata_class, attribute_name = trace_mapping.get(self.trace_type, (None, None))
+        if metadata_class and attribute_name:
+            assert (isinstance(self.metadata, metadata_class), 
+                    f"Metadata must be of type {metadata_class.__name__} for the {self.trace_type} trace type")
+            setattr(current_trace, attribute_name, self.metadata)
+        else:
+            raise ValueError(f"Unsupported trace type: {self.trace_type}")
 
-            elif self.trace_type == TraceType.EMBEDDING:
-                assert isinstance(
-                    self.metadata, EmbeddingMetadata
-                ), "Metadata must be of type EmbeddingMetadata for the EMBEDDING trace type"
-                current_trace.embeddingMetadata = self.metadata
-
-            elif self.trace_type == TraceType.RETRIEVER:
-                assert isinstance(
-                    self.metadata, RetrieverMetadata
-                ), "Metadata must be of type RetrieverMetadata for the RETRIEVER trace type"
-                current_trace.retrieverMetadata = self.metadata
-
-            elif self.trace_type == TraceType.RERANKING:
-                assert isinstance(
-                    self.metadata, RerankingMetadata
-                ), "Metadata must be of type RerankingMetadata for the RERANKING trace type"
-                current_trace.rerankingMetadata = self.metadata
-
+        # update track stack in trace manager
         trace_manager.set_trace_stack(current_stack)
 
     # change to attributes and custom attributes
-    def set_parameters(self, output: Any, metadata: Optional[Metadata] = None):
-        self.output = output
-
-        if not metadata:
-            if self.trace_provider == TraceProvider.DEFAULT:
-                if self.trace_type == TraceType.LLM:
-                    self.metadata = LlmMetadata()
-                elif self.trace_type == TraceType.EMBEDDING:
-                    self.metadata = EmbeddingMetadata()
-                elif self.trace_type == TraceType.RETRIEVER:
-                    self.metadata = RetrieverMetadata()
-                elif self.trace_type == TraceType.RERANKING:
-                    self.metadata = RerankingMetadata()
-        else:
-            self.metadata = metadata
+    def set_parameters(self, metadata: Metadata):
+        if self.trace_provider == TraceProvider.CUSTOM:
+            assert (isinstance(metadata, GenericMetadata), 
+                    f"Metadata must be of type GenericMetadata for CUSTOM Traces")
+        self.metadata = metadata
 
     def track(
         self,

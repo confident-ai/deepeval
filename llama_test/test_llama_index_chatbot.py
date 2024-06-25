@@ -7,14 +7,12 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from typing import Any, List
 import asyncio
 
-from deepeval.tracing import Tracer, TraceType
+from deepeval.tracing import Tracer
 from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
-import deepeval.tracing
 
 ###########################################################
 # set up integration
 ###########################################################
-
 
 # set llama index global handler
 def deepeval_callback_handler(**eval_params: Any) -> BaseCallbackHandler:

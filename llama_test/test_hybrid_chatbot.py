@@ -130,19 +130,16 @@ user_inputs = [
     # "what are your services"
 ]
 
-
 async def query_and_print(engine: RAGPipeline, query: str):
     print(query)
     res = await engine.aquery(query)
     print("end of " + str(query))
-
 
 async def main():
     engine = RAGPipeline(data_dir="data")
 
     tasks = [query_and_print(engine, query) for query in user_inputs]
     await asyncio.gather(*tasks)
-
 
 if __name__ == "__main__":
     asyncio.run(main())
