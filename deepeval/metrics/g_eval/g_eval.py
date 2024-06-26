@@ -364,9 +364,11 @@ class GEval(BaseMetric):
 
                 # Calculate the linear probability
                 linear_prob = math.exp(logprob)
-                token_linear_probability[int(token_logprob["token"])] = (
-                    linear_prob
-                )
+                token_score = int(token_logprob["token"])
+                if token_linear_probability.get(token_score):
+                    token_linear_probability[token_score] += linear_prob
+                else:
+                    token_linear_probability[token_score] = linear_prob
                 sum_linear_probability += linear_prob
 
             sum_of_weighted_scores = 0.0
