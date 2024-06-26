@@ -45,7 +45,6 @@ nodes = node_parser.get_nodes_from_documents(documents, show_progress=True)
 # Define embedding model
 index = VectorStoreIndex(nodes)
 
-
 async def chatbot(input):
     with Tracer(trace_type="Chatbot") as chatbot_trace:
         # LLM
@@ -54,10 +53,6 @@ async def chatbot(input):
         query_engine = index.as_query_engine(similarity_top_k=5)
         res = query_engine.query(input).response
 
-        chatbot_trace.set_parameters(
-            output=res,
-        )
-
         chatbot_trace.track(
             input=input,
             response=res,
@@ -65,7 +60,6 @@ async def chatbot(input):
         )
 
         return res
-
 
 #############################################################
 ### test chatbot event tracking
@@ -79,7 +73,6 @@ user_inputs = [
     # "do you offer support",
     # "what are your services"
 ]
-
 
 async def query_and_print(query: str):
     res = await chatbot(query)

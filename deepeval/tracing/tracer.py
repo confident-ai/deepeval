@@ -49,7 +49,7 @@ class RetrievalNode(BaseModel):
     content: str
     # Optional variables
     id: Optional[str] = None
-    score: Optional[str] = None
+    score: Optional[float] = None
     source_file: Optional[str] = None
 
 ########################################################
@@ -83,7 +83,7 @@ class LlmMetadata(BaseModel):
     prompt_token_count: Optional[int] = Field(None, serialization_alias="promptTokenCount")
     completion_token_count: Optional[int] = Field(None, serialization_alias="completionTokenCount")
     prompt_template: Optional[str] = Field(None, serialization_alias="promptTemplate")
-    prompt_template_variables: Optional[Dict[str:str]] = Field(
+    prompt_template_variables: Optional[Dict[str, str]] = Field(
         None, serialization_alias="promptTemplateVariables"
     )
 
@@ -92,6 +92,7 @@ class QueryMetadata(BaseModel):
     output: str
 
 class RetrieverMetadata(BaseModel):
+    query_str: str
     nodes: List[RetrievalNode]
     # Optional variables
     top_k: Optional[int] = Field(None, serialization_alias="topK")
@@ -112,15 +113,15 @@ class SynthesizeMetadata(BaseModel):
     user_query: str
     response: str
     # Optional variables
-    output_documents: List[RetrievalNode]
+    retrieved_context: Optional[str]
 
 class ToolMetadata(BaseModel):
     name: str
     description: str
 
 class GenericMetadata(BaseModel):
-    input: str
-    output: str
+    input: Optional[str]
+    output: Optional[str]
 
 ########################################################
 ### Trace Types #######################################
@@ -182,7 +183,7 @@ class ToolTrace(BaseTrace):
     
 @dataclass
 class GenericTrace(BaseTrace):
-    genericMetadata: GenericMetadata
+    genericMetadata: Optional[GenericMetadata] = None
     type: str
 
 Metadata = Union[
@@ -254,7 +255,7 @@ class Tracer:
         self.name: str
         self.start_time: float
         self.execution_time: float
-        self.status: str
+        self.status: TraceStatus
         self.error: Optional[Dict[str:Any]] = None
         self.metadata: Optional[Metadata] = None
         self.track_params: Optional[Dict] = None
@@ -287,14 +288,14 @@ class Tracer:
 
         # Check if an exception occurred within the `with` block
         if exc_type is not None:
-            self.status = 'Error'
+            self.status = TraceStatus.ERROR
             self.error = {
                 "status": "Error",
                 "exception_type": exc_type.__name__,
                 "message": str(exc_val),
             }
         else:
-            self.status = "Success"
+            self.status = TraceStatus.SUCCESS
 
         self.update_trace_instance()
         current_trace_stack = trace_manager.get_trace_stack_copy()
@@ -458,8 +459,9 @@ class Tracer:
             assert (isinstance(self.metadata, metadata_class), 
                     f"Metadata must be of type {metadata_class.__name__} for the {self.trace_type} trace type")
             setattr(current_trace, attribute_name, self.metadata)
-        else:
-            raise ValueError(f"Unsupported trace type: {self.trace_type}")
+        elif self.metadata is not None:
+            assert (isinstance(self.metadata, GenericMetadata), 
+                    f"Metadata must be of type GenericMetaData for Custom traces")
 
         # update track stack in trace manager
         trace_manager.set_trace_stack(current_stack)
