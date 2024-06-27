@@ -52,6 +52,8 @@ from deepeval.tracing import (
     SynthesizeAttributes,
     SynthesizeTrace,
     GenericAttributes,
+    AgentAttributes,
+    AgentTrace,
     TraceData
 )
 from deepeval.utils import dataclass_to_dict
@@ -176,7 +178,15 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         ### Different Attributes ###############################
 
         elif event_type == CBEventType.AGENT_STEP:
-            pass
+            trace_instance = AgentTrace(
+                **trace_kwargs,
+                embeddingAttributes=AgentAttributes(
+                    input="",
+                    output="",
+                    name="",
+                    description=""
+                ),
+            )
 
         elif event_type == CBEventType.EMBEDDING:
             trace_instance = EmbeddingTrace(
@@ -267,7 +277,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         trace_instance: BaseTrace,
         event_type: CBEventType,
         processed_payload: Optional[Dict[str, Any]] = None,
-    ) -> Union[EmbeddingTrace, LlmTrace, RetrieverTrace, GenericTrace]:
+    ) -> TraceData:
 
         trace_instance.executionTime = (
             perf_counter() - trace_instance.executionTime
@@ -275,6 +285,9 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         if "exception" in processed_payload:
             trace_instance.status = TraceStatus.ERROR
+
+        elif event_type == CBEventType.AGENT_STEP and isinstance(trace_instance, AgentTrace):
+            print(processed_payload)
 
         elif event_type == CBEventType.LLM and isinstance(trace_instance, LlmTrace):
             attributes = trace_instance.llmAttributes

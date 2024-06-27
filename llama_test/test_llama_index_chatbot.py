@@ -8,7 +8,7 @@ from llama_index.core.postprocessor import LLMRerank
 from typing import Any, List
 import asyncio
 
-from deepeval.tracing import Tracer
+from deepeval.tracing import Tracer, GenericAttributes
 from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
 
 ###########################################################
@@ -53,6 +53,12 @@ async def chatbot(input):
         # Build query engine
         query_engine = index.as_query_engine(similarity_top_k=5)
         res = query_engine.query(input).response
+
+        chatbot_trace.set_attributes(
+            attributes=GenericAttributes(
+                output=res,
+            )
+        )
 
         chatbot_trace.track(
             input=input,

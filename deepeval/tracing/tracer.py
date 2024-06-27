@@ -120,8 +120,8 @@ class ToolAttributes(BaseModel):
     description: str
 
 class GenericAttributes(BaseModel):
-    input: Optional[str]
-    output: Optional[str]
+    input: Optional[str] = None
+    output: Optional[str] = None
 
 ########################################################
 ### Trace Types #######################################
@@ -339,7 +339,7 @@ class Tracer:
         self,
         trace_type: Union[TraceType, str],
         trace_provider: TraceProvider,
-        attributes: Optional[Attributes]
+        attributes: Optional[Attributes] = None
     ):
         if trace_provider == TraceProvider.DEFAULT:
             if trace_type == TraceType.AGENT:
