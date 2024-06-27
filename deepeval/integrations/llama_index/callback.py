@@ -39,19 +39,20 @@ from deepeval.tracing import (
     RerankingTrace,
     RetrieverTrace,
     TraceStatus,
-    LlmMetadata,
-    EmbeddingMetadata,
-    RerankingMetadata,
-    RetrieverMetadata,
+    LlmAttributes,
+    EmbeddingAttributes,
+    RerankingAttributes,
+    RetrieverAttributes,
     TraceType,
     TraceProvider,
     LlamaIndexTraceType,
     RetrievalNode,
     QueryTrace,
-    QueryMetadata,
-    SynthesizeMetadata,
+    QueryAttributes,
+    SynthesizeAttributes,
     SynthesizeTrace,
-    GenericMetadata
+    GenericAttributes,
+    TraceData
 )
 from deepeval.utils import dataclass_to_dict
 
@@ -151,7 +152,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         self,
         event_type: CBEventType,
         processed_payload: Optional[Dict[str, Any]] = None,
-    ) -> Union[EmbeddingTrace, LlmMetadata, GenericTrace]:
+    ) -> TraceData:
 
         trace_kwargs = {
             "traceProvider": TraceProvider.LLAMA_INDEX,
@@ -164,11 +165,15 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         if "exception" in processed_payload:
             trace_instance = GenericTrace(
-                **trace_kwargs,
+                traceProvider=TraceProvider.LLAMA_INDEX,
+                type=self.convert_event_type_to_deepeval_trace_type(event_type),
+                executionTime=perf_counter(),
+                name=event_type,
                 status=TraceStatus.ERROR,
+                traces=[]
             )
 
-        ### Different Metadatas ################################
+        ### Different Attributes ###############################
 
         elif event_type == CBEventType.AGENT_STEP:
             pass
@@ -176,7 +181,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         elif event_type == CBEventType.EMBEDDING:
             trace_instance = EmbeddingTrace(
                 **trace_kwargs,
-                embeddingMetadata=EmbeddingMetadata(
+                embeddingAttributes=EmbeddingAttributes(
                     embedding_text="",
                     # Optional variables
                     model=processed_payload["embedding_model_name"],
@@ -188,7 +193,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             messages = processed_payload.get("llm_input_messages")
             trace_instance = LlmTrace(
                 **trace_kwargs,
-                llmMetadata=LlmMetadata(
+                llmAttributes=LlmAttributes(
                     input_str=next(m['message_content'] for m in messages if m['message_role'] == 'user'),
                     output_str="",
                     # Optional variables
@@ -204,7 +209,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         elif event_type == CBEventType.RERANKING:
             trace_instance = RerankingTrace(
                 **trace_kwargs,
-                rerankingMetadata=RerankingMetadata(
+                rerankingAttributes=RerankingAttributes(
                     input_nodes=[],
                     output_nodes=[],
                     # Optional variables
@@ -218,7 +223,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         elif event_type == CBEventType.RETRIEVE:
             trace_instance = RetrieverTrace(
                 **trace_kwargs,
-                retrieverMetadata=RetrieverMetadata(
+                retrieverAttributes=RetrieverAttributes(
                     query_str=processed_payload["input_value"],
                     nodes = [],
                     # Optional variables
@@ -232,7 +237,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         elif event_type == CBEventType.QUERY:
             trace_instance = QueryTrace(
                 **trace_kwargs,
-                queryMetadata=QueryMetadata(
+                queryAttributes=QueryAttributes(
                     input=processed_payload["input_value"],
                     output=""
                 )   
@@ -241,7 +246,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         elif event_type == CBEventType.SYNTHESIZE:
             trace_instance = SynthesizeTrace(
                 **trace_kwargs,
-                synthesizeMetadata=SynthesizeMetadata(
+                synthesizeAttributes=SynthesizeAttributes(
                     user_query=processed_payload["input_value"],
                     response="",
                     # Optional variables
@@ -252,6 +257,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         else:
             trace_instance = GenericTrace(
                 **trace_kwargs,
+                genericAttributes=None
             )
 
         return trace_instance
@@ -271,38 +277,38 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_instance.status = TraceStatus.ERROR
 
         elif event_type == CBEventType.LLM and isinstance(trace_instance, LlmTrace):
-            metadata = trace_instance.llmMetadata
-            metadata.output_str = processed_payload["output_value"]
-            metadata.total_token_count = processed_payload["llm_token_count_total"]
-            metadata.prompt_token_count = processed_payload["llm_token_prompt_count"]
-            metadata.completion_token_count = processed_payload["llm_token_count_completion"]
+            attributes = trace_instance.llmAttributes
+            attributes.output_str = processed_payload["output_value"]
+            attributes.total_token_count = processed_payload["llm_token_count_total"]
+            attributes.prompt_token_count = processed_payload["llm_token_prompt_count"]
+            attributes.completion_token_count = processed_payload["llm_token_count_completion"]
 
         elif event_type == CBEventType.EMBEDDING and isinstance(trace_instance, EmbeddingTrace):
-            metadata = trace_instance.embeddingMetadata
+            attributes = trace_instance.embeddingAttributes
             embedding = processed_payload["embeddings"][0]
-            metadata.embedding_text = embedding["embedding_text"]
-            metadata.embedding_length = len(embedding["embedding_vector"])
+            attributes.embedding_text = embedding["embedding_text"]
+            attributes.embedding_length = len(embedding["embedding_vector"])
 
         elif event_type == CBEventType.RETRIEVE and isinstance(trace_instance, RetrieverTrace):
-            metadata = trace_instance.retrieverMetadata
+            attributes = trace_instance.retrieverAttributes
             total_chunk_length = 0
             top_score = 0
             nodes: List[RetrievalNode] = processed_payload["retrieval_documents"]
             for node in nodes:
                 total_chunk_length += len(node.content)
                 top_score = node.score if node.score > top_score else top_score
-            metadata.nodes = nodes
-            metadata.top_k = len(nodes)
-            metadata.average_chunk_size = total_chunk_length // len(nodes)
-            metadata.top_score = top_score
+            attributes.nodes = nodes
+            attributes.top_k = len(nodes)
+            attributes.average_chunk_size = total_chunk_length // len(nodes)
+            attributes.top_score = top_score
 
         elif event_type == CBEventType.QUERY and isinstance(trace_instance, QueryTrace):
-            metadata = trace_instance.queryMetadata
-            metadata.output = processed_payload["output_value"]
+            attributes = trace_instance.queryAttributes
+            attributes.output = processed_payload["output_value"]
 
         elif event_type == CBEventType.SYNTHESIZE and isinstance(trace_instance, SynthesizeTrace):
-            metadata = trace_instance.synthesizeMetadata
-            metadata.response = processed_payload["output_value"]
+            attributes = trace_instance.synthesizeAttributes
+            attributes.response = processed_payload["output_value"]
 
         return trace_instance
 

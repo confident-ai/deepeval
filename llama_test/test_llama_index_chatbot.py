@@ -4,6 +4,7 @@ from llama_index.core.callbacks.base_handler import BaseCallbackHandler
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.core.postprocessor import LLMRerank
 from typing import Any, List
 import asyncio
 

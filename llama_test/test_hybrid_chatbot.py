@@ -9,7 +9,7 @@ from openai import AsyncOpenAI
 import asyncio
 import os
 
-from deepeval.tracing import Tracer, TraceType, LlmMetadata
+from deepeval.tracing import Tracer, TraceType, LlmAttributes, QueryAttributes, GenericAttributes
 from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
 
 ########################################################
@@ -71,12 +71,17 @@ class RAGPipeline:
         self.model_name = model_name
 
     def format_nodes(self, query):
-        with Tracer(trace_type="Custom Type") as llama_wrapper_trace:
+        with Tracer(trace_type="Custom Type") as custom_trace:
             nodes = self.retriever.retrieve(query)
             combined_nodes = "\n".join([node.get_content() for node in nodes])
 
             # set parameters
-            # llama_wrapper_trace.set_parameters(combined_nodes)
+            custom_trace.set_attributes(
+                attributes=GenericAttributes(
+                    input=query,
+                    output=combined_nodes
+                )
+            )
             return combined_nodes
 
     async def generate_completion(self, prompt, context):
@@ -97,8 +102,17 @@ class RAGPipeline:
             output = response.choices[0].message.content
 
             # set parameters
-            llm_trace.set_parameters(
-                output=output, metadata=LlmMetadata(model="gpt-4-turbo-preview")
+            llm_trace.set_attributes(
+                attributes=LlmAttributes(
+                    input_str=prompt,
+                    output_str=full_prompt,
+                    model="GPT4o",
+                    prompt_token_count=response.usage.prompt_tokens,
+                    completion_token_count=response.usage.completion_tokens,
+                    total_token_count=response.usage.total_tokens,
+                    prompt_template="Context: _____\n\nQuery: _____\n\nResponse:",
+                    prompt_template_variables={"context": context, "prompt": prompt}
+                )
             )
             return output
 
@@ -108,7 +122,12 @@ class RAGPipeline:
             response = await self.generate_completion(query_text, context)
 
             # set parameters and track event
-            query_trace.set_parameters(response)
+            query_trace.set_attributes(
+                attributes=QueryAttributes(
+                    input=query_text,
+                    output=response
+                )
+            )
             query_trace.track(
                 input=query_text,
                 response=response,
