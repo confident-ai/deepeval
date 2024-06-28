@@ -473,7 +473,6 @@ class Tracer:
             
         # append trace instance to stack
         self.attributes = attributes
-        print(self.attributes)
         
     def track(
         self,

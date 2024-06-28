@@ -48,8 +48,6 @@ index = VectorStoreIndex(nodes)
 
 async def chatbot(input):
     with Tracer(trace_type="Chatbot") as chatbot_trace:
-        # LLM
-
         # Build query engine
         query_engine = index.as_query_engine(similarity_top_k=5)
         res = query_engine.query(input).response

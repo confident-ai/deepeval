@@ -285,10 +285,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         if "exception" in processed_payload:
             trace_instance.status = TraceStatus.ERROR
-
-        elif event_type == CBEventType.AGENT_STEP and isinstance(trace_instance, AgentTrace):
-            print(processed_payload)
-
+            
         elif event_type == CBEventType.LLM and isinstance(trace_instance, LlmTrace):
             attributes = trace_instance.llmAttributes
             attributes.output_str = processed_payload["output_value"]
