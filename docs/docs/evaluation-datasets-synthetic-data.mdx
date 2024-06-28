@@ -40,8 +40,9 @@ There are 4 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Gold
 
 1. Generating synthetic `Golden`s using **context extracted from documents.**
 2. Generating synthetic `Golden`s from a **list of provided context.**
-3. Generating synthetic `Golden`s from a **list of provided prompts.**
-4. Generating synthetic `Golden`s from **scratch**
+3. Generating synthetic red-teaming `Golden`s from a **list of provided context.**
+4. Generating synthetic `Golden`s from a **list of provided prompts.**
+5. Generating synthetic `Golden`s from **scratch**
 
 ### 1. Generating From Documents
 
@@ -106,7 +107,42 @@ There are one mandatory and five optional parameters when using the `generate_go
 While the previous methods first use an LLM to generate a series of inputs based on the provided context before evolving them, `generate_goldens_from_inputs` simply evolves the provided list of inputs into more complex and diverse `Golden`s. It's also important to note that this method will only populate the input field of each generated `Golden`.
 :::
 
-### 3. Generating From Provided Prompts
+### 3. Generating Red-Teaming `Goldens` From Provided Contexts
+
+`deepeval` also allows you to generate synthetic red-teaming `Goldens` from a manually provided a list of contexts.
+
+:::info
+This is especially helpful if you are trying to **assess your LLM application's vulnerabilities**.
+:::
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+synthesizer.generate_red_team_goldens(
+    # Provide a list of context for synthetic data generation
+    contexts=[
+        ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
+        ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
+    ]
+)
+```
+
+There are one mandatory and five optional parameters when using the `generate_goldens` method:
+
+- `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area.
+- [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
+- [Optional] `max_goldens_per_context`: the maximum number of golden data points to be generated from each context. Adjusting this parameter can influence the size of the resulting dataset. Defaulted to 2.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
+- [Optional] `enable_breadth_evolve`: a boolean indicating whether to enable breadth evolution strategies during data generation. When set to True, it introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
+- [Optional] `evolution_types`: a list of `RedTeamEvolution`, specifying methods used during data evolution. Defaulted to all `RedTeamEvolution`s.
+- [Optional] `responses`: a list of `Response`, representing the red-teaming behaviour you are trying to elicit. Defaulted to all `Response`s.
+
+:::info
+`RedTeamEvolution` is an `ENUM` that specifies the different **types of red-teaming** prompts you wish to include in your final dataset, while the `Response` `ENUM` is the **type of response you are trying to get your LLM to produce**.
+:::
+
+### 4. Generating From Provided Prompts
 
 If your LLM application **does not rely on a retrieval context**, or if you simply wish to generate a synthetic dataset based on information outside your application's information database, `deepeval` also supports generating synthetic `Golden`s from an initial list of prompts, which serve as examples from which additional prompts will be generated.
 
@@ -135,7 +171,7 @@ There are one mandatory and three optional parameters when using the `generate_g
 - [Optional] `enable_breadth_evolve`: a boolean which when set to `True`, introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
 - [Optional] `evolution_types`: a list of `PromptEvolution`, specifying methods used during data evolution. Defaulted to all `PromptEvolution`s.
 
-### 4. Generating From Scratch
+### 5. Generating From Scratch
 
 If you do not have a list of example prompts, or wish to solely rely on an LLM generation for synthesis, you can also generate synthetic `Golden`s simply by specifying the subject, task, and output format you wish your prompts to follow.
 
