@@ -37,7 +37,7 @@ from deepeval.tracing import (
     RetrieverMetadata,
     TraceType,
     TraceProvider,
-    LlamaIndexTraceType,
+    LangChainTraceType,
 )
 from deepeval.utils import dataclass_to_dict
 from wrapt import ObjectProxy
@@ -76,21 +76,176 @@ class _DictWithLock(ObjectProxy, Generic[K, V]):  # type: ignore
 class LangChainCallbackHandler(BaseTracer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        # print("hhihihih")
-        # self.run_map = _DictWithLock[str, Run](self.run_map)
-        # self._tracer = None
-        # self._spans_by_run: None
-        # self._lock = RLock()  # handlers may be run in a thread by langchain
-        # print("badsfsadfa")
+        self.event_map = {}
 
-    # def _start_trace(self, run: Run) -> None:
-    #     return
+    def _start_trace(self, run: Run) -> None:
+        self.run_map[str(run.id)] = run
+        print("#########################")
+        print("#########################")
+        print(run.id)
+        print(run.name)
+        print(run.run_type)
+        # trace_instance = self.create_trace_instance(
+        #     run.id, run.name
+        # )
+        # self.event_map[run.id] = trace_instance
+        # trace_manager.append_to_trace_stack(trace_instance)
+    
+    def convert_event_type_to_deepeval_trace_type(self, event_type: str):
+        # TODO: add more types
+        if event_type == "llm":
+            return LlamaIndexTraceType.LLM
+        elif event_type == "retriever":
+            return LlamaIndexTraceType.RETRIEVER
+        elif event_type == CBEventType.EMBEDDING:
+            return LlamaIndexTraceType.EMBEDDING
+        elif event_type == CBEventType.CHUNKING:
+            return LlamaIndexTraceType.CHUNKING
+        elif event_type == CBEventType.NODE_PARSING:
+            return LlamaIndexTraceType.NODE_PARSING
+        elif event_type == CBEventType.SYNTHESIZE:
+            return LlamaIndexTraceType.SYNTHESIZE
+        elif event_type == CBEventType.QUERY:
+            return LlamaIndexTraceType.QUERY
+        elif event_type == CBEventType.RERANKING:
+            return LlamaIndexTraceType.RERANKING
+        elif event_type == CBEventType.AGENT_STEP:
+            return LlamaIndexTraceType.AGENT_STEP
 
-    def _end_trace(self, run: Run) -> None:
-        print("#########################")
-        print(run)
-        print("#########################")
-        pass
+        return event_type.capitalize()
+
+    def create_trace_instance(
+        self,
+        event_type: str,
+        processed_payload: Optional[Dict[str, Any]] = None,
+    ) -> Union[EmbeddingTrace, LlmMetadata, GenericTrace]:
+
+        current_time = perf_counter()
+        type = self.convert_event_type_to_deepeval_trace_type(event_type)
+        name = event_type
+        trace_instance_input = None
+
+        if "exception" in processed_payload:
+            trace_instance = GenericTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=trace_instance_input,
+                output={"exception": processed_payload["exception"]},
+                status=TraceStatus.ERROR,
+                traces=[],
+            )
+
+        elif event_type == CBEventType.LLM:
+            trace_instance = LlmTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=processed_payload["llm_input_messages"],
+                output=None,
+                status=TraceStatus.SUCCESS,
+                traces=[],
+                llmMetadata=LlmMetadata(
+                    model=processed_payload["llm_model_name"],
+                    output_messages=None,
+                    token_count=None,
+                    prompt_template=processed_payload.get(
+                        "llm_prompt_template"
+                    ),
+                    prompt_template_variables=processed_payload.get(
+                        "llm_prompt_template_variables"
+                    ),
+                ),
+            )
+
+        elif event_type == CBEventType.EMBEDDING:
+            trace_instance = EmbeddingTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=trace_instance_input,
+                output=None,
+                status=TraceStatus.SUCCESS,
+                traces=[],
+                embeddingMetadata=EmbeddingMetadata(
+                    model=processed_payload["embedding_model_name"],
+                ),
+            )
+
+        elif event_type == CBEventType.RETRIEVE:
+            trace_instance = RetrieverTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=processed_payload["input_value"],
+                output=None,
+                status=TraceStatus.SUCCESS,
+                traces=[],
+                retrieverMetadata=RetrieverMetadata(),
+            )
+
+        elif event_type == CBEventType.RERANKING:
+            trace_instance = RerankingTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=processed_payload["input_value"],
+                output=None,
+                status=TraceStatus.SUCCESS,
+                traces=[],
+                rerankingMetadata=RerankingMetadata(
+                    model=processed_payload["reranker_model_name"],
+                    top_k=processed_payload["reranker_top_k"],
+                ),
+            )
+
+        elif event_type == CBEventType.QUERY:
+            trace_instance = GenericTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=processed_payload["input_value"],
+                output=None,
+                status=TraceStatus.SUCCESS,
+                traces=[],
+            )
+
+        elif event_type == CBEventType.SYNTHESIZE:
+            trace_instance = GenericTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=processed_payload["input_value"],
+                output=None,
+                status=TraceStatus.SUCCESS,
+                traces=[],
+            )
+
+        else:
+            trace_instance = GenericTrace(
+                traceProvider=TraceProvider.LLAMA_INDEX,
+                type=type,
+                executionTime=current_time,
+                name=name,
+                input=trace_instance_input,
+                output=None,
+                status=TraceStatus.SUCCESS,
+                traces=[],
+            )
+        return trace_instance
+
+    # def _end_trace(self, run: Run) -> None:
+    #     print("#########################")
+    #     print("#########################")
+    #     print("#########################")
+    #     pass
 
     def _persist_run(self, run: Run) -> None:
         print("#########################")

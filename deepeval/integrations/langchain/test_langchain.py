@@ -1,34 +1,49 @@
-import sys
-sys.path.append(r"C:\Users\bombk\OneDrive\Documents\GitHub\deepeval")
-
-from langchain.prompts import PromptTemplate
-from langchain_openai import OpenAI
-from langchain.chains import LLMChain
-
 from deepeval.integrations.langchain import trace_langchain
 
 trace_langchain()
 
-ice_cream_assistant_template = """
-You are an ice cream assistant chatbot named "Scoopsie". Your expertise is 
-exclusively in providing information and advice about anything related to ice creams. This includes flavor combinations, ice cream recipes, and general 
-ice cream-related queries. You do not provide information outside of this 
-scope. If a question is not about ice cream, respond with, "I specialize only in ice cream related queries." 
-Question: {question} 
-Answer:"""
+from langchain_openai import ChatOpenAI
 
-ice_cream_assistant_prompt_template = PromptTemplate(
-    input_variables=["question"],
-    template=ice_cream_assistant_template
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
+
+import bs4
+from langchain import hub
+from langchain_chroma import Chroma
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+# Load, chunk and index the contents of the blog.
+loader = WebBaseLoader(
+    web_paths=("https://lilianweng.github.io/posts/2023-06-23-agent/",),
+    bs_kwargs=dict(
+        parse_only=bs4.SoupStrainer(
+            class_=("post-content", "post-title", "post-header")
+        )
+    ),
+)
+docs = loader.load()
+
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+splits = text_splitter.split_documents(docs)
+vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings())
+
+# Retrieve and generate using the relevant snippets of the blog.
+retriever = vectorstore.as_retriever()
+prompt = hub.pull("rlm/rag-prompt")
+
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+
+rag_chain = (
+    {"context": retriever | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
 )
 
-llm = OpenAI(model='gpt-3.5-turbo-instruct',
-             temperature=0.7)
-
-llm_chain = LLMChain(llm=llm, prompt=ice_cream_assistant_prompt_template)
-
-def query_llm(question):
-    print(llm_chain.invoke({'question': question})['text'])
-
-if __name__ == '__main__':
-    query_llm("Who are you?")
+rag_chain.invoke("What is Task Decomposition?")
