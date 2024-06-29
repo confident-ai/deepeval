@@ -24,7 +24,6 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
         _track: bool = True,
     ):
-        super.__init__()
         self.threshold = threshold
         self.model = model
         self._track = _track
@@ -92,7 +91,6 @@ class RAGASContextualRelevancyMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
         _track: bool = True,
     ):
-        super.__init__()
         self.threshold = threshold
         self.model = model
         self._track = _track
@@ -161,7 +159,6 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         embeddings: Optional[Embeddings] = None,
         _track: bool = True,
     ):
-        super.__init__()
         self.threshold = threshold
         self.model = model
         self._track = _track
@@ -228,7 +225,6 @@ class RAGASFaithfulnessMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
         _track: bool = True,
     ):
-        super.__init__()
         self.threshold = threshold
         self.model = model
         self._track = _track
@@ -290,7 +286,6 @@ class RAGASContextualRecallMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
         _track: bool = True,
     ):
-        super.__init__()
         self.threshold = threshold
         self.model = model
         self._track = _track
@@ -352,7 +347,6 @@ class RagasMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
         embeddings: Optional[Embeddings] = None,
     ):
-        super.__init__()
         self.threshold = threshold
         self.model = model
         if isinstance(model, str):

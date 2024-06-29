@@ -1,6 +1,5 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from contextvars import ContextVar
 from typing import Optional, List, Tuple, Union, Dict
 from pydantic import BaseModel
 from langchain.schema import AIMessage
@@ -12,11 +11,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.metrics.g_eval.template import GEvalTemplate
-from deepeval.utils import (
-    get_or_create_event_loop,
-    generate_uuid,
-    prettify_list,
-)
+from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     print_intermediate_steps,
     validate_conversational_test_case,
@@ -59,15 +54,6 @@ class GEvalResponse(BaseModel):
 
 
 class GEval(BaseMetric):
-
-    @property
-    def evaluation_steps(self) -> Optional[List[str]]:
-        return self._evaluation_steps.get()
-
-    @evaluation_steps.setter
-    def evaluation_steps(self, value: Optional[List[str]]):
-        self._evaluation_steps.set(value)
-
     def __init__(
         self,
         name: str,
@@ -80,10 +66,6 @@ class GEval(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        super().__init__()
-        self._evaluation_steps: ContextVar[Optional[List[str]]] = ContextVar(
-            generate_uuid(), default=None
-        )
         self.name = name
         self.evaluation_params = evaluation_params
 
@@ -113,8 +95,7 @@ class GEval(BaseMetric):
         self.verbose_mode = verbose_mode
 
     def measure(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -124,12 +105,9 @@ class GEval(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                (
-                    self.evaluation_steps,
-                    self.score,
-                    self.reason,
-                    self.success,
-                ) = loop.run_until_complete(self._measure_async(test_case))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
+                )
             else:
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
@@ -189,12 +167,6 @@ class GEval(BaseMetric):
                     ],
                 )
             return self.score
-
-    async def _measure_async(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
-    ):
-        await self.a_measure(test_case, _show_indicator=False)
-        return (self.evaluation_steps, self.score, self.reason, self.success)
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
@@ -392,9 +364,11 @@ class GEval(BaseMetric):
 
                 # Calculate the linear probability
                 linear_prob = math.exp(logprob)
-                token_linear_probability[int(token_logprob["token"])] = (
-                    linear_prob
-                )
+                token_score = int(token_logprob["token"])
+                if token_linear_probability.get(token_score):
+                    token_linear_probability[token_score] += linear_prob
+                else:
+                    token_linear_probability[token_score] = linear_prob
                 sum_linear_probability += linear_prob
 
             sum_of_weighted_scores = 0.0
@@ -420,7 +394,7 @@ class GEval(BaseMetric):
             self.success = False
         else:
             try:
-                self.success = self.score >= self.threshold
+                self.score >= self.threshold
             except:
                 self.success = False
         return self.success
