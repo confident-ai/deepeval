@@ -14,6 +14,7 @@ from deepeval.event import track
 ########################################################
 
 class TraceProvider(Enum):
+    LANGCHAIN = "LANGCHAIN"
     LLAMA_INDEX = "LLAMA_INDEX"
     DEFAULT = "DEFAULT"
     CUSTOM = "CUSTOM"
@@ -40,6 +41,18 @@ class LlamaIndexTraceType(Enum):
     RETRIEVER = "Retriever"
     SYNTHESIZE = "Synthesize"
     TOOL = "Tool"
+
+class LangChainTraceType(Enum):
+    AGENT = "Agent"
+    CHAIN = "Chain"
+    EMBEDDING = "Embedding"
+    LLM = "LLM"
+    QUERY = "Query"
+    RERANKING = "Reranking"
+    RETRIEVER = "Retriever"
+    SYNTHESIZE = "Synthesize"
+    TOOL = "Tool"
+
 
 class TraceStatus(Enum):
     SUCCESS = "Success"

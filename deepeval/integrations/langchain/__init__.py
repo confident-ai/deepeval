@@ -1,6 +1,4 @@
 import sys
-sys.path.append(r"C:\Users\bombk\OneDrive\Documents\GitHub\deepeval")
-
 from typing import TYPE_CHECKING, Any, Callable
 from wrapt import wrap_function_wrapper  
 from langchain_core.callbacks import BaseCallbackManager
