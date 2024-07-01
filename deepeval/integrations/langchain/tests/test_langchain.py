@@ -1,11 +1,3 @@
-from deepeval.integrations.langchain import trace_langchain
-
-trace_langchain()
-
-from langchain_openai import ChatOpenAI
-
-llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
-
 import bs4
 from langchain import hub
 from langchain_chroma import Chroma
@@ -13,7 +5,14 @@ from langchain_community.document_loaders import WebBaseLoader
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+from deepeval.integrations.langchain import trace_langchain
+from deepeval.tracing import Tracer
+
+trace_langchain()
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 
 # Load, chunk and index the contents of the blog.
 loader = WebBaseLoader(
@@ -34,10 +33,8 @@ vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings
 retriever = vectorstore.as_retriever()
 prompt = hub.pull("rlm/rag-prompt")
 
-
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
-
 
 rag_chain = (
     {"context": retriever | format_docs, "question": RunnablePassthrough()}
@@ -46,4 +43,12 @@ rag_chain = (
     | StrOutputParser()
 )
 
-rag_chain.invoke("What is Task Decomposition?")
+with Tracer("LangChain Chatbot") as trace:
+    input = "What is Task Decomposition?"
+    output = rag_chain.invoke(input)
+    trace.track(
+        event_name="LangChain Test",
+        model="GPT3.5",
+        input=input,
+        response=output
+    )

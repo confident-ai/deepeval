@@ -22,10 +22,6 @@ from typing import (
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing import (
     trace_manager,
-    get_trace_stack,
-    BaseTrace,
-    AgentTrace,
-    AgentAttributes,
     ChainTrace,
     ChainAttributes,
     ToolTrace,
@@ -34,15 +30,10 @@ from deepeval.tracing import (
     LlmAttributes,
     GenericTrace,
     GenericAttributes,
-    EmbeddingTrace,
-    EmbeddingAttributes,
-    RerankingTrace,
-    RerankingAttributes,
     RetrieverTrace,
     RetrieverAttributes,
     RetrievalNode,
     TraceStatus,
-    TraceType,
     TraceProvider,
     LangChainTraceType,
     TraceData
@@ -102,7 +93,7 @@ class LangChainCallbackHandler(BaseTracer):
     
     def create_trace_instance(
         self,
-        event_type: LangChainTraceType,
+        event_type: LangChainTraceType | str,
         name: str
     ) -> TraceData:
         trace_kwargs = {
@@ -113,14 +104,10 @@ class LangChainCallbackHandler(BaseTracer):
             "status": TraceStatus.SUCCESS,
             "traces": []
         }
-        if event_type == LangChainTraceType.AGENT:
-            trace_instance = AgentTrace(**trace_kwargs, agentAttributes=None)
-        elif event_type == LangChainTraceType.CHAIN:
+        if event_type == LangChainTraceType.CHAIN:
             trace_instance = ChainTrace(**trace_kwargs, chainAttributes=None)
         elif event_type == LangChainTraceType.LLM:
             trace_instance = LlmTrace(**trace_kwargs, llmAttributes=None)
-        elif event_type == LangChainTraceType.RERANKING:
-            trace_instance = RerankingTrace(**trace_kwargs, rerankingAttributes=None)
         elif event_type == LangChainTraceType.RETRIEVER:
             trace_instance = RetrieverTrace(**trace_kwargs, retrieverAttributes=None)
         elif event_type == LangChainTraceType.TOOL:
@@ -136,29 +123,36 @@ class LangChainCallbackHandler(BaseTracer):
         processed_payload: Optional[Dict[str, Any]],
     ) -> TraceData:
         
+        def json_if_valid(string):
+            try:
+                json_object = json.loads(string)
+                return json_object
+            except ValueError:
+                return string
+
         trace_instance.executionTime = (
             perf_counter() - trace_instance.executionTime
         )
-        if event_type == LangChainTraceType.AGENT:
-            attributes = None
-            trace_instance.agentAttributes = attributes
-        elif event_type == LangChainTraceType.CHAIN:
-            attributes = None
+        if event_type == LangChainTraceType.CHAIN:
+            input_value: str = processed_payload.get("input_value")
+            output_value: str = processed_payload.get("output_value")
+            input_json = json_if_valid(input_value)
+            output_json = json_if_valid(output_value)
+            input = (str(input_json.get('input')) or "") if isinstance(input_json, dict) else input_json
+            output = (str(output_json.get('question')) or "") if isinstance(output_json, dict) else output_json
+            attributes = ChainAttributes(
+                # Required Attributes
+                input=input,
+                output=output,
+            )
             trace_instance.chainAttributes = attributes
-            # print(attributes)
-            # print("******************")
-            # print("******************")
-            # print("******************")
-            print(processed_payload)
-            # print("******************")
-            # print("******************")
-            # print("******************")
-            # print(json(processed_payload["input_value"]))
         elif event_type == LangChainTraceType.LLM:
             prompt = '\n'.join(processed_payload.get("llm_prompts"))
             attributes = LlmAttributes(
+                # Required Attributes
                 input_str=prompt,
                 output_str=processed_payload["llm_output_messages.0.message_content"],
+                # Optional Attributes
                 model=processed_payload.get("llm_model"),
                 total_token_count = processed_payload.get("llm_token_count_total"),
                 prompt_token_count = processed_payload.get("llm_token_count_prompt"),
@@ -167,9 +161,6 @@ class LangChainCallbackHandler(BaseTracer):
                 prompt_template_variables=None,
             )
             trace_instance.llmAttributes = attributes
-        elif event_type == LangChainTraceType.RERANKING:
-            attributes = None
-            trace_instance.rerankingAttributes = attributes
         elif event_type == LangChainTraceType.RETRIEVER:
             retrieval_documents = []
             total_content_length = 0
@@ -187,17 +178,26 @@ class LangChainCallbackHandler(BaseTracer):
                 retrieval_documents.append(node)
                 i += 1
             attributes = RetrieverAttributes(
+                # Required Attributes
                 query_str=processed_payload.get("input_value"),
                 nodes=retrieval_documents,
+                # Optional Attributes
                 average_chunk_size=total_content_length // len("retrieval_documents"),
                 top_k=len("retrieval_documents"),
             )
             trace_instance.retrieverAttributes = attributes
         elif event_type == LangChainTraceType.TOOL:
-            attributes = None
+            attributes = ToolAttributes(
+                # Required Attributes
+                name=processed_payload.get("tool_name") or "NA",
+                description=processed_payload.get("tool_description") or "NA"
+            )
             trace_instance.toolAttributes = attributes
         else:
-            attributes = None
+            attributes = GenericAttributes(
+                input=processed_payload.get("input_value"),
+                output=processed_payload.get("output_value")
+            )
             trace_instance.genericAttributes = attributes
         return trace_instance
     
@@ -213,10 +213,6 @@ class LangChainCallbackHandler(BaseTracer):
             return LangChainTraceType.TOOL
         elif event_type == "chain":
             return LangChainTraceType.CHAIN
-        elif event_type == "reranker":
-            return LangChainTraceType.RERANKING
-        elif "agent" in event_type:
-            return LangChainTraceType.AGENT
 
         return event_type.capitalize()
     
