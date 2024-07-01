@@ -147,11 +147,11 @@ class LangChainCallbackHandler(BaseTracer):
             )
             trace_instance.chainAttributes = attributes
         elif event_type == LangChainTraceType.LLM:
-            prompt = '\n'.join(processed_payload.get("llm_prompts"))
+            prompt = '\n'.join(processed_payload.get("llm_prompts") or ['NA']) or 'NA'
             attributes = LlmAttributes(
                 # Required Attributes
                 input_str=prompt,
-                output_str=processed_payload["llm_output_messages.0.message_content"],
+                output_str=processed_payload.get("llm_output_messages.0.message_content") or 'NA',
                 # Optional Attributes
                 model=processed_payload.get("llm_model"),
                 total_token_count = processed_payload.get("llm_token_count_total"),
