@@ -1,12 +1,7 @@
-from contextvars import ContextVar
 from typing import Optional, List, Union
 from pydantic import BaseModel
 
-from deepeval.utils import (
-    get_or_create_event_loop,
-    generate_uuid,
-    prettify_list,
-)
+from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     print_intermediate_steps,
     validate_conversational_test_case,
@@ -41,14 +36,6 @@ class ContextualPrecisionVerdict(BaseModel):
 
 
 class ContextualPrecisionMetric(BaseMetric):
-    @property
-    def verdicts(self) -> Optional[List[ContextualPrecisionVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[ContextualPrecisionVerdict]]):
-        self._verdicts.set(value)
-
     def __init__(
         self,
         threshold: float = 0.5,
@@ -58,9 +45,6 @@ class ContextualPrecisionMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        self._verdicts: ContextVar[
-            Optional[List[ContextualPrecisionVerdict]]
-        ] = ContextVar(generate_uuid(), default=None)
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
         self.model, self.using_native_model = initialize_model(model)
@@ -70,8 +54,7 @@ class ContextualPrecisionMetric(BaseMetric):
         self.verbose_mode = verbose_mode
 
     def measure(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -81,8 +64,8 @@ class ContextualPrecisionMetric(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                (self.verdicts, self.score, self.reason, self.success) = (
-                    loop.run_until_complete(self._measure_async(test_case))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
                 )
             else:
                 self.verdicts: List[ContextualPrecisionVerdict] = (
@@ -139,13 +122,6 @@ class ContextualPrecisionMetric(BaseMetric):
                     ],
                 )
             return self.score
-
-    async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-    ):
-        await self.a_measure(test_case, _show_indicator=False)
-        return (self.verdicts, self.score, self.reason, self.success)
 
     async def _a_generate_reason(self, input: str):
         if self.include_reason is False:

@@ -11,6 +11,7 @@ from deepeval.dataset import EvaluationDataset
 class FakeMetric(BaseMetric):
     # This metric by default checks if the latency is greater than 10 seconds
     def __init__(self, threshold: float = 0.5):
+        super().__init__()
         self.threshold = threshold
 
     def measure(self, test_case: LLMTestCase):

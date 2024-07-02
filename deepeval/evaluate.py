@@ -1,3 +1,4 @@
+import copy
 import os
 from typing import List, Optional, Union, Dict
 import time
@@ -114,12 +115,12 @@ def create_api_test_case(
             # to each individual message (test case)
             test_case.additional_metadata = additional_metadata
             test_case.comments = comments
-            traceStack = None
+            trace_stack = None
         else:
             success = True
             name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
             order = test_case._dataset_rank
-            traceStack = get_trace_stack()
+            trace_stack = get_trace_stack()
 
         return LLMApiTestCase(
             name=name,
@@ -135,7 +136,7 @@ def create_api_test_case(
             order=order,
             additionalMetadata=test_case.additional_metadata,
             comments=test_case.comments,
-            traceStack=traceStack,
+            traceStack=trace_stack,
         )
 
     elif isinstance(test_case, ConversationalTestCase):

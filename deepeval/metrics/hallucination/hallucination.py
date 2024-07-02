@@ -1,4 +1,3 @@
-from contextvars import ContextVar
 from typing import Optional, Union, List
 from pydantic import BaseModel, Field
 
@@ -8,11 +7,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
-from deepeval.utils import (
-    get_or_create_event_loop,
-    generate_uuid,
-    prettify_list,
-)
+from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     print_intermediate_steps,
     validate_conversational_test_case,
@@ -37,15 +32,6 @@ class HallucinationVerdict(BaseModel):
 
 
 class HallucinationMetric(BaseMetric):
-
-    @property
-    def verdicts(self) -> Optional[List[HallucinationVerdict]]:
-        return self._verdicts.get()
-
-    @verdicts.setter
-    def verdicts(self, value: Optional[List[HallucinationVerdict]]):
-        self._verdicts.set(value)
-
     def __init__(
         self,
         threshold: float = 0.5,
@@ -55,9 +41,6 @@ class HallucinationMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        self._verdicts: ContextVar[Optional[List[HallucinationVerdict]]] = (
-            ContextVar(generate_uuid(), default=None)
-        )
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -67,8 +50,7 @@ class HallucinationMetric(BaseMetric):
         self.verbose_mode = verbose_mode
 
     def measure(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -78,8 +60,8 @@ class HallucinationMetric(BaseMetric):
         with metric_progress_indicator(self):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                (self.verdicts, self.score, self.reason, self.success) = (
-                    loop.run_until_complete(self._measure_async(test_case))
+                loop.run_until_complete(
+                    self.a_measure(test_case, _show_indicator=False)
                 )
             else:
                 self.verdicts: List[HallucinationVerdict] = (
@@ -130,13 +112,6 @@ class HallucinationMetric(BaseMetric):
                     ],
                 )
             return self.score
-
-    async def _measure_async(
-        self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
-    ):
-        await self.a_measure(test_case, _show_indicator=False)
-        return (self.verdicts, self.score, self.reason, self.success)
 
     async def _a_generate_reason(self):
         if self.include_reason is False:

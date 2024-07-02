@@ -17,7 +17,6 @@ from deepeval.synthesizer.template_prompt import (
     PromptEvolutionTemplate,
     PromptSynthesizerTemplate,
 )
-
 from deepeval.synthesizer.context_generator import ContextGenerator
 from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.models import DeepEvalBaseLLM
@@ -235,7 +234,7 @@ class Synthesizer():
                 source_files[index] if source_files is not None else None
             )
             golden = Golden(
-                input=evolved_input, context=context, sourceFile=source_file
+                input=evolved_input, context=context, source_file=source_file
             )
 
             if include_expected_output:
@@ -403,6 +402,7 @@ class Synthesizer():
             self.model.get_model_name(),
             None,
             (num_initial_goldens + 1) * num_evolutions,
+            None,
             _show_indicator,
         ):
             goldens: List[Golden] = []
@@ -460,6 +460,7 @@ class Synthesizer():
             self.model.get_model_name(),
             None,
             len(prompts) * num_evolutions,
+            None,
             _show_indicator,
         ):
             goldens: List[Golden] = []
@@ -592,6 +593,7 @@ class Synthesizer():
                 self.model.get_model_name(),
                 None,
                 len(contexts) * max_goldens_per_context,
+                use_case.value,
                 _show_indicator,
             ):
                 goldens: List[Golden] = []
@@ -677,6 +679,7 @@ class Synthesizer():
                 self.model.get_model_name(),
                 None,
                 len(contexts) * max_goldens_per_context,
+                use_case.value,
                 _show_indicator,
             ):
 
@@ -856,4 +859,3 @@ class Synthesizer():
 
         print(f"Synthetic goldens saved at {full_file_path}!")
         return full_file_path
-

@@ -89,7 +89,7 @@ def test_everything():
         threshold=0.1,
         strict_mode=strict_mode,
         async_mode=False,
-        verbose_mode=True,
+        verbose_mode=verbose_mode,
     )
     metric2 = FaithfulnessMetric(
         threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
@@ -128,6 +128,18 @@ def test_everything():
         verbose_mode=verbose_mode,
     )
 
+    metric11 = GEval(
+        name="Relevancy",
+        criteria="Relevancy - determine if the actual output is relevant with the input.",
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+        ],
+        strict_mode=strict_mode,
+        model="gpt-4-0125-preview",
+        verbose_mode=verbose_mode,
+    )
+
     test_case = LLMTestCase(
         input="What is this",
         actual_output="this is a latte",
@@ -144,11 +156,12 @@ def test_everything():
             metric3,
             metric4,
             metric5,
-            # metric6,
-            # metric7,
-            # metric8,
-            # metric9,
-            # metric10,
+            metric6,
+            metric7,
+            metric8,
+            metric9,
+            metric10,
+            metric11,
         ],
         # run_async=False,
     )
