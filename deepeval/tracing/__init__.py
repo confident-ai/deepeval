@@ -17,6 +17,7 @@ from .tracer import (
     TraceType,
     TraceProvider,
     LlamaIndexTraceType,
+    LangChainTraceType,
     TraceStatus,
     RetrievalNode,
     AgentAttributes,
