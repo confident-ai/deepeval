@@ -24,7 +24,6 @@ from deepeval.dataset.api import (
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import is_confident
-from deepeval.synthesizer.base_synthesizer import BaseSynthesizer
 from deepeval.synthesizer.synthesizer_types import *
 
 valid_file_types = ["csv", "json"]
@@ -422,9 +421,14 @@ class EvaluationDataset:
             PromptEvolution.COMPARATIVE,
             PromptEvolution.HYPOTHETICAL,
         ],
+        synthesizer = None,
     ) -> List[Golden]:
+
         from deepeval.synthesizer import Synthesizer
-        synthesizer = Synthesizer()
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, BaseSynthesizer))
 
         self.goldens.extend(
             synthesizer.generate_goldens_from_scratch(
@@ -453,10 +457,13 @@ class EvaluationDataset:
             PromptEvolution.COMPARATIVE,
             PromptEvolution.HYPOTHETICAL,
         ],
+        synthesizer = None
     ):
         from deepeval.synthesizer import Synthesizer
-        synthesizer = Synthesizer()
-
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, Synthesizer))
         self.goldens.extend(
             synthesizer.generate_goldens_from_prompts(
                 prompts=prompts,
@@ -466,13 +473,13 @@ class EvaluationDataset:
                 evolution_types=evolution_types,
             )
         )
-        
+
         
     def generate_red_team_goldens(
         self,
-        contexts: List[List[str]],
+        contexts: Optional[List[List[str]]] = None,
         include_expected_output: bool = False,
-        max_goldens_per_context: int = 2,
+        max_goldens: int = 2,
         num_evolutions: int = 3,
         enable_breadth_evolve: bool = False,
         evolution_types: List[RedTeamEvolution] = [
@@ -490,15 +497,19 @@ class EvaluationDataset:
         ],
         use_case: UseCase = UseCase.QA,
         _show_indicator: bool = True,
+        synthesizer = None
     ):
         from deepeval.synthesizer import Synthesizer
-        synthesizer = Synthesizer()
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, Synthesizer))
 
         self.goldens.extend(
             synthesizer.generate_red_team_goldens(
                 contexts=contexts,
                 include_expected_output=include_expected_output,
-                max_goldens_per_context=max_goldens_per_context,
+                max_goldens=max_goldens,
                 num_evolutions=num_evolutions,
                 enable_breadth_evolve=enable_breadth_evolve,
                 evolution_types=evolution_types,
@@ -526,9 +537,13 @@ class EvaluationDataset:
             Evolution.HYPOTHETICAL,
         ],
         use_case: UseCase = UseCase.QA,
+        synthesizer = None,
     ):
         from deepeval.synthesizer import Synthesizer
-        synthesizer = Synthesizer()
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, Synthesizer))
 
         self.goldens.extend(
             synthesizer.generate_goldens(
@@ -563,7 +578,10 @@ class EvaluationDataset:
         ],
     ):
         from deepeval.synthesizer import Synthesizer
-        synthesizer = Synthesizer()
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, Synthesizer))
 
         self.goldens.extend(
             synthesizer.generate_goldens_from_docs(
@@ -577,7 +595,6 @@ class EvaluationDataset:
                 evolution_types=evolution_types
             )
         )
-        print(self.goldens)
 
     # TODO: add save test cases as well
     def save_as(self, file_type: str, directory: str) -> str:

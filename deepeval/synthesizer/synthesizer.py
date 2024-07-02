@@ -61,7 +61,7 @@ red_team_evolution_map = {
 class SyntheticData(BaseModel):
     input: str
 
-class Synthesizer:
+class Synthesizer():
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -294,10 +294,10 @@ class Synthesizer:
 
     def _generate_red_team_from_contexts(
         self,
-        context: List[str],
+        context: Optional[List[str]],
         goldens: List[Golden],
         include_expected_output: bool,
-        max_goldens_per_context: int,
+        max_goldens: int,
         lock: Lock,
         responses: List[Response],
         num_evolutions: int,
@@ -311,9 +311,16 @@ class Synthesizer:
                 res = self.model.generate(prompt)
             return res
                     
-        prompt = SynthesizerTemplate.generate_synthetic_inputs(context, max_goldens_per_context)
-        data = trimAndLoadJson(call_model(prompt))
-        synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        synthetic_data = []
+        if context:
+            prompt = SynthesizerTemplate.generate_synthetic_inputs(context, max_goldens)
+            data = trimAndLoadJson(call_model(prompt))
+            synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        else:
+            prompt = RedTeamSynthesizerTemplate.generate_synthetic_inputs(max_goldens)
+            data = trimAndLoadJson(call_model(prompt))
+            synthetic_data = [SyntheticData(**item) for item in data["data"]]
+
 
         ###########
 
@@ -340,7 +347,7 @@ class Synthesizer:
             if non_compliant == "False":  
                 # evolve red-teaming inputs
                 golden = Golden(input=evolved_input, context=context)
-                if include_expected_output:
+                if include_expected_output and context is not None:
                     prompt = ""
                     if evolution_type != RedTeamEvolution.PROMPT_PROBING: 
                         prompt = RedTeamSynthesizerTemplate.generate_synthetic_expected_output(
@@ -494,9 +501,9 @@ class Synthesizer:
     
     def generate_red_team_goldens(
         self,
-        contexts: List[List[str]],
+        contexts: Optional[List[List[str]]] = None,
         include_expected_output: bool = False,
-        max_goldens_per_context: int = 2,
+        max_goldens: int = 2,
         num_evolutions: int = 3,
         enable_breadth_evolve: bool = False,
         evolution_types: List[RedTeamEvolution] = [
@@ -518,11 +525,17 @@ class Synthesizer:
 
         if use_case == UseCase.QA:
 
+            num_goldens = max_goldens
+            if not contexts:
+                contexts = [None for i in range(max_goldens)]
+            else:
+                num_goldens *= len(contexts)
+
             include_expected_output = True
             with synthesizer_progress_context(
                 self.model.get_model_name(),
                 None,
-                len(contexts) * max_goldens_per_context,
+                num_goldens,
                 _show_indicator,
             ):
 
@@ -534,17 +547,17 @@ class Synthesizer:
                         futures = {
                             executor.submit(
                                 self._generate_red_team_from_contexts,
-                                context,
+                                contexts[i],
                                 goldens,
                                 include_expected_output,
-                                max_goldens_per_context,
+                                max_goldens,
                                 lock,
                                 responses,
                                 num_evolutions,
                                 enable_breadth_evolve,
                                 evolution_types
-                            ): context
-                            for context in contexts
+                            ): i
+                            for i in range(num_goldens)
                         }
 
                         for future in as_completed(futures):

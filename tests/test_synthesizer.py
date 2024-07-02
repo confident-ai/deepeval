@@ -4,7 +4,6 @@ from deepeval.synthesizer import Synthesizer
 from deepeval.dataset import EvaluationDataset
 from deepeval.models import OpenAIEmbeddingModel
 
-
 @pytest.mark.skip(reason="openai is expensive")
 def test_synthesizer():
     module_b_dir = os.path.dirname(os.path.realpath(__file__))
@@ -37,15 +36,14 @@ synthesizer = Synthesizer(embedder=OpenAIEmbeddingModel(model="text-embedding-3-
 # )
 # synthesizer.save_as(file_type="json", directory="./results")
 
-# dataset = EvaluationDataset()
-# # dataset.generate_goldens_from_docs(
-# #     document_paths=[file_path1, file_path2, file_path3],
-# #     max_goldens_per_document=2,
-# # )
-
-# dataset.generate_red_team_goldens(
-#     contexts=[["Hey I love the weather"]],
-#     max_goldens_per_context=2,
+dataset = EvaluationDataset()
+# dataset.generate_goldens_from_docs(
+#     document_paths=[file_path1, file_path2, file_path3],
+#     max_goldens_per_document=2,
 # )
 
-# dataset.save_as(file_type="json", directory="./results")
+dataset.generate_red_team_goldens(
+    max_goldens=2, synthesizer=synthesizer
+)
+
+dataset.save_as(file_type="json", directory="./results")
