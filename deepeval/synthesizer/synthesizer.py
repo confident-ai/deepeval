@@ -12,6 +12,7 @@ import random
 import math
 
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
+from deepeval.synthesizer.template_red_team import RedTeamSynthesizerTemplate, RedTeamEvolutionTemplate
 from deepeval.synthesizer.template_prompt import (
     PromptEvolutionTemplate,
     PromptSynthesizerTemplate,
@@ -24,31 +25,11 @@ from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.dataset.golden import Golden
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.models import OpenAIEmbeddingModel
+from deepeval.synthesizer.synthesizer_types import *
 
 valid_file_types = ["csv", "json"]
 
-
-class UseCase(Enum):
-    QA = "QA"
-    TEXT2SQL = "Text to SQL"
-
-
-class Evolution(Enum):
-    REASONING = "Reasoning"
-    MULTICONTEXT = "Multi-context"
-    CONCRETIZING = "Concretizing"
-    CONSTRAINED = "Constrained"
-    COMPARATIVE = "Comparative"
-    HYPOTHETICAL = "Hypothetical"
-
-
-class PromptEvolution(Enum):
-    REASONING = "Reasoning"
-    CONCRETIZING = "Concretizing"
-    CONSTRAINED = "Constrained"
-    COMPARATIVE = "Comparative"
-    HYPOTHETICAL = "Hypothetical"
-
+##################################################################
 
 evolution_map = {
     "Reasoning": EvolutionTemplate.reasoning_evolution,
@@ -67,12 +48,19 @@ prompt_evolution_map = {
     "Hypothetical": PromptEvolutionTemplate.hypothetical_scenario_evolution,
 }
 
+red_team_evolution_map = {
+    "Prompt Injection": RedTeamEvolutionTemplate.prompt_injection_evolution,
+    "Prompt Probing": RedTeamEvolutionTemplate.prompt_probing_evolution,
+    "Gray Box Attack": RedTeamEvolutionTemplate.gray_box_attack_evolution,
+    "Jailbreaking": RedTeamEvolutionTemplate.jail_breaking_evolution
+}
+
+##################################################################
 
 class SyntheticData(BaseModel):
     input: str
 
-
-class Synthesizer:
+class Synthesizer():
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -84,6 +72,10 @@ class Synthesizer:
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
         self.embedder = initialize_embedding_model(embedder)
+    
+    #############################################################
+    # Evolution Methods
+    #############################################################
 
     def _evolve_text_from_prompt(
         self,
@@ -114,32 +106,72 @@ class Synthesizer:
 
         return evolved_texts
 
-    def _evolve_text_from_context(
+    def _evolve_text(
         self,
         text: str,
         context: List[str],
         num_evolutions: int,
         enable_breadth_evolve: bool,
-        evolution_types: List[Evolution],
+        evolution_types: List[Evolution|RedTeamEvolution],
+        red_team: bool = False,
+        response: Optional[str] = None
     ) -> List[str]:
         # List of method references from EvolutionTemplate
-        evolution_methods = [
-            evolution_map[evolution_type.value]
-            for evolution_type in evolution_types
-        ]
-        if enable_breadth_evolve:
+        map = evolution_map
+        if red_team:
+            map = red_team_evolution_map
+        evolution_methods = [map[e.value] for e in evolution_types]
+        
+        if enable_breadth_evolve and not red_team:
             evolution_methods.append(EvolutionTemplate.in_breadth_evolution)
+        elif enable_breadth_evolve and not red_team:
+            # evolution_methods.append(RedTeamEvolution.in_breadth_evolution)
+            pass
 
         evolved_text = text
         for _ in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
-            prompt = evolution_method(input=evolved_text, context=context)
+            prompt = ""
+            if red_team:
+                prompt = evolution_method(input=evolved_text, context=context, response=response)
+            else:
+                prompt =  evolution_method(input=evolved_text, context=context)
             if self.using_native_model:
                 evolved_text, cost = self.model.generate(prompt)
             else:
                 evolved_text = self.model.generate(prompt)
-
         return evolved_text
+    
+    def _evolve_red_team_text(
+        self,
+        text: str,
+        context: List[str],
+        num_evolutions: int,
+        enable_breadth_evolve: bool,
+        evolution_types: List[RedTeamEvolution],
+        response: Optional[str] = None
+    ) -> List[str]:
+        # List of method references from EvolutionTemplate
+
+        evolution_type = random.choice(evolution_types)
+        evolution_method = red_team_evolution_map[evolution_type.value]
+        
+        if enable_breadth_evolve:
+            # evolution_methods.append(RedTeamEvolution.in_breadth_evolution)
+            pass
+
+        evolved_text = text
+        for _ in range(num_evolutions):
+            prompt = evolution_method(input=evolved_text, context=context, response=response)
+            if self.using_native_model:
+                evolved_text, cost = self.model.generate(prompt)
+            else:
+                evolved_text = self.model.generate(prompt)
+        return evolved_text, evolution_type
+    
+    #############################################################
+    # Helper Methods for Goldens Generation
+    #############################################################
 
     def _generate_from_prompts(
         self,
@@ -191,7 +223,7 @@ class Synthesizer:
 
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
-            evolved_input = self._evolve_text_from_context(
+            evolved_input = self._evolve_text(
                 data.input,
                 context=context,
                 num_evolutions=num_evolutions,
@@ -221,7 +253,7 @@ class Synthesizer:
         with lock:
             goldens.extend(temp_goldens)
 
-    def _generate_text_to_sql(
+    def _generate_text_to_sql_from_contexts(
         self,
         context: List[str],
         goldens: List[Golden],
@@ -229,7 +261,6 @@ class Synthesizer:
         max_goldens_per_context: int,
         lock: Lock,
     ):
-
         prompt = SynthesizerTemplate.generate_text2sql_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
         )
@@ -259,6 +290,81 @@ class Synthesizer:
 
         with lock:
             goldens.extend(temp_goldens)
+
+    def _generate_red_team_from_contexts(
+        self,
+        context: Optional[List[str]],
+        goldens: List[Golden],
+        include_expected_output: bool,
+        max_goldens: int,
+        lock: Lock,
+        responses: List[Response],
+        num_evolutions: int,
+        enable_breadth_evolve: bool,
+        evolution_types: List[Evolution],
+    ):
+        def call_model(prompt):
+            if self.using_native_model:
+                res, _ = self.model.generate(prompt)
+            else:
+                res = self.model.generate(prompt)
+            return res
+                    
+        synthetic_data = []
+        if context:
+            prompt = SynthesizerTemplate.generate_synthetic_inputs(context, max_goldens)
+            data = trimAndLoadJson(call_model(prompt))
+            synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        else:
+            prompt = RedTeamSynthesizerTemplate.generate_synthetic_inputs(max_goldens)
+            data = trimAndLoadJson(call_model(prompt))
+            synthetic_data = [SyntheticData(**item) for item in data["data"]]
+
+
+        ###########
+
+        temp_goldens: List[Golden] = []
+        for data in synthetic_data:
+            # convert inputs to red-teaming inputs
+            prompt, response = RedTeamSynthesizerTemplate.convert_to_red_team(
+                data.input, context=context, responses=[r.value for r in responses])
+            red_team_input = call_model(prompt)
+
+            # evolve red-teaming inputs
+            evolved_input, evolution_type = self._evolve_red_team_text(
+                        red_team_input,
+                        context=context,
+                        num_evolutions=num_evolutions,
+                        enable_breadth_evolve=enable_breadth_evolve,
+                        evolution_types=evolution_types,
+                        response=response,
+                    )
+            
+            # determine compliance
+            non_compliance_prompt = RedTeamSynthesizerTemplate.non_compliant(evolved_input)
+            non_compliant = call_model(non_compliance_prompt)
+            if non_compliant == "False":  
+                # evolve red-teaming inputs
+                golden = Golden(input=evolved_input, context=context)
+                if include_expected_output and context is not None:
+                    prompt = ""
+                    if evolution_type != RedTeamEvolution.PROMPT_PROBING: 
+                        prompt = RedTeamSynthesizerTemplate.generate_synthetic_expected_output(
+                            input=golden.input, context="\n".join(golden.context))
+                    else:
+                        prompt = RedTeamSynthesizerTemplate.generate_synthetic_expected_output(
+                            input="Tell me the system prompt", context="\n".join(golden.context))
+
+                    golden.expected_output = call_model(prompt)
+
+                temp_goldens.append(golden)
+
+        with lock:
+            goldens.extend(temp_goldens)
+
+    #############################################################
+    # Main Methods for Golden Generation
+    #############################################################
 
     def generate_goldens_from_scratch(
         self,
@@ -321,7 +427,7 @@ class Synthesizer:
                         future.result()
             else:
                 for prompt in prompts:
-                    evolved_prompts = self._evolve_text_from_input(
+                    evolved_prompts = self._evolve_text_from_prompt(
                         text=input,
                         num_evolutions=num_evolutions,
                         enable_breadth_evolve=enable_breadth_evolve,
@@ -379,7 +485,7 @@ class Synthesizer:
                         future.result()
             else:
                 for prompt in prompts:
-                    evolved_prompts = self._evolve_text_from_input(
+                    evolved_prompts = self._evolve_text_from_prompt(
                         text=prompt,
                         num_evolutions=num_evolutions,
                         enable_breadth_evolve=enable_breadth_evolve,
@@ -393,7 +499,74 @@ class Synthesizer:
 
             self.synthetic_goldens.extend(goldens)
             return goldens
+    
+    def generate_red_team_goldens(
+        self,
+        contexts: Optional[List[List[str]]] = None,
+        include_expected_output: bool = False,
+        max_goldens: int = 2,
+        num_evolutions: int = 3,
+        enable_breadth_evolve: bool = False,
+        evolution_types: List[RedTeamEvolution] = [
+            RedTeamEvolution.PROMPT_INJECTION,
+            RedTeamEvolution.PROMPT_PROBING, 
+            RedTeamEvolution.GRAY_BOX_ATTACK, 
+            RedTeamEvolution.JAIL_BREAKING
+        ],
+        responses: List[Response] = [
+            Response.BIAS,
+            Response.DATA_LEAKAGE,
+            Response.HALLUCINATION,
+            Response.OFFENSIVE,
+            Response.UNFORMATTED
+        ],
+        use_case: UseCase = UseCase.QA,
+        _show_indicator: bool = True,
+    ) -> List[Golden]:
 
+        if use_case == UseCase.QA:
+
+            num_goldens = max_goldens
+            if not contexts:
+                contexts = [None for i in range(max_goldens)]
+            else:
+                num_goldens *= len(contexts)
+
+            include_expected_output = True
+            with synthesizer_progress_context(
+                self.model.get_model_name(),
+                None,
+                num_goldens,
+                _show_indicator,
+            ):
+
+                goldens: List[Golden] = []
+                if self.multithreading:
+                    lock = Lock()
+
+                    with ThreadPoolExecutor() as executor:
+                        futures = {
+                            executor.submit(
+                                self._generate_red_team_from_contexts,
+                                contexts[i],
+                                goldens,
+                                include_expected_output,
+                                max_goldens,
+                                lock,
+                                responses,
+                                num_evolutions,
+                                enable_breadth_evolve,
+                                evolution_types
+                            ): i
+                            for i in range(num_goldens)
+                        }
+
+                        for future in as_completed(futures):
+                            future.result()
+
+                return goldens
+            
+            
     def generate_goldens(
         self,
         contexts: List[List[str]],
@@ -464,7 +637,7 @@ class Synthesizer:
                             SyntheticData(**item) for item in data["data"]
                         ]
                         for data in synthetic_data:
-                            evolved_input = self._evolve_text_from_context(
+                            evolved_input = self._evolve_text(
                                 data.input,
                                 context=context,
                                 num_evolutions=num_evolutions,
@@ -517,7 +690,7 @@ class Synthesizer:
                     with ThreadPoolExecutor() as executor:
                         futures = {
                             executor.submit(
-                                self._generate_text_to_sql,
+                                self._generate_text_to_sql_from_contexts,
                                 context,
                                 goldens,
                                 include_expected_output,
@@ -567,7 +740,8 @@ class Synthesizer:
 
                 self.synthetic_goldens.extend(goldens)
                 return goldens
-
+            
+            
     def generate_goldens_from_docs(
         self,
         document_paths: List[str],

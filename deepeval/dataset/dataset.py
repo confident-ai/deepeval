@@ -24,7 +24,7 @@ from deepeval.dataset.api import (
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import convert_keys_to_snake_case, is_confident
-from deepeval.synthesizer.base_synthesizer import BaseSynthesizer
+from deepeval.synthesizer.synthesizer_types import *
 
 valid_file_types = ["csv", "json"]
 
@@ -412,56 +412,195 @@ class EvaluationDataset:
             raise Exception(
                 "Run `deepeval login` to pull dataset from Confident AI"
             )
+        
+    def generate_goldens_from_scratch(
+        self,
+        subject: str,
+        task: str,
+        output_format: str,
+        num_initial_goldens: int,
+        num_evolutions: int = 1,
+        enable_breadth_evolve: bool = False,
+        _show_indicator: bool = True,
+        evolution_types: List[PromptEvolution] = [
+            PromptEvolution.REASONING,
+            PromptEvolution.CONCRETIZING,
+            PromptEvolution.CONSTRAINED,
+            PromptEvolution.COMPARATIVE,
+            PromptEvolution.HYPOTHETICAL,
+        ],
+        synthesizer = None,
+    ) -> List[Golden]:
+
+        from deepeval.synthesizer import Synthesizer
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, BaseSynthesizer))
+
+        self.goldens.extend(
+            synthesizer.generate_goldens_from_scratch(
+                subject=subject,
+                task=task,
+                output_format=output_format,
+                num_initial_goldens=num_initial_goldens,
+                num_evolutions=num_evolutions,
+                enable_breadth_evolve=enable_breadth_evolve,
+                _show_indicator=_show_indicator,
+                evolution_types=evolution_types
+            )
+        )
+        
+    
+    def generate_goldens_from_prompts(
+        self,
+        prompts: List[str],
+        num_evolutions: int = 1,
+        enable_breadth_evolve: bool = False,
+        _show_indicator: bool = True,
+        evolution_types: List[PromptEvolution] = [
+            PromptEvolution.REASONING,
+            PromptEvolution.CONCRETIZING,
+            PromptEvolution.CONSTRAINED,
+            PromptEvolution.COMPARATIVE,
+            PromptEvolution.HYPOTHETICAL,
+        ],
+        synthesizer = None
+    ):
+        from deepeval.synthesizer import Synthesizer
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, Synthesizer))
+        self.goldens.extend(
+            synthesizer.generate_goldens_from_prompts(
+                prompts=prompts,
+                num_evolutions=num_evolutions,
+                enable_breadth_evolve=enable_breadth_evolve,
+                _show_indicator=_show_indicator,
+                evolution_types=evolution_types,
+            )
+        )
+
+        
+    def generate_red_team_goldens(
+        self,
+        contexts: Optional[List[List[str]]] = None,
+        include_expected_output: bool = False,
+        max_goldens: int = 2,
+        num_evolutions: int = 3,
+        enable_breadth_evolve: bool = False,
+        evolution_types: List[RedTeamEvolution] = [
+            RedTeamEvolution.PROMPT_INJECTION,
+            RedTeamEvolution.PROMPT_PROBING, 
+            RedTeamEvolution.GRAY_BOX_ATTACK, 
+            RedTeamEvolution.JAIL_BREAKING
+        ],
+        responses: List[Response] = [
+            Response.BIAS,
+            Response.DATA_LEAKAGE,
+            Response.HALLUCINATION,
+            Response.OFFENSIVE,
+            Response.UNFORMATTED
+        ],
+        use_case: UseCase = UseCase.QA,
+        _show_indicator: bool = True,
+        synthesizer = None
+    ):
+        from deepeval.synthesizer import Synthesizer
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, Synthesizer))
+
+        self.goldens.extend(
+            synthesizer.generate_red_team_goldens(
+                contexts=contexts,
+                include_expected_output=include_expected_output,
+                max_goldens=max_goldens,
+                num_evolutions=num_evolutions,
+                enable_breadth_evolve=enable_breadth_evolve,
+                evolution_types=evolution_types,
+                _show_indicator=_show_indicator,
+                responses=responses,
+                use_case=use_case,
+            )
+        )
 
     def generate_goldens(
         self,
         contexts: List[List[str]],
-        synthesizer: BaseSynthesizer = None,
+        include_expected_output: bool = False,
         max_goldens_per_context: int = 2,
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
         source_files: Optional[List[str]] = None,
         _show_indicator: bool = True,
+        evolution_types: List[Evolution] = [
+            Evolution.REASONING,
+            Evolution.MULTICONTEXT,
+            Evolution.CONCRETIZING,
+            Evolution.CONSTRAINED,
+            Evolution.COMPARATIVE,
+            Evolution.HYPOTHETICAL,
+        ],
+        use_case: UseCase = UseCase.QA,
+        synthesizer = None,
     ):
         from deepeval.synthesizer import Synthesizer
-
         if synthesizer is None:
             synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, Synthesizer))
 
         self.goldens.extend(
             synthesizer.generate_goldens(
                 contexts=contexts,
+                include_expected_output=include_expected_output,
                 max_goldens_per_context=max_goldens_per_context,
                 num_evolutions=num_evolutions,
                 enable_breadth_evolve=enable_breadth_evolve,
                 source_files=source_files,
                 _show_indicator=_show_indicator,
+                evolution_types=evolution_types,
+                use_case=use_case
             )
         )
 
     def generate_goldens_from_docs(
         self,
         document_paths: List[str],
-        synthesizer: BaseSynthesizer = None,
+        include_expected_output: bool = False,
         max_goldens_per_document: int = 5,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
+        evolution_types: List[Evolution] = [
+            Evolution.REASONING,
+            Evolution.MULTICONTEXT,
+            Evolution.CONCRETIZING,
+            Evolution.CONSTRAINED,
+            Evolution.COMPARATIVE,
+            Evolution.HYPOTHETICAL,
+        ],
     ):
         from deepeval.synthesizer import Synthesizer
-
         if synthesizer is None:
             synthesizer = Synthesizer()
+        else:
+            assert(isinstance(synthesizer, Synthesizer))
 
         self.goldens.extend(
             synthesizer.generate_goldens_from_docs(
                 document_paths=document_paths,
+                include_expected_output=include_expected_output,
                 max_goldens_per_document=max_goldens_per_document,
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
                 num_evolutions=num_evolutions,
                 enable_breadth_evolve=enable_breadth_evolve,
+                evolution_types=evolution_types
             )
         )
 
