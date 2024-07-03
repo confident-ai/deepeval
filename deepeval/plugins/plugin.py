@@ -12,6 +12,7 @@ def pytest_sessionstart(session: pytest.Session):
     is_running_deepeval = get_is_running_deepeval()
 
     if is_running_deepeval:
+        test_run_manager.save_to_disk = True
         test_run_manager.create_test_run(
             file_name=session.config.getoption("file_or_dir")[0]
         )
