@@ -13,11 +13,13 @@ from deepeval.event import track
 ### Trace Types ########################################
 ########################################################
 
+
 class TraceProvider(Enum):
     LLAMA_INDEX = "LLAMA_INDEX"
     DEFAULT = "DEFAULT"
     CUSTOM = "CUSTOM"
     HYBRID = "HYBRID"
+
 
 class TraceType(Enum):
     AGENT = "Agent"
@@ -30,6 +32,7 @@ class TraceType(Enum):
     SYNTHESIZE = "Synthesize"
     TOOL = "Tool"
 
+
 class LlamaIndexTraceType(Enum):
     AGENT = "Agent"
     CHAIN = "Chain"
@@ -41,9 +44,11 @@ class LlamaIndexTraceType(Enum):
     SYNTHESIZE = "Synthesize"
     TOOL = "Tool"
 
+
 class TraceStatus(Enum):
     SUCCESS = "Success"
     ERROR = "Error"
+
 
 class RetrievalNode(BaseModel):
     content: str
@@ -52,9 +57,11 @@ class RetrievalNode(BaseModel):
     score: Optional[float] = None
     source_file: Optional[str] = Field(None, serialization_alias="sourceFile")
 
+
 ########################################################
 ### Attributes Types ###################################
 ########################################################
+
 
 class AgentAttributes(BaseModel):
     input: str
@@ -62,70 +69,103 @@ class AgentAttributes(BaseModel):
     name: str
     description: str
 
+
 class ChainAttributes(BaseModel):
     input: str
     output: str
     # Optional variables
-    prompt_template: Optional[str] = Field(None, serialization_alias="promptTemplate")
+    prompt_template: Optional[str] = Field(
+        None, serialization_alias="promptTemplate"
+    )
+
 
 class EmbeddingAttributes(BaseModel):
     embedding_text: str = Field("", serialization_alias="embeddingText")
     # Optional variables
     model: Optional[str] = None
-    embedding_length: Optional[int] = Field(None, serialization_alias="embeddingLength")
+    embedding_length: Optional[int] = Field(
+        None, serialization_alias="embeddingLength"
+    )
+
 
 class LlmAttributes(BaseModel):
     input_str: str = Field("", serialization_alias="inputStr")
     output_str: str = Field("", serialization_alias="outputStr")
     # Optional variables
     model: Optional[str] = None
-    total_token_count: Optional[int] = Field(None, serialization_alias="totalTokenCount")
-    prompt_token_count: Optional[int] = Field(None, serialization_alias="promptTokenCount")
-    completion_token_count: Optional[int] = Field(None, serialization_alias="completionTokenCount")
-    prompt_template: Optional[str] = Field(None, serialization_alias="promptTemplate")
+    total_token_count: Optional[int] = Field(
+        None, serialization_alias="totalTokenCount"
+    )
+    prompt_token_count: Optional[int] = Field(
+        None, serialization_alias="promptTokenCount"
+    )
+    completion_token_count: Optional[int] = Field(
+        None, serialization_alias="completionTokenCount"
+    )
+    prompt_template: Optional[str] = Field(
+        None, serialization_alias="promptTemplate"
+    )
     prompt_template_variables: Optional[Dict[str, str]] = Field(
         None, serialization_alias="promptTemplateVariables"
     )
 
+
 class QueryAttributes(BaseModel):
     input: str
     output: str
+
 
 class RetrieverAttributes(BaseModel):
     query_str: str = Field("", serialization_alias="queryStr")
     nodes: List[RetrievalNode]
     # Optional variables
     top_k: Optional[int] = Field(None, serialization_alias="topK")
-    average_chunk_size: Optional[int] = Field(None, serialization_alias="averageChunkSize")
+    average_chunk_size: Optional[int] = Field(
+        None, serialization_alias="averageChunkSize"
+    )
     top_score: Optional[float] = Field(None, serialization_alias="topScore")
-    similarity_scorer: Optional[str] = Field(None, serialization_alias="similarityScorer")
+    similarity_scorer: Optional[str] = Field(
+        None, serialization_alias="similarityScorer"
+    )
+
 
 class RerankingAttributes(BaseModel):
-    input_nodes: List[RetrievalNode] = Field([], serialization_alias="inputNodes")
-    output_nodes: List[RetrievalNode] = Field([], serialization_alias="outputNodes")
+    input_nodes: List[RetrievalNode] = Field(
+        [], serialization_alias="inputNodes"
+    )
+    output_nodes: List[RetrievalNode] = Field(
+        [], serialization_alias="outputNodes"
+    )
     # Optional variables
     model: Optional[str] = None
     top_n: Optional[int] = Field(None, serialization_alias="topN")
     batch_size: Optional[int] = Field(None, serialization_alias="batchSize")
     query_str: Optional[str] = Field(None, serialization_alias="queryStr")
 
+
 class SynthesizeAttributes(BaseModel):
     user_query: str = Field("", serialization_alias="userQuery")
     response: str
     # Optional variables
-    retrieved_context: Optional[str] = Field(None, serialization_alias="retrievedContext")
+    retrieved_context: Optional[str] = Field(
+        None, serialization_alias="retrievedContext"
+    )
+
 
 class ToolAttributes(BaseModel):
     name: str
     description: str
 
+
 class GenericAttributes(BaseModel):
     input: Optional[str] = None
     output: Optional[str] = None
 
+
 ########################################################
 ### Trace Types #######################################
 ########################################################
+
 
 @dataclass
 class BaseTrace:
@@ -136,66 +176,90 @@ class BaseTrace:
     traceProvider: TraceProvider
     traces: List["TraceData"]
 
+
 @dataclass
 class AgentTrace(BaseTrace):
     agentAttributes: AgentAttributes
     type: TraceType
+
 
 @dataclass
 class ChainTrace(BaseTrace):
     chainAttributes: ChainAttributes
     type: TraceType
 
+
 @dataclass
 class EmbeddingTrace(BaseTrace):
     embeddingAttributes: EmbeddingAttributes
     type: TraceType
+
 
 @dataclass
 class LlmTrace(BaseTrace):
     llmAttributes: LlmAttributes
     type: TraceType
 
+
 @dataclass
 class QueryTrace(BaseTrace):
     queryAttributes: QueryAttributes
     type: TraceType
-    
+
+
 @dataclass
 class RetrieverTrace(BaseTrace):
     retrieverAttributes: RetrieverAttributes
     type: TraceType
+
 
 @dataclass
 class RerankingTrace(BaseTrace):
     rerankingAttributes: RerankingAttributes
     type: TraceType
 
+
 @dataclass
 class SynthesizeTrace(BaseTrace):
     synthesizeAttributes: SynthesizeAttributes
     type: TraceType
 
+
 @dataclass
 class ToolTrace(BaseTrace):
     toolAttributes: ToolAttributes
     type: TraceType
-    
+
+
 @dataclass
 class GenericTrace(BaseTrace):
     genericAttributes: Optional[GenericAttributes] = None
     type: str
 
+
 Attributes = Union[
-    AgentAttributes, ChainAttributes, EmbeddingAttributes, 
-    LlmAttributes, QueryAttributes,
-    RerankingAttributes, RetrieverAttributes, SynthesizeAttributes,
-    ToolAttributes, GenericAttributes
+    AgentAttributes,
+    ChainAttributes,
+    EmbeddingAttributes,
+    LlmAttributes,
+    QueryAttributes,
+    RerankingAttributes,
+    RetrieverAttributes,
+    SynthesizeAttributes,
+    ToolAttributes,
+    GenericAttributes,
 ]
 TraceData = Union[
-    AgentTrace, ChainTrace, EmbeddingTrace, LlmTrace,
-    QueryTrace, RerankingTrace, RetrieverTrace,
-    SynthesizeTrace, ToolTrace, GenericTrace
+    AgentTrace,
+    ChainTrace,
+    EmbeddingTrace,
+    LlmTrace,
+    QueryTrace,
+    RerankingTrace,
+    RetrieverTrace,
+    SynthesizeTrace,
+    ToolTrace,
+    GenericTrace,
 ]
 TraceStack = List[TraceData]
 
@@ -206,6 +270,7 @@ dict_trace_stack_var = ContextVar("dict_trace_stack", default=None)
 ########################################################
 ### ContextVar Managers ################################
 ########################################################
+
 
 class TraceManager:
     def get_trace_stack(self):
@@ -238,16 +303,18 @@ class TraceManager:
         dict_trace_stack_var.set(None)
         return dict_trace_stack
 
+
 trace_manager = TraceManager()
 
 ########################################################
 ### Tracer #############################################
 ########################################################
 
+
 class Tracer:
     # IMPORTANT: framework callback integrations does NOT use this Tracer
     def __init__(self, trace_type: Union[TraceType, str]):
-        self.trace_type: TraceType|str = trace_type
+        self.trace_type: TraceType | str = trace_type
         if isinstance(self.trace_type, TraceType):
             self.trace_provider = TraceProvider.DEFAULT
         else:
@@ -270,7 +337,9 @@ class Tracer:
         func_name = caller_frame.f_code.co_name
         self.name = func_name
 
-        trace_instance: BaseTrace = self.create_trace_instance(self.trace_type, self.trace_provider, None)
+        trace_instance: BaseTrace = self.create_trace_instance(
+            self.trace_type, self.trace_provider, None
+        )
         trace_manager.append_to_trace_stack(trace_instance)
 
         print("Tracing " + self.name + "... ")
@@ -339,7 +408,7 @@ class Tracer:
         self,
         trace_type: Union[TraceType, str],
         trace_provider: TraceProvider,
-        attributes: Optional[Attributes] = None
+        attributes: Optional[Attributes] = None,
     ):
         if trace_provider == TraceProvider.DEFAULT:
             if trace_type == TraceType.AGENT:
@@ -420,9 +489,9 @@ class Tracer:
                     name=self.name,
                     status=TraceStatus.SUCCESS,
                     traces=[],
-                    synthesizeAttributes=attributes
+                    synthesizeAttributes=attributes,
                 )
-            
+
         elif trace_provider == TraceProvider.CUSTOM:
             return GenericTrace(
                 type=trace_type,
@@ -431,7 +500,7 @@ class Tracer:
                 name=self.name,
                 status=TraceStatus.SUCCESS,
                 traces=[],
-                genericAttributes=attributes
+                genericAttributes=attributes,
             )
 
     def update_trace_instance(self):
@@ -445,22 +514,29 @@ class Tracer:
 
         # Assert that the attributes is of the correct type and assign it to the current trace
         trace_mapping = {
-            TraceType.AGENT: (AgentAttributes, 'agentAttributes'),
-            TraceType.CHAIN: (ChainAttributes, 'chainAttributes'),
-            TraceType.EMBEDDING: (EmbeddingAttributes, 'embeddingAttributes'),
-            TraceType.LLM: (LlmAttributes, 'llmAttributes'),
-            TraceType.QUERY: (QueryAttributes, 'queryAttributes'),
-            TraceType.RETRIEVER: (RetrieverAttributes, 'retrieverAttributes'),
-            TraceType.RERANKING: (RerankingAttributes, 'rerankingAttributes'),
-            TraceType.SYNTHESIZE: (SynthesizeAttributes, 'synthesizeAttributes'),
-            TraceType.TOOL: (ToolAttributes, 'toolAttributes'),
+            TraceType.AGENT: (AgentAttributes, "agentAttributes"),
+            TraceType.CHAIN: (ChainAttributes, "chainAttributes"),
+            TraceType.EMBEDDING: (EmbeddingAttributes, "embeddingAttributes"),
+            TraceType.LLM: (LlmAttributes, "llmAttributes"),
+            TraceType.QUERY: (QueryAttributes, "queryAttributes"),
+            TraceType.RETRIEVER: (RetrieverAttributes, "retrieverAttributes"),
+            TraceType.RERANKING: (RerankingAttributes, "rerankingAttributes"),
+            TraceType.SYNTHESIZE: (
+                SynthesizeAttributes,
+                "synthesizeAttributes",
+            ),
+            TraceType.TOOL: (ToolAttributes, "toolAttributes"),
         }
-        attribute_class, attribute_name = trace_mapping.get(self.trace_type, (None, None))
+        attribute_class, attribute_name = trace_mapping.get(
+            self.trace_type, (None, None)
+        )
         if attribute_class and attribute_name:
-            assert isinstance(self.attributes, attribute_class), f"Attributes must be of type {attribute_class.__name__} for the {self.trace_type} trace type"
+            assert isinstance(
+                self.attributes, attribute_class
+            ), f"Attributes must be of type {attribute_class.__name__} for the {self.trace_type} trace type"
             setattr(current_trace, attribute_name, self.attributes)
-        if self.trace_provider == TraceProvider.CUSTOM and self.attributes: 
-            setattr(current_trace, 'genericAttributes', self.attributes)
+        if self.trace_provider == TraceProvider.CUSTOM and self.attributes:
+            setattr(current_trace, "genericAttributes", self.attributes)
 
         # update track stack in trace manager
         trace_manager.set_trace_stack(current_stack)
@@ -468,12 +544,14 @@ class Tracer:
     # change to attributes and custom attributes
     def set_attributes(self, attributes: Attributes):
         if self.trace_provider == TraceProvider.CUSTOM:
-            assert (isinstance(attributes, GenericAttributes), 
-                    f"Attributes must be of type GenericAttributes for CUSTOM Traces")
-            
+            assert (
+                isinstance(attributes, GenericAttributes),
+                f"Attributes must be of type GenericAttributes for CUSTOM Traces",
+            )
+
         # append trace instance to stack
         self.attributes = attributes
-        
+
     def track(
         self,
         event_name: str = None,

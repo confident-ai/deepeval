@@ -86,7 +86,7 @@ def track(
         except AttributeError:
             # Pydantic version below 2.0
             body = api_event.dict(by_alias=True, exclude_none=True)
-            
+
         result = api.post_request(
             endpoint=Endpoints.EVENT_ENDPOINT.value,
             body=body,

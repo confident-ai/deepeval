@@ -1,8 +1,10 @@
 from enum import Enum
 
+
 class UseCase(Enum):
     QA = "QA"
     TEXT2SQL = "Text to SQL"
+
 
 class Evolution(Enum):
     REASONING = "Reasoning"
@@ -12,6 +14,7 @@ class Evolution(Enum):
     COMPARATIVE = "Comparative"
     HYPOTHETICAL = "Hypothetical"
 
+
 class PromptEvolution(Enum):
     REASONING = "Reasoning"
     CONCRETIZING = "Concretizing"
@@ -19,11 +22,13 @@ class PromptEvolution(Enum):
     COMPARATIVE = "Comparative"
     HYPOTHETICAL = "Hypothetical"
 
+
 class RedTeamEvolution(Enum):
     PROMPT_INJECTION = "Prompt Injection"
     PROMPT_PROBING = "Prompt Probing"
     GRAY_BOX_ATTACK = "Gray Box Attack"
     JAIL_BREAKING = "Jailbreaking"
+
 
 class Response(Enum):
     HALLUCINATION = "spread misinformation and hallucinate"

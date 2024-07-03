@@ -54,7 +54,7 @@ from deepeval.tracing import (
     GenericAttributes,
     AgentAttributes,
     AgentTrace,
-    TraceData
+    TraceData,
 )
 from deepeval.utils import dataclass_to_dict
 
@@ -162,7 +162,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             "executionTime": perf_counter(),
             "name": event_type,
             "status": TraceStatus.SUCCESS,
-            "traces": []
+            "traces": [],
         }
 
         if "exception" in processed_payload:
@@ -172,7 +172,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 executionTime=perf_counter(),
                 name=event_type,
                 status=TraceStatus.ERROR,
-                traces=[]
+                traces=[],
             )
 
         ### Different Attributes ###############################
@@ -181,10 +181,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_instance = AgentTrace(
                 **trace_kwargs,
                 embeddingAttributes=AgentAttributes(
-                    input="",
-                    output="",
-                    name="",
-                    description=""
+                    input="", output="", name="", description=""
                 ),
             )
 
@@ -204,15 +201,23 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_instance = LlmTrace(
                 **trace_kwargs,
                 llmAttributes=LlmAttributes(
-                    input_str=next(m['message_content'] for m in messages if m['message_role'] == 'user'),
+                    input_str=next(
+                        m["message_content"]
+                        for m in messages
+                        if m["message_role"] == "user"
+                    ),
                     output_str="",
                     # Optional variables
                     model=processed_payload["llm_model_name"],
                     total_token_count=None,
                     prompt_token_count=None,
                     completion_token_count=None,
-                    prompt_template=processed_payload.get("llm_prompt_template"),
-                    prompt_template_variables=processed_payload.get("llm_prompt_template_variables"),
+                    prompt_template=processed_payload.get(
+                        "llm_prompt_template"
+                    ),
+                    prompt_template_variables=processed_payload.get(
+                        "llm_prompt_template_variables"
+                    ),
                 ),
             )
 
@@ -226,21 +231,21 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     model=processed_payload["reranker_model_name"],
                     top_n=processed_payload["reranker_top_k"],
                     batch_size=None,
-                    query_str=None
+                    query_str=None,
                 ),
             )
-            
+
         elif event_type == CBEventType.RETRIEVE:
             trace_instance = RetrieverTrace(
                 **trace_kwargs,
                 retrieverAttributes=RetrieverAttributes(
                     query_str=processed_payload["input_value"],
-                    nodes = [],
+                    nodes=[],
                     # Optional variables
-                    top_k = None,
+                    top_k=None,
                     average_chunk_size=None,
-                    top_score = None,
-                    similarity_scorer=None
+                    top_score=None,
+                    similarity_scorer=None,
                 ),
             )
 
@@ -248,9 +253,8 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_instance = QueryTrace(
                 **trace_kwargs,
                 queryAttributes=QueryAttributes(
-                    input=processed_payload["input_value"],
-                    output=""
-                )   
+                    input=processed_payload["input_value"], output=""
+                ),
             )
 
         elif event_type == CBEventType.SYNTHESIZE:
@@ -261,13 +265,12 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     response="",
                     # Optional variables
                     retrieved_context=None,
-                )
+                ),
             )
 
         else:
             trace_instance = GenericTrace(
-                **trace_kwargs,
-                genericAttributes=None
+                **trace_kwargs, genericAttributes=None
             )
 
         return trace_instance
@@ -285,25 +288,39 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
         if "exception" in processed_payload:
             trace_instance.status = TraceStatus.ERROR
-            
-        elif event_type == CBEventType.LLM and isinstance(trace_instance, LlmTrace):
+
+        elif event_type == CBEventType.LLM and isinstance(
+            trace_instance, LlmTrace
+        ):
             attributes = trace_instance.llmAttributes
             attributes.output_str = processed_payload["output_value"]
-            attributes.total_token_count = processed_payload["llm_token_count_total"]
-            attributes.prompt_token_count = processed_payload["llm_token_prompt_count"]
-            attributes.completion_token_count = processed_payload["llm_token_count_completion"]
+            attributes.total_token_count = processed_payload[
+                "llm_token_count_total"
+            ]
+            attributes.prompt_token_count = processed_payload[
+                "llm_token_prompt_count"
+            ]
+            attributes.completion_token_count = processed_payload[
+                "llm_token_count_completion"
+            ]
 
-        elif event_type == CBEventType.EMBEDDING and isinstance(trace_instance, EmbeddingTrace):
+        elif event_type == CBEventType.EMBEDDING and isinstance(
+            trace_instance, EmbeddingTrace
+        ):
             attributes = trace_instance.embeddingAttributes
             embedding = processed_payload["embeddings"][0]
             attributes.embedding_text = embedding["embedding_text"]
             attributes.embedding_length = len(embedding["embedding_vector"])
 
-        elif event_type == CBEventType.RETRIEVE and isinstance(trace_instance, RetrieverTrace):
+        elif event_type == CBEventType.RETRIEVE and isinstance(
+            trace_instance, RetrieverTrace
+        ):
             attributes = trace_instance.retrieverAttributes
             total_chunk_length = 0
             top_score = 0
-            nodes: List[RetrievalNode] = processed_payload["retrieval_documents"]
+            nodes: List[RetrievalNode] = processed_payload[
+                "retrieval_documents"
+            ]
             for node in nodes:
                 total_chunk_length += len(node.content)
                 top_score = node.score if node.score > top_score else top_score
@@ -312,11 +329,15 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             attributes.average_chunk_size = total_chunk_length // len(nodes)
             attributes.top_score = top_score
 
-        elif event_type == CBEventType.QUERY and isinstance(trace_instance, QueryTrace):
+        elif event_type == CBEventType.QUERY and isinstance(
+            trace_instance, QueryTrace
+        ):
             attributes = trace_instance.queryAttributes
             attributes.output = processed_payload["output_value"]
 
-        elif event_type == CBEventType.SYNTHESIZE and isinstance(trace_instance, SynthesizeTrace):
+        elif event_type == CBEventType.SYNTHESIZE and isinstance(
+            trace_instance, SynthesizeTrace
+        ):
             attributes = trace_instance.synthesizeAttributes
             attributes.response = processed_payload["output_value"]
 
@@ -363,7 +384,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         # ignore these events
         if event_type in (CBEventType.NODE_PARSING, CBEventType.CHUNKING):
             return attributes
-        
+
         #########################
         # process embedding vectors
         chunks = payload.get(EventPayload.CHUNKS)
@@ -577,7 +598,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
     def process_nodes(self, nodes) -> Dict[str, Optional[str]]:
         processed_nodes = [
             RetrievalNode(
-                content= node_with_score.node.text,
+                content=node_with_score.node.text,
                 id=node_with_score.node.node_id,
                 score=node_with_score.score,
             )

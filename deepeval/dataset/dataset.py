@@ -412,7 +412,7 @@ class EvaluationDataset:
             raise Exception(
                 "Run `deepeval login` to pull dataset from Confident AI"
             )
-        
+
     def generate_goldens_from_scratch(
         self,
         subject: str,
@@ -429,14 +429,15 @@ class EvaluationDataset:
             PromptEvolution.COMPARATIVE,
             PromptEvolution.HYPOTHETICAL,
         ],
-        synthesizer = None,
+        synthesizer=None,
     ) -> List[Golden]:
 
         from deepeval.synthesizer import Synthesizer
+
         if synthesizer is None:
             synthesizer = Synthesizer()
         else:
-            assert(isinstance(synthesizer, BaseSynthesizer))
+            assert isinstance(synthesizer, BaseSynthesizer)
 
         self.goldens.extend(
             synthesizer.generate_goldens_from_scratch(
@@ -447,11 +448,10 @@ class EvaluationDataset:
                 num_evolutions=num_evolutions,
                 enable_breadth_evolve=enable_breadth_evolve,
                 _show_indicator=_show_indicator,
-                evolution_types=evolution_types
+                evolution_types=evolution_types,
             )
         )
-        
-    
+
     def generate_goldens_from_prompts(
         self,
         prompts: List[str],
@@ -465,13 +465,14 @@ class EvaluationDataset:
             PromptEvolution.COMPARATIVE,
             PromptEvolution.HYPOTHETICAL,
         ],
-        synthesizer = None
+        synthesizer=None,
     ):
         from deepeval.synthesizer import Synthesizer
+
         if synthesizer is None:
             synthesizer = Synthesizer()
         else:
-            assert(isinstance(synthesizer, Synthesizer))
+            assert isinstance(synthesizer, Synthesizer)
         self.goldens.extend(
             synthesizer.generate_goldens_from_prompts(
                 prompts=prompts,
@@ -482,7 +483,6 @@ class EvaluationDataset:
             )
         )
 
-        
     def generate_red_team_goldens(
         self,
         contexts: Optional[List[List[str]]] = None,
@@ -492,26 +492,27 @@ class EvaluationDataset:
         enable_breadth_evolve: bool = False,
         evolution_types: List[RedTeamEvolution] = [
             RedTeamEvolution.PROMPT_INJECTION,
-            RedTeamEvolution.PROMPT_PROBING, 
-            RedTeamEvolution.GRAY_BOX_ATTACK, 
-            RedTeamEvolution.JAIL_BREAKING
+            RedTeamEvolution.PROMPT_PROBING,
+            RedTeamEvolution.GRAY_BOX_ATTACK,
+            RedTeamEvolution.JAIL_BREAKING,
         ],
         responses: List[Response] = [
             Response.BIAS,
             Response.DATA_LEAKAGE,
             Response.HALLUCINATION,
             Response.OFFENSIVE,
-            Response.UNFORMATTED
+            Response.UNFORMATTED,
         ],
         use_case: UseCase = UseCase.QA,
         _show_indicator: bool = True,
-        synthesizer = None
+        synthesizer=None,
     ):
         from deepeval.synthesizer import Synthesizer
+
         if synthesizer is None:
             synthesizer = Synthesizer()
         else:
-            assert(isinstance(synthesizer, Synthesizer))
+            assert isinstance(synthesizer, Synthesizer)
 
         self.goldens.extend(
             synthesizer.generate_red_team_goldens(
@@ -545,13 +546,14 @@ class EvaluationDataset:
             Evolution.HYPOTHETICAL,
         ],
         use_case: UseCase = UseCase.QA,
-        synthesizer = None,
+        synthesizer=None,
     ):
         from deepeval.synthesizer import Synthesizer
+
         if synthesizer is None:
             synthesizer = Synthesizer()
         else:
-            assert(isinstance(synthesizer, Synthesizer))
+            assert isinstance(synthesizer, Synthesizer)
 
         self.goldens.extend(
             synthesizer.generate_goldens(
@@ -563,7 +565,7 @@ class EvaluationDataset:
                 source_files=source_files,
                 _show_indicator=_show_indicator,
                 evolution_types=evolution_types,
-                use_case=use_case
+                use_case=use_case,
             )
         )
 
@@ -586,10 +588,11 @@ class EvaluationDataset:
         ],
     ):
         from deepeval.synthesizer import Synthesizer
+
         if synthesizer is None:
             synthesizer = Synthesizer()
         else:
-            assert(isinstance(synthesizer, Synthesizer))
+            assert isinstance(synthesizer, Synthesizer)
 
         self.goldens.extend(
             synthesizer.generate_goldens_from_docs(
@@ -600,7 +603,7 @@ class EvaluationDataset:
                 chunk_overlap=chunk_overlap,
                 num_evolutions=num_evolutions,
                 enable_breadth_evolve=enable_breadth_evolve,
-                evolution_types=evolution_types
+                evolution_types=evolution_types,
             )
         )
 

@@ -41,5 +41,5 @@ from .tracer import (
     ToolTrace,
     GenericTrace,
     Attributes,
-    TraceData
+    TraceData,
 )

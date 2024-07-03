@@ -15,6 +15,7 @@ from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
 # set up integration
 ###########################################################
 
+
 # set llama index global handler
 def deepeval_callback_handler(**eval_params: Any) -> BaseCallbackHandler:
     return LlamaIndexCallbackHandler(**eval_params)
@@ -46,6 +47,7 @@ nodes = node_parser.get_nodes_from_documents(documents, show_progress=True)
 # Define embedding model
 index = VectorStoreIndex(nodes)
 
+
 async def chatbot(input):
     with Tracer(trace_type="Chatbot") as chatbot_trace:
         # Build query engine
@@ -66,6 +68,7 @@ async def chatbot(input):
 
         return res
 
+
 #############################################################
 ### test chatbot event tracking
 #############################################################
@@ -78,6 +81,7 @@ user_inputs = [
     # "do you offer support",
     # "what are your services"
 ]
+
 
 async def query_and_print(query: str):
     res = await chatbot(query)
