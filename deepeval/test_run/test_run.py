@@ -23,6 +23,7 @@ from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
     is_confident,
+    is_in_ci_env,
 )
 from deepeval.test_run.cache import test_run_cache_manager
 
@@ -41,14 +42,6 @@ class MetricScoreType(BaseModel):
 class MetricScores(BaseModel):
     metric: str
     scores: List[float]
-
-
-class DeploymentConfigs(BaseModel):
-    env: str
-    actor: Optional[str]
-    branch: Optional[str]
-    sha: Optional[str]
-    repo: Optional[str]
 
 
 class MetricsAverageDict:
@@ -88,10 +81,6 @@ class TestRun(BaseModel):
     test_file: Optional[str] = Field(
         None,
         alias="testFile",
-    )
-    deployment: Optional[bool] = Field(True)
-    deployment_configs: Optional[DeploymentConfigs] = Field(
-        None, alias="deploymentConfigs"
     )
     test_cases: List[LLMApiTestCase] = Field(
         alias="testCases", default_factory=lambda: []
@@ -258,8 +247,6 @@ class TestRunManager:
 
     def create_test_run(
         self,
-        deployment: Optional[bool] = False,
-        deployment_configs: Optional[DeploymentConfigs] = None,
         file_name: Optional[str] = None,
         disable_request: Optional[bool] = False,
     ):
@@ -269,8 +256,6 @@ class TestRunManager:
             testCases=[],
             metricsScores=[],
             hyperparameters=None,
-            deployment=deployment,
-            deploymentConfigs=deployment_configs,
             testPassed=None,
             testFailed=None,
         )
@@ -581,7 +566,8 @@ class TestRunManager:
                 "✅ Tests finished! View results on "
                 f"[link={link}]{link}[/link]"
             )
-            if test_run.deployment == False:
+
+            if is_in_ci_env() == False:
                 webbrowser.open(link)
 
         else:

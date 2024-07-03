@@ -171,28 +171,27 @@ def get_is_running_deepeval() -> bool:
         return False
 
 
-def get_deployment_configs() -> Optional[Dict]:
-    if os.getenv("GITHUB_ACTIONS") == "true":
-        env_info = {
-            "env": "GitHub Actions",
-            "actor": os.getenv("GITHUB_ACTOR", None),
-            "sha": os.getenv("GITHUB_SHA", None),
-            "repo": os.getenv("GITHUB_REPOSITORY", None),
-        }
+def is_in_ci_env() -> bool:
+    ci_env_vars = [
+        "GITHUB_ACTIONS",  # GitHub Actions
+        "GITLAB_CI",  # GitLab CI
+        "CIRCLECI",  # CircleCI
+        "JENKINS_URL",  # Jenkins
+        "TRAVIS",  # Travis CI
+        "CI",  # Generic CI indicator used by many services
+        "CONTINUOUS_INTEGRATION",  # Another generic CI indicator
+        "TEAMCITY_VERSION",  # TeamCity
+        "BUILDKITE",  # Buildkite
+        "BITBUCKET_BUILD_NUMBER",  # Bitbucket Pipelines
+        "SYSTEM_TEAMFOUNDATIONCOLLECTIONURI",  # Azure Pipelines
+        "HEROKU_TEST_RUN_ID",  # Heroku CI
+    ]
 
-        branch_ref = os.getenv("GITHUB_REF", "")
-        if branch_ref.startswith("refs/pull/"):
-            is_pull_request = True
-        else:
-            is_pull_request = False
+    for var in ci_env_vars:
+        if os.getenv(var) is not None:
+            return True
 
-        env_info["is_pull_request"] = is_pull_request
-        env_info["branch"] = (
-            branch_ref.replace("refs/heads/", "") if branch_ref else None
-        )
-        return env_info
-
-    return None
+    return False
 
 
 def is_confident():
