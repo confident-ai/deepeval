@@ -149,33 +149,34 @@ There are six optional parameters when using the `generate_red_teaming_goldens` 
 
 - [Optional] `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area. When `contexts` is supplied, the `Synthesizer` generates adversarial goldens **based on information presented in contexts**. If not, they are generated from scratch.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
-- [Optional] `max_goldens`: the maximum number of golden data points to be generated if `contexts` isn't supplied, or the max number of golden datapoints per context if `contexts` is supplied. Adjusting this parameter can influence the size of the resulting dataset. Defaulted to 2.
-- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
-- [Optional] `evolutions`: a list of `RedTeamEvolution`s, specifying methods used during data evolution. Defaulted to all `RedTeamEvolution`s.
-- [Optional] `responses`: a list of `Response`s, representing the red teaming behaviour you are trying to elicit. Defaulted to all `Response`s.
+- [Optional] `max_goldens`: the maximum number of golden to be generated if `contexts` isn't supplied. If `contexts` is supplied, `max_goldens` will be confined to the length of `contexts`. Defaulted to 2.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated `Golden`. Defaulted to 1.
+- [Optional] `attacks`: a list of `RTAdversarialAttack`s, specifying the types of adversarial attacks you want generated for your synthetic `Golden`s. Defaulted to all `RTAdversarialAttack`s.
+- [Optional] `vulnerabilities`: a list of `RTVulnerability`s, representing the undesirable vulnerability you are trying to elicit. Defaulted to all `RTVulnerability`s.
 
 :::info
-`RedTeamEvolution` is an `ENUM` that specifies the different **types of red-teaming** prompts (prompt injection, prompt probing, etc.) you wish to include in your final dataset, while the `Response` `ENUM` is the **type of response you are trying to get your LLM to produce** (hallucination, bias, etc.):
+`RTAdversarialAttack` is an `ENUM` that specifies the different **types of red teaming** attacks (prompt injection, prompt probing, etc.) you wish to include in your final dataset, while the `RTVulnerability` `ENUM` specifies the type of vulnerability and risk you are trying to assess your LLM application on (hallucination, bias, etc.):
 
 ```python
-from deepeval.synthesizer import RedTeamEvolution, Response
+from deepeval.synthesizer import RTAdversarialAttack, RTVulnerability
 
-available_red_teaming_evolutions = [
-    RedTeamEvolution.PROMPT_INJECTION,
-    RedTeamEvolution.PROMPT_PROBING,
-    RedTeamEvolution.GRAY_BOX_ATTACK,
-    RedTeamEvolution.JAIL_BREAKING
+available_red_teaming_attacks = [
+    RTAdversarialAttack.PROMPT_INJECTION,
+    RTAdversarialAttack.PROMPT_PROBING,
+    RTAdversarialAttack.GRAY_BOX_ATTACK,
+    RTAdversarialAttack.JAIL_BREAKING
 ]
 
-available_red_teaming_responses = [
-    Response.HALLUCINATION,
-    Response.OFFENSIVE,
-    Response.BIAS,
-    Response.DATA_LEAKAGE,
-    Response.UNFORMATTED
+available_red_teaming_vulnerabilities = [
+    RTVulnerability.HALLUCINATION,
+    RTVulnerability.OFFENSIVE,
+    RTVulnerability.BIAS,
+    RTVulnerability.DATA_LEAKAGE,
+    RTVulnerability.UNFORMATTED
 ]
 ```
 
+[Click here to learn more](https://www.confident-ai.com/blog/red-teaming-llms-a-step-by-step-guide) about the different types of adversarial attacks and vulnerabilities used for red teaming.
 :::
 
 ## Saving Generated Goldens

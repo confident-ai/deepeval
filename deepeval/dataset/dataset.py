@@ -413,96 +413,25 @@ class EvaluationDataset:
                 "Run `deepeval login` to pull dataset from Confident AI"
             )
 
-    # def generate_goldens_from_scratch(
-    #     self,
-    #     subject: str,
-    #     task: str,
-    #     output_format: str,
-    #     num_initial_goldens: int,
-    #     num_evolutions: int = 1,
-    #     enable_breadth_evolve: bool = False,
-    #     _show_indicator: bool = True,
-    #     evolution_types: List[PromptEvolution] = [
-    #         PromptEvolution.REASONING,
-    #         PromptEvolution.CONCRETIZING,
-    #         PromptEvolution.CONSTRAINED,
-    #         PromptEvolution.COMPARATIVE,
-    #         PromptEvolution.HYPOTHETICAL,
-    #     ],
-    #     synthesizer=None,
-    # ) -> List[Golden]:
-
-    #     from deepeval.synthesizer import Synthesizer
-
-    #     if synthesizer is None:
-    #         synthesizer = Synthesizer()
-    #     else:
-    #         assert isinstance(synthesizer, Synthesizer)
-
-    #     self.goldens.extend(
-    #         synthesizer.generate_goldens_from_scratch(
-    #             subject=subject,
-    #             task=task,
-    #             output_format=output_format,
-    #             num_initial_goldens=num_initial_goldens,
-    #             num_evolutions=num_evolutions,
-    #             enable_breadth_evolve=enable_breadth_evolve,
-    #             _show_indicator=_show_indicator,
-    #             evolution_types=evolution_types,
-    #         )
-    #     )
-
-    # def generate_goldens_from_prompts(
-    #     self,
-    #     prompts: List[str],
-    #     num_evolutions: int = 1,
-    #     enable_breadth_evolve: bool = False,
-    #     _show_indicator: bool = True,
-    #     evolution_types: List[PromptEvolution] = [
-    #         PromptEvolution.REASONING,
-    #         PromptEvolution.CONCRETIZING,
-    #         PromptEvolution.CONSTRAINED,
-    #         PromptEvolution.COMPARATIVE,
-    #         PromptEvolution.HYPOTHETICAL,
-    #     ],
-    #     synthesizer=None,
-    # ):
-    #     from deepeval.synthesizer import Synthesizer
-
-    #     if synthesizer is None:
-    #         synthesizer = Synthesizer()
-    #     else:
-    #         assert isinstance(synthesizer, Synthesizer)
-    #     self.goldens.extend(
-    #         synthesizer.generate_goldens_from_prompts(
-    #             prompts=prompts,
-    #             num_evolutions=num_evolutions,
-    #             enable_breadth_evolve=enable_breadth_evolve,
-    #             _show_indicator=_show_indicator,
-    #             evolution_types=evolution_types,
-    #         )
-    #     )
-
     def generate_red_teaming_goldens(
         self,
         synthesizer=None,
         contexts: Optional[List[List[str]]] = None,
         include_expected_output: bool = False,
         max_goldens: int = 2,
-        num_evolutions: int = 3,
-        enable_breadth_evolve: bool = False,
-        evolutions: List[RedTeamEvolution] = [
-            RedTeamEvolution.PROMPT_INJECTION,
-            RedTeamEvolution.PROMPT_PROBING,
-            RedTeamEvolution.GRAY_BOX_ATTACK,
-            RedTeamEvolution.JAIL_BREAKING,
+        num_evolutions: int = 1,
+        attacks: List[RTAdversarialAttack] = [
+            RTAdversarialAttack.PROMPT_INJECTION,
+            RTAdversarialAttack.PROMPT_PROBING,
+            RTAdversarialAttack.GRAY_BOX_ATTACK,
+            RTAdversarialAttack.JAIL_BREAKING,
         ],
-        responses: List[Response] = [
-            Response.BIAS,
-            Response.DATA_LEAKAGE,
-            Response.HALLUCINATION,
-            Response.OFFENSIVE,
-            Response.UNFORMATTED,
+        vulnerabilities: List[RTVulnerability] = [
+            RTVulnerability.BIAS,
+            RTVulnerability.DATA_LEAKAGE,
+            RTVulnerability.HALLUCINATION,
+            RTVulnerability.OFFENSIVE,
+            RTVulnerability.UNFORMATTED,
         ],
         use_case: UseCase = UseCase.QA,
         _show_indicator: bool = True,
@@ -520,10 +449,9 @@ class EvaluationDataset:
                 include_expected_output=include_expected_output,
                 max_goldens=max_goldens,
                 num_evolutions=num_evolutions,
-                enable_breadth_evolve=enable_breadth_evolve,
-                evolutions=evolutions,
+                attacks=attacks,
                 _show_indicator=_show_indicator,
-                responses=responses,
+                vulnerabilities=vulnerabilities,
                 use_case=use_case,
             )
         )

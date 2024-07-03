@@ -32,13 +32,13 @@ def test_synthesizer():
 #     document_paths=[file_path1, file_path2, file_path3],
 #     max_goldens_per_document=1,
 # )
-# print(goldens)
 # goldens = synthesizer.generate_goldens(contexts=[["Wow what a nice day"]])
-# print(goldens)
-# goldens = synthesizer.generate_red_teaming_goldens()
-# print(goldens)
-# print(goldens)
+# goldens = synthesizer.generate_red_teaming_goldens(
+#     contexts=[["Yesterday my boss gave me a salary bump."]],
+#     include_expected_output=True,
+# )
 
+# synthesizer.save_as(file_type="json", directory="./results")
 
 # module_b_dir = os.path.dirname(os.path.realpath(__file__))
 

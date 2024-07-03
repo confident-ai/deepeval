@@ -14,7 +14,7 @@ import math
 from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
 from deepeval.synthesizer.template_red_team import (
     RedTeamSynthesizerTemplate,
-    RedTeamEvolutionTemplate,
+    RTAdversarialAttackTemplate,
 )
 from deepeval.synthesizer.template_prompt import (
     PromptEvolutionTemplate,
@@ -51,11 +51,11 @@ prompt_evolution_map = {
     "Hypothetical": PromptEvolutionTemplate.hypothetical_scenario_evolution,
 }
 
-red_teaming_evolution_map = {
-    "Prompt Injection": RedTeamEvolutionTemplate.prompt_injection_evolution,
-    "Prompt Probing": RedTeamEvolutionTemplate.prompt_probing_evolution,
-    "Gray Box Attack": RedTeamEvolutionTemplate.gray_box_attack_evolution,
-    "Jailbreaking": RedTeamEvolutionTemplate.jail_breaking_evolution,
+red_teaming_attack_map = {
+    "Prompt Injection": RTAdversarialAttackTemplate.prompt_injection,
+    "Prompt Probing": RTAdversarialAttackTemplate.prompt_probing,
+    "Gray Box Attack": RTAdversarialAttackTemplate.gray_box_attack,
+    "Jailbreaking": RTAdversarialAttackTemplate.jail_breaking,
 }
 
 ##################################################################
@@ -82,129 +82,58 @@ class Synthesizer:
     # Evolution Methods
     #############################################################
 
-    # def _evolve_text_from_prompt(
-    #     self,
-    #     text,
-    #     num_evolutions: int,
-    #     enable_breadth_evolve: bool,
-    #     evolution_types: List[PromptEvolution],
-    # ) -> List[str]:
-    #     # List of method references from EvolutionTemplate
-    #     evolution_methods = [
-    #         prompt_evolution_map[evolution_type.value]
-    #         for evolution_type in evolution_types
-    #     ]
-    #     if enable_breadth_evolve:
-    #         evolution_methods.append(
-    #             PromptEvolutionTemplate.in_breadth_evolution
-    #         )
-
-    #     evolved_texts = [text]
-    #     for i in range(num_evolutions):
-    #         evolution_method = random.choice(evolution_methods)
-    #         prompt = evolution_method(input=evolved_texts[-1])
-    #         if self.using_native_model:
-    #             evolved_text, cost = self.model.generate(prompt)
-    #         else:
-    #             evolved_text = self.model.generate(prompt)
-    #         evolved_texts.append(evolved_text)
-
-    #     return evolved_texts
-
     def _evolve_text(
         self,
         text: str,
         context: List[str],
         num_evolutions: int,
         enable_breadth_evolve: bool,
-        evolutions: List[Evolution | RedTeamEvolution],
-        red_team: bool = False,
-        response: Optional[str] = None,
+        evolutions: List[Evolution],
     ) -> List[str]:
         # List of method references from EvolutionTemplate
         map = evolution_map
-        if red_team:
-            map = red_teaming_evolution_map
         evolution_methods = [map[e.value] for e in evolutions]
 
-        if enable_breadth_evolve and not red_team:
+        if enable_breadth_evolve:
             evolution_methods.append(EvolutionTemplate.in_breadth_evolution)
-        elif enable_breadth_evolve and not red_team:
-            # evolution_methods.append(RedTeamEvolution.in_breadth_evolution)
-            pass
 
         evolved_text = text
         for _ in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
-            prompt = ""
-            if red_team:
-                prompt = evolution_method(
-                    input=evolved_text, context=context, response=response
-                )
-            else:
-                prompt = evolution_method(input=evolved_text, context=context)
+            prompt = evolution_method(input=evolved_text, context=context)
             if self.using_native_model:
                 evolved_text, cost = self.model.generate(prompt)
             else:
                 evolved_text = self.model.generate(prompt)
         return evolved_text
 
-    def _evolve_red_teaming_text(
+    def _evolve_red_teaming_attack(
         self,
         text: str,
         context: List[str],
         num_evolutions: int,
-        enable_breadth_evolve: bool,
-        evolutions: List[RedTeamEvolution],
-        response: Optional[str] = None,
+        attacks: List[RTAdversarialAttack],
+        vulnerability: Optional[RTVulnerability] = None,
     ) -> List[str]:
-        # List of method references from EvolutionTemplate
+        attack = random.choice(attacks)
+        attack_method = red_teaming_attack_map[attack.value]
 
-        evolution = random.choice(evolutions)
-        evolution_method = red_teaming_evolution_map[evolution.value]
-
-        if enable_breadth_evolve:
-            # evolution_methods.append(RedTeamEvolution.in_breadth_evolution)
-            pass
-
-        evolved_text = text
+        evolved_attack = text
         for _ in range(num_evolutions):
-            prompt = evolution_method(
-                input=evolved_text, context=context, response=response
+            prompt = attack_method(
+                input=evolved_attack,
+                context=context,
+                vulnerability=vulnerability,
             )
             if self.using_native_model:
-                evolved_text, cost = self.model.generate(prompt)
+                evolved_attack, cost = self.model.generate(prompt)
             else:
-                evolved_text = self.model.generate(prompt)
-        return evolved_text, evolution
+                evolved_attack = self.model.generate(prompt)
+        return evolved_attack, attack
 
     #############################################################
     # Helper Methods for Goldens Generation
     #############################################################
-
-    # def _generate_from_prompts(
-    #     self,
-    #     prompt: str,
-    #     goldens: List[Golden],
-    #     lock: Lock,
-    #     num_evolutions: int,
-    #     enable_breadth_evolve: bool,
-    #     evolution_types: List[PromptEvolution],
-    # ):
-    #     temp_goldens: List[Golden] = []
-    #     evolved_prompts = self._evolve_text_from_prompt(
-    #         text=prompt,
-    #         num_evolutions=num_evolutions,
-    #         enable_breadth_evolve=enable_breadth_evolve,
-    #         evolution_types=evolution_types,
-    #     )
-    #     new_goldens = [
-    #         Golden(input=evolved_prompt) for evolved_prompt in evolved_prompts
-    #     ]
-    #     temp_goldens.extend(new_goldens)
-
-    #     with lock:
-    #         goldens.extend(temp_goldens)
 
     def _generate_from_contexts(
         self,
@@ -307,10 +236,9 @@ class Synthesizer:
         include_expected_output: bool,
         max_goldens: int,
         lock: Lock,
-        responses: List[Response],
+        vulnerabilities: List[RTVulnerability],
         num_evolutions: int,
-        enable_breadth_evolve: bool,
-        evolutions: List[Evolution],
+        attacks: List[RTAdversarialAttack],
     ):
         def call_model(prompt):
             if self.using_native_model:
@@ -338,34 +266,34 @@ class Synthesizer:
         temp_goldens: List[Golden] = []
         for data in synthetic_data:
             # convert inputs to red-teaming inputs
-            prompt, response = RedTeamSynthesizerTemplate.convert_to_red_team(
-                data.input,
-                context=context,
-                responses=[r.value for r in responses],
+            prompt, vulnerability = (
+                RedTeamSynthesizerTemplate.convert_to_red_team(
+                    data.input,
+                    context=context,
+                    vulnerabilities=[v.value for v in vulnerabilities],
+                )
             )
+
             red_teaming_input = call_model(prompt)
 
             # evolve red-teaming inputs
-            evolved_input, evolution_type = self._evolve_red_teaming_text(
+            evolved_attack, attack_type = self._evolve_red_teaming_attack(
                 red_teaming_input,
                 context=context,
                 num_evolutions=num_evolutions,
-                enable_breadth_evolve=enable_breadth_evolve,
-                evolutions=evolutions,
-                response=response,
+                attacks=attacks,
+                vulnerability=vulnerability,
             )
-
             # determine compliance
             non_compliance_prompt = RedTeamSynthesizerTemplate.non_compliant(
-                evolved_input
+                evolved_attack
             )
             non_compliant = call_model(non_compliance_prompt)
             if non_compliant == "False":
                 # evolve red-teaming inputs
-                golden = Golden(input=evolved_input, context=context)
+                golden = Golden(input=evolved_attack, context=context)
                 if include_expected_output and context is not None:
-                    prompt = ""
-                    if evolution_type != RedTeamEvolution.PROMPT_PROBING:
+                    if attack_type != RTAdversarialAttack.PROMPT_PROBING:
                         prompt = RedTeamSynthesizerTemplate.generate_synthetic_expected_output(
                             input=golden.input,
                             context="\n".join(golden.context),
@@ -387,159 +315,24 @@ class Synthesizer:
     # Main Methods for Golden Generation
     #############################################################
 
-    # def generate_goldens_from_scratch(
-    #     self,
-    #     subject: str,
-    #     task: str,
-    #     output_format: str,
-    #     num_initial_goldens: int,
-    #     num_evolutions: int = 1,
-    #     enable_breadth_evolve: bool = False,
-    #     _show_indicator: bool = True,
-    #     evolution_types: List[PromptEvolution] = [
-    #         PromptEvolution.REASONING,
-    #         PromptEvolution.CONCRETIZING,
-    #         PromptEvolution.CONSTRAINED,
-    #         PromptEvolution.COMPARATIVE,
-    #         PromptEvolution.HYPOTHETICAL,
-    #     ],
-    # ) -> List[Golden]:
-
-    #     prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
-    #         subject=subject,
-    #         task=task,
-    #         output_format=output_format,
-    #         num_initial_goldens=num_initial_goldens,
-    #     )
-    #     if self.using_native_model:
-    #         res, cost = self.model.generate(prompt)
-    #     else:
-    #         res = self.model.generate(prompt)
-    #     data = trimAndLoadJson(res)
-    #     synthetic_data = [SyntheticData(**item) for item in data["data"]]
-    #     prompts = [data.input for data in synthetic_data]
-
-    #     with synthesizer_progress_context(
-    #         self.model.get_model_name(),
-    #         None,
-    #         (num_initial_goldens + 1) * num_evolutions,
-    #         None,
-    #         _show_indicator,
-    #     ):
-    #         goldens: List[Golden] = []
-    #         if self.multithreading:
-    #             lock = Lock()
-
-    #             with ThreadPoolExecutor() as executor:
-    #                 futures = {
-    #                     executor.submit(
-    #                         self._generate_from_prompts,
-    #                         prompt,
-    #                         goldens,
-    #                         lock,
-    #                         num_evolutions,
-    #                         enable_breadth_evolve,
-    #                         evolution_types,
-    #                     ): prompt
-    #                     for prompt in prompts
-    #                 }
-
-    #                 for future in as_completed(futures):
-    #                     future.result()
-    #         else:
-    #             for prompt in prompts:
-    #                 evolved_prompts = self._evolve_text_from_prompt(
-    #                     text=input,
-    #                     num_evolutions=num_evolutions,
-    #                     enable_breadth_evolve=enable_breadth_evolve,
-    #                     evolution_types=evolution_types,
-    #                 )
-    #                 new_goldens = [
-    #                     Golden(input=evolved_prompt)
-    #                     for evolved_prompt in evolved_prompts
-    #                 ]
-    #                 goldens.extend(new_goldens)
-
-    #         self.synthetic_goldens.extend(goldens)
-    #         return goldens
-
-    # def generate_goldens_from_prompts(
-    #     self,
-    #     prompts: List[str],
-    #     num_evolutions: int = 1,
-    #     enable_breadth_evolve: bool = False,
-    #     _show_indicator: bool = True,
-    #     evolution_types: List[PromptEvolution] = [
-    #         PromptEvolution.REASONING,
-    #         PromptEvolution.CONCRETIZING,
-    #         PromptEvolution.CONSTRAINED,
-    #         PromptEvolution.COMPARATIVE,
-    #         PromptEvolution.HYPOTHETICAL,
-    #     ],
-    # ) -> List[Golden]:
-    #     with synthesizer_progress_context(
-    #         self.model.get_model_name(),
-    #         None,
-    #         len(prompts) * num_evolutions,
-    #         None,
-    #         _show_indicator,
-    #     ):
-    #         goldens: List[Golden] = []
-    #         if self.multithreading:
-    #             lock = Lock()
-
-    #             with ThreadPoolExecutor() as executor:
-    #                 futures = {
-    #                     executor.submit(
-    #                         self._generate_from_prompts,
-    #                         prompt,
-    #                         goldens,
-    #                         lock,
-    #                         num_evolutions,
-    #                         enable_breadth_evolve,
-    #                         evolution_types,
-    #                     ): prompt
-    #                     for prompt in prompts
-    #                 }
-
-    #                 for future in as_completed(futures):
-    #                     future.result()
-    #         else:
-    #             for prompt in prompts:
-    #                 evolved_prompts = self._evolve_text_from_prompt(
-    #                     text=prompt,
-    #                     num_evolutions=num_evolutions,
-    #                     enable_breadth_evolve=enable_breadth_evolve,
-    #                     evolution_types=evolution_types,
-    #                 )
-    #                 new_goldens = [
-    #                     Golden(input=evolved_prompt)
-    #                     for evolved_prompt in evolved_prompts
-    #                 ]
-    #                 goldens.extend(new_goldens)
-
-    #         self.synthetic_goldens.extend(goldens)
-    #         return goldens
-
     def generate_red_teaming_goldens(
         self,
         contexts: Optional[List[List[str]]] = None,
         include_expected_output: bool = False,
         max_goldens: int = 2,
-        num_evolutions: int = 3,
-        enable_breadth_evolve: bool = False,
-        evolutions: List[RedTeamEvolution] = [
-            RedTeamEvolution.PROMPT_INJECTION,
-            RedTeamEvolution.PROMPT_PROBING,
-            RedTeamEvolution.GRAY_BOX_ATTACK,
-            RedTeamEvolution.JAIL_BREAKING,
+        num_evolutions: int = 1,
+        attacks: List[RTAdversarialAttack] = [
+            RTAdversarialAttack.PROMPT_INJECTION,
+            RTAdversarialAttack.PROMPT_PROBING,
+            RTAdversarialAttack.GRAY_BOX_ATTACK,
+            RTAdversarialAttack.JAIL_BREAKING,
         ],
-        responses: List[Response] = [
-            Response.BIAS,
-            Response.DATA_LEAKAGE,
-            Response.HALLUCINATION,
-            Response.OFFENSIVE,
-            Response.UNFORMATTED,
+        vulnerabilities: List[RTVulnerability] = [
+            RTVulnerability.BIAS,
+            RTVulnerability.DATA_LEAKAGE,
+            RTVulnerability.HALLUCINATION,
+            RTVulnerability.OFFENSIVE,
+            RTVulnerability.UNFORMATTED,
         ],
         use_case: UseCase = UseCase.QA,
         _show_indicator: bool = True,
@@ -551,16 +344,16 @@ class Synthesizer:
             if not contexts:
                 contexts = [None for i in range(max_goldens)]
             else:
-                num_goldens *= len(contexts)
+                # TODO: confine num goldens to len(contexts) for now
+                num_goldens = len(contexts)
 
-            include_expected_output = True
             with synthesizer_progress_context(
                 self.model.get_model_name(),
                 None,
                 num_goldens,
+                use_case.value,
                 _show_indicator,
             ):
-
                 goldens: List[Golden] = []
                 if self.multithreading:
                     lock = Lock()
@@ -574,10 +367,9 @@ class Synthesizer:
                                 include_expected_output,
                                 max_goldens,
                                 lock,
-                                responses,
+                                vulnerabilities,
                                 num_evolutions,
-                                enable_breadth_evolve,
-                                evolutions,
+                                attacks,
                             ): i
                             for i in range(num_goldens)
                         }
@@ -585,6 +377,7 @@ class Synthesizer:
                         for future in as_completed(futures):
                             future.result()
 
+                self.synthetic_goldens.extend(goldens)
                 return goldens
 
     def generate_goldens(
