@@ -21,37 +21,38 @@ def test_synthesizer():
     synthesizer.save_as(file_type="json", directory="./results")
 
 
-module_b_dir = os.path.dirname(os.path.realpath(__file__))
-file_path1 = os.path.join(module_b_dir, "synthesizer_data", "pdf_example.pdf")
-file_path2 = os.path.join(module_b_dir, "synthesizer_data", "docx_example.docx")
-file_path3 = os.path.join(module_b_dir, "synthesizer_data", "txt_example.txt")
-synthesizer = Synthesizer(
-    embedder=OpenAIEmbeddingModel(model="text-embedding-3-large")
-)
-goldens = synthesizer.generate_goldens_from_docs(
-    document_paths=[file_path1, file_path2, file_path3],
-    max_goldens_per_document=2,
-)
-print(goldens)
-
-
-module_b_dir = os.path.dirname(os.path.realpath(__file__))
-
-file_path1 = os.path.join(module_b_dir, "synthesizer_data", "pdf_example.pdf")
-file_path2 = os.path.join(module_b_dir, "synthesizer_data", "docx_example.docx")
-file_path3 = os.path.join(module_b_dir, "synthesizer_data", "txt_example.txt")
-synthesizer = Synthesizer(
-    embedder=OpenAIEmbeddingModel(model="text-embedding-3-large")
-)
-# synthesizer.generate_goldens_from_docs(
+# module_b_dir = os.path.dirname(os.path.realpath(__file__))
+# file_path1 = os.path.join(module_b_dir, "synthesizer_data", "pdf_example.pdf")
+# file_path2 = os.path.join(module_b_dir, "synthesizer_data", "docx_example.docx")
+# file_path3 = os.path.join(module_b_dir, "synthesizer_data", "txt_example.txt")
+# synthesizer = Synthesizer(
+#     embedder=OpenAIEmbeddingModel(model="text-embedding-3-large")
+# )
+# goldens = synthesizer.generate_goldens_from_docs(
 #     document_paths=[file_path1, file_path2, file_path3],
 #     max_goldens_per_document=2,
 # )
+# print(goldens)
 
 
-dataset.generate_red_team_goldens(max_goldens=2, synthesizer=synthesizer)
+# module_b_dir = os.path.dirname(os.path.realpath(__file__))
 
-dataset.save_as(file_type="json", directory="./results")
+# file_path1 = os.path.join(module_b_dir, "synthesizer_data", "pdf_example.pdf")
+# file_path2 = os.path.join(module_b_dir, "synthesizer_data", "docx_example.docx")
+# file_path3 = os.path.join(module_b_dir, "synthesizer_data", "txt_example.txt")
+# synthesizer = Synthesizer(
+#     embedder=OpenAIEmbeddingModel(model="text-embedding-3-large")
+# )
+# # synthesizer.generate_goldens_from_docs(
+# #     document_paths=[file_path1, file_path2, file_path3],
+# #     max_goldens_per_document=2,
+# # )
+
+# dataset = EvaluationDataset()
+
+# dataset.generate_red_team_goldens(max_goldens=2, synthesizer=synthesizer)
+
+# dataset.save_as(file_type="json", directory="./results")
 
 # dataset.save_as(file_type="json", directory="./results")
 
