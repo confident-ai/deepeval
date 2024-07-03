@@ -2,7 +2,6 @@ from .test_run import (
     TestRun,
     test_run_manager,
     TEMP_FILE_NAME,
-    DeploymentConfigs,
     LLMApiTestCase,
     ConversationalApiTestCase,
 )

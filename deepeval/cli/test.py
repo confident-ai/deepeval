@@ -11,7 +11,6 @@ from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.utils import (
     delete_file_if_exists,
-    get_deployment_configs,
     set_should_ignore_errors,
     set_should_use_cache,
 )
@@ -99,11 +98,6 @@ def run(
 
     if exit_on_first_failure:
         pytest_args.insert(0, "-x")
-
-    deployment_configs = get_deployment_configs()
-    if deployment_configs is not None:
-        deployment_configs_json = json.dumps(deployment_configs)
-        pytest_args.extend(["--deployment", deployment_configs_json])
 
     pytest_args.extend(
         [
