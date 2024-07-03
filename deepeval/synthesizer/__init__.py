@@ -1,8 +1,8 @@
 from .synthesizer import (
     Synthesizer,
-    RedTeamEvolution,
+    RTAdversarialAttack,
     Evolution,
     PromptEvolution,
-    Response,
+    RTVulnerability,
     UseCase,
 )

@@ -29,6 +29,7 @@ def synthesizer_progress_context(
     use_case: str = "QA",
     _show_indicator: bool = True,
 ):
+    print(use_case, ")(*&*(*))")
     with capture_synthesizer_run(max_generations):
         if embedder is None:
             description = f"✨ 🍰 ✨ You're generating up to {max_generations} goldens using DeepEval's latest Synthesizer (using {evaluation_model}, use case={use_case})! This may take a while..."
