@@ -30,8 +30,13 @@ def test_synthesizer():
 # )
 # goldens = synthesizer.generate_goldens_from_docs(
 #     document_paths=[file_path1, file_path2, file_path3],
-#     max_goldens_per_document=2,
+#     max_goldens_per_document=1,
 # )
+# print(goldens)
+# goldens = synthesizer.generate_goldens(contexts=[["Wow what a nice day"]])
+# print(goldens)
+# goldens = synthesizer.generate_red_teaming_goldens()
+# print(goldens)
 # print(goldens)
 
 
@@ -50,7 +55,7 @@ def test_synthesizer():
 
 # dataset = EvaluationDataset()
 
-# dataset.generate_red_team_goldens(max_goldens=2, synthesizer=synthesizer)
+# dataset.generate_red_teaming_goldens(max_goldens=2, synthesizer=synthesizer)
 
 # dataset.save_as(file_type="json", directory="./results")
 

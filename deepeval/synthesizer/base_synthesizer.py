@@ -1,5 +1,4 @@
-from abc import abstractmethod
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 from deepeval.models.base_model import (
     DeepEvalBaseLLM,

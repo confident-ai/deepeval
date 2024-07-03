@@ -28,7 +28,7 @@ from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.dataset.golden import Golden
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.models import OpenAIEmbeddingModel
-from deepeval.synthesizer.synthesizer_types import *
+from deepeval.synthesizer.types import *
 
 valid_file_types = ["csv", "json"]
 
@@ -51,7 +51,7 @@ prompt_evolution_map = {
     "Hypothetical": PromptEvolutionTemplate.hypothetical_scenario_evolution,
 }
 
-red_team_evolution_map = {
+red_teaming_evolution_map = {
     "Prompt Injection": RedTeamEvolutionTemplate.prompt_injection_evolution,
     "Prompt Probing": RedTeamEvolutionTemplate.prompt_probing_evolution,
     "Gray Box Attack": RedTeamEvolutionTemplate.gray_box_attack_evolution,
@@ -82,34 +82,34 @@ class Synthesizer:
     # Evolution Methods
     #############################################################
 
-    def _evolve_text_from_prompt(
-        self,
-        text,
-        num_evolutions: int,
-        enable_breadth_evolve: bool,
-        evolution_types: List[PromptEvolution],
-    ) -> List[str]:
-        # List of method references from EvolutionTemplate
-        evolution_methods = [
-            prompt_evolution_map[evolution_type.value]
-            for evolution_type in evolution_types
-        ]
-        if enable_breadth_evolve:
-            evolution_methods.append(
-                PromptEvolutionTemplate.in_breadth_evolution
-            )
+    # def _evolve_text_from_prompt(
+    #     self,
+    #     text,
+    #     num_evolutions: int,
+    #     enable_breadth_evolve: bool,
+    #     evolution_types: List[PromptEvolution],
+    # ) -> List[str]:
+    #     # List of method references from EvolutionTemplate
+    #     evolution_methods = [
+    #         prompt_evolution_map[evolution_type.value]
+    #         for evolution_type in evolution_types
+    #     ]
+    #     if enable_breadth_evolve:
+    #         evolution_methods.append(
+    #             PromptEvolutionTemplate.in_breadth_evolution
+    #         )
 
-        evolved_texts = [text]
-        for i in range(num_evolutions):
-            evolution_method = random.choice(evolution_methods)
-            prompt = evolution_method(input=evolved_texts[-1])
-            if self.using_native_model:
-                evolved_text, cost = self.model.generate(prompt)
-            else:
-                evolved_text = self.model.generate(prompt)
-            evolved_texts.append(evolved_text)
+    #     evolved_texts = [text]
+    #     for i in range(num_evolutions):
+    #         evolution_method = random.choice(evolution_methods)
+    #         prompt = evolution_method(input=evolved_texts[-1])
+    #         if self.using_native_model:
+    #             evolved_text, cost = self.model.generate(prompt)
+    #         else:
+    #             evolved_text = self.model.generate(prompt)
+    #         evolved_texts.append(evolved_text)
 
-        return evolved_texts
+    #     return evolved_texts
 
     def _evolve_text(
         self,
@@ -117,15 +117,15 @@ class Synthesizer:
         context: List[str],
         num_evolutions: int,
         enable_breadth_evolve: bool,
-        evolution_types: List[Evolution | RedTeamEvolution],
+        evolutions: List[Evolution | RedTeamEvolution],
         red_team: bool = False,
         response: Optional[str] = None,
     ) -> List[str]:
         # List of method references from EvolutionTemplate
         map = evolution_map
         if red_team:
-            map = red_team_evolution_map
-        evolution_methods = [map[e.value] for e in evolution_types]
+            map = red_teaming_evolution_map
+        evolution_methods = [map[e.value] for e in evolutions]
 
         if enable_breadth_evolve and not red_team:
             evolution_methods.append(EvolutionTemplate.in_breadth_evolution)
@@ -149,19 +149,19 @@ class Synthesizer:
                 evolved_text = self.model.generate(prompt)
         return evolved_text
 
-    def _evolve_red_team_text(
+    def _evolve_red_teaming_text(
         self,
         text: str,
         context: List[str],
         num_evolutions: int,
         enable_breadth_evolve: bool,
-        evolution_types: List[RedTeamEvolution],
+        evolutions: List[RedTeamEvolution],
         response: Optional[str] = None,
     ) -> List[str]:
         # List of method references from EvolutionTemplate
 
-        evolution_type = random.choice(evolution_types)
-        evolution_method = red_team_evolution_map[evolution_type.value]
+        evolution = random.choice(evolutions)
+        evolution_method = red_teaming_evolution_map[evolution.value]
 
         if enable_breadth_evolve:
             # evolution_methods.append(RedTeamEvolution.in_breadth_evolution)
@@ -176,35 +176,35 @@ class Synthesizer:
                 evolved_text, cost = self.model.generate(prompt)
             else:
                 evolved_text = self.model.generate(prompt)
-        return evolved_text, evolution_type
+        return evolved_text, evolution
 
     #############################################################
     # Helper Methods for Goldens Generation
     #############################################################
 
-    def _generate_from_prompts(
-        self,
-        prompt: str,
-        goldens: List[Golden],
-        lock: Lock,
-        num_evolutions: int,
-        enable_breadth_evolve: bool,
-        evolution_types: List[PromptEvolution],
-    ):
-        temp_goldens: List[Golden] = []
-        evolved_prompts = self._evolve_text_from_prompt(
-            text=prompt,
-            num_evolutions=num_evolutions,
-            enable_breadth_evolve=enable_breadth_evolve,
-            evolution_types=evolution_types,
-        )
-        new_goldens = [
-            Golden(input=evolved_prompt) for evolved_prompt in evolved_prompts
-        ]
-        temp_goldens.extend(new_goldens)
+    # def _generate_from_prompts(
+    #     self,
+    #     prompt: str,
+    #     goldens: List[Golden],
+    #     lock: Lock,
+    #     num_evolutions: int,
+    #     enable_breadth_evolve: bool,
+    #     evolution_types: List[PromptEvolution],
+    # ):
+    #     temp_goldens: List[Golden] = []
+    #     evolved_prompts = self._evolve_text_from_prompt(
+    #         text=prompt,
+    #         num_evolutions=num_evolutions,
+    #         enable_breadth_evolve=enable_breadth_evolve,
+    #         evolution_types=evolution_types,
+    #     )
+    #     new_goldens = [
+    #         Golden(input=evolved_prompt) for evolved_prompt in evolved_prompts
+    #     ]
+    #     temp_goldens.extend(new_goldens)
 
-        with lock:
-            goldens.extend(temp_goldens)
+    #     with lock:
+    #         goldens.extend(temp_goldens)
 
     def _generate_from_contexts(
         self,
@@ -217,7 +217,7 @@ class Synthesizer:
         enable_breadth_evolve: bool,
         source_files: Optional[List[str]],
         index: int,
-        evolution_types: List[Evolution],
+        evolutions: List[Evolution],
     ):
         prompt: List = SynthesizerTemplate.generate_synthetic_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
@@ -237,7 +237,7 @@ class Synthesizer:
                 context=context,
                 num_evolutions=num_evolutions,
                 enable_breadth_evolve=enable_breadth_evolve,
-                evolution_types=evolution_types,
+                evolutions=evolutions,
             )
             source_file = (
                 source_files[index] if source_files is not None else None
@@ -300,7 +300,7 @@ class Synthesizer:
         with lock:
             goldens.extend(temp_goldens)
 
-    def _generate_red_team_from_contexts(
+    def _generate_red_teaming_from_contexts(
         self,
         context: Optional[List[str]],
         goldens: List[Golden],
@@ -310,7 +310,7 @@ class Synthesizer:
         responses: List[Response],
         num_evolutions: int,
         enable_breadth_evolve: bool,
-        evolution_types: List[Evolution],
+        evolutions: List[Evolution],
     ):
         def call_model(prompt):
             if self.using_native_model:
@@ -343,15 +343,15 @@ class Synthesizer:
                 context=context,
                 responses=[r.value for r in responses],
             )
-            red_team_input = call_model(prompt)
+            red_teaming_input = call_model(prompt)
 
             # evolve red-teaming inputs
-            evolved_input, evolution_type = self._evolve_red_team_text(
-                red_team_input,
+            evolved_input, evolution_type = self._evolve_red_teaming_text(
+                red_teaming_input,
                 context=context,
                 num_evolutions=num_evolutions,
                 enable_breadth_evolve=enable_breadth_evolve,
-                evolution_types=evolution_types,
+                evolutions=evolutions,
                 response=response,
             )
 
@@ -387,148 +387,148 @@ class Synthesizer:
     # Main Methods for Golden Generation
     #############################################################
 
-    def generate_goldens_from_scratch(
-        self,
-        subject: str,
-        task: str,
-        output_format: str,
-        num_initial_goldens: int,
-        num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
-        _show_indicator: bool = True,
-        evolution_types: List[PromptEvolution] = [
-            PromptEvolution.REASONING,
-            PromptEvolution.CONCRETIZING,
-            PromptEvolution.CONSTRAINED,
-            PromptEvolution.COMPARATIVE,
-            PromptEvolution.HYPOTHETICAL,
-        ],
-    ) -> List[Golden]:
+    # def generate_goldens_from_scratch(
+    #     self,
+    #     subject: str,
+    #     task: str,
+    #     output_format: str,
+    #     num_initial_goldens: int,
+    #     num_evolutions: int = 1,
+    #     enable_breadth_evolve: bool = False,
+    #     _show_indicator: bool = True,
+    #     evolution_types: List[PromptEvolution] = [
+    #         PromptEvolution.REASONING,
+    #         PromptEvolution.CONCRETIZING,
+    #         PromptEvolution.CONSTRAINED,
+    #         PromptEvolution.COMPARATIVE,
+    #         PromptEvolution.HYPOTHETICAL,
+    #     ],
+    # ) -> List[Golden]:
 
-        prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
-            subject=subject,
-            task=task,
-            output_format=output_format,
-            num_initial_goldens=num_initial_goldens,
-        )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-        else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res)
-        synthetic_data = [SyntheticData(**item) for item in data["data"]]
-        prompts = [data.input for data in synthetic_data]
+    #     prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
+    #         subject=subject,
+    #         task=task,
+    #         output_format=output_format,
+    #         num_initial_goldens=num_initial_goldens,
+    #     )
+    #     if self.using_native_model:
+    #         res, cost = self.model.generate(prompt)
+    #     else:
+    #         res = self.model.generate(prompt)
+    #     data = trimAndLoadJson(res)
+    #     synthetic_data = [SyntheticData(**item) for item in data["data"]]
+    #     prompts = [data.input for data in synthetic_data]
 
-        with synthesizer_progress_context(
-            self.model.get_model_name(),
-            None,
-            (num_initial_goldens + 1) * num_evolutions,
-            None,
-            _show_indicator,
-        ):
-            goldens: List[Golden] = []
-            if self.multithreading:
-                lock = Lock()
+    #     with synthesizer_progress_context(
+    #         self.model.get_model_name(),
+    #         None,
+    #         (num_initial_goldens + 1) * num_evolutions,
+    #         None,
+    #         _show_indicator,
+    #     ):
+    #         goldens: List[Golden] = []
+    #         if self.multithreading:
+    #             lock = Lock()
 
-                with ThreadPoolExecutor() as executor:
-                    futures = {
-                        executor.submit(
-                            self._generate_from_prompts,
-                            prompt,
-                            goldens,
-                            lock,
-                            num_evolutions,
-                            enable_breadth_evolve,
-                            evolution_types,
-                        ): prompt
-                        for prompt in prompts
-                    }
+    #             with ThreadPoolExecutor() as executor:
+    #                 futures = {
+    #                     executor.submit(
+    #                         self._generate_from_prompts,
+    #                         prompt,
+    #                         goldens,
+    #                         lock,
+    #                         num_evolutions,
+    #                         enable_breadth_evolve,
+    #                         evolution_types,
+    #                     ): prompt
+    #                     for prompt in prompts
+    #                 }
 
-                    for future in as_completed(futures):
-                        future.result()
-            else:
-                for prompt in prompts:
-                    evolved_prompts = self._evolve_text_from_prompt(
-                        text=input,
-                        num_evolutions=num_evolutions,
-                        enable_breadth_evolve=enable_breadth_evolve,
-                        evolution_types=evolution_types,
-                    )
-                    new_goldens = [
-                        Golden(input=evolved_prompt)
-                        for evolved_prompt in evolved_prompts
-                    ]
-                    goldens.extend(new_goldens)
+    #                 for future in as_completed(futures):
+    #                     future.result()
+    #         else:
+    #             for prompt in prompts:
+    #                 evolved_prompts = self._evolve_text_from_prompt(
+    #                     text=input,
+    #                     num_evolutions=num_evolutions,
+    #                     enable_breadth_evolve=enable_breadth_evolve,
+    #                     evolution_types=evolution_types,
+    #                 )
+    #                 new_goldens = [
+    #                     Golden(input=evolved_prompt)
+    #                     for evolved_prompt in evolved_prompts
+    #                 ]
+    #                 goldens.extend(new_goldens)
 
-            self.synthetic_goldens.extend(goldens)
-            return goldens
+    #         self.synthetic_goldens.extend(goldens)
+    #         return goldens
 
-    def generate_goldens_from_prompts(
-        self,
-        prompts: List[str],
-        num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
-        _show_indicator: bool = True,
-        evolution_types: List[PromptEvolution] = [
-            PromptEvolution.REASONING,
-            PromptEvolution.CONCRETIZING,
-            PromptEvolution.CONSTRAINED,
-            PromptEvolution.COMPARATIVE,
-            PromptEvolution.HYPOTHETICAL,
-        ],
-    ) -> List[Golden]:
-        with synthesizer_progress_context(
-            self.model.get_model_name(),
-            None,
-            len(prompts) * num_evolutions,
-            None,
-            _show_indicator,
-        ):
-            goldens: List[Golden] = []
-            if self.multithreading:
-                lock = Lock()
+    # def generate_goldens_from_prompts(
+    #     self,
+    #     prompts: List[str],
+    #     num_evolutions: int = 1,
+    #     enable_breadth_evolve: bool = False,
+    #     _show_indicator: bool = True,
+    #     evolution_types: List[PromptEvolution] = [
+    #         PromptEvolution.REASONING,
+    #         PromptEvolution.CONCRETIZING,
+    #         PromptEvolution.CONSTRAINED,
+    #         PromptEvolution.COMPARATIVE,
+    #         PromptEvolution.HYPOTHETICAL,
+    #     ],
+    # ) -> List[Golden]:
+    #     with synthesizer_progress_context(
+    #         self.model.get_model_name(),
+    #         None,
+    #         len(prompts) * num_evolutions,
+    #         None,
+    #         _show_indicator,
+    #     ):
+    #         goldens: List[Golden] = []
+    #         if self.multithreading:
+    #             lock = Lock()
 
-                with ThreadPoolExecutor() as executor:
-                    futures = {
-                        executor.submit(
-                            self._generate_from_prompts,
-                            prompt,
-                            goldens,
-                            lock,
-                            num_evolutions,
-                            enable_breadth_evolve,
-                            evolution_types,
-                        ): prompt
-                        for prompt in prompts
-                    }
+    #             with ThreadPoolExecutor() as executor:
+    #                 futures = {
+    #                     executor.submit(
+    #                         self._generate_from_prompts,
+    #                         prompt,
+    #                         goldens,
+    #                         lock,
+    #                         num_evolutions,
+    #                         enable_breadth_evolve,
+    #                         evolution_types,
+    #                     ): prompt
+    #                     for prompt in prompts
+    #                 }
 
-                    for future in as_completed(futures):
-                        future.result()
-            else:
-                for prompt in prompts:
-                    evolved_prompts = self._evolve_text_from_prompt(
-                        text=prompt,
-                        num_evolutions=num_evolutions,
-                        enable_breadth_evolve=enable_breadth_evolve,
-                        evolution_types=evolution_types,
-                    )
-                    new_goldens = [
-                        Golden(input=evolved_prompt)
-                        for evolved_prompt in evolved_prompts
-                    ]
-                    goldens.extend(new_goldens)
+    #                 for future in as_completed(futures):
+    #                     future.result()
+    #         else:
+    #             for prompt in prompts:
+    #                 evolved_prompts = self._evolve_text_from_prompt(
+    #                     text=prompt,
+    #                     num_evolutions=num_evolutions,
+    #                     enable_breadth_evolve=enable_breadth_evolve,
+    #                     evolution_types=evolution_types,
+    #                 )
+    #                 new_goldens = [
+    #                     Golden(input=evolved_prompt)
+    #                     for evolved_prompt in evolved_prompts
+    #                 ]
+    #                 goldens.extend(new_goldens)
 
-            self.synthetic_goldens.extend(goldens)
-            return goldens
+    #         self.synthetic_goldens.extend(goldens)
+    #         return goldens
 
-    def generate_red_team_goldens(
+    def generate_red_teaming_goldens(
         self,
         contexts: Optional[List[List[str]]] = None,
         include_expected_output: bool = False,
         max_goldens: int = 2,
         num_evolutions: int = 3,
         enable_breadth_evolve: bool = False,
-        evolution_types: List[RedTeamEvolution] = [
+        evolutions: List[RedTeamEvolution] = [
             RedTeamEvolution.PROMPT_INJECTION,
             RedTeamEvolution.PROMPT_PROBING,
             RedTeamEvolution.GRAY_BOX_ATTACK,
@@ -568,7 +568,7 @@ class Synthesizer:
                     with ThreadPoolExecutor() as executor:
                         futures = {
                             executor.submit(
-                                self._generate_red_team_from_contexts,
+                                self._generate_red_teaming_from_contexts,
                                 contexts[i],
                                 goldens,
                                 include_expected_output,
@@ -577,7 +577,7 @@ class Synthesizer:
                                 responses,
                                 num_evolutions,
                                 enable_breadth_evolve,
-                                evolution_types,
+                                evolutions,
                             ): i
                             for i in range(num_goldens)
                         }
@@ -596,7 +596,7 @@ class Synthesizer:
         enable_breadth_evolve: bool = False,
         source_files: Optional[List[str]] = None,
         _show_indicator: bool = True,
-        evolution_types: List[Evolution] = [
+        evolutions: List[Evolution] = [
             Evolution.REASONING,
             Evolution.MULTICONTEXT,
             Evolution.CONCRETIZING,
@@ -633,7 +633,7 @@ class Synthesizer:
                                 enable_breadth_evolve,
                                 source_files,
                                 index,
-                                evolution_types,
+                                evolutions,
                             ): context
                             for index, context in enumerate(contexts)
                         }
@@ -662,7 +662,7 @@ class Synthesizer:
                                 context=context,
                                 num_evolutions=num_evolutions,
                                 enable_breadth_evolve=enable_breadth_evolve,
-                                evolution_types=evolution_types,
+                                evolutions=evolutions,
                             )
                             source_file = (
                                 source_files[i]
@@ -770,7 +770,7 @@ class Synthesizer:
         chunk_overlap: int = 0,
         num_evolutions: int = 1,
         enable_breadth_evolve: bool = False,
-        evolution_types: List[Evolution] = [
+        evolutions: List[Evolution] = [
             Evolution.REASONING,
             Evolution.MULTICONTEXT,
             Evolution.CONCRETIZING,
@@ -816,7 +816,7 @@ class Synthesizer:
                 enable_breadth_evolve,
                 source_files,
                 _show_indicator=False,
-                evolution_types=evolution_types,
+                evolutions=evolutions,
             )
 
     def save_as(self, file_type: str, directory: str) -> str:
