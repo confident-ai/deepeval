@@ -166,13 +166,9 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         }
 
         if "exception" in processed_payload:
+            trace_kwargs['status'] = TraceStatus.ERROR
             trace_instance = GenericTrace(
-                traceProvider=TraceProvider.LLAMA_INDEX,
-                type=self.convert_event_type_to_deepeval_trace_type(event_type),
-                executionTime=perf_counter(),
-                name=event_type,
-                status=TraceStatus.ERROR,
-                traces=[],
+                **trace_kwargs,
             )
 
         ### Different Attributes ###############################

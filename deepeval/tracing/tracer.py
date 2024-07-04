@@ -15,6 +15,7 @@ from deepeval.event import track
 
 
 class TraceProvider(Enum):
+    LANGCHAIN = "LANGCHAIN"
     LLAMA_INDEX = "LLAMA_INDEX"
     DEFAULT = "DEFAULT"
     CUSTOM = "CUSTOM"
@@ -44,6 +45,16 @@ class LlamaIndexTraceType(Enum):
     SYNTHESIZE = "Synthesize"
     TOOL = "Tool"
 
+class LangChainTraceType(Enum):
+    AGENT = "Agent"
+    CHAIN = "Chain"
+    EMBEDDING = "Embedding"
+    LLM = "LLM"
+    QUERY = "Query"
+    RERANKING = "Reranking"
+    RETRIEVER = "Retriever"
+    SYNTHESIZE = "Synthesize"
+    TOOL = "Tool"
 
 class TraceStatus(Enum):
     SUCCESS = "Success"
@@ -342,8 +353,6 @@ class Tracer:
         )
         trace_manager.append_to_trace_stack(trace_instance)
 
-        print("Tracing " + self.name + "... ")
-
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -544,11 +553,8 @@ class Tracer:
     # change to attributes and custom attributes
     def set_attributes(self, attributes: Attributes):
         if self.trace_provider == TraceProvider.CUSTOM:
-            assert (
-                isinstance(attributes, GenericAttributes),
-                f"Attributes must be of type GenericAttributes for CUSTOM Traces",
-            )
-
+            assert (isinstance(attributes, GenericAttributes), f"Attributes must be of type GenericAttributes for CUSTOM Traces")
+            
         # append trace instance to stack
         self.attributes = attributes
 
