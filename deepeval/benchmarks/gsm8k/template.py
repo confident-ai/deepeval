@@ -25,7 +25,9 @@ class GSM8KTemplate:
         prompt += "**Problem**: " + input + "\n**Answer**: \n\n"
 
         # define ouptut confinement
-        prompt += "Make sure to conclude your output with the numerical answer. "
+        prompt += (
+            "Make sure to conclude your output with the numerical answer. "
+        )
         if enable_cot:
             prompt += "Let's think step-by-step."
         else:

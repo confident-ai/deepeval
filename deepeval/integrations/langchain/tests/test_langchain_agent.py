@@ -37,7 +37,9 @@ llm_with_tools = llm.bind_tools(tools)
 from langchain.agents.format_scratchpad.openai_tools import (
     format_to_openai_tool_messages,
 )
-from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputParser
+from langchain.agents.output_parsers.openai_tools import (
+    OpenAIToolsAgentOutputParser,
+)
 
 agent = (
     {
@@ -56,4 +58,3 @@ from langchain.agents import AgentExecutor
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 list(agent_executor.stream({"input": "How many letters in the word eudca"}))
-
