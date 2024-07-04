@@ -218,6 +218,7 @@ class SummarizationEvaluator(BaseEvaluator):
             feedback=metric.reason,
         )
 
+
 class BiasEvaluator(BaseEvaluator):
     def __init__(
         self,

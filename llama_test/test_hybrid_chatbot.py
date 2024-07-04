@@ -9,7 +9,13 @@ from openai import AsyncOpenAI
 import asyncio
 import os
 
-from deepeval.tracing import Tracer, TraceType, LlmAttributes, QueryAttributes, GenericAttributes
+from deepeval.tracing import (
+    Tracer,
+    TraceType,
+    LlmAttributes,
+    QueryAttributes,
+    GenericAttributes,
+)
 from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
 
 ########################################################
@@ -77,10 +83,7 @@ class RAGPipeline:
 
             # set parameters
             custom_trace.set_attributes(
-                attributes=GenericAttributes(
-                    input=query,
-                    output=combined_nodes
-                )
+                attributes=GenericAttributes(input=query, output=combined_nodes)
             )
             return combined_nodes
 
@@ -111,7 +114,10 @@ class RAGPipeline:
                     completion_token_count=response.usage.completion_tokens,
                     total_token_count=response.usage.total_tokens,
                     prompt_template="Context: _____\n\nQuery: _____\n\nResponse:",
-                    prompt_template_variables={"context": context, "prompt": prompt}
+                    prompt_template_variables={
+                        "context": context,
+                        "prompt": prompt,
+                    },
                 )
             )
             return output
@@ -123,10 +129,7 @@ class RAGPipeline:
 
             # set parameters and track event
             query_trace.set_attributes(
-                attributes=QueryAttributes(
-                    input=query_text,
-                    output=response
-                )
+                attributes=QueryAttributes(input=query_text, output=response)
             )
             query_trace.track(
                 input=query_text,
@@ -149,16 +152,19 @@ user_inputs = [
     # "what are your services"
 ]
 
+
 async def query_and_print(engine: RAGPipeline, query: str):
     print(query)
     res = await engine.aquery(query)
     print("end of " + str(query))
+
 
 async def main():
     engine = RAGPipeline(data_dir="data")
 
     tasks = [query_and_print(engine, query) for query in user_inputs]
     await asyncio.gather(*tasks)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
