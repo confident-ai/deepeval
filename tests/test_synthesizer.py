@@ -20,14 +20,21 @@ def test_synthesizer():
     )
     synthesizer.save_as(file_type="json", directory="./results")
 
-
 # module_b_dir = os.path.dirname(os.path.realpath(__file__))
 # file_path1 = os.path.join(module_b_dir, "synthesizer_data", "pdf_example.pdf")
 # file_path2 = os.path.join(module_b_dir, "synthesizer_data", "docx_example.docx")
 # file_path3 = os.path.join(module_b_dir, "synthesizer_data", "txt_example.txt")
-# synthesizer = Synthesizer(
-#     embedder=OpenAIEmbeddingModel(model="text-embedding-3-large")
-# )
+
+synthesizer = Synthesizer(
+    embedder=OpenAIEmbeddingModel(model="text-embedding-3-large")
+)
+results = synthesizer.generate_goldens_from_scratch(
+    subject="red-teaming prompts", 
+    task="elicit discriminatory responses from LLMs", 
+    output_format="string less than 15 words", 
+    num_initial_goldens=5)
+print(results)
+
 # goldens = synthesizer.generate_goldens_from_docs(
 #     document_paths=[file_path1, file_path2, file_path3],
 #     max_goldens_per_document=1,
@@ -41,17 +48,6 @@ def test_synthesizer():
 # synthesizer.save_as(file_type="json", directory="./results")
 
 # module_b_dir = os.path.dirname(os.path.realpath(__file__))
-
-# file_path1 = os.path.join(module_b_dir, "synthesizer_data", "pdf_example.pdf")
-# file_path2 = os.path.join(module_b_dir, "synthesizer_data", "docx_example.docx")
-# file_path3 = os.path.join(module_b_dir, "synthesizer_data", "txt_example.txt")
-# synthesizer = Synthesizer(
-#     embedder=OpenAIEmbeddingModel(model="text-embedding-3-large")
-# )
-# # synthesizer.generate_goldens_from_docs(
-# #     document_paths=[file_path1, file_path2, file_path3],
-# #     max_goldens_per_document=2,
-# # )
 
 # dataset = EvaluationDataset()
 

@@ -82,6 +82,35 @@ class Synthesizer:
     # Evolution Methods
     #############################################################
 
+    def _evolve_text_from_prompt(
+        self,
+        text,
+        num_evolutions: int,
+        enable_breadth_evolve: bool,
+        evolution_types: List[PromptEvolution],
+    ) -> List[str]:
+        # List of method references from EvolutionTemplate
+        evolution_methods = [
+            prompt_evolution_map[evolution_type.value]
+            for evolution_type in evolution_types
+        ]
+        if enable_breadth_evolve:
+            evolution_methods.append(
+                PromptEvolutionTemplate.in_breadth_evolution
+            )
+
+        evolved_texts = [text]
+        for i in range(num_evolutions):
+            evolution_method = random.choice(evolution_methods)
+            prompt = evolution_method(input=evolved_texts[-1])
+            if self.using_native_model:
+                evolved_text, cost = self.model.generate(prompt)
+            else:
+                evolved_text = self.model.generate(prompt)
+            evolved_texts.append(evolved_text)
+
+        return evolved_texts
+
     def _evolve_text(
         self,
         text: str,
@@ -134,6 +163,30 @@ class Synthesizer:
     #############################################################
     # Helper Methods for Goldens Generation
     #############################################################
+
+    def _generate_from_prompts(
+        self,
+        prompt: str,
+        goldens: List[Golden],
+        lock: Lock,
+        num_evolutions: int,
+        enable_breadth_evolve: bool,
+        evolution_types: List[PromptEvolution],
+    ):
+        temp_goldens: List[Golden] = []
+        evolved_prompts = self._evolve_text_from_prompt(
+            text=prompt,
+            num_evolutions=num_evolutions,
+            enable_breadth_evolve=enable_breadth_evolve,
+            evolution_types=evolution_types,
+        )
+        new_goldens = [
+            Golden(input=evolved_prompt) for evolved_prompt in evolved_prompts
+        ]
+        temp_goldens.extend(new_goldens)
+
+        with lock:
+            goldens.extend(temp_goldens)
 
     def _generate_from_contexts(
         self,
@@ -315,6 +368,82 @@ class Synthesizer:
     # Main Methods for Golden Generation
     #############################################################
 
+    def generate_goldens_from_scratch(
+        self,
+        subject: str,
+        task: str,
+        output_format: str,
+        num_initial_goldens: int,
+        num_evolutions: int = 1,
+        enable_breadth_evolve: bool = False,
+        _show_indicator: bool = True,
+        evolution_types: List[PromptEvolution] = [
+            PromptEvolution.REASONING,
+            PromptEvolution.CONCRETIZING,
+            PromptEvolution.CONSTRAINED,
+            PromptEvolution.COMPARATIVE,
+            PromptEvolution.HYPOTHETICAL,
+        ],
+    ) -> List[Golden]:
+
+        prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
+            subject=subject,
+            task=task,
+            output_format=output_format,
+            num_initial_goldens=num_initial_goldens,
+        )
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+        else:
+            res = self.model.generate(prompt)
+        data = trimAndLoadJson(res)
+        synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        prompts = [data.input for data in synthetic_data]
+
+        with synthesizer_progress_context(
+            self.model.get_model_name(),
+            None,
+            (num_initial_goldens + 1) * num_evolutions,
+            None,
+            _show_indicator,
+        ):
+            goldens: List[Golden] = []
+            if self.multithreading:
+                lock = Lock()
+
+                with ThreadPoolExecutor() as executor:
+                    futures = {
+                        executor.submit(
+                            self._generate_from_prompts,
+                            prompt,
+                            goldens,
+                            lock,
+                            num_evolutions,
+                            enable_breadth_evolve,
+                            evolution_types,
+                        ): prompt
+                        for prompt in prompts
+                    }
+
+                    for future in as_completed(futures):
+                        future.result()
+            else:
+                for prompt in prompts:
+                    evolved_prompts = self._evolve_text_from_prompt(
+                        text=input,
+                        num_evolutions=num_evolutions,
+                        enable_breadth_evolve=enable_breadth_evolve,
+                        evolution_types=evolution_types,
+                    )
+                    new_goldens = [
+                        Golden(input=evolved_prompt)
+                        for evolved_prompt in evolved_prompts
+                    ]
+                    goldens.extend(new_goldens)
+
+            self.synthetic_goldens.extend(goldens)
+            return goldens
+        
     def generate_red_teaming_goldens(
         self,
         contexts: Optional[List[List[str]]] = None,

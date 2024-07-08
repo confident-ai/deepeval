@@ -36,11 +36,12 @@ As you'll learn later, an embedding model is only used when using the `generate_
 
 ## Using Synthesizer As A Standalone
 
-There are 3 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
+There are 4 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
 
 1. Generating synthetic `Golden`s using **context extracted from documents.**
 2. Generating synthetic `Golden`s from a **list of provided context.**
 3. Generating synthetic adversarial `Golden`s for red teaming.
+4. Generating synthetic `Golden`s from **scratch**
 
 ### 1. Generating From Documents
 
@@ -179,6 +180,71 @@ available_red_teaming_vulnerabilities = [
 [Click here to learn more](https://www.confident-ai.com/blog/red-teaming-llms-a-step-by-step-guide) about the different types of adversarial attacks and vulnerabilities used for red teaming.
 :::
 
+### 4. Generating From Scratch
+
+If you do not have a list of example prompts, or wish to solely rely on an LLM generation for synthesis, you can also generate synthetic `Golden`s simply by specifying the subject, task, and output format you wish your prompts to follow.
+
+:::tip
+Generating goldens from scratch is especially helpful when you wish to **evaluate your LLM on a specific task**, such as red-teaming or text-to-SQL use cases!
+:::
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+synthesizer.generate_goldens_from_scratch(
+    subject="Harmful and toxic prompts, with emphasis on dark humor",
+    task="Red-team LLMs",
+    output_format="string",
+    num_initial_goldens=25,
+    num_evolutions=20
+)
+```
+
+This method is a **2-step function** that first generates a list of prompts about a given subject for a certain task and in a certain output format, before using the generated list of prompts to generate more prompts through data evolution.
+
+:::info```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+synthesizer.generate_goldens_from_scratch(
+subject="Harmful and toxic prompts, with emphasis on dark humor",
+task="Red-team LLMs",
+output_format="string",
+num_initial_goldens=25,
+num_evolutions=20
+)
+
+````
+
+This method is a **2-step function** that first generates a list of prompts about a given subject for a certain task and in a certain output format, before using the generated list of prompts to generate more prompts through data evolution.
+
+:::info
+The subject, task, and output format parameters are all strings that are inserted into a predefined prompt template, meaning these parameters are **flexible and will need to be iterated on** for optimal results.
+:::
+
+There are four mandatory and three optional parameters when using the `generate_goldens_from_docs` method:
+
+- `subject`: a string, specifying the subject and nature of your generated `Golden`s
+- `task`: a string, representing the purpose of these evaluation `Golden`s
+- `output_format`: a string, representing the expected output format. This is not equivalent to python `type`s but simply gives you more control over the structure of your synthetic data.
+- `num_initial_goldens`: the number of goldens generated before consequent evolutions
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated prompt. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
+- [Optional] `enable_breadth_evolve`: a boolean which when set to `True`, introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
+- [Optional] `evolution_types`: a list of `PromptEvolution`, specifying methods used during data evolution. Defaulted to all `PromptEvolution`s.
+The subject, task, and output format parameters are all strings that are inserted into a predefined prompt template, meaning these parameters are **flexible and will need to be iterated on** for optimal results.
+:::
+
+There are four mandatory and three optional parameters when using the `generate_goldens_from_docs` method:
+
+- `subject`: a string, specifying the subject and nature of your generated `Golden`s
+- `task`: a string, representing the purpose of these evaluation `Golden`s
+- `output_format`: a string, representing the expected output format. This is not equivalent to python `type`s but simply gives you more control over the structure of your synthetic data.
+- `num_initial_goldens`: the number of goldens generated before consequent evolutions
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated prompt. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
+- [Optional] `enable_breadth_evolve`: a boolean which when set to `True`, introduces a **wider variety of context modifications**, enhancing the dataset's diversity. Defaulted to `False`.
+- [Optional] `evolution_types`: a list of `PromptEvolution`, specifying methods used during data evolution. Defaulted to all `PromptEvolution`s.
+
 ## Saving Generated Goldens
 
 To not accidentally lose any generated synthetic `Golden`, you can use the `save_as()` method:
@@ -188,7 +254,7 @@ synthesizer.save_as(
     file_type='json', # or 'csv'
     directory="./synthetic_data"
 )
-```
+````
 
 ## Using Synthesizer Within An Evaluation Dataset
 
