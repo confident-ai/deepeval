@@ -70,7 +70,7 @@ class DeepEvalBaseLLM(ABC):
         raise AttributeError
 
     @abstractmethod
-    async def get_model_name(self, *args, **kwargs) -> str:
+    def get_model_name(self, *args, **kwargs) -> str:
         pass
 
 
