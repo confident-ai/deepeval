@@ -8,7 +8,7 @@ class HumanEvalTemplate:
     @staticmethod
     def generate_output(input: str, task: HumanEvalTask):
 
-        prompt = "Complete the following function with a temperature of 0.8.\n"
+        prompt = "Complete the following function.\n"
         prompt += input
         prompt += "Only output the function with the following entry_point: `{ep}` in string format.".format(
             ep=task.value
