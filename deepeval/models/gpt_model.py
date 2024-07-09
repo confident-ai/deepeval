@@ -1,5 +1,8 @@
 import logging
 import openai
+import instructor
+from openai import OpenAI, AsyncOpenAI
+from pydantic import BaseModel
 
 from typing import Optional, Tuple
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
@@ -55,6 +58,7 @@ class GPTModel(DeepEvalBaseLLM):
             model_name = default_gpt_model
 
         self._openai_api_key = _openai_api_key
+        self.is_azure_model: bool
         # args and kwargs will be passed to the underlying model, in load_model function
         self.args = args
         self.kwargs = kwargs
@@ -92,7 +96,7 @@ class GPTModel(DeepEvalBaseLLM):
                 *self.args,
                 **self.kwargs,
             )
-
+        
         return ChatOpenAI(
             model_name=self.model_name,
             openai_api_key=self._openai_api_key,
@@ -100,27 +104,51 @@ class GPTModel(DeepEvalBaseLLM):
             **self.kwargs,
         )
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
-        after=log_retry_error,
-    )
-    def generate(self, prompt: str) -> Tuple[str, float]:
-        chat_model = self.load_model()
-        with get_openai_callback() as cb:
-            res = chat_model.invoke(prompt)
-            return res.content, cb.total_cost
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
         after=log_retry_error,
     )
-    async def a_generate(self, prompt: str) -> Tuple[str, float]:
-        chat_model = self.load_model()
-        with get_openai_callback() as cb:
-            res = await chat_model.ainvoke(prompt)
-            return res.content, cb.total_cost
+    def generate(
+        self, 
+        prompt: str, 
+        pydantic_model: Optional[BaseModel] = None
+        ) -> Tuple[str, float]:
+        if pydantic_model == None:
+            chat_model = self.load_model()
+            with get_openai_callback() as cb:
+                res = chat_model.invoke(prompt)
+                return res.content, cb.total_cost
+        elif pydantic_model != None:
+            client = instructor.from_openai(OpenAI())
+            return client.chat.completions.create(
+                model=self.model_name,
+                response_model=pydantic_model,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(openai.RateLimitError),
+        after=log_retry_error,
+    )
+    async def a_generate(self, 
+        prompt: str, 
+        pydantic_model: Optional[BaseModel] = None
+        ) -> Tuple[str, float]:
+        if pydantic_model == None:
+            chat_model = self.load_model()
+            with get_openai_callback() as cb:
+                res = await chat_model.ainvoke(prompt)
+                return res.content, cb.total_cost
+        else:
+            client = instructor.from_openai(AsyncOpenAI())
+            return await client.chat.completions.create(
+                model=self.model_name,
+                response_model=pydantic_model,
+                messages=[{"role": "user", "content": prompt}],
+            )            
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
@@ -183,3 +211,5 @@ class GPTModel(DeepEvalBaseLLM):
             return "azure openai"
         elif self.model_name:
             return self.model_name
+
+    
