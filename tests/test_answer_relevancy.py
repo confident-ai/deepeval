@@ -81,3 +81,11 @@ def test_answer_relevancy():
         retrieval_context=[one, two, three],
     )
     assert_test(test_case, [metric])
+
+test_case = LLMTestCase(
+        input="What is your name",
+        actual_output="Idk",
+        retrieval_context=[one, two, three],
+    )
+metric = AnswerRelevancyMetric(threshold=0.5, verbose_mode=True)
+metric.measure(test_case=test_case)

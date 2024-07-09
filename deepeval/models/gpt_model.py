@@ -144,11 +144,12 @@ class GPTModel(DeepEvalBaseLLM):
                 return res.content, cb.total_cost
         else:
             client = instructor.from_openai(AsyncOpenAI())
-            return await client.chat.completions.create(
+            response = await client.chat.completions.create(
                 model=self.model_name,
                 response_model=pydantic_model,
                 messages=[{"role": "user", "content": prompt}],
             )            
+            response
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),

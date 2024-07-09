@@ -18,18 +18,12 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-
+from deepeval.metrics.answer_relevancy.models import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
-
-
-class AnswerRelvancyVerdict(BaseModel):
-    verdict: str
-    reason: str = Field(default=None)
-
 
 class AnswerRelevancyMetric(BaseMetric):
     def __init__(
@@ -132,12 +126,11 @@ class AnswerRelevancyMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, Reason)
             self.evaluation_cost += cost
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res = await self.model.a_generate(prompt, Reason)
+        return res.reason
 
     def _generate_reason(self, input: str) -> str:
         if self.include_reason is False:
@@ -155,13 +148,11 @@ class AnswerRelevancyMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, Reason)
             self.evaluation_cost += cost
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res = self.model.generate(prompt, Reason)
+        return res.reason
 
     async def _a_generate_verdicts(
         self, input: str
@@ -174,12 +165,11 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output=self.statements,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, Verdicts)
             self.evaluation_cost += cost
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+            res = await self.model.a_generate(prompt, Verdicts)
+        verdicts = [item for item in res.verdicts]
         return verdicts
 
     def _generate_verdicts(self, input: str) -> List[AnswerRelvancyVerdict]:
@@ -191,12 +181,11 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output=self.statements,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, Verdicts)
             self.evaluation_cost += cost
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+            res = self.model.generate(prompt, Verdicts)
+        verdicts = [item for item in res.verdicts]
         return verdicts
 
     async def _a_generate_statements(
@@ -207,12 +196,11 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output=actual_output,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, Statements)
             self.evaluation_cost += cost
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["statements"]
+            res = await self.model.a_generate(prompt, Statements)
+        return res.statements
 
     def _generate_statements(
         self,
@@ -222,12 +210,11 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output=actual_output,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost =  self.model.generate(prompt, Statements)
             self.evaluation_cost += cost
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["statements"]
+            res =  self.model.generate(prompt, Statements)
+        return res.statements
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
@@ -255,3 +242,5 @@ class AnswerRelevancyMetric(BaseMetric):
     @property
     def __name__(self):
         return "Answer Relevancy"
+
+
