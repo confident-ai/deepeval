@@ -21,28 +21,13 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.summarization.template import SummarizationTemplate
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.summarization.models import *
+from deepeval.metrics.faithfulness.models import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
-
-
-class SummarizationAlignmentVerdict(BaseModel):
-    # yes, no, or idk
-    verdict: str
-    reason: str = Field(default=None)
-
-
-class SummarizationCoverageVerdict(BaseModel):
-    summary_verdict: str
-    original_verdict: str
-    question: str = Field(default=None)
-
-
-class ScoreType(Enum):
-    ALIGNMENT = "Alignment"
-    COVERAGE = "Coverage"
 
 
 class SummarizationMetric(BaseMetric):
@@ -206,13 +191,14 @@ class SummarizationMetric(BaseMetric):
 """
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res: Reason = await self.model.a_generate(prompt, Reason)
+            return res.reason
+        
 
     def _generate_reason(self) -> str:
         if self.include_reason is False:
@@ -253,11 +239,11 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res: Reason = self.model.generate(prompt, Reason)
+            return res.reason
 
     def _calculate_score(self, score_type: ScoreType) -> float:
         if score_type == ScoreType.ALIGNMENT:
@@ -298,11 +284,12 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["answers"]
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["answers"]
-
+            res: Answers = await self.model.a_generate(prompt, Answers)
+            return res.answers
+        
     def _generate_answers(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_answers(
             questions=self.assessment_questions, text=text
@@ -310,30 +297,33 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["answers"]
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["answers"]
+            res: Answers = self.model.generate(prompt, Answers)
+            return res.answers
 
     async def _a_generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["questions"]
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["questions"]
+            res: Questions = await self.model.a_generate(prompt, Questions)
+            return res.questions
 
     def _generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["questions"]
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["questions"]
+            res: Questions = self.model.generate(prompt, Questions)
+            return res.questions
 
     async def _a_generate_coverage_verdicts(
         self, test_case: LLMTestCase
@@ -404,13 +394,15 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [
+                SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+            ]
+            return verdicts
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [
-            SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
-        ]
-        return verdicts
+            res: Verdict = await self.model.a_generate(prompt, Verdict)
+            verdicts = [item for item in res.verdicts]
+            return verdicts
 
     def _generate_alignment_verdicts(
         self,
@@ -425,13 +417,15 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [
+                SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+            ]
+            return verdicts
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [
-            SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
-        ]
-        return verdicts
+            res: Verdict = self.model.generate(prompt, Verdict)
+            verdicts = [item for item in res.verdicts]
+            return verdicts
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
@@ -439,22 +433,24 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["claims"]
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["claims"]
-
+            res: Claim = await self.model.a_generate(prompt, Claim)
+            return res.claims
+        
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["claims"]
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["claims"]
-
+            res: Claim = self.model.generate(prompt, Claim)
+            return res.claims
+        
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False

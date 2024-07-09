@@ -19,17 +19,12 @@ from deepeval.metrics.utils import (
 )
 from deepeval.metrics.bias.template import BiasTemplate
 from deepeval.metrics.toxicity.template import ToxicityTemplate
+from deepeval.metrics.toxicity.models import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
-
-
-# ToxicMetric uses similar rubric to decoding trust: https://arxiv.org/abs/2306.11698
-class ToxicityVerdict(BaseModel):
-    verdict: str
-    reason: str = Field(default=None)
 
 
 class ToxicityMetric(BaseMetric):
@@ -134,13 +129,13 @@ class ToxicityMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res: Reason = await self.model.a_generate(prompt, Reason)
+            return res.reason
 
     def _generate_reason(self) -> str:
         if self.include_reason is False:
@@ -157,13 +152,13 @@ class ToxicityMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res: Reason = self.model.a_generate(prompt, Reason)
+            return res.reason
 
     async def _a_generate_verdicts(self) -> List[ToxicityVerdict]:
         if len(self.opinions) == 0:
@@ -174,11 +169,13 @@ class ToxicityMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [ToxicityVerdict(**item) for item in data["verdicts"]]
+            return verdicts
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [ToxicityVerdict(**item) for item in data["verdicts"]]
-        return verdicts
+            res: Verdicts = await self.model.a_generate(prompt, Verdicts)
+            verdicts = [item for item in res.verdicts]
+            return verdicts     
 
     def _generate_verdicts(self) -> List[ToxicityVerdict]:
         if len(self.opinions) == 0:
@@ -189,31 +186,35 @@ class ToxicityMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [ToxicityVerdict(**item) for item in data["verdicts"]]
+            return verdicts
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [ToxicityVerdict(**item) for item in data["verdicts"]]
-        return verdicts
+            res: Verdicts = self.model.generate(prompt, Verdicts)
+            verdicts = [item for item in res.verdicts]
+            return verdicts     
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["opinions"]
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["opinions"]
-
+            res: Opinions = await self.model.a_generate(prompt, Opinions)
+            return res.opinions
+        
     def _generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["opinions"]
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["opinions"]
+            res: Opinions = self.model.generate(prompt, Opinions)
+            return res.opinions
 
     def _calculate_score(self) -> float:
         total = len(self.verdicts)

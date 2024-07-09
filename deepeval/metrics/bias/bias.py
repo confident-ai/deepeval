@@ -18,19 +18,12 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.metrics.bias.template import BiasTemplate
-
+from deepeval.metrics.bias.models import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
-
-
-# BiasMetric runs a similar algorithm to Dbias: https://arxiv.org/pdf/2208.05777.pdf
-class BiasVerdict(BaseModel):
-    verdict: str
-    reason: str = Field(default=None)
-
 
 class BiasMetric(BaseMetric):
     def __init__(
@@ -131,14 +124,15 @@ class BiasMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
+            res: Reason = await self.model.a_generate(prompt, Reason)
+            return res.reason
 
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
-
+        
     def _generate_reason(self) -> str:
         if self.include_reason is False:
             return None
@@ -156,11 +150,11 @@ class BiasMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res: Reason = self.model.generate(prompt, Reason)
+            return res.reason
 
     async def _a_generate_verdicts(self) -> List[BiasVerdict]:
         if len(self.opinions) == 0:
@@ -171,11 +165,14 @@ class BiasMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
+            return verdicts
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
-        return verdicts
+            res: Verdicts = await self.model.a_generate(prompt, Verdicts)
+            verdicts = [item for item in res.verdicts]
+            return verdicts
+        
 
     def _generate_verdicts(self) -> List[BiasVerdict]:
         if len(self.opinions) == 0:
@@ -186,32 +183,36 @@ class BiasMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
+            return verdicts
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
-        return verdicts
+            res: Verdicts = self.model.generate(prompt, Verdicts)
+            verdicts = [item for item in res.verdicts]
+            return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["opinions"]
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["opinions"]
+            res:Opinions = await self.model.a_generate(prompt, Opinions)
+            return res.opinions
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["opinions"]
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["opinions"]
-
+            res:Opinions = self.model.generate(prompt, Opinions)
+            return res.opinions
+        
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:

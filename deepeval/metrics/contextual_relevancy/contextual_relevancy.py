@@ -21,18 +21,13 @@ from deepeval.metrics.contextual_relevancy.template import (
     ContextualRelevancyTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.contextual_relevancy.models import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
     LLMTestCaseParams.RETRIEVAL_CONTEXT,
 ]
-
-
-class ContextualRelevancyVerdict(BaseModel):
-    verdict: str
-    reason: str = Field(default=None)
-
 
 class ContextualRelevancyMetric(BaseMetric):
     def __init__(
@@ -133,13 +128,13 @@ class ContextualRelevancyMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res: Reason = await self.model.a_generate(prompt, Reason)
+            return res.reason
 
     def _generate_reason(self, input: str):
         if self.include_reason is False:
@@ -158,11 +153,12 @@ class ContextualRelevancyMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res: Reason = self.model.generate(prompt, Reason)
+            return res.reason
+        
 
     def _calculate_score(self):
         total_verdicts = len(self.verdicts)
@@ -185,7 +181,11 @@ class ContextualRelevancyMetric(BaseMetric):
             prompt = ContextualRelevancyTemplate.generate_verdict(
                 text=text, context=context
             )
-            task = asyncio.create_task(self.model.a_generate(prompt))
+            if self.using_native_model:
+                task = asyncio.create_task(self.model.a_generate(prompt))
+                
+            else:
+                task = asyncio.create_task(self.model.a_generate(prompt, ContextualRelevancyVerdict))
             tasks.append(task)
 
         results = await asyncio.gather(*tasks)
@@ -198,10 +198,8 @@ class ContextualRelevancyMetric(BaseMetric):
                 verdicts.append(verdict)
         else:
             for res in results:
-                data = trimAndLoadJson(res, self)
-                verdict = ContextualRelevancyVerdict(**data)
+                verdict = res
                 verdicts.append(verdict)
-
         return verdicts
 
     def _generate_verdicts(
@@ -215,10 +213,12 @@ class ContextualRelevancyMetric(BaseMetric):
             if self.using_native_model:
                 res, cost = self.model.generate(prompt)
                 self.evaluation_cost += cost
+                data = trimAndLoadJson(res, self)
+                verdict = ContextualRelevancyVerdict(**data)
             else:
                 res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            verdict = ContextualRelevancyVerdict(**data)
+                verdict = res
+           
             verdicts.append(verdict)
 
         return verdicts

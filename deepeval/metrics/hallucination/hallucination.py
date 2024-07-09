@@ -18,17 +18,13 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.hallucination.template import HallucinationTemplate
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.hallucination.models import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
     LLMTestCaseParams.CONTEXT,
 ]
-
-
-class HallucinationVerdict(BaseModel):
-    verdict: str
-    reason: str = Field(default=None)
 
 
 class HallucinationMetric(BaseMetric):
@@ -132,13 +128,14 @@ class HallucinationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
+            res: Reason = await self.model.a_generate(prompt, Reason)
+            return res.reason
 
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
 
     def _generate_reason(self):
         if self.include_reason is False:
@@ -161,11 +158,11 @@ class HallucinationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res: Reason = self.model.generate(prompt, Reason)
+            return res.reason
 
     async def _a_generate_verdicts(
         self, actual_output: str, contexts: List[str]
@@ -177,11 +174,14 @@ class HallucinationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [HallucinationVerdict(**item) for item in data["verdicts"]]
+            return verdicts
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [HallucinationVerdict(**item) for item in data["verdicts"]]
-        return verdicts
+            res: Verdicts = await self.model.a_generate(prompt, Verdicts)
+            verdicts = [item for item in res.verdicts]
+            return verdicts
+        
 
     def _generate_verdicts(
         self, actual_output: str, contexts: List[str]
@@ -193,11 +193,13 @@ class HallucinationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [HallucinationVerdict(**item) for item in data["verdicts"]]
+            return verdicts
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [HallucinationVerdict(**item) for item in data["verdicts"]]
-        return verdicts
+            res: Verdicts = self.model.generate(prompt, Verdicts)
+            verdicts = [item for item in res.verdicts]
+            return verdicts
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)

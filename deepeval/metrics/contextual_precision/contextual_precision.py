@@ -20,7 +20,7 @@ from deepeval.metrics.contextual_precision.template import (
     ContextualPrecisionTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-
+from deepeval.metrics.contextual_precision.models import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -28,11 +28,6 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.RETRIEVAL_CONTEXT,
     LLMTestCaseParams.EXPECTED_OUTPUT,
 ]
-
-
-class ContextualPrecisionVerdict(BaseModel):
-    verdict: str
-    reason: str
 
 
 class ContextualPrecisionMetric(BaseMetric):
@@ -138,13 +133,13 @@ class ContextualPrecisionMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            res:Reason = await self.model.a_generate(prompt, Reason)
+            return res.reason
 
     def _generate_reason(self, input: str):
         if self.include_reason is False:
@@ -163,11 +158,12 @@ class ContextualPrecisionMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
+            res:Reason = self.model.generate(prompt, Reason)
+            return res.reason
 
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
 
     async def _a_generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
@@ -180,13 +176,15 @@ class ContextualPrecisionMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [
+                ContextualPrecisionVerdict(**item) for item in data["verdicts"]
+            ]
+            return verdicts
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [
-            ContextualPrecisionVerdict(**item) for item in data["verdicts"]
-        ]
-        return verdicts
+            res:Verdicts = await self.model.a_generate(prompt, Verdicts)
+            verdicts = [item for item in res.verdicts]
+            return verdicts
 
     def _generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
@@ -199,13 +197,15 @@ class ContextualPrecisionMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [
+                ContextualPrecisionVerdict(**item) for item in data["verdicts"]
+            ]
+            return verdicts
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [
-            ContextualPrecisionVerdict(**item) for item in data["verdicts"]
-        ]
-        return verdicts
+            res: Verdicts = self.model.generate(prompt, Verdicts)
+            verdicts = [item for item in res.verdicts]
+            return verdicts
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
