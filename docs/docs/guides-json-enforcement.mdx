@@ -168,4 +168,8 @@ Instructor simplifies the process of extracting structured data, such as JSON, f
 
 Deepeval metrics will automatically look for the `pydantic_model` argument in custom LLMs. If supplied, it will use the associated `pydantic` model for the task. If the `pydantic_model` field is not provided, the evaluation will still run, but there is a higher chance of the evaluation not completing due to invalid JSON output from the LLM.
 
-Regardless, before running evaluations, you should test your generate function to ensure that the `pydantic` models are being correctly configured to prevent issues that may arise during the evaluation process.
+:::caution
+The `pydantic_model` field should always be of type `BaseModel`!
+:::
+
+Regardless, before running evaluations, you should test your generate function to ensure that the `pydantic` models are being correctly configured to prevent issues that may arise during the evaluation process. You should also be aware that there is a tradeoff in evaluation accuracy when using JSON-pydantic confinement.
