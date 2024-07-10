@@ -1,5 +1,6 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
+import inspect
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -136,9 +137,13 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"] 
-        else:
+        elif 'pydantic_model' in inspect.getfullargspec(self.model.generate)[0]:
             res: Reason = await self.model.a_generate(prompt, Reason)
             return res.reason
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["reason"] 
         
     def _generate_reason(self, input: str) -> str:
         if self.include_reason is False:
@@ -160,9 +165,13 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        else:
+        elif 'pydantic_model' in inspect.getfullargspec(self.model.generate)[0]:
             res: Reason = self.model.generate(prompt, Reason)
             return res.reason
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
 
     async def _a_generate_verdicts(
         self, input: str
@@ -179,10 +188,14 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
-        else:
+        elif 'pydantic_model' in inspect.getfullargspec(self.model.generate)[0]:
             res:Verdicts = await self.model.a_generate(prompt, Verdicts)
-            print(res)
             return [item for item in res.verdicts]    
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+
         
     def _generate_verdicts(self, input: str) -> List[AnswerRelvancyVerdict]:
         if len(self.statements) == 0:
@@ -197,9 +210,13 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
-        else:
+        elif 'pydantic_model' in inspect.getfullargspec(self.model.generate)[0]:
             res:Verdicts = self.model.generate(prompt, Verdicts)
-            return [item for item in res.verdicts]            
+            return [item for item in res.verdicts]    
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]  
         
     async def _a_generate_statements(
         self,
@@ -213,9 +230,13 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["statements"]
-        else:
+        elif 'pydantic_model' in inspect.getfullargspec(self.model.generate)[0]:
             res: Statements = await self.model.a_generate(prompt, Statements)
             return res.statements
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["statements"]
         
     def _generate_statements(
         self,
@@ -229,10 +250,14 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["statements"]
-        else:
+        elif 'pydantic_model' in inspect.getfullargspec(self.model.generate)[0]:
             res: Statements = self.model.generate(prompt, Statements)
             return res.statements
-
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["statements"]
+        
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
