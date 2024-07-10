@@ -1,6 +1,7 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 import asyncio
+import inspect
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -132,9 +133,12 @@ class ContextualRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
             res: Reason = await self.model.a_generate(prompt, Reason)
             return res.reason
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
 
     def _generate_reason(self, input: str):
         if self.include_reason is False:
@@ -155,10 +159,13 @@ class ContextualRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
             res: Reason = self.model.generate(prompt, Reason)
             return res.reason
-        
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
 
     def _calculate_score(self):
         total_verdicts = len(self.verdicts)
@@ -181,11 +188,11 @@ class ContextualRelevancyMetric(BaseMetric):
             prompt = ContextualRelevancyTemplate.generate_verdict(
                 text=text, context=context
             )
-            if self.using_native_model:
+            if self.using_native_model or 'pydantic_model' not in inspect.signature(self.model.a_generate).parameters:
                 task = asyncio.create_task(self.model.a_generate(prompt))
-                
             else:
                 task = asyncio.create_task(self.model.a_generate(prompt, ContextualRelevancyVerdict))
+                print(inspect.signature(self.model.a_generate).parameters)
             tasks.append(task)
 
         results = await asyncio.gather(*tasks)
@@ -196,10 +203,16 @@ class ContextualRelevancyMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 verdict = ContextualRelevancyVerdict(**data)
                 verdicts.append(verdict)
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
             for res in results:
                 verdict = res
                 verdicts.append(verdict)
+        else:
+            for res in results:
+                data = trimAndLoadJson(res, self)
+                verdict = ContextualRelevancyVerdict(**data)
+                verdicts.append(verdict)
+
         return verdicts
 
     def _generate_verdicts(
@@ -215,9 +228,13 @@ class ContextualRelevancyMetric(BaseMetric):
                 self.evaluation_cost += cost
                 data = trimAndLoadJson(res, self)
                 verdict = ContextualRelevancyVerdict(**data)
-            else:
+            elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
                 res = self.model.generate(prompt)
                 verdict = res
+            else:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdict = ContextualRelevancyVerdict(**data)
            
             verdicts.append(verdict)
 

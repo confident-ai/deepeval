@@ -2,6 +2,7 @@
 
 from typing import Optional, List, Tuple, Union, Dict
 from pydantic import BaseModel
+import inspect
 from langchain.schema import AIMessage
 import math
 from deepeval.metrics import BaseMetric
@@ -184,9 +185,13 @@ class GEval(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["steps"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
             res: Steps = await self.model.a_generate(prompt, Steps)
             return res.steps
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["steps"]
 
     def _generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
@@ -203,9 +208,13 @@ class GEval(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["steps"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
             res: Steps = self.model.generate(prompt, Steps)
             return res.steps
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["steps"]
 
     async def _a_evaluate(
         self, test_case: LLMTestCase
@@ -253,9 +262,13 @@ class GEval(BaseMetric):
                 self.evaluation_cost += cost
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reason"]
-            else:
+            elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
                 res: ReasonScore = await self.model.a_generate(prompt, ReasonScore)
                 return res.score, res.reason
+            else:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         text = """"""
@@ -299,9 +312,13 @@ class GEval(BaseMetric):
                 self.evaluation_cost += cost
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reason"]
-            else:
+            elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
                 res: ReasonScore = self.model.generate(prompt, ReasonScore)
                 return res.score, res.reason
+            else:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["score"], data["reason"]
 
     def generate_weighted_summed_score(
         self, raw_score: int, raw_response: AIMessage

@@ -2,6 +2,7 @@ from typing import List, Optional, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 import asyncio
+import inspect
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -195,10 +196,13 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
             res: Reason = await self.model.a_generate(prompt, Reason)
             return res.reason
-        
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
 
     def _generate_reason(self) -> str:
         if self.include_reason is False:
@@ -241,9 +245,13 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
             res: Reason = self.model.generate(prompt, Reason)
             return res.reason
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
 
     def _calculate_score(self, score_type: ScoreType) -> float:
         if score_type == ScoreType.ALIGNMENT:
@@ -286,9 +294,13 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["answers"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
             res: Answers = await self.model.a_generate(prompt, Answers)
             return res.answers
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["answers"]
         
     def _generate_answers(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_answers(
@@ -299,9 +311,13 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["answers"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
             res: Answers = self.model.generate(prompt, Answers)
             return res.answers
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["answers"]
 
     async def _a_generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
@@ -310,9 +326,13 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["questions"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
             res: Questions = await self.model.a_generate(prompt, Questions)
             return res.questions
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["questions"]
 
     def _generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
@@ -321,9 +341,13 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["questions"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
             res: Questions = self.model.generate(prompt, Questions)
             return res.questions
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["questions"]
 
     async def _a_generate_coverage_verdicts(
         self, test_case: LLMTestCase
@@ -399,9 +423,16 @@ class SummarizationMetric(BaseMetric):
                 SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
             ]
             return verdicts
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
             res: Verdict = await self.model.a_generate(prompt, Verdict)
             verdicts = [item for item in res.verdicts]
+            return verdicts
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            verdicts = [
+                SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+            ]
             return verdicts
 
     def _generate_alignment_verdicts(
@@ -422,11 +453,18 @@ class SummarizationMetric(BaseMetric):
                 SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
             ]
             return verdicts
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
             res: Verdict = self.model.generate(prompt, Verdict)
             verdicts = [item for item in res.verdicts]
             return verdicts
-
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            verdicts = [
+                SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+            ]
+            return verdicts
+            
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
@@ -435,9 +473,13 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["claims"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
             res: Claim = await self.model.a_generate(prompt, Claim)
             return res.claims
+        else:
+            res = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["claims"]
         
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
@@ -447,9 +489,13 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["claims"]
-        else:
+        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
             res: Claim = self.model.generate(prompt, Claim)
             return res.claims
+        else:
+            res = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["claims"]
         
     def is_successful(self) -> bool:
         if self.error is not None:
