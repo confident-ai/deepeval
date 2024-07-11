@@ -4,17 +4,76 @@ title: JSON Enforcement
 sidebar_label: JSON Enforcement
 ---
 
-`deepeval` metrics allow you to use **any custom LLM for evaluation**, from LangChain and Llama-Index modules to Hugging Face’s Transformer models. Most of these metrics utilize these custom LLMs to generate verdicts, statements, and other types of LLM-generated responses to produce the final metric score for each test case. These generated responses are often prompted to be in JSON format.
+If you've ever used **custom LLMs** to evaluate your test cases in `deepeval`, you may have encountered the following error:
+
+```bash
+_ValueError: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model_
+```
+
+`deepeval` metrics allow you to use **any custom LLM for evaluation**, from LangChain modules to Hugging Face’s Transformer models. Most of these metrics utilize custom LLMs to generate reasons, verdicts, statements, and other types of LLM-generated responses, which serve as criteria for calculating the final metric score for each test case.
 
 :::warning
-However, the responses **do not always come out as complete JSON objects**, causing the deepeval metric to raise the error: “_ValueError: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model,_” which prevents the metric from completing the evaluation.
+However, each custom LLM is **prompted to return a JSON object**, and it's often the case that these objects are **deformed**, causing `deepeval` to raise the above error! These deformities come in a variety of formats, from missing brackets, to incomplete strings, to mismatched keys.
+
+For example:
+
+```python
+{
+    "reaso: "The actual output does directly not address the input"
+
+# Issues:
+# 1. Missing closing bracket at the end.
+# 2. The key "reaso" is misspelled and the string is not closed properly.
+```
+
 :::
 
-**In GPT-4 or GPT-4o, this issue almost never occurs**. However, for smaller and less powerful LLMs, this happens because prompt engineering alone is insufficient to produce a valid JSON output. Often, it’s simply a case of a missing “}” or a misspelled key. Regardless of what’s causing the invalid JSON, it’s important to find a workaround since this process stops the entire evaluation.
+When using SOTA models like GPT-4 or GPT-4o, this is almost always never a problem. However, for _smaller and less powerful LLMs, prompt engineering alone is not sufficient to enforce JSON outputs_. As a result, it's vital to find a workaround, since this error stops the entire evaluation process.
 
-This guide will show you various methods to confine your LLM output by leveraging pydantic models to validate your output.
+This guide will demonstrate **various methods to confine your LLM output** by leveraging Pydantic models for validation. These models ensure that the JSON objects outputted adhere to predefined schemas, which helps prevent issues like missing brackets or incomplete strings.
 
-## Hugging Face models
+## JSON Enforcement libraries
+
+### The `lm-format-enforcer` Library
+
+The **LM-Format-Enforcer** is a versatile library designed to standardize the output formats of language models. It supports Python-based language models across various platforms, including popular frameworks such as Transformers, LangChain, LlamaIndex, llama.cpp, vLLM, Haystack, NVIDIA, TensorRT-LLM, and ExLlamaV2. For comprehensive details about the package and advanced usage instructions, [please visit the LM-format-enforcer github page](https://github.com/noamgat/lm-format-enforcer).
+
+The LM-Format-Enforcer combines a **character-level parser** with a **tokenizer prefix tree**. Unlike other libraries that strictly enforce output formats, this method enables LLMs to sequentially generate tokens that meet output format constraints, thereby enhancing the quality of the output.
+
+### The `instructor` Library
+
+**Instructor** is a user-friendly python library built on top of Pydantic. It enables straightforward confinement of your LLM's output by encapsulating your LLM client within an Instructor method. It simplifies the process of extracting structured data, such as JSON, from LLMs including GPT-3.5, GPT-4, GPT-4-Vision, and open-source models like Mistral/Mixtral, Anyscale, Ollama, and llama-cpp-python. For more information on advanced usage or integration with other models not covered here, [please consult the documentation](https://github.com/jxnl/instructor).
+
+## Tutorials
+
+To enforce JSON output in a custom `DeepEvalLLM`, you can supply an optional `schema` argument, which should be a Pydantic `BaseModel`, to your custom LLM's generate method. However, you can still run metrics without enforcing JSON output by omitting the schema argument.
+
+```python
+class Mistral7B(DeepEvalBaseLLM):
+
+    def generate(self, prompt: str, schema: BaseModel) -> str:
+        ...
+
+    async def a_generate(self, prompt: str, schema: BaseModel) -> str:
+        ...
+```
+
+:::caution
+When supplied a `schema`, your generate function **must always output a model of type `schema`**. Otherwise, simply return your LLM output.
+:::
+
+LLM JSON confinement is possible across **a range of LLM models**, including:
+
+- Hugging Face models (Mistral-7b-v0.2, Llama-3-70b-Instruct, etc)
+- LangChain, LlamaIndex, Haystack models
+- llama.cpp models
+- OpenAI models (GPT-4o, GPT-3.5, etc)
+- Anthropic models (Claude-3 Opus, etc)
+- Gemini models
+
+In the following set of tutorials, we'll go through setting up Pydantic enforcement for Mistral-7B v0.3 (through HF), Llama-3 70B Instruct (through HF), Gemini-1.5 Flash (through Google API SDK), and Llama-2 7B Chat (through LangChain) using the libraries from the above section.
+
+## Mistral-7B v0.3
 
 ### 1. Install `lm-format-enforcer`
 
@@ -24,11 +83,9 @@ Begin by installing the `lm-format-enforcer` package via pip:
 pip install lm-format-enforcer
 ```
 
-The LM-format-enforcer integrates a **character-level parser** with a **tokenizer prefix tree**. Unlike other libraries that enforce exact output formats, this approach allows LLMs to generate tokens that sequentially satisfy output format constraints, thus improving output quality.
+### 2. Create your custom LLM
 
-### 2. Build your custom LLM
-
-Create your custom LLM using the `DeepEvalLLM` base class. We will be creating a custom Mistral7B LLM using Hugging Face's transformers library for evaluation.
+Create your custom Mistral-7B v0.3 LLM class using the `DeepEvalLLM` base class. Define an additional optional `schema` parameter in your generate and a_generate method signatures.
 
 ```python
 class Mistral7B(DeepEvalBaseLLM):
@@ -44,54 +101,109 @@ class Mistral7B(DeepEvalBaseLLM):
         return self.model
 
     def get_model_name(self):
-        return "Mistral 7B"
+        return "Mistral-7B v0.3"
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
         ...
 
-    async def a_generate(self, prompt: str) -> str:
+    async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
         ...
-
 ```
 
-### 3. Populate the `generate` method
+### 3. Write the `generate` method
 
-This process involves defining an additional parameter, `pydantic_model`, which takes a `BaseModel` class from Pydantic. Utilize the `JsonSchemaParser` class and the `build_transformers_prefix_allowed_tokens_fn` function to ensure that the model's outputs strictly adhere to the defined JSON schema.
+Write the `generate` method for your custom LLM by utilizng `JsonSchemaParser` and `build_transformers_prefix_allowed_tokens_fn` from the `lmformatenforce` library to ensure that the model's outputs strictly adhere to the defined JSON `schema` when supplied.
 
 ```python
 from pydantic import BaseModel
 from lmformatenforcer import JsonSchemaParser
 from lmformatenforcer.integrations.transformers import build_transformers_prefix_allowed_tokens_fn
 
+class Mistral7B(DeepEvalBaseLLM):
+    ...
+
+    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+        hf_pipeline = pipeline(
+                "text-generation",
+                model=self.model,
+                tokenizer=self.tokenizer,
+                use_cache=True,
+                device_map="auto",
+                max_length=2500,
+                do_sample=True,
+                top_k=5,
+                num_return_sequences=1,
+                eos_token_id=self.tokenizer.eos_token_id,
+                pad_token_id=self.tokenizer.eos_token_id,
+        )
+        output_dict = None
+
+        if not schema:
+            output_dict = hf_pipeline(prompt)
+        else:
+            parser = JsonSchemaParser(pydantic_model.schema())
+            prefix_function = build_transformers_prefix_allowed_tokens_fn(hf_pipeline.tokenizer, parser)
+            output_dict = hf_pipeline(prompt, prefix_allowed_tokens_fn=prefix_function)
+
+        output = output_dict[0]['generated_text'][len(prompt):]
+        ...
+```
+
+### 4. Outputting a schema object
+
+The `lmformatenforcer` helps language models output a JSON object that follows the Pydantic `schema`, not the actual Pydantic schema itself. Therefore, we must convert this back to an object of type `schema` for evaluation.
+
+```python
+import json
+
+class Mistral7B(DeepEvalBaseLLM):
     ...
 
     def generate(self, prompt: str, pydantic_model: BaseModel) -> str:
-        hf_pipeline = pipeline(
-            'text-generation',
-            model=self.load_model(),
-            device_map='auto'
-            )
-        pydantic_model = JsonSchemaParser(AnswerFormat.model_json_schema())
-        prefix_function = build_transformers_prefix_allowed_tokens_fn(
-            hf_pipeline.tokenizer,
-            parser)
-        output_dict = hf_pipeline(prompt, prefix_allowed_tokens_fn=prefix_function)
-        return output_dict[0]['generated_text'][len(prompt):]
+        ...
 
-    async def a_generate(self, prompt: str) -> str:
-        return self.generate(prompt)
-
+        output = output_dict[0]['generated_text'][len(prompt):]
+        json_result = json.loads(result)
+        return pydantic_model(**json_result)
 ```
 
-### LM-format-enforcer
+### 5. Instantiating your model
 
-The LM-format-enforcer is compatible with any Python-based language model, including widely used frameworks like Transformers, LangChain, LlamaIndex, llama.cpp, vLLM, Haystack, NVIDIA, TensorRT-LLM, and ExLlamaV2. For detailed information about the package and advanced usage guidelines, [visit the LM-format-enforcer github page](https://github.com/noamgat/lm-format-enforcer).
+Load your models from Hugging Face's `transformers` library. Optionally, you can pass in a `quantization_config` parameter if your compute resources are limited.
 
-:::info
-If the `pydantic_model` argument is not provided in the generate method of your custom LLM, you can still run metric evaluations. However, omitting this argument increases the likelihood of encountering invalid JSON errors during output generation.
-:::
+```python
+from transformers import BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
-# OpenAI, Anthropic, Cohere, Gemini, Litellm models
+quantization_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_use_double_quant=True,
+)
+
+model_4bit = AutoModelForCausalLM.from_pretrained(
+    "mistralai/Mistral-7B-Instruct-v0.3", device_map="auto",quantization_config=quantization_config)
+tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.3")
+mistral_custom = Mistral7B(model_4bit, tokenizer)
+```
+
+### 6. Running evaluations
+
+Finally, evaluate your test cases using your desired metric on the custom Mistral-7B v0.3 model. You'll find that some of your LLM test cases, which previously failed to evaluate due to an invalid JSON error, will now run successfully after you have defined the schema parameter.
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(...)
+
+metric = AnswerRelevancyMetric(threshold=0.5, model=mistral_custom, verbose_mode=True)
+metric.measure(test_case)
+print(metric.reason)
+```
+
+## Gemini
 
 ### 1. Install `instructor`
 
@@ -159,10 +271,6 @@ import google.generativeai as genai
         return self.generate(prompt)
 
 ```
-
-### Instructor
-
-Instructor simplifies the process of extracting structured data, such as JSON, from LLMs including GPT-3.5, GPT-4, GPT-4-Vision, and open-source models like Mistral/Mixtral, Anyscale, Ollama, and llama-cpp-python. For more information on advanced usage or integration with other models not covered here, [please consult the documentation.](https://github.com/jxnl/instructor).
 
 # How All of This Fits into Improving Evaluations
 
