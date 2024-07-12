@@ -22,21 +22,8 @@ from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
 ### Integration ########################################
 ########################################################
 
-
-def deepeval_callback_handler(**eval_params: Any) -> BaseCallbackHandler:
-    return LlamaIndexCallbackHandler(**eval_params)
-
-
-def set_global_handler(eval_mode: str, **eval_params: Any) -> None:
-    """Set global eval handlers."""
-    if eval_mode == "deepeval":
-        handler = deepeval_callback_handler(**eval_params)
-        import llama_index.core
-
-        llama_index.core.global_handler = handler
-
-
-set_global_handler("deepeval")
+from deepeval.integrations import Integrations
+Integrations.trace_llama_index()
 
 ###########################################################
 # set up RAG pipeline
