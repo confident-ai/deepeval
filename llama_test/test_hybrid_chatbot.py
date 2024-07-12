@@ -23,6 +23,7 @@ from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
 ########################################################
 
 from deepeval.integrations import Integrations
+
 Integrations.trace_llama_index()
 
 ###########################################################

@@ -17,6 +17,7 @@ from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
 
 # set llama index global handler
 from deepeval.integrations import Integrations
+
 Integrations.trace_llama_index()
 
 ###########################################################
