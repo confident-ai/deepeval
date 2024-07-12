@@ -71,9 +71,14 @@ LLM JSON confinement is possible across **a range of LLM models**, including:
 - Anthropic models (Claude-3 Opus, etc)
 - Gemini models
 
-In the following set of tutorials, we'll go through setting up Pydantic enforcement for Mistral-7B v0.3 (through HF), Llama-3 70B Instruct (through HF), Gemini-1.5 Flash (through Google API SDK), and Llama-2 7B Chat (through LangChain) using the libraries from the above section.
+In the following set of tutorials, we'll go through setting up Pydantic enforcement using the libraries from the above section for:
 
-## Mistral-7B v0.3
+1.  [Mistral-7B v0.3 (through HF)](#1-mistral-7b-v03)
+2.  [Llama-3 70B Instruct (through HF)](#2-llama-3-8b)
+3.  [Gemini 1.5 Flash (through Google AI)](#3-gemini-15-flash)
+4.  [Claude 3 Opus Chat (through Antrhopic)](#4-claude-3-opus)
+
+## 1.) Mistral-7B v0.3
 
 ### 1. Install `lm-format-enforcer`
 
@@ -88,6 +93,8 @@ pip install lm-format-enforcer
 Create your custom Mistral-7B v0.3 LLM class using the `DeepEvalLLM` base class. Define an additional optional `schema` parameter in your generate and a_generate method signatures.
 
 ```python
+from pydantic import BaseModel
+
 class Mistral7B(DeepEvalBaseLLM):
     def __init__(
         self,
@@ -115,7 +122,6 @@ class Mistral7B(DeepEvalBaseLLM):
 Write the `generate` method for your custom LLM by utilizng `JsonSchemaParser` and `build_transformers_prefix_allowed_tokens_fn` from the `lmformatenforce` library to ensure that the model's outputs strictly adhere to the defined JSON `schema` when supplied.
 
 ```python
-from pydantic import BaseModel
 from lmformatenforcer import JsonSchemaParser
 from lmformatenforcer.integrations.transformers import build_transformers_prefix_allowed_tokens_fn
 
@@ -203,7 +209,138 @@ metric.measure(test_case)
 print(metric.reason)
 ```
 
-## Gemini
+## 2.) Llama-3 8B
+
+### 1. Install `lm-format-enforcer`
+
+Begin by installing the `lm-format-enforcer` package via pip:
+
+```bash
+pip install lm-format-enforcer
+```
+
+### 2. Create your custom LLM
+
+Create your custom Llama-3 8B LLM class using the `DeepEvalLLM` base class. Define an additional optional `schema` parameter in your generate and a_generate method signatures.
+
+```python
+from pydantic import BaseModel
+
+class Llama8B(DeepEvalBaseLLM):
+    def __init__(
+        self,
+        model,
+        tokenizer
+    ):
+        self.model = model
+        self.tokenizer = tokenizer
+
+    def load_model(self):
+        return self.model
+
+    def get_model_name(self):
+        return "Mistral-3 8B"
+
+    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+        ...
+
+    async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+        ...
+```
+
+### 3. Write the `generate` method
+
+Write the `generate` method for your custom LLM by utilizng `JsonSchemaParser` and `build_transformers_prefix_allowed_tokens_fn` from the `lmformatenforce` library to ensure that the model's outputs strictly adhere to the defined JSON `schema` when supplied.
+
+```python
+from lmformatenforcer import JsonSchemaParser
+from lmformatenforcer.integrations.transformers import build_transformers_prefix_allowed_tokens_fn
+
+class Llama8B(DeepEvalBaseLLM):
+    ...
+
+    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+        hf_pipeline = pipeline(
+                "text-generation",
+                model=self.model,
+                tokenizer=self.tokenizer,
+                use_cache=True,
+                device_map="auto",
+                max_length=2500,
+                do_sample=True,
+                top_k=5,
+                num_return_sequences=1,
+                eos_token_id=self.tokenizer.eos_token_id,
+                pad_token_id=self.tokenizer.eos_token_id,
+        )
+        output_dict = None
+
+        if not schema:
+            output_dict = hf_pipeline(prompt)
+        else:
+            parser = JsonSchemaParser(pydantic_model.schema())
+            prefix_function = build_transformers_prefix_allowed_tokens_fn(hf_pipeline.tokenizer, parser)
+            output_dict = hf_pipeline(prompt, prefix_allowed_tokens_fn=prefix_function)
+
+        output = output_dict[0]['generated_text'][len(prompt):]
+        ...
+```
+
+### 4. Outputting a schema object
+
+The `lmformatenforcer` helps language models output a JSON object that follows the Pydantic `schema`, not the actual Pydantic schema itself. Therefore, we must convert this back to an object of type `schema` for evaluation.
+
+```python
+import json
+
+class Llama8B(DeepEvalBaseLLM):
+    ...
+
+    def generate(self, prompt: str, pydantic_model: BaseModel) -> str:
+        ...
+
+        output = output_dict[0]['generated_text'][len(prompt):]
+        json_result = json.loads(result)
+        return pydantic_model(**json_result)
+```
+
+### 5. Instantiating your model
+
+Load your models from Hugging Face's `transformers` library. Optionally, you can pass in a `quantization_config` parameter if your compute resources are limited.
+
+```python
+from transformers import BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+
+quantization_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_use_double_quant=True,
+)
+
+model_4bit = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Meta-Llama-3-8B-Instruct", device_map="auto",quantization_config=quantization_config)
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
+mistral_custom = Mistral7B(model_4bit, tokenizer)
+```
+
+### 6. Running evaluations
+
+Finally, evaluate your test cases using your desired metric on the custom Mistral-7B v0.3 model. You'll find that some of your LLM test cases, which previously failed to evaluate due to an invalid JSON error, will now run successfully after you have defined the schema parameter.
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(...)
+
+metric = AnswerRelevancyMetric(threshold=0.5, model=mistral_custom, verbose_mode=True)
+metric.measure(test_case)
+print(metric.reason)
+```
+
+## Gemini 1.5 Flash
 
 ### 1. Install `instructor`
 
@@ -213,71 +350,188 @@ Begin by installing the `instructor` package via pip:
 pip install -U instructor
 ```
 
-Instructor is a user-friendly Python library built on top of Pydantic. It enables straightforward confinement of your LLM's output by encapsulating your LLM client within an Instructor method.
+### 2. Create your custom LLM
 
-### 2. Build your custom LLM
-
-Create your custom LLM using the `DeepEvalLLM` base class. We will be creating a custom Gemini 1.5 LLM using the Google AI Python SDK.
+Create your custom Gemini 1.5 Flash LLM class using the `DeepEvalLLM` base class. Define an additional optional `schema` parameter in your generate and a_generate method signatures.
 
 ```python
-class Mistral7B(DeepEvalBaseLLM):
-    def __init__(
-        self,
-        model_name
-    ):
-        self.model_name = model_name
-
-    def get_model_name(self):
-        return model_name
-
-    def generate(self, prompt: str) -> str:
-        ...
-
-    async def a_generate(self, prompt: str) -> str:
-        ...
-
-```
-
-### 3. Populate the `generate` method
-
-This process involves defining an additional parameter, `pydantic_model`, which takes a `BaseModel` class from Pydantic. The `instructor` client automatically allows you to create a structured response by defining a respone_model parameter which accepts a pydantic_model that inherits from `BaseClass`.
-
-```python
-import instructor
 from pydantic import BaseModel
 import google.generativeai as genai
 
+class GeminiFlash(DeepEvalBaseLLM):
+    def __init__(
+        self
+    ):
+        self.model = genai.GenerativeModel(
+            model_name="models/gemini-1.5-flash-latest"
+        )
+
+    def load_model(self):
+        return self.model
+
+    def get_model_name(self):
+        return "Gemini 1.5 Flash"
+
+    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+        ...
+
+    async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+        ...
+```
+
+### 3. Write the `generate` method
+
+This process involves defining an additional parameter, `pydantic_model`, which takes a `BaseModel` class from Pydantic. The `instructor` client automatically allows you to create a structured response by defining a respone_model parameter which accepts a pydantic_model that inherits from `BaseClass`. To write your `a_generate` function, you can wrap the Instructor client around your Async Gemini client. Alternatively, you can call the generate function directly if you prefer not to write an async method.
+
+```python
+import instructor
+
+class GeminiFlash(DeepEvalBaseLLM):
     ...
 
     def generate(self, prompt: str, pydantic_model: BaseModel) -> str:
-        client = instructor.from_gemini(
-            client=genai.GenerativeModel(
-                model_name="models/gemini-1.5-flash-latest",  # model defaults to "gemini-pro"
-            ),
-        mode=instructor.Mode.GEMINI_JSON,
-        )
-        resp = client.messages.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            response_model=pydantic_model,
-        )
-        return resp
+        client = self.load_model()
+        if not pydantic_model:
+            return client.generate_content(prompt)
+        else:
+            instructor_client = instructor.from_gemini(
+                client=client,
+                ),
+            mode=instructor.Mode.GEMINI_JSON,
+            )
+            resp = instructor_client.messages.create(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                response_model=pydantic_model,
+            )
+            return resp
 
     async def a_generate(self, prompt: str) -> str:
-        return self.generate(prompt)
-
+        ...
 ```
 
-# How All of This Fits into Improving Evaluations
+### 4. Running evaluations
 
-Deepeval metrics will automatically look for the `pydantic_model` argument in custom LLMs. If supplied, it will use the associated `pydantic` model for the task. If the `pydantic_model` field is not provided, the evaluation will still run, but there is a higher chance of the evaluation not completing due to invalid JSON output from the LLM.
+Finally, evaluate your test cases using your desired metric on the custom Gemini 1.5 Flash model. You'll find that some of your LLM test cases, which previously failed to evaluate due to an invalid JSON error, will now run successfully after you have defined the schema parameter.
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(...)
+gemini_custom = GeminiFlash()
+
+metric = AnswerRelevancyMetric(threshold=0.5, model=gemini_custom, verbose_mode=True)
+metric.measure(test_case)
+print(metric.reason)
+```
+
+## Claude 3 Opus
+
+### 1. Install `instructor`
+
+Begin by installing the `instructor` package via pip:
+
+```bash
+pip install -U instructor
+```
+
+### 2. Create your custom LLM
+
+Create your custom Claude 3 Opus LLM class using the `DeepEvalLLM` base class. Define an additional optional `schema` parameter in your generate and a_generate method signatures.
+
+```python
+from pydantic import BaseModel
+from anthropic import Anthropic
+
+class ClaudeOpus(DeepEvalBaseLLM):
+    def __init__(
+        self
+    ):
+        self.model = Anthropic()
+
+    def load_model(self):
+        return self.model
+
+    def get_model_name(self):
+        return "Claude 3 Opus LLM"
+
+    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+        ...
+
+    async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+        ...
+```
+
+### 3. Write the `generate` method
+
+This process involves defining an additional parameter, `pydantic_model`, which takes a `BaseModel` class from Pydantic. The `instructor` client automatically allows you to create a structured response by defining a respone_model parameter which accepts a pydantic_model that inherits from `BaseClass`. To write your `a_generate` function, you can wrap the Instructor client around your Async Gemini client. Alternatively, you can call the generate function directly if you prefer not to write an async method.
+
+```python
+import instructor
+
+class ClaudeOpus(DeepEvalBaseLLM):
+    ...
+
+    def generate(self, prompt: str, pydantic_model: BaseModel) -> str:
+        client = self.load_model()
+        if not pydantic_model:
+            resp = client.messages.create(
+                model="claude-3-opus-20240229",
+                max_tokens=1024,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+            )
+            return resp
+        else:
+            client = instructor.from_anthropic(client)
+            resp = client.messages.create(
+                model="claude-3-opus-20240229",
+                max_tokens=1024,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                response_model=User,
+            )
+            return resp
+
+    async def a_generate(self, prompt: str) -> str:
+        ...
+```
+
+### 4. Running evaluations
+
+Finally, evaluate your test cases using your desired metric on the custom Gemini 1.5 Flash model. You'll find that some of your LLM test cases, which previously failed to evaluate due to an invalid JSON error, will now run successfully after you have defined the schema parameter.
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(...)
+gemini_custom = GeminiFlash()
+
+metric = AnswerRelevancyMetric(threshold=0.5, model=gemini_custom, verbose_mode=True)
+metric.measure(test_case)
+print(metric.reason)
+```
+
+## How All of This Fits into Improving Evaluations
+
+Deepeval metrics will automatically check for the `schema` parameter in custom LLMs. When provided, they utilize the associated `pydantic` model for the task. If the `schema` field is absent, the evaluation can proceed but may face a higher risk of being incomplete due to potential invalid JSON output from the LLM.
 
 :::caution
-The `pydantic_model` field should always be of type `BaseModel`!
+Ensure that the `schema` field is always of type `Optional[BaseModel]`.
 :::
 
-Regardless, before running evaluations, you should test your generate function to ensure that the `pydantic` models are being correctly configured to prevent issues that may arise during the evaluation process. You should also be aware that there is a tradeoff in evaluation accuracy when using JSON-pydantic confinement.
+Before executing evaluations, it's crucial to verify that your generate function properly configures the `pydantic` models. This preliminary testing helps prevent issues during the evaluation process. Additionally, be aware of the trade-offs in evaluation accuracy that may occur due to the constraints imposed by JSON-pydantic validation.
