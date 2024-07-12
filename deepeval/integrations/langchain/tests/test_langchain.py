@@ -8,10 +8,10 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from deepeval.integrations.langchain import trace_langchain
+from deepeval.integrations import Integrations
 from deepeval.tracing import Tracer
 
-trace_langchain()
+Integrations.trace_langchain()
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 
 # Load, chunk and index the contents of the blog.

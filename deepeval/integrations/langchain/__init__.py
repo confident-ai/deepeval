@@ -1,6 +1,4 @@
-import sys
-from typing import TYPE_CHECKING, Any, Callable
-from wrapt import wrap_function_wrapper
+from typing import Any, Callable
 from langchain_core.callbacks import BaseCallbackManager
 from deepeval.integrations.langchain.callback import LangChainCallbackHandler
 
@@ -25,11 +23,3 @@ class _BaseCallbackManagerInit:
                 break
         else:
             instance.add_handler(self._tracer, True)
-
-
-def trace_langchain():
-    wrap_function_wrapper(
-        module="langchain_core.callbacks",
-        name="BaseCallbackManager.__init__",
-        wrapper=_BaseCallbackManagerInit(LangChainCallbackHandler()),
-    )

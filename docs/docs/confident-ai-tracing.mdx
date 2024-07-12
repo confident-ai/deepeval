@@ -23,26 +23,23 @@ Confident AI is **NOT** tied to or vendor-locked into any LLM provider or framew
 If your LLM application was built using a hybrid approach (eg., a bit of `langchain`, and bit of `llama_index`, and maybe a bit of custom LLM API calling), you'll want to consider [hybrid tracing instead.](confident-ai-tracing#full-advanced-hybrid-tracing-example)
 :::
 
+DeepEval's `Integrations` class allows you to setup automatic tracing integrations for amy LLM applications in just one line of code!
+
 ### LlamaIndex
 
-You can setup tracing for LLM applications built with LlamaIndex in 1 line of code:
-
 ```python
-from llama_index.core import set_global_handler
+from deepeval.integrations import Integrations
 
-set_global_handler("deepeval")
+Integrations.trace_llama_index()
 ```
 
-:::info
-The `set_global_handler()` function tells `llama_index` to trace via `deepeval`, which means LLM tracing will automatically be enabled and viewable on Confident AI for each `llama_index` query:
+### LangChain
 
 ```python
-...
+from deepeval.integrations import Integrations
 
-query_engine.query("...")
+Integrations.trace_langchain()
 ```
-
-:::
 
 ## Setup Custom Tracing
 
