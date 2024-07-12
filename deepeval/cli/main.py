@@ -8,11 +8,12 @@ import webbrowser
 app = typer.Typer(name="deepeval")
 app.add_typer(test_app, name="test")
 
+
 @app.command()
 def login(
     api_key: str = typer.Option(
-        "", 
-        help="API key to get from https://app.confident-ai.com. Required if you want to log events to the server."
+        "",
+        help="API key to get from https://app.confident-ai.com. Required if you want to log events to the server.",
     ),
     confident_api_key: Optional[str] = typer.Option(
         None,
