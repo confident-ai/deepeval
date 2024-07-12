@@ -32,7 +32,9 @@ def track(
     token_cost: Optional[float] = None,
     distinct_id: Optional[str] = None,
     conversation_id: Optional[str] = None,
-    additional_data: Optional[Dict[str, Union[str, Link, Dict]]] = None,
+    additional_data: Optional[
+        Dict[str, Union[str, Link, List[Link], Dict]]
+    ] = None,
     hyperparameters: Optional[Dict[str, str]] = {},
     fail_silently: Optional[bool] = False,
     raise_expection: Optional[bool] = True,
@@ -57,9 +59,20 @@ def track(
                     custom_properties[key] = CustomProperty(
                         value=value.value, type=CustomPropertyType.LINK
                     )
+                elif isinstance(value, list):
+                    if not all(isinstance(item, Link) for item in value):
+                        raise ValueError(
+                            "All values in 'additional_data' must be either of type 'string', 'Link', list of 'Link', or 'dict'."
+                        )
+                    custom_properties[key] = [
+                        CustomProperty(
+                            value=item.value, type=CustomPropertyType.LINK
+                        )
+                        for item in value
+                    ]
                 else:
                     raise ValueError(
-                        "All values in 'additional_data' must be either of type 'string', 'Link', or 'dict'."
+                        "All values in 'additional_data' must be either of type 'string', 'Link', list of 'Link', or 'dict'."
                     )
 
         hyperparameters = process_hyperparameters(hyperparameters)

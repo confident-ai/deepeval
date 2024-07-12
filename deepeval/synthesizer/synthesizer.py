@@ -443,7 +443,7 @@ class Synthesizer:
 
             self.synthetic_goldens.extend(goldens)
             return goldens
-        
+
     def generate_red_teaming_goldens(
         self,
         contexts: Optional[List[List[str]]] = None,

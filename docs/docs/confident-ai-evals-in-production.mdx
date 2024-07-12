@@ -92,15 +92,16 @@ deepeval.track(
         "Example Text": "...",
         # the Link class allows you to access the link directly on Confident AI
         "Example Link": Link(value="https://www.youtube.com"),
+        "Example list of Links": [Link(value="https://www.instagram.com")],
         "Example JSON": {"Any Key": "Any Value"}
     },
 )
 ```
 
-Note that you can log either text, a `Link`, or any custom dict (as shown in the "Example Json"). Similar to hyperparameter, you can also filter and search for different responses based on the provided custom data.
+Note that you can log either text, a `Link`, list of `Link`s, or any custom dict (as shown in the "Example Json"). Similar to hyperparameter, you can also filter and search for different responses based on the provided custom data.
 
 :::tip Did you know?
-Although you can technically log a link as a native string, the `Link(value="...")` class allows you to access said link directly on Confident AI.
+Although you can technically log a link as a native string, the `Link(value="...")` class allows you to access said link directly on Confident AI. You should also aim to have your `Link`s start with 'https://...'.
 :::
 
 ## Sending Human Feedback

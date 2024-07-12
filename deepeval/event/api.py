@@ -33,9 +33,9 @@ class APIEvent(BaseModel):
     token_cost: Optional[float] = Field(None, alias="tokenCost")
     distinct_id: Optional[str] = Field(None, alias="distinctId")
     conversation_id: Optional[str] = Field(None, alias="conversationId")
-    custom_properties: Optional[Dict[str, CustomProperty]] = Field(
-        None, alias="customProperties"
-    )
+    custom_properties: Optional[
+        Dict[str, Union[CustomProperty, List[CustomProperty]]]
+    ] = Field(None, alias="customProperties")
     trace_stack: Optional[Dict] = Field(None, alias="traceStack")
     trace_provider: Optional[str] = Field(None, alias="traceProvider")
     hyperparameters: Optional[Dict] = Field(None)
