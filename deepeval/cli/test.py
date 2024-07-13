@@ -13,6 +13,7 @@ from deepeval.utils import (
     delete_file_if_exists,
     set_should_ignore_errors,
     set_should_use_cache,
+    set_verbose_mode,
 )
 from deepeval.test_run import invoke_test_run_end_hook
 from deepeval.telemetry import capture_evaluation_run
@@ -41,7 +42,6 @@ def check_if_valid_file(test_file_or_directory: str):
 @app.command()
 def run(
     test_file_or_directory: str,
-    verbose: bool = True,
     color: str = "yes",
     durations: int = 10,
     pdb: bool = False,
@@ -75,6 +75,12 @@ def run(
         "-i",
         help="Whether to ignore errors or not",
     ),
+    verbose: Optional[bool] = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Whether to turn on verbose mode for evaluation or not",
+    ),
     mark: Optional[str] = typer.Option(
         None,
         "--mark",
@@ -91,6 +97,7 @@ def run(
     should_use_cache = use_cache and repeat is None
     set_should_use_cache(should_use_cache)
     set_should_ignore_errors(ignore_errors)
+    set_verbose_mode(verbose)
 
     test_run_manager.reset()
 

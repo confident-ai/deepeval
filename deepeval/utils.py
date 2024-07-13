@@ -133,6 +133,23 @@ def set_should_ignore_errors(yes: bool):
         os.environ["IGNORE_DEEPEVAL_ERRORS"] = "NO"
 
 
+def should_verbose_print() -> Union[bool, None]:
+    try:
+        if os.environ["DEEPEVAL_VERBOSE_MODE"] == "YES":
+            return True
+        else:
+            return False
+    except:
+        return None
+
+
+def set_verbose_mode(yes: bool):
+    if yes:
+        os.environ["DEEPEVAL_VERBOSE_MODE"] = "YES"
+    else:
+        os.environ["DEEPEVAL_VERBOSE_MODE"] = "NO"
+
+
 def should_use_cache():
     try:
         if os.environ["ENABLE_DEEPEVAL_CACHE"] == "YES":
