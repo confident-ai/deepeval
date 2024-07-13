@@ -6,10 +6,11 @@ from dataclasses import dataclass
 
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
-    drop_and_copy,
     get_or_create_event_loop,
+    set_verbose_mode,
     should_ignore_errors,
     should_use_cache,
+    should_verbose_print,
 )
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import BaseMetric
@@ -168,11 +169,17 @@ def execute_test_cases(
     ignore_errors: bool,
     use_cache: bool,
     save_to_disk: bool = False,
+    verbose_mode: Optional[bool] = None,
 ) -> List[TestResult]:
     test_results: List[TestResult] = []
     test_run_cache_manager.disable_write_cache = save_to_disk == False
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
+
+    if verbose_mode is not None:
+        for metric in metrics:
+            metric.verbose_mode = verbose_mode
+
     for index, test_case in enumerate(test_cases):
         with capture_evaluation_run("test case"):
             if isinstance(test_case, ConversationalTestCase):
@@ -281,11 +288,16 @@ async def a_execute_test_cases(
     ignore_errors: bool,
     use_cache: bool,
     save_to_disk: bool = False,
+    verbose_mode: Optional[bool] = None,
 ) -> List[TestResult]:
     test_results: List[TestResult] = []
     test_run_cache_manager.disable_write_cache = save_to_disk == False
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
+
+    if verbose_mode is not None:
+        for metric in metrics:
+            metric.verbose_mode = verbose_mode
 
     for index, test_case in enumerate(test_cases):
         with capture_evaluation_run("test case"):
@@ -381,6 +393,7 @@ def assert_test(
                 metrics,
                 ignore_errors=should_ignore_errors(),
                 use_cache=should_use_cache(),
+                verbose_mode=should_verbose_print(),
                 save_to_disk=get_is_running_deepeval(),
             )
         )[0]
@@ -390,6 +403,7 @@ def assert_test(
             metrics,
             ignore_errors=should_ignore_errors(),
             use_cache=should_use_cache(),
+            verbose_mode=should_verbose_print(),
             save_to_disk=get_is_running_deepeval(),
         )[0]
 
@@ -428,6 +442,7 @@ def evaluate(
     write_cache: bool = True,
     use_cache: bool = False,
     ignore_errors: bool = False,
+    verbose_mode: Optional[bool] = None,
 ):
     if hyperparameters is not None:
         if (
@@ -439,19 +454,18 @@ def evaluate(
             )
         hyperparameters = process_hyperparameters(hyperparameters)
 
-    set_indicator(show_indicator)
-
     # TODO: keep this for now, blocking conversational metrics like KR
     for metric in metrics:
         if not isinstance(metric, BaseMetric):
             raise TypeError("Provided 'metric' must be of type 'BaseMetric'.")
+
+    set_indicator(show_indicator)
 
     test_run_manager.reset()
     start_time = time.perf_counter()
     if print_results:
         print("Evaluating test cases...")
 
-    metric_states = []
     with capture_evaluation_run("evaluate()"):
         if run_async:
             loop = get_or_create_event_loop()
@@ -461,6 +475,7 @@ def evaluate(
                     metrics,
                     ignore_errors=ignore_errors,
                     use_cache=use_cache,
+                    verbose_mode=verbose_mode,
                     save_to_disk=write_cache,
                 )
             )
@@ -470,6 +485,7 @@ def evaluate(
                 metrics,
                 ignore_errors=ignore_errors,
                 use_cache=use_cache,
+                verbose_mode=verbose_mode,
                 save_to_disk=write_cache,
             )
 
