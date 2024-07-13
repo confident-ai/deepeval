@@ -228,7 +228,7 @@ There are two mandatory and eight optional arguments when calling the `evaluate(
 - [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for eac test case. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `False`.
+- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the progress indicator for each individual metric. Defaulted to `True`.
