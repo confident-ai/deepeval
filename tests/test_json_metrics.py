@@ -44,7 +44,7 @@ default_gpt_model = "gpt-4o"
 ##### custom model with pydantic_model argument 
 #########################################################
 
-class GPTPydanticModel(DeepEvalBaseLLM):
+class CustomGPTEnforced(DeepEvalBaseLLM):
     def __init__(
         self,
         model: Optional[str] = None,
@@ -118,20 +118,14 @@ class GPTPydanticModel(DeepEvalBaseLLM):
     def generate(
         self, 
         prompt: str, 
-        pydantic_model: Optional[BaseModel] = None
+        schema: Optional[BaseModel] = None
         ) -> Tuple[str, float]:
-        if pydantic_model == None:
-            chat_model = self.load_model()
-            with get_openai_callback() as cb:
-                res = chat_model.invoke(prompt)
-                return res.content, cb.total_cost
-        elif pydantic_model != None:
-            client = instructor.from_openai(OpenAI())
-            return client.chat.completions.create(
-                model=self.model_name,
-                response_model=pydantic_model,
-                messages=[{"role": "user", "content": prompt}],
-            )
+        client = instructor.from_openai(OpenAI())
+        return client.chat.completions.create(
+            model=self.model_name,
+            response_model=schema,
+            messages=[{"role": "user", "content": prompt}],
+        )
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
@@ -140,21 +134,15 @@ class GPTPydanticModel(DeepEvalBaseLLM):
     )
     async def a_generate(self, 
         prompt: str, 
-        pydantic_model: Optional[BaseModel] = None
+        schema: Optional[BaseModel] = None
         ) -> Tuple[str, float]:
-        if pydantic_model == None:
-            chat_model = self.load_model()
-            with get_openai_callback() as cb:
-                res = await chat_model.ainvoke(prompt)
-                return res.content, cb.total_cost
-        else:
-            client = instructor.from_openai(AsyncOpenAI())
-            response = await client.chat.completions.create(
-                model=self.model_name,
-                response_model=pydantic_model,
-                messages=[{"role": "user", "content": prompt}],
-            )            
-            return response
+        client = instructor.from_openai(AsyncOpenAI())
+        response = await client.chat.completions.create(
+            model=self.model_name,
+            response_model=schema,
+            messages=[{"role": "user", "content": prompt}],
+        )            
+        return response
 
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
@@ -170,7 +158,7 @@ class GPTPydanticModel(DeepEvalBaseLLM):
 ##### custom model with no pydantic_model argument 
 #########################################################
 
-class GPTEmptyPydantic(DeepEvalBaseLLM):
+class CustomGPT(DeepEvalBaseLLM):
     def __init__(
         self,
         model: Optional[str] = None,
@@ -306,40 +294,40 @@ test_case = LLMTestCase(
     )
 
 answer_relevancy = AnswerRelevancyMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
-answer_relevancy_non_confine = AnswerRelevancyMetric(verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
-answer_relevancy_confine = AnswerRelevancyMetric(verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+answer_relevancy_non_confine = AnswerRelevancyMetric(verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
+answer_relevancy_confine = AnswerRelevancyMetric(verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 bias = BiasMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
-bias_non_confine = BiasMetric(verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
-bias_confine = BiasMetric(verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+bias_non_confine = BiasMetric(verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
+bias_confine = BiasMetric(verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 contextual_precision = ContextualPrecisionMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
-contextual_precision_non_confine = ContextualPrecisionMetric(verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
-contextual_precision_confine = ContextualPrecisionMetric(verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+contextual_precision_non_confine = ContextualPrecisionMetric(verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
+contextual_precision_confine = ContextualPrecisionMetric(verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 contextual_recall = ContextualRecallMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
-contextual_recall_non_confine = ContextualRecallMetric(verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
-contextual_recall_confine = ContextualRecallMetric(verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+contextual_recall_non_confine = ContextualRecallMetric(verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
+contextual_recall_confine = ContextualRecallMetric(verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 contextual_relevancy = ContextualRelevancyMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
-contextual_relevancy_non_confine = ContextualRelevancyMetric(verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
-contextual_relevancy_confine = ContextualRelevancyMetric(verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+contextual_relevancy_non_confine = ContextualRelevancyMetric(verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
+contextual_relevancy_confine = ContextualRelevancyMetric(verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 faithfulness = FaithfulnessMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
-faithfulness_non_confine = FaithfulnessMetric(verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
-faithfulness_confine = FaithfulnessMetric(verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+faithfulness_non_confine = FaithfulnessMetric(verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
+faithfulness_confine = FaithfulnessMetric(verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 hallucination= HallucinationMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
-hallucination_non_confine = HallucinationMetric(verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
-hallucination_confine = HallucinationMetric(verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+hallucination_non_confine = HallucinationMetric(verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
+hallucination_confine = HallucinationMetric(verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 summarization = SummarizationMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
-summarization_non_confine = SummarizationMetric(verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
-summarization_confine = SummarizationMetric(verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+summarization_non_confine = SummarizationMetric(verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
+summarization_confine = SummarizationMetric(verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 toxicity = ToxicityMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
-toxicity_non_confine = ToxicityMetric(verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
-toxicity_confine = ToxicityMetric(verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+toxicity_non_confine = ToxicityMetric(verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
+toxicity_confine = ToxicityMetric(verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 g_eval = GEval(
     name="coherence",
@@ -350,12 +338,12 @@ g_eval_non_confine = GEval(
     name="coherence",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     evaluation_steps=['Response should be concise', 'Reponse should read easily'], 
-    verbose_mode=True, threshold=0.5, model=GPTEmptyPydantic("gpt-3.5-turbo-0125"))
+    verbose_mode=True, threshold=0.5, model=CustomGPT("gpt-3.5-turbo-0125"))
 g_eval_confine = GEval(
     name="coherence",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     evaluation_steps=['Response should be concise', 'Reponse should read easily'], 
-    verbose_mode=True, threshold=0.5, model=GPTPydanticModel("gpt-3.5-turbo-0125"))
+    verbose_mode=True, threshold=0.5, model=CustomGPTEnforced("gpt-3.5-turbo-0125"))
 
 #########################################################
 ##### measure Metrics 
@@ -368,6 +356,10 @@ g_eval_confine = GEval(
 # bias.measure(test_case)
 # bias_non_confine.measure(test_case)
 # bias_confine.measure(test_case)
+
+# contextual_precision.measure(test_case)
+# contextual_precision_confine.measure(test_case)
+# contextual_precision_non_confine.measure(test_case)
 
 # contextual_recall.measure(test_case)
 # contextual_recall_confine.measure(test_case)

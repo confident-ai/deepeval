@@ -133,12 +133,14 @@ class ContextualRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Reason = await self.model.a_generate(prompt, Reason)
-            return res.reason
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
+            try:
+                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     def _generate_reason(self, input: str):
         if self.include_reason is False:
@@ -159,13 +161,14 @@ class ContextualRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Reason = self.model.generate(prompt, Reason)
-            return res.reason
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            try:
+                res: Reason = self.model.generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     def _calculate_score(self):
         total_verdicts = len(self.verdicts)
@@ -179,7 +182,25 @@ class ContextualRelevancyMetric(BaseMetric):
 
         score = relevant_nodes / total_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
+    
 
+    async def _a_generate_verdict(
+        self, prompt: str
+    ) -> ContextualRelevancyVerdict:
+        if self.using_native_model:
+                res, cost = await self.model.a_generate(prompt)
+                self.evaluation_cost += cost
+                data = trimAndLoadJson(res, self)
+                return ContextualRelevancyVerdict(**data)
+        else:
+            try:
+                res = await self.model.a_generate(prompt, schema=ContextualRelevancyVerdict)
+                return res
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return ContextualRelevancyVerdict(**data)
+        
     async def _a_generate_verdicts(
         self, text: str, retrieval_context: List[str]
     ) -> ContextualRelevancyVerdict:
@@ -188,31 +209,9 @@ class ContextualRelevancyMetric(BaseMetric):
             prompt = ContextualRelevancyTemplate.generate_verdict(
                 text=text, context=context
             )
-            if self.using_native_model or 'pydantic_model' not in inspect.signature(self.model.a_generate).parameters:
-                task = asyncio.create_task(self.model.a_generate(prompt))
-            else:
-                task = asyncio.create_task(self.model.a_generate(prompt, ContextualRelevancyVerdict))
-                print(inspect.signature(self.model.a_generate).parameters)
+            task = asyncio.create_task(self._a_generate_verdict(prompt))
             tasks.append(task)
-
-        results = await asyncio.gather(*tasks)
-
-        verdicts = []
-        if self.using_native_model:
-            for res, _ in results:
-                data = trimAndLoadJson(res, self)
-                verdict = ContextualRelevancyVerdict(**data)
-                verdicts.append(verdict)
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            for res in results:
-                verdict = res
-                verdicts.append(verdict)
-        else:
-            for res in results:
-                data = trimAndLoadJson(res, self)
-                verdict = ContextualRelevancyVerdict(**data)
-                verdicts.append(verdict)
-
+        verdicts = await asyncio.gather(*tasks)
         return verdicts
 
     def _generate_verdicts(
@@ -228,13 +227,14 @@ class ContextualRelevancyMetric(BaseMetric):
                 self.evaluation_cost += cost
                 data = trimAndLoadJson(res, self)
                 verdict = ContextualRelevancyVerdict(**data)
-            elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-                res = self.model.generate(prompt)
-                verdict = res
             else:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdict = ContextualRelevancyVerdict(**data)
+                try:
+                    res = self.model.generate(prompt, schema=ContextualRelevancyVerdict)
+                    verdict = res
+                except TypeError:
+                    res = self.model.generate(prompt)
+                    data = trimAndLoadJson(res, self)
+                    verdict = ContextualRelevancyVerdict(**data)
            
             verdicts.append(verdict)
 

@@ -137,13 +137,14 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"] 
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Reason = await self.model.a_generate(prompt, Reason)
-            return res.reason
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["reason"] 
+            try:
+                res: Reason = await self.model.a_generate(prompt=prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"] 
         
     def _generate_reason(self, input: str) -> str:
         if self.include_reason is False:
@@ -165,13 +166,14 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Reason = self.model.generate(prompt, Reason)
-            return res.reason
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            try:
+                res: Reason = self.model.generate(prompt=prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     async def _a_generate_verdicts(
         self, input: str
@@ -188,13 +190,14 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res:Verdicts = await self.model.a_generate(prompt, Verdicts)
-            return [item for item in res.verdicts]    
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+            try:
+                res:Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                return [item for item in res.verdicts]    
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
 
         
     def _generate_verdicts(self, input: str) -> List[AnswerRelvancyVerdict]:
@@ -210,13 +213,14 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res:Verdicts = self.model.generate(prompt, Verdicts)
-            return [item for item in res.verdicts]    
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]  
+            try:
+                res:Verdicts = self.model.generate(prompt, schema=Verdicts)
+                return [item for item in res.verdicts]    
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]  
         
     async def _a_generate_statements(
         self,
@@ -230,13 +234,14 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["statements"]
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Statements = await self.model.a_generate(prompt, Statements)
-            return res.statements
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["statements"]
+            try:
+                res: Statements = await self.model.a_generate(prompt, schema=Statements)
+                return res.statements
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["statements"]
         
     def _generate_statements(
         self,
@@ -250,13 +255,14 @@ class AnswerRelevancyMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["statements"]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Statements = self.model.generate(prompt, Statements)
-            return res.statements
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["statements"]
+            try:
+                res: Statements = self.model.generate(prompt, schema=Statements)
+                return res.statements
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["statements"]
         
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)

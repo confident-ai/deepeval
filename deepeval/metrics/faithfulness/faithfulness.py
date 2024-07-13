@@ -131,13 +131,14 @@ class FaithfulnessMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Reason = await self.model.a_generate(prompt, Reason)
-            return res.reason
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            try:
+                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     def _generate_reason(self) -> str:
         if self.include_reason is False:
@@ -158,14 +159,15 @@ class FaithfulnessMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Reason = self.model.generate(prompt, Reason)
-            return res.reason
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
-            
+            try:
+                res: Reason = self.model.generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
+                
     async def _a_generate_verdicts(self) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
             return []
@@ -180,15 +182,16 @@ class FaithfulnessMetric(BaseMetric):
             data = trimAndLoadJson(res, self)
             verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
             return verdicts
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Verdicts = await self.model.a_generate(prompt, Verdicts)
-            verdicts = [item for item in res.verdicts]
-            return verdicts
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
-            return verdicts
+            try:
+                res: Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+                return verdicts
 
     def _generate_verdicts(self) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
@@ -204,15 +207,16 @@ class FaithfulnessMetric(BaseMetric):
             data = trimAndLoadJson(res, self)
             verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
             return verdicts
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Verdicts = self.model.generate(prompt, Verdicts)
-            verdicts = [item for item in res.verdicts]
-            return verdicts
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
-            return verdicts
+            try:
+                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
+                verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+                return verdicts
 
     async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_truths(
@@ -223,13 +227,14 @@ class FaithfulnessMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["truths"]
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Truth = await self.model.a_generate(prompt, Truth)
-            return res.truths
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["truths"]
+            try:
+                res: Truth = await self.model.a_generate(prompt, schema=Truth)
+                return res.truths
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["truths"]
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_truths(
@@ -240,13 +245,14 @@ class FaithfulnessMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["truths"]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Truth = self.model.generate(prompt, Truth)
-            return res.truths
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["truths"]
+            try:
+                res: Truth = self.model.generate(prompt, schema=Truth)
+                return res.truths
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["truths"]
 
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
@@ -255,13 +261,14 @@ class FaithfulnessMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["claims"]
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Claim = await self.model.a_generate(prompt, Claim)
-            return res.claims
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["claims"]
+            try:
+                res: Claim = await self.model.a_generate(prompt, schema=Claim)
+                return res.claims
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["claims"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
@@ -270,13 +277,14 @@ class FaithfulnessMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["claims"]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Claim = self.model.generate(prompt, Claim)
-            return res.claims
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["claims"]
+            try:
+                res: Claim = self.model.generate(prompt, schema=Claim)
+                return res.claims
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["claims"]
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)

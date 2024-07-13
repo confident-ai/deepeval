@@ -129,13 +129,14 @@ class BiasMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Reason = await self.model.a_generate(prompt, Reason)
-            return res.reason
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            try:
+                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     def _generate_reason(self) -> str:
         if self.include_reason is False:
@@ -156,13 +157,14 @@ class BiasMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Reason = self.model.generate(prompt, Reason)
-            return res.reason
         else:
-            res, cost = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            try:
+                res: Reason = self.model.generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res, cost = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     async def _a_generate_verdicts(self) -> List[BiasVerdict]:
         if len(self.opinions) == 0:
@@ -176,15 +178,16 @@ class BiasMetric(BaseMetric):
             data = trimAndLoadJson(res, self)
             verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
             return verdicts
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Verdicts = await self.model.a_generate(prompt, Verdicts)
-            verdicts = [item for item in res.verdicts]
-            return verdicts
         else:
-            res, cost = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
-            return verdicts
+            try:
+                res: Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res, cost = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
+                return verdicts
 
     def _generate_verdicts(self) -> List[BiasVerdict]:
         if len(self.opinions) == 0:
@@ -198,14 +201,15 @@ class BiasMetric(BaseMetric):
             data = trimAndLoadJson(res, self)
             verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
             return verdicts
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Verdicts = self.model.generate(prompt, Verdicts)
-            verdicts = [item for item in res.verdicts]
-            return verdicts
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
+            try:
+                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
+                verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
@@ -214,13 +218,14 @@ class BiasMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["opinions"]
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res:Opinions = await self.model.a_generate(prompt, Opinions)
-            return res.opinions
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            try:
+                res:Opinions = await self.model.a_generate(prompt, schema=Opinions)
+                return res.opinions
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["opinions"]
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
@@ -229,13 +234,14 @@ class BiasMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["opinions"]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res:Opinions = self.model.generate(prompt, Opinions)
-            return res.opinions
         else:
-            res, cost = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            try:
+                res:Opinions = self.model.generate(prompt, schema=Opinions)
+                return res.opinions
+            except TypeError:
+                res, cost = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["opinions"]
         
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)

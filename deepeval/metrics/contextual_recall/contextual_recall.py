@@ -135,17 +135,18 @@ class ContextualRecallMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Reason = self.model.generate(prompt, Reason)
-            return res.reason
         else:
-            res = self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            try:
+                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     def _generate_reason(self, expected_output: str):
         if self.include_reason is False:
@@ -171,13 +172,14 @@ class ContextualRecallMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["reason"]
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Reason = self.model.generate(prompt, Reason)
-            return res.reason
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            try:
+                res: Reason = self.model.generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
@@ -206,17 +208,18 @@ class ContextualRecallMetric(BaseMetric):
                 ContextualRecallVerdict(**item) for item in data["verdicts"]
             ]
             return verdicts
-        elif 'pydantic_model' in inspect.signature(self.model.a_generate).parameters:
-            res: Verdicts = await self.model.a_generate(prompt, Verdicts)
-            verdicts: Verdicts = [item for item in res.verdicts]
-            return verdicts
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                ContextualRecallVerdict(**item) for item in data["verdicts"]
-            ]
-            return verdicts
+            try:
+                res: Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                verdicts: Verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [
+                    ContextualRecallVerdict(**item) for item in data["verdicts"]
+                ]
+                return verdicts
         
 
     def _generate_verdicts(
@@ -233,17 +236,18 @@ class ContextualRecallMetric(BaseMetric):
                 ContextualRecallVerdict(**item) for item in data["verdicts"]
             ]
             return verdicts
-        elif 'pydantic_model' in inspect.signature(self.model.generate).parameters:
-            res: Verdicts = self.model.generate(prompt, Verdicts)
-            verdicts: Verdicts = [item for item in res.verdicts]
-            return verdicts
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                ContextualRecallVerdict(**item) for item in data["verdicts"]
-            ]
-            return verdicts
+            try:
+                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
+                verdicts: Verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [
+                    ContextualRecallVerdict(**item) for item in data["verdicts"]
+                ]
+                return verdicts
 
 
     def is_successful(self) -> bool:
