@@ -76,6 +76,7 @@ module.exports = {
         "guides-optimizing-hyperparameters",
         "guides-building-custom-metrics",
         "guides-answer-correctness-metric",
+        "guides-json-enforcement",
       ],
       collapsed: false,
     },
