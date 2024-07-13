@@ -174,16 +174,16 @@ deepeval test run test_example.py -i -c -n 2
 
 :::
 
-### Verbose
+### Verbose Mode
 
-The `-v` flag (with no arguments) allows you to turn on `verbose_mode` for all metrics ran using `deepeval test run`. Not supplying the `-v` flag will default each metric's `verbose_mode` to its instantiated value.
+The `-v` flag (with no arguments) allows you to turn on [`verbose_mode` for all metrics](metrics-introduction#debugging-a-metric) ran using `deepeval test run`. Not supplying the `-v` flag will default each metric's `verbose_mode` to its value at instantiation.
 
 ```python
 deepeval test run test_example.py -v
 ```
 
 :::note
-When a metric's `verbose_mode` is `True`, it prints the [intermediate steps used to calculate said metric](metrics-introduction#debugging-a-metric) to the console during evaluation.
+When a metric's `verbose_mode` is `True`, it prints the intermediate steps used to calculate said metric to the console during evaluation.
 :::
 
 ### Repeats
@@ -221,10 +221,11 @@ answer_relevancy_metric = AnswerRelevancyMetric()
 evaluate(dataset, [answer_relevancy_metric])
 ```
 
-There are two mandatory and four optional arguments when calling the `evaluate()` function:
+There are two mandatory and eight optional arguments when calling the `evaluate()` function:
 
 - `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics of type `BaseMetric`
+- [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for eac test case. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `False`.
