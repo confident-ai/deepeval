@@ -138,16 +138,14 @@ def should_verbose_print() -> Union[bool, None]:
         if os.environ["DEEPEVAL_VERBOSE_MODE"] == "YES":
             return True
         else:
-            return False
+            return None
     except:
         return None
 
 
-def set_verbose_mode(yes: bool):
+def set_verbose_mode(yes: Optional[bool]):
     if yes:
         os.environ["DEEPEVAL_VERBOSE_MODE"] = "YES"
-    else:
-        os.environ["DEEPEVAL_VERBOSE_MODE"] = "NO"
 
 
 def should_use_cache():

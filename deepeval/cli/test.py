@@ -76,7 +76,7 @@ def run(
         help="Whether to ignore errors or not",
     ),
     verbose: Optional[bool] = typer.Option(
-        False,
+        None,
         "--verbose",
         "-v",
         help="Whether to turn on verbose mode for evaluation or not",

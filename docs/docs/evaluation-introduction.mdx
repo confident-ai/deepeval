@@ -174,6 +174,18 @@ deepeval test run test_example.py -i -c -n 2
 
 :::
 
+### Verbose
+
+The `-v` flag (with no arguments) allows you to turn on `verbose_mode` for all metrics ran using `deepeval test run`. Not supplying the `-v` flag will default each metric's `verbose_mode` to its instantiated value.
+
+```python
+deepeval test run test_example.py -v
+```
+
+:::note
+When a metric's `verbose_mode` is `True`, it prints the [intermediate steps used to calculate said metric](metrics-introduction#debugging-a-metric) to the console during evaluation.
+:::
+
 ### Repeats
 
 Repeat each test case by providing a number to the `-r` flag to specify how many times to rerun each test case.
@@ -215,6 +227,7 @@ There are two mandatory and four optional arguments when calling the `evaluate()
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for eac test case. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `False`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the progress indicator for each individual metric. Defaulted to `True`.
