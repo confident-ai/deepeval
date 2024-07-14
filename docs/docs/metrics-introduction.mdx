@@ -24,9 +24,9 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
 
 ## Types of Metrics
 
-A **_custom_** metric is a type of metric you can easily create by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versitle and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an **_LLM-Eval_** (LLM evaluated) or **_classic_** metric. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
+A **_custom_** metric is a type of metric you can easily create by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versatile and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an **_LLM-Eval_** (LLM evaluated) or **_classic_** metric. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
 
-`deepeval` also offer **_default_** metrics. Most default metrics offered by `deepeval` are LLM-Evals, which means they are evaluated using LLMs. This is delibrate because LLM-Evals are versitle in nature and better aligns with human expectations when compared to traditional model based approaches.
+`deepeval` also offers **_default_** metrics. Most default metrics offered by `deepeval` are LLM-Evals, which means they are evaluated using LLMs. This is deliberate because LLM-Evals are versatile in nature and better align with human expectations when compared to traditional model based approaches.
 
 `deepeval`'s LLM-Evals are a step up to other implementations because they:
 
@@ -373,7 +373,7 @@ All metrics in `deepeval`, including [custom metrics that you create](metrics-cu
 - has a `strict_mode` property, which when turned on enforces `metric.score` to a binary one
 - has a `verbose_mode` property, which when turned on prints metric logs whenever a metric is executed
 
-In additional, all metrics in `deepeval` executes asynchronously by default. This behavior is something you can configure via the `async_mode` parameter when instantiating a metric.
+In additional, all metrics in `deepeval` execute asynchronously by default. This behavior is something you can configure via the `async_mode` parameter when instantiating a metric.
 
 :::tip
 Visit an individual metric page to learn how they are calculated, and what is required when creating an `LLMTestCase` in order to execute it.
