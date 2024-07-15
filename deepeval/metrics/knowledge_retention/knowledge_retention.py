@@ -13,16 +13,7 @@ from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-
-
-class Knowledge(BaseModel):
-    data: Dict[str, Union[str, List[str]]]
-
-
-class KnowledgeRetentionVerdict(BaseModel):
-    index: int
-    verdict: str
-    reason: str = Field(default=None)
+from deepeval.metrics.knowledge_retention.models import *
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):

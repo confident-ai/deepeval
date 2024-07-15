@@ -2,6 +2,7 @@ from typing import List, Optional, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 import asyncio
+import inspect
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -21,28 +22,13 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.summarization.template import SummarizationTemplate
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.summarization.models import *
+from deepeval.metrics.faithfulness.models import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
-
-
-class SummarizationAlignmentVerdict(BaseModel):
-    # yes, no, or idk
-    verdict: str
-    reason: str = Field(default=None)
-
-
-class SummarizationCoverageVerdict(BaseModel):
-    summary_verdict: str
-    original_verdict: str
-    question: str = Field(default=None)
-
-
-class ScoreType(Enum):
-    ALIGNMENT = "Alignment"
-    COVERAGE = "Coverage"
 
 
 class SummarizationMetric(BaseMetric):
@@ -206,13 +192,18 @@ class SummarizationMetric(BaseMetric):
 """
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            try:
+                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     def _generate_reason(self) -> str:
         if self.include_reason is False:
@@ -253,11 +244,16 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            try:
+                res: Reason = self.model.generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     def _calculate_score(self, score_type: ScoreType) -> float:
         if score_type == ScoreType.ALIGNMENT:
@@ -298,11 +294,17 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["answers"]
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["answers"]
-
+            try:
+                res: Answers = await self.model.a_generate(prompt, schema=Answers)
+                return res.answers
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["answers"]
+        
     def _generate_answers(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_answers(
             questions=self.assessment_questions, text=text
@@ -310,30 +312,48 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["answers"]
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["answers"]
+            try:
+                res: Answers = self.model.generate(prompt, schema=Answers)
+                return res.answers
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["answers"]
 
     async def _a_generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["questions"]
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["questions"]
+            try:
+                res: Questions = await self.model.a_generate(prompt, schema=Questions)
+                return res.questions
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["questions"]
 
     def _generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["questions"]
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["questions"]
+            try:
+                res: Questions = self.model.generate(prompt, schema=Questions)
+                return res.questions
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["questions"]
 
     async def _a_generate_coverage_verdicts(
         self, test_case: LLMTestCase
@@ -404,13 +424,23 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [
+                SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+            ]
+            return verdicts
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [
-            SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
-        ]
-        return verdicts
+            try:
+                res: Verdict = await self.model.a_generate(prompt, schema=Verdict)
+                verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [
+                    SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+                ]
+                return verdicts
 
     def _generate_alignment_verdicts(
         self,
@@ -425,36 +455,58 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [
+                SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+            ]
+            return verdicts
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        verdicts = [
-            SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
-        ]
-        return verdicts
-
+            try:
+                res: Verdict = self.model.generate(prompt, schema=Verdict)
+                verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [
+                    SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+                ]
+                return verdicts
+                
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["claims"]
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["claims"]
-
+            try:
+                res: Claim = await self.model.a_generate(prompt, schema=Claim)
+                return res.claims
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["claims"]
+        
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["claims"]
         else:
-            res = self.model.generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["claims"]
-
+            try:
+                res: Claim = self.model.generate(prompt, schema=Claim)
+                return res.claims
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["claims"]
+        
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False

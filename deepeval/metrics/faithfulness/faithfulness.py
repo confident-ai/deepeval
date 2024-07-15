@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 import asyncio
+import inspect
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -19,18 +20,13 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.faithfulness.models import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
     LLMTestCaseParams.RETRIEVAL_CONTEXT,
 ]
-
-
-class FaithfulnessVerdict(BaseModel):
-    verdict: str
-    reason: str = Field(default=None)
-
 
 class FaithfulnessMetric(BaseMetric):
     def __init__(
@@ -131,13 +127,18 @@ class FaithfulnessMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
+            try:
+                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     def _generate_reason(self) -> str:
         if self.include_reason is False:
@@ -156,12 +157,17 @@ class FaithfulnessMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["reason"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["reason"]
-
+            try:
+                res: Reason = self.model.generate(prompt, schema=Reason)
+                return res.reason
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
+                
     async def _a_generate_verdicts(self) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
             return []
@@ -173,12 +179,19 @@ class FaithfulnessMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+            return verdicts
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
-        return verdicts
+            try:
+                res: Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+                return verdicts
 
     def _generate_verdicts(self) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
@@ -191,12 +204,19 @@ class FaithfulnessMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+            return verdicts
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
-        return verdicts
+            try:
+                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
+                verdicts = [item for item in res.verdicts]
+                return verdicts
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+                return verdicts
 
     async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_truths(
@@ -205,10 +225,16 @@ class FaithfulnessMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["truths"]
         else:
-            res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["truths"]
+            try:
+                res: Truth = await self.model.a_generate(prompt, schema=Truth)
+                return res.truths
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["truths"]
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_truths(
@@ -217,33 +243,48 @@ class FaithfulnessMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["truths"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["truths"]
+            try:
+                res: Truth = self.model.generate(prompt, schema=Truth)
+                return res.truths
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["truths"]
 
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["claims"]
         else:
-            res = await self.model.a_generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["claims"]
+            try:
+                res: Claim = await self.model.a_generate(prompt, schema=Claim)
+                return res.claims
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["claims"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["claims"]
         else:
-            res = self.model.generate(prompt)
-
-        data = trimAndLoadJson(res, self)
-        return data["claims"]
+            try:
+                res: Claim = self.model.generate(prompt, schema=Claim)
+                return res.claims
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["claims"]
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
