@@ -1,25 +1,20 @@
 import typer
-from typing_extensions import Annotated
-
+from typing import Optional
 from rich import print
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.cli.test import app as test_app
-from typing import Optional
 import webbrowser
 
 app = typer.Typer(name="deepeval")
-
 app.add_typer(test_app, name="test")
 
 
 @app.command()
 def login(
-    api_key: Annotated[
-        str,
-        typer.Option(
-            help="API key to get from https://app.confident-ai.com. Required if you want to log events to the server."
-        ),
-    ] = "",
+    api_key: str = typer.Option(
+        "",
+        help="API key to get from https://app.confident-ai.com. Required if you want to log events to the server.",
+    ),
     confident_api_key: Optional[str] = typer.Option(
         None,
         "--confident-api-key",
