@@ -72,7 +72,7 @@ module.exports = {
       label: "Guides",
       items: [
         "guides-rag-evaluation",
-        "guides-json-enforcement-for-custom-llms",
+        // "guides-json-enforcement-for-custom-llms",
         "guides-optimizing-hyperparameters",
         "guides-regression-testing-in-cicd",
         "guides-building-custom-metrics",
