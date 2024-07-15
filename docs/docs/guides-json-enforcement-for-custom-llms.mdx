@@ -1,36 +1,42 @@
 ---
-# id: guides-using-custom-llms
-title: Using Custom LLMs for Evaluation
-sidebar_label: Using Custom LLMs
+# id: guides-json-enforcement-for-custom-llms
+title: JSON Enforcement for Custom LLMs
+sidebar_label: JSON Enforcement for Custom LLMs
 ---
 
-If you've ever used **custom LLMs** to evaluate your test cases in `deepeval`, you may have encountered the following error:
+If you've ever used custom LLMs for evaluation in `deepeval`, you may have encountered the following error:
 
 ```bash
-_ValueError: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model_
+ValueError: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model.
 ```
 
-`deepeval` metrics allow you to use **any custom LLM for evaluation**, from LangChain modules to Hugging Face’s Transformer models. Most of these metrics utilize custom LLMs to generate reasons, verdicts, statements, and other types of LLM-generated responses, which serve as criteria for calculating the final metric score for each test case.
+This error arises when your custom LLM used for evaluation is unable to generate valid JSONs during metric calculation. Although `deepeval` allows you to use literally any LLM for evaluation, the inability to output valid JSONs stops the evaluation process altogether. This happens because for smaller and less powerful LLMs, prompt engineering alone is not sufficient to enforce JSON outputs, which is the method used in `deepeval`'s metrics to output JSONs. As a result, it's vital to find a workaround for users not using OpenAI's GPT models for evaluation.
 
-:::warning
-However, each custom LLM is **prompted to return a JSON object**, and it's often the case that these objects are **deformed**, causing `deepeval` to raise the above error! These deformities come in a variety of formats, from missing brackets, to incomplete strings, to mismatched keys.
+This guide will demonstrate **various methods to enforce JSON LLM outputs** by leveraging `deepeval`'s built-in Pydantic schemas for validation. This method ensures that the generated JSONs adhere to the given Pydantic schemas, which helps prevent issues like missing brackets or incomplete strings. We'll be showing examples from a wide range of LLM implementations, including:
 
-For example:
+- Mistral-7B v0.3 from Hugging Face `transformers`
+- Llama-3 8B from Hugging Face `transformers`
+- Gemini 1.5 Flash from Vertex AI
+- Claude Opus 3 from Anthropic
 
-```python
+:::info You should know
+All of `deepeval`'s metrics require the evaluation model to generate valid JSONs to extract properties such as: reasons, verdicts, statements, and other types of LLM-generated responses that are later used for calculating metric scores, and so when the generated JSONs required to extract these properties are invalid (eg. missing brackets, incomplete string quotations, extra trailing commas, or mismatched keys), `deepeval` won't be able to use the necessary information required for metric calculation.
+
+Here's an example of an invalid JSON an open-source model like `mistralai/Mistral-7B-Instruct-v0.3` might output:
+
+```console
 {
-    "reaso: "The actual output does directly not address the input"
-
-# Issues:
-# 1. Missing closing bracket at the end.
-# 2. The key "reaso" is misspelled and the string is not closed properly.
+    "reaso: "The actual output does directly not address the input",
+}
 ```
 
 :::
 
-When using SOTA models like GPT-4 or GPT-4o, this is almost always never a problem. However, for _smaller and less powerful LLMs, prompt engineering alone is not sufficient to enforce JSON outputs_. As a result, it's vital to find a workaround, since this error stops the entire evaluation process.
+## Creating Your Custom LLM
 
-This guide will demonstrate **various methods to confine your LLM output** by leveraging Pydantic models for validation. These models ensure that the JSON objects outputted adhere to predefined schemas, which helps prevent issues like missing brackets or incomplete strings.
+## Rewriting the `generate()` and `a_generate()` Method
+
+## More Examples
 
 ## JSON Enforcement libraries
 
@@ -78,7 +84,7 @@ In the following set of tutorials, we'll go through setting up Pydantic enforcem
 3.  [Gemini 1.5 Flash (through Google AI)](#3-gemini-15-flash)
 4.  [Claude 3 Opus Chat (through Anthropic)](#4-claude-3-opus)
 
-## 1.) Mistral-7B v0.3
+## Mistral-7B v0.3
 
 ### 1. Install `lm-format-enforcer`
 
@@ -188,7 +194,7 @@ metric.measure(test_case)
 print(metric.reason)
 ```
 
-## 2.) Llama-3 8B
+## Llama-3 8B
 
 ### 1. Install `lm-format-enforcer`
 
