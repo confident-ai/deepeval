@@ -4,7 +4,7 @@ title: G-Eval
 sidebar_label: G-Eval
 ---
 
-G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most verstile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
+G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most versatile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
 
 :::info
 You can run **[real-time evaluations in production](confident-ai-evals-in-production)** on metrics such as `GEval` using [Confident AI.](https://app.confident-ai.com)
@@ -80,7 +80,7 @@ G-Eval is a two-step algorithm that first generates a series of `evaluation_step
 When you provide `evaluation_steps`, the `GEval` metric skips the first step and uses the provided steps to determine the final score instead.
 
 :::tip Did Your Know?
-In the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the authors used the the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation?
+In the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the authors used the the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation.
 
 This step was introduced in the paper because it minimizes bias in LLM scoring. **This normalization step is automatically handled by `deepeval` by default** (unless you're using a custom model).
 :::

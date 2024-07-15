@@ -43,14 +43,14 @@ The retrieval step typically involves:
 3. **Rerank the retrieved nodes**. The initial ranking provided by the vector search might not always align perfectly with the specific relevance for your specific use-case.
 
 :::tip
-A "vector store" can either be a dedicated vector database (eg. Pinecone) or a vector extension of an existing database like PostgresQL (eg. pgvector). You **MUST** need to populate your vector store before any retrieval by chunking and vectorizing the relevant documents in your knowledge base.
+A "vector store" can either be a dedicated vector database (eg. Pinecone) or a vector extension of an existing database like PostgresQL (eg. pgvector). You **MUST** populate your vector store before any retrieval by chunking and vectorizing the relevant documents in your knowledge base.
 :::
 
 As you've noticed, there are quite a few hyperparameters such as the choice of embedding model, top-K, etc. that needs tuning. Here are some questions RAG evaluation aims to solve in the retrieval step:
 
 - **Does the embedding model you're using capture domain-specific nuances?** (If you're working on a medical use case, a generic embedding model offered by OpenAI might not provide expected the vector search results.)
 - **Does your reranker model ranks the retrieved nodes in the "correct" order?**
-- **Are you retreiving the right amount of information?** This is influenced by hyperparmeters text chunk size, top-K number.
+- **Are you retrieving the right amount of information?** This is influenced by hyperparmeters text chunk size, top-K number.
 
 We'll explore what other hyperparameters to consider in the generation step of a RAG pipeline, before showing how to evaluate RAG.
 
