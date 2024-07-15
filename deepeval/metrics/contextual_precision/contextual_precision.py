@@ -140,7 +140,7 @@ class ContextualPrecisionMetric(BaseMetric):
             return data["reason"]
         else:
             try:
-                res:Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: Reason = await self.model.a_generate(prompt, schema=Reason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -168,7 +168,7 @@ class ContextualPrecisionMetric(BaseMetric):
             return data["reason"]
         else:
             try:
-                res:Reason = self.model.generate(prompt, schema=Reason)
+                res: Reason = self.model.generate(prompt, schema=Reason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)
@@ -193,17 +193,20 @@ class ContextualPrecisionMetric(BaseMetric):
             return verdicts
         else:
             try:
-                res:Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                res: Verdicts = await self.model.a_generate(
+                    prompt, schema=Verdicts
+                )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [
-                    ContextualPrecisionVerdict(**item) for item in data["verdicts"]
+                    ContextualPrecisionVerdict(**item)
+                    for item in data["verdicts"]
                 ]
                 return verdicts
-        
+
     def _generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
     ) -> List[ContextualPrecisionVerdict]:
@@ -229,7 +232,8 @@ class ContextualPrecisionMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [
-                    ContextualPrecisionVerdict(**item) for item in data["verdicts"]
+                    ContextualPrecisionVerdict(**item)
+                    for item in data["verdicts"]
                 ]
                 return verdicts
 

@@ -30,6 +30,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.RETRIEVAL_CONTEXT,
 ]
 
+
 class ContextualRelevancyMetric(BaseMetric):
     def __init__(
         self,
@@ -182,25 +183,26 @@ class ContextualRelevancyMetric(BaseMetric):
 
         score = relevant_nodes / total_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
-    
 
     async def _a_generate_verdict(
         self, prompt: str
     ) -> ContextualRelevancyVerdict:
         if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt)
-                self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                return ContextualRelevancyVerdict(**data)
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return ContextualRelevancyVerdict(**data)
         else:
             try:
-                res = await self.model.a_generate(prompt, schema=ContextualRelevancyVerdict)
+                res = await self.model.a_generate(
+                    prompt, schema=ContextualRelevancyVerdict
+                )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return ContextualRelevancyVerdict(**data)
-        
+
     async def _a_generate_verdicts(
         self, text: str, retrieval_context: List[str]
     ) -> ContextualRelevancyVerdict:
@@ -229,13 +231,15 @@ class ContextualRelevancyMetric(BaseMetric):
                 verdict = ContextualRelevancyVerdict(**data)
             else:
                 try:
-                    res = self.model.generate(prompt, schema=ContextualRelevancyVerdict)
+                    res = self.model.generate(
+                        prompt, schema=ContextualRelevancyVerdict
+                    )
                     verdict = res
                 except TypeError:
                     res = self.model.generate(prompt)
                     data = trimAndLoadJson(res, self)
                     verdict = ContextualRelevancyVerdict(**data)
-           
+
             verdicts.append(verdict)
 
         return verdicts

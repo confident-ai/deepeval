@@ -185,13 +185,17 @@ class ToxicityMetric(BaseMetric):
             return verdicts
         else:
             try:
-                res: Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                res: Verdicts = await self.model.a_generate(
+                    prompt, schema=Verdicts
+                )
                 verdicts = [item for item in res.verdicts]
-                return verdicts     
+                return verdicts
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [ToxicityVerdict(**item) for item in data["verdicts"]]
+                verdicts = [
+                    ToxicityVerdict(**item) for item in data["verdicts"]
+                ]
                 return verdicts
 
     def _generate_verdicts(self) -> List[ToxicityVerdict]:
@@ -214,7 +218,9 @@ class ToxicityMetric(BaseMetric):
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [ToxicityVerdict(**item) for item in data["verdicts"]]
+                verdicts = [
+                    ToxicityVerdict(**item) for item in data["verdicts"]
+                ]
                 return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
@@ -226,13 +232,15 @@ class ToxicityMetric(BaseMetric):
             return data["opinions"]
         else:
             try:
-                res: Opinions = await self.model.a_generate(prompt, schema=Opinions)
+                res: Opinions = await self.model.a_generate(
+                    prompt, schema=Opinions
+                )
                 return res.opinions
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["opinions"]
-        
+
     def _generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
         if self.using_native_model:
@@ -248,7 +256,7 @@ class ToxicityMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["opinions"]
-        
+
     def _calculate_score(self) -> float:
         total = len(self.verdicts)
         if total == 0:

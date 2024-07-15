@@ -266,7 +266,9 @@ class GEval(BaseMetric):
                 return data["score"], data["reason"]
             else:
                 try:
-                    res: ReasonScore = await self.model.a_generate(prompt, schema=ReasonScore)
+                    res: ReasonScore = await self.model.a_generate(
+                        prompt, schema=ReasonScore
+                    )
                     return res.score, res.reason
                 except TypeError:
                     res = await self.model.a_generate(prompt)
@@ -317,7 +319,9 @@ class GEval(BaseMetric):
                 return data["score"], data["reason"]
             else:
                 try:
-                    res: ReasonScore = self.model.generate(prompt, schema=ReasonScore)
+                    res: ReasonScore = self.model.generate(
+                        prompt, schema=ReasonScore
+                    )
                     return res.score, res.reason
                 except TypeError:
                     res = self.model.generate(prompt)

@@ -298,13 +298,15 @@ class SummarizationMetric(BaseMetric):
             return data["answers"]
         else:
             try:
-                res: Answers = await self.model.a_generate(prompt, schema=Answers)
+                res: Answers = await self.model.a_generate(
+                    prompt, schema=Answers
+                )
                 return res.answers
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["answers"]
-        
+
     def _generate_answers(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_answers(
             questions=self.assessment_questions, text=text
@@ -332,7 +334,9 @@ class SummarizationMetric(BaseMetric):
             return data["questions"]
         else:
             try:
-                res: Questions = await self.model.a_generate(prompt, schema=Questions)
+                res: Questions = await self.model.a_generate(
+                    prompt, schema=Questions
+                )
                 return res.questions
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -426,19 +430,23 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             verdicts = [
-                SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+                SummarizationAlignmentVerdict(**item)
+                for item in data["verdicts"]
             ]
             return verdicts
         else:
             try:
-                res: Verdict = await self.model.a_generate(prompt, schema=Verdict)
+                res: Verdict = await self.model.a_generate(
+                    prompt, schema=Verdict
+                )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [
-                    SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+                    SummarizationAlignmentVerdict(**item)
+                    for item in data["verdicts"]
                 ]
                 return verdicts
 
@@ -457,7 +465,8 @@ class SummarizationMetric(BaseMetric):
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             verdicts = [
-                SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+                SummarizationAlignmentVerdict(**item)
+                for item in data["verdicts"]
             ]
             return verdicts
         else:
@@ -469,10 +478,11 @@ class SummarizationMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [
-                    SummarizationAlignmentVerdict(**item) for item in data["verdicts"]
+                    SummarizationAlignmentVerdict(**item)
+                    for item in data["verdicts"]
                 ]
                 return verdicts
-                
+
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
@@ -489,7 +499,7 @@ class SummarizationMetric(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
-        
+
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
@@ -506,7 +516,7 @@ class SummarizationMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
-        
+
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False

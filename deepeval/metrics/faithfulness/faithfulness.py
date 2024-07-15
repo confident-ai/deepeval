@@ -28,6 +28,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.RETRIEVAL_CONTEXT,
 ]
 
+
 class FaithfulnessMetric(BaseMetric):
     def __init__(
         self,
@@ -167,7 +168,7 @@ class FaithfulnessMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
-                
+
     async def _a_generate_verdicts(self) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
             return []
@@ -180,17 +181,23 @@ class FaithfulnessMetric(BaseMetric):
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+            verdicts = [
+                FaithfulnessVerdict(**item) for item in data["verdicts"]
+            ]
             return verdicts
         else:
             try:
-                res: Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                res: Verdicts = await self.model.a_generate(
+                    prompt, schema=Verdicts
+                )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+                verdicts = [
+                    FaithfulnessVerdict(**item) for item in data["verdicts"]
+                ]
                 return verdicts
 
     def _generate_verdicts(self) -> List[FaithfulnessVerdict]:
@@ -205,7 +212,9 @@ class FaithfulnessMetric(BaseMetric):
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+            verdicts = [
+                FaithfulnessVerdict(**item) for item in data["verdicts"]
+            ]
             return verdicts
         else:
             try:
@@ -215,7 +224,9 @@ class FaithfulnessMetric(BaseMetric):
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [FaithfulnessVerdict(**item) for item in data["verdicts"]]
+                verdicts = [
+                    FaithfulnessVerdict(**item) for item in data["verdicts"]
+                ]
                 return verdicts
 
     async def _a_generate_truths(self, retrieval_context: str) -> List[str]:

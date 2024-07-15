@@ -26,6 +26,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
 
+
 class BiasMetric(BaseMetric):
     def __init__(
         self,
@@ -180,7 +181,9 @@ class BiasMetric(BaseMetric):
             return verdicts
         else:
             try:
-                res: Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                res: Verdicts = await self.model.a_generate(
+                    prompt, schema=Verdicts
+                )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:
@@ -220,7 +223,9 @@ class BiasMetric(BaseMetric):
             return data["opinions"]
         else:
             try:
-                res:Opinions = await self.model.a_generate(prompt, schema=Opinions)
+                res: Opinions = await self.model.a_generate(
+                    prompt, schema=Opinions
+                )
                 return res.opinions
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -236,13 +241,13 @@ class BiasMetric(BaseMetric):
             return data["opinions"]
         else:
             try:
-                res:Opinions = self.model.generate(prompt, schema=Opinions)
+                res: Opinions = self.model.generate(prompt, schema=Opinions)
                 return res.opinions
             except TypeError:
                 res, cost = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["opinions"]
-        
+
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:

@@ -136,16 +136,18 @@ class AnswerRelevancyMetric(BaseMetric):
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            return data["reason"] 
+            return data["reason"]
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt=prompt, schema=Reason)
+                res: Reason = await self.model.a_generate(
+                    prompt=prompt, schema=Reason
+                )
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["reason"] 
-        
+                return data["reason"]
+
     def _generate_reason(self, input: str) -> str:
         if self.include_reason is False:
             return None
@@ -192,14 +194,17 @@ class AnswerRelevancyMetric(BaseMetric):
             return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
         else:
             try:
-                res:Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
-                return [item for item in res.verdicts]    
+                res: Verdicts = await self.model.a_generate(
+                    prompt, schema=Verdicts
+                )
+                return [item for item in res.verdicts]
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+                return [
+                    AnswerRelvancyVerdict(**item) for item in data["verdicts"]
+                ]
 
-        
     def _generate_verdicts(self, input: str) -> List[AnswerRelvancyVerdict]:
         if len(self.statements) == 0:
             return []
@@ -215,13 +220,15 @@ class AnswerRelevancyMetric(BaseMetric):
             return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
         else:
             try:
-                res:Verdicts = self.model.generate(prompt, schema=Verdicts)
-                return [item for item in res.verdicts]    
+                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
+                return [item for item in res.verdicts]
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]  
-        
+                return [
+                    AnswerRelvancyVerdict(**item) for item in data["verdicts"]
+                ]
+
     async def _a_generate_statements(
         self,
         actual_output: str,
@@ -236,13 +243,15 @@ class AnswerRelevancyMetric(BaseMetric):
             return data["statements"]
         else:
             try:
-                res: Statements = await self.model.a_generate(prompt, schema=Statements)
+                res: Statements = await self.model.a_generate(
+                    prompt, schema=Statements
+                )
                 return res.statements
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["statements"]
-        
+
     def _generate_statements(
         self,
         actual_output: str,
@@ -263,7 +272,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["statements"]
-        
+
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:

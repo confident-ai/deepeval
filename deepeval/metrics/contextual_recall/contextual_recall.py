@@ -210,7 +210,9 @@ class ContextualRecallMetric(BaseMetric):
             return verdicts
         else:
             try:
-                res: Verdicts = await self.model.a_generate(prompt, schema=Verdicts)
+                res: Verdicts = await self.model.a_generate(
+                    prompt, schema=Verdicts
+                )
                 verdicts: Verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:
@@ -220,7 +222,6 @@ class ContextualRecallMetric(BaseMetric):
                     ContextualRecallVerdict(**item) for item in data["verdicts"]
                 ]
                 return verdicts
-        
 
     def _generate_verdicts(
         self, expected_output: str, retrieval_context: List[str]
@@ -248,7 +249,6 @@ class ContextualRecallMetric(BaseMetric):
                     ContextualRecallVerdict(**item) for item in data["verdicts"]
                 ]
                 return verdicts
-
 
     def is_successful(self) -> bool:
         if self.error is not None:
