@@ -278,14 +278,21 @@ TraceStack = List[TraceData]
 
 # Context variable to maintain an isolated stack for each async task
 trace_stack_var: ContextVar[TraceStack] = ContextVar("trace_stack", default=[])
-dict_trace_stack_var = ContextVar("dict_trace_stack", default=None)
-
+dict_trace_stack_var: ContextVar[Dict] = ContextVar("dict_trace_stack", default={})
+outter_provider_var: ContextVar[Optional[TraceProvider]] = ContextVar("outter_provider", default=None)
+    
 ########################################################
 ### ContextVar Managers ################################
 ########################################################
 
-
 class TraceManager:
+
+    def get_outter_provider(self):
+        return outter_provider_var.get()
+    
+    def set_outter_provider(self, provider:TraceProvider):
+        return outter_provider_var.set(provider)
+
     def get_trace_stack(self):
         return trace_stack_var.get()
 
@@ -340,6 +347,7 @@ class Tracer:
         self.attributes: Optional[Attributes] = None
         self.track_params: Optional[Dict] = None
         self.is_tracking: bool = False
+        
 
     def __enter__(self):
         # start timer
@@ -349,6 +357,10 @@ class Tracer:
         caller_frame = inspect.currentframe().f_back
         func_name = caller_frame.f_code.co_name
         self.name = func_name
+
+        # set outtermost provider
+        if not trace_manager.get_outter_provider():
+            trace_manager.set_outter_provider(TraceProvider.CUSTOM)
 
         trace_instance: BaseTrace = self.create_trace_instance(
             self.trace_type, self.trace_provider, None
