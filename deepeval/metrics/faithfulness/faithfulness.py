@@ -240,7 +240,7 @@ class FaithfulnessMetric(BaseMetric):
             return data["truths"]
         else:
             try:
-                res: Truth = await self.model.a_generate(prompt, schema=Truth)
+                res: Truths = await self.model.a_generate(prompt, schema=Truths)
                 return res.truths
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -258,7 +258,7 @@ class FaithfulnessMetric(BaseMetric):
             return data["truths"]
         else:
             try:
-                res: Truth = self.model.generate(prompt, schema=Truth)
+                res: Truths = self.model.generate(prompt, schema=Truths)
                 return res.truths
             except TypeError:
                 res = self.model.generate(prompt)
@@ -274,7 +274,7 @@ class FaithfulnessMetric(BaseMetric):
             return data["claims"]
         else:
             try:
-                res: Claim = await self.model.a_generate(prompt, schema=Claim)
+                res: Claims = await self.model.a_generate(prompt, schema=Claims)
                 return res.claims
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -290,7 +290,7 @@ class FaithfulnessMetric(BaseMetric):
             return data["claims"]
         else:
             try:
-                res: Claim = self.model.generate(prompt, schema=Claim)
+                res: Claims = self.model.generate(prompt, schema=Claims)
                 return res.claims
             except TypeError:
                 res = self.model.generate(prompt)

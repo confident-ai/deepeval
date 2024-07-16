@@ -1,6 +1,5 @@
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field
-import inspect
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (

@@ -493,7 +493,7 @@ class SummarizationMetric(BaseMetric):
             return data["claims"]
         else:
             try:
-                res: Claim = await self.model.a_generate(prompt, schema=Claim)
+                res: Claims = await self.model.a_generate(prompt, schema=Claims)
                 return res.claims
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -510,7 +510,7 @@ class SummarizationMetric(BaseMetric):
             return data["claims"]
         else:
             try:
-                res: Claim = self.model.generate(prompt, schema=Claim)
+                res: Claims = self.model.generate(prompt, schema=Claims)
                 return res.claims
             except TypeError:
                 res = self.model.generate(prompt)

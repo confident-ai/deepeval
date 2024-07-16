@@ -11,11 +11,11 @@ class Verdicts(BaseModel):
     verdicts: List[FaithfulnessVerdict]
 
 
-class Truth(BaseModel):
+class Truths(BaseModel):
     truths: List[str]
 
 
-class Claim(BaseModel):
+class Claims(BaseModel):
     claims: List[str]
 
 
