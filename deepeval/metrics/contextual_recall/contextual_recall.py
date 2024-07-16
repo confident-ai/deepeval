@@ -19,7 +19,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.contextual_recall.template import ContextualRecallTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.contextual_recall.models import *
+from deepeval.metrics.contextual_recall.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,

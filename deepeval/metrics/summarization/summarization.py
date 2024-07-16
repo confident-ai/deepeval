@@ -22,8 +22,8 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.summarization.template import SummarizationTemplate
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.summarization.models import *
-from deepeval.metrics.faithfulness.models import *
+from deepeval.metrics.summarization.schema import *
+from deepeval.metrics.faithfulness.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,

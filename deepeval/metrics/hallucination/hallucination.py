@@ -19,7 +19,7 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.hallucination.template import HallucinationTemplate
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.hallucination.models import *
+from deepeval.metrics.hallucination.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
