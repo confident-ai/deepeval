@@ -156,7 +156,9 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     model=self.track_params.get("model") or "NA",
                     input=self.track_params.get("input") or "NA",
                     response=self.track_params.get("response") or "NA",
-                    retrieval_context=self.track_params.get("retrieval_context"),
+                    retrieval_context=self.track_params.get(
+                        "retrieval_context"
+                    ),
                     completion_time=current_trace_stack[0].executionTime,
                     token_usage=self.track_params.get("token_usage"),
                     trace_stack=dict_representation,
@@ -308,10 +310,18 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         ):
             attributes = trace_instance.llmAttributes
             attributes.output_str = processed_payload["output_value"]
-            attributes.total_token_count = processed_payload["llm_token_count_total"]
-            attributes.prompt_token_count = processed_payload["llm_token_prompt_count"]
-            attributes.completion_token_count = processed_payload["llm_token_count_completion"]
-            self.track_params["token_usage"] = processed_payload["llm_token_count_total"]
+            attributes.total_token_count = processed_payload[
+                "llm_token_count_total"
+            ]
+            attributes.prompt_token_count = processed_payload[
+                "llm_token_prompt_count"
+            ]
+            attributes.completion_token_count = processed_payload[
+                "llm_token_count_completion"
+            ]
+            self.track_params["token_usage"] = processed_payload[
+                "llm_token_count_total"
+            ]
 
         elif event_type == CBEventType.EMBEDDING and isinstance(
             trace_instance, EmbeddingTrace
@@ -337,7 +347,9 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             attributes.top_k = len(nodes)
             attributes.average_chunk_size = total_chunk_length // len(nodes)
             attributes.top_score = top_score
-            self.track_params["retrieval_context"] = [node.content for node in nodes]
+            self.track_params["retrieval_context"] = [
+                node.content for node in nodes
+            ]
 
         elif event_type == CBEventType.QUERY and isinstance(
             trace_instance, QueryTrace

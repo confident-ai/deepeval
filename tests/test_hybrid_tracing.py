@@ -12,7 +12,7 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent, Tool
 #### Step 1: Define the base LLM and the embedding model
 #############################################################
 
-# LLM 
+# LLM
 llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0, streaming=True)
 
 # Embedding Model
@@ -21,16 +21,16 @@ embed_model = OpenAIEmbedding(
 )
 
 # Set Llamaindex Configs
-Settings.llm = llm 
+Settings.llm = llm
 Settings.embed_model = embed_model
 
 #############################################################
-#### Step 2: We leverage the indexing and retrieval 
-# functionalities of LlamaIndex to define individual query 
+#### Step 2: We leverage the indexing and retrieval
+# functionalities of LlamaIndex to define individual query
 # engines for our documents.
 #############################################################
 
-#Building Indexes for each of the Documents
+# Building Indexes for each of the Documents
 try:
     storage_context = StorageContext.from_defaults(
         persist_dir="./tracing_data/storage/lyft"
@@ -43,7 +43,9 @@ try:
     uber_index = load_index_from_storage(storage_context)
 
     index_loaded = True
-    print("Index was already created. We just loaded it from the local storage.")
+    print(
+        "Index was already created. We just loaded it from the local storage."
+    )
 
 except:
 
@@ -67,26 +69,29 @@ if not index_loaded:
     uber_index = VectorStoreIndex.from_documents(uber_docs)
 
     # persist index
-    lyft_index.storage_context.persist(persist_dir="./tracing_data/storage/lyft")
-    uber_index.storage_context.persist(persist_dir="./tracing_data/storage/uber")
-    
+    lyft_index.storage_context.persist(
+        persist_dir="./tracing_data/storage/lyft"
+    )
+    uber_index.storage_context.persist(
+        persist_dir="./tracing_data/storage/uber"
+    )
+
     index_loaded = True
 
-#Creating Query engines on top of the indexes
+# Creating Query engines on top of the indexes
 lyft_engine = lyft_index.as_query_engine(similarity_top_k=3)
 uber_engine = uber_index.as_query_engine(similarity_top_k=3)
 
 print("LlamaIndex Query Engines created successfully.")
 
 #############################################################
-#### Step 3: We now use the LlamaIndex QueryEngineTool 
-# abstraction to transform these query engines into Tools, 
+#### Step 3: We now use the LlamaIndex QueryEngineTool
+# abstraction to transform these query engines into Tools,
 # which would later be provided to the LLM.
 #############################################################
 
-#creating tools for each of our query engines
+# creating tools for each of our query engines
 query_engine_tools = [
-
     QueryEngineTool(
         query_engine=lyft_engine,
         metadata=ToolMetadata(
@@ -110,27 +115,29 @@ query_engine_tools = [
 ]
 
 #############################################################
-#### Step 4: We convert the LlamaIndex Tools into a format 
+#### Step 4: We convert the LlamaIndex Tools into a format
 # compatible with Langchain Agents.
 #############################################################
 
-#convert to langchain format
-llamaindex_to_langchain_converted_tools = [t.to_langchain_tool() for t in query_engine_tools]
+# convert to langchain format
+llamaindex_to_langchain_converted_tools = [
+    t.to_langchain_tool() for t in query_engine_tools
+]
 
-#Another Langchain Tool
+# Another Langchain Tool
 search = DuckDuckGoSearchRun()
 duckduckgo_tool = Tool(
-        name='DuckDuckGoSearch',
-        func= search.run,
-        description='Use for when you need to perform an internet search to find information that another tool can not provide.'
-)   
+    name="DuckDuckGoSearch",
+    func=search.run,
+    description="Use for when you need to perform an internet search to find information that another tool can not provide.",
+)
 langchain_tools = [duckduckgo_tool]
 
-#Combine to create final list of tools
+# Combine to create final list of tools
 tools = llamaindex_to_langchain_converted_tools + langchain_tools
 
 #############################################################
-#### Step 5: We’ll initialize Langchain’s latest Tool 
+#### Step 5: We’ll initialize Langchain’s latest Tool
 # Calling Agent.
 #############################################################
 
@@ -150,15 +157,26 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 # Construct the Tools agent
-agent = create_tool_calling_agent(llm, tools, prompt,)
+agent = create_tool_calling_agent(
+    llm,
+    tools,
+    prompt,
+)
 
 #############################################################
-#### Step 6: Next, we’ll put the agent to the test 
+#### Step 6: Next, we’ll put the agent to the test
 # with our queries.
 #############################################################
 
 # Create an agent executor by passing in the agent and tools
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, return_intermediate_steps=True, handle_parsing_errors=True, max_iterations=10)
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    verbose=True,
+    return_intermediate_steps=True,
+    handle_parsing_errors=True,
+    max_iterations=10,
+)
 
 #############################################################
 #### Step 7: Tracking responses
@@ -167,19 +185,23 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, return_in
 from deepeval.integrations import Integrations
 from deepeval.tracing import Tracer, TraceType, QueryAttributes
 
+
 def ask_llm(question):
     with Tracer(TraceType.QUERY) as tracer:
         response = agent_executor.invoke({"input": question})
-        tracer.set_attributes(QueryAttributes(input=question, output=response['output']))
-        tracer.track(
-            event_name='Hybrid Integrations',
-            input=question,
-            response=response['output'],
-            model="gpt-4-1106-preview"
+        tracer.set_attributes(
+            QueryAttributes(input=question, output=response["output"])
         )
+        tracer.track(
+            event_name="Hybrid Integrations",
+            input=question,
+            response=response["output"],
+            model="gpt-4-1106-preview",
+        )
+
 
 Integrations.trace_langchain()
 Integrations.trace_llama_index()
 
-question =  "What was Lyft's revenue growth in 2021?"
+question = "What was Lyft's revenue growth in 2021?"
 ask_llm(question)

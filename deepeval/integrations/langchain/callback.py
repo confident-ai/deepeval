@@ -40,14 +40,15 @@ from deepeval.tracing import (
 )
 from deepeval.event import track
 
+
 class LangChainCallbackHandler(BaseTracer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.event_map: Dict[str, TraceData] = {}
         self.track_params = {}
-        
+
     def _start_trace(self, run: Run) -> None:
-         # set outtermost provider
+        # set outtermost provider
         if not trace_manager.get_outter_provider():
             trace_manager.set_outter_provider(TraceProvider.LANGCHAIN)
         self.run_map[str(run.id)] = run
@@ -97,8 +98,12 @@ class LangChainCallbackHandler(BaseTracer):
             trace_manager.clear_trace_stack()
 
             if current_trace_stack[0].type == LangChainTraceType.CHAIN:
-                self.track_params["input"] = current_trace_stack[0].chainAttributes.input
-                self.track_params["response"] = current_trace_stack[0].chainAttributes.output
+                self.track_params["input"] = current_trace_stack[
+                    0
+                ].chainAttributes.input
+                self.track_params["response"] = current_trace_stack[
+                    0
+                ].chainAttributes.output
 
             if trace_manager.get_outter_provider() == TraceProvider.LANGCHAIN:
                 track(
@@ -106,7 +111,9 @@ class LangChainCallbackHandler(BaseTracer):
                     model=self.track_params.get("model") or "NA",
                     input=self.track_params.get("input") or "NA",
                     response=self.track_params.get("response") or "NA",
-                    retrieval_context=self.track_params.get("retrieval_context"),
+                    retrieval_context=self.track_params.get(
+                        "retrieval_context"
+                    ),
                     completion_time=current_trace_stack[0].executionTime,
                     token_usage=self.track_params.get("token_usage"),
                     trace_stack=dict_representation,
@@ -191,17 +198,25 @@ class LangChainCallbackHandler(BaseTracer):
                 or "NA",
                 # Optional Attributes
                 model=processed_payload.get("llm_model"),
-                total_token_count=processed_payload.get("llm_token_count_total"),
-                prompt_token_count=processed_payload.get("llm_token_count_prompt"),
-                completion_token_count=processed_payload.get("llm_token_count_completion"),
+                total_token_count=processed_payload.get(
+                    "llm_token_count_total"
+                ),
+                prompt_token_count=processed_payload.get(
+                    "llm_token_count_prompt"
+                ),
+                completion_token_count=processed_payload.get(
+                    "llm_token_count_completion"
+                ),
                 prompt_template=prompt,
                 prompt_template_variables=None,
             )
             trace_instance.llmAttributes = attributes
             self.track_params["model"] = processed_payload.get("llm_model_name")
-            self.track_params["token_usage"] = processed_payload.get("llm_token_count_total")
+            self.track_params["token_usage"] = processed_payload.get(
+                "llm_token_count_total"
+            )
         elif event_type == LangChainTraceType.RETRIEVER:
-            retrieval_documents:List[RetrievalNode] = []
+            retrieval_documents: List[RetrievalNode] = []
             total_content_length = 0
             i = 0
             while True:
@@ -230,7 +245,9 @@ class LangChainCallbackHandler(BaseTracer):
                 top_k=len("retrieval_documents"),
             )
             trace_instance.retrieverAttributes = attributes
-            self.track_params["retrieval_context"] = [doc.content for doc in retrieval_documents]
+            self.track_params["retrieval_context"] = [
+                doc.content for doc in retrieval_documents
+            ]
         elif event_type == LangChainTraceType.TOOL:
             attributes = ToolAttributes(
                 # Required Attributes
@@ -264,10 +281,8 @@ class LangChainCallbackHandler(BaseTracer):
     def _persist_run(self, run: Run) -> None:
         pass
 
-
     def _flatten(
-        self, 
-        key_values: Iterable[Tuple[str, Any]]
+        self, key_values: Iterable[Tuple[str, Any]]
     ) -> Iterator[Tuple[str, Any]]:
         for key, value in key_values:
             if value is None:
@@ -279,13 +294,14 @@ class LangChainCallbackHandler(BaseTracer):
                 isinstance(item, Mapping) for item in value
             ):
                 for index, sub_mapping in enumerate(value):
-                    for sub_key, sub_value in self._flatten(sub_mapping.items()):
+                    for sub_key, sub_value in self._flatten(
+                        sub_mapping.items()
+                    ):
                         yield f"{key}.{index}.{sub_key}", sub_value
             else:
                 if isinstance(value, Enum):
                     value = value.value
                 yield key, value
-
 
     def safe_json_dumps(self, obj: Any, **kwargs: Any) -> str:
         """
@@ -295,14 +311,11 @@ class LangChainCallbackHandler(BaseTracer):
         """
         return json.dumps(obj, default=str, ensure_ascii=False, **kwargs)
 
-
     def _as_input(self, values: Iterable[str]) -> Iterator[Tuple[str, str]]:
         return zip(("input_value", "input.mime_type"), values)
 
-
     def _as_output(self, values: Iterable[str]) -> Iterator[Tuple[str, str]]:
         return zip(("output_value", "output.mime_type"), values)
-
 
     def _convert_io(self, obj: Optional[Mapping[str, Any]]) -> Iterator[str]:
         if not obj:
@@ -315,7 +328,6 @@ class LangChainCallbackHandler(BaseTracer):
             yield self.safe_json_dumps(obj)
             yield "application/json"
 
-
     def _replace_nan(self, obj: Mapping[str, Any]) -> Iterator[Tuple[str, Any]]:
         for k, v in obj.items():
             if isinstance(v, float) and not math.isfinite(v):
@@ -323,11 +335,9 @@ class LangChainCallbackHandler(BaseTracer):
             else:
                 yield k, v
 
-
     # Unchecked
     def _prompts(
-        self, 
-        inputs: Optional[Mapping[str, Any]]
+        self, inputs: Optional[Mapping[str, Any]]
     ) -> Iterator[Tuple[str, List[str]]]:
         """Yields prompts if present."""
         if not inputs:
@@ -335,7 +345,6 @@ class LangChainCallbackHandler(BaseTracer):
         assert hasattr(inputs, "get"), f"expected Mapping, found {type(inputs)}"
         if prompts := inputs.get("prompts"):
             yield "llm_prompts", prompts
-
 
     # Unchecked
     def _input_messages(
@@ -363,7 +372,9 @@ class LangChainCallbackHandler(BaseTracer):
                         dict(self._parse_message_data(message_data.to_json()))
                     )
                 elif hasattr(message_data, "get"):
-                    parsed_messages.append(dict(self._parse_message_data(message_data)))
+                    parsed_messages.append(
+                        dict(self._parse_message_data(message_data))
+                    )
                 else:
                     raise ValueError(
                         f"failed to parse message of type {type(message_data)}"
@@ -373,14 +384,15 @@ class LangChainCallbackHandler(BaseTracer):
                 dict(self._parse_message_data(first_messages.to_json()))
             )
         elif hasattr(first_messages, "get"):
-            parsed_messages.append(dict(self._parse_message_data(first_messages)))
+            parsed_messages.append(
+                dict(self._parse_message_data(first_messages))
+            )
         else:
             raise ValueError(
                 f"failed to parse messages of type {type(first_messages)}"
             )
         if parsed_messages:
             yield "llm_input_messages", parsed_messages
-
 
     # Unchecked
     def _output_messages(
@@ -390,7 +402,9 @@ class LangChainCallbackHandler(BaseTracer):
         """Yields chat messages if present."""
         if not outputs:
             return
-        assert hasattr(outputs, "get"), f"expected Mapping, found {type(outputs)}"
+        assert hasattr(
+            outputs, "get"
+        ), f"expected Mapping, found {type(outputs)}"
         # There may be more than one set of generations. We'll use just the first set.
         if not (multiple_generations := outputs.get("generations")):
             return
@@ -414,7 +428,9 @@ class LangChainCallbackHandler(BaseTracer):
                         dict(self._parse_message_data(message_data.to_json()))
                     )
                 elif hasattr(message_data, "get"):
-                    parsed_messages.append(dict(self._parse_message_data(message_data)))
+                    parsed_messages.append(
+                        dict(self._parse_message_data(message_data))
+                    )
                 else:
                     raise ValueError(
                         f"fail to parse message of type {type(message_data)}"
@@ -422,11 +438,9 @@ class LangChainCallbackHandler(BaseTracer):
         if parsed_messages:
             yield "llm_output_messages", parsed_messages
 
-
     # Unchecked
     def _parse_message_data(
-        self,
-        message_data: Optional[Mapping[str, Any]]
+        self, message_data: Optional[Mapping[str, Any]]
     ) -> Iterator[Tuple[str, Any]]:
         """Parses message data to grab message role, content, etc."""
         if not message_data:
@@ -450,10 +464,14 @@ class LangChainCallbackHandler(BaseTracer):
         elif message_class_name.startswith("ChatMessage"):
             role = message_data["kwargs"]["role"]
         else:
-            raise ValueError(f"Cannot parse message of type: {message_class_name}")
+            raise ValueError(
+                f"Cannot parse message of type: {message_class_name}"
+            )
         yield "message_role", role
         if kwargs := message_data.get("kwargs"):
-            assert hasattr(kwargs, "get"), f"expected Mapping, found {type(kwargs)}"
+            assert hasattr(
+                kwargs, "get"
+            ), f"expected Mapping, found {type(kwargs)}"
             if content := kwargs.get("content"):
                 assert isinstance(
                     content, str
@@ -483,15 +501,15 @@ class LangChainCallbackHandler(BaseTracer):
                     ), f"expected Iterable, found {type(tool_calls)}"
                     message_tool_calls = []
                     for tool_call in tool_calls:
-                        if message_tool_call := dict(self._get_tool_call(tool_call)):
+                        if message_tool_call := dict(
+                            self._get_tool_call(tool_call)
+                        ):
                             message_tool_calls.append(message_tool_call)
                     if message_tool_calls:
                         yield "message_tool_calls", message_tool_calls
 
-
     def _get_tool_call(
-        self, 
-        tool_call: Optional[Mapping[str, Any]]
+        self, tool_call: Optional[Mapping[str, Any]]
     ) -> Iterator[Tuple[str, Any]]:
         if not tool_call:
             return
@@ -503,14 +521,15 @@ class LangChainCallbackHandler(BaseTracer):
                 function, "get"
             ), f"expected Mapping, found {type(function)}"
             if name := function.get("name"):
-                assert isinstance(name, str), f"expected str, found {type(name)}"
+                assert isinstance(
+                    name, str
+                ), f"expected str, found {type(name)}"
                 yield "tool_call_function_name", name
             if arguments := function.get("arguments"):
                 assert isinstance(
                     arguments, str
                 ), f"expected str, found {type(arguments)}"
                 yield "tool_call_function_arguments_json", arguments
-
 
     def _prompt_template(self, run: Run) -> Iterator[Tuple[str, Any]]:
         """
@@ -533,7 +552,9 @@ class LangChainCallbackHandler(BaseTracer):
             # object's class in the LangChain package, e.g. `PromptTemplate` in
             # the `langchain.prompts.prompt` module is represented as
             # ["langchain", "prompts", "prompt", "PromptTemplate"]
-            assert isinstance(id_, Sequence), f"expected list, found {type(id_)}"
+            assert isinstance(
+                id_, Sequence
+            ), f"expected list, found {type(id_)}"
             if id_[-1].endswith("PromptTemplate"):
                 if not (kwargs := obj.get("kwargs")):
                     continue
@@ -557,7 +578,6 @@ class LangChainCallbackHandler(BaseTracer):
                         )
                 break
 
-
     def _invocation_parameters(self, run: Run) -> Iterator[Tuple[str, str]]:
         """Yields invocation parameters if present."""
         if run.run_type.lower() != "llm":
@@ -573,10 +593,8 @@ class LangChainCallbackHandler(BaseTracer):
                 invocation_parameters
             )
 
-
     def _model_name(
-        self,
-        extra: Optional[Mapping[str, Any]]
+        self, extra: Optional[Mapping[str, Any]]
     ) -> Iterator[Tuple[str, str]]:
         """Yields model name if present."""
         if not extra:
@@ -589,15 +607,15 @@ class LangChainCallbackHandler(BaseTracer):
                 yield "llm_model_name", name
                 return
 
-
     def _token_counts(
-        self, 
-        outputs: Optional[Mapping[str, Any]]
+        self, outputs: Optional[Mapping[str, Any]]
     ) -> Iterator[Tuple[str, int]]:
         """Yields token count information if present."""
         if not outputs:
             return
-        assert hasattr(outputs, "get"), f"expected Mapping, found {type(outputs)}"
+        assert hasattr(
+            outputs, "get"
+        ), f"expected Mapping, found {type(outputs)}"
         if not (llm_output := outputs.get("llm_output")):
             return
         assert hasattr(
@@ -615,16 +633,16 @@ class LangChainCallbackHandler(BaseTracer):
         ]:
             if (token_count := token_usage.get(key)) is not None:
                 yield attribute_name, token_count
-                
 
     def _function_calls(
-        self,
-        outputs: Optional[Mapping[str, Any]]
+        self, outputs: Optional[Mapping[str, Any]]
     ) -> Iterator[Tuple[str, str]]:
         """Yields function call information if present."""
         if not outputs:
             return
-        assert hasattr(outputs, "get"), f"expected Mapping, found {type(outputs)}"
+        assert hasattr(
+            outputs, "get"
+        ), f"expected Mapping, found {type(outputs)}"
         try:
             function_call_data = deepcopy(
                 outputs["generations"][0][0]["message"]["kwargs"][
@@ -637,7 +655,6 @@ class LangChainCallbackHandler(BaseTracer):
             yield "llm_function_call", self.safe_json_dumps(function_call_data)
         except Exception:
             pass
-
 
     def _tools(self, run: Run) -> Iterator[Tuple[str, str]]:
         """Yields tool attributes if present."""
@@ -653,16 +670,17 @@ class LangChainCallbackHandler(BaseTracer):
         if description := serialized.get("description"):
             yield "tool_description", description
 
-
     def _retrieval_documents(
-        self, 
+        self,
         run: Run,
     ) -> Iterator[Tuple[str, List[Mapping[str, Any]]]]:
         if run.run_type.lower() != "retriever":
             return
         if not (outputs := run.outputs):
             return
-        assert hasattr(outputs, "get"), f"expected Mapping, found {type(outputs)}"
+        assert hasattr(
+            outputs, "get"
+        ), f"expected Mapping, found {type(outputs)}"
         documents = outputs.get("documents")
         assert isinstance(
             documents, Iterable
@@ -670,7 +688,6 @@ class LangChainCallbackHandler(BaseTracer):
         yield "retrieval_documents", [
             dict(self._as_document(document)) for document in documents
         ]
-
 
     def _metadata(self, run: Run) -> Iterator[Tuple[str, str]]:
         """
@@ -688,7 +705,6 @@ class LangChainCallbackHandler(BaseTracer):
         ):
             yield "session_id", session_id
         yield "metadata", self.safe_json_dumps(metadata)
-
 
     def _as_document(self, document: Any) -> Iterator[Tuple[str, Any]]:
         if page_content := getattr(document, "page_content", None):

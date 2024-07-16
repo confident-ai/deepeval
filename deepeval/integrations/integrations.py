@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+
 class Integrations:
 
     @staticmethod
@@ -24,9 +25,11 @@ class Integrations:
     @staticmethod
     def trace_llama_index():
         try:
-            from deepeval.integrations.llama_index.callback import LlamaIndexCallbackHandler
+            from deepeval.integrations.llama_index.callback import (
+                LlamaIndexCallbackHandler,
+            )
             import llama_index.core
-            
+
             llama_index.core.global_handler = LlamaIndexCallbackHandler()
             logging.info("Llama Index tracing setup completed.")
         except Exception as e:

@@ -35,6 +35,7 @@ nodes = node_parser.get_nodes_from_documents(documents, show_progress=True)
 # Define embedding model
 index = VectorStoreIndex(nodes)
 
+
 async def chatbot(input):
     query_engine = index.as_query_engine(similarity_top_k=5)
     res = query_engine.query(input).response
@@ -51,8 +52,9 @@ user_inputs = [
     "what is your company name",
     "what are your products",
     "do you offer support",
-    "what are your services"
+    "what are your services",
 ]
+
 
 async def query_and_print(query: str):
     res = await chatbot(query)
