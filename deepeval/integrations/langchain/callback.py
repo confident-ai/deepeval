@@ -41,13 +41,15 @@ from deepeval.tracing import (
 from deepeval.event import track
 
 class LangChainCallbackHandler(BaseTracer):
-    def __init__(self, send_trace: bool = True, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.event_map: Dict[str, TraceData] = {}
-        self.send_trace = send_trace
         self.track_params = {}
         
     def _start_trace(self, run: Run) -> None:
+         # set outtermost provider
+        if not trace_manager.get_outter_provider():
+            trace_manager.set_outter_provider(TraceProvider.LANGCHAIN)
         self.run_map[str(run.id)] = run
         event_type = self.convert_event_type_to_deepeval_trace_type(
             run.run_type
@@ -98,7 +100,7 @@ class LangChainCallbackHandler(BaseTracer):
                 self.track_params["input"] = current_trace_stack[0].chainAttributes.input
                 self.track_params["response"] = current_trace_stack[0].chainAttributes.output
 
-            if self.send_trace:
+            if trace_manager.get_outter_provider() == TraceProvider.LANGCHAIN:
                 track(
                     event_name=current_trace_stack[0].name,
                     model=self.track_params.get("model") or "NA",

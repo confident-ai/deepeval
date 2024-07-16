@@ -19,8 +19,6 @@ from llama_index.core.callbacks.base_handler import BaseCallbackHandler
 from llama_index.core.callbacks.schema import CBEventType, EventPayload
 from llama_index.core.llms import ChatMessage
 from llama_index.core.schema import BaseNode
-
-# Kritin
 from llama_index.core import Response
 from llama_index.core.base.response.schema import StreamingResponse
 from llama_index.core.callbacks import CBEventType, EventPayload
@@ -78,8 +76,7 @@ events_to_ignore = [
 
 
 class LlamaIndexCallbackHandler(BaseCallbackHandler):
-    def __init__(self, send_trace: bool = True) -> None:
-        self.send_trace = send_trace
+    def __init__(self) -> None:
         self.track_params = {}
         self.event_map = {}
         self._templating_parent_id = {}
@@ -109,6 +106,10 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         parent_id: str = "",
         **kwargs: Any,
     ) -> str:
+        # set outtermost provider
+        if not trace_manager.get_outter_provider():
+            trace_manager.set_outter_provider(TraceProvider.LLAMA_INDEX)
+
         processed_payload = self.process_payload(
             event_type, event_id, parent_id, payload, True
         )
@@ -149,7 +150,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
 
-            if self.send_trace:
+            if trace_manager.get_outter_provider() == TraceProvider.LLAMA_INDEX:
                 track(
                     event_name=current_trace_stack[0].name,
                     model=self.track_params.get("model") or "NA",
