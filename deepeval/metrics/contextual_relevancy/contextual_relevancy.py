@@ -22,7 +22,7 @@ from deepeval.metrics.contextual_relevancy.template import (
     ContextualRelevancyTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.contextual_relevancy.models import *
+from deepeval.metrics.contextual_relevancy.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,

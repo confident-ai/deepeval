@@ -21,7 +21,7 @@ from deepeval.metrics.contextual_precision.template import (
     ContextualPrecisionTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.contextual_precision.models import *
+from deepeval.metrics.contextual_precision.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,

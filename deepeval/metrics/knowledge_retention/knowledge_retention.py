@@ -13,7 +13,7 @@ from deepeval.metrics.knowledge_retention.template import (
     KnowledgeRetentionTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.knowledge_retention.models import *
+from deepeval.metrics.knowledge_retention.schema import *
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):

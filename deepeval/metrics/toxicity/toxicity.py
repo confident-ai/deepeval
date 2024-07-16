@@ -20,7 +20,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.metrics.bias.template import BiasTemplate
 from deepeval.metrics.toxicity.template import ToxicityTemplate
-from deepeval.metrics.toxicity.models import *
+from deepeval.metrics.toxicity.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,

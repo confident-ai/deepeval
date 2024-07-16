@@ -22,7 +22,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.g_eval.models import *
+from deepeval.metrics.g_eval.schema import *
 
 G_EVAL_PARAMS = {
     LLMTestCaseParams.INPUT: "Input",

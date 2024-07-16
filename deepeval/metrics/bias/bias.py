@@ -19,7 +19,7 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.metrics.bias.template import BiasTemplate
-from deepeval.metrics.bias.models import *
+from deepeval.metrics.bias.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
