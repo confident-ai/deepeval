@@ -1,28 +1,119 @@
 ---
-# id: guides-json-enforcement-for-custom-llms
-title: JSON Enforcement for Custom LLMs
-sidebar_label: JSON Enforcement for Custom LLMs
+# id: using-custom-llms
+title: Using Custom LLMs for Evaluation
+sidebar_label: Using Custom LLMs for Evaluation
 ---
 
-If you've ever used custom LLMs for evaluation in `deepeval`, you may have encountered the following error:
+All of `deepeval`'s metrics uses LLMs for evaluation, and is currently defaulted to OpenAI's GPT models. However, for users that don't wish to use OpenAI's GPT models and would instead prefer other providers such as Claude (Anthropic), Gemini (Google), Llama-3 (Meta), or Mistral, `deepeval` provides an easy way for anyone to use literaly **ANY** custom LLM for evaluation.
 
-```bash
-ValueError: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model.
-```
-
-This error arises when your custom LLM used for evaluation is unable to generate valid JSONs during metric calculation. Although `deepeval` allows you to use literally any LLM for evaluation, the inability to output valid JSONs stops the evaluation process altogether. This happens because for smaller and less powerful LLMs, prompt engineering alone is not sufficient to enforce JSON outputs, which is the method used in `deepeval`'s metrics to output JSONs. As a result, it's vital to find a workaround for users not using OpenAI's GPT models for evaluation.
-
-This guide will demonstrate **various methods to enforce JSON LLM outputs** by leveraging `deepeval`'s built-in Pydantic schemas for validation. This method ensures that the generated JSONs adhere to the given Pydantic schemas, which helps prevent issues like missing brackets or incomplete strings. We'll be showing examples from a wide range of LLM implementations, including:
+This guide will show you how to create custom LLMs for evaluation in `deepeval`, and demonstrate various methods to enforce valid JSON LLM outputs that are required for evaluation through the following examples:
 
 - Mistral-7B v0.3 from Hugging Face `transformers`
 - Llama-3 8B from Hugging Face `transformers`
 - Gemini 1.5 Flash from Vertex AI
 - Claude Opus 3 from Anthropic
 
-:::info You should know
-All of `deepeval`'s metrics require the evaluation model to generate valid JSONs to extract properties such as: reasons, verdicts, statements, and other types of LLM-generated responses that are later used for calculating metric scores, and so when the generated JSONs required to extract these properties are invalid (eg. missing brackets, incomplete string quotations, extra trailing commas, or mismatched keys), `deepeval` won't be able to use the necessary information required for metric calculation.
+## Creating A Custom LLM
 
-Here's an example of an invalid JSON an open-source model like `mistralai/Mistral-7B-Instruct-v0.3` might output:
+Here's a quick example on a custom Llama-3 8B model being used for evaluation in `deepeval`:
+
+```python
+import transformers
+from transformers import BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+
+from deepeval.models import DeepEvalBaseLLM
+
+class CustomLlama3_8B(DeepEvalBaseLLM):
+    def __init__(self):
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_use_double_quant=True,
+        )
+
+        model_4bit = AutoModelForCausalLM.from_pretrained(
+            "meta-llama/Meta-Llama-3-8B-Instruct", device_map="auto",quantization_config=quantization_config)
+        tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
+
+        self.model = model_4bit
+        self.tokenizer = tokenizer
+
+    def load_model(self):
+        return self.model
+
+    def generate(self, prompt: str) -> str:
+        model = self.load_model()
+
+        pipeline = transformers.pipeline(
+            "text-generation",
+            model=model,
+            tokenizer=self.tokenizer,
+            use_cache=True,
+            device_map="auto",
+            max_length=2500,
+            do_sample=True,
+            top_k=5,
+            num_return_sequences=1,
+            eos_token_id=self.tokenizer.eos_token_id,
+            pad_token_id=self.tokenizer.eos_token_id,
+        )
+
+        return pipeline(prompt)
+
+    async def a_generate(self, prompt: str) -> str:
+        return self.generate(prompt)
+
+    def get_model_name(self):
+        return "Llama-3 8B"
+```
+
+There are **SIX** rules to follow when creating a custom LLM evaluation model:
+
+1. Inherit `DeepEvalBaseLLM`.
+2. Implement the `get_model_name()` method, which simply returns a string representing your custom model name.
+3. Implement the `load_model()` method, which will be responsible for returning a model object.
+4. Implement the `generate()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
+5. The `generate()` method should return the generated string output from your custom LLM. Note that we called `pipeline(prompt)` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
+6. Implement the `a_generate()` method, with the same function signature as `generate()`. **Note that this is an async method**. In this example, we called `self.generate(prompt)`, which simply reuses the synchronous `generate()` method. However, although optional, you should implement an asynchronous version (if possible) to speed up evaluation.
+
+:::caution
+In later sections, you'll an exception to rules 4. and 5., as the `generate()` and `a_generate()` method can actually be rewritten to optimize custom LLM outputs that are essential for evaluation.
+:::
+
+Then, instatiate the `CustomLlama3_8B` class and test the `generate()` (or `a_generate()`) method out:
+
+```python
+...
+
+custom_llm = CustomLlama3_8B(model=model_4bit, tokenizer=tokenizer)
+print(custom_llm.generate("Write me a joke"))
+```
+
+Finally, supply it to a metric to run evaluations using your custom LLM:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+metric = AnswerRelevancyMetric(model=custom_llm)
+```
+
+**Congratulations 🎉!** You can now evaluate using any custom LLM of your choice on all LLM evaluation metrics offered by `deepeval`.
+
+## JSON Enforcement for Custom LLMs
+
+In the previous section, we learnt how to create a custom LLM, but if you've ever used custom LLMs for evaluation in `deepeval`, you may have encountered the following error:
+
+```bash
+ValueError: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model.
+```
+
+This error arises when the custom LLM used for evaluation is unable to generate valid JSONs during metric calculation, which stops the evaluation process altogether. This happens because for smaller and less powerful LLMs, prompt engineering alone is not sufficient to enforce JSON outputs, which so happens to be the method used in `deepeval`'s metrics. As a result, it's vital to find a workaround for users not using OpenAI's GPT models for evaluation.
+
+:::info
+All of `deepeval`'s metrics require the evaluation model to generate valid JSONs to extract properties such as: reasons, verdicts, statements, and other types of LLM-generated responses that are later used for calculating metric scores, and so when the generated JSONs required to extract these properties are invalid (eg. missing brackets, incomplete string quotations, extra trailing commas, or mismatched keys), `deepeval` won't be able to use the necessary information required for metric calculation. Here's an example of an invalid JSON an open-source model like `mistralai/Mistral-7B-Instruct-v0.3` might output:
 
 ```console
 {
@@ -31,8 +122,6 @@ Here's an example of an invalid JSON an open-source model like `mistralai/Mistra
 ```
 
 :::
-
-## Creating Your Custom LLM
 
 ## Rewriting the `generate()` and `a_generate()` Method
 
