@@ -8,17 +8,15 @@ from llama_index.core.postprocessor import LLMRerank
 from typing import Any, List
 import asyncio
 
-from deepeval.tracing import Tracer, GenericAttributes
-from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
+import deepeval
 
 ###########################################################
 # set up integration
 ###########################################################
 
 # set llama index global handler
-from deepeval.integrations import Integrations
 
-Integrations.trace_llama_index()
+deepeval.trace_llama_index()
 
 ###########################################################
 # test chatbot

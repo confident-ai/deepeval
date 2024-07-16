@@ -181,8 +181,7 @@ agent_executor = AgentExecutor(
 #############################################################
 #### Step 7: Tracking responses
 #############################################################
-
-from deepeval.integrations import Integrations
+import deepeval
 from deepeval.tracing import Tracer, TraceType, QueryAttributes
 
 
@@ -200,8 +199,8 @@ def ask_llm(question):
         )
 
 
-Integrations.trace_langchain()
-Integrations.trace_llama_index()
+deepeval.trace_langchain()
+deepeval.trace_llama_index()
 
 question = "What was Lyft's revenue growth in 2021?"
 ask_llm(question)

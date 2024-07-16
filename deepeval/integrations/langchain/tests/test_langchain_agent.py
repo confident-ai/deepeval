@@ -1,6 +1,6 @@
-from deepeval.integrations import Integrations
+import deepeval
 
-Integrations.trace_langchain()
+deepeval.trace_langchain()
 
 from langchain_openai import ChatOpenAI
 

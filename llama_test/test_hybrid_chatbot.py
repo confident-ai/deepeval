@@ -9,6 +9,7 @@ from openai import AsyncOpenAI
 import asyncio
 import os
 
+import deepeval
 from deepeval.tracing import (
     Tracer,
     TraceType,
@@ -16,15 +17,13 @@ from deepeval.tracing import (
     QueryAttributes,
     GenericAttributes,
 )
-from deepeval.integrations.llama_index import LlamaIndexCallbackHandler
+
 
 ########################################################
 ### Integration ########################################
 ########################################################
 
-from deepeval.integrations import Integrations
-
-Integrations.trace_llama_index()
+deepeval.trace_llama_index()
 
 ###########################################################
 # set up RAG pipeline
