@@ -49,12 +49,5 @@ rag_chain = (
     | StrOutputParser()
 )
 
-with Tracer("LangChain Chatbot") as trace:
-    input = "What is Task Decomposition?"
-    output = rag_chain.invoke(input)
-    trace.track(
-        event_name="LangChain Test",
-        model="GPT3.5",
-        input=input,
-        response=output,
-    )
+input = "What is Task Decomposition?"
+output = rag_chain.invoke(input)

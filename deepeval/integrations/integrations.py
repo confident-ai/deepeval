@@ -1,5 +1,5 @@
 import logging
-
+from typing import Any
 
 class Integrations:
 
@@ -15,7 +15,7 @@ class Integrations:
             wrap_function_wrapper(
                 module="langchain_core.callbacks",
                 name="BaseCallbackManager.__init__",
-                wrapper=_BaseCallbackManagerInit(LangChainCallbackHandler()),
+                wrapper=_BaseCallbackManagerInit(LangChainCallbackHandler(send_trace=False)),
             )
             logging.info("Langchain tracing setup completed.")
         except Exception as e:
@@ -24,9 +24,10 @@ class Integrations:
     @staticmethod
     def trace_llama_index():
         try:
-            from llama_index.core import set_global_handler
-
-            set_global_handler("deepeval")
+            from deepeval.integrations.llama_index.callback import LlamaIndexCallbackHandler
+            import llama_index.core
+            
+            llama_index.core.global_handler = LlamaIndexCallbackHandler(send_trace=False)
             logging.info("Llama Index tracing setup completed.")
         except Exception as e:
             logging.error(f"Error setting up Llama Index tracing: {e}")

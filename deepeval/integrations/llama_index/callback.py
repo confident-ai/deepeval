@@ -57,6 +57,7 @@ from deepeval.tracing import (
     TraceData,
 )
 from deepeval.utils import dataclass_to_dict
+from deepeval.event import track
 
 events_to_ignore = [
     # CBEventType.CHUNKING,
@@ -77,7 +78,9 @@ events_to_ignore = [
 
 
 class LlamaIndexCallbackHandler(BaseCallbackHandler):
-    def __init__(self) -> None:
+    def __init__(self, send_trace: bool = True) -> None:
+        self.send_trace = send_trace
+        self.track_params = {}
         self.event_map = {}
         self._templating_parent_id = {}
         self._templating_payloads = {}
@@ -145,6 +148,18 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             dict_representation = dataclass_to_dict(current_trace_stack[0])
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
+
+            if self.send_trace:
+                track(
+                    event_name=current_trace_stack[0].name,
+                    model=self.track_params.get("model") or "NA",
+                    input=self.track_params.get("input") or "NA",
+                    response=self.track_params.get("response") or "NA",
+                    retrieval_context=self.track_params.get("retrieval_context"),
+                    completion_time=current_trace_stack[0].executionTime,
+                    token_usage=self.track_params.get("token_usage"),
+                    trace_stack=dict_representation,
+                )
         else:
             trace_manager.pop_trace_stack()
 
@@ -216,6 +231,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     ),
                 ),
             )
+            self.track_params["model"] = processed_payload["llm_model_name"]
 
         elif event_type == CBEventType.RERANKING:
             trace_instance = RerankingTrace(
@@ -252,6 +268,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     input=processed_payload["input_value"], output=""
                 ),
             )
+            self.track_params["input"] = processed_payload["input_value"]
 
         elif event_type == CBEventType.SYNTHESIZE:
             trace_instance = SynthesizeTrace(
@@ -290,15 +307,10 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         ):
             attributes = trace_instance.llmAttributes
             attributes.output_str = processed_payload["output_value"]
-            attributes.total_token_count = processed_payload[
-                "llm_token_count_total"
-            ]
-            attributes.prompt_token_count = processed_payload[
-                "llm_token_prompt_count"
-            ]
-            attributes.completion_token_count = processed_payload[
-                "llm_token_count_completion"
-            ]
+            attributes.total_token_count = processed_payload["llm_token_count_total"]
+            attributes.prompt_token_count = processed_payload["llm_token_prompt_count"]
+            attributes.completion_token_count = processed_payload["llm_token_count_completion"]
+            self.track_params["token_usage"] = processed_payload["llm_token_count_total"]
 
         elif event_type == CBEventType.EMBEDDING and isinstance(
             trace_instance, EmbeddingTrace
@@ -324,12 +336,14 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             attributes.top_k = len(nodes)
             attributes.average_chunk_size = total_chunk_length // len(nodes)
             attributes.top_score = top_score
+            self.track_params["retrieval_context"] = [node.content for node in nodes]
 
         elif event_type == CBEventType.QUERY and isinstance(
             trace_instance, QueryTrace
         ):
             attributes = trace_instance.queryAttributes
             attributes.output = processed_payload["output_value"]
+            self.track_params["response"] = processed_payload["output_value"]
 
         elif event_type == CBEventType.SYNTHESIZE and isinstance(
             trace_instance, SynthesizeTrace

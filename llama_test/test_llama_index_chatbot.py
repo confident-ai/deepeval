@@ -35,26 +35,10 @@ nodes = node_parser.get_nodes_from_documents(documents, show_progress=True)
 # Define embedding model
 index = VectorStoreIndex(nodes)
 
-
 async def chatbot(input):
-    with Tracer(trace_type="Chatbot") as chatbot_trace:
-        # Build query engine
-        query_engine = index.as_query_engine(similarity_top_k=5)
-        res = query_engine.query(input).response
-
-        chatbot_trace.set_attributes(
-            attributes=GenericAttributes(
-                output=res,
-            )
-        )
-
-        chatbot_trace.track(
-            input=input,
-            response=res,
-            model="gpt-4-turbo-preview",
-        )
-
-        return res
+    query_engine = index.as_query_engine(similarity_top_k=5)
+    res = query_engine.query(input).response
+    return res
 
 
 #############################################################
@@ -64,12 +48,11 @@ async def chatbot(input):
 user_inputs = [
     "what does your company do",
     "when were you incorporated",
-    # "what is your company name",
-    # "what are your products",
-    # "do you offer support",
-    # "what are your services"
+    "what is your company name",
+    "what are your products",
+    "do you offer support",
+    "what are your services"
 ]
-
 
 async def query_and_print(query: str):
     res = await chatbot(query)
