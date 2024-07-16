@@ -20,6 +20,8 @@ class Scorer:
         Rouge (Recall-Oriented Understudy for Gisting Evaluation) is a metric used for evaluating the quality of generated text,
         especially in tasks like text summarization.
 
+        To utilize the rouge_score scoring method, be sure to `pip install rouge-score` before calling this method.
+
         Args:
             target (str): The actual label or target text.
             prediction (str): The generated text from the model or LLM.
