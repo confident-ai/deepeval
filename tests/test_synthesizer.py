@@ -148,12 +148,11 @@ synthesizer_sync = Synthesizer(async_mode=False)
 synthesizer_async = Synthesizer(async_mode=True)
 
 # Test Generate Red Team ################################
-def test_generate_red_teaming_goldens(synthesizer: Synthesizer, usecase: UseCase = UseCase.QA):
+def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
     start_time = time.time()
     goldens = synthesizer.generate_red_teaming_goldens(
         max_goldens=2, 
         num_evolutions=2,
-        usecase = usecase,
         contexts=contexts, 
     )
     end_time = time.time()
@@ -163,16 +162,13 @@ def test_generate_red_teaming_goldens(synthesizer: Synthesizer, usecase: UseCase
 
 test_generate_red_teaming_goldens(synthesizer_sync)
 test_generate_red_teaming_goldens(synthesizer_async)
-test_generate_red_teaming_goldens(synthesizer_sync, UseCase.TEXT2SQL)
-test_generate_red_teaming_goldens(synthesizer_async, UseCase.TEXT2SQL)
 
 # Test Generate Red Team No Context ######################
-def test_generate_red_teaming_goldens(synthesizer: Synthesizer, usecase: UseCase = UseCase.QA):
+def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
     start_time = time.time()
     goldens = synthesizer.generate_red_teaming_goldens(
         max_goldens=2, 
         num_evolutions=2,
-        usecase = usecase,
     )
     end_time = time.time()
     duration = end_time - start_time
@@ -181,11 +177,9 @@ def test_generate_red_teaming_goldens(synthesizer: Synthesizer, usecase: UseCase
 
 test_generate_red_teaming_goldens(synthesizer_sync)
 test_generate_red_teaming_goldens(synthesizer_async)
-test_generate_red_teaming_goldens(synthesizer_sync, UseCase.TEXT2SQL)
-test_generate_red_teaming_goldens(synthesizer_async, UseCase.TEXT2SQL)
 
 #########################################################
-### Generate Red-Teaming scratch ########################
+### Generate Goldens From Scratch #######################
 #########################################################
 
 synthesizer_sync = Synthesizer(async_mode=False)

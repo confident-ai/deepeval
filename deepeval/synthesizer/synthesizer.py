@@ -413,7 +413,6 @@ class Synthesizer:
                     output_format,
                     num_initial_goldens,
                     num_evolutions,
-                    enable_breadth_evolve,
                     _show_indicator,
                     evolution_types
                 )
