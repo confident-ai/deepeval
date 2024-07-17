@@ -104,7 +104,6 @@ def track(
             endpoint=Endpoints.EVENT_ENDPOINT.value,
             body=body,
         )
-        print(body)
         response = EventHttpResponse(eventId=result["eventId"])
         return response.eventId
     except Exception as e:

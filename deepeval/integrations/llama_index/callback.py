@@ -54,7 +54,7 @@ from deepeval.tracing import (
     AgentTrace,
     TraceData,
 )
-from deepeval.utils import dataclass_to_dict
+from deepeval.utils import dataclass_to_dict, class_to_dict
 from deepeval.event import track
 
 events_to_ignore = [
@@ -116,6 +116,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         trace_instance = self.create_trace_instance(
             event_type, processed_payload
         )
+        trace_instance.inputPayload = class_to_dict(processed_payload)
         self.event_map[event_id] = trace_instance
         trace_manager.append_to_trace_stack(trace_instance)
 
@@ -138,7 +139,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_instance, event_type, processed_payload
         )
         current_trace_stack = trace_manager.get_trace_stack_copy()
-        # trace_instance = current_trace_stack[-1]
+        trace_instance.outputPayload = class_to_dict(processed_payload)
 
         if len(current_trace_stack) > 1:
             parent_trace = current_trace_stack[-2]
@@ -181,6 +182,8 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             "name": event_type,
             "status": TraceStatus.SUCCESS,
             "traces": [],
+            "inputPayload": None,
+            "outputPayload": None,
         }
 
         if "exception" in processed_payload:
@@ -406,6 +409,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         #########################
         # ignore these events
         if event_type in (CBEventType.NODE_PARSING, CBEventType.CHUNKING):
+            print(payload)
             return attributes
 
         #########################

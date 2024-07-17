@@ -19,7 +19,7 @@ from typing import (
     Tuple,
 )
 
-from deepeval.utils import dataclass_to_dict
+from deepeval.utils import dataclass_to_dict, class_to_dict
 from deepeval.tracing import (
     trace_manager,
     ChainTrace,
@@ -84,10 +84,12 @@ class LangChainCallbackHandler(BaseTracer):
             )
         )
         trace_instance = self.update_trace_instance(
-            trace_instance, event_type, processed_payload
+            trace_instance, event_type, processed_payload, run
         )
+        trace_instance.inputPayload = class_to_dict(run.inputs)
+        trace_instance.outputPayload = class_to_dict(run.outputs)
         current_trace_stack = trace_manager.get_trace_stack_copy()
-        # trace_instance = current_trace_stack[-1]
+
         if len(current_trace_stack) > 1:
             parent_trace = current_trace_stack[-2]
             parent_trace.traces.append(trace_instance)
@@ -131,17 +133,21 @@ class LangChainCallbackHandler(BaseTracer):
             "name": name,
             "status": TraceStatus.SUCCESS,
             "traces": [],
+            "inputPayload": None,
+            "outputPayload": None,
         }
         if event_type == LangChainTraceType.CHAIN:
-            trace_instance = ChainTrace(**trace_kwargs, chainAttributes=None)
+            trace_kwargs["chainAttributes"] = None
+            trace_instance = ChainTrace(**trace_kwargs)
         elif event_type == LangChainTraceType.LLM:
-            trace_instance = LlmTrace(**trace_kwargs, llmAttributes=None)
+            trace_kwargs["llmAttributes"] = None
+            trace_instance = LlmTrace(**trace_kwargs)
         elif event_type == LangChainTraceType.RETRIEVER:
-            trace_instance = RetrieverTrace(
-                **trace_kwargs, retrieverAttributes=None
-            )
+            trace_kwargs["retrieverAttributes"] = None
+            trace_instance = RetrieverTrace(**trace_kwargs)
         elif event_type == LangChainTraceType.TOOL:
-            trace_instance = ToolTrace(**trace_kwargs, toolAttributes=None)
+            trace_kwargs["toolAttributes"] = None
+            trace_instance = ToolTrace(**trace_kwargs)
         else:
             trace_instance = GenericTrace(**trace_kwargs)
         return trace_instance
@@ -151,37 +157,26 @@ class LangChainCallbackHandler(BaseTracer):
         trace_instance: TraceData,
         event_type: LangChainTraceType,
         processed_payload: Optional[Dict[str, Any]],
+        run: Run
     ) -> TraceData:
-
-        def json_if_valid(string):
-            try:
-                json_object = json.loads(string)
-                return json_object
-            except ValueError:
-                return string
 
         trace_instance.executionTime = (
             perf_counter() - trace_instance.executionTime
         )
         if event_type == LangChainTraceType.CHAIN:
-            input_value: str = processed_payload.get("input_value")
-            output_value: str = processed_payload.get("output_value")
-            input_json = json_if_valid(input_value)
-            output_json = json_if_valid(output_value)
-            input = (
-                (str(input_json.get("input")) or "")
-                if isinstance(input_json, dict)
-                else input_json
-            )
-            output = (
-                (str(output_json.get("question")) or "")
-                if isinstance(output_json, dict)
-                else output_json
-            )
+            input_value = 'NA'
+            output_value = 'NA'
+            for key, value in run.inputs.items():
+                if "input" in key and isinstance(value, str):
+                    input_value = value
+                    break
+            for key, value in run.outputs.items():
+                if "output" in key and isinstance(value, str):
+                    output_value = value
+                    break
             attributes = ChainAttributes(
-                # Required Attributes
-                input=input,
-                output=output,
+                input=input_value,
+                output=output_value
             )
             trace_instance.chainAttributes = attributes
         elif event_type == LangChainTraceType.LLM:
@@ -256,9 +251,19 @@ class LangChainCallbackHandler(BaseTracer):
             )
             trace_instance.toolAttributes = attributes
         else:
+            input_value = 'NA'
+            output_value = 'NA'
+            for key, value in run.inputs.items():
+                if "input" in key and isinstance(value, str):
+                    input_value = value
+                    break
+            for key, value in run.outputs.items():
+                if "output" in key and isinstance(value, str):
+                    output_value = value
+                    break
             attributes = GenericAttributes(
-                input=processed_payload.get("input_value"),
-                output=processed_payload.get("output_value"),
+                input=input_value,
+                output=output_value
             )
             trace_instance.genericAttributes = attributes
         return trace_instance
