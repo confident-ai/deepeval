@@ -43,6 +43,7 @@ evolution_map = {
     "Constrained": EvolutionTemplate.constrained_evolution,
     "Comparative": EvolutionTemplate.comparative_question_evolution,
     "Hypothetical": EvolutionTemplate.hypothetical_scenario_evolution,
+    "In-Breadth": EvolutionTemplate.in_breadth_evolution
 }
 
 prompt_evolution_map = {
@@ -51,6 +52,7 @@ prompt_evolution_map = {
     "Constrained": PromptEvolutionTemplate.constrained_evolution,
     "Comparative": PromptEvolutionTemplate.comparative_question_evolution,
     "Hypothetical": PromptEvolutionTemplate.hypothetical_scenario_evolution,
+    "In-Breadth": PromptEvolutionTemplate.in_breadth_evolution
 }
 
 red_teaming_attack_map = {
@@ -100,17 +102,12 @@ class Synthesizer:
         self,
         text,
         num_evolutions: int,
-        enable_breadth_evolve: bool,
         evolution_types: List[PromptEvolution],
     ) -> List[str]:
         evolution_methods = [
             prompt_evolution_map[evolution_type.value]
             for evolution_type in evolution_types
         ]
-        if enable_breadth_evolve:
-            evolution_methods.append(
-                PromptEvolutionTemplate.in_breadth_evolution
-            )
         evolved_texts = [text]
         for i in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
@@ -124,17 +121,12 @@ class Synthesizer:
         self,
         text,
         num_evolutions: int,
-        enable_breadth_evolve: bool,
         evolution_types: List[PromptEvolution],
     ) -> List[str]:
         evolution_methods = [
             prompt_evolution_map[evolution_type.value]
             for evolution_type in evolution_types
         ]
-        if enable_breadth_evolve:
-            evolution_methods.append(
-                PromptEvolutionTemplate.in_breadth_evolution
-            )
         evolved_texts = [text]
         for i in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
@@ -149,13 +141,10 @@ class Synthesizer:
         text: str,
         context: List[str],
         num_evolutions: int,
-        enable_breadth_evolve: bool,
         evolutions: List[Evolution],
     ) -> List[str]:
         map = evolution_map
         evolution_methods = [map[e.value] for e in evolutions]
-        if enable_breadth_evolve:
-            evolution_methods.append(EvolutionTemplate.in_breadth_evolution)
         evolved_text = text
         for _ in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
@@ -169,13 +158,10 @@ class Synthesizer:
         text: str,
         context: List[str],
         num_evolutions: int,
-        enable_breadth_evolve: bool,
         evolutions: List[Evolution],
     ) -> List[str]:
         map = evolution_map
         evolution_methods = [map[e.value] for e in evolutions]
-        if enable_breadth_evolve:
-            evolution_methods.append(EvolutionTemplate.in_breadth_evolution)
         evolved_text = text
         for _ in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
@@ -236,7 +222,6 @@ class Synthesizer:
         include_expected_output: bool,
         max_goldens_per_context: int,
         num_evolutions: int,
-        enable_breadth_evolve: bool,
         source_files: Optional[List[str]],
         index: int,
         evolutions: List[Evolution],
@@ -252,7 +237,6 @@ class Synthesizer:
                 data.input,
                 context=context,
                 num_evolutions=num_evolutions,
-                enable_breadth_evolve=enable_breadth_evolve,
                 evolutions=evolutions,
             )
             source_file = (source_files[index] if source_files is not None else None)
@@ -360,7 +344,6 @@ class Synthesizer:
         output_format: str,
         num_initial_goldens: int,
         num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
         _show_indicator: bool = True,
         evolution_types: List[PromptEvolution] = [
             PromptEvolution.REASONING,
@@ -368,33 +351,40 @@ class Synthesizer:
             PromptEvolution.CONSTRAINED,
             PromptEvolution.COMPARATIVE,
             PromptEvolution.HYPOTHETICAL,
+            PromptEvolution.IN_BREADTH,
         ],
     ) -> List[Golden]:
         goldens: List[Golden] = []
-        prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
-            subject=subject,
-            task=task,
-            output_format=output_format,
-            num_initial_goldens=num_initial_goldens,
-        )
-        res, _ = await self.a_generate(prompt)
-        data = trimAndLoadJson(res)
-        synthetic_data = [SyntheticData(**item) for item in data["data"]]
-        tasks = [
-            self._a_evolve_text_from_prompt(
-                text=data.input,
-                num_evolutions=num_evolutions,
-                enable_breadth_evolve=enable_breadth_evolve,
-                evolution_types=evolution_types,
-            ) for data in synthetic_data
-        ]
-        evolved_prompts_list = await asyncio.gather(*tasks)
-        goldens = [Golden(input=evolved_prompt) 
-                   for evolved_prompts in evolved_prompts_list 
-                   for evolved_prompt in evolved_prompts]
-        self.synthetic_goldens.extend(goldens)
-        return goldens
-        
+        with synthesizer_progress_context(
+            self.model.get_model_name(),
+            None,
+            (num_initial_goldens + 1) * num_evolutions,
+            None,
+            _show_indicator,
+        ):
+            prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
+                subject=subject,
+                task=task,
+                output_format=output_format,
+                num_initial_goldens=num_initial_goldens,
+            )
+            res, _ = await self.a_generate(prompt)
+            data = trimAndLoadJson(res)
+            synthetic_data = [SyntheticData(**item) for item in data["data"]]
+            tasks = [
+                self._a_evolve_text_from_prompt(
+                    text=data.input,
+                    num_evolutions=num_evolutions,
+                    evolution_types=evolution_types,
+                ) for data in synthetic_data
+            ]
+            evolved_prompts_list = await asyncio.gather(*tasks)
+            goldens = [Golden(input=evolved_prompt) 
+                    for evolved_prompts in evolved_prompts_list 
+                    for evolved_prompt in evolved_prompts]
+            self.synthetic_goldens.extend(goldens)
+            return goldens
+
 
     def generate_goldens_from_scratch(
         self,
@@ -403,7 +393,6 @@ class Synthesizer:
         output_format: str,
         num_initial_goldens: int,
         num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
         _show_indicator: bool = True,
         evolution_types: List[PromptEvolution] = [
             PromptEvolution.REASONING,
@@ -411,31 +400,32 @@ class Synthesizer:
             PromptEvolution.CONSTRAINED,
             PromptEvolution.COMPARATIVE,
             PromptEvolution.HYPOTHETICAL,
+            PromptEvolution.IN_BREADTH,
         ],
     ) -> List[Golden]:
-        with synthesizer_progress_context(
-            self.model.get_model_name(),
-            None,
-            (num_initial_goldens + 1) * num_evolutions,
-            None,
-            _show_indicator,
-        ):
-            goldens: List[Golden] = []
-            if self.async_mode:
-                loop = get_or_create_event_loop()
-                return loop.run_until_complete(
-                    self.a_generate_goldens_from_scratch(
-                        subject,
-                        task,
-                        output_format,
-                        num_initial_goldens,
-                        num_evolutions,
-                        enable_breadth_evolve,
-                        _show_indicator,
-                        evolution_types
-                    )
+        goldens: List[Golden] = []
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            return loop.run_until_complete(
+                self.a_generate_goldens_from_scratch(
+                    subject,
+                    task,
+                    output_format,
+                    num_initial_goldens,
+                    num_evolutions,
+                    enable_breadth_evolve,
+                    _show_indicator,
+                    evolution_types
                 )
-            else:
+            )
+        else:
+            with synthesizer_progress_context(
+                self.model.get_model_name(),
+                None,
+                (num_initial_goldens + 1) * num_evolutions,
+                None,
+                _show_indicator,
+            ):
                 prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
                     subject=subject,
                     task=task,
@@ -449,7 +439,6 @@ class Synthesizer:
                     evolved_prompts = self._evolve_text_from_prompt(
                         text=data.input,
                         num_evolutions=num_evolutions,
-                        enable_breadth_evolve=enable_breadth_evolve,
                         evolution_types=evolution_types,
                     )
                     new_goldens = [
@@ -457,8 +446,8 @@ class Synthesizer:
                         for evolved_prompt in evolved_prompts
                     ]
                     goldens.extend(new_goldens)
-            self.synthetic_goldens.extend(goldens)
-            return goldens
+                    self.synthetic_goldens.extend(goldens)
+                    return goldens
         
         
     async def a_generate_red_teaming_goldens(
@@ -624,7 +613,6 @@ class Synthesizer:
         include_expected_output: bool = False,
         max_goldens_per_context: int = 2,
         num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
         source_files: Optional[List[str]] = None,
         _show_indicator: bool = True,
         evolutions: List[Evolution] = [
@@ -634,6 +622,7 @@ class Synthesizer:
             Evolution.CONSTRAINED,
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
+            Evolution.IN_BREADTH,
         ],
         use_case: UseCase = UseCase.QA,
     ) -> List[Golden]:
@@ -653,7 +642,6 @@ class Synthesizer:
                             include_expected_output,
                             max_goldens_per_context,
                             num_evolutions,
-                            enable_breadth_evolve,
                             source_files,
                             index,
                             evolutions,
@@ -690,7 +678,6 @@ class Synthesizer:
         include_expected_output: bool = False,
         max_goldens_per_context: int = 2,
         num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
         source_files: Optional[List[str]] = None,
         _show_indicator: bool = True,
         evolutions: List[Evolution] = [
@@ -700,6 +687,7 @@ class Synthesizer:
             Evolution.CONSTRAINED,
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
+            Evolution.IN_BREADTH,
         ],
         use_case: UseCase = UseCase.QA,
     ) -> List[Golden]:
@@ -711,7 +699,6 @@ class Synthesizer:
                     include_expected_output,
                     max_goldens_per_context,
                     num_evolutions,
-                    enable_breadth_evolve,
                     source_files,
                     _show_indicator,
                     evolutions,
@@ -741,7 +728,6 @@ class Synthesizer:
                                 data.input,
                                 context=context,
                                 num_evolutions=num_evolutions,
-                                enable_breadth_evolve=enable_breadth_evolve,
                                 evolutions=evolutions,
                             )
                             source_file = (
@@ -804,7 +790,6 @@ class Synthesizer:
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
         evolutions: List[Evolution] = [
             Evolution.REASONING,
             Evolution.MULTICONTEXT,
@@ -812,6 +797,7 @@ class Synthesizer:
             Evolution.CONSTRAINED,
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
+            Evolution.IN_BREADTH,
         ],
         use_case: UseCase = UseCase.QA,
     ):
@@ -844,7 +830,6 @@ class Synthesizer:
                 include_expected_output,
                 max_goldens_per_context,
                 num_evolutions,
-                enable_breadth_evolve,
                 source_files,
                 _show_indicator=False,
                 evolutions=evolutions,
