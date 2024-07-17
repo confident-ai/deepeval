@@ -4,6 +4,7 @@ from langchain_community.document_loaders import (
     TextLoader,
     Docx2txtLoader,
 )
+from langchain_community.document_loaders.base import BaseLoader
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
 from typing import Optional, List, Dict, Type
@@ -47,12 +48,49 @@ class DocumentChunker:
         self.mean_embedding: Optional[float] = None
 
         # Mapping of file extensions to their respective loader classes
-        self.loader_mapping: Dict[str, Type] = {
+        self.loader_mapping: Dict[str, BaseLoader] = {
             ".pdf": PyPDFLoader,
             ".txt": TextLoader,
             ".docx": Docx2txtLoader,
         }
 
+    ############### Load and Chunk ###############
+    async def a_load_doc(self, path: str) -> List[LCDocument]:
+        self.source_file = path
+
+        # Find appropiate doc loader
+        _, extension = os.path.splitext(path)
+        extension = extension.lower()
+        loader: Optional[BaseLoader] = self.loader_mapping.get(extension)
+        if loader is None:
+            raise ValueError(f"Unsupported file format: {extension}")
+
+        # Load and split text in doc
+        loader = loader(path)
+        docs = await loader.aload()
+        raw_chunks: List[LCDocument] = self.text_splitter.split_documents(docs)
+
+        # Load results into Chunk class
+        contents = [rc.page_content for rc in raw_chunks]
+        embeddings = self.embedder.embed_texts(contents)
+        embeddings_np = np.array(embeddings)
+        mean_embedding = np.mean(embeddings_np, axis=0)
+        chunks = []
+        for i in range(len(raw_chunks)):
+            chunk = Chunk(
+                id=str(uuid.uuid4()),
+                content=contents[i],
+                embedding=embeddings[i],
+                source_file=path,
+                similarity_to_mean=get_embedding_similarity(
+                    (embeddings_np[i]), mean_embedding
+                ),
+            )
+            chunks.append(chunk)
+        self.chunks = chunks
+
+        return chunks
+    
     ############### Load and Chunk ###############
     def load_doc(self, path: str) -> List[LCDocument]:
         self.source_file = path
@@ -60,7 +98,7 @@ class DocumentChunker:
         # Find appropiate doc loader
         _, extension = os.path.splitext(path)
         extension = extension.lower()
-        loader = self.loader_mapping.get(extension)
+        loader: Optional[BaseLoader] = self.loader_mapping.get(extension)
         if loader is None:
             raise ValueError(f"Unsupported file format: {extension}")
 

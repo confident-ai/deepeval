@@ -1,6 +1,6 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Tuple, Dict, Union, Optional
 import random
+import asyncio
 
 from deepeval.synthesizer.doc_chunker import (
     DocumentChunker,
@@ -9,7 +9,7 @@ from deepeval.synthesizer.doc_chunker import (
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.synthesizer.utils import initialize_embedding_model
-
+from deepeval.utils import get_or_create_event_loop
 
 class ContextGenerator:
     def __init__(
@@ -18,13 +18,13 @@ class ContextGenerator:
         embedder: DeepEvalBaseEmbeddingModel,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
-        multithreading: bool = False,
+        async_mode: bool = False,
     ):
         self.embedder = embedder
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
-        self.multithreading = multithreading
+        self.async_mode = async_mode
         self.document_paths: List[str] = document_paths
 
         # TODO: Potential bug, calling generate_goldens_from_docs
@@ -53,44 +53,38 @@ class ContextGenerator:
         return contexts, source_files
 
     ############### Load Docs #############################
-    def _load_docs(self) -> Dict[str, List[Chunk]]:
+    async def _a_load_docs(self) -> Dict[str, List[Chunk]]:
+        async def a_process_document(path):
+            doc_chunker = DocumentChunker(
+                self.embedder, self.chunk_size, self.chunk_overlap
+            )
+            chunks = await doc_chunker.a_load_doc(path)
+            return path, chunks
+
         source_files_to_chunks_map: Dict[str, List[Chunk]] = {}
-        if not self.multithreading:
+        tasks = [a_process_document(path) for path in self.document_paths]
+        path_to_chunks = await asyncio.gather(*tasks)
+        for (path, chunks) in path_to_chunks:
+            if path not in source_files_to_chunks_map:
+                source_files_to_chunks_map[path] = []
+            source_files_to_chunks_map[path].extend(chunks)
+        return source_files_to_chunks_map
+    
+    def _load_docs(self) -> Dict[str, List[Chunk]]:
+        if not self.async_mode:
+            source_files_to_chunks_map: Dict[str, List[Chunk]] = {}
             for path in self.document_paths:
                 doc_chunker = DocumentChunker(
                     self.embedder, self.chunk_size, self.chunk_overlap
                 )
                 chunks = doc_chunker.load_doc(path)
-
                 if path not in source_files_to_chunks_map:
                     source_files_to_chunks_map[path] = []
                 source_files_to_chunks_map[path].extend(chunks)
+            return source_files_to_chunks_map
         else:
-
-            def process_document(path):
-                doc_chunker = DocumentChunker(
-                    self.embedder, self.chunk_size, self.chunk_overlap
-                )
-                return doc_chunker.load_doc(path)
-
-            with ThreadPoolExecutor() as executor:
-                future_to_path = {
-                    executor.submit(process_document, path): path
-                    for path in self.document_paths
-                }
-                for future in as_completed(future_to_path):
-                    path = future_to_path[future]
-                    try:
-                        chunks = future.result()
-
-                        if path not in source_files_to_chunks_map:
-                            source_files_to_chunks_map[path] = []
-                        source_files_to_chunks_map[path].extend(chunks)
-
-                    except Exception as exc:
-                        print(f"{path} generated an exception: {exc}")
-
-        return source_files_to_chunks_map
+            loop = get_or_create_event_loop()
+            return loop.run_until_complete(self._a_load_docs())
 
     ############### Search N Chunks ########################
     def _get_n_random_clusters(
