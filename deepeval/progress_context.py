@@ -1,6 +1,7 @@
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from contextlib import contextmanager
+from typing import Optional
 import sys
 
 from deepeval.telemetry import capture_synthesizer_run
@@ -24,12 +25,11 @@ def progress_context(
 @contextmanager
 def synthesizer_progress_context(
     evaluation_model: str,
-    embedder: str = None,
+    embedder: Optional[str] = None,
     max_generations: str = None,
     use_case: str = "QA",
     _show_indicator: bool = True,
 ):
-    print(use_case, ")(*&*(*))")
     with capture_synthesizer_run(max_generations):
         if embedder is None:
             description = f"✨ 🍰 ✨ You're generating up to {max_generations} goldens using DeepEval's latest Synthesizer (using {evaluation_model}, use case={use_case})! This may take a while..."
