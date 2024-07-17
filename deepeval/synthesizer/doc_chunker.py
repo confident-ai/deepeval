@@ -90,7 +90,7 @@ class DocumentChunker:
         self.chunks = chunks
 
         return chunks
-    
+
     ############### Load and Chunk ###############
     def load_doc(self, path: str) -> List[LCDocument]:
         self.source_file = path

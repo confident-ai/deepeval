@@ -11,6 +11,7 @@ from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.utils import get_or_create_event_loop
 
+
 class ContextGenerator:
     def __init__(
         self,
@@ -64,12 +65,12 @@ class ContextGenerator:
         source_files_to_chunks_map: Dict[str, List[Chunk]] = {}
         tasks = [a_process_document(path) for path in self.document_paths]
         path_to_chunks = await asyncio.gather(*tasks)
-        for (path, chunks) in path_to_chunks:
+        for path, chunks in path_to_chunks:
             if path not in source_files_to_chunks_map:
                 source_files_to_chunks_map[path] = []
             source_files_to_chunks_map[path].extend(chunks)
         return source_files_to_chunks_map
-    
+
     def _load_docs(self) -> Dict[str, List[Chunk]]:
         if not self.async_mode:
             source_files_to_chunks_map: Dict[str, List[Chunk]] = {}
