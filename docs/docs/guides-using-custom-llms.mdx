@@ -239,12 +239,12 @@ class Mistral7B(DeepEvalBaseLLM):
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.eos_token_id,
         )
-        parser = JsonSchemaParser(pydantic_model.schema())
+        parser = JsonSchemaParser(schema.schema())
         prefix_function = build_transformers_prefix_allowed_tokens_fn(hf_pipeline.tokenizer, parser)
         output_dict = hf_pipeline(prompt, prefix_allowed_tokens_fn=prefix_function)
         output = output_dict[0]['generated_text'][len(prompt):]
         json_result = json.loads(output)
-        return pydantic_model(**json_result)
+        return schema(**json_result)
 ```
 
 ### 4. Instantiating your model
@@ -349,12 +349,12 @@ class Llama8B(DeepEvalBaseLLM):
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.eos_token_id,
         )
-        parser = JsonSchemaParser(pydantic_model.schema())
+        parser = JsonSchemaParser(schema.schema())
         prefix_function = build_transformers_prefix_allowed_tokens_fn(hf_pipeline.tokenizer, parser)
         output_dict = hf_pipeline(prompt, prefix_allowed_tokens_fn=prefix_function)
         output = output_dict[0]['generated_text'][len(prompt):]
         json_result = json.loads(output)
-        return pydantic_model(**json_result)
+        return schema(**json_result)
 ```
 
 ### 4. Instantiating your model
@@ -526,7 +526,7 @@ import instructor
 class ClaudeOpus(DeepEvalBaseLLM):
     ...
 
-    def generate(self, prompt: str, pydantic_model: BaseModel) -> BaseModel:
+    def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
         client = self.load_model()
         instructor_client = instructor.from_anthropic(client)
         resp = instructor_client.messages.create(
@@ -538,7 +538,7 @@ class ClaudeOpus(DeepEvalBaseLLM):
                     "content": prompt,
                 }
             ],
-            response_model=User,
+            response_model=schema,
         )
         return resp
 
