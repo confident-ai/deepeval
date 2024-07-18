@@ -11,7 +11,6 @@ from deepeval.types import Languages
 from deepeval.test_run.api import MetricMetadata
 from deepeval.utils import (
     delete_file_if_exists,
-    get_is_running_deepeval,
     serialize,
 )
 from deepeval.metrics import BaseMetric

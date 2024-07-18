@@ -78,6 +78,7 @@ async def measure_metric_task(
             metric.success = metric_metadata.success
             metric.reason = metric_metadata.reason
             metric.evaluation_cost = metric_metadata.evaluation_cost
+            metric.verbose_logs = metric_metadata.verbose_logs
             finish_text = "Read from Cache"
         else:
             if isinstance(test_case, ConversationalTestCase):
@@ -172,6 +173,7 @@ async def measure_metrics_with_indicator(
                 metric.strict_mode = metric_metadata.strict_mode
                 metric.evaluation_model = metric_metadata.evaluation_model
                 metric.evaluation_cost = metric_metadata.evaluation_cost
+                metric.verbose_logs = metric_metadata.verbose_logs
             else:
                 if isinstance(test_case, ConversationalTestCase):
                     tc = test_case.messages[len(test_case.messages) - 1]

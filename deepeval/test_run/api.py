@@ -12,6 +12,7 @@ class MetricMetadata(BaseModel):
     evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
     error: Optional[str] = None
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+    verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
 
 
 class LLMApiTestCase(BaseModel):

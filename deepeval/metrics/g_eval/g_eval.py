@@ -2,7 +2,6 @@
 
 from typing import Optional, List, Tuple, Union, Dict
 from pydantic import BaseModel
-import inspect
 from langchain.schema import AIMessage
 import math
 from deepeval.metrics import BaseMetric
@@ -14,7 +13,7 @@ from deepeval.test_case import (
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
-    print_intermediate_steps,
+    construct_verbose_logs,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -123,14 +122,14 @@ class GEval(BaseMetric):
                     else self.score
                 )
                 self.success = self.score >= self.threshold
-                if self.verbose_mode:
-                    print_intermediate_steps(
-                        self.__name__,
-                        steps=[
-                            f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}\n",
-                            f"Score: {self.score}\nReason: {self.reason}",
-                        ],
-                    )
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
+
                 return self.score
 
     async def a_measure(
@@ -160,14 +159,14 @@ class GEval(BaseMetric):
                 else self.score
             )
             self.success = self.score >= self.threshold
-            if self.verbose_mode:
-                print_intermediate_steps(
-                    self.__name__,
-                    steps=[
-                        f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}\n",
-                        f"Score: {self.score}\nReason: {self.reason}",
-                    ],
-                )
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                    f"Score: {self.score}\nReason: {self.reason}",
+                ],
+            )
+
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:

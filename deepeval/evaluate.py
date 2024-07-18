@@ -65,6 +65,7 @@ def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
             evaluationModel=metric.evaluation_model,
             error=metric.error,
             evaluationCost=metric.evaluation_cost,
+            verboseLogs=metric.verbose_logs,
         )
     else:
         return MetricMetadata(
@@ -77,6 +78,7 @@ def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
             evaluationModel=metric.evaluation_model,
             error=None,
             evaluationCost=metric.evaluation_cost,
+            verboseLogs=metric.verbose_logs,
         )
 
 
