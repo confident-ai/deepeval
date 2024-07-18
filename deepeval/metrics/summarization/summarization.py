@@ -1,8 +1,5 @@
 from typing import List, Optional, Union
-from enum import Enum
-from pydantic import BaseModel, Field
 import asyncio
-import inspect
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -13,7 +10,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
-    print_intermediate_steps,
+    construct_verbose_logs,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -92,18 +89,18 @@ class SummarizationMetric(BaseMetric):
                 self.score = min(alignment_score, coverage_score)
                 self.reason = self._generate_reason()
                 self.success = self.score >= self.threshold
-                if self.verbose_mode:
-                    print_intermediate_steps(
-                        self.__name__,
-                        steps=[
-                            f"Truths:\n{prettify_list(self.truths)}\n",
-                            f"Claims:\n{prettify_list(self.claims)}\n",
-                            f"Assessment Questions:\n{prettify_list(self.assessment_questions)}\n",
-                            f"Coverage Verdicts:\n{prettify_list(self.coverage_verdicts)}\n",
-                            f"Alignment Verdicts:\n{prettify_list(self.alignment_verdicts)}\n",
-                            f"Score: {self.score}\nReason: {self.reason}",
-                        ],
-                    )
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"Truths:\n{prettify_list(self.truths)}",
+                        f"Claims:\n{prettify_list(self.claims)}",
+                        f"Assessment Questions:\n{prettify_list(self.assessment_questions)}",
+                        f"Coverage Verdicts:\n{prettify_list(self.coverage_verdicts)}",
+                        f"Alignment Verdicts:\n{prettify_list(self.alignment_verdicts)}",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
+
                 return self.score
 
     async def a_measure(
@@ -141,18 +138,18 @@ class SummarizationMetric(BaseMetric):
             self.score = min(alignment_score, coverage_score)
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
-            if self.verbose_mode:
-                print_intermediate_steps(
-                    self.__name__,
-                    steps=[
-                        f"Truths:\n{prettify_list(self.truths)}\n",
-                        f"Claims:\n{prettify_list(self.claims)}\n",
-                        f"Assessment Questions:\n{prettify_list(self.assessment_questions)}\n",
-                        f"Coverage Verdicts:\n{prettify_list(self.coverage_verdicts)}\n",
-                        f"Alignment Verdicts:\n{prettify_list(self.alignment_verdicts)}\n",
-                        f"Score: {self.score}\nReason: {self.reason}",
-                    ],
-                )
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    f"Truths:\n{prettify_list(self.truths)}",
+                    f"Claims:\n{prettify_list(self.claims)}",
+                    f"Assessment Questions:\n{prettify_list(self.assessment_questions)}",
+                    f"Coverage Verdicts:\n{prettify_list(self.coverage_verdicts)}",
+                    f"Alignment Verdicts:\n{prettify_list(self.alignment_verdicts)}",
+                    f"Score: {self.score}\nReason: {self.reason}",
+                ],
+            )
+
             return self.score
 
     async def _a_generate_reason(self) -> str:

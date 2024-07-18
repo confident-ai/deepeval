@@ -10,6 +10,22 @@ from deepeval.test_case import (
 )
 
 
+def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
+    verbose_logs = ""
+    for i in range(len(steps) - 1):
+        verbose_logs += steps[i]
+
+        # don't add new line for penultimate step
+        if i < len(steps) - 2:
+            verbose_logs += "\n\n"
+
+    if metric.verbose_mode:
+        # only print reason and score for deepeval
+        print_verbose_logs(metric.__name__, verbose_logs + f"\n\n{steps[-1]}")
+
+    return verbose_logs
+
+
 def validate_conversational_test_case(
     test_case: ConversationalTestCase,
     metric: BaseMetric,
@@ -86,14 +102,11 @@ def initialize_model(
     return GPTModel(model=model), True
 
 
-def print_intermediate_steps(metric: str, steps: List[str]):
+def print_verbose_logs(metric: str, logs: str):
     print("*" * 50)
     print(f"{metric} Verbose Logs")
     print("*" * 50)
     print("")
-    for index, step in enumerate(steps):
-        print(step)
-        if index < len(steps) - 1:
-            print("")
+    print(logs)
     print("")
     print("=" * 70)

@@ -1,6 +1,4 @@
 from typing import Optional, Union, List
-from pydantic import BaseModel, Field
-import inspect
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -10,7 +8,7 @@ from deepeval.test_case import (
 from deepeval.metrics import BaseMetric
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
-    print_intermediate_steps,
+    construct_verbose_logs,
     validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
@@ -69,14 +67,14 @@ class HallucinationMetric(BaseMetric):
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
-                if self.verbose_mode:
-                    print_intermediate_steps(
-                        self.__name__,
-                        steps=[
-                            f"Verdicts:\n{prettify_list(self.verdicts)}\n",
-                            f"Score: {self.score}\nReason: {self.reason}",
-                        ],
-                    )
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
+
                 return self.score
 
     async def a_measure(
@@ -100,14 +98,14 @@ class HallucinationMetric(BaseMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
-            if self.verbose_mode:
-                print_intermediate_steps(
-                    self.__name__,
-                    steps=[
-                        f"Verdicts:\n{prettify_list(self.verdicts)}\n",
-                        f"Score: {self.score}\nReason: {self.reason}",
-                    ],
-                )
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    f"Verdicts:\n{prettify_list(self.verdicts)}",
+                    f"Score: {self.score}\nReason: {self.reason}",
+                ],
+            )
+
             return self.score
 
     async def _a_generate_reason(self):
