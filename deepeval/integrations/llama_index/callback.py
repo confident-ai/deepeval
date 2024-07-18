@@ -296,18 +296,15 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                 **trace_kwargs,
                 chunkAttributes=ChunkAttributes(
                     input=processed_payload.get("chunking_input"),
-                    output_chunks=[]
+                    output_chunks=[],
                 ),
             )
 
         elif event_type == CBEventType.NODE_PARSING:
             trace_instance = NodeParsingTrace(
                 **trace_kwargs,
-                nodeParsingAttributes=NodeParsingAttributes(
-                    output_nodes=[]
-                )
+                nodeParsingAttributes=NodeParsingAttributes(output_nodes=[]),
             )
-
 
         else:
             trace_instance = GenericTrace(
@@ -395,10 +392,12 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             attributes.output_chunks = processed_payload.get("chunking_output")
 
         elif event_type == CBEventType.NODE_PARSING and isinstance(
-                trace_instance, NodeParsingTrace
-            ):
+            trace_instance, NodeParsingTrace
+        ):
             attributes = trace_instance.nodeParsingAttributes
-            attributes.output_nodes = processed_payload.get("node_parsing_nodes")
+            attributes.output_nodes = processed_payload.get(
+                "node_parsing_nodes"
+            )
 
         return trace_instance
 
@@ -682,7 +681,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                         content=node_with_score.node.text,
                         id=node_with_score.node.node_id,
                         score=node_with_score.score,
-                        source=node_with_score.node.metadata.get("file_path")
+                        source=node_with_score.node.metadata.get("file_path"),
                     )
                     for node_with_score in nodes
                 ]
@@ -691,7 +690,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     RetrievalNode(
                         content=text_node.text,
                         id=text_node.node_id,
-                        source=text_node.metadata.get("file_path")
+                        source=text_node.metadata.get("file_path"),
                     )
                     for text_node in nodes
                 ]

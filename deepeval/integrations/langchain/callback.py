@@ -157,15 +157,15 @@ class LangChainCallbackHandler(BaseTracer):
         trace_instance: TraceData,
         event_type: LangChainTraceType,
         processed_payload: Optional[Dict[str, Any]],
-        run: Run
+        run: Run,
     ) -> TraceData:
 
         trace_instance.executionTime = (
             perf_counter() - trace_instance.executionTime
         )
         if event_type == LangChainTraceType.CHAIN:
-            input_value = 'NA'
-            output_value = 'NA'
+            input_value = "NA"
+            output_value = "NA"
             for key, value in run.inputs.items():
                 if "input" in key and isinstance(value, str):
                     input_value = value
@@ -174,10 +174,7 @@ class LangChainCallbackHandler(BaseTracer):
                 if "output" in key and isinstance(value, str):
                     output_value = value
                     break
-            attributes = ChainAttributes(
-                input=input_value,
-                output=output_value
-            )
+            attributes = ChainAttributes(input=input_value, output=output_value)
             trace_instance.chainAttributes = attributes
         elif event_type == LangChainTraceType.LLM:
             prompt = (
@@ -251,8 +248,8 @@ class LangChainCallbackHandler(BaseTracer):
             )
             trace_instance.toolAttributes = attributes
         else:
-            input_value = 'NA'
-            output_value = 'NA'
+            input_value = "NA"
+            output_value = "NA"
             for key, value in run.inputs.items():
                 if "input" in key and isinstance(value, str):
                     input_value = value
@@ -262,8 +259,7 @@ class LangChainCallbackHandler(BaseTracer):
                     output_value = value
                     break
             attributes = GenericAttributes(
-                input=input_value,
-                output=output_value
+                input=input_value, output=output_value
             )
             trace_instance.genericAttributes = attributes
         return trace_instance

@@ -308,7 +308,7 @@ def class_to_dict(instance: Any) -> Any:
         return tuple(class_to_dict(item) for item in instance)
     elif isinstance(instance, dict):
         return {k: class_to_dict(v) for k, v in instance.items()}
-    elif hasattr(instance, '__dict__'):
+    elif hasattr(instance, "__dict__"):
         instance_dict: Dict = instance.__dict__
         return {str(k): class_to_dict(v) for k, v in instance_dict.items()}
     else:
@@ -364,7 +364,8 @@ def normalize_text(text: str) -> str:
         return text.lower()
 
     return white_space_fix(remove_articles(remove_punc(lower(text))))
-        
+
+
 ###############################################
 # Source: https://github.com/tingofurro/summac
 ###############################################

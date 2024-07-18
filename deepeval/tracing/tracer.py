@@ -97,9 +97,11 @@ class ChainAttributes(BaseModel):
         None, serialization_alias="promptTemplate"
     )
 
+
 class ChunkAttributes(BaseModel):
     input: str
     output_chunks: List[str] = Field([], serialization_alias="outputChunks")
+
 
 class EmbeddingAttributes(BaseModel):
     embedding_text: str = Field("", serialization_alias="embeddingText")
@@ -108,6 +110,7 @@ class EmbeddingAttributes(BaseModel):
     embedding_length: Optional[int] = Field(
         None, serialization_alias="embeddingLength"
     )
+
 
 class LlmAttributes(BaseModel):
     input_str: str = Field("", serialization_alias="inputStr")
@@ -130,8 +133,12 @@ class LlmAttributes(BaseModel):
         None, serialization_alias="promptTemplateVariables"
     )
 
+
 class NodeParsingAttributes(BaseModel):
-    output_nodes: List[RetrievalNode] = Field([], serialization_alias="outputNodes")
+    output_nodes: List[RetrievalNode] = Field(
+        [], serialization_alias="outputNodes"
+    )
+
 
 class QueryAttributes(BaseModel):
     input: str
@@ -213,10 +220,12 @@ class ChainTrace(BaseTrace):
     chainAttributes: ChainAttributes
     type: TraceType
 
+
 @dataclass
 class ChunkTrace(BaseTrace):
     chunkAttributes: ChunkAttributes
     type: TraceType
+
 
 @dataclass
 class EmbeddingTrace(BaseTrace):
@@ -229,10 +238,12 @@ class LlmTrace(BaseTrace):
     llmAttributes: LlmAttributes
     type: TraceType
 
+
 @dataclass
 class NodeParsingTrace(BaseTrace):
     nodeParsingAttributes: NodeParsingAttributes
     type: TraceType
+
 
 @dataclass
 class QueryTrace(BaseTrace):
