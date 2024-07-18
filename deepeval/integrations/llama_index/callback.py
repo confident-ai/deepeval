@@ -18,7 +18,7 @@ from llama_index.core.bridge.pydantic import BaseModel
 from llama_index.core.callbacks.base_handler import BaseCallbackHandler
 from llama_index.core.callbacks.schema import CBEventType, EventPayload
 from llama_index.core.llms import ChatMessage
-from llama_index.core.schema import BaseNode
+from llama_index.core.schema import BaseNode, NodeWithScore, TextNode
 from llama_index.core import Response
 from llama_index.core.base.response.schema import StreamingResponse
 from llama_index.core.callbacks import CBEventType, EventPayload
@@ -36,6 +36,8 @@ from deepeval.tracing import (
     EmbeddingTrace,
     RerankingTrace,
     RetrieverTrace,
+    ChunkTrace,
+    NodeParsingTrace,
     TraceStatus,
     LlmAttributes,
     EmbeddingAttributes,
@@ -49,6 +51,8 @@ from deepeval.tracing import (
     QueryAttributes,
     SynthesizeAttributes,
     SynthesizeTrace,
+    ChunkAttributes,
+    NodeParsingAttributes,
     GenericAttributes,
     AgentAttributes,
     AgentTrace,
@@ -111,12 +115,12 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_manager.set_outter_provider(TraceProvider.LLAMA_INDEX)
 
         processed_payload = self.process_payload(
-            event_type, event_id, parent_id, payload, True
+            event_type, event_id, parent_id, payload, False
         )
         trace_instance = self.create_trace_instance(
             event_type, processed_payload
         )
-        trace_instance.inputPayload = class_to_dict(processed_payload)
+        trace_instance.inputPayload = class_to_dict(payload)
         self.event_map[event_id] = trace_instance
         trace_manager.append_to_trace_stack(trace_instance)
 
@@ -139,7 +143,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_instance, event_type, processed_payload
         )
         current_trace_stack = trace_manager.get_trace_stack_copy()
-        trace_instance.outputPayload = class_to_dict(processed_payload)
+        trace_instance.outputPayload = class_to_dict(payload)
 
         if len(current_trace_stack) > 1:
             parent_trace = current_trace_stack[-2]
@@ -232,9 +236,9 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     prompt_template=processed_payload.get(
                         "llm_prompt_template"
                     ),
-                    prompt_template_variables=processed_payload.get(
-                        "llm_prompt_template_variables"
-                    ),
+                    # prompt_template_variables=processed_payload.get(
+                    #     "llm_prompt_template_variables"
+                    # ),
                 ),
             )
             self.track_params["model"] = processed_payload["llm_model_name"]
@@ -286,6 +290,24 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                     retrieved_context=None,
                 ),
             )
+
+        elif event_type == CBEventType.CHUNKING:
+            trace_instance = ChunkTrace(
+                **trace_kwargs,
+                chunkAttributes=ChunkAttributes(
+                    input=processed_payload.get("chunking_input"),
+                    output_chunks=[]
+                ),
+            )
+
+        elif event_type == CBEventType.NODE_PARSING:
+            trace_instance = NodeParsingTrace(
+                **trace_kwargs,
+                nodeParsingAttributes=NodeParsingAttributes(
+                    output_nodes=[]
+                )
+            )
+
 
         else:
             trace_instance = GenericTrace(
@@ -366,6 +388,17 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         ):
             attributes = trace_instance.synthesizeAttributes
             attributes.response = processed_payload["output_value"]
+        elif event_type == CBEventType.CHUNKING and isinstance(
+            trace_instance, ChunkTrace
+        ):
+            attributes = trace_instance.chunkAttributes
+            attributes.output_chunks = processed_payload.get("chunking_output")
+
+        elif event_type == CBEventType.NODE_PARSING and isinstance(
+                trace_instance, NodeParsingTrace
+            ):
+            attributes = trace_instance.nodeParsingAttributes
+            attributes.output_nodes = processed_payload.get("node_parsing_nodes")
 
         return trace_instance
 
@@ -387,6 +420,10 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             return LlamaIndexTraceType.RERANKING
         elif event_type == CBEventType.AGENT_STEP:
             return LlamaIndexTraceType.AGENT
+        elif event_type == CBEventType.CHUNKING:
+            return LlamaIndexTraceType.CHUNKING
+        elif event_type == CBEventType.NODE_PARSING:
+            return LlamaIndexTraceType.NODE_PARSING
 
         return event_type.value.capitalize()
 
@@ -407,9 +444,24 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             attributes["exception"] = exception
 
         #########################
-        # ignore these events
-        if event_type in (CBEventType.NODE_PARSING, CBEventType.CHUNKING):
-            print(payload)
+        # NODE_PARSING
+        if event_type is CBEventType.NODE_PARSING:
+            documents = payload.get(EventPayload.DOCUMENTS)
+            nodes = payload.get(EventPayload.NODES)
+            if is_event_end:
+                attributes["node_parsing_nodes"] = self.process_nodes(nodes)
+            else:
+                attributes["node_parsing_documents"] = documents
+            return attributes
+
+        #########################
+        # CHUNKING
+        if event_type is CBEventType.CHUNKING:
+            chunks = payload.get(EventPayload.CHUNKS)
+            if is_event_end:
+                attributes["chunking_output"] = chunks
+            else:
+                attributes["chunking_input"] = chunks[0]
             return attributes
 
         #########################
@@ -622,16 +674,29 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         if (total_tokens := usage_mapping.get("total_tokens")) is not None:
             yield "llm_token_count_total", total_tokens
 
-    def process_nodes(self, nodes) -> Dict[str, Optional[str]]:
-        processed_nodes = [
-            RetrievalNode(
-                content=node_with_score.node.text,
-                id=node_with_score.node.node_id,
-                score=node_with_score.score,
-            )
-            for node_with_score in nodes
-        ]
-        return processed_nodes
+    def process_nodes(self, nodes: List) -> Dict[str, Optional[str]]:
+        if isinstance(nodes, list):
+            if all(isinstance(node, NodeWithScore) for node in nodes):
+                return [
+                    RetrievalNode(
+                        content=node_with_score.node.text,
+                        id=node_with_score.node.node_id,
+                        score=node_with_score.score,
+                        source=node_with_score.node.metadata.get("file_path")
+                    )
+                    for node_with_score in nodes
+                ]
+            elif all(isinstance(node, TextNode) for node in nodes):
+                return [
+                    RetrievalNode(
+                        content=text_node.text,
+                        id=text_node.node_id,
+                        source=text_node.metadata.get("file_path")
+                    )
+                    for text_node in nodes
+                ]
+            return []
+        return []
 
     def process_message(self, message: Any) -> Dict[str, Optional[str]]:
         if isinstance(message, ChatMessage):
