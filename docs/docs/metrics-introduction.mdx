@@ -80,9 +80,9 @@ deepeval unset-azure-openai
 `deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
 
 :::caution
-We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputing responses in valid JSON formats.
+We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputing responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](guides-using-custom-llms).
 
-If you find yourself running into JSON errors and would like to ignore it, use the [`-c` and `-i` flag during `deepeval test run`](evaluation-introduction#evaluating-with-pytest):
+Alternatively, if you find yourself running into JSON errors and would like to ignore it, use the [`-c` and `-i` flag during `deepeval test run`](evaluation-introduction#evaluating-with-pytest):
 
 ```console
 deepeval test run test_example.py -i -c
