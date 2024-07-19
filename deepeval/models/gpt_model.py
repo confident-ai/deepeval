@@ -18,7 +18,7 @@ def log_retry_error(retry_state):
 
 
 valid_gpt_models = [
-    "gpt-4o-mini"
+    "gpt-4o-mini",
     "gpt-4o",
     "gpt-4-turbo",
     "gpt-4-turbo-preview",
