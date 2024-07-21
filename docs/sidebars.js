@@ -63,7 +63,16 @@ module.exports = {
         "confident-ai-analyze-evaluations",
         "confident-ai-github-actions",
         "confident-ai-evals-in-production",
-        "confident-ai-tracing",
+        {
+          type: "category",
+          label: "LLM Tracing",
+          items: [
+            "confident-ai-tracing",
+            "confident-ai-tracing-llama-index",
+            "confident-ai-tracing-langchain",
+          ],
+          collapsed: false,
+        },
       ],
       collapsed: false,
     },
