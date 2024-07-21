@@ -1,10 +1,8 @@
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-from llama_index.core import set_global_handler, Settings
-from llama_index.core.callbacks.base_handler import BaseCallbackHandler
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.core.postprocessor import LLMRerank
+from llama_index.llms.openai import OpenAI
+
 from typing import Any, List
 import asyncio
 
@@ -33,7 +31,6 @@ nodes = node_parser.get_nodes_from_documents(documents, show_progress=True)
 # Define embedding model
 index = VectorStoreIndex(nodes)
 
-
 async def chatbot(input):
     query_engine = index.as_query_engine(similarity_top_k=5)
     res = query_engine.query(input).response
@@ -60,7 +57,7 @@ async def query_and_print(query: str):
 
 
 async def main():
-    tasks = [query_and_print(query) for query in user_inputs]
+    tasks = [chatbot(query) for query in user_inputs]
     await asyncio.gather(*tasks)
 
 
