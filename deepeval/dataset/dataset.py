@@ -8,6 +8,7 @@ import webbrowser
 import os
 import datetime
 import time
+import ast
 
 from deepeval.metrics import BaseMetric
 from deepeval.api import Api, Endpoints
@@ -143,6 +144,7 @@ class EvaluationDataset:
 
         return evaluate(self.test_cases, metrics)
 
+
     def add_test_cases_from_csv_file(
         self,
         file_path: str,
@@ -153,6 +155,7 @@ class EvaluationDataset:
         context_col_delimiter: str = ";",
         retrieval_context_col_name: Optional[str] = None,
         retrieval_context_col_delimiter: str = ";",
+        additional_metadata_col_name: Optional[str] = None,
     ):
         """
         Load test cases from a CSV file.
@@ -168,6 +171,7 @@ class EvaluationDataset:
             context_delimiter (str, optional): The delimiter used to separate items in the context list within the CSV file. Defaults to ';'.
             retrieval_context_col_name (str, optional): The column name in the CSV corresponding to the retrieval context for the test case. Defaults to None.
             retrieval_context_delimiter (str, optional): The delimiter used to separate items in the retrieval context list within the CSV file. Defaults to ';'.
+            additional_metadata_col_name (str, optional): The column name in the CSV corresponding to additional metadata for the test case. Defaults to None.
 
         Returns:
             None: The method adds test cases to the Dataset instance but does not return anything.
@@ -207,27 +211,39 @@ class EvaluationDataset:
         ]
         retrieval_contexts = [
             (
-                retreival_context.split(retrieval_context_col_delimiter)
-                if retreival_context
+                retrieval_context.split(retrieval_context_col_delimiter)
+                if retrieval_context
                 else []
             )
-            for retreival_context in get_column_data(
+            for retrieval_context in get_column_data(
                 df, retrieval_context_col_name, default=""
             )
         ]
-
+        additional_metadatas = []
+        if additional_metadata_col_name:
+            for metadata in get_column_data(df, additional_metadata_col_name, default=""):
+                try:
+                    additional_metadata = ast.literal_eval(metadata) if metadata else {}
+                except (ValueError, SyntaxError):
+                    additional_metadata = {}
+                additional_metadatas.append(additional_metadata)
+        else:
+            additional_metadatas = None
+        
         for (
             input,
             actual_output,
             expected_output,
             context,
             retrieval_context,
+            additional_metadata,
         ) in zip(
             inputs,
             actual_outputs,
             expected_outputs,
             contexts,
             retrieval_contexts,
+            additional_metadatas,
         ):
             self.add_test_case(
                 LLMTestCase(
@@ -236,8 +252,10 @@ class EvaluationDataset:
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
+                    additional_metadata=additional_metadata,
                 )
             )
+
 
     def add_test_cases_from_json_file(
         self,
