@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import logging
 import os
 import socket
 import sys
@@ -48,6 +49,8 @@ if not telemetry_opt_out():
     # Add the OTLP exporter to the span processor
     span_processor = BatchSpanProcessor(otlp_exporter)
     tracer_provider.add_span_processor(span_processor)
+
+    logging.getLogger("opentelemetry.exporter.otlp").setLevel(logging.CRITICAL)
 
     # Create a tracer for your application
     tracer = trace.get_tracer(__name__)

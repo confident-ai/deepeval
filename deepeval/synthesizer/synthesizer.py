@@ -345,7 +345,6 @@ class Synthesizer:
         output_format: str,
         num_initial_goldens: int,
         num_evolutions: int = 1,
-        _show_indicator: bool = True,
         evolution_types: List[PromptEvolution] = [
             PromptEvolution.REASONING,
             PromptEvolution.CONCRETIZING,
@@ -354,6 +353,7 @@ class Synthesizer:
             PromptEvolution.HYPOTHETICAL,
             PromptEvolution.IN_BREADTH,
         ],
+        _show_indicator: bool = True,
     ) -> List[Golden]:
         goldens: List[Golden] = []
         with synthesizer_progress_context(
@@ -396,7 +396,6 @@ class Synthesizer:
         output_format: str,
         num_initial_goldens: int,
         num_evolutions: int = 1,
-        _show_indicator: bool = True,
         evolution_types: List[PromptEvolution] = [
             PromptEvolution.REASONING,
             PromptEvolution.CONCRETIZING,
@@ -405,6 +404,7 @@ class Synthesizer:
             PromptEvolution.HYPOTHETICAL,
             PromptEvolution.IN_BREADTH,
         ],
+        _show_indicator: bool = True,
     ) -> List[Golden]:
         goldens: List[Golden] = []
         if self.async_mode:
@@ -416,8 +416,8 @@ class Synthesizer:
                     output_format,
                     num_initial_goldens,
                     num_evolutions,
-                    _show_indicator,
                     evolution_types,
+                    _show_indicator,
                 )
             )
         else:
@@ -643,7 +643,6 @@ class Synthesizer:
         max_goldens_per_context: int = 2,
         num_evolutions: int = 1,
         source_files: Optional[List[str]] = None,
-        _show_indicator: bool = True,
         evolutions: List[Evolution] = [
             Evolution.REASONING,
             Evolution.MULTICONTEXT,
@@ -654,6 +653,7 @@ class Synthesizer:
             Evolution.IN_BREADTH,
         ],
         use_case: UseCase = UseCase.QA,
+        _show_indicator: bool = True,
     ) -> List[Golden]:
         goldens: List[Golden] = []
         if use_case == UseCase.QA:
@@ -707,7 +707,6 @@ class Synthesizer:
         max_goldens_per_context: int = 2,
         num_evolutions: int = 1,
         source_files: Optional[List[str]] = None,
-        _show_indicator: bool = True,
         evolutions: List[Evolution] = [
             Evolution.REASONING,
             Evolution.MULTICONTEXT,
@@ -718,6 +717,7 @@ class Synthesizer:
             Evolution.IN_BREADTH,
         ],
         use_case: UseCase = UseCase.QA,
+        _show_indicator: bool = True,
     ) -> List[Golden]:
         if self.async_mode:
             loop = get_or_create_event_loop()
@@ -728,9 +728,9 @@ class Synthesizer:
                     max_goldens_per_context,
                     num_evolutions,
                     source_files,
-                    _show_indicator,
                     evolutions,
                     use_case,
+                    _show_indicator,
                 )
             )
         else:
@@ -813,6 +813,65 @@ class Synthesizer:
             self.synthetic_goldens.extend(goldens)
             return goldens
 
+    async def a_generate_goldens_from_docs(
+        self,
+        document_paths: List[str],
+        include_expected_output: bool = False,
+        max_goldens_per_document: int = 5,
+        chunk_size: int = 1024,
+        chunk_overlap: int = 0,
+        num_evolutions: int = 1,
+        evolutions: List[Evolution] = [
+            Evolution.REASONING,
+            Evolution.MULTICONTEXT,
+            Evolution.CONCRETIZING,
+            Evolution.CONSTRAINED,
+            Evolution.COMPARATIVE,
+            Evolution.HYPOTHETICAL,
+            Evolution.IN_BREADTH,
+        ],
+        use_case: UseCase = UseCase.QA,
+        _show_indicator: bool = True,
+    ):
+        if self.embedder is None:
+            self.embedder = OpenAIEmbeddingModel()
+
+        with synthesizer_progress_context(
+            self.model.get_model_name(),
+            self.embedder.get_model_name(),
+            max_goldens_per_document * len(document_paths),
+            _show_indicator=_show_indicator,
+        ):
+            if self.context_generator is None:
+                self.context_generator = ContextGenerator(
+                    document_paths,
+                    embedder=self.embedder,
+                    chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap,
+                )
+            await self.context_generator._a_load_docs()
+
+            max_goldens_per_context = 2
+            if max_goldens_per_document < max_goldens_per_context:
+                max_goldens_per_context = 1
+            num_context = math.floor(
+                max_goldens_per_document / max_goldens_per_context
+            )
+            contexts, source_files = self.context_generator.generate_contexts(
+                num_context=num_context
+            )
+
+            return await self.a_generate_goldens(
+                contexts,
+                include_expected_output,
+                max_goldens_per_context,
+                num_evolutions,
+                source_files,
+                evolutions=evolutions,
+                use_case=use_case,
+                _show_indicator=False,
+            )
+
     def generate_goldens_from_docs(
         self,
         document_paths: List[str],
@@ -834,38 +893,59 @@ class Synthesizer:
     ):
         if self.embedder is None:
             self.embedder = OpenAIEmbeddingModel()
+
         with synthesizer_progress_context(
             self.model.get_model_name(),
             self.embedder.get_model_name(),
             max_goldens_per_document * len(document_paths),
         ):
-            if self.context_generator is None:
-                self.context_generator = ContextGenerator(
-                    document_paths,
-                    embedder=self.embedder,
-                    chunk_size=chunk_size,
-                    chunk_overlap=chunk_overlap,
-                    async_mode=self.async_mode,
+            if self.async_mode:
+                loop = get_or_create_event_loop()
+                return loop.run_until_complete(
+                    self.a_generate_goldens_from_docs(
+                        document_paths,
+                        include_expected_output,
+                        max_goldens_per_document,
+                        chunk_size,
+                        chunk_overlap,
+                        num_evolutions,
+                        evolutions,
+                        use_case,
+                        _show_indicator=False,
+                    )
                 )
-            max_goldens_per_context = 2
-            if max_goldens_per_document < max_goldens_per_context:
-                max_goldens_per_context = 1
-            num_context = math.floor(
-                max_goldens_per_document / max_goldens_per_context
-            )
-            contexts, source_files = self.context_generator.generate_contexts(
-                num_context=num_context
-            )
-            return self.generate_goldens(
-                contexts,
-                include_expected_output,
-                max_goldens_per_context,
-                num_evolutions,
-                source_files,
-                _show_indicator=False,
-                evolutions=evolutions,
-                use_case=use_case,
-            )
+            else:
+                if self.context_generator is None:
+                    self.context_generator = ContextGenerator(
+                        document_paths,
+                        embedder=self.embedder,
+                        chunk_size=chunk_size,
+                        chunk_overlap=chunk_overlap,
+                    )
+
+                self.context_generator._load_docs()
+
+                max_goldens_per_context = 2
+                if max_goldens_per_document < max_goldens_per_context:
+                    max_goldens_per_context = 1
+                num_context = math.floor(
+                    max_goldens_per_document / max_goldens_per_context
+                )
+                contexts, source_files = (
+                    self.context_generator.generate_contexts(
+                        num_context=num_context
+                    )
+                )
+                return self.generate_goldens(
+                    contexts,
+                    include_expected_output,
+                    max_goldens_per_context,
+                    num_evolutions,
+                    source_files,
+                    evolutions=evolutions,
+                    use_case=use_case,
+                    _show_indicator=False,
+                )
 
     def save_as(self, file_type: str, directory: str) -> str:
         if file_type not in valid_file_types:

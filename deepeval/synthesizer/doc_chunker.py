@@ -7,8 +7,8 @@ from langchain_community.document_loaders import (
 from langchain_community.document_loaders.base import BaseLoader
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
-from typing import Optional, List, Dict, Type
-from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
+from pydantic import BaseModel
 import numpy as np
 import uuid
 import os
@@ -72,7 +72,7 @@ class DocumentChunker:
 
         # Load results into Chunk class
         contents = [rc.page_content for rc in raw_chunks]
-        embeddings = self.embedder.embed_texts(contents)
+        embeddings = await self.embedder.a_embed_texts(contents)
         embeddings_np = np.array(embeddings)
         mean_embedding = np.mean(embeddings_np, axis=0)
         chunks = []
