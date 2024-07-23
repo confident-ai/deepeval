@@ -29,6 +29,8 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
                 )
         elif model is None:
             model_name = default_openai_embedding_model
+        self.args = args
+        self.kwargs = kwargs
         super().__init__(model_name, *args, **kwargs)
 
     def load_model(self):
@@ -52,9 +54,13 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
                 azure_deployment=azure_embedding_deployment,
                 azure_endpoint=azure_endpoint,
                 openai_api_key=openai_api_key,
+                **self.args,
+                **self.kwargs,
             )
 
-        return OpenAIEmbeddings(model=self.model_name)
+        return OpenAIEmbeddings(
+            model=self.model_name, **self.args, **self.kwargs
+        )
 
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
