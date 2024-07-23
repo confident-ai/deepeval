@@ -144,7 +144,6 @@ class EvaluationDataset:
 
         return evaluate(self.test_cases, metrics)
 
-
     def add_test_cases_from_csv_file(
         self,
         file_path: str,
@@ -221,15 +220,19 @@ class EvaluationDataset:
         ]
         additional_metadatas = []
         if additional_metadata_col_name:
-            for metadata in get_column_data(df, additional_metadata_col_name, default=""):
+            for metadata in get_column_data(
+                df, additional_metadata_col_name, default=""
+            ):
                 try:
-                    additional_metadata = ast.literal_eval(metadata) if metadata else {}
+                    additional_metadata = (
+                        ast.literal_eval(metadata) if metadata else {}
+                    )
                 except (ValueError, SyntaxError):
                     additional_metadata = {}
                 additional_metadatas.append(additional_metadata)
         else:
             additional_metadatas = None
-        
+
         for (
             input,
             actual_output,
@@ -255,7 +258,6 @@ class EvaluationDataset:
                     additional_metadata=additional_metadata,
                 )
             )
-
 
     def add_test_cases_from_json_file(
         self,
