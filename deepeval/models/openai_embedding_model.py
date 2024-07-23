@@ -31,10 +31,10 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             model_name = default_openai_embedding_model
         self.args = args
         self.kwargs = kwargs
-        print(kwargs, "@@@")
         super().__init__(model_name)
 
     def load_model(self):
+        print("!!!!!")
         if self.should_use_azure_openai():
             openai_api_key = KEY_FILE_HANDLER.fetch_data(
                 KeyValues.AZURE_OPENAI_API_KEY
@@ -55,13 +55,10 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
                 azure_deployment=azure_embedding_deployment,
                 azure_endpoint=azure_endpoint,
                 openai_api_key=openai_api_key,
-                **self.args,
                 **self.kwargs,
             )
 
-        return OpenAIEmbeddings(
-            model=self.model_name, **self.args, **self.kwargs
-        )
+        return OpenAIEmbeddings(model=self.model_name, **self.kwargs)
 
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
