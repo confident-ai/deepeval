@@ -31,7 +31,8 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             model_name = default_openai_embedding_model
         self.args = args
         self.kwargs = kwargs
-        super().__init__(model_name, *args, **kwargs)
+        print(kwargs, "@@@")
+        super().__init__(model_name)
 
     def load_model(self):
         if self.should_use_azure_openai():
