@@ -51,8 +51,6 @@ class ContextGenerator:
 
     ############### Load Docs #############################
     async def _a_load_docs(self) -> Dict[str, List[Chunk]]:
-        self.check_if_docs_are_loaded()
-
         async def a_process_document(path):
             doc_chunker = DocumentChunker(
                 self.embedder, self.chunk_size, self.chunk_overlap
@@ -67,7 +65,7 @@ class ContextGenerator:
             if path not in source_files_to_chunks_map:
                 source_files_to_chunks_map[path] = []
             source_files_to_chunks_map[path].extend(chunks)
-        return source_files_to_chunks_map
+        self.source_files_to_chunks_map = source_files_to_chunks_map
 
     def _load_docs(self) -> Dict[str, List[Chunk]]:
         source_files_to_chunks_map: Dict[str, List[Chunk]] = {}
@@ -79,7 +77,7 @@ class ContextGenerator:
             if path not in source_files_to_chunks_map:
                 source_files_to_chunks_map[path] = []
             source_files_to_chunks_map[path].extend(chunks)
-        return source_files_to_chunks_map
+        self.source_files_to_chunks_map = source_files_to_chunks_map
 
     ############### Search N Chunks ########################
     def _get_n_random_clusters(

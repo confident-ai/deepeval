@@ -7,8 +7,8 @@ from langchain_community.document_loaders import (
 from langchain_community.document_loaders.base import BaseLoader
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
-from typing import Optional, List, Dict, Type
-from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
+from pydantic import BaseModel
 import numpy as np
 import uuid
 import os

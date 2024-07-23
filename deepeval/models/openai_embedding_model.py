@@ -34,7 +34,6 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         super().__init__(model_name)
 
     def load_model(self):
-        print("!!!!!")
         if self.should_use_azure_openai():
             openai_api_key = KEY_FILE_HANDLER.fetch_data(
                 KeyValues.AZURE_OPENAI_API_KEY

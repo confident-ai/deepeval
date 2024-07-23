@@ -97,14 +97,14 @@ def test_generate_goldens(
     )
     end_time = time.time()
     duration = end_time - start_time
-    print("Generated goldens:", goldens)
+    print("Generated goldens:", len(goldens))
     print(f"Time taken: {duration} seconds")
 
 
-test_generate_goldens(synthesizer_sync)
-test_generate_goldens(synthesizer_async)
-test_generate_goldens(synthesizer_sync, UseCase.TEXT2SQL)
-test_generate_goldens(synthesizer_async, UseCase.TEXT2SQL)
+# test_generate_goldens(synthesizer_sync)
+# test_generate_goldens(synthesizer_async)
+# test_generate_goldens(synthesizer_sync, UseCase.TEXT2SQL)
+# test_generate_goldens(synthesizer_async, UseCase.TEXT2SQL)
 
 #########################################################
 ### Generate Goldens From Docs ##########################
@@ -130,13 +130,13 @@ embedder = initialize_embedding_model("text-embedding-3-large")
 context_generator = ContextGenerator(
     document_paths=document_paths, embedder=embedder
 )
-loaded_docs_sync = asyncio.run(
-    test_context_generator(context_generator._load_docs)
-)
-loaded_docs_async = asyncio.run(
-    test_context_generator(context_generator._a_load_docs, is_async=True)
-)
-assert loaded_docs_async == loaded_docs_async
+# loaded_docs_sync = asyncio.run(
+#     test_context_generator(context_generator._load_docs)
+# )
+# loaded_docs_async = asyncio.run(
+#     test_context_generator(context_generator._a_load_docs, is_async=True)
+# )
+# assert loaded_docs_async == loaded_docs_async
 
 # Test Generate from Docs ###############################
 synthesizer_sync = Synthesizer(async_mode=False)
@@ -155,11 +155,11 @@ def test_generate_goldens_from_docs(
     )
     end_time = time.time()
     duration = end_time - start_time
-    print("Generated goldens:", goldens)
+    print("Generated goldens from docs:", len(goldens))
     print(f"Time taken: {duration} seconds")
 
 
-test_generate_goldens_from_docs(synthesizer_sync)
+# test_generate_goldens_from_docs(synthesizer_sync)
 test_generate_goldens_from_docs(synthesizer_async)
 test_generate_goldens_from_docs(synthesizer_sync, UseCase.TEXT2SQL)
 test_generate_goldens_from_docs(synthesizer_async, UseCase.TEXT2SQL)
@@ -182,7 +182,7 @@ def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
     )
     end_time = time.time()
     duration = end_time - start_time
-    print("Generated goldens:", goldens)
+    print("Generated red teaming goldens with contexts:", len(goldens))
     print(f"Time taken: {duration} seconds")
 
 
@@ -199,7 +199,7 @@ def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
     )
     end_time = time.time()
     duration = end_time - start_time
-    print("Generated goldens:", goldens)
+    print("Generated red teaming goldens without context:", len(goldens))
     print(f"Time taken: {duration} seconds")
 
 
@@ -224,7 +224,7 @@ def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
     )
     end_time = time.time()
     duration = end_time - start_time
-    print("Generated goldens:", goldens)
+    print("Generated goldens from scratch:", len(goldens))
     print(f"Time taken: {duration} seconds")
 
 

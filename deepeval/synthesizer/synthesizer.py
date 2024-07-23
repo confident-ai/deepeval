@@ -655,6 +655,7 @@ class Synthesizer:
         use_case: UseCase = UseCase.QA,
         _show_indicator: bool = True,
     ) -> List[Golden]:
+        print("finally")
         goldens: List[Golden] = []
         if use_case == UseCase.QA:
             with synthesizer_progress_context(
@@ -698,6 +699,7 @@ class Synthesizer:
                 ]
                 await asyncio.gather(*tasks)
         self.synthetic_goldens.extend(goldens)
+        print("done")
         return goldens
 
     def generate_goldens(
@@ -833,6 +835,11 @@ class Synthesizer:
         use_case: UseCase = UseCase.QA,
         _show_indicator: bool = True,
     ):
+        if self.embedder is None:
+            self.embedder = OpenAIEmbeddingModel()
+
+        print("start generate")
+
         with synthesizer_progress_context(
             self.model.get_model_name(),
             self.embedder.get_model_name(),
@@ -845,9 +852,9 @@ class Synthesizer:
                     embedder=self.embedder,
                     chunk_size=chunk_size,
                     chunk_overlap=chunk_overlap,
-                    async_mode=self.async_mode,
                 )
             await self.context_generator._a_load_docs()
+            print("loaded doc")
 
             max_goldens_per_context = 2
             if max_goldens_per_document < max_goldens_per_context:
@@ -901,7 +908,7 @@ class Synthesizer:
                 loop = get_or_create_event_loop()
                 return loop.run_until_complete(
                     self.a_generate_goldens_from_docs(
-                        contexts,
+                        document_paths,
                         include_expected_output,
                         max_goldens_per_document,
                         chunk_size,
@@ -919,8 +926,8 @@ class Synthesizer:
                         embedder=self.embedder,
                         chunk_size=chunk_size,
                         chunk_overlap=chunk_overlap,
-                        async_mode=self.async_mode,
                     )
+
                 self.context_generator._load_docs()
 
                 max_goldens_per_context = 2
