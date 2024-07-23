@@ -218,20 +218,12 @@ class EvaluationDataset:
                 df, retrieval_context_col_name, default=""
             )
         ]
-        additional_metadatas = []
-        if additional_metadata_col_name:
+        additional_metadatas = [
+            ast.literal_eval(metadata) if metadata else None
             for metadata in get_column_data(
                 df, additional_metadata_col_name, default=""
-            ):
-                try:
-                    additional_metadata = (
-                        ast.literal_eval(metadata) if metadata else {}
-                    )
-                except (ValueError, SyntaxError):
-                    additional_metadata = {}
-                additional_metadatas.append(additional_metadata)
-        else:
-            additional_metadatas = None
+            )
+        ]
 
         for (
             input,
