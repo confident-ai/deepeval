@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Union, Optional
+from typing import List, Tuple, Dict, Optional
 import random
 import asyncio
 
@@ -8,8 +8,6 @@ from deepeval.synthesizer.doc_chunker import (
     get_embedding_similarity,
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
-from deepeval.synthesizer.utils import initialize_embedding_model
-from deepeval.utils import get_or_create_event_loop
 
 
 class ContextGenerator:
@@ -19,25 +17,23 @@ class ContextGenerator:
         embedder: DeepEvalBaseEmbeddingModel,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
-        async_mode: bool = False,
     ):
         self.embedder = embedder
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
-        self.async_mode = async_mode
         self.document_paths: List[str] = document_paths
 
         # TODO: Potential bug, calling generate_goldens_from_docs
         # twice in a notebook enviornment will not refresh source_files_to_chunks_map
-        self.source_files_to_chunks_map: Dict[str, List[Chunk]] = (
-            self._load_docs()
-        )
+        self.source_files_to_chunks_map: Optional[Dict[str, List[Chunk]]] = None
 
     ############### Generate Topics ########################
     def generate_contexts(
         self, num_context: int, max_context_size: int = 3
     ) -> Tuple[List[List[str]], List[str]]:
+        self.check_if_docs_are_loaded()
+
         contexts: List[List[str]] = []
         source_files: List[str] = []
         for path, document_chunks in self.source_files_to_chunks_map.items():
@@ -55,6 +51,8 @@ class ContextGenerator:
 
     ############### Load Docs #############################
     async def _a_load_docs(self) -> Dict[str, List[Chunk]]:
+        self.check_if_docs_are_loaded()
+
         async def a_process_document(path):
             doc_chunker = DocumentChunker(
                 self.embedder, self.chunk_size, self.chunk_overlap
@@ -72,20 +70,16 @@ class ContextGenerator:
         return source_files_to_chunks_map
 
     def _load_docs(self) -> Dict[str, List[Chunk]]:
-        if not self.async_mode:
-            source_files_to_chunks_map: Dict[str, List[Chunk]] = {}
-            for path in self.document_paths:
-                doc_chunker = DocumentChunker(
-                    self.embedder, self.chunk_size, self.chunk_overlap
-                )
-                chunks = doc_chunker.load_doc(path)
-                if path not in source_files_to_chunks_map:
-                    source_files_to_chunks_map[path] = []
-                source_files_to_chunks_map[path].extend(chunks)
-            return source_files_to_chunks_map
-        else:
-            loop = get_or_create_event_loop()
-            return loop.run_until_complete(self._a_load_docs())
+        source_files_to_chunks_map: Dict[str, List[Chunk]] = {}
+        for path in self.document_paths:
+            doc_chunker = DocumentChunker(
+                self.embedder, self.chunk_size, self.chunk_overlap
+            )
+            chunks = doc_chunker.load_doc(path)
+            if path not in source_files_to_chunks_map:
+                source_files_to_chunks_map[path] = []
+            source_files_to_chunks_map[path].extend(chunks)
+        return source_files_to_chunks_map
 
     ############### Search N Chunks ########################
     def _get_n_random_clusters(
@@ -104,6 +98,8 @@ class ContextGenerator:
         return chunk_cluster
 
     def _get_n_random_chunks(self, path: str, n: int) -> List[str]:
+        self.check_if_docs_are_loaded()
+
         document_chunks = self.source_files_to_chunks_map[path]
         n = min(len(document_chunks), n)
         return random.sample(document_chunks, n)
@@ -115,6 +111,8 @@ class ContextGenerator:
         n: int,
         threshold: float = 0.7,
     ) -> List[Chunk]:
+        self.check_if_docs_are_loaded()
+
         document_chunks = self.source_files_to_chunks_map[path]
 
         if not document_chunks:
@@ -141,3 +139,9 @@ class ContextGenerator:
         top_n_indices = sorted_indices[:n]
         similar_chunks = [document_chunks[i] for i in top_n_indices]
         return similar_chunks
+
+    def check_if_docs_are_loaded(self):
+        if self.source_files_to_chunks_map is None:
+            raise ValueError(
+                "Context Generator has yet to properly load documents"
+            )

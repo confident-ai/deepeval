@@ -72,7 +72,7 @@ class DocumentChunker:
 
         # Load results into Chunk class
         contents = [rc.page_content for rc in raw_chunks]
-        embeddings = self.embedder.embed_texts(contents)
+        embeddings = await self.embedder.a_embed_texts(contents)
         embeddings_np = np.array(embeddings)
         mean_embedding = np.mean(embeddings_np, axis=0)
         chunks = []
