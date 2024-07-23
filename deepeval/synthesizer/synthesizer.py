@@ -655,7 +655,6 @@ class Synthesizer:
         use_case: UseCase = UseCase.QA,
         _show_indicator: bool = True,
     ) -> List[Golden]:
-        print("finally")
         goldens: List[Golden] = []
         if use_case == UseCase.QA:
             with synthesizer_progress_context(
@@ -699,7 +698,6 @@ class Synthesizer:
                 ]
                 await asyncio.gather(*tasks)
         self.synthetic_goldens.extend(goldens)
-        print("done")
         return goldens
 
     def generate_goldens(
@@ -838,8 +836,6 @@ class Synthesizer:
         if self.embedder is None:
             self.embedder = OpenAIEmbeddingModel()
 
-        print("start generate")
-
         with synthesizer_progress_context(
             self.model.get_model_name(),
             self.embedder.get_model_name(),
@@ -854,7 +850,6 @@ class Synthesizer:
                     chunk_overlap=chunk_overlap,
                 )
             await self.context_generator._a_load_docs()
-            print("loaded doc")
 
             max_goldens_per_context = 2
             if max_goldens_per_document < max_goldens_per_context:
