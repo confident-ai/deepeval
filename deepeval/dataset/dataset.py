@@ -474,9 +474,7 @@ class EvaluationDataset:
         include_expected_output: bool = False,
         max_goldens_per_context: int = 2,
         num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
         source_files: Optional[List[str]] = None,
-        _show_indicator: bool = True,
         evolutions: List[Evolution] = [
             Evolution.REASONING,
             Evolution.MULTICONTEXT,
@@ -484,6 +482,7 @@ class EvaluationDataset:
             Evolution.CONSTRAINED,
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
+            Evolution.IN_BREADTH
         ],
         use_case: UseCase = UseCase.QA,
         synthesizer=None,
@@ -501,9 +500,7 @@ class EvaluationDataset:
                 include_expected_output=include_expected_output,
                 max_goldens_per_context=max_goldens_per_context,
                 num_evolutions=num_evolutions,
-                enable_breadth_evolve=enable_breadth_evolve,
                 source_files=source_files,
-                _show_indicator=_show_indicator,
                 evolutions=evolutions,
                 use_case=use_case,
             )
@@ -517,7 +514,6 @@ class EvaluationDataset:
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         num_evolutions: int = 1,
-        enable_breadth_evolve: bool = False,
         evolutions: List[Evolution] = [
             Evolution.REASONING,
             Evolution.MULTICONTEXT,
@@ -525,6 +521,7 @@ class EvaluationDataset:
             Evolution.CONSTRAINED,
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
+            Evolution.IN_BREADTH
         ],
         synthesizer=None,
     ):
@@ -543,7 +540,6 @@ class EvaluationDataset:
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
                 num_evolutions=num_evolutions,
-                enable_breadth_evolve=enable_breadth_evolve,
                 evolutions=evolutions,
             )
         )
