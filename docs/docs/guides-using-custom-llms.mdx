@@ -155,7 +155,7 @@ class CustomLlama3_8B(DeepEvalBaseLLM):
     def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
         pass
 
-    def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+    async def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
         return self.generate(prompt, schema)
 ```
 
@@ -219,7 +219,7 @@ class CustomLlama3_8B(DeepEvalBaseLLM):
         # Return valid JSON object according to the schema DeepEval supplied
         return schema(**json_result)
 
-    def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+    async def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
         return self.generate(prompt, schema)
 
 ```
@@ -337,7 +337,7 @@ class CustomMistral7B(DeepEvalBaseLLM):
         # Return valid JSON object according to the schema DeepEval supplied
         return schema(**json_result)
 
-    def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+    async def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
         return self.generate(prompt, schema)
 
     def get_model_name(self):
