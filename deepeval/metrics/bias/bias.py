@@ -161,7 +161,7 @@ class BiasMetric(BaseMetric):
                 res: Reason = self.model.generate(prompt, schema=Reason)
                 return res.reason
             except TypeError:
-                res, cost = self.model.generate(prompt)
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
@@ -185,7 +185,7 @@ class BiasMetric(BaseMetric):
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:
-                res, cost = await self.model.a_generate(prompt)
+                res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
                 return verdicts
@@ -242,7 +242,7 @@ class BiasMetric(BaseMetric):
                 res: Opinions = self.model.generate(prompt, schema=Opinions)
                 return res.opinions
             except TypeError:
-                res, cost = self.model.generate(prompt)
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["opinions"]
 
