@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "0.21.72"
+version = "0.21.71"
 description = "The Evaluation Framework for LLMs"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -42,10 +42,11 @@ aiohttp = "*"
 llama-index = "*"
 docx2txt = "^0.8"
 importlib-metadata = ">=6.0.2"
-tenacity = "^8.2.3"
-opentelemetry-api = "^1.14.0"
-opentelemetry-sdk = "^1.14.0"
-opentelemetry-exporter-otlp-proto-grpc = "^1.24.0"
+tenacity = "^8.4.1"
+opentelemetry-api = "1.24.0"  
+opentelemetry-sdk = "1.24.0" 
+opentelemetry-exporter-otlp-proto-grpc = "1.24.0" 
+grpcio = "1.63.0"
 
 [tool.black]
 line-length = 80
