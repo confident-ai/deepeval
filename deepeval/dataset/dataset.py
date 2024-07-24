@@ -482,7 +482,7 @@ class EvaluationDataset:
             Evolution.CONSTRAINED,
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
-            Evolution.IN_BREADTH
+            Evolution.IN_BREADTH,
         ],
         use_case: UseCase = UseCase.QA,
         synthesizer=None,
@@ -521,7 +521,7 @@ class EvaluationDataset:
             Evolution.CONSTRAINED,
             Evolution.COMPARATIVE,
             Evolution.HYPOTHETICAL,
-            Evolution.IN_BREADTH
+            Evolution.IN_BREADTH,
         ],
         synthesizer=None,
     ):
