@@ -16,6 +16,7 @@ class BaseMetric:
     include_reason: bool = False
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
+    verbose_logs: Optional[str] = None
 
     @property
     def threshold(self) -> float:

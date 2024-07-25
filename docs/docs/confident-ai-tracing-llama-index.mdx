@@ -1,0 +1,130 @@
+---
+id: confident-ai-tracing-llama-index
+title: Tracing LlamaIndex Applications
+sidebar_label: LlamaIndex Integration
+---
+
+[**LlamaIndex**](https://www.llamaindex.ai/) is a flexible framework that enriches generative AI applications by integrating LLMs with external data through context augmentation. It offers tools for data ingestion, parsing, and indexing, enabling applications like Retrieval-Augmented Generation and chatbots.
+
+`deepeval` allows anyone to automatically log traces for LlamaIndex applications **in just one line of code**. All traces will be sent to Confident AI upon setup and all you need to do is [login to Confident AI](confident-ai-introduction#login-to-confident-ai).
+
+:::info
+LLamaIndex traces are marked with the ![](../assets/llama.png) icon.
+:::
+
+import LlamaVideo from "../assets/llama.mp4";
+
+<video src={LlamaVideo} width="100%" autoPlay loop muted playsInline />
+
+## Setting up the LlamaIndex Integration
+
+First, make sure you have `deepeval` and `llama-index` installed.
+
+```bash
+pip install llama-index deepeval
+```
+
+Next, set up the LlamaIndex integration either through `deepeval` or `llama-index`. To integrate using `deepeval`, simply import `deepeval` and call the `trace_llama_index` function before your LLamaIndex application. To integrate directly through `llama-index`, import the `set_global_handler` function and pass `"deepeval"` as the argument.
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+<Tabs
+  defaultValue="DeepEval"
+  values={[
+      { label: 'DeepEval', value: 'DeepEval', },
+      { label: 'LlamaIndex', value: 'LlamaIndex', },
+  ]}
+>
+<TabItem value="DeepEval">
+
+```py
+import deepeval
+
+deepeval.trace_llama_index()
+
+# Your LlamaIndex Applications
+...
+```
+
+</TabItem>
+
+<TabItem value="LlamaIndex">
+
+```py
+from llama_index.core import set_global_handler
+
+set_global_handler("deepeval")
+
+# Your LlamaIndex Applications
+...
+```
+
+</TabItem>
+
+</Tabs>
+
+**Your LlamaIndex application is now equipped to automatically log and transmit traces to Confident AI!** In addition to LlamaIndex applications, DeepEval also supports LlamaIndex traces as part of a larger LLM application.
+
+:::tip
+If your LLM application was built using a hybrid approach (eg., a bit of `langchain`, and bit of `llama_index`, and maybe a bit of custom LLM API calling), you'll want to consider [hybrid tracing instead.](confident-ai-tracing#full-advanced-hybrid-tracing-example)
+:::
+
+Confident AI supports **multiple LlamaIndex trace types**. For example, when you invoke an LLM through LlamaIndex, attributes such as token count and prompt template are automatically saved and displayed on the platform. Here are all the supported LlamaIndex trace types:
+
+- Agent
+- Chunking
+- Embedding
+- Llm
+- Node Parsing
+- Query
+- Retriever
+- Synthesize
+- Generic
+
+## Example: Tracing your LlamaIndex Application
+
+### 1. Import and Configure Models
+
+Import the necessary modules and configure the language and embedding models using OpenAI's GPT-4 Turbo and text-embedding-ada-002.
+
+```python
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.llms.openai import OpenAI
+
+Settings.llm = OpenAI(model="gpt-4-turbo-preview")
+Settings.embed_model = OpenAIEmbedding(model="text-embedding-ada-002")
+```
+
+### 2. Building the Chatbot
+
+Load and process documents to generate nodes, then create a vector store index for querying.
+
+```python
+documents = SimpleDirectoryReader("data").load_data()
+node_parser = SentenceSplitter(chunk_size=200, chunk_overlap=20)
+nodes = node_parser.get_nodes_from_documents(documents, show_progress=True)
+index = VectorStoreIndex(nodes)
+
+async def chatbot(input):
+    query_engine = index.as_query_engine(similarity_top_k=5)
+    res = query_engine.query(input).response
+    return res
+```
+
+### 3. Tracing your Queries
+
+Trace the chatbot with DeepEval and run queries asynchronously.
+
+```python
+deepeval.trace_llama_index()
+
+async def main():
+    user_inputs = [...]
+    tasks = [chatbot(query) for query in user_inputs]
+    await asyncio.gather(*tasks)
+
+asyncio.run(main())
+```

@@ -13,6 +13,7 @@ class Evolution(Enum):
     CONSTRAINED = "Constrained"
     COMPARATIVE = "Comparative"
     HYPOTHETICAL = "Hypothetical"
+    IN_BREADTH = "In-Breadth"
 
 
 class PromptEvolution(Enum):
@@ -21,6 +22,7 @@ class PromptEvolution(Enum):
     CONSTRAINED = "Constrained"
     COMPARATIVE = "Comparative"
     HYPOTHETICAL = "Hypothetical"
+    IN_BREADTH = "In-Breadth"
 
 
 class RTAdversarialAttack(Enum):
