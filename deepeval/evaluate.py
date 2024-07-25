@@ -223,6 +223,7 @@ def execute_test_cases(
                             tc = test_case.messages[last_message_index]
                         else:
                             tc = test_case
+                        metric.error = None  # Reset metric error
                         metric.measure(tc)
                     except Exception as e:
                         if ignore_errors:
