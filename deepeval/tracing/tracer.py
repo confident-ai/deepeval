@@ -25,8 +25,10 @@ class TraceProvider(Enum):
 class TraceType(Enum):
     AGENT = "Agent"
     CHAIN = "Chain"
+    CHUNKING = "Chunking"
     EMBEDDING = "Embedding"
     LLM = "LLM"
+    NODE_PARSING = "Node Parsing"
     QUERY = "Query"
     RERANKING = "Reranking"
     RETRIEVER = "Retriever"
@@ -37,8 +39,10 @@ class TraceType(Enum):
 class LlamaIndexTraceType(Enum):
     AGENT = "Agent"
     CHAIN = "Chain"
+    CHUNKING = "Chunking"
     EMBEDDING = "Embedding"
     LLM = "LLM"
+    NODE_PARSING = "Node Parsing"
     QUERY = "Query"
     RERANKING = "Reranking"
     RETRIEVER = "Retriever"
@@ -49,8 +53,10 @@ class LlamaIndexTraceType(Enum):
 class LangChainTraceType(Enum):
     AGENT = "Agent"
     CHAIN = "Chain"
+    CHUNKING = "Chunking"
     EMBEDDING = "Embedding"
     LLM = "LLM"
+    NODE_PARSING = "Node Parsing"
     QUERY = "Query"
     RERANKING = "Reranking"
     RETRIEVER = "Retriever"
@@ -92,6 +98,11 @@ class ChainAttributes(BaseModel):
     )
 
 
+class ChunkAttributes(BaseModel):
+    input: str
+    output_chunks: List[str] = Field([], serialization_alias="outputChunks")
+
+
 class EmbeddingAttributes(BaseModel):
     embedding_text: str = Field("", serialization_alias="embeddingText")
     # Optional variables
@@ -120,6 +131,12 @@ class LlmAttributes(BaseModel):
     )
     prompt_template_variables: Optional[Dict[str, str]] = Field(
         None, serialization_alias="promptTemplateVariables"
+    )
+
+
+class NodeParsingAttributes(BaseModel):
+    output_nodes: List[RetrievalNode] = Field(
+        [], serialization_alias="outputNodes"
     )
 
 
@@ -188,6 +205,8 @@ class BaseTrace:
     status: TraceStatus
     traceProvider: TraceProvider
     traces: List["TraceData"]
+    inputPayload: Optional[Dict]
+    outputPayload: Optional[Dict]
 
 
 @dataclass
@@ -203,6 +222,12 @@ class ChainTrace(BaseTrace):
 
 
 @dataclass
+class ChunkTrace(BaseTrace):
+    chunkAttributes: ChunkAttributes
+    type: TraceType
+
+
+@dataclass
 class EmbeddingTrace(BaseTrace):
     embeddingAttributes: EmbeddingAttributes
     type: TraceType
@@ -211,6 +236,12 @@ class EmbeddingTrace(BaseTrace):
 @dataclass
 class LlmTrace(BaseTrace):
     llmAttributes: LlmAttributes
+    type: TraceType
+
+
+@dataclass
+class NodeParsingTrace(BaseTrace):
+    nodeParsingAttributes: NodeParsingAttributes
     type: TraceType
 
 
@@ -437,98 +468,45 @@ class Tracer:
         trace_provider: TraceProvider,
         attributes: Optional[Attributes] = None,
     ):
+        trace_kwargs = {
+            "traceProvider": trace_provider,
+            "type": trace_type,
+            "executionTime": 0,
+            "name": self.name,
+            "status": TraceStatus.SUCCESS,
+            "traces": [],
+            "inputPayload": None,
+            "outputPayload": None,
+        }
         if trace_provider == TraceProvider.DEFAULT:
             if trace_type == TraceType.AGENT:
-                return AgentTrace(
-                    type=trace_type,
-                    traceProvider=trace_provider,
-                    executionTime=0,
-                    name=self.name,
-                    status=TraceStatus.SUCCESS,
-                    traces=[],
-                    agentAttributes=attributes,
-                )
+                trace_kwargs["agentAttributes"] = attributes
+                return AgentTrace(**trace_kwargs)
             elif trace_type == TraceType.CHAIN:
-                return ChainTrace(
-                    type=trace_type,
-                    traceProvider=trace_provider,
-                    executionTime=0,
-                    name=self.name,
-                    status=TraceStatus.SUCCESS,
-                    traces=[],
-                    chainAttributes=attributes,
-                )
+                trace_kwargs["chainAttributes"] = attributes
+                return ChainTrace(**trace_kwargs)
             elif trace_type == TraceType.EMBEDDING:
-                return EmbeddingTrace(
-                    type=trace_type,
-                    traceProvider=trace_provider,
-                    executionTime=0,
-                    name=self.name,
-                    status=TraceStatus.SUCCESS,
-                    traces=[],
-                    embeddingAttributes=attributes,
-                )
+                trace_kwargs["embeddingAttributes"] = attributes
+                return EmbeddingTrace(**trace_kwargs)
             elif trace_type == TraceType.LLM:
-                return LlmTrace(
-                    type=trace_type,
-                    traceProvider=trace_provider,
-                    executionTime=0,
-                    name=self.name,
-                    status=TraceStatus.SUCCESS,
-                    traces=[],
-                    llmAttributes=attributes,
-                )
+                trace_kwargs["llmAttributes"] = attributes
+                return LlmTrace(**trace_kwargs)
             elif trace_type == TraceType.QUERY:
-                return QueryTrace(
-                    type=trace_type,
-                    traceProvider=trace_provider,
-                    executionTime=0,
-                    name=self.name,
-                    status=TraceStatus.SUCCESS,
-                    traces=[],
-                    queryAttributes=attributes,
-                )
+                trace_kwargs["queryAttributes"] = attributes
+                return QueryTrace(**trace_kwargs)
             elif trace_type == TraceType.RERANKING:
-                return RerankingTrace(
-                    type=trace_type,
-                    traceProvider=trace_provider,
-                    executionTime=0,
-                    name=self.name,
-                    status=TraceStatus.SUCCESS,
-                    traces=[],
-                    rerankingAttributes=attributes,
-                )
+                trace_kwargs["rerankingAttributes"] = attributes
+                return RerankingTrace(**trace_kwargs)
             elif trace_type == TraceType.RETRIEVER:
-                return RetrieverTrace(
-                    type=trace_type,
-                    traceProvider=trace_provider,
-                    executionTime=0,
-                    name=self.name,
-                    status=TraceStatus.SUCCESS,
-                    traces=[],
-                    retrieverAttributes=attributes,
-                )
+                trace_kwargs["retrieverAttributes"] = attributes
+                return RetrieverTrace(**trace_kwargs)
             elif trace_type == TraceType.SYNTHESIZE:
-                return SynthesizeTrace(
-                    type=trace_type,
-                    traceProvider=trace_provider,
-                    executionTime=0,
-                    name=self.name,
-                    status=TraceStatus.SUCCESS,
-                    traces=[],
-                    synthesizeAttributes=attributes,
-                )
+                trace_kwargs["synthesizeAttributes"] = attributes
+                return SynthesizeTrace(**trace_kwargs)
 
         elif trace_provider == TraceProvider.CUSTOM:
-            return GenericTrace(
-                type=trace_type,
-                traceProvider=trace_provider,
-                executionTime=0,
-                name=self.name,
-                status=TraceStatus.SUCCESS,
-                traces=[],
-                genericAttributes=attributes,
-            )
+            trace_kwargs["genericAttributes"] = attributes
+            return GenericTrace(**trace_kwargs)
 
     def update_trace_instance(self):
         # Get the latest trace instance from the stack

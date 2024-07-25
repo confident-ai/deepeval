@@ -299,6 +299,22 @@ def dataclass_to_dict(instance: Any) -> Any:
         return instance
 
 
+def class_to_dict(instance: Any) -> Any:
+    if isinstance(instance, Enum):
+        return instance.value
+    elif isinstance(instance, list):
+        return [class_to_dict(item) for item in instance]
+    elif isinstance(instance, tuple):
+        return tuple(class_to_dict(item) for item in instance)
+    elif isinstance(instance, dict):
+        return {k: class_to_dict(v) for k, v in instance.items()}
+    elif hasattr(instance, "__dict__"):
+        instance_dict: Dict = instance.__dict__
+        return {str(k): class_to_dict(v) for k, v in instance_dict.items()}
+    else:
+        return instance
+
+
 def delete_file_if_exists(file_path):
     try:
         if os.path.exists(file_path):
