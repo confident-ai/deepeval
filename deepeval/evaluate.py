@@ -184,6 +184,8 @@ def execute_test_cases(
 
     for index, test_case in enumerate(test_cases):
         with capture_evaluation_run("test case"):
+            for metric in metrics:
+                metric.error = None  # Reset metric error
             if isinstance(test_case, ConversationalTestCase):
                 last_message_index = len(test_case.messages) - 1
             else:
@@ -223,7 +225,6 @@ def execute_test_cases(
                             tc = test_case.messages[last_message_index]
                         else:
                             tc = test_case
-                        metric.error = None  # Reset metric error
                         metric.measure(tc)
                     except Exception as e:
                         if ignore_errors:
@@ -305,6 +306,8 @@ async def a_execute_test_cases(
     for index, test_case in enumerate(test_cases):
         with capture_evaluation_run("test case"):
             cached_test_case = None
+            for metric in metrics:
+                metric.error = None  # Reset metric error
             # only use cache when NOT conversational test case
             if use_cache and isinstance(test_case, LLMTestCase):
                 cached_test_case = test_run_cache_manager.get_cached_test_case(
