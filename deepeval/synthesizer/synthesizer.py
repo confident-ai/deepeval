@@ -19,6 +19,7 @@ from deepeval.synthesizer.template_prompt import (
 )
 from deepeval.synthesizer.context_generator import ContextGenerator
 from deepeval.synthesizer.utils import initialize_embedding_model
+from deepeval.synthesizer.schema import SyntheticData, SyntheticDataList, SQLData, ComplianceData, Response
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
@@ -60,11 +61,6 @@ red_teaming_attack_map = {
 
 ##################################################################
 
-
-class SyntheticData(BaseModel):
-    input: str
-
-
 class Synthesizer:
     def __init__(
         self,
@@ -82,13 +78,124 @@ class Synthesizer:
         if self.using_native_model:
             return self.model.generate(prompt)
         else:
-            return self.model.generate(prompt), 0
+            # necessary for handling enforced models
+            try:
+                res: Response = self.model.generate(
+                    prompt=prompt, schema=Response
+                )
+                return res.response, 0
+            except TypeError:
+                return self.model.generate(prompt), 0
+    
 
     async def a_generate(self, prompt: str) -> Tuple[str, str]:
         if self.using_native_model:
             return await self.model.a_generate(prompt)
         else:
-            return (await self.model.a_generate(prompt), 0)
+            # necessary for handling enforced models
+            try:
+                res: Response = await self.model.a_generate(
+                    prompt=prompt, schema=Response
+                )
+                return res.response, 0
+            except TypeError:
+                return await self.model.a_generate(prompt), 0
+    
+    def generate_synthetic_inputs(self, prompt: str) -> List[SyntheticData]:
+        if self.using_native_model:
+            res, _ = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return [SyntheticData(**item) for item in data["data"]]
+        else:
+            try:
+                res: SyntheticDataList = self.model.generate(
+                    prompt=prompt, schema=SyntheticDataList
+                )
+                return res.data
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return [SyntheticData(**item) for item in data["data"]]
+
+    async def a_generate_synthetic_inputs(self, prompt: str) -> List[SyntheticData]:
+        if self.using_native_model:
+            res, _ = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return [SyntheticData(**item) for item in data["data"]]
+        else:
+            try:
+                res: SyntheticDataList = await self.model.a_generate(
+                    prompt=prompt, schema=SyntheticDataList
+                )
+                return res.data
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return [SyntheticData(**item) for item in data["data"]]
+            
+    def generate_expected_output_sql(self, prompt: str) -> List[SyntheticData]:
+        if self.using_native_model:
+            res, _ = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["sql"]
+        else:
+            try:
+                res: SQLData = self.model.generate(
+                    prompt=prompt, schema=SQLData
+                )
+                return res.sql
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["sql"]
+        
+    async def a_generate_sql_expected_output(self, prompt: str) -> List[SyntheticData]:
+        if self.using_native_model:
+            res, _ = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["sql"]
+        else:
+            try:
+                res: SQLData = await self.model.a_generate(
+                    prompt=prompt, schema=SQLData
+                )
+                return res.sql
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["sql"]
+            
+    def generate_non_compliance(self, prompt: str) -> List[SyntheticData]:
+        if self.using_native_model:
+            res, _ = self.model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["non_compliant"]
+        else:
+            try:
+                res: ComplianceData = self.model.generate(
+                    prompt=prompt, schema=ComplianceData
+                )
+                return res.non_compliant
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["non_compliant"]
+        
+    async def a_generate_non_compliance(self, prompt: str) -> List[SyntheticData]:
+        if self.using_native_model:
+            res, _ = await self.model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            return data["non_compliant"]
+        else:
+            try:
+                res: ComplianceData = await self.model.a_generate(
+                    prompt=prompt, schema=ComplianceData
+                )
+                return res.non_compliant
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["non_compliant"]
 
     #############################################################
     # Evolution Methods
@@ -136,7 +243,7 @@ class Synthesizer:
         context: List[str],
         num_evolutions: int,
         evolutions: List[Evolution],
-    ) -> List[str]:
+    ) -> str:
         map = evolution_map
         evolution_methods = [map[e.value] for e in evolutions]
         evolved_text = text
@@ -144,6 +251,7 @@ class Synthesizer:
             evolution_method = random.choice(evolution_methods)
             prompt = evolution_method(input=evolved_text, context=context)
             evolved_text, _ = self.generate(prompt)
+            
         return evolved_text
 
     async def _a_evolve_text(
@@ -152,14 +260,14 @@ class Synthesizer:
         context: List[str],
         num_evolutions: int,
         evolutions: List[Evolution],
-    ) -> List[str]:
+    ) -> str:
         map = evolution_map
         evolution_methods = [map[e.value] for e in evolutions]
         evolved_text = text
         for _ in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
             prompt = evolution_method(input=evolved_text, context=context)
-            evolved_text, _ = await self.a_generate(prompt)
+            evolved_text, _  = await self.a_generate(prompt)
         return evolved_text
 
     def _evolve_red_teaming_attack(
@@ -169,7 +277,7 @@ class Synthesizer:
         num_evolutions: int,
         attacks: List[RTAdversarialAttack],
         vulnerability: Optional[RTVulnerability] = None,
-    ) -> List[str]:
+    ) -> Tuple[str, RTAdversarialAttack]:
         attack = random.choice(attacks)
         attack_method = red_teaming_attack_map[attack.value]
         evolved_attack = text
@@ -189,7 +297,7 @@ class Synthesizer:
         num_evolutions: int,
         attacks: List[RTAdversarialAttack],
         vulnerability: Optional[RTVulnerability] = None,
-    ) -> List[str]:
+    ) -> Tuple[str, RTAdversarialAttack]:
         attack = random.choice(attacks)
         attack_method = red_teaming_attack_map[attack.value]
         evolved_attack = text
@@ -220,9 +328,7 @@ class Synthesizer:
         prompt: List = SynthesizerTemplate.generate_synthetic_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
         )
-        res, _ = await self.a_generate(prompt)
-        data = trimAndLoadJson(res)
-        synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        synthetic_data = await self.a_generate_synthetic_inputs(prompt)
         for data in synthetic_data:
             evolved_input = await self._a_evolve_text(
                 data.input,
@@ -253,17 +359,14 @@ class Synthesizer:
         prompt = SynthesizerTemplate.generate_text2sql_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
         )
-        res, _ = await self.a_generate(prompt)
-        data = trimAndLoadJson(res)
-        synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        synthetic_data = await self.a_generate_synthetic_inputs(prompt)
         for data in synthetic_data:
             golden = Golden(input=data.input, context=context)
             if include_expected_output:
                 prompt = SynthesizerTemplate.generate_text2sql_expected_output(
                     input=golden.input, context="\n".join(golden.context)
                 )
-                res, _ = await self.a_generate(prompt)
-                golden.expected_output = trimAndLoadJson(res)["sql"]
+                golden.expected_output = await self.a_generate_sql_expected_output(prompt)
             goldens.append(golden)
 
     async def _a_generate_red_teaming_from_contexts(
@@ -276,21 +379,15 @@ class Synthesizer:
         num_evolutions: int,
         attacks: List[RTAdversarialAttack],
     ):
-        synthetic_data = []
         if context:
             prompt = SynthesizerTemplate.generate_synthetic_inputs(
                 context, max_goldens
-            )
-            res, _ = await self.a_generate(prompt)
-            data = trimAndLoadJson(res)
-            synthetic_data = [SyntheticData(**item) for item in data["data"]]
+            )    
         else:
             prompt = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
                 max_goldens
             )
-            res, _ = await self.a_generate(prompt)
-            data = trimAndLoadJson(res)
-            synthetic_data = [SyntheticData(**item) for item in data["data"]]
+        synthetic_data = await self.a_generate_synthetic_inputs(prompt)
 
         for data in synthetic_data:
             prompt, vulnerability = (
@@ -313,8 +410,8 @@ class Synthesizer:
             non_compliance_prompt = RedTeamSynthesizerTemplate.non_compliant(
                 evolved_attack
             )
-            non_compliant, _ = await self.a_generate(non_compliance_prompt)
-            if non_compliant == "False":
+            non_compliant = await self.a_generate_non_compliance(non_compliance_prompt)
+            if non_compliant == False:
                 golden = Golden(input=evolved_attack, context=context)
                 if include_expected_output and context is not None:
                     if attack_type != RTAdversarialAttack.PROMPT_PROBING:
@@ -365,9 +462,7 @@ class Synthesizer:
                 output_format=output_format,
                 num_initial_goldens=num_initial_goldens,
             )
-            res, _ = await self.a_generate(prompt)
-            data = trimAndLoadJson(res)
-            synthetic_data = [SyntheticData(**item) for item in data["data"]]
+            synthetic_data = self.generate_synthetic_inputs(prompt)
             tasks = [
                 self._a_evolve_text_from_prompt(
                     text=data.input,
@@ -432,11 +527,7 @@ class Synthesizer:
                         num_initial_goldens=num_initial_goldens,
                     )
                 )
-                res, _ = self.generate(prompt)
-                data = trimAndLoadJson(res)
-                synthetic_data = [
-                    SyntheticData(**item) for item in data["data"]
-                ]
+                synthetic_data = self.generate_synthetic_inputs(prompt)
                 for data in synthetic_data:
                     evolved_prompts = self._evolve_text_from_prompt(
                         text=data.input,
@@ -555,27 +646,17 @@ class Synthesizer:
                     _show_indicator,
                 ):
                     for context in contexts:
-                        synthetic_data = []
                         if context:
                             prompt = (
                                 SynthesizerTemplate.generate_synthetic_inputs(
                                     context, max_goldens
                                 )
                             )
-                            res, _ = self.generate(prompt)
-                            data = trimAndLoadJson(res)
-                            synthetic_data = [
-                                SyntheticData(**item) for item in data["data"]
-                            ]
                         else:
                             prompt = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
                                 max_goldens
                             )
-                            res, _ = self.generate(prompt)
-                            data = trimAndLoadJson(res)
-                            synthetic_data = [
-                                SyntheticData(**item) for item in data["data"]
-                            ]
+                        synthetic_data = self.generate_synthetic_inputs(prompt)
                         for data in synthetic_data:
                             prompt, vulnerability = (
                                 RedTeamSynthesizerTemplate.convert_to_red_team(
@@ -601,10 +682,10 @@ class Synthesizer:
                                     evolved_attack
                                 )
                             )
-                            non_compliant, _ = self.generate(
+                            non_compliant = self.generate_non_compliance(
                                 non_compliance_prompt
                             )
-                            if non_compliant == "False":
+                            if non_compliant == False:
                                 golden = Golden(
                                     input=evolved_attack, context=context
                                 )
@@ -744,11 +825,7 @@ class Synthesizer:
                             context=context,
                             max_goldens_per_context=max_goldens_per_context,
                         )
-                        res, _ = self.generate(prompt)
-                        data = trimAndLoadJson(res)
-                        synthetic_data = [
-                            SyntheticData(**item) for item in data["data"]
-                        ]
+                        synthetic_data = self.generate_synthetic_inputs(prompt)
                         for data in synthetic_data:
                             evolved_input = self._evolve_text(
                                 data.input,
@@ -788,11 +865,7 @@ class Synthesizer:
                             context=context,
                             max_goldens_per_context=max_goldens_per_context,
                         )
-                        res, _ = self.generate(prompt)
-                        data = trimAndLoadJson(res)
-                        synthetic_data = [
-                            SyntheticData(**item) for item in data["data"]
-                        ]
+                        synthetic_data = self.generate_synthetic_inputs(prompt)
                         for data in synthetic_data:
                             golden = Golden(
                                 input=data.input,
@@ -803,8 +876,7 @@ class Synthesizer:
                                     input=golden.input,
                                     context="\n".join(golden.context),
                                 )
-                                res, _ = self.generate(prompt)
-                                golden.expected_output = res
+                                golden.expected_output = self.generate_expected_output_sql(prompt)
                             goldens.append(golden)
             self.synthetic_goldens.extend(goldens)
             return goldens
