@@ -6,13 +6,15 @@ sidebar_label: Test Cases
 
 ## Quick Summary
 
-A test case is a blueprint provided by `deepeval` to unit test LLM outputs based on five parameters:
+A test case is a blueprint provided by `deepeval` to unit test LLM outputs based on seven parameters:
 
 - `input`
 - `actual_output`
 - [Optional] `expected_output`
 - [Optional] `context`
 - [Optional] `retrieval_context`
+- [Optional] `tools_used`
+- [Optional] `expected_tools`
 
 Here's an example implementation of a test case:
 
@@ -25,13 +27,15 @@ test_case = LLMTestCase(
     actual_output="We offer a 30-day full refund at no extra cost.",
     context=["All customers are eligible for a 30 day full refund at no extra cost."],
     retrieval_context=["Only shoes can be refunded."],
+    tools_used=["WebSearch"],
+    expected_tools=["WebSearch", "QueryDatabase"]
 )
 ```
 
 :::info
 Since `deepeval` is an LLM evaluation framework, the ** `input` and `actual_output` are always mandatory.** However, this does not mean they are necessarily used for evaluation.
 
-Additionally, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output` and/or `context` as additional parameters. For example, you won't need `expected_output` and `context` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
+Additionally, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output`, `context`, `tools_used`, and/or `expected_tools` as additional parameters. For example, you won't need `expected_output`, `context`, `tools_used`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
 :::
 
 ## Input
@@ -172,6 +176,51 @@ test_case = LLMTestCase(
 :::note
 Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results. So, while they might look similar at times, they are not the same.
 :::
+
+## Tools Used
+
+The `tools_used` parameter is an **optional** parameter that represents the tools your LLM agent actually invoked during execution. By providing `tools_used`, you can evaluate how effectively your LLM agent utilized the tools available to it.
+
+```python
+# A hypothetical LLM application example
+import chatbot
+
+input = "Why did the chicken cross the road?"
+
+test_case = LLMTestCase(
+    input=input,
+    actual_output=chatbot.run(input),
+    expected_output="To get to the other side!",
+    context=["The chicken wanted to cross the road."],
+    retrieval_context=["The chicken liked the other side of the road better"],
+    tools_used=["WebSearch", "DatabaseQuery"]
+)
+```
+
+:::note
+`tools_used` and `expected_tools` are LLM test case parameters that are utilized only in **agent evaluation metrics**. These parameters allow you to assess the effectiveness of tool usage in your LLM application and ensure that it meets the expected tool usage standards.
+:::
+
+## Expected Tools
+
+The `expected_tools` parameter is an **optional** parameter that represents the tools that ideally should have been used to generate the output. By providing `expected_tools`, you can assess whether your LLM application used the tools you anticipated for optimal performance.
+
+```python
+# A hypothetical LLM application example
+import chatbot
+
+input = "Why did the chicken cross the road?"
+
+test_case = LLMTestCase(
+    input=input,
+    actual_output=chatbot.run(input),
+    expected_output="To get to the other side!",
+    context=["The chicken wanted to cross the road."],
+    retrieval_context=["The chicken liked the other side of the road better"],
+    tools_used=["WebSearch", "DatabaseQuery"],
+    expected_tools=["DatabaseQuery"]
+)
+```
 
 ## Assert A Test Case
 
