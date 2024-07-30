@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple
+from typing import List
 from pydantic import BaseModel
 
 class SyntheticData(BaseModel):
