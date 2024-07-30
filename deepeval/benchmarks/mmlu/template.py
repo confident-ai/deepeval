@@ -16,9 +16,6 @@ class MMLUTemplate:
         for i in range(n_shots):
             prompt += MMLUTemplate.format_question(train_set[i])
         prompt += input
-
-        # define ouptut confinement
-        prompt += "Output 'A', 'B', 'C', or 'D'. Full answer not needed."
         return prompt
 
     @staticmethod
