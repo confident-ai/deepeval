@@ -19,7 +19,13 @@ from deepeval.synthesizer.template_prompt import (
 )
 from deepeval.synthesizer.context_generator import ContextGenerator
 from deepeval.synthesizer.utils import initialize_embedding_model
-from deepeval.synthesizer.schema import SyntheticData, SyntheticDataList, SQLData, ComplianceData, Response
+from deepeval.synthesizer.schema import (
+    SyntheticData,
+    SyntheticDataList,
+    SQLData,
+    ComplianceData,
+    Response,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
@@ -61,6 +67,7 @@ red_teaming_attack_map = {
 
 ##################################################################
 
+
 class Synthesizer:
     def __init__(
         self,
@@ -86,7 +93,6 @@ class Synthesizer:
                 return res.response, 0
             except TypeError:
                 return self.model.generate(prompt), 0
-    
 
     async def a_generate(self, prompt: str) -> Tuple[str, str]:
         if self.using_native_model:
@@ -100,7 +106,7 @@ class Synthesizer:
                 return res.response, 0
             except TypeError:
                 return await self.model.a_generate(prompt), 0
-    
+
     def generate_synthetic_inputs(self, prompt: str) -> List[SyntheticData]:
         if self.using_native_model:
             res, _ = self.model.generate(prompt)
@@ -117,7 +123,9 @@ class Synthesizer:
                 data = trimAndLoadJson(res, self)
                 return [SyntheticData(**item) for item in data["data"]]
 
-    async def a_generate_synthetic_inputs(self, prompt: str) -> List[SyntheticData]:
+    async def a_generate_synthetic_inputs(
+        self, prompt: str
+    ) -> List[SyntheticData]:
         if self.using_native_model:
             res, _ = await self.model.a_generate(prompt)
             data = trimAndLoadJson(res, self)
@@ -132,7 +140,7 @@ class Synthesizer:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return [SyntheticData(**item) for item in data["data"]]
-            
+
     def generate_expected_output_sql(self, prompt: str) -> List[SyntheticData]:
         if self.using_native_model:
             res, _ = self.model.generate(prompt)
@@ -148,8 +156,10 @@ class Synthesizer:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["sql"]
-        
-    async def a_generate_sql_expected_output(self, prompt: str) -> List[SyntheticData]:
+
+    async def a_generate_sql_expected_output(
+        self, prompt: str
+    ) -> List[SyntheticData]:
         if self.using_native_model:
             res, _ = await self.model.a_generate(prompt)
             data = trimAndLoadJson(res, self)
@@ -164,7 +174,7 @@ class Synthesizer:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["sql"]
-            
+
     def generate_non_compliance(self, prompt: str) -> List[SyntheticData]:
         if self.using_native_model:
             res, _ = self.model.generate(prompt)
@@ -180,8 +190,10 @@ class Synthesizer:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["non_compliant"]
-        
-    async def a_generate_non_compliance(self, prompt: str) -> List[SyntheticData]:
+
+    async def a_generate_non_compliance(
+        self, prompt: str
+    ) -> List[SyntheticData]:
         if self.using_native_model:
             res, _ = await self.model.a_generate(prompt)
             data = trimAndLoadJson(res, self)
@@ -251,7 +263,7 @@ class Synthesizer:
             evolution_method = random.choice(evolution_methods)
             prompt = evolution_method(input=evolved_text, context=context)
             evolved_text, _ = self.generate(prompt)
-            
+
         return evolved_text
 
     async def _a_evolve_text(
@@ -267,7 +279,7 @@ class Synthesizer:
         for _ in range(num_evolutions):
             evolution_method = random.choice(evolution_methods)
             prompt = evolution_method(input=evolved_text, context=context)
-            evolved_text, _  = await self.a_generate(prompt)
+            evolved_text, _ = await self.a_generate(prompt)
         return evolved_text
 
     def _evolve_red_teaming_attack(
@@ -366,7 +378,9 @@ class Synthesizer:
                 prompt = SynthesizerTemplate.generate_text2sql_expected_output(
                     input=golden.input, context="\n".join(golden.context)
                 )
-                golden.expected_output = await self.a_generate_sql_expected_output(prompt)
+                golden.expected_output = (
+                    await self.a_generate_sql_expected_output(prompt)
+                )
             goldens.append(golden)
 
     async def _a_generate_red_teaming_from_contexts(
@@ -382,7 +396,7 @@ class Synthesizer:
         if context:
             prompt = SynthesizerTemplate.generate_synthetic_inputs(
                 context, max_goldens
-            )    
+            )
         else:
             prompt = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
                 max_goldens
@@ -410,7 +424,9 @@ class Synthesizer:
             non_compliance_prompt = RedTeamSynthesizerTemplate.non_compliant(
                 evolved_attack
             )
-            non_compliant = await self.a_generate_non_compliance(non_compliance_prompt)
+            non_compliant = await self.a_generate_non_compliance(
+                non_compliance_prompt
+            )
             if non_compliant == False:
                 golden = Golden(input=evolved_attack, context=context)
                 if include_expected_output and context is not None:
@@ -876,7 +892,9 @@ class Synthesizer:
                                     input=golden.input,
                                     context="\n".join(golden.context),
                                 )
-                                golden.expected_output = self.generate_expected_output_sql(prompt)
+                                golden.expected_output = (
+                                    self.generate_expected_output_sql(prompt)
+                                )
                             goldens.append(golden)
             self.synthetic_goldens.extend(goldens)
             return goldens

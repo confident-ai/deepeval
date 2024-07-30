@@ -14,6 +14,7 @@ class LLMTestCaseParams(Enum):
     EXPECTED_TOOLS = "expected_tools"
     REASONING = "reasoning"
 
+
 @dataclass
 class LLMTestCase:
     input: str
@@ -46,21 +47,25 @@ class LLMTestCase:
                 raise TypeError(
                     "'retrieval_context' must be None or a list of strings"
                 )
-            
+
         # Ensure `tools_used` is None or a list of strings
         if self.tools_used is not None:
             if not isinstance(self.tools_used, list) or not all(
                 isinstance(item, str) for item in self.tools_used
             ):
-                raise TypeError("'tools_used' must be None or a list of strings")
-        
+                raise TypeError(
+                    "'tools_used' must be None or a list of strings"
+                )
+
         # Ensure `expected_tools` is None or a list of strings
         if self.expected_tools is not None:
             if not isinstance(self.expected_tools, list) or not all(
                 isinstance(item, str) for item in self.expected_tools
             ):
-                raise TypeError("'expected_tools' must be None or a list of strings")
-        
+                raise TypeError(
+                    "'expected_tools' must be None or a list of strings"
+                )
+
         # Ensure `reasoning` is None or a list of strings
         if self.reasoning is not None:
             if not isinstance(self.reasoning, list) or not all(

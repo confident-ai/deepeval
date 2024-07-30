@@ -20,7 +20,7 @@ from deepeval.metrics import (
     ToxicityMetric,
     GEval,
     SummarizationMetric,
-    ToolCorrectnessMetric
+    ToolCorrectnessMetric,
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
@@ -202,7 +202,7 @@ def test_everything_2():
         # retrieval_context=["I love coffee"],
         context=["I love coffee"],
         expected_tools=["mixer", "creamer", "dripper"],
-        tools_used=["mixer", "creamer", "mixer"]
+        tools_used=["mixer", "creamer", "mixer"],
     )
     assert_test(
         test_case,
@@ -218,7 +218,7 @@ def test_everything_2():
             # metric9,
             # metric10,
             # metric11,
-            metric12
+            metric12,
         ],
         # run_async=False,
     )

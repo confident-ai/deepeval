@@ -12,10 +12,12 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
+
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.TOOLS_USED,
     LLMTestCaseParams.EXPECTED_TOOLS,
 ]
+
 
 class ToolCorrectnessMetric(BaseMetric):
     def __init__(
@@ -39,7 +41,9 @@ class ToolCorrectnessMetric(BaseMetric):
 
         self.tools_used: Set[str] = set(test_case.tools_used)
         self.expected_tools: Set[str] = set(test_case.expected_tools)
-        self.expected_tools_used = self.tools_used.intersection(self.expected_tools) 
+        self.expected_tools_used = self.tools_used.intersection(
+            self.expected_tools
+        )
         self.score = self._calculate_score()
         self.reason = self._generate_reason()
         self.success = self.score >= self.threshold
@@ -52,18 +56,22 @@ class ToolCorrectnessMetric(BaseMetric):
             ],
         )
         return self.score
-    
+
     async def a_measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
         return self.measure(test_case)
-    
+
     def _generate_reason(self):
         reason = f"The score is {self.score} because {len(self.expected_tools_used)} out of {len(self.expected_tools)} expected tools were used. "
         tools_unused = list(self.expected_tools - self.expected_tools_used)
         if len(tools_unused) > 0:
             reason += f""
-            reason += f"Tool {tools_unused} was " if len(tools_unused) == 1 else f"Tools {tools_unused} were "
+            reason += (
+                f"Tool {tools_unused} was "
+                if len(tools_unused) == 1
+                else f"Tools {tools_unused} were "
+            )
             reason += "expected but not used"
 
         return reason
@@ -71,7 +79,7 @@ class ToolCorrectnessMetric(BaseMetric):
     def _calculate_score(self):
         number_of_expected_tools_used = len(self.expected_tools_used)
         number_of_expected_tools = len(self.expected_tools)
-        score = number_of_expected_tools_used  / number_of_expected_tools
+        score = number_of_expected_tools_used / number_of_expected_tools
         return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
@@ -84,4 +92,3 @@ class ToolCorrectnessMetric(BaseMetric):
     @property
     def __name__(self):
         return "Tool Correctness"
-
