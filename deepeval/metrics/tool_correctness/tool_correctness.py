@@ -14,6 +14,8 @@ from deepeval.test_case import (
 from deepeval.metrics import BaseMetric
 
 required_params: List[LLMTestCaseParams] = [
+    LLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
     LLMTestCaseParams.TOOLS_USED,
     LLMTestCaseParams.EXPECTED_TOOLS,
 ]
@@ -72,7 +74,7 @@ class ToolCorrectnessMetric(BaseMetric):
                 if len(tools_unused) == 1
                 else f"Tools {tools_unused} were "
             )
-            reason += "expected but not used"
+            reason += "expected but not used."
 
         return reason
 

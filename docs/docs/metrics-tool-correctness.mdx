@@ -6,18 +6,20 @@ sidebar_label: Tool Correctness
 
 import Equation from "@site/src/components/equation";
 
-The **tool correctness metric** evaluates your agent's tool-calling abilities by comparing the `tools_used` by your LLM agent to the `expected_tools`. A perfect score of 1 indicates that all tools called by your LLM agent can be found in the list of expected tools, and a score of 0 indicates that none of the tools that were called were expected to be called.
+The tool correctness metric is an agentic LLM metric that assesses your LLM agent's function/tool calling ability. It is calculated by comparing whether every tool that is expected to be used was indeed called.
+
+:::info
+The `ToolCorrectnessMetric` is an agentic evaluation metric designed to evaluate an LLM Agent's function/tool-calling correctness.
+:::
 
 ## Required Arguments
 
 To use the `ToolCorrectnessMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
 
+- `input`
+- `actual_output`
 - `tools_used`
 - `expected_tools`
-
-:::note
-The `ToolCorrectnessMetric` is an agent metric designed to evaluate LLM Agents and LLM apps utilizing tool-calling agents.
-:::
 
 ## Example
 
@@ -26,11 +28,6 @@ from deepeval import evaluate
 from deepeval.metrics import ContextualRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
-
-# Replace this with the actual retrieved context from your RAG pipeline
-retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
 metric = ContextualRelevancyMetric(
     threshold=0.7,
@@ -39,8 +36,8 @@ metric = ContextualRelevancyMetric(
 )
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output,
-    retrieval_context=retrieval_context
+    actual_output="We offer a 30-day full refund at no extra cost."
+    # Replace this with the tools that was actually used by your LLM agent
     tools_used=["WebSearch"]
     expected_tools=["WebSearch", "ToolQuery"]
 )
@@ -53,7 +50,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are four optional parameters when creating a `ContextualRelevancyMetricMetric`:
+There are four optional parameters when creating a `ToolCorrectnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
@@ -62,6 +59,10 @@ There are four optional parameters when creating a `ContextualRelevancyMetricMet
 
 ## How Is It Calculated?
 
+:::note
+The `ToolCorrectnessMetric`, unlike all other `deepeval` metrics, are not calculated using any models or LLMs, and instead via exact matching between the `expected_tools` and `tools_used` parameters.
+:::
+
 The **tool correctness metric** score is calculated according to the following equation:
 
 <Equation
@@ -69,4 +70,4 @@ The **tool correctness metric** score is calculated according to the following e
 "
 />
 
-This metric assesses the accuracy of your agent's tool usage by comparing the `tools_used` by your LLM agent to the `expected_tools`. A score of 1 indicates that every tool utilized by your LLM agent matches the expected tools, while a score of 0 signifies that none of the used tools were among the expected tools.
+This metric assesses the accuracy of your agent's tool usage by comparing the `tools_used` by your LLM agent to the list of `expected_tools`. A score of 1 indicates that every tool utilized by your LLM agent matches the expected tools, while a score of 0 signifies that none of the used tools were among the expected tools.
