@@ -132,6 +132,8 @@ def create_api_test_case(
             expectedOutput=test_case.expected_output,
             context=test_case.context,
             retrievalContext=test_case.retrieval_context,
+            toolsUsed=test_case.tools_used,
+            expectedTools=test_case.expected_tools,
             success=success,
             metricsMetadata=None,
             runDuration=None,

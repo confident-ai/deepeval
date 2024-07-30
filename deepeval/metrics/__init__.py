@@ -11,6 +11,7 @@ from .contextual_recall.contextual_recall import ContextualRecallMetric
 from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
+from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 
 # from .ragas_metric import (
 #     RagasMetric,

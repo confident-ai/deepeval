@@ -20,6 +20,7 @@ from deepeval.metrics import (
     ToxicityMetric,
     GEval,
     SummarizationMetric,
+    ToolCorrectnessMetric
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
@@ -167,7 +168,7 @@ def test_everything():
     )
 
 
-@pytest.mark.skip(reason="openadi is expensive")
+# @pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -192,6 +193,7 @@ def test_everything_2():
     metric11 = RagasMetric(
         threshold=0.5, model="gpt-3.5-turbo", embeddings=OpenAIEmbeddings()
     )
+    metric12 = ToolCorrectnessMetric()
 
     test_case = LLMTestCase(
         input="What is this again?",
@@ -199,21 +201,24 @@ def test_everything_2():
         expected_output="this is a mocha",
         # retrieval_context=["I love coffee"],
         context=["I love coffee"],
+        expected_tools=["mixer", "creamer", "dripper"],
+        tools_used=["mixer", "creamer", "mixer"]
     )
     assert_test(
         test_case,
         [
             metric1,
-            metric2,
-            metric3,
-            metric4,
+            # metric2,
+            # metric3,
+            # metric4,
             # metric5,
-            metric6,
+            # metric6,
             # metric7,
             # metric8,
             # metric9,
             # metric10,
             # metric11,
+            metric12
         ],
         # run_async=False,
     )

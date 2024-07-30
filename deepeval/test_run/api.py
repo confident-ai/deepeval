@@ -22,6 +22,8 @@ class LLMApiTestCase(BaseModel):
     expected_output: Optional[str] = Field(None, alias="expectedOutput")
     context: Optional[list] = Field(None)
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
+    tools_used: Optional[list] = Field(None, alias="toolsUsed")
+    expected_tools: Optional[list] = Field(None, alias="expectedTools")
     # make optional, not all test cases in a conversation will be evaluated
     success: Union[bool, None] = Field(None)
     # make optional, not all test cases in a conversation will be evaluated
