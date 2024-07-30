@@ -75,13 +75,10 @@ class ToolCorrectnessMetric(BaseMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
-        if self.error is not None:
+        try:
+            self.success = self.score >= self.threshold
+        except:
             self.success = False
-        else:
-            try:
-                self.success = self.score >= self.threshold
-            except:
-                self.success = False
         return self.success
 
     @property
