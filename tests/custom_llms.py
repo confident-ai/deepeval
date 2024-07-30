@@ -14,10 +14,12 @@ from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
 
+
 def log_retry_error(retry_state):
     logging.error(
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
+
 
 valid_gpt_models = [
     "gpt-4o-mini",
@@ -37,6 +39,7 @@ valid_gpt_models = [
 ]
 
 default_gpt_model = "gpt-4o"
+
 
 class CustomGPTEnforced(DeepEvalBaseLLM):
     def __init__(

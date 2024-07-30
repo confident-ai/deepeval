@@ -182,7 +182,7 @@ def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
     )
     end_time = time.time()
     duration = end_time - start_time
-    print("Generated red teaming goldens with contexts:",len(goldens))
+    print("Generated red teaming goldens with contexts:", len(goldens))
     print(f"Time taken: {duration} seconds")
 
 
