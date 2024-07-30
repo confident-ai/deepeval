@@ -1,0 +1,72 @@
+---
+id: metrics-tool-correctness
+title: Tool Correctness
+sidebar_label: Tool Correctness
+---
+
+import Equation from "@site/src/components/equation";
+
+The **tool correctness metric** evaluates your agent's tool-calling abilities by comparing the `tools_used` by your LLM agent to the `expected_tools`. A perfect score of 1 indicates that all tools called by your LLM agent can be found in the list of expected tools, and a score of 0 indicates that none of the tools that were called were expected to be called.
+
+## Required Arguments
+
+To use the `ToolCorrectnessMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
+
+- `tools_used`
+- `expected_tools`
+
+:::note
+The `ToolCorrectnessMetric` is an agent metric designed to evaluate LLM Agents and LLM apps utilizing tool-calling agents.
+:::
+
+## Example
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import ContextualRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+# Replace this with the actual output from your LLM application
+actual_output = "We offer a 30-day full refund at no extra cost."
+
+# Replace this with the actual retrieved context from your RAG pipeline
+retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
+
+metric = ContextualRelevancyMetric(
+    threshold=0.7,
+    model="gpt-4",
+    include_reason=True
+)
+test_case = LLMTestCase(
+    input="What if these shoes don't fit?",
+    actual_output=actual_output,
+    retrieval_context=retrieval_context
+    tools_used=["WebSearch"]
+    expected_tools=["WebSearch", "ToolQuery"]
+)
+
+metric.measure(test_case)
+print(metric.score)
+print(metric.reason)
+
+# or evaluate test cases in bulk
+evaluate([test_case], [metric])
+```
+
+There are four optional parameters when creating a `ContextualRelevancyMetricMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+## How Is It Calculated?
+
+The **tool correctness metric** score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Tool Correctness} = \frac{\text{Number of Correctly Used Tools}}{\text{Total Number of Tools Used}}
+"
+/>
+
+This metric assesses the accuracy of your agent's tool usage by comparing the `tools_used` by your LLM agent to the `expected_tools`. A score of 1 indicates that every tool utilized by your LLM agent matches the expected tools, while a score of 0 signifies that none of the used tools were among the expected tools.

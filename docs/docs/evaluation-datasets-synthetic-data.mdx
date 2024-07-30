@@ -338,7 +338,7 @@ The `save_as()` method returns a string to the path the dataset was saved to, ju
 ## Using a Custom Embedding Model
 
 :::info
-Under the hood, only the `generate_goldens_from_docs()` method uses an embedding model. This is becuase in order to generate goldens from documents, the `Synthesizer` uses cosine similarity to generate the relevant context needed for data synthesization.
+Under the hood, only the `generate_goldens_from_docs()` method uses an embedding model. This is because in order to generate goldens from documents, the `Synthesizer` uses cosine similarity to generate the relevant context needed for data synthesization.
 :::
 
 ### Using Azure OpenAI
@@ -433,3 +433,7 @@ from deepeval.synthesizer import Synthesizer
 
 synthesizer = Synthesizer(embedder=CustomEmbeddingModel())
 ```
+
+:::tip
+If you run into **invalid JSON errors** using custom models, you may want to consult [this guide](guides-using-custom-llms) on using custom LLMs for evaluation, as synthetic data generation also supports pydantic confinement for custom models.
+:::
