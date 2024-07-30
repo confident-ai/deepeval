@@ -29,6 +29,7 @@ module.exports = {
             "metrics-hallucination",
             "metrics-bias",
             "metrics-toxicity",
+            "metrics-tool-correctness",
             "metrics-ragas",
             "metrics-knowledge-retention",
             "metrics-custom",
