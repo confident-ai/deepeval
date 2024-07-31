@@ -63,7 +63,18 @@ module.exports = {
         "confident-ai-evaluate-datasets",
         "confident-ai-analyze-evaluations",
         "confident-ai-github-actions",
-        "confident-ai-evals-in-production",
+        {
+          type: "category",
+          label: "LLM Monitoring",
+          items: [
+            "confident-ai-llm-monitoring",
+            "confident-ai-llm-monitoring-platform",
+            "confident-ai-llm-monitoring-conversations",
+            "confident-ai-llm-monitoring-evaluations",
+            "confident-ai-llm-monitoring-dataset",
+          ],
+          collapsed: true,
+        },
         {
           type: "category",
           label: "LLM Tracing",

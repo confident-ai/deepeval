@@ -1,0 +1,39 @@
+---
+id: confident-ai-llm-monitoring-conversations
+title: Conversational Events
+sidebar_label: Conversational Events
+---
+
+If you're building conversational agents or conversational systems such as LLM chatbots, you may want to view these responses as sequential messages. Confident AI allows you to **view entire conversation threads** from the observatory page.
+
+:::caution
+This feature is only available if a `conversation_id` was supplied to `deepeval`'s track function during live monitoring
+:::
+
+## Inspecting conversations
+
+### 1. Viewing the Conversation
+
+To review a specific conversation thread, select the **conversation ID** on the main observatory page. This thread will display all inputs and responses of events with that conversation ID, organized chronologically.
+
+![ok](https://confident-bucket.s3.amazonaws.com/conversation2.svg)
+
+:::tip
+Click the **inspect** button to further inspect each event, which triggers a "Response Details" side modal that provides detailed information about the associated event.
+:::
+
+### 2. Leaving Feedback
+
+You may also leave **conversation-level feedback** by clicking the top right button on the conversations page. This feedback will appear on the human feedback page.
+
+![ok](https://confident-bucket.s3.amazonaws.com/conversation_leaving_feedback.svg)
+
+:::info
+To learn more about providing feedback for your LLMs in production, [read this guide](confident-ai-human-feedback).
+:::
+
+### 3. Viewing Feedback
+
+You may also view conversational-level feedback directly in the conversations page by clicking on the feeback icon on the left nav bar.
+
+![ok](https://confident-bucket.s3.amazonaws.com/conversation_feedback.svg)

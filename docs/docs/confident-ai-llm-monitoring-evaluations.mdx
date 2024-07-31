@@ -1,0 +1,38 @@
+---
+id: confident-ai-llm-monitoring-evaluations
+title: Automating Evaluations
+sidebar_label: Automating Evaluations
+---
+
+To monitor how your LLM application is performing over time, and be alerted of any unsatisfactory LLM responses in production, head to the home page via the left navigation drawer to **turn on the metrics** you wish to enable in production. This process is incredibly helpful for **identifying failing events**, serving as a preliminary filter for unsatisfactory responses that require further discussion.
+
+:::info
+Confident AI will **automatically run evaluations** for the enabled metrics for all incoming events.
+:::
+
+Confident AI supports multiple real-time evaluation metrics, including:
+
+- Answer Relevancy
+- Faithfulness
+- Retreival Quality
+- Custom G-Eval metrics for any custom use case
+
+## Creating custom metrics
+
+### 1. Creating the Metric
+
+To run real-time evaluations using a custom G-Eval metric, first create your custom metric by clicking the **create custom metric** button.
+
+![ok](https://confident-bucket.s3.amazonaws.com/real_time_eval.svg)
+
+### 2. Defining Custom Criteria
+
+Define your **custom criteria**, thresholds, modes, reasoning settings, and select the evaluation parameters you plan to use. Please note that this setup does not include the `expected_output` and `context`, as these parameters are unavailable for real-time events.
+
+![ok](https://confident-bucket.s3.amazonaws.com/real_time_eval_create.svg)
+
+### 3. Viewing Evaluations
+
+Easily **view your real-time evaluation results** on the provided graph in the home page. Each data point represents the average metric score for each metric across all the events of each monitoring day.
+
+![ok](https://confident-bucket.s3.amazonaws.com/real_time_eval_graph.svg)

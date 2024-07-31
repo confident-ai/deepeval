@@ -1,12 +1,16 @@
 ---
-id: confident-ai-evals-in-production
+id: confident-ai-llm-monitoring
 title: LLM Application Monitoring in Production
 sidebar_label: LLM Monitoring in Production
 ---
 
 ## Quick Summary
 
-`deepeval` allows you to live monitor LLM responses in production, which you can **enable real-time evaluations** on. By monitoring responses, you can leverage our hosted evaluation infrastructure to identify unsatisfactory LLM responses, have human annotators send feedback to such responses, and improve your evaluation dataset over time.
+`deepeval` allows you to **live monitor LLM responses in production** with a single function call. By monitoring responses in production, you can leverage Confident AI to [identify unsatisfactory LLM responses](confident-ai-llm-monitoring-platform), have users and human annotators [leave feedback](confident-ai-human-feedback) on such responses, and [improve your evaluation dataset](confident-ai-llm-monitoring-dataset) over time.
+
+:::tip
+Additionally, you may enable [**real-time evaluations**](confident-ai-llm-monitoring-evaluations), which automatically run under the hood to help you identify prelimniary failing responses, as well as [**LLM tracing**](confident-ai-tracing), which allows you to easily debug your LLM applications.
+:::
 
 ## Monitoring Live Responses
 
@@ -104,53 +108,8 @@ Note that you can log either text, a `Link`, list of `Link`s, or any custom dict
 Although you can technically log a link as a native string, the `Link(value="...")` class allows you to access said link directly on Confident AI. You should also aim to have your `Link`s start with 'https://...'.
 :::
 
-## Sending Human Feedback
-
-`deepeval` allows you to send human feedback for a particular LLM response by specifying an `event_id` returned through the `track()` function.
-
-There are two types of feedback:
-
-- **User provided feedback.** A user feedback, is feedback provided by your end users. If you're building a discord bot for example, this will likely be the users interacting with your discord bot on a daily basis.
-- **Reviewer provided feedback.** A reviewer feedback, is feedback provided by your LLM quality assurance personnel, whoever they might be. These might be data annotators and labellers, or even domain experts that checking the quality of LLM responses in production.
-
-Using the `event_id` returned from `track()`, here's how you can send feedback to Confident:
-
-```python
-import deepeval
-
-event_id = deepeval.track(...)
-
-deepeval.send_feedback(
-    event_id=event_id,
-    provider="user",
-    rating=6,
-    explanation="...",
-    expected_response="..."
-)
-```
-
-There are three mandatory and four optional parameters when using the `send_feedback()` function:
-
-- `event_id`: a string representing the `event_id` returned from the `deepeval.track()` function.
-- `provider`: a string of either `"user"` **OR** `"reviewer"` to specify the type of feedback provider.
-- `rating`: an integer ranging from 1 - 5, inclusive.
-- [Optional] `explanation`: a string that serves as the explanation for the given rating.
-- [Optional] `expected_response`: a string representing what the ideal response is.
-- [Optional] `fail_silently`: a boolean which when set to `True` will neither print nor raise any exceptions on error. Defaulted to `False`.
-- [Optional] `raise_expection`: a boolean which when set to `True` will not raise any expections on error. Defaulted to `True`.
-
 ## Responses on Confident AI
 
-Confident offers an observatory to view responses and identify ones where you want to augment your evaluation dataset with.
+Confident offers an observatory to view responses and identify ones where you want to augment your evaluation dataset with. [Click here to learn how](confident-ai-llm-monitoring-platform).
 
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/observatory.png)
-
-If you're building an LLM chatbot, you can also view entire conversation threads via the `conversation_id`.
-
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/conversation.png)
-
-## Enable Real-Time Evals
-
-To monitor how your LLM application is performing over time, and be alerted of any unsatisfactory LLM responses in production, head to the "projects details" section via the left navigation drawer to turn on the metrics you wish to enable in production. Confident AI will automatically run evaluations for enabled metrics for all incoming events.
-
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/metrics-settings.png)
+![ok](https://confident-bucket.s3.amazonaws.com/observatory2.svg)
