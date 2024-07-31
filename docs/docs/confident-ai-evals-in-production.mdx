@@ -104,41 +104,6 @@ Note that you can log either text, a `Link`, list of `Link`s, or any custom dict
 Although you can technically log a link as a native string, the `Link(value="...")` class allows you to access said link directly on Confident AI. You should also aim to have your `Link`s start with 'https://...'.
 :::
 
-## Sending Human Feedback
-
-`deepeval` allows you to send human feedback for a particular LLM response by specifying an `event_id` returned through the `track()` function.
-
-There are two types of feedback:
-
-- **User provided feedback.** A user feedback, is feedback provided by your end users. If you're building a discord bot for example, this will likely be the users interacting with your discord bot on a daily basis.
-- **Reviewer provided feedback.** A reviewer feedback, is feedback provided by your LLM quality assurance personnel, whoever they might be. These might be data annotators and labellers, or even domain experts that checking the quality of LLM responses in production.
-
-Using the `event_id` returned from `track()`, here's how you can send feedback to Confident:
-
-```python
-import deepeval
-
-event_id = deepeval.track(...)
-
-deepeval.send_feedback(
-    event_id=event_id,
-    provider="user",
-    rating=6,
-    explanation="...",
-    expected_response="..."
-)
-```
-
-There are three mandatory and four optional parameters when using the `send_feedback()` function:
-
-- `event_id`: a string representing the `event_id` returned from the `deepeval.track()` function.
-- `provider`: a string of either `"user"` **OR** `"reviewer"` to specify the type of feedback provider.
-- `rating`: an integer ranging from 1 - 5, inclusive.
-- [Optional] `explanation`: a string that serves as the explanation for the given rating.
-- [Optional] `expected_response`: a string representing what the ideal response is.
-- [Optional] `fail_silently`: a boolean which when set to `True` will neither print nor raise any exceptions on error. Defaulted to `False`.
-- [Optional] `raise_expection`: a boolean which when set to `True` will not raise any expections on error. Defaulted to `True`.
-
 ## Responses on Confident AI
 
 Confident offers an observatory to view responses and identify ones where you want to augment your evaluation dataset with.
