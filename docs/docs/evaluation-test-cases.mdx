@@ -185,20 +185,17 @@ The `tools_used` parameter is an **optional** parameter that represents the tool
 # A hypothetical LLM application example
 import chatbot
 
-input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
-    input=input,
+    input="Why did the chicken cross the road?",
     actual_output=chatbot.run(input),
-    expected_output="To get to the other side!",
-    context=["The chicken wanted to cross the road."],
-    retrieval_context=["The chicken liked the other side of the road better"],
+    # Replace this with the tools that were actually used
     tools_used=["WebSearch", "DatabaseQuery"]
 )
 ```
 
 :::note
-`tools_used` and `expected_tools` are LLM test case parameters that are utilized only in **agent evaluation metrics**. These parameters allow you to assess the effectiveness of tool usage in your LLM application and ensure that it meets the expected tool usage standards.
+`tools_used` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
 :::
 
 ## Expected Tools
@@ -214,9 +211,7 @@ input = "Why did the chicken cross the road?"
 test_case = LLMTestCase(
     input=input,
     actual_output=chatbot.run(input),
-    expected_output="To get to the other side!",
-    context=["The chicken wanted to cross the road."],
-    retrieval_context=["The chicken liked the other side of the road better"],
+    # Replace this with the tools that were actually used
     tools_used=["WebSearch", "DatabaseQuery"],
     expected_tools=["DatabaseQuery"]
 )
