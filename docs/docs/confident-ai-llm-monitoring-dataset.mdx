@@ -1,0 +1,27 @@
+---
+id: confident-ai-llm-monitoring-dataset
+title: Adding Events to Evaluation Datasets
+sidebar_label: Adding Events to Datasets
+---
+
+Your **evaluation** dataset that was prepared during development can cover only so much ground. That's why it's crucial to continually enhance this dataset for future iterations to improve your LLM system. One approach is to keep manually curating test cases; another is to generate additional synthetic data.
+
+However, arguably the most important method is to **create test cases based on real user interactions**. This means identify your LLM's failing responses and incorporating these events into your evaluation dataset.
+
+:::info
+**Confident AI** allows you to easily add failing datasets to your evaluation datasets in bulk.
+:::
+
+## Adding Events to Datasets
+
+### 1. Select Events
+
+To select events for your evaluation dataset, simply check the checkboxes to the left of each event. You may find it helpful to first filter for events that meet your criteria for failure, then checking the box next to the Event Name column to select all filtered events. After selecting the events, click the **Add to Dataset** button.
+
+![ok](https://confident-bucket.s3.amazonaws.com/selecting_events.svg)
+
+### 2. Select Dataset
+
+You will be prompted to select the evaluation dataset to which you want to add the failing events. Click **Add**, and you will have successfully added the events to your dataset!
+
+![ok](https://confident-bucket.s3.amazonaws.com/adding_to_dataset.svg)

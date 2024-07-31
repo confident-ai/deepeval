@@ -1,12 +1,16 @@
 ---
-id: confident-ai-evals-in-production
+id: confident-ai-llm-monitoring
 title: LLM Application Monitoring in Production
 sidebar_label: LLM Monitoring in Production
 ---
 
 ## Quick Summary
 
-`deepeval` allows you to live monitor LLM responses in production, which you can **enable real-time evaluations** on. By monitoring responses, you can leverage our hosted evaluation infrastructure to identify unsatisfactory LLM responses, have human annotators send feedback to such responses, and improve your evaluation dataset over time.
+`deepeval` allows you to **live monitor LLM responses in production** with a single function call. By monitoring responses in production, you can leverage Confident AI to [identify unsatisfactory LLM responses](confident-ai-llm-monitoring-platform), have users and human annotators [leave feedback](confident-ai-human-feedback) on such responses, and [improve your evaluation dataset](confident-ai-llm-monitoring-dataset) over time.
+
+:::tip
+Additionally, you may enable [**real-time evaluations**](confident-ai-llm-monitoring-evaluations), which automatically run under the hood to help you identify prelimniary failing responses, as well as [**LLM tracing**](confident-ai-tracing), which allows you to easily debug your LLM applications.
+:::
 
 ## Monitoring Live Responses
 
@@ -106,16 +110,6 @@ Although you can technically log a link as a native string, the `Link(value="...
 
 ## Responses on Confident AI
 
-Confident offers an observatory to view responses and identify ones where you want to augment your evaluation dataset with.
+Confident offers an observatory to view responses and identify ones where you want to augment your evaluation dataset with. [Click here to learn how](confident-ai-llm-monitoring-platform).
 
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/observatory.png)
-
-If you're building an LLM chatbot, you can also view entire conversation threads via the `conversation_id`.
-
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/conversation.png)
-
-## Enable Real-Time Evals
-
-To monitor how your LLM application is performing over time, and be alerted of any unsatisfactory LLM responses in production, head to the "projects details" section via the left navigation drawer to turn on the metrics you wish to enable in production. Confident AI will automatically run evaluations for enabled metrics for all incoming events.
-
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/metrics-settings.png)
+![ok](https://confident-bucket.s3.amazonaws.com/observatory2.svg)
