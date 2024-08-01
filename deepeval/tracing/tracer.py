@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 import inspect
 
 from deepeval.utils import dataclass_to_dict
-from deepeval.event import track
+from deepeval.monitor import monitor
 
 ########################################################
 ### Trace Types ########################################
@@ -382,7 +382,7 @@ class Tracer:
         self.error: Optional[Dict[str:Any]] = None
         self.attributes: Optional[Attributes] = None
         self.track_params: Optional[Dict] = None
-        self.is_tracking: bool = False
+        self.is_monitoring: bool = False
 
     def __enter__(self):
         # start timer
@@ -439,8 +439,8 @@ class Tracer:
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
 
-            if self.is_tracking:
-                track(
+            if self.is_monitoring:
+                monitor(
                     event_name=self.track_params["event_name"]
                     or self.trace_type,
                     model=self.track_params["model"],
@@ -557,7 +557,7 @@ class Tracer:
         # append trace instance to stack
         self.attributes = attributes
 
-    def track(
+    def monitor(
         self,
         event_name: str = None,
         model: str = None,
@@ -575,8 +575,8 @@ class Tracer:
         raise_exception: Optional[bool] = True,
         run_async: Optional[bool] = True,
     ):
-        self.is_tracking = True
-        self.track_params = {
+        self.is_monitoring = True
+        self.monitor_params = {
             "event_name": event_name,
             "model": model,
             "input": input,

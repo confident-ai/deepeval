@@ -1,11 +1,11 @@
 from typing import Optional
 
 from deepeval.api import Api, Endpoints
-from deepeval.event.api import APIFeedback
+from deepeval.monitor.api import APIFeedback
 
 
 def send_feedback(
-    event_id: str,
+    response_id: str,
     rating: int,
     expected_response: Optional[str] = None,
     explanation: Optional[str] = None,
@@ -14,7 +14,7 @@ def send_feedback(
 ) -> str:
     try:
         api_event = APIFeedback(
-            eventId=event_id,
+            eventId=response_id,
             rating=rating,
             expectedResponse=expected_response,
             explanation=explanation,

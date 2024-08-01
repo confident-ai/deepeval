@@ -118,7 +118,7 @@ class RAGPipeline:
             query_trace.set_attributes(
                 attributes=QueryAttributes(input=query_text, output=response)
             )
-            query_trace.track(
+            query_trace.monitor(
                 input=query_text,
                 response=response,
                 model="gpt-4-turbo-preview",

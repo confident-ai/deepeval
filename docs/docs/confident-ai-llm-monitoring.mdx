@@ -31,7 +31,7 @@ deepeval.monitor(
 
 There are four mandatory and ten optional parameters when using the `monitor()` function to monitor responses in production:
 
-- `event_name`: type `str` specifying the type of event monitored. The `event_name` can be thought of as an identifier for different functionalities your LLM application performs.
+- `event_name`: type `str` specifying the type of response event monitored. The `event_name` can be thought of as an identifier for different functionalities your LLM application performs.
 - `model`: type `str` specifying the name of the LLM model used.
 - `input`: type `str`.
 - `response`: type `str`.
@@ -88,7 +88,7 @@ Similar to hyperparameters, you can easily associate custom additional data for 
 
 ```python
 import deepeval
-from deepeval.events.api import Link
+from deepeval.monitor import Link
 
 deepeval.monitor(
     ...
