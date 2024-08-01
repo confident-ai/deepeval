@@ -513,7 +513,7 @@ Remember, you can also supply a custom `str` as `trace_type` for custom trace ty
 
 ## Custom Tracing During Monitoring in Production
 
-To enable Custom Tracing for production response monitoring, you'll need to call the `track()` method at the end of the root trace `with` block. This method has the same exact arguments (and types) as `deepeval.track()`. You can learn more about `deepeval.track` in production monitoring [here.](confident-ai-evals-in-production#monitoring-live-responses)
+To enable Custom Tracing for production response monitoring, you'll need to call the `monitor()` method at the end of the root trace `with` block. This method has the same exact arguments (and types) as `deepeval.monitor()`. You can learn more about `deepeval.track` in production monitoring [here.](confident-ai-evals-in-production#monitoring-live-responses)
 
 ```python
 from deepeval.tracing import Tracer, TraceType
@@ -521,7 +521,7 @@ from deepeval.tracing import Tracer, TraceType
 with Tracer(trace_type=TraceType.AGENT) as agent_trace:
     ...
 
-    agent_trace.track(
+    agent_trace.monitor(
         event_name="Chatbot",
         model='gpt-4-turbo-preview',
         input=user_input,
@@ -615,7 +615,7 @@ class RAGPipeline:
                 output=response
             )
             query_trace.set_attributes(attributes)
-            query_trace.track(
+            query_trace.monitor(
                 input=query_text,
                 response=response,
                 model='gpt-4-turbo-preview',

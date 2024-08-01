@@ -191,7 +191,7 @@ def ask_llm(question):
         tracer.set_attributes(
             QueryAttributes(input=question, output=response["output"])
         )
-        tracer.track(
+        tracer.monitor(
             event_name="Hybrid Integrations",
             input=question,
             response=response["output"],

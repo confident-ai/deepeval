@@ -465,7 +465,7 @@ Confident AI allows anyone to **monitor and evaluate LLM responses in real-time.
 import deepeval
 
 # At the end of your LLM call
-event_id = deepeval.track(
+response_id = deepeval.monitor(
     event_name="Chatbot",
     model="gpt-4",
     input="Example input.",
@@ -482,14 +482,14 @@ You can find more information on [running real-time evaluations here.](confident
 
 ### Sending Human Feedback
 
-Confident AI allows you to send human feedback on LLM responses tracked in production, all via one API call by using the previously returned `event_id` from `deepeval.track()`:
+Confident AI allows you to send human feedback on LLM responses monitored in production, all via one API call by using the previously returned `response_id` from `deepeval.monitor()`:
 
 ```python
 import deepeval
 ...
 
 deepeval.send_feedback(
-    event_id=event_id,
+    response_id=response_id,
     provider="user",
     rating=7,
     explanation="Although the response is accurate, I think the spacing makes it hard to read."
