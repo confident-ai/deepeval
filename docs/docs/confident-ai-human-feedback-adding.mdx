@@ -1,0 +1,31 @@
+---
+id: confident-ai-human-feedback-adding
+title: Reviewer-Provided Feedback
+sidebar_label: Providing Reviewer Feedback
+---
+
+Confident AI enables reviewers to leave **reviewer-provided feedback** on each event. This feature is crucial for identifying failing LLM responses in production.
+
+:::info
+Feedback can be accessed, reviewed, and filtered on the **[Human Feedback page](confident-ai-human-feedback-platform)** by data annotators, labelers, and domain experts for further discussion, including the potential inclusion of an event in the dataset.
+:::
+
+## Leaving a feedback
+
+### 1.) Selecting the event
+
+Navigate to the event you wish to review (you can filter events based on LLM parameters, hyperparameters, and logged custom data on the observatory page) and click on the inspect button.
+
+![ok](https://confident-bucket.s3.amazonaws.com/inspect_event.svg)
+
+### 2.) Leaving the feedback
+
+Provide feedback by rating the response out of 5, offering an explanation for the rating, and suggesting the ideal expected response. Note that the explanation and ideal response are optional parameters. Click "Leave Feedback" to submit your review.
+
+![ok](https://confident-bucket.s3.amazonaws.com/leave_feedback.svg)
+
+### 3.) Viewing the feedback
+
+The feedback you've submitted will now be available in the feedback tab within the event details panel. You can submit multiple pieces of feedback for a single event, all of which will be displayed here.
+
+![ok](https://confident-bucket.s3.amazonaws.com/feedback_left.svg)

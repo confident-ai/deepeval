@@ -77,13 +77,23 @@ module.exports = {
         },
         {
           type: "category",
+          label: "Human Feedback",
+          items: [
+            "confident-ai-human-feedback",
+            "confident-ai-human-feedback-adding",
+            "confident-ai-human-feedback-platform",
+          ],
+          collapsed: true,
+        },
+        {
+          type: "category",
           label: "LLM Tracing",
           items: [
             "confident-ai-tracing",
             "confident-ai-tracing-llama-index",
             "confident-ai-tracing-langchain",
           ],
-          collapsed: false,
+          collapsed: true,
         },
       ],
       collapsed: false,
