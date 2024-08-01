@@ -68,7 +68,14 @@ module.exports = {
           ],
           collapsed: false,
         },
-        "confident-ai-analyze-evaluations",
+        {
+          type: "category",
+          label: "Evaluation & Testing",
+          items: [
+            "confident-ai-testing-n-evaluation-test-run",
+          ],
+          collapsed: false,
+        },
         {
           type: "category",
           label: "LLM Monitoring",

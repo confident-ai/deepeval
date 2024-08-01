@@ -1,0 +1,218 @@
+---
+id: confident-ai-testing-n-evaluation-test-run
+title: Test Runs and Experiments
+sidebar_label: Test Runs & Experiments
+---
+
+## Quick Summary
+
+A test run on Confident AI (and `deepeval`), is a collection of evaluated test cases and their corresponding metric scores. For example, a test run can be the result of evaluated test cases using the `AnswerRelevancyMetric`.
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+metric = AnswerRelevancyMetric()
+test_case = LLMTestCase(input="...", actual_output="...", retrieval_context=[...])
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+Test runs are useful because they are a convenient way to compare and experiment with different hyperparameters in an LLM application, such as which prompt templates and LLMs to use.
+
+For example, to choose the optimal LLM for a particular use case, simply use different LLMs to generate `actual_output`s for the same set of test cases, and apply the same metric to them, which allows you to see which LLM gives the best metric scores. Since test run results enables the experimention of different hyperparameter choices and LLM system architectures, **a test run can also be known as an experiment.**
+
+:::tip
+To associate different hyperparameters with each test run, simply supply the hyperparameters argument with a flat JSON to log any custom hyperparameter of your choice (you can learn more about the `evaluate()` function [here](evaluation-introduction#evaluating-without-pytest)):
+
+```python
+...
+
+evaluate(
+    test_cases=[test_case],
+    metrics=[metric],
+    hyperparameters={"model": "gpt4o", "prompt template": "..."}
+)
+```
+
+This will allow you easily to filter for the best hyperparameter choices on Confident AI.
+
+:::
+
+## Running A Test Run
+
+Although in the previous section you saw how you could evaluate lone test cases, we're going to show how you can leverage Confident AI's datasets feature to keep the dataset used in different test runs/experiments standardized.
+
+### Using the `evaluate()` Function
+
+You can use the `evaluate()` function to run a test run. All test run results will be automatically sent to Confident AI once you're [logged in.](confident-ai-introduction#login-to-confident-ai) First, pull the dataset:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(
+    alias="Your Dataset Alias",
+    # Don't convert goldens to test cases yet
+    auto_convert_goldens_to_test_cases=False
+)
+```
+
+Since we're going to be generating `actual_output`s at evaluation time, we're **NOT** going to convert the pulled goldens to test cases yet.
+
+:::info
+If you're unfamilar with what we're doing with an `EvaluationDataset`, please first visit the [datasets section.](confident-ai-evaluation-dataset-evaluation)
+:::
+
+With the dataset pulled, we can now generate the `actual_output`s for each golden and populate the evaluation dataset with test cases that are ready for evaluation (we're using a hypothetical `llm_app` to generate `actual_output`s in this example):
+
+```python
+# A hypothetical LLM application example
+import llm_app
+from typing import List
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import Golden
+...
+
+def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
+    test_cases = []
+    for golden in goldens:
+        test_case = LLMTestCase(
+            input=golden.input,
+            # Generate actual output using the 'input'.
+            # Replace this with your actual LLM application
+            actual_output=llm_app.generate(golden.input),
+            expected_output=golden.expected_output,
+            context=golden.context,
+            retrieval_context=golden.retrieval_context
+        )
+        test_cases.append(test_case)
+    return test_cases
+
+# Data preprocessing before setting the dataset test cases
+dataset.test_cases = convert_goldens_to_test_cases(dataset.goldens)
+```
+
+Now that your dataset is ready, define your metrics. Here, we'll be using the `AnswerRelevancyMetric` to keep things simple:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+metric = AnswerRelevancyMetric()
+```
+
+Lastly, using the metrics you've defined and dataset you've pulled and generated `actual_output`s for, execute your test run:
+
+```python
+import evaluate
+...
+
+evaluate(dataset, metrics=[metric])
+```
+
+### Using the `deepeval test run` Command
+
+Alternatively, you can also execute a test run via `deepeval`'s Pytest integration, which similar to the `evaluate()` function, will automatically send all test run results to Confident AI. Here is a full example that is analogous to the one above:
+
+```python title="test_llm_app.py"
+# A hypothetical LLM application example
+import llm_app
+from typing import List
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval import assert_test
+
+dataset = EvaluationDataset()
+dataset.pull(
+    alias="Your Dataset Alias",
+    # Don't convert goldens to test cases yet
+    auto_convert_goldens_to_test_cases=False
+)
+
+def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
+    test_cases = []
+    for golden in goldens:
+        test_case = LLMTestCase(
+            input=golden.input,
+            # Generate actual output using the 'input'.
+            # Replace this with your actual LLM application
+            actual_output=llm_app.generate(golden.input),
+            expected_output=golden.expected_output,
+            context=golden.context,
+            retrieval_context=golden.retrieval_context
+        )
+        test_cases.append(test_case)
+    return test_cases
+
+# Data preprocessing before setting the dataset test cases
+dataset.test_cases = convert_goldens_to_test_cases(dataset.goldens)
+
+@pytest.mark.parametrize(
+    "test_case",
+    dataset,
+)
+def test_llm_app(test_case: LLMTestCase):
+    metric = AnswerRelevancyMetric()
+    assert_test(test_case, [metric])
+```
+
+Lastly, execute your test file via the CLI:
+
+```console
+deepeval test run test_llm_app.py
+```
+
+:::tip
+Some users prefer `deepeval test run` over `evaluate()` is because it integrates well with CI/CD pipelines such as Github Actions. Another reason why `deepeval test run` is prefered is because you can easily spin up multiple processes to evaluate multiple test cases in parallel:
+
+```console
+deepeval test run test_llm_app.py -n 10
+```
+
+You can learn more about all the functionalities `deepeval test run` offers [here.](evaluation-introduction#evaluating-with-pytest)
+
+:::
+
+## Iterating on Hyperparameters
+
+In the first section, we saw how to execute a test run by dynamically generating `actual_output` for pulled datasets at evaluation time. To experiemnt with different hyperparameter values to iterate towards the optimal LLM to use for your LLM application for example, you should **associate hyperparameter values to test runs to compare and pick the best hyperparameters on Confident AI.**
+
+Continuing from the previous example, if for example `llm_app` uses `gpt-4o` as its LLM, you can associate the `gpt-4o` value as such:
+
+```python
+...
+
+evaluate(
+    test_cases=[test_case],
+    metrics=[metric],
+    hyperparameters={"model": "gpt4o", "prompt template": "..."}
+)
+```
+
+:::tip
+You can run a heavily nested for loop to generate `actual_output`s to get test run evaluation results for all hyperparameter combinations.
+
+```python
+for model in models:
+    for prompt in prompts:
+        evaluate(..., hyperparameters={...})
+```
+
+:::
+
+Or, if you're using `deepeval test run`:
+
+```python title="test_llm_app.py"
+...
+
+# You should aim to make these values dynamic
+@deepeval.log_hyperparameters(model="gpt-4o", prompt_template="...")
+def hyperparameters():
+    # Return a custom flat dict to log any additional hyperparameters.
+    return {}
+```
+
+This will help Confident AI identify which hyperparameter combination were used to generate each test run results, which you can ultimately easily filter for and visualize experiments on the platform.
+
+![ok](https://confident-bucket.s3.amazonaws.com/experiments.png)
