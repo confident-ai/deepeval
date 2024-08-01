@@ -68,7 +68,6 @@ module.exports = {
           label: "LLM Monitoring",
           items: [
             "confident-ai-llm-monitoring",
-            "confident-ai-llm-monitoring-platform",
             "confident-ai-llm-monitoring-conversations",
             "confident-ai-llm-monitoring-evaluations",
             "confident-ai-llm-monitoring-dataset",

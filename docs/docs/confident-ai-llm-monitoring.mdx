@@ -110,6 +110,48 @@ Although you can technically log a link as a native string, the `Link(value="...
 
 ## Responses on Confident AI
 
-Confident offers an observatory to view responses and identify ones where you want to augment your evaluation dataset with. [Click here to learn how](confident-ai-llm-monitoring-platform).
+**Confident AI** allows you to view and manage your monitored responses in the **Observatory**. On this page, you can inspect the ways in which these responses were generated, view entire conversational threads, view and debug traces, leave human feedback, and add unsatsifactory responses to your evaluation dataset.
 
 ![ok](https://confident-bucket.s3.amazonaws.com/observatory2.svg)
+
+:::info
+While `conversation_id` is logged here, it is an optional parameter that will appear as `None` if not supplied to `deepeval`'s `monitor()` function during live monitoring.
+:::
+
+### Viewing A Response
+
+To view an response in more detail, simply **click on the response you want to examine**, which will trigger a dropdown panel to appear. Here, you can view the event name, Distinct ID (user ID), Conversation ID, time and completion time (automatically tracked), token cost, and token usage, as well as your usual LLM parameters, including input, response and retrieval context.
+
+![ok](https://confident-bucket.s3.amazonaws.com/observatory_event.svg)
+
+:::tip
+
+You can view logged **hyperparameters** and **custom data** by toggling the tabs next to the real-time evaluation metric results, and click the inspect button to toggle the "Response Details" side panel.
+
+:::
+
+### Inspecting A Response
+
+On the side panel, you may inspect response information data in greater detail.
+
+![ok](https://confident-bucket.s3.amazonaws.com/observatory_event_inspect.svg)
+
+:::tip
+You may also view the **associated trace** or leave **human feedback** by clicking on the respective buttons on the side panel.
+:::
+
+### Filtering for Responses
+
+Filtering for responses is vital as it allows you to replay or recreate the real-world conditions of which this response was generated under. For example, with Confident AI you can easily filter for responses where data was retrieved from a particular knowledge base or data lake.
+
+![ok](https://confident-bucket.s3.amazonaws.com/observatory_filter.svg)
+
+On Confident AI, you can filter responses on numerous and a combination of criteria, ranging from your Distinct (user) IDs and Conversation IDs to associated [human feedback](confident-ai-human-feedback) information such as the rating, provider, explanation, and expected response. You can also filter responses based on the [hyperparameters](#logging-custom-hyperparameters) and/or [custom data](#logging-additional-custom-data) you have logged.
+
+:::info
+Use the date selector to choose a timeframe for the responses you wish to view. This feature is particularly useful when assigning data annotation tasks to your labelers.
+:::
+
+Here is an example of a list of filtered responses with a rating of 1!
+
+![ok](https://confident-bucket.s3.amazonaws.com/observatory_filtered.svg)
