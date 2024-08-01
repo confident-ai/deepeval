@@ -29,18 +29,7 @@ pip install langchain deepeval
 
 Next, set up the LangChain integration through `deepeval`. Simply import `deepeval` and call the `trace_langchain` function before your LangChain application.
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-
-<Tabs
-  defaultValue="DeepEval"
-  values={[
-      { label: 'DeepEval', value: 'DeepEval', },
-  ]}
->
-<TabItem value="DeepEval">
-
-```py
+```python
 import deepeval
 
 deepeval.trace_langchain()
@@ -48,10 +37,6 @@ deepeval.trace_langchain()
 # Your LangChain Applications
 ...
 ```
-
-</TabItem>
-
-</Tabs>
 
 **Your LangChain application is now equipped to automatically log and transmit traces to Confident AI!** In addition to LangChain applications, DeepEval also supports LangChain traces as part of a larger LLM application.
 
