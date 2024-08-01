@@ -1,31 +1,32 @@
 ---
 id: confident-ai-llm-monitoring-platform
-title: Analyzing Events on Confident AI
-sidebar_label: Analyzing Events on Confident
+title: Analyzing Responses on Confident AI
+sidebar_label: Analyzing Responses
 ---
 
-**Confident AI** allows you to manage your tracked events in the **Observatory**. On this page, you can manage and inspect events, view entire conversational threads, view and debug traces, leave human feedback, and add failing responses to your evaluation dataset.
+**Confident AI** allows you to view and manage your monitored responses in the **Observatory**. On this page, you can inspect the ways in which these responses were generated, view entire conversational threads, view and debug traces, leave human feedback, and add unsatsifactory responses to your evaluation dataset.
 
 ![ok](https://confident-bucket.s3.amazonaws.com/observatory2.svg)
 
 :::info
-While `conversation_id` is logged here, it is an optional parameter that will appear as `None` if not supplied to `deepeval`'s track function during live monitoring.
-
+While `conversation_id` is logged here, it is an optional parameter that will appear as `None` if not supplied to `deepeval`'s `monitor()` function during live monitoring.
 :::
 
-## Inspecting an Event
+## Viewing A Response
 
-### 1. Click on the Event
-
-To inspect an event in more detail, simply **click on the event you want to examine**, which will trigger a dropdown panel to appear. Here, you can view the event name, Distinct ID (user ID), Conversation ID, time and completion time (automatically tracked), token cost, and token usage, as well as your usual LLM parameters, including input, response and retrieval context.
+To view an response in more detail, simply **click on the response you want to examine**, which will trigger a dropdown panel to appear. Here, you can view the event name, Distinct ID (user ID), Conversation ID, time and completion time (automatically tracked), token cost, and token usage, as well as your usual LLM parameters, including input, response and retrieval context.
 
 ![ok](https://confident-bucket.s3.amazonaws.com/observatory_event.svg)
 
-Additionally, you can view logged **hyperparameters** and **custom data** by toggling the tabs next to the real-time evaluation metric results, and click the inspect button to toggle the "Response Details" side panel.
+:::tip
 
-### 2. Inspecting the Event
+You can view logged **hyperparameters** and **custom data** by toggling the tabs next to the real-time evaluation metric results, and click the inspect button to toggle the "Response Details" side panel.
 
-On the side panel, you may inspect event information in greater detail.
+:::
+
+## Inspecting A Response
+
+On the side panel, you may inspect response information data in greater detail.
 
 ![ok](https://confident-bucket.s3.amazonaws.com/observatory_event_inspect.svg)
 
@@ -33,20 +34,18 @@ On the side panel, you may inspect event information in greater detail.
 You may also view the **associated trace** or leave **human feedback** by clicking on the respective buttons on the side panel.
 :::
 
-## Filtering for Events
+## Filtering for Responses
 
-### 1. Selecting the filter
-
-On **Confident AI**, you can filter events using various criteria, ranging from your Distinct ID and Conversation IDs to associated feedback information such as the rating, provider, explanation, and expected response. You can also filter events based on the hyperparameters and custom data you have logged.
+Filtering for responses is vital as it allows you to replay or recreate the real-world conditions of which this response was generated under. For example, with Confident AI you can easily filter for responses where data was retrieved from a particular knowledge base or data lake.
 
 ![ok](https://confident-bucket.s3.amazonaws.com/observatory_filter.svg)
 
-:::note
-Use the **date selector** to choose a timeframe for the events. This feature is particularly useful when assigning data annotation tasks to your labelers.
+On Confident AI, you can filter responses on numerous and a combination of criteria, ranging from your Distinct (user) IDs and Conversation IDs to associated feedback information such as the rating, provider, explanation, and expected response. You can also filter responses based on the hyperparameters and custom data you have logged.
+
+:::info
+Use the date selector to choose a timeframe for the responses you wish to view. This feature is particularly useful when assigning data annotation tasks to your labelers.
 :::
 
-### 2. Filtered Events
-
-Here is an example of a list of filtered events with a rating of 1!
+Here is an example of a list of filtered responses with a rating of 1!
 
 ![ok](https://confident-bucket.s3.amazonaws.com/observatory_filtered.svg)

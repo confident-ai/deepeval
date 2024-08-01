@@ -4,7 +4,7 @@ title: Human-in-the-Loop for LLMs in Production
 sidebar_label: Human-in-the-Loop for LLMs
 ---
 
-**Capturing human feedback** is crucial for understanding how your application performs in real-world scenarios. **Confident AI** enables you to incorporate human input into your evaluation cycle through `deepeval`, which makes it easy to send feedback for a specific LLM response by specifying the `event_id` returned from the `track()` function.
+**Capturing human feedback** is crucial for understanding how your application performs in real-world scenarios. **Confident AI** enables you to incorporate human input into your evaluation cycle through `deepeval`, which makes it easy to send feedback for a specific LLM response by specifying the `response_id` returned from the `monitor()` function.
 
 :::info
 Before diving into this content, it might be helpful to read the following:
@@ -26,15 +26,15 @@ Incorporating **simple and enfortless feedback mechanisms** such as thumbs-up or
 
 ## Sending Human Feedback
 
-Using the `event_id` returned from `track()`, here's how you can send feedback to Confident:
+Using the `response_id` returned from `track()`, here's how you can send feedback to Confident:
 
 ```python
 import deepeval
 
-event_id = deepeval.track(...)
+response_id = deepeval.track(...)
 
 deepeval.send_feedback(
-    event_id=event_id,
+    response_id=response_id,
     rating=5,
     explanation="...",
     expected_response="..."
@@ -43,7 +43,7 @@ deepeval.send_feedback(
 
 There are two mandatory and four optional parameters when using the `send_feedback()` function:
 
-- `event_id`: a string representing the `event_id` returned from the `deepeval.track()` function.
+- `response_id`: a string representing the `response_id` returned from the `deepeval.monitor()` function.
 - `rating`: an integer ranging from 1 - 5, inclusive.
 - [Optional] `explanation`: a string that serves as the explanation for the given rating.
 - [Optional] `expected_response`: a string representing what the ideal response is.

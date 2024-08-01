@@ -1,37 +1,34 @@
 ---
 id: confident-ai-llm-monitoring-evaluations
-title: Automating Evaluations
-sidebar_label: Automating Evaluations
+title: Online LLM Evaluations
+sidebar_label: Online Evaluations
 ---
 
-To monitor how your LLM application is performing over time, and be alerted of any unsatisfactory LLM responses in production, head to the home page via the left navigation drawer to **turn on the metrics** you wish to enable in production. This process is incredibly helpful for **identifying failing events**, serving as a preliminary filter for unsatisfactory responses that require further discussion.
+To monitor how your LLM application is performing over time, and be alerted of any unsatisfactory LLM responses in production, head to the home page via the left navigation drawer to **turn on the metrics** you wish to enable in production. This process is incredibly helpful for **identifying failing responses**, serving as a preliminary filter for unsatisfactory responses that require further discussion.
 
 :::info
-Confident AI will **automatically run evaluations** for the enabled metrics for all incoming events.
+Confident AI will **automatically run evaluations** for the enabled metrics for all incoming responses.
 :::
 
-Confident AI supports multiple real-time evaluation metrics, including:
+Confident AI supports multiple default real-time evaluation metrics, including:
 
-- Answer Relevancy
-- Faithfulness
+- [Answer Relevancy](metrics-answer-relevancy)
+- [Faithfulness](metrics-faithfulness)
 - Retreival Quality
-- Custom G-Eval metrics for any custom use case
 
-## Creating custom metrics
+Additionally, Confident AI supports [G-Eval](metrics-llm-evals) metrics for **ANY** custom use case.
 
-### 1. Creating the Metric
+## Creating A Custom Metric
 
 To run real-time evaluations using a custom G-Eval metric, first create your custom metric by clicking the **create custom metric** button.
 
 ![ok](https://confident-bucket.s3.amazonaws.com/real_time_eval.svg)
 
-### 2. Defining Custom Criteria
-
-Define your **custom criteria**, thresholds, modes, reasoning settings, and select the evaluation parameters you plan to use. Please note that this setup does not include the `expected_output` and `context`, as these parameters are unavailable for real-time events.
+Here you can create **custom criteria**, thresholds, strict modes, reasoning settings, and select the evaluation parameters that are logged during monitoring should be used for evaluation (these are analogous to the `LLMTestCaseParams` used in [G-Eval.](metrics-llm-evals)). Please note that this setup does not include the `expected_output` and `context`, as these parameters are unavailable for online evaluations.
 
 ![ok](https://confident-bucket.s3.amazonaws.com/real_time_eval_create.svg)
 
-### 3. Viewing Evaluations
+## Viewing Evaluations
 
 Easily **view your real-time evaluation results** on the provided graph in the home page. Each data point represents the average metric score for each metric across all the events of each monitoring day.
 

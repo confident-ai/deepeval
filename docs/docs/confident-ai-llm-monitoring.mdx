@@ -6,22 +6,22 @@ sidebar_label: LLM Monitoring in Production
 
 ## Quick Summary
 
-`deepeval` allows you to **live monitor LLM responses in production** with a single function call. By monitoring responses in production, you can leverage Confident AI to [identify unsatisfactory LLM responses](confident-ai-llm-monitoring-platform), have users and human annotators [leave feedback](confident-ai-human-feedback) on such responses, and [improve your evaluation dataset](confident-ai-llm-monitoring-dataset) over time.
+`deepeval` allows you to **monitor live LLM responses in production** with a single API call. By monitoring responses in production, you can leverage Confident AI to [identify unsatisfactory LLM responses](confident-ai-llm-monitoring-platform), have users and human annotators [leave feedback](confident-ai-human-feedback) on such responses, and incorperate real-world data to [improve your evaluation dataset](confident-ai-llm-monitoring-dataset) over time.
 
 :::tip
-Additionally, you may enable [**real-time evaluations**](confident-ai-llm-monitoring-evaluations), which automatically run under the hood to help you identify prelimniary failing responses, as well as [**LLM tracing**](confident-ai-tracing), which allows you to easily debug your LLM applications.
+Additionally, you may enable [**real-time evaluations**](confident-ai-llm-monitoring-evaluations), which automatically runs under the hood to help you identify preliminary failing responses, as well as [**LLM tracing**](confident-ai-tracing), which allows you to easily debug your LLM applications.
 :::
 
 ## Monitoring Live Responses
 
-To monitor LLM responses, use the `deepeval.track(...)` method in your LLM application to start tracking responses.
+To monitor LLM responses, use the `deepeval.monitor(...)` method in your LLM application to start monitoring responses.
 
 ```python
 import deepeval
 
 # At the end of your LLM call,
 # usually in your backend API handler
-deepeval.track(
+deepeval.monitor(
     event_name="Chatbot",
     model="gpt-4",
     input="input",
@@ -29,9 +29,9 @@ deepeval.track(
 )
 ```
 
-There are four mandatory and ten optional parameters when using the `track()` function to monitor responses in production:
+There are four mandatory and ten optional parameters when using the `monitor()` function to monitor responses in production:
 
-- `event_name`: type `str` specifying the type of event tracked.
+- `event_name`: type `str` specifying the type of event monitored. The `event_name` can be thought of as an identifier for different functionalities your LLM application performs.
 - `model`: type `str` specifying the name of the LLM model used.
 - `input`: type `str`.
 - `response`: type `str`.
@@ -43,31 +43,31 @@ There are four mandatory and ten optional parameters when using the `track()` fu
 - [Optional] `completion_time`: type `float` that indicates how many **seconds** it took your LLM application to complete.
 - [Optional] `token_usage`: type `float`
 - [Optional] `token_cost`: type `float`
-- [Optional] `fail_silently`: type `bool`. You should set this to `False` in development to check if tracking is working properly. Defaulted to `False`.
+- [Optional] `fail_silently`: type `bool`. You should set this to `False` in development to check if `monitor()` is working properly. Defaulted to `False`.
 - [Optional] `raise_expection`: type `bool`. You should set this to `False` in production if you don't want to raise expections in production. Defaulted to `True`.
 
 :::caution
 Please do **NOT** provide placeholder values for optional parameters. Leave it blank instead.
 :::
 
-The `track()` function returns an `event_id` upon a successful API request to Confident's servers, which you can later use to send human feedback regarding a particular LLM response you've tracked.
+The `monitor()` function returns an `response_id` upon a successful API request to Confident's servers, which you can later use to send human feedback regarding a particular LLM response you've monitored.
 
 ```python
 import deepeval
 
-event_id = deepeval.track(...)
+response_id = deepeval.monitor(...)
 ```
 
 **Congratulations!** With a few lines of code, `deepeval` will now automatically log all LLM responses in production to Confident AI.
 
-### Tracking Custom Hyperparameters
+### Logging Custom Hyperparameters
 
-In addition to tracking which `model` was used to generate each response, you can also associate any custom hyperparameters you wish to each response you're tracking.
+In addition to logging which `model` was used to generate each respective response, you can also associate any custom hyperparameters you wish to each response you're monitoring.
 
 ```python
 import deepeval
 
-deepeval.track(
+deepeval.monitor(
     ...
     model="gpt-4",
     hyperparameters={
@@ -79,10 +79,10 @@ deepeval.track(
 ```
 
 :::info
-Logging hyperparameters allows you to more easily filter and search for different responses on Confident AI.
+Logging hyperparameters allows you to more easily filter and search for the different responses on Confident AI.
 :::
 
-### Tracking Additional Custom Data
+### Logging Additional Custom Data
 
 Similar to hyperparameters, you can easily associate custom additional data for each response.
 
@@ -90,7 +90,7 @@ Similar to hyperparameters, you can easily associate custom additional data for 
 import deepeval
 from deepeval.events.api import Link
 
-deepeval.track(
+deepeval.monitor(
     ...
     additional_data={
         "Example Text": "...",
