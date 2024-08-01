@@ -459,7 +459,7 @@ Feel free to execute this in a nested for loop to figure out the best hyperparam
 
 ### Monitoring LLM Responses
 
-Confident AI allows anyone to **monitor and evaluate LLM responses in real-time.** A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
+Confident AI allows anyone to [monitor and evaluate LLM responses in real-time.](confident-ai-llm-monitoring) A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
 
 ```python
 import deepeval
@@ -477,7 +477,7 @@ response_id = deepeval.monitor(
 Confident AI will automatically run evaluations for each incoming LLM response on metrics you have turned on. Simply head over to the 'Project Details' page on Confident AI to turn on these real-time metrics.
 
 :::info
-You can find more information on [running real-time evaluations here.](confident-ai-evals-in-production)
+You can find more information on [running real-time evaluations here.](confident-ai-llm-monitoring-evaluations)
 :::
 
 ### Sending Human Feedback
@@ -499,7 +499,7 @@ deepeval.send_feedback(
 Confident AI allows you to keep track of either `"user"` feedback (ie. feedback provided by end users interacting with your LLM application), or `"reviewer"` feedback (ie. feedback provided by reviewers manually checking the quality of LLM responses in production).
 
 :::note
-To learn more, visit the [human feedback section page.](confident-ai-evals-in-production#sending-human-feedback)
+To learn more, visit the [human feedback section page.](confident-ai-human-feedback)
 :::
 
 ## Full Example

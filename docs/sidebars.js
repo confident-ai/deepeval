@@ -73,7 +73,7 @@ module.exports = {
             "confident-ai-llm-monitoring-evaluations",
             "confident-ai-llm-monitoring-dataset",
           ],
-          collapsed: true,
+          collapsed: false,
         },
         {
           type: "category",
@@ -83,7 +83,7 @@ module.exports = {
             "confident-ai-human-feedback-adding",
             "confident-ai-human-feedback-platform",
           ],
-          collapsed: true,
+          collapsed: false,
         },
         {
           type: "category",
@@ -93,7 +93,7 @@ module.exports = {
             "confident-ai-tracing-llama-index",
             "confident-ai-tracing-langchain",
           ],
-          collapsed: true,
+          collapsed: false,
         },
       ],
       collapsed: false,

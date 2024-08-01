@@ -36,7 +36,7 @@ There are four mandatory and ten optional parameters when using the `monitor()` 
 - `input`: type `str`.
 - `response`: type `str`.
 - [Optional] `retrieval_context`: type `list[str]` that indicates the context that were retrieved in your RAG pipeline.
-- [Optional] `additional_data`: type `dict[str, Union[str, dict, Link]]`. [See below](confident-ai-evals-in-production#tracking-additional-custom-data) for further details.
+- [Optional] `additional_data`: type `dict[str, Union[str, dict, Link]]`. [See below](#logging-additional-custom-data) for more details.
 - [Optional] `hyperparameters`: type `dict[str, Union[str, int, float]]`. You can provide a dictionary to specify any additional hyperparamters used to generate the response.
 - [Optional] `distinct_id`: type `str` to identify **end users** using your LLM application.
 - [Optional] `conversation_id`: type `str` to **group together multiple messages** under a single conversation thread.
