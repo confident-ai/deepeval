@@ -59,10 +59,16 @@ module.exports = {
       label: "Confident AI",
       items: [
         "confident-ai-introduction",
-        "confident-ai-manage-datasets",
-        "confident-ai-evaluate-datasets",
+        {
+          type: "category",
+          label: "Evaluation Datasets",
+          items: [
+            "confident-ai-evaluation-dataset-management",
+            "confident-ai-evaluation-dataset-evaluation",
+          ],
+          collapsed: false,
+        },
         "confident-ai-analyze-evaluations",
-        "confident-ai-github-actions",
         {
           type: "category",
           label: "LLM Monitoring",

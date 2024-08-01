@@ -1,0 +1,115 @@
+---
+id: confident-ai-evaluation-dataset-management
+title: Managing Datasets
+sidebar_label: Managing Datasets
+---
+
+## Quick Summary
+
+Confident AI provides your team a centralized place to **create, generate, upload and edit** evaluation datasets online. You can manage evaluation datasets directly on Confident AI or using `deepeval`. To begin, create a fresh dataset on Confident AI on the "Datasets" page.
+
+:::note
+An evaluation dataset on Confident AI is a collection of goldens, which is extremely similar to a test case. You can learn more about goldens [here.](#what-is-a-golden)
+:::
+
+## Generate A Synthetic Dataset
+
+You can upload documents in your knowledge base to generate synthetic goldens that can later be used as test cases for evaluation. Under the hood, Confident AI uses various document parsing algorithms to first extract contexts before generating goldens based on these contexts through numerous [data-evolution techniques.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
+
+Simply click on the "Generate" button to upload a document of type `.pdf`, `.txt` or `.docx` to start generating.
+
+![ok](https://confident-bucket.s3.amazonaws.com/generate-goldens.svg)
+
+:::caution
+You **MUST** set your OpenAI API Key for your project in order to generate synthetic goldens. You can set your OpenAI API Key in the "Project Details" page.
+:::
+
+## Upload A Dataset
+
+Alternatively, you can also choose to upload entire datasets from CSV files. Simply click on the "Upload Goldens" button to import goldens from CSV files.
+
+![ok](https://confident-bucket.s3.amazonaws.com/upload-goldens.svg)
+
+## Push Your Dataset Using DeepEval
+
+Pushing an `EvaluationDataset` on Confident using `deepeval` is a two-step process:
+
+1. Create a dataset locally (same as how you would create a dataset as shown in the [datasets section](evaluation-datasets))
+2. Push the created dataset to Confident
+
+### Create A Dataset Locally
+
+Here's a quick example:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
+
+original_dataset = [
+    {
+        "input": "What are your operating hours?",
+        "actual_output": "...",
+        "context": [
+            "Our company operates from 10 AM to 6 PM, Monday to Friday.",
+            "We are closed on weekends and public holidays.",
+            "Our customer service is available 24/7.",
+        ],
+    },
+    {
+        "input": "Do you offer free shipping?",
+        "actual_output": "...",
+        "expected_output": "Yes, we offer free shipping on orders over $50.",
+    },
+    {
+        "input": "What is your return policy?",
+        "actual_output": "...",
+    },
+]
+
+test_cases = []
+for datapoint in original_dataset:
+    input = datapoint.get("input", None)
+    actual_output = datapoint.get("actual_output", None)
+    expected_output = datapoint.get("expected_output", None)
+    context = datapoint.get("context", None)
+
+    test_case = LLMTestCase(
+        input=input,
+        actual_output=actual_output,
+        expected_output=expected_output,
+        context=context
+    )
+    test_cases.append(test_case)
+
+dataset = EvaluationDataset(test_cases=test_cases)
+```
+
+### Push Dataset to Confident AI
+
+After creating your `EvaluationDataset`, all you have to do is push it to Confident by providing an `alias` as an unique identifier:
+
+```python
+# Provide an alias when pushing a dataset
+dataset.push(alias="My Confident Dataset")
+```
+
+:::tip Did you know?
+You can choose to overwrite or append to an existing dataset if an existing dataset with the same alias already exist.
+
+```python
+dataset.push(alias="My Confident Dataset", overwrite=False)
+```
+
+`deepeval` will prompt you in the terminal if no value for `overwrite` is provided.
+
+:::
+
+## What is a Golden?
+
+A "Golden" is what makes up an evaluation dataset and is very similar to a test case in `deepeval`, but they:
+
+- do not require an `actual_output`, so whilst test cases are always ready for evaluation, a golden isn't.
+- only exists within an `EvaluationDataset()`, while test cases can be defined anywhere.
+- contains an extra `additional_metadata` field, which is a dictionary you can define on Confident. Allows you to do some extra preprocessing on your dataset (eg., generating a custom LLM `actual_output` based on some variables in `additional_metadata`) before evaluation.
+
+We introduced the concept of goldens because it allows you to create evaluation datasets on Confident without needing pre-computed `actual_output`s. This is especially helpful if you are looking to generate responses from your LLM application at evaluation time.

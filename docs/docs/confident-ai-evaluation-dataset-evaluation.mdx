@@ -1,12 +1,32 @@
 ---
-id: confident-ai-evaluate-datasets
+id: confident-ai-evaluation-dataset-evaluation
 title: Evaluating Datasets
 sidebar_label: Evaluating Datasets
 ---
 
 ## Quick Summary
 
-You can pull evaluation datasets from Confident AI and run evaluations using `deepeval` as described in the [datasets section.](evaluation-datasets)
+You can pull evaluation datasets created on Confident AI like how you would pull code from a GitHub repo by specifying the dataset `alias`, which is unique dataset name within a project.
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My Confident Dataset")
+```
+
+Once the dataset is pulled locally, you can start running evaluations using `deepeval`'s metrics you defined as demonstrated in the [datasets section.](evaluation-datasets)
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+dataset.evaluate(metrics=[AnswerRelevancyMetric()])
+```
+
+:::caution
+Here we're just showing the simplest example. In reality, you will likely have to generate `actual_output`s before running evaluations as the datasets you store on Confident AI will likely not have pre-computed `actual_output`s.
+:::
 
 ## Pull Your Dataset From Confident AI
 
@@ -94,6 +114,10 @@ The term "evaluations" and "test run" means the same and is often used interchan
 
 ### With Pytest (highly recommended)
 
+:::info
+You can view a complete example [here.](evaluation-introduction#evaluating-with-pytest)
+:::
+
 ```python title="test_example.py"
 from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
@@ -139,3 +163,5 @@ dataset.evaluate([hallucination_metric])
 # You can also call the evaluate() function directly
 evaluate(dataset, [hallucination_metric, answer_relevancy_metric])
 ```
+
+You can learn more about the `evaluate()` method [here.](evaluation-introduction#evaluating-without-pytest)
