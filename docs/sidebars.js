@@ -61,7 +61,7 @@ module.exports = {
         "confident-ai-introduction",
         {
           type: "category",
-          label: "Evaluation Datasets",
+          label: "Datasets",
           items: [
             "confident-ai-evaluation-dataset-management",
             "confident-ai-evaluation-dataset-evaluation",
