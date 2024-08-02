@@ -9,9 +9,9 @@ sidebar_label: Test Runs & Experiments
 A test run on Confident AI (and `deepeval`), is a collection of evaluated test cases and their corresponding metric scores. For example, a test run can be the result of evaluated test cases using the `AnswerRelevancyMetric`.
 
 ```python
+from deepeval import evaluate
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval import evaluate
 
 metric = AnswerRelevancyMetric()
 test_case = LLMTestCase(input="...", actual_output="...", retrieval_context=[...])
@@ -19,7 +19,10 @@ test_case = LLMTestCase(input="...", actual_output="...", retrieval_context=[...
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-Test runs are useful because they are a convenient way to compare and experiment with different hyperparameters in an LLM application, such as which prompt templates and LLMs to use.
+Test runs are useful because they are a convenient way to compare and experiment with different hyperparameters in an LLM application, such as which prompt templates and LLMs to use. Confident AI keeps track of your test run histories in both development and CI/CD pipelines and allows you to:
+
+- Visualize test run results
+- Experiment with the optimal hyperparameters (eg. prompt templates, model used, etc.) your LLM application
 
 For example, to choose the optimal LLM for a particular use case, simply use different LLMs to generate `actual_output`s for the same set of test cases, and apply the same metric to them, which allows you to see which LLM gives the best metric scores. Since test run results enables the experimention of different hyperparameter choices and LLM system architectures, **a test run can also be known as an experiment.**
 
@@ -157,7 +160,7 @@ def test_llm_app(test_case: LLMTestCase):
     assert_test(test_case, [metric])
 ```
 
-Lastly, execute your test file via the CLI:
+And execute your test file via the CLI:
 
 ```console
 deepeval test run test_llm_app.py
@@ -173,6 +176,66 @@ deepeval test run test_llm_app.py -n 10
 You can learn more about all the functionalities `deepeval test run` offers [here.](evaluation-introduction#evaluating-with-pytest)
 
 :::
+
+### In CI/CD Pipelines
+
+You can also execute run a test run in CI/CD pipelines by executing `deepeval test run` to regression test your LLM application and have the results sent to Confident AI. Here is an example of how you would do it in GitHub Actions:
+
+```yaml title=".github/workflows/regression.yml"
+name: LLM Regression Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        run: poetry install --no-root
+
+      - name: Login to Confident AI
+        env:
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+        run: poetry run deepeval login --confident-api-key "$CONFIDENT_API_KEY"
+
+      - name: Run DeepEval Test Run
+        run: poetry run deepeval test run test_llm_app.py
+```
+
+:::note
+You don't have to necessarily use `poetry` for installation or follow each step exactly as presented. We're merely showing an example of how a sample `yaml` file to execute a `deepeval test run` would look like.
+:::
+
+## Test Runs On Confident AI
+
+All test runs are automatically sent to Confident AI after `evaluate()` or `deepeval test run` for anyone in your organization to view, download, and comment on. Confident AI also keeps track of additional metadata such as time taken for a test run to finish executing, and the evaluation cost associated with this test run.
+
+### Viewing Test Cases
+
+![ok](https://confident-bucket.s3.amazonaws.com/test-cases.svg)
+
+### Download Test Cases
+
+![ok](https://confident-bucket.s3.amazonaws.com/download-test-cases.svg)
+
+### Comment On Test Runs
+
+![ok](https://confident-bucket.s3.amazonaws.com/test-run-comment.svg)
 
 ## Iterating on Hyperparameters
 
