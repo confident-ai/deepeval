@@ -10,7 +10,7 @@ from deepeval.benchmarks.hellaswag.task import HellaSwagTask
 from deepeval.benchmarks.hellaswag.template import HellaSwagTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-
+from deepeval.benchmarks.models import MultipleChoiceModel
 
 class HellaSwag(DeepEvalBaseBenchmark):
     def __init__(
@@ -111,7 +111,16 @@ class HellaSwag(DeepEvalBaseBenchmark):
             n_shots=self.n_shots,
         )
 
-        prediction = model.generate(prompt)
+        # Enforced model generation
+        try:
+            res: MultipleChoiceModel = model.generate(
+                prompt=prompt, schema=MultipleChoiceModel
+            )
+            prediction = res.answer
+        except TypeError:
+            prompt += "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
+            prediction = model.generate(prompt)
+
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]

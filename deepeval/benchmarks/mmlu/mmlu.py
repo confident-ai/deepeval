@@ -10,7 +10,7 @@ from deepeval.benchmarks.mmlu.task import MMLUTask
 from deepeval.benchmarks.mmlu.template import MMLUTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-
+from deepeval.benchmarks.models import MultipleChoiceModel
 
 class MMLU(DeepEvalBaseBenchmark):
     def __init__(
@@ -108,7 +108,16 @@ class MMLU(DeepEvalBaseBenchmark):
             n_shots=self.n_shots,
         )
 
-        prediction = model.generate(prompt)
+        # Enforced model generation
+        try:
+            res: MultipleChoiceModel = model.generate(
+                prompt=prompt, schema=MultipleChoiceModel
+            )
+            prediction = res.answer
+        except TypeError:
+            prompt += "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
+            prediction = model.generate(prompt)
+
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]

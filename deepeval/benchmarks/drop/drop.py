@@ -2,6 +2,7 @@ from typing import List, Optional, Dict
 from datasets import load_dataset
 import pandas as pd
 from tqdm import tqdm
+from typing import Union
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
@@ -10,6 +11,7 @@ from deepeval.benchmarks.drop.task import DROPTask
 from deepeval.benchmarks.drop.template import DROPTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
+from deepeval.benchmarks.models import NumberModel, StringModel, DateModel
 
 DELIMITER = ","
 
@@ -100,10 +102,26 @@ class DROP(DeepEvalBaseBenchmark):
         prompt: dict = DROPTemplate.generate_output(
             train_set=self.shots_dataset,
             input=golden.input,
-            type=golden.context[0],
             n_shots=self.n_shots,
         )
-        prediction = model.generate(prompt)
+        
+        # Enforced model generation
+        type_info = golden["context"][0]
+        try:
+            if type_info == "number":
+                schema = NumberModel
+            elif type_info == "date":
+                schema = DateModel
+            elif type_info == "span":
+                schema = StringModel
+            res: Union[NumberModel, DateModel, StringModel] = model.generate(
+                prompt=prompt, schema=schema
+            )
+            prediction = res.answer
+        except TypeError:
+            prompt += "Output should be of type {type}. No explanation needed.".format(type=type)
+            prediction = model.generate(prompt)
+            
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]

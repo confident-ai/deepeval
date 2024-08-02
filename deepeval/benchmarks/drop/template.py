@@ -5,7 +5,7 @@ class DROPTemplate:
     # outputted log_probabilties for each answer choice
 
     @staticmethod
-    def generate_output(input: str, train_set: object, type: str, n_shots: int):
+    def generate_output(input: str, train_set: object, n_shots: int):
         prompt = "Answer the following question based on the passage.\n\n"
         # Examples
         if n_shots > 0:
@@ -14,11 +14,6 @@ class DROPTemplate:
             prompt += DROPTemplate.format_question(train_set[i]) + "\n"
         # define output confinement
         prompt += input
-        prompt += (
-            "Output should be of type {type}. No explanation needed.".format(
-                type=type
-            )
-        )
         return prompt
 
     @staticmethod

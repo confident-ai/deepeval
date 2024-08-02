@@ -2,6 +2,7 @@ from typing import List, Dict, Optional
 from datasets import load_dataset, Dataset
 from tqdm import tqdm
 import pandas as pd
+from typing import Union
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
@@ -11,7 +12,7 @@ from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
 from deepeval.benchmarks.truthful_qa.template import TruthfulQATemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-
+from deepeval.benchmarks.models import NumberModel, ListOfNumbersModel
 
 class TruthfulQA(DeepEvalBaseBenchmark):
     def __init__(
@@ -109,7 +110,24 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         prompt: dict = TruthfulQATemplate.generate_output(
             input=golden.input, mode=mode
         )
-        prediction = model.generate(prompt)
+        
+        # Enforced model generation
+        try:
+            if mode == TruthfulQAMode.MC1:
+                base_model = NumberModel
+            elif mode == TruthfulQAMode.MC2:
+                base_model = ListOfNumbersModel 
+            res: Union[ListOfNumbersModel | NumberModel] = model.generate(
+                prompt=prompt, schema=base_model
+            )
+            prediction = res.answer
+        except TypeError:
+            if mode == TruthfulQAMode.MC1:
+                prompt += "\n\nOutput '1', '2', '3', '4', '5' etc. (number in front of answer choice). Full answer not needed."
+            elif mode == TruthfulQAMode.MC2:
+                prompt += "\n\nOutput the indices of all correct answers as a python list (e.g. '[1, 3, 4]'). Full answers are not needed."
+            prediction = model.generate(prompt)
+
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]

@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 from datasets import load_dataset
 import pandas as pd
 
@@ -8,7 +8,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.human_eval.task import HumanEvalTask
 from deepeval.benchmarks.human_eval.template import HumanEvalTemplate
 from deepeval.scorer import Scorer
-
+from deepeval.benchmarks.models import StringModel
 
 class HumanEval(DeepEvalBaseBenchmark):
     def __init__(
@@ -121,3 +121,9 @@ class HumanEval(DeepEvalBaseBenchmark):
             input=test_set["prompt"], expected_output=test_set["test"]
         )
         return golden
+
+
+benchmark = HumanEval()
+tasks = list(HumanEvalTask)
+for task in tasks:
+    benchmark.load_benchmark_dataset(task)

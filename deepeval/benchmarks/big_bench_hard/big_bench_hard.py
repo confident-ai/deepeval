@@ -10,7 +10,7 @@ from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard.template import BigBenchHardTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-
+from deepeval.benchmarks.models import bbh_models_dict, bbh_confinement_statements_dict
 
 class BigBenchHard(DeepEvalBaseBenchmark):
     def __init__(
@@ -112,10 +112,19 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             n_shots=self.n_shots,
             enable_cot=self.enable_cot,
         )
-        prediction = model.generate(prompt)
+        model = bbh_models_dict[task.value]
+        try:
+            res: model = model.generate(
+                prompt=prompt, schema=model
+            )
+            prediction = res.answer
+        except TypeError:
+            prompt += bbh_confinement_statements_dict[task.value]
+            prediction = model.generate(prompt)
+
         if isinstance(prediction, tuple):
             prediction = prediction[0]
-        prediction = prediction.split()[-1]
+            
         # WARNING: doesn't work. Should use regex to isolate true and false instead
         prediction = prediction[:-1] if self.enable_cot else prediction
 
