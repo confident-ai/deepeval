@@ -11,7 +11,7 @@ from deepeval.benchmarks.drop.task import DROPTask
 from deepeval.benchmarks.drop.template import DROPTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-from deepeval.benchmarks.models import NumberModel, StringModel, DateModel
+from deepeval.benchmarks.models import DROPDateModel, DROPNumberModel, DROPStringModel
 
 DELIMITER = ","
 
@@ -106,29 +106,30 @@ class DROP(DeepEvalBaseBenchmark):
         )
         
         # Enforced model generation
-        type_info = golden["context"][0]
+        type_info = golden.context[0]
         try:
             if type_info == "number":
-                schema = NumberModel
+                schema = DROPNumberModel
             elif type_info == "date":
-                schema = DateModel
+                schema = DROPDateModel
             elif type_info == "span":
-                schema = StringModel
-            res: Union[NumberModel, DateModel, StringModel] = model.generate(
+                schema = DROPStringModel
+            res: Union[DROPNumberModel, DROPDateModel, DROPStringModel] = model.generate(
                 prompt=prompt, schema=schema
             )
-            prediction = res.answer
+            prediction = str(res.answer)
         except TypeError:
             prompt += "Output should be of type {type}. No explanation needed.".format(type=type)
-            prediction = model.generate(prompt)
+            prediction = str(model.generate(prompt))
             
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]
 
         # Define Metric
-        score = self.scorer.exact_match_score(
-            golden.expected_output, prediction
+        expected_output = DROPTemplate.parse_str_to_list(golden.expected_output, DELIMITER)
+        score = self.scorer.quasi_contains_score(
+            expected_output, prediction
         )
         return {"prediction": prediction, "score": score}
 
@@ -161,7 +162,7 @@ class DROP(DeepEvalBaseBenchmark):
             prediction = predictions[i]
             golden = goldens[i]
             # Define Metric
-            score = self.scorer.exact_match_score(
+            score = self.scorer.quasi_exact_match_score(
                 golden.expected_output, prediction
             )
             res.append({"prediction": prediction, "score": score})
@@ -196,7 +197,7 @@ class DROP(DeepEvalBaseBenchmark):
         goldens: List[Golden] = []
         for data in val_set:
             input = DROPTemplate.format_question(data, include_answer=False)
-            output = DELIMITER.join(tuple(data["answers_spans"]["spans"][0]))
+            output = DROPTemplate.parse_list_to_str(data["answers_spans"]["spans"], DELIMITER)
             output_type = data["answers_spans"]["types"][0]
             golden = Golden(
                 input=input, expected_output=output, context=[output_type]

@@ -44,7 +44,7 @@ class GSM8K(DeepEvalBaseBenchmark):
             if score:
                 overall_correct_predictions += 1
             predictions_row.append((golden.input, prediction, score))
-
+        
         # Calculate overall accuracy
         overall_accuracy = (
             overall_correct_predictions / overall_total_predictions
@@ -75,15 +75,19 @@ class GSM8K(DeepEvalBaseBenchmark):
             res: NumberModel = model.generate(
                 prompt=prompt, schema=NumberModel
             )
-            prediction = res.answer
+            prediction = str(res.answer)
         except TypeError:
             prompt += "Make sure to output only the numerical answer."
-            prediction = model.generate(prompt)
+            prediction = str(model.generate(prompt))
 
         # Define Metric
+        print(golden.expected_output)
+        print(prediction)
+
         score = self.scorer.exact_match_score(
             golden.expected_output, prediction
         )
+        
         return {"prediction": prediction, "score": score}
 
     def load_benchmark_dataset(self) -> List[Golden]:

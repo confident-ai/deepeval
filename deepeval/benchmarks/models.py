@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Literal
+from typing import List, Literal, Union
 
 class MultipleChoiceModel(BaseModel):
     answer: Literal["A", "B", "C", "D"]
@@ -7,13 +7,24 @@ class MultipleChoiceModel(BaseModel):
 class ListOfNumbersModel(BaseModel):
     answer: List[int]
 
+class ListofStringsModel(BaseModel):
+    answer: List[str]
+
 class NumberModel(BaseModel):
     answer: int
 
-class DateModel(BaseModel):
+class StringModel(BaseModel):
     answer: str
 
-class StringModel(BaseModel):
+# DROP Models #############################
+
+class DROPStringModel(BaseModel):
+    answer: str
+
+class DROPNumberModel(BaseModel):
+    answer: int
+
+class DROPDateModel(BaseModel):
     answer: str
 
 # BBH Models #############################
@@ -55,11 +66,11 @@ class BBHMultipleChoice18(BaseModel):
     answer: Literal["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)", "(I)", "(J)", "(K)", "(L)", "(M)", "(N)", "(O)", "(P)", "(Q)", "(R)"]
 
 bbh_models_dict = {
-    "boolean_expression": BooleanModel,
+    "boolean_expressions": BooleanModel,
     "causal_judgement": AffirmationModel,
     "date_understanding": BBHMultipleChoice6,
     "disambiguation_qa": BBHMultipleChoice3,
-    "dyck_language": StringModel,
+    "dyck_languages": StringModel,
     "formal_fallacies": ValidModel,
     "geometric_shapes": BBHMultipleChoice11,
     "hyperbaton": BBHMultipleChoice2,
@@ -67,7 +78,7 @@ bbh_models_dict = {
     "logical_deduction_five_objects": BBHMultipleChoice5,
     "logical_deduction_seven_objects": BBHMultipleChoice7,
     "movie_recommendation": BBHMultipleChoice5,
-    "multi_step_arithmetic": NumberModel,
+    "multistep_arithmetic_two": NumberModel,
     "navigate": AffirmationModel,
     "object_counting": NumberModel,
     "penguins_in_a_table": BBHMultipleChoice5,

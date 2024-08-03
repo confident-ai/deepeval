@@ -10,7 +10,7 @@ from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard.template import BigBenchHardTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-from deepeval.benchmarks.models import bbh_models_dict, bbh_confinement_statements_dict
+from deepeval.benchmarks.models import *
 
 class BigBenchHard(DeepEvalBaseBenchmark):
     def __init__(
@@ -106,27 +106,24 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         self, model: DeepEvalBaseLLM, task: BigBenchHardTask, golden: Golden
     ) -> Dict:
         # Define prompt template
-        prompt: dict = BigBenchHardTemplate.generate_output(
+        prompt: str = BigBenchHardTemplate.generate_output(
             input=golden.input,
             task=task,
             n_shots=self.n_shots,
             enable_cot=self.enable_cot,
         )
-        model = bbh_models_dict[task.value]
+        pydantic_model = bbh_models_dict[task.value]
         try:
             res: model = model.generate(
-                prompt=prompt, schema=model
+                prompt=prompt, schema=pydantic_model
             )
-            prediction = res.answer
+            prediction = str(res.answer)
         except TypeError:
             prompt += bbh_confinement_statements_dict[task.value]
-            prediction = model.generate(prompt)
+            prediction = str(model.generate(prompt))
 
         if isinstance(prediction, tuple):
             prediction = prediction[0]
-            
-        # WARNING: doesn't work. Should use regex to isolate true and false instead
-        prediction = prediction[:-1] if self.enable_cot else prediction
 
         # Define Metric
         score = self.scorer.exact_match_score(
@@ -179,8 +176,12 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             dataset = load_dataset("lukaemon/bbh", task.value)
 
         goldens: List[Golden] = []
+        count = 0
         for data in dataset["test"]:
             golden = Golden(input=data["input"], expected_output=data["target"])
             goldens.append(golden)
+            count += 1
+            if count > 10:
+                break
 
         return goldens
