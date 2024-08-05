@@ -110,8 +110,8 @@ class Scorer:
     def quasi_exact_match_score(cls, target: str, prediction: str) -> int:
         if not prediction:
             return 0
-        return 1 if normalize_text(target) == normalize_text(prediction) else 0\
-    
+        return 1 if normalize_text(target) == normalize_text(prediction) else 0
+
     @classmethod
     def quasi_contains_score(cls, targets: List[str], prediction: str) -> int:
         normalized_targets = [normalize_text(t) for t in targets]

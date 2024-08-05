@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class HumanEvalTask(Enum):
     HAS_CLOSE_ELEMENTS = "has_close_elements"
     SEPARATE_PAREN_GROUPS = "separate_paren_groups"

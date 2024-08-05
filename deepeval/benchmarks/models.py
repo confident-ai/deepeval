@@ -1,69 +1,123 @@
 from pydantic import BaseModel
 from typing import List, Literal, Union
 
+
 class MultipleChoiceModel(BaseModel):
     answer: Literal["A", "B", "C", "D"]
+
 
 class ListOfNumbersModel(BaseModel):
     answer: List[int]
 
+
 class ListofStringsModel(BaseModel):
     answer: List[str]
+
 
 class NumberModel(BaseModel):
     answer: int
 
+
 class StringModel(BaseModel):
     answer: str
 
+
 # DROP Models #############################
+
 
 class DROPStringModel(BaseModel):
     answer: str
 
+
 class DROPNumberModel(BaseModel):
     answer: int
+
 
 class DROPDateModel(BaseModel):
     answer: str
 
+
 # BBH Models #############################
+
 
 class AffirmationModel(BaseModel):
     answer: Literal["No", "Yes"]
 
+
 class AffirmationLowerModel(BaseModel):
     answer: Literal["no", "yes"]
+
 
 class BooleanModel(BaseModel):
     answer: Literal["True", "False"]
 
+
 class ValidModel(BaseModel):
     answer: Literal["valid", "invalid"]
+
 
 class BBHMultipleChoice2(BaseModel):
     answer: Literal["(A)", "(B)"]
 
+
 class BBHMultipleChoice3(BaseModel):
     answer: Literal["(A)", "(B)", "(C)"]
+
 
 class BBHMultipleChoice4(BaseModel):
     answer: Literal["(A)", "(B)", "(C)", "(D)"]
 
+
 class BBHMultipleChoice5(BaseModel):
     answer: Literal["(A)", "(B)", "(C)", "(D)", "(E)"]
+
 
 class BBHMultipleChoice6(BaseModel):
     answer: Literal["(A)", "(B)", "(C)", "(D)", "(E)", "(F)"]
 
+
 class BBHMultipleChoice7(BaseModel):
     answer: Literal["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)"]
 
+
 class BBHMultipleChoice11(BaseModel):
-    answer: Literal["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)", "(I)", "(J)", "(K)"]
+    answer: Literal[
+        "(A)",
+        "(B)",
+        "(C)",
+        "(D)",
+        "(E)",
+        "(F)",
+        "(G)",
+        "(H)",
+        "(I)",
+        "(J)",
+        "(K)",
+    ]
+
 
 class BBHMultipleChoice18(BaseModel):
-    answer: Literal["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)", "(I)", "(J)", "(K)", "(L)", "(M)", "(N)", "(O)", "(P)", "(Q)", "(R)"]
+    answer: Literal[
+        "(A)",
+        "(B)",
+        "(C)",
+        "(D)",
+        "(E)",
+        "(F)",
+        "(G)",
+        "(H)",
+        "(I)",
+        "(J)",
+        "(K)",
+        "(L)",
+        "(M)",
+        "(N)",
+        "(O)",
+        "(P)",
+        "(Q)",
+        "(R)",
+    ]
+
 
 bbh_models_dict = {
     "boolean_expressions": BooleanModel,
@@ -92,7 +146,7 @@ bbh_models_dict = {
     "tracking_shuffled_objects_five_objects": BBHMultipleChoice5,
     "tracking_shuffled_objects_seven_objects": BBHMultipleChoice7,
     "web_of_lies": AffirmationModel,
-    "word_sorting": StringModel
+    "word_sorting": StringModel,
 }
 
 bbh_confinement_statements_dict = {
@@ -124,4 +178,3 @@ bbh_confinement_statements_dict = {
     "web_of_lies": "\n\nOutput 'Yes' or 'No'. Full answer not needed.",
     "word_sorting": "\n\nOutput only the sequence of words separated by white space. Full answer not needed.",
 }
-

@@ -12,6 +12,7 @@ from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
 from deepeval.benchmarks.models import MultipleChoiceModel
 
+
 class MMLU(DeepEvalBaseBenchmark):
     def __init__(
         self, tasks: List[MMLUTask] = None, n_shots: int = 5, **kwargs
@@ -115,7 +116,9 @@ class MMLU(DeepEvalBaseBenchmark):
             )
             prediction = res.answer
         except TypeError:
-            prompt += "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
+            prompt += (
+                "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
+            )
             prediction = model.generate(prompt)
 
         # For native models, shouldn't happen but just in case
@@ -146,7 +149,20 @@ class MMLU(DeepEvalBaseBenchmark):
             )
             prompts.append(prompt)
 
-        predictions = model.batch_generate(prompts)
+        # Enforced model generation
+        try:
+            responses: List[MultipleChoiceModel] = model.batch_generate(
+                prompts=prompts, schemas=[MultipleChoiceModel for i in prompts]
+            )
+            predictions = [res.answer for res in responses]
+        except TypeError:
+            prompts = [
+                prompt
+                + "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
+                for prompt in prompts
+            ]
+            predictions = model.batch_generate(prompts)
+
         if len(predictions) is not len(goldens):
             raise ValueError(
                 "Custom `batch_generate` method did not return the same number of generations as the number of prompts."

@@ -36,4 +36,3 @@ class MMLUTemplate:
         for entry in l:
             s += " " + entry
         return s
-

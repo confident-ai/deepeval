@@ -20,6 +20,7 @@ from deepeval.models.gpt_model_schematic import *
 ##### custom model with no pydantic_model argument
 #########################################################
 
+
 class CustomGPT(DeepEvalBaseLLM):
     def __init__(
         self,

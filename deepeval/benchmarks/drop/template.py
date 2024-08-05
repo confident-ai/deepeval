@@ -1,5 +1,6 @@
 from typing import List
 
+
 class DROPTemplate:
 
     # Most of this template was taken from MMLU Github Repo
@@ -26,14 +27,14 @@ class DROPTemplate:
         if include_answer:
             prompt += data["answers_spans"]["spans"][0] + "\n"
         return prompt
-    
+
     @staticmethod
     def parse_list_to_str(input_list: List, DELIMITER: str) -> str:
         if len(input_list) == 1:
             return input_list[0]
         else:
             return DELIMITER.join(tuple(input_list))
-        
+
     @staticmethod
     def parse_str_to_list(input_str: str, DELIMITER: str) -> List[str]:
-            return input_str.split(DELIMITER)
+        return input_str.split(DELIMITER)

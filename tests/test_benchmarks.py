@@ -55,14 +55,21 @@ from deepeval.benchmarks.modes import *
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.models.gpt_model import GPTModel
 
-#gpt_model = SchematicGPTModel(model="gpt-4o")
+# gpt_model = SchematicGPTModel(model="gpt-4o")
 gpt_model = GPTModel(model="gpt-4o")
-                              
-benchmark_mmlu = MMLU(tasks=[MMLUTask.ABSTRACT_ALGEBRA, MMLUTask.MORAL_SCENARIOS])
+
+benchmark_mmlu = MMLU(
+    tasks=[MMLUTask.ABSTRACT_ALGEBRA, MMLUTask.MORAL_SCENARIOS]
+)
 benchmark_hellaswag = HellaSwag(tasks=[HellaSwagTask.APPLYING_SUNSCREEN])
 benchmark_drop = DROP(tasks=[DROPTask.HISTORY_1450, DROPTask.NFL_899])
-benchmark_truthfulQA = TruthfulQA(tasks=[TruthfulQATask.PSYCHOLOGY, TruthfulQATask.SUBJECTIVE])
-benchmark_truthfulQA_MC2 = TruthfulQA(tasks=[TruthfulQATask.PSYCHOLOGY, TruthfulQATask.SUBJECTIVE], mode=TruthfulQAMode.MC2)
+benchmark_truthfulQA = TruthfulQA(
+    tasks=[TruthfulQATask.PSYCHOLOGY, TruthfulQATask.SUBJECTIVE]
+)
+benchmark_truthfulQA_MC2 = TruthfulQA(
+    tasks=[TruthfulQATask.PSYCHOLOGY, TruthfulQATask.SUBJECTIVE],
+    mode=TruthfulQAMode.MC2,
+)
 
 benchmark_gsm8k = GSM8K(n_problems=25)
 benchmark_bbh = BigBenchHard(
@@ -99,16 +106,13 @@ benchmark_bbh = BigBenchHard(
 
 benchmarks = [
     # benchmark_mmlu,
-    benchmark_hellaswag, 
-    benchmark_drop, 
-    benchmark_truthfulQA, 
+    benchmark_hellaswag,
+    benchmark_drop,
+    benchmark_truthfulQA,
     benchmark_truthfulQA_MC2,
     benchmark_gsm8k,
-    benchmark_bbh # Need to test every task (different schemas for all tasks)
-    ]
+    benchmark_bbh,  # Need to test every task (different schemas for all tasks)
+]
 
 for benchmark in benchmarks:
     benchmark.evaluate(model=gpt_model)
-
-
-

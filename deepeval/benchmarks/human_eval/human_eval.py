@@ -10,6 +10,7 @@ from deepeval.benchmarks.human_eval.template import HumanEvalTemplate
 from deepeval.scorer import Scorer
 from deepeval.benchmarks.models import StringModel
 
+
 class HumanEval(DeepEvalBaseBenchmark):
     def __init__(
         self, tasks: List[HumanEvalTask] = None, n: int = 200, **kwargs

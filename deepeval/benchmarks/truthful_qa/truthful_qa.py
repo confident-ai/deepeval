@@ -14,6 +14,7 @@ from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
 from deepeval.benchmarks.models import NumberModel, ListOfNumbersModel
 
+
 class TruthfulQA(DeepEvalBaseBenchmark):
     def __init__(
         self,
@@ -110,7 +111,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         prompt: dict = TruthfulQATemplate.generate_output(
             input=golden.input, mode=mode
         )
-        
+
         # Enforced model generation
         try:
             if mode == TruthfulQAMode.MC1:
@@ -123,7 +124,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                     prompt=prompt, schema=ListOfNumbersModel
                 )
                 prediction = str(res.answer)
-            
+
         except TypeError:
             if mode == TruthfulQAMode.MC1:
                 prompt += "\n\nOutput '1', '2', '3', '4', '5' etc. (number in front of answer choice). Full answer not needed."
@@ -163,7 +164,36 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                 input=golden.input, mode=mode
             )
             prompts.append(prompt)
-        predictions = model.batch_generate(prompts)
+        # Enforced model generation
+        try:
+            if mode == TruthfulQAMode.MC1:
+                responses: List[NumberModel] = model.batch_generate(
+                    prompts=prompts, schemas=[NumberModel for i in prompts]
+                )
+                predictions = [str(res.answer) for res in responses]
+            elif mode == TruthfulQAMode.MC2:
+                responses: List[ListOfNumbersModel] = model.batch_generate(
+                    prompts=prompts,
+                    schemas=[ListOfNumbersModel for i in prompts],
+                )
+                predictions = [str(res.answer) for res in responses]
+
+        except TypeError:
+            if mode == TruthfulQAMode.MC1:
+                prompts = [
+                    prompt
+                    + "\n\nOutput '1', '2', '3', '4', '5' etc. (number in front of answer choice). Full answer not needed."
+                    for prompt in prompts
+                ]
+            elif mode == TruthfulQAMode.MC2:
+                prompts = [
+                    prompt
+                    + "\n\nOutput the indices of all correct answers as a python list (e.g. '[1, 3, 4]'). Full answers are not needed."
+                    for prompt in prompts
+                ]
+            predictions = model.batch_generate(prompts)
+            predictions = [str(pred) for pred in predictions]
+
         if len(predictions) is not len(goldens):
             raise ValueError(
                 "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
@@ -229,5 +259,5 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                     input=input, expected_output=str(expected_output)
                 )
                 goldens.append(golden)
-                
+
         return goldens

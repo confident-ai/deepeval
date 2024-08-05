@@ -16,6 +16,7 @@ def log_retry_error(retry_state):
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
 
+
 valid_gpt_models = [
     "gpt-4o-mini",
     "gpt-4o",
