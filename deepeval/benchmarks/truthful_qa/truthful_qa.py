@@ -132,9 +132,6 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                 prompt += "\n\nOutput the indices of all correct answers as a python list (e.g. '[1, 3, 4]'). Full answers are not needed."
             prediction = str(model.generate(prompt))
 
-        print("Expected: " + (golden.expected_output))
-        print("Prediction: " + (prediction))
-
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]
