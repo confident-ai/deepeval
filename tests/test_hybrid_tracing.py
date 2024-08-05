@@ -10,6 +10,7 @@ from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.agents import AgentExecutor, create_tool_calling_agent, Tool
 
+
 @pytest.mark.skip(reason="data files used by this test are missing")
 def test_hybrid_tracing():
     #############################################################
@@ -17,7 +18,9 @@ def test_hybrid_tracing():
     #############################################################
 
     # LLM
-    llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0, streaming=True)
+    llm = ChatOpenAI(
+        model_name="gpt-4-1106-preview", temperature=0, streaming=True
+    )
 
     # Embedding Model
     embed_model = OpenAIEmbedding(
@@ -188,7 +191,6 @@ def test_hybrid_tracing():
     import deepeval
     from deepeval.tracing import Tracer, TraceType, QueryAttributes
 
-
     def ask_llm(question):
         with Tracer(TraceType.QUERY) as tracer:
             response = agent_executor.invoke({"input": question})
@@ -201,7 +203,6 @@ def test_hybrid_tracing():
                 response=response["output"],
                 model="gpt-4-1106-preview",
             )
-
 
     deepeval.trace_langchain()
     deepeval.trace_llama_index()
