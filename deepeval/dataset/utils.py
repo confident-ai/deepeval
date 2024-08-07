@@ -61,7 +61,7 @@ def convert_goldens_to_messages(
             _dataset_id=_id,
             _dataset_rank=index,
         )
-        messages.append(Message(test_case=test_case))
+        messages.append(Message(llm_test_case=test_case))
     return messages
 
 
