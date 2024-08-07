@@ -17,8 +17,6 @@ class HellaSwagTemplate:
             prompt += HellaSwagTemplate.format_question(train_set[i])
         prompt += input
 
-        # define ouptut confinement
-        prompt += "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
         return prompt
 
     @staticmethod

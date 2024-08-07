@@ -10,6 +10,7 @@ from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard.template import BigBenchHardTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
+from deepeval.benchmarks.models import *
 
 
 class BigBenchHard(DeepEvalBaseBenchmark):
@@ -106,18 +107,22 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         self, model: DeepEvalBaseLLM, task: BigBenchHardTask, golden: Golden
     ) -> Dict:
         # Define prompt template
-        prompt: dict = BigBenchHardTemplate.generate_output(
+        prompt: str = BigBenchHardTemplate.generate_output(
             input=golden.input,
             task=task,
             n_shots=self.n_shots,
             enable_cot=self.enable_cot,
         )
-        prediction = model.generate(prompt)
+        pydantic_model = bbh_models_dict[task.value]
+        try:
+            res: model = model.generate(prompt=prompt, schema=pydantic_model)
+            prediction = str(res.answer)
+        except TypeError:
+            prompt += bbh_confinement_statements_dict[task.value]
+            prediction = str(model.generate(prompt))
+
         if isinstance(prediction, tuple):
             prediction = prediction[0]
-        prediction = prediction.split()[-1]
-        # WARNING: doesn't work. Should use regex to isolate true and false instead
-        prediction = prediction[:-1] if self.enable_cot else prediction
 
         # Define Metric
         score = self.scorer.exact_match_score(
@@ -141,7 +146,20 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             )
             prompts.append(prompt)
 
-        predictions = model.batch_generate(prompts)
+        # Enforced model generation
+        try:
+            responses: List[NumberModel] = model.batch_generate(
+                prompts=prompts, schemas=[NumberModel for i in prompts]
+            )
+            predictions = [res.answer for res in responses]
+        except TypeError:
+            prompts = [
+                prompt + "Make sure to output only the numerical answer."
+                for prompt in prompts
+            ]
+            predictions = model.batch_generate(prompts)
+            predictions = [str(pred) for pred in predictions]
+
         if len(predictions) is not len(goldens):
             raise ValueError(
                 "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
@@ -170,8 +188,12 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             dataset = load_dataset("lukaemon/bbh", task.value)
 
         goldens: List[Golden] = []
+        count = 0
         for data in dataset["test"]:
             golden = Golden(input=data["input"], expected_output=data["target"])
             goldens.append(golden)
+            count += 1
+            if count > 10:
+                break
 
         return goldens

@@ -10,6 +10,7 @@ from deepeval.benchmarks.hellaswag.task import HellaSwagTask
 from deepeval.benchmarks.hellaswag.template import HellaSwagTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
+from deepeval.benchmarks.models import MultipleChoiceModel
 
 
 class HellaSwag(DeepEvalBaseBenchmark):
@@ -111,7 +112,18 @@ class HellaSwag(DeepEvalBaseBenchmark):
             n_shots=self.n_shots,
         )
 
-        prediction = model.generate(prompt)
+        # Enforced model generation
+        try:
+            res: MultipleChoiceModel = model.generate(
+                prompt=prompt, schema=MultipleChoiceModel
+            )
+            prediction = res.answer
+        except TypeError:
+            prompt += (
+                "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
+            )
+            prediction = model.generate(prompt)
+
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]
@@ -140,7 +152,20 @@ class HellaSwag(DeepEvalBaseBenchmark):
             )
             prompts.append(prompt)
 
-        predictions = model.batch_generate(prompts)
+        # Enforced model generation
+        try:
+            responses: List[MultipleChoiceModel] = model.batch_generate(
+                prompts=prompts, schemas=[MultipleChoiceModel for i in prompts]
+            )
+            predictions = [res.answer for res in responses]
+        except TypeError:
+            prompts = [
+                prompt
+                + "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
+                for prompt in prompts
+            ]
+            predictions = model.batch_generate(prompts)
+
         if len(predictions) is not len(goldens):
             raise ValueError(
                 "Custom `batch_generate` method did not return the same number of generations as the number of prompts."

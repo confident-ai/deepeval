@@ -112,6 +112,13 @@ class Scorer:
             return 0
         return 1 if normalize_text(target) == normalize_text(prediction) else 0
 
+    @classmethod
+    def quasi_contains_score(cls, targets: List[str], prediction: str) -> int:
+        normalized_targets = [normalize_text(t) for t in targets]
+        if not prediction:
+            return 0
+        return 1 if normalize_text(prediction) in normalized_targets else 0
+
     # Todo: More mode based metrics to be added
 
     @classmethod

@@ -8,6 +8,7 @@ from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.gsm8k.template import GSM8KTemplate
 from deepeval.scorer import Scorer
+from deepeval.benchmarks.models import NumberModel
 
 
 class GSM8K(DeepEvalBaseBenchmark):
@@ -69,12 +70,19 @@ class GSM8K(DeepEvalBaseBenchmark):
             n_shots=self.n_shots,
             enable_cot=self.enable_cot,
         )
-        prediction = model.generate(prompt)
 
-        # Define Metric
+        # Enforced model generation
+        try:
+            res: NumberModel = model.generate(prompt=prompt, schema=NumberModel)
+            prediction = str(res.answer)
+        except TypeError:
+            prompt += "Make sure to output only the numerical answer."
+            prediction = str(model.generate(prompt))
+
         score = self.scorer.exact_match_score(
             golden.expected_output, prediction
         )
+
         return {"prediction": prediction, "score": score}
 
     def load_benchmark_dataset(self) -> List[Golden]:
