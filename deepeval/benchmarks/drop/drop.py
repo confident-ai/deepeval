@@ -11,10 +11,10 @@ from deepeval.benchmarks.drop.task import DROPTask
 from deepeval.benchmarks.drop.template import DROPTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-from deepeval.benchmarks.models import (
-    DROPDateModel,
-    DROPNumberModel,
-    DROPStringModel,
+from deepeval.benchmarks.schema import (
+    DROPDateSchema,
+    DROPNumberSchema,
+    DROPStringSchema,
 )
 
 DELIMITER = ","
@@ -113,12 +113,12 @@ class DROP(DeepEvalBaseBenchmark):
         type_info = golden.context[0]
         try:
             if type_info == "number":
-                schema = DROPNumberModel
+                schema = DROPNumberSchema
             elif type_info == "date":
-                schema = DROPDateModel
+                schema = DROPDateSchema
             elif type_info == "span":
-                schema = DROPStringModel
-            res: Union[DROPNumberModel, DROPDateModel, DROPStringModel] = (
+                schema = DROPStringSchema
+            res: Union[DROPNumberSchema, DROPDateSchema, DROPStringSchema] = (
                 model.generate(prompt=prompt, schema=schema)
             )
             prediction = str(res.answer)
@@ -159,16 +159,16 @@ class DROP(DeepEvalBaseBenchmark):
             prompts.append(prompt)
             output_type = golden.context[0]
             if output_type == "number":
-                schema = DROPNumberModel
+                schema = DROPNumberSchema
             elif output_type == "date":
-                schema = DROPDateModel
+                schema = DROPDateSchema
             elif output_type == "span":
-                schema = DROPStringModel
+                schema = DROPStringSchema
             schemas.append(schema)
 
         try:
             responses: List[
-                Union[DROPNumberModel, DROPDateModel, DROPStringModel]
+                Union[DROPNumberSchema, DROPDateSchema, DROPStringSchema]
             ] = model.batch_generate(prompts=prompts, schemas=schemas)
             predictions = [str(res.answer) for res in responses]
         except TypeError:

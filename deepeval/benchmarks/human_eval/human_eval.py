@@ -8,7 +8,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.human_eval.task import HumanEvalTask
 from deepeval.benchmarks.human_eval.template import HumanEvalTemplate
 from deepeval.scorer import Scorer
-from deepeval.benchmarks.models import StringModel
 
 
 class HumanEval(DeepEvalBaseBenchmark):

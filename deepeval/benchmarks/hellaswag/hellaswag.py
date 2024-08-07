@@ -10,7 +10,7 @@ from deepeval.benchmarks.hellaswag.task import HellaSwagTask
 from deepeval.benchmarks.hellaswag.template import HellaSwagTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-from deepeval.benchmarks.models import MultipleChoiceModel
+from deepeval.benchmarks.schema import MultipleChoiceSchema
 
 
 class HellaSwag(DeepEvalBaseBenchmark):
@@ -114,8 +114,8 @@ class HellaSwag(DeepEvalBaseBenchmark):
 
         # Enforced model generation
         try:
-            res: MultipleChoiceModel = model.generate(
-                prompt=prompt, schema=MultipleChoiceModel
+            res: MultipleChoiceSchema = model.generate(
+                prompt=prompt, schema=MultipleChoiceSchema
             )
             prediction = res.answer
         except TypeError:
@@ -154,8 +154,8 @@ class HellaSwag(DeepEvalBaseBenchmark):
 
         # Enforced model generation
         try:
-            responses: List[MultipleChoiceModel] = model.batch_generate(
-                prompts=prompts, schemas=[MultipleChoiceModel for i in prompts]
+            responses: List[MultipleChoiceSchema] = model.batch_generate(
+                prompts=prompts, schemas=[MultipleChoiceSchema for i in prompts]
             )
             predictions = [res.answer for res in responses]
         except TypeError:

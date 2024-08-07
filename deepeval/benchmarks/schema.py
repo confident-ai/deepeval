@@ -1,86 +1,86 @@
 from pydantic import BaseModel
-from typing import List, Literal, Union
+from typing import List, Literal
 
 
-class MultipleChoiceModel(BaseModel):
+class MultipleChoiceSchema(BaseModel):
     answer: Literal["A", "B", "C", "D"]
 
 
-class ListOfNumbersModel(BaseModel):
+class ListOfNumbersSchema(BaseModel):
     answer: List[int]
 
 
-class ListofStringsModel(BaseModel):
+class ListofStringsSchema(BaseModel):
     answer: List[str]
 
 
-class NumberModel(BaseModel):
+class NumberSchema(BaseModel):
     answer: int
 
 
-class StringModel(BaseModel):
+class StringSchema(BaseModel):
     answer: str
 
 
 # DROP Models #############################
 
 
-class DROPStringModel(BaseModel):
+class DROPStringSchema(BaseModel):
     answer: str
 
 
-class DROPNumberModel(BaseModel):
+class DROPNumberSchema(BaseModel):
     answer: int
 
 
-class DROPDateModel(BaseModel):
+class DROPDateSchema(BaseModel):
     answer: str
 
 
 # BBH Models #############################
 
 
-class AffirmationModel(BaseModel):
+class AffirmationSchema(BaseModel):
     answer: Literal["No", "Yes"]
 
 
-class AffirmationLowerModel(BaseModel):
+class AffirmationLowerSchema(BaseModel):
     answer: Literal["no", "yes"]
 
 
-class BooleanModel(BaseModel):
+class BooleanSchema(BaseModel):
     answer: Literal["True", "False"]
 
 
-class ValidModel(BaseModel):
+class ValidSchema(BaseModel):
     answer: Literal["valid", "invalid"]
 
 
-class BBHMultipleChoice2(BaseModel):
+class BBHMultipleChoice2Schema(BaseModel):
     answer: Literal["(A)", "(B)"]
 
 
-class BBHMultipleChoice3(BaseModel):
+class BBHMultipleChoice3Schema(BaseModel):
     answer: Literal["(A)", "(B)", "(C)"]
 
 
-class BBHMultipleChoice4(BaseModel):
+class BBHMultipleChoice4Schema(BaseModel):
     answer: Literal["(A)", "(B)", "(C)", "(D)"]
 
 
-class BBHMultipleChoice5(BaseModel):
+class BBHMultipleChoice5Schema(BaseModel):
     answer: Literal["(A)", "(B)", "(C)", "(D)", "(E)"]
 
 
-class BBHMultipleChoice6(BaseModel):
+class BBHMultipleChoice6Schema(BaseModel):
     answer: Literal["(A)", "(B)", "(C)", "(D)", "(E)", "(F)"]
 
 
-class BBHMultipleChoice7(BaseModel):
+class BBHMultipleChoice7Schema(BaseModel):
     answer: Literal["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)"]
 
 
-class BBHMultipleChoice11(BaseModel):
+class BBHMultipleChoice11Schema(BaseModel):
     answer: Literal[
         "(A)",
         "(B)",
@@ -96,7 +96,7 @@ class BBHMultipleChoice11(BaseModel):
     ]
 
 
-class BBHMultipleChoice18(BaseModel):
+class BBHMultipleChoice18Schema(BaseModel):
     answer: Literal[
         "(A)",
         "(B)",
@@ -120,33 +120,33 @@ class BBHMultipleChoice18(BaseModel):
 
 
 bbh_models_dict = {
-    "boolean_expressions": BooleanModel,
-    "causal_judgement": AffirmationModel,
-    "date_understanding": BBHMultipleChoice6,
-    "disambiguation_qa": BBHMultipleChoice3,
-    "dyck_languages": StringModel,
-    "formal_fallacies": ValidModel,
-    "geometric_shapes": BBHMultipleChoice11,
-    "hyperbaton": BBHMultipleChoice2,
-    "logical_deduction_three_objects": BBHMultipleChoice3,
-    "logical_deduction_five_objects": BBHMultipleChoice5,
-    "logical_deduction_seven_objects": BBHMultipleChoice7,
-    "movie_recommendation": BBHMultipleChoice5,
-    "multistep_arithmetic_two": NumberModel,
-    "navigate": AffirmationModel,
-    "object_counting": NumberModel,
-    "penguins_in_a_table": BBHMultipleChoice5,
-    "reasoning_about_colored_objects": BBHMultipleChoice18,
-    "ruin_names": BBHMultipleChoice4,
-    "salient_translation_error_detection": BBHMultipleChoice6,
-    "snarks": BBHMultipleChoice2,
-    "sports_understanding": AffirmationLowerModel,
-    "temporal_sequences": BBHMultipleChoice4,
-    "tracking_shuffled_objects_three_objects": BBHMultipleChoice3,
-    "tracking_shuffled_objects_five_objects": BBHMultipleChoice5,
-    "tracking_shuffled_objects_seven_objects": BBHMultipleChoice7,
-    "web_of_lies": AffirmationModel,
-    "word_sorting": StringModel,
+    "boolean_expressions": BooleanSchema,
+    "causal_judgement": AffirmationSchema,
+    "date_understanding": BBHMultipleChoice6Schema,
+    "disambiguation_qa": BBHMultipleChoice3Schema,
+    "dyck_languages": StringSchema,
+    "formal_fallacies": ValidSchema,
+    "geometric_shapes": BBHMultipleChoice11Schema,
+    "hyperbaton": BBHMultipleChoice2Schema,
+    "logical_deduction_three_objects": BBHMultipleChoice3Schema,
+    "logical_deduction_five_objects": BBHMultipleChoice5Schema,
+    "logical_deduction_seven_objects": BBHMultipleChoice7Schema,
+    "movie_recommendation": BBHMultipleChoice5Schema,
+    "multistep_arithmetic_two": NumberSchema,
+    "navigate": AffirmationSchema,
+    "object_counting": NumberSchema,
+    "penguins_in_a_table": BBHMultipleChoice5Schema,
+    "reasoning_about_colored_objects": BBHMultipleChoice18Schema,
+    "ruin_names": BBHMultipleChoice4Schema,
+    "salient_translation_error_detection": BBHMultipleChoice6Schema,
+    "snarks": BBHMultipleChoice2Schema,
+    "sports_understanding": AffirmationLowerSchema,
+    "temporal_sequences": BBHMultipleChoice4Schema,
+    "tracking_shuffled_objects_three_objects": BBHMultipleChoice3Schema,
+    "tracking_shuffled_objects_five_objects": BBHMultipleChoice5Schema,
+    "tracking_shuffled_objects_seven_objects": BBHMultipleChoice7Schema,
+    "web_of_lies": AffirmationSchema,
+    "word_sorting": StringSchema,
 }
 
 bbh_confinement_statements_dict = {
