@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
-    validate_conversational_test_case,
     trimAndLoadJson,
     initialize_model,
 )
@@ -31,7 +30,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
 
     def measure(self, test_case: ConversationalTestCase):
-        validate_conversational_test_case(test_case, self)
         with metric_progress_indicator(self):
             self.knowledges: List[Knowledge] = self._generate_knowledges(
                 test_case
