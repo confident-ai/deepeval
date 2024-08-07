@@ -188,12 +188,8 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             dataset = load_dataset("lukaemon/bbh", task.value)
 
         goldens: List[Golden] = []
-        count = 0
         for data in dataset["test"]:
             golden = Golden(input=data["input"], expected_output=data["target"])
             goldens.append(golden)
-            count += 1
-            if count > 10:
-                break
 
         return goldens

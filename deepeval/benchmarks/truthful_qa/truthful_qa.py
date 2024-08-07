@@ -12,7 +12,7 @@ from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
 from deepeval.benchmarks.truthful_qa.template import TruthfulQATemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-from deepeval.benchmarks.models import NumberModel, ListOfNumbersModel
+from deepeval.benchmarks.schema import NumberSchema, ListOfNumbersSchema
 
 
 class TruthfulQA(DeepEvalBaseBenchmark):
@@ -115,13 +115,13 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         # Enforced model generation
         try:
             if mode == TruthfulQAMode.MC1:
-                res: NumberModel = model.generate(
-                    prompt=prompt, schema=NumberModel
+                res: NumberSchema = model.generate(
+                    prompt=prompt, schema=NumberSchema
                 )
                 prediction = str(res.answer)
             elif mode == TruthfulQAMode.MC2:
-                res: ListOfNumbersModel = model.generate(
-                    prompt=prompt, schema=ListOfNumbersModel
+                res: ListOfNumbersSchema = model.generate(
+                    prompt=prompt, schema=ListOfNumbersSchema
                 )
                 prediction = str(res.answer)
 
@@ -164,14 +164,14 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         # Enforced model generation
         try:
             if mode == TruthfulQAMode.MC1:
-                responses: List[NumberModel] = model.batch_generate(
-                    prompts=prompts, schemas=[NumberModel for i in prompts]
+                responses: List[NumberSchema] = model.batch_generate(
+                    prompts=prompts, schemas=[NumberSchema for i in prompts]
                 )
                 predictions = [str(res.answer) for res in responses]
             elif mode == TruthfulQAMode.MC2:
-                responses: List[ListOfNumbersModel] = model.batch_generate(
+                responses: List[ListOfNumbersSchema] = model.batch_generate(
                     prompts=prompts,
-                    schemas=[ListOfNumbersModel for i in prompts],
+                    schemas=[ListOfNumbersSchema for i in prompts],
                 )
                 predictions = [str(res.answer) for res in responses]
 
