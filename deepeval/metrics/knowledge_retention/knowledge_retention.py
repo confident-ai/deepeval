@@ -87,7 +87,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             previous_knowledge = self.knowledges[index].data
 
             prompt = KnowledgeRetentionTemplate.generate_verdict(
-                llm_message=message.actual_output,
+                llm_message=message.llm_test_case.actual_output,
                 previous_knowledge=previous_knowledge,
             )
             if self.using_native_model:
@@ -107,12 +107,14 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         for index, message in enumerate(test_case.messages):
             previous_knowledge = knowledges[-1].data if knowledges else {}
             llm_message = (
-                test_case.messages[index - 1].actual_output if index > 0 else ""
+                test_case.messages[index - 1].llm_test_case.actual_output
+                if index > 0
+                else ""
             )
 
             prompt = KnowledgeRetentionTemplate.extract_data(
                 llm_message=llm_message,
-                user_message=message.input,
+                user_message=message.llm_test_case.input,
                 previous_knowledge=previous_knowledge,
             )
 

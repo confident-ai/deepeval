@@ -1,6 +1,6 @@
 from typing import List, Optional
 from deepeval.dataset.api import Golden, ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, Message
 
 
 def convert_test_cases_to_goldens(
@@ -40,6 +40,29 @@ def convert_goldens_to_test_cases(
         )
         test_cases.append(test_case)
     return test_cases
+
+
+def convert_goldens_to_messages(
+    goldens: List[Golden],
+    _alias: Optional[str] = None,
+    _id: Optional[str] = None,
+) -> List[Message]:
+    messages = []
+    for index, golden in enumerate(goldens):
+        test_case = LLMTestCase(
+            input=golden.input,
+            actual_output=golden.actual_output,
+            expected_output=golden.expected_output,
+            context=golden.context,
+            retrieval_context=golden.retrieval_context,
+            additional_metadata=golden.additional_metadata,
+            comments=golden.comments,
+            _dataset_alias=_alias,
+            _dataset_id=_id,
+            _dataset_rank=index,
+        )
+        messages.append(Message(test_case=test_case))
+    return messages
 
 
 def convert_convo_goldens_to_convo_test_cases(

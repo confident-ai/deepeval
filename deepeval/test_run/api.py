@@ -41,8 +41,9 @@ class LLMApiTestCase(BaseModel):
     )
     comments: Optional[str] = Field(None)
     traceStack: Optional[dict] = Field(None)
+    conversational_instance_id: Optional[int] = Field(None)
 
-    def update(self, metric_metadata: MetricMetadata):
+    def update_metric_metadata(self, metric_metadata: MetricMetadata):
         if self.metrics_metadata is None:
             self.metrics_metadata = [metric_metadata]
         else:
@@ -65,10 +66,14 @@ class LLMApiTestCase(BaseModel):
         else:
             self.evaluation_cost += evaluationCost
 
+    def update_run_duration(self, run_duration: float):
+        self.run_duration = run_duration
+
 
 class ConversationalApiTestCase(BaseModel):
     name: str
     success: bool
+    instance_id: Optional[int] = Field(None)
     # metrics_metadata can be None when we're not evaluating using conversational metrics
     metrics_metadata: Union[List[MetricMetadata], None] = Field(
         None, alias="metricsMetadata"
@@ -80,23 +85,26 @@ class ConversationalApiTestCase(BaseModel):
     )
     order: Union[int, None] = Field(None)
 
-    def update(self, metric_metadata: MetricMetadata, index: int):
-        if index == -1:
-            pass
+    def update_metric_metadata(self, metric_metadata: MetricMetadata):
+        if self.metrics_metadata is None:
+            self.metrics_metadata = [metric_metadata]
         else:
-            # if index != -1, update the metrics metadata of the specific message (llm test case)
-            self.messages[index].update(metric_metadata)
-            if metric_metadata.success is False:
-                self.success = False
+            self.metrics_metadata.append(metric_metadata)
 
-            evaluationCost = metric_metadata.evaluation_cost
-            if evaluationCost is None:
-                return
+        if metric_metadata.success is False:
+            self.success = False
 
-            if self.evaluation_cost is None:
-                self.evaluation_cost = evaluationCost
-            else:
-                self.evaluation_cost += evaluationCost
+        evaluationCost = metric_metadata.evaluation_cost
+        if evaluationCost is None:
+            return
+
+        if self.evaluation_cost is None:
+            self.evaluation_cost = evaluationCost
+        else:
+            self.evaluation_cost += evaluationCost
+
+    def update_run_duration(self, run_duration: float):
+        self.run_duration += run_duration
 
 
 class TestRunHttpResponse(BaseModel):

@@ -35,7 +35,7 @@ def validate_conversational_test_case(
         metric.error = error_str
         raise ValueError(error_str)
 
-    return test_case.messages[len(test_case.messages) - 1]
+    return test_case.messages[len(test_case.messages) - 1].llm_test_case
 
 
 def check_llm_test_case_params(

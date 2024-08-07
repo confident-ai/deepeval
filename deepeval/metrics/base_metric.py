@@ -49,11 +49,15 @@ class BaseConversationalMetric:
     score: Optional[float] = None
     score_breakdown: Dict = None
     reason: Optional[str] = None
+    success: Optional[bool] = None
     evaluation_model: Optional[str] = None
-    error: Optional[str] = None
-    # Not changeable for now
     strict_mode: bool = False
-    async_mode: bool = False
+    async_mode: bool = True
+    verbose_mode: bool = True
+    include_reason: bool = False
+    error: Optional[str] = None
+    evaluation_cost: Optional[float] = None
+    verbose_logs: Optional[str] = None
 
     @property
     def threshold(self) -> float:
@@ -68,6 +72,14 @@ class BaseConversationalMetric:
         self, test_case: ConversationalTestCase, *args, **kwargs
     ) -> float:
         raise NotImplementedError
+
+    @abstractmethod
+    async def a_measure(
+        self, test_case: ConversationalTestCase, *args, **kwargs
+    ) -> float:
+        raise NotImplementedError(
+            f"Async execution for {self.__class__.__name__} not supported yet. Please set 'async_mode' to 'False'."
+        )
 
     @abstractmethod
     def is_successful(self) -> bool:
