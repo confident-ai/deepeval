@@ -9,7 +9,9 @@ import math
 import asyncio
 import requests
 
-from deepeval.synthesizer.templates.template_red_team import RedTeamSynthesizerTemplate
+from deepeval.synthesizer.templates.template_red_team import (
+    RedTeamSynthesizerTemplate,
+)
 from deepeval.synthesizer.types import RTAdversarialAttack, RTVulnerability
 from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.synthesizer.schema import Response
@@ -41,8 +43,9 @@ class RTSynthesizer:
         self.context_generator = None
         self.embedder = initialize_embedding_model(embedder)
 
-        self.unaligned_vulnerabilities = [item.value for item in RTUnalignedVulnerabilities]
-
+        self.unaligned_vulnerabilities = [
+            item.value for item in RTUnalignedVulnerabilities
+        ]
 
     def generate(self, prompt: str) -> Tuple[str, str]:
         if self.using_native_model:
@@ -69,10 +72,10 @@ class RTSynthesizer:
                 return res.response, 0
             except TypeError:
                 return await self.model.a_generate(prompt), 0
-            
+
     def generate_unaligned_harmful_templates(
-        self, 
-        purpose: str, 
+        self,
+        purpose: str,
         vulernability: List[RTVulnerability],
     ) -> str:
         body = {
@@ -81,46 +84,53 @@ class RTSynthesizer:
         }
         try:
             response = requests.post(
-                url='https://api.promptfoo.dev/redteam/generateHarmful',
-                headers={'Content-Type': 'application/json'},
-                json=body
+                url="https://api.promptfoo.dev/redteam/generateHarmful",
+                headers={"Content-Type": "application/json"},
+                json=body,
             )
             if not response.ok:
-                raise Exception(f"Promptfoo API call failed with status {response.status_code}")
+                raise Exception(
+                    f"Promptfoo API call failed with status {response.status_code}"
+                )
             data = response.json()
             return data.get("output")
         except Exception as err:
             return {"error": f"API call error: {str(err)}"}
-        
+
     def generate_red_teaming_prompts(
-        self, 
+        self,
         n_goldens_per_failure: int,
         purpose: str,
         vulernabilities: List[RTVulnerability],
         attacks: List[RTAdversarialAttack],
     ) -> List[Golden]:
-        
+
         goldens: List[Golden] = []
         for vulnerability in vulernabilities:
             if vulnerability.value not in self.unaligned_vulnerabilities:
                 template = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
-                    n_goldens_per_failure, vulnerability, purpose)
+                    n_goldens_per_failure, vulnerability, purpose
+                )
                 inputs, _ = self.generate(template)
                 print(inputs)
                 goldens.extend(Golden(input=input) for input in inputs)
             else:
                 for i in range(n_goldens_per_failure):
-                    input = self.generate_unaligned_harmful_templates(purpose, vulnerability.value)
+                    input = self.generate_unaligned_harmful_templates(
+                        purpose, vulnerability.value
+                    )
                 goldens.append(input)
-        
+
         print(goldens)
         return goldens
+
 
 #################################################################################
 
 red_teamer = RTSynthesizer()
 red_teamer.generate_red_teaming_prompts(
-    n_goldens_per_failure=5, 
+    n_goldens_per_failure=5,
     purpose="Evaluate chatbot safety and robustness",
     vulernabilities=[RTVulnerability.PII_DIRECT],
-    attacks=[])
+    attacks=[],
+)

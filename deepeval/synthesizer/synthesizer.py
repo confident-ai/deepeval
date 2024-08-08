@@ -8,7 +8,10 @@ import random
 import math
 import asyncio
 
-from deepeval.synthesizer.templates.template import EvolutionTemplate, SynthesizerTemplate
+from deepeval.synthesizer.templates.template import (
+    EvolutionTemplate,
+    SynthesizerTemplate,
+)
 from deepeval.synthesizer.templates.template_red_team import (
     RedTeamSynthesizerTemplate,
     RTAdversarialAttackTemplate,
