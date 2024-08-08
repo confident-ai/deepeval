@@ -6,7 +6,7 @@ from typing import List, Optional, Union
 import time
 import asyncio
 
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import BaseMetric, BaseConversationalMetric
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import show_indicator
 from deepeval.test_run.cache import CachedTestCase, Cache
@@ -14,7 +14,8 @@ from deepeval.telemetry import capture_metric_type
 
 
 def format_metric_description(
-    metric: BaseMetric, async_mode: Optional[bool] = None
+    metric: Union[BaseMetric, BaseConversationalMetric],
+    async_mode: Optional[bool] = None,
 ):
     if async_mode is None:
         run_async = metric.async_mode
@@ -58,7 +59,7 @@ def metric_progress_indicator(
 async def measure_metric_task(
     task_id,
     progress,
-    metric: BaseMetric,
+    metric: Union[BaseMetric, BaseConversationalMetric],
     test_case: Union[LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
@@ -67,7 +68,7 @@ async def measure_metric_task(
         start_time = time.perf_counter()
         metric_metadata = None
         if cached_test_case is not None:
-            # cached test casr will always be None for conversational test case (from a_execute_test_cases)
+            # cached test case will always be None for conversational test case (from a_execute_test_cases)
             cached_metric_data = Cache.get_metric_data(metric, cached_test_case)
             if cached_metric_data:
                 metric_metadata = cached_metric_data.metric_metadata
@@ -81,17 +82,12 @@ async def measure_metric_task(
             metric.verbose_logs = metric_metadata.verbose_logs
             finish_text = "Read from Cache"
         else:
-            if isinstance(test_case, ConversationalTestCase):
-                tc = test_case.messages[len(test_case.messages) - 1]
-            else:
-                tc = test_case
-
             try:
-                await metric.a_measure(tc, _show_indicator=False)
+                await metric.a_measure(test_case, _show_indicator=False)
                 finish_text = "Done"
             except TypeError:
                 try:
-                    await metric.a_measure(tc)
+                    await metric.a_measure(test_case)
                     finish_text = "Done"
                 except Exception as e:
                     if ignore_errors:
@@ -119,7 +115,7 @@ async def measure_metric_task(
 
 
 async def measure_metrics_with_indicator(
-    metrics: List[BaseMetric],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     test_case: Union[LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,

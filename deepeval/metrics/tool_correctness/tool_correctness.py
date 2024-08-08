@@ -3,7 +3,6 @@ from typing import Set, List, Union
 from deepeval.utils import prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    validate_conversational_test_case,
     check_llm_test_case_params,
 )
 from deepeval.test_case import (
@@ -34,11 +33,7 @@ class ToolCorrectnessMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
 
-    def measure(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
-    ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = validate_conversational_test_case(test_case, self)
+    def measure(self, test_case: LLMTestCase) -> float:
         check_llm_test_case_params(test_case, required_params, self)
 
         self.tools_used: Set[str] = set(test_case.tools_used)
@@ -59,9 +54,7 @@ class ToolCorrectnessMetric(BaseMetric):
         )
         return self.score
 
-    async def a_measure(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
-    ) -> float:
+    async def a_measure(self, test_case: LLMTestCase) -> float:
         return self.measure(test_case)
 
     def _generate_reason(self):

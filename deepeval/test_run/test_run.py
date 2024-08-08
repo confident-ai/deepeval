@@ -105,7 +105,32 @@ class TestRun(BaseModel):
         if isinstance(api_test_case, ConversationalApiTestCase):
             self.conversational_test_cases.append(api_test_case)
         else:
-            self.test_cases.append(api_test_case)
+            if api_test_case.conversational_instance_id is not None:
+                for conversational_test_case in self.conversational_test_cases:
+                    if (
+                        api_test_case.conversational_instance_id
+                        == conversational_test_case.instance_id
+                    ):
+                        conversational_test_case.messages[
+                            api_test_case.order
+                        ] = api_test_case
+
+                        if conversational_test_case.evaluation_cost is None:
+                            conversational_test_case.evaluation_cost = (
+                                api_test_case.evaluation_cost
+                            )
+                        else:
+                            conversational_test_case.evaluation_cost += (
+                                api_test_case.evaluation_cost
+                            )
+
+                        conversational_test_case.run_duration += (
+                            api_test_case.run_duration
+                        )
+                        break
+
+            else:
+                self.test_cases.append(api_test_case)
 
         if api_test_case.evaluation_cost is not None:
             if self.evaluation_cost is None:
@@ -149,6 +174,15 @@ class TestRun(BaseModel):
                 test_case.order = highest_order
             highest_order = test_case.order + 1
 
+    def delete_test_case_instance_ids(self):
+        for conversational_test_case in self.conversational_test_cases:
+            del conversational_test_case.instance_id
+            for message in conversational_test_case.messages:
+                del message.conversational_instance_id
+
+        for test_case in self.test_cases:
+            del test_case.conversational_instance_id
+
     def construct_metrics_scores(self) -> int:
         metrics_dict: Dict[str, List[float]] = {}
         valid_scores = 0
@@ -166,10 +200,20 @@ class TestRun(BaseModel):
                 else:
                     metrics_dict[metric] = [score]
 
-        for test_case in self.conversational_test_cases:
-            # right now, we only look at individual message evaluations
-            # and not a conversation as a whole
-            for message in test_case.messages:
+        for convo_test_case in self.conversational_test_cases:
+            if convo_test_case.metrics_metadata is not None:
+                for metric_metadata in convo_test_case.metrics_metadata:
+                    metric = metric_metadata.metric
+                    score = metric_metadata.score
+                    if score is None:
+                        continue
+                    valid_scores += 1
+                    if metric in metrics_dict:
+                        metrics_dict[metric].append(score)
+                    else:
+                        metrics_dict[metric] = [score]
+
+            for message in convo_test_case.messages:
                 if message.metrics_metadata is None:
                     continue
                 for metric_metadata in message.metrics_metadata:
@@ -396,10 +440,10 @@ class TestRunManager:
                     "",
                 )
 
-        for index, conversattional_test_case in enumerate(
+        for index, conversational_test_case in enumerate(
             test_run.conversational_test_cases
         ):
-            for test_case in conversattional_test_case.messages:
+            for test_case in conversational_test_case.messages:
                 if test_case.metrics_metadata is None:
                     # skip if no evaluation
                     continue
@@ -618,6 +662,7 @@ class TestRunManager:
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
         test_run.sort_test_cases()
+        test_run.delete_test_case_instance_ids()
 
         if test_run_cache_manager.disable_write_cache is None:
             test_run_cache_manager.disable_write_cache = (
