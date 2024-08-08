@@ -1,9 +1,8 @@
+from copy import deepcopy
 import os
 from typing import List, Optional, Union, Dict
 import time
 from dataclasses import dataclass
-
-from pydantic import BaseModel
 
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
@@ -254,7 +253,6 @@ def execute_test_cases(
                         )
                         if cached_metric_data:
                             metric_metadata = cached_metric_data.metric_metadata
-                            print("cached metric data: ", metric_metadata)
 
                     if metric_metadata is None:
                         read_all_metrics_from_cache = False
@@ -273,9 +271,8 @@ def execute_test_cases(
 
                     # here, we will check for an additional property on the flattened test cases to see if updating is necessary
                     api_test_case.update_metric_metadata(metric_metadata)
-
                     if metric.error is None:
-                        cache_metric_metadata = metric_metadata
+                        cache_metric_metadata = deepcopy(metric_metadata)
                         cache_metric_metadata.evaluation_cost = 0  # Cached metrics will have evaluation cost as 0, not None.
                         updated_cached_metric_data = CachedMetricData(
                             metric_metadata=cache_metric_metadata,
@@ -351,7 +348,7 @@ def execute_test_cases(
 
 async def a_execute_test_cases(
     test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
-    metrics: List[BaseMetric],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     ignore_errors: bool,
     use_cache: bool,
     save_to_disk: bool = False,
@@ -394,6 +391,7 @@ async def a_execute_test_cases(
                 if len(llm_metrics) == 0:
                     continue
 
+                llm_test_case_count += 1
                 cached_test_case = None
                 for metric in metrics:
                     metric.error = None  # Reset metric error
@@ -423,7 +421,7 @@ async def a_execute_test_cases(
                     api_test_case.update_metric_metadata(metric_metadata)
 
                     if metric.error is None:
-                        cache_metric_metadata = metric_metadata
+                        cache_metric_metadata = deepcopy(metric_metadata)
                         cache_metric_metadata.evaluation_cost = (
                             0  # Create new copy and save 0 for cost
                         )
@@ -490,14 +488,9 @@ async def a_execute_test_cases(
 
 def assert_test(
     test_case: Union[LLMTestCase, ConversationalTestCase],
-    metrics: List[BaseMetric],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     run_async: bool = True,
 ):
-    # TODO: keep this for now, blocking conversational metrics like KR
-    for metric in metrics:
-        if not isinstance(metric, BaseMetric):
-            raise TypeError("Provided 'metric' must be of type 'BaseMetric'.")
-
     if run_async:
         loop = get_or_create_event_loop()
         test_result = loop.run_until_complete(
@@ -566,11 +559,6 @@ def evaluate(
                 "A `model` and `prompt template` key must be provided when logging `hyperparameters`."
             )
         hyperparameters = process_hyperparameters(hyperparameters)
-
-    # TODO: keep this for now, blocking conversational metrics like KR
-    for metric in metrics:
-        if not isinstance(metric, BaseMetric):
-            raise TypeError("Provided 'metric' must be of type 'BaseMetric'.")
 
     set_indicator(show_indicator)
 

@@ -1,5 +1,5 @@
 import json
-from typing import Any, Optional, List, Union, Tuple
+from typing import Any, Dict, Optional, List, Union, Tuple
 from deepeval.models import GPTModel, DeepEvalBaseLLM
 
 from deepeval.metrics import BaseMetric, BaseConversationalMetric
@@ -7,7 +7,36 @@ from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
+    Message,
 )
+
+
+def process_llm_test_cases_windows(
+    llm_test_cases_windows: List[List[LLMTestCase]],
+    test_case_params: List[LLMTestCaseParams],
+) -> List[List[Dict[str, str]]]:
+    res = []
+    for llm_test_cases_window in llm_test_cases_windows:
+        window = []
+        for llm_test_case in llm_test_cases_window:
+            dict = {}
+            for param in test_case_params:
+                if getattr(llm_test_case, param.value):
+                    value = getattr(llm_test_case, param.value)
+                    key = None
+                    if param is LLMTestCaseParams.INPUT:
+                        key = "Input"
+                    elif param is LLMTestCaseParams.ACTUAL_OUTPUT:
+                        key = "LLM Response"
+                    dict[param.value] = value
+            window.append(dict)
+        res.append(window)
+    return res
+
+
+def get_messages_in_sliding_window(messages: List[Message], window_size: int):
+    for i in range(len(messages)):
+        yield messages[max(0, i - window_size + 1) : i + 1]
 
 
 def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:

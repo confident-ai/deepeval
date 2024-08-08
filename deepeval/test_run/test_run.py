@@ -132,11 +132,11 @@ class TestRun(BaseModel):
             else:
                 self.test_cases.append(api_test_case)
 
-        # if api_test_case.evaluation_cost is not None:
-        #     if self.evaluation_cost is None:
-        #         self.evaluation_cost = api_test_case.evaluation_cost
-        #     else:
-        #         self.evaluation_cost += api_test_case.evaluation_cost
+        if api_test_case.evaluation_cost is not None:
+            if self.evaluation_cost is None:
+                self.evaluation_cost = api_test_case.evaluation_cost
+            else:
+                self.evaluation_cost += api_test_case.evaluation_cost
 
     def set_dataset_properties(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -200,10 +200,20 @@ class TestRun(BaseModel):
                 else:
                     metrics_dict[metric] = [score]
 
-        for test_case in self.conversational_test_cases:
-            # right now, we only look at individual message evaluations
-            # and not a conversation as a whole
-            for message in test_case.messages:
+        for convo_test_case in self.conversational_test_cases:
+            if convo_test_case.metrics_metadata is not None:
+                for metric_metadata in convo_test_case.metrics_metadata:
+                    metric = metric_metadata.metric
+                    score = metric_metadata.score
+                    if score is None:
+                        continue
+                    valid_scores += 1
+                    if metric in metrics_dict:
+                        metrics_dict[metric].append(score)
+                    else:
+                        metrics_dict[metric] = [score]
+
+            for message in convo_test_case.messages:
                 if message.metrics_metadata is None:
                     continue
                 for metric_metadata in message.metrics_metadata:
@@ -530,10 +540,6 @@ class TestRunManager:
             except AttributeError:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
-
-            print(body)
-
-            return
 
             api = Api()
             result = api.post_request(

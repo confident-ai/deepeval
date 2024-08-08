@@ -1,8 +1,10 @@
-from typing import List, Dict, Union
 from pydantic import BaseModel, Field
 
 
-class CoherenceVerdict(BaseModel):
-    index: int
+class ConversationRelevancyVerdict(BaseModel):
     verdict: str
     reason: str = Field(default=None)
+
+
+class Reason(BaseModel):
+    reason: str

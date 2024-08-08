@@ -42,7 +42,10 @@ class ConversationalTestCase:
                     message.should_evaluate = True
             else:
                 # Defaults to only evaluating last message unless overriden
-                if i == len(self.messages) - 1:
+                if (
+                    i == len(self.messages) - 1
+                    and message.should_evaluate is None
+                ):
                     message.should_evaluate = True
                 else:
                     if message.should_evaluate is None:
