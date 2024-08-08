@@ -204,6 +204,7 @@ class BiasMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
+                return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
