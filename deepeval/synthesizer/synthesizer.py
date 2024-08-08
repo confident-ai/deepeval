@@ -8,16 +8,16 @@ import random
 import math
 import asyncio
 
-from deepeval.synthesizer.template import EvolutionTemplate, SynthesizerTemplate
-from deepeval.synthesizer.template_red_team import (
+from deepeval.synthesizer.templates.template import EvolutionTemplate, SynthesizerTemplate
+from deepeval.synthesizer.templates.template_red_team import (
     RedTeamSynthesizerTemplate,
     RTAdversarialAttackTemplate,
 )
-from deepeval.synthesizer.template_prompt import (
+from deepeval.synthesizer.templates.template_prompt import (
     PromptEvolutionTemplate,
     PromptSynthesizerTemplate,
 )
-from deepeval.synthesizer.context_generator import ContextGenerator
+from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.synthesizer.schema import (
     SyntheticData,
