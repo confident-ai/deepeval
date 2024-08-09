@@ -38,9 +38,9 @@ class ContextGenerator:
         source_files: List[str] = []
         for path, document_chunks in self.source_files_to_chunks_map.items():
             num_chunks = len(document_chunks)
-            num_context = min(num_context, num_chunks)
+            min_num_context = min(num_context, num_chunks)
             clusters = self._get_n_random_clusters(
-                path=path, n=num_context, cluster_size=max_context_size
+                path=path, n=min_num_context, cluster_size=max_context_size
             )
             for cluster in clusters:
                 context = [chunk.content for chunk in cluster]
