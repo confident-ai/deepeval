@@ -13,3 +13,6 @@ from .contextual_precision.contextual_precision import ContextualPrecisionMetric
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 from .conversation_relevancy.conversation_relevancy import ConversationRelevancy
+from .conversation_completeness.conversation_completeness import (
+    ConversationCompleteness,
+)

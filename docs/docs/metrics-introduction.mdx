@@ -1,6 +1,6 @@
 ---
 id: metrics-introduction
-title: Metrics
+title: Introduction
 sidebar_label: Introduction
 ---
 
@@ -20,18 +20,31 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
 - Toxicity
 - Bias
 
-`deepeval` also offers you a straightforward way to develop your own custom evaluation metrics. All metrics are measured on a test case. Visit the [test cases section](evaluation-test-cases) to learn how to apply any metric on test cases for evaluation.
+`deepeval` also offers conversational metrics, which are metrics used to evaluate conversations instead of individual, granular LLM interactions. These include:
+
+- Knowledge Retention
+- Conversation Relevancy
+- Conversation Coherence
+
+You can also easily develop your own custom evaluation metrics in `deepeval`. All metrics are measured on a test case. Visit the [test cases section](evaluation-test-cases) to learn how to apply any metric on test cases for evaluation.
 
 ## Types of Metrics
 
 A **_custom_** metric is a type of metric you can easily create by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versatile and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an **_LLM-Eval_** (LLM evaluated) or **_classic_** metric. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
 
-`deepeval` also offers **_default_** metrics. Most default metrics offered by `deepeval` are LLM-Evals, which means they are evaluated using LLMs. This is deliberate because LLM-Evals are versatile in nature and better align with human expectations when compared to traditional model based approaches.
+`deepeval` also offers **_default_** metrics, which can either be conversational or non-conversational. Non-conversational metrics are used to evaluate `LLMTestCase`s, while conversational metrics can be used to evaluate `ConversationalTestCase`s.
+
+:::caution
+Since there are way more non-conversational metrics in `deepeval` than conversational metrics, you should assume the term 'metrics' refer to non-conversational metrics.
+:::
+
+Almost all default metrics offered by `deepeval` are LLM-Evals, which means they are evaluated using LLMs. This is deliberate because LLM-Evals are versatile in nature and better align with human expectations when compared to traditional model based approaches.
 
 `deepeval`'s LLM-Evals are a step up to other implementations because they:
 
 - are extra reliable as LLMs are only used for extremely specific tasks during evaluation to greatly reduce stochasticity and flakiness in scores.
 - provide a comprehensive reason for the scores computed.
+- can be computed using any LLM.
 
 All of `deepeval`'s default metrics output a score between 0-1, and require a `threshold` argument to instantiate. A default metric is only successful if the evaluation score is equal to or greater than `threshold`.
 

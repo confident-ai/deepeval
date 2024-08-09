@@ -11,6 +11,20 @@ from deepeval.test_case import (
 )
 
 
+def process_llm_test_cases(
+    llm_test_cases: List[LLMTestCase], test_case_params: List[LLMTestCaseParams]
+) -> List[Dict[str, str]]:
+    res = []
+    for llm_test_case in llm_test_cases:
+        dict = {}
+        for param in test_case_params:
+            value = getattr(llm_test_case, param.value)
+            if value:
+                dict[param.value] = value
+        res.append(dict)
+    return res
+
+
 def process_llm_test_cases_windows(
     llm_test_cases_windows: List[List[LLMTestCase]],
     test_case_params: List[LLMTestCaseParams],

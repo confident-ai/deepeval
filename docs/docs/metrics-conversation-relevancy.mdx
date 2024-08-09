@@ -1,0 +1,52 @@
+---
+id: metrics-conversation-relevancy
+title: Conversation Relevancy
+sidebar_label: Conversation Relevancy
+---
+
+import Equation from "@site/src/components/equation";
+
+The conversation relevancy metric is a conversational metric that determines whether your LLM is able to consistently generate relevant responses **throughout a conversation**.
+
+## Required Arguments
+
+To use the `ConversationRelevancyMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`s for each `Message` in a `ConversationalTestCase`:
+
+- `input`
+- `actual_output`
+
+## Example
+
+Let's take this conversation as an example:
+
+```python
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, Message
+from deepeval.metrics import ConversationRelevancyMetric
+
+convo_test_case = ConversationalTestCase(
+    messages=[Message(llm_test_case=LLMTestCase(input="...", actual_output="..."))]
+)
+metric = ConversationRelevancyMetric(threshold=0.5)
+
+metric.measure(convo_test_case)
+print(metric.score)
+print(metric.reason)
+```
+
+There are six optional parameters when creating a `FaithfulnessMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `window_size`: an integer which defines the size of the sliding window of messages used during evaluation. Defaulted to 3.
+
+## How Is It Calculated?
+
+The `ConversationRelevancyMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Conversation Relevancy} = \frac{\text{Number of Messages with Relevant Actual Outputs}}{\text{Total Number of Messages}}" />
+
+The `ConversationRelevancyMetric` first constructs a sliding windows of messages for each message, before using an LLM to determine whether the last message in each sliding window has an `actual_output` that is relevant to the `input` based on previous conversational context found in the sliding window.

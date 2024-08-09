@@ -4,7 +4,6 @@ class ConversationRelevancyTemplate:
         return f"""Based on the given list of message exchanges between a user and an LLM, generate a JSON object to indicate whether the LAST `actual_output` is relevant to the LAST `input` in messages. The JSON will have 2 fields: 'verdict' and 'reason'.
 The 'verdict' key should STRICTLY be either 'yes' or 'no', which states whether the last `actual output` is relevant to the last `input`. 
 Provide a 'reason' ONLY if the answer is 'no'. 
-Try to quote the in the reason using the facts in the retrieval context.
 You MUST USE the previous messages (if any) provided in the list of messages to make an informed judgement on relevancy.
 
 **
