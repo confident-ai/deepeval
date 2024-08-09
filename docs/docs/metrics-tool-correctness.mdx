@@ -24,16 +24,11 @@ To use the `ToolCorrectnessMetric`, you'll have to provide the following argumen
 ## Example
 
 ```python
-from deepeval import evaluate
-from deepeval.metrics import ContextualRelevancyMetric
+from deepeval.metrics import ToolCorrectnessMetric
 from deepeval.test_case import LLMTestCase
 
 
-metric = ContextualRelevancyMetric(
-    threshold=0.7,
-    model="gpt-4",
-    include_reason=True
-)
+metric = ToolCorrectnessMetric()
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     actual_output="We offer a 30-day full refund at no extra cost."
@@ -45,9 +40,6 @@ test_case = LLMTestCase(
 metric.measure(test_case)
 print(metric.score)
 print(metric.reason)
-
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
 ```
 
 There are four optional parameters when creating a `ToolCorrectnessMetric`:
