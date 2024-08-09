@@ -48,6 +48,12 @@ There are four optional parameters when creating a `ToolCorrectnessMetric`:
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `should_consider_ordering`: a boolean which when set to `True`, will consider the ordering in which the tools were called in. For example, if `expected_tools=["WebSearch", "ToolQuery", "WebSearch"]` and `tools_used=["WebSearch", "WebSearch"]`, the metric will consider the tool calling to be correct. Defaulted to `False`.
+- [Optional] `should_exact_match`: a boolean which when set to `True`, will required the `tools_used` and `expected_tools` to be exactly the same. Defaulted to `False`.
+
+:::note
+Since `should_exact_match` is a stricter criteria than `should_consider_ordering`, setting `should_consider_ordering` will have no effect when `should_exact_match` is set to `True`.
+:::
 
 ## How Is It Calculated?
 
@@ -62,4 +68,4 @@ The **tool correctness metric** score is calculated according to the following e
 "
 />
 
-This metric assesses the accuracy of your agent's tool usage by comparing the `tools_used` by your LLM agent to the list of `expected_tools`. A score of 1 indicates that every tool utilized by your LLM agent matches the expected tools, while a score of 0 signifies that none of the used tools were among the expected tools.
+This metric assesses the accuracy of your agent's tool usage by comparing the `tools_used` by your LLM agent to the list of `expected_tools`. A score of 1 indicates that every tool utilized by your LLM agent were called correctly according to the list of `expected_tools`, `should_consider_ordering`, and `should_exact_match`, while a score of 0 signifies that none of the `tools_used` were called correctly.
