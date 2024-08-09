@@ -1,0 +1,55 @@
+---
+id: metrics-conversation-completeness
+title: Conversation Completeness
+sidebar_label: Conversation Completeness
+---
+
+import Equation from "@site/src/components/equation";
+
+The conversation completeness metric is a conversational metric that determines whether your LLM is able to complete an end-to-end conversation by satisfying user needs **throughout a conversation**.
+
+:::note
+The `ConversationCompletenessMetric` can be used as a proxy to measure user satisfaction throughout a conversation. Conversational metrics are particular useful for an LLM chatbot use case.
+:::
+
+## Required Arguments
+
+To use the `ConversationCompletenessMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`s for each `Message` in a `ConversationalTestCase`:
+
+- `input`
+- `actual_output`
+
+## Example
+
+Let's take this conversation as an example:
+
+```python
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, Message
+from deepeval.metrics import ConversationCompletenessMetric
+
+convo_test_case = ConversationalTestCase(
+    messages=[Message(llm_test_case=LLMTestCase(input="...", actual_output="..."))]
+)
+metric = ConversationCompletenessMetric(threshold=0.5)
+
+metric.measure(convo_test_case)
+print(metric.score)
+print(metric.reason)
+```
+
+There are six optional parameters when creating a `ConversationCompletenessMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+## How Is It Calculated?
+
+The `ConversationCompletenessMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Conversation Completeness} = \frac{\text{Number of Satisfied User Intentions in Conversation}}{\text{Total Number of User Intentions in Conversation}}" />
+
+The `ConversationCompletenessMetric` assumes that a conversion is only complete if user intentions, such as asking for help to an LLM chatbot, are met by the LLM chatbot. Hence, the `ConversationCompletenessMetric` first uses asn LLM to extract a list of high level user intentions found in the list of `Message`s, before using the same LLM to determine whether each intention was met and/or satisfied throughout the conversation.
