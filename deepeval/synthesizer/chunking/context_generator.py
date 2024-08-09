@@ -2,7 +2,7 @@ from typing import List, Tuple, Dict, Optional
 import random
 import asyncio
 
-from deepeval.synthesizer.doc_chunker import (
+from deepeval.synthesizer.chunking.doc_chunker import (
     DocumentChunker,
     Chunk,
     get_embedding_similarity,
