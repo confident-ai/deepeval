@@ -31,9 +31,9 @@ from deepeval.test_case import LLMTestCase
 metric = ToolCorrectnessMetric()
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output="We offer a 30-day full refund at no extra cost."
+    actual_output="We offer a 30-day full refund at no extra cost.",
     # Replace this with the tools that was actually used by your LLM agent
-    tools_used=["WebSearch"]
+    tools_used=["WebSearch"],
     expected_tools=["WebSearch", "ToolQuery"]
 )
 
