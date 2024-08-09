@@ -6,32 +6,14 @@ sidebar_label: Knowledge Retention
 
 import Equation from "@site/src/components/equation";
 
-The knowledge retention metric determines whether your LLM is able to retain factual information presented **throughout a conversation**.
-
-:::caution
-This is `deepeval`'s first experimental **conversational metric**. A conversational metric is a metric that evaluates an entire conversation.
-:::
+The knowledge retention metric is a conversational metric that determines whether your LLM is able to retain factual information presented **throughout a conversation**.
 
 ## Required Arguments
 
-To use the `KnowledgeRetentionMetric`, you'll have to provide the following arguments when creating an `ConversationalTestCase`:
+To use the `KnowledgeRetentionMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`s for each `Message` in a `ConversationalTestCase`:
 
-- `messages` (`list[LLMTestCase]`)
-
-:::info
-Here's an example of how to create a `ConversationalTestCase`:
-
-```python
-from deepeval.test_case import ConversationalTestCase, LLMTestCase
-
-message1 = LLMTestCase(input="...", actual_output="...")
-message2 = LLMTestCase(input="...", actual_output="...")
-message3 = LLMTestCase(input="...", actual_output="...")
-
-conversational_test_case = ConversationalTestCase(messages=[message1, message2, message3])
-```
-
-:::
+- `input`
+- `actual_output`
 
 ## Example
 
