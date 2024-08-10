@@ -9,6 +9,7 @@ from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 from deepeval.red_team import RedTeamer
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.synthesizer import RTAdversarialAttack, RTVulnerability
 
 def log_retry_error(retry_state):
@@ -139,13 +140,20 @@ def main():
         target_purpose="A friendly chatbot",
         target_system_prompt="You are a friendly chatbot.",
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
+        evaluation_model=TargetGPTModel("gpt-4o"),
+        synthesizer_model=TargetGPTModel("gpt-4o"),
         async_mode=True
     )
-    red_teamer.scan(
-        2,
-        vulnerabilities=[RTVulnerability.HARMFUL_COPYRIGHT_VIOLATIONS, RTVulnerability.EXCESSIVE_AGENCY],
-        attacks=[RTAdversarialAttack.BASE64, RTAdversarialAttack.JAILBREAKING]
+    results = red_teamer.scan(
+        1,
+        # vulnerabilities=[v for v in RTVulnerability],
+        # attacks=[a for a in RTAdversarialAttack],
+        vulnerabilities=[v for v in RTVulnerability][:5],
+        attacks=[RTAdversarialAttack.LEETSPEAK, RTAdversarialAttack.JAILBREAK_LINEAR],
     )
+
+    print(results)
+    print(red_teamer.vulnerability_breakdown)
 
 if __name__ == "__main__":
     main()

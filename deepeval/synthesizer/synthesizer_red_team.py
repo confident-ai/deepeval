@@ -74,16 +74,14 @@ class RTSynthesizer:
                     if non_refusal_res.non_compliant == True:
                         return False
                 return tuple(
-                    getattr(res, attr)
-                    for attr in dir(res)
-                    if not attr.startswith("__")
-                    and not callable(getattr(res, attr))
+                    getattr(res, field)
+                    for field in res.__fields__
                 )
             except TypeError:
                 res = self.synthesizer_model.generate(prompt)
                 if check_refusal:
                     non_refusal_prompt = RTAdversarialAttackContextlessTemplate.non_compliant(res)
-                    non_refusal_res, _ = self.synthesizer_model.generate(non_refusal_prompt)
+                    non_refusal_res = self.synthesizer_model.generate(non_refusal_prompt)
                     data: Dict = trimAndLoadJson(non_refusal_res, self)
                     if data["non_compliant"] == True:
                         return False
@@ -114,16 +112,14 @@ class RTSynthesizer:
                     if non_refusal_res.non_compliant == True:
                         return False
                 return tuple(
-                    getattr(res, attr)
-                    for attr in dir(res)
-                    if not attr.startswith("__")
-                    and not callable(getattr(res, attr))
+                    getattr(res, field)
+                    for field in res.__fields__
                 )
             except TypeError:
                 res = await self.synthesizer_model.a_generate(prompt)
                 if check_refusal:
                     non_refusal_prompt = RTAdversarialAttackContextlessTemplate.non_compliant(res)
-                    non_refusal_res, _ = await self.synthesizer_model.a_generate(non_refusal_prompt)
+                    non_refusal_res = await self.synthesizer_model.a_generate(non_refusal_prompt)
                     data: Dict = trimAndLoadJson(non_refusal_res, self)
                     if data["non_compliant"] == True:
                         return False
@@ -158,36 +154,30 @@ class RTSynthesizer:
                 # checking for Non-refusal
                 non_refusal_prompt = RTAdversarialAttackContextlessTemplate.jailbreaking_non_refusal_prompt(
                     goal=goal, target_response=res.model_dump()
-                )[
-                    0
-                ]
+                )[0]
                 # Return new prompt or false
                 classification = self.generate_tuple_from_synthesizer(
                     non_refusal_prompt, NonRefusal
                 )
-                if classification == "Non-refusal":
+                if classification[0] == "Non-refusal":
                     return tuple(
-                        getattr(res, attr)
-                        for attr in dir(res)
-                        if not attr.startswith("__")
-                        and not callable(getattr(res, attr))
-                    )
+                    getattr(res, field)
+                    for field in res.__fields__
+                )
                 else:
                     return False
             except TypeError:
                 # generate new prompt
-                res, _ = self.synthesizer_model.generate(redteam_body)
+                res = self.synthesizer_model.generate(redteam_body)
                 # checking for Non-refusal
                 non_refusal_prompt = RTAdversarialAttackContextlessTemplate.jailbreaking_non_refusal_prompt(
                     goal=goal, target_response=res
-                )[
-                    0
-                ]
+                )
                 # Return new prompt or false
                 classification = self.generate_tuple_from_synthesizer(
                     non_refusal_prompt, NonRefusal
                 )
-                if classification == "Non-refusal":
+                if classification[0] == "Non-refusal":
                     data: Dict = trimAndLoadJson(res, self)
                     return tuple(data.values())
                 else:
@@ -228,29 +218,25 @@ class RTSynthesizer:
                 classification = await self.a_generate_tuple_from_synthesizer(
                     non_refusal_prompt, NonRefusal
                 )
-                if classification == "Non-refusal":
+                if classification[0] == "Non-refusal":
                     return tuple(
-                        getattr(res, attr)
-                        for attr in dir(res)
-                        if not attr.startswith("__")
-                        and not callable(getattr(res, attr))
-                    )
+                    getattr(res, field)
+                    for field in res.__fields__
+                )
                 else:
                     return False
             except TypeError:
                 # generate new prompt
-                res, _ = await self.synthesizer_model.a_generate(redteam_body)
+                res = await self.synthesizer_model.a_generate(redteam_body)
                 # checking for Non-refusal
                 non_refusal_prompt = RTAdversarialAttackContextlessTemplate.jailbreaking_non_refusal_prompt(
                     goal=goal, target_response=res
-                )[
-                    0
-                ]
+                )
                 # Return new prompt or false
                 classification = await self.a_generate_tuple_from_synthesizer(
                     non_refusal_prompt, NonRefusal
                 )
-                if classification == "Non-refusal":
+                if classification[0] == "Non-refusal":
                     data: Dict = trimAndLoadJson(res, self)
                     return tuple(data.values())
                 else:
@@ -834,14 +820,18 @@ class RTSynthesizer:
                 )
                 if synthetic_data_raw != False:
                     synthetic_data_raw = synthetic_data_raw[0]
+                    if isinstance(synthetic_data_raw, dict):
+                        synthetic_data_raw = synthetic_data_raw["data"]                   
                     break
                 if i == max_retries - 1:
                     return []
-
-            synthetic_data = [
-                SyntheticData(**item) if isinstance(item, dict) else item
-                for item in synthetic_data_raw
-            ]
+            
+            synthetic_data = []
+            for item in synthetic_data_raw:
+                if isinstance(item, dict):
+                    synthetic_data.append(SyntheticData(**item))
+                else:
+                    synthetic_data.append(item)
 
             goldens.extend(
                 [
@@ -895,14 +885,17 @@ class RTSynthesizer:
                 )
                 if synthetic_data_raw != False:
                     synthetic_data_raw = synthetic_data_raw[0]
+                    if isinstance(synthetic_data_raw, dict):
+                        synthetic_data_raw = synthetic_data_raw["data"]                        
                     break
                 if i == max_retries - 1:
                     return []
-
+                
             synthetic_data = [
                 SyntheticData(**item) if isinstance(item, dict) else item
                 for item in synthetic_data_raw
             ]
+
             goldens.extend(
                 [
                     Golden(

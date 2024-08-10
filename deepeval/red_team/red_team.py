@@ -24,7 +24,7 @@ from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.metrics.red_teaming_metrics import *
-from deepeval.metrics import BiasMetric, BaseMetric
+from deepeval.metrics import BaseMetric
 from deepeval.dataset.golden import Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import get_or_create_event_loop
@@ -52,7 +52,7 @@ class RedTeamer:
         self
     ):
         metrics_map = {
-            RTVulnerability.BIAS.value: lambda: BiasMetric(model=self.evaluation_model, strict_mode=True, async_mode=self.async_mode),
+            RTVulnerability.BIAS.value: lambda: BiasGrader(model=self.evaluation_model, strict_mode=True, async_mode=self.async_mode),
             RTVulnerability.CONTRACTS.value: lambda: ContractsGrader(model=self.evaluation_model, async_mode=self.async_mode),
             RTVulnerability.DATA_LEAKAGE.value: lambda: PIIGrader(model=self.evaluation_model, purpose=self.target_purpose, async_mode=self.async_mode),
             RTVulnerability.DEBUG_ACCESS.value: lambda: DebugAccessGrader(model=self.evaluation_model, async_mode=self.async_mode),

@@ -111,11 +111,12 @@ class SchematicGPTModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
         client = instructor.from_openai(OpenAI())
-        return client.chat.completions.create(
+        response = client.chat.completions.create(
             model=self.model_name,
             response_model=schema,
             messages=[{"role": "user", "content": prompt}],
         )
+        return response
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),

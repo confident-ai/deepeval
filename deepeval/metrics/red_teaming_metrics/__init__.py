@@ -11,3 +11,4 @@ from .politics.politics import PoliticsGrader
 from .rbac.rbac import RBACGrader
 from .shell_injection.shell_injection import ShellInjectionGrader
 from .sql_injection.sql_injection import SQLInjectionGrader
+from .bias.bias import BiasGrader
