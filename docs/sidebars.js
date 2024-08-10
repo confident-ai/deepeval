@@ -31,8 +31,17 @@ module.exports = {
             "metrics-bias",
             "metrics-toxicity",
             "metrics-ragas",
-            "metrics-knowledge-retention",
             "metrics-custom",
+            {
+              type: "category",
+              label: "Conversational Metrics",
+              items: [
+                "metrics-conversation-completeness",
+                "metrics-conversation-relevancy",
+                "metrics-knowledge-retention",
+              ],
+              collapsed: true,
+            },
           ],
           collapsed: false,
         },

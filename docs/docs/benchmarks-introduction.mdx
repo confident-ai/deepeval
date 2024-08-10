@@ -41,6 +41,14 @@ A target label in a benchmark dataset is simply the `expected_output` in `deepev
 
 Below is an example of how to evaluate a [Mistral 7B model](https://huggingface.co/docs/transformers/model_doc/mistral) (exposed through Hugging Face's `transformers` library) against the `MMLU` benchmark.
 
+:::danger
+Often times, LLMs you're trying to benchmark can fail to generate correctly structured outputs for these public benchmarks to work. These public benchmarks, as you'll learn later, mostly require outputs in the form of single letters as they are often presented in MCQ format, and the failure to generate nothing else but single letters can cause these benchmarks to give faulty results. If you ever run into issues where benchmark scores are absurdly low, it is likely your LLM is not generating valid outputs.
+
+There are a few ways to go around this, such as fine-tuning the model on specific tasks or datasets that closely resemble the target task (e.g., MCQs). However, this is complicated and fortunately in `deepeval` there is no need for this.
+
+**Simply follow [this quick guide](guides-using-custom-llms#json-confinement-for-custom-llms) to learn how to generate the correct outputs in your custom LLM implementation to benchmark your custom LLM.**
+:::
+
 ### Create A Custom LLM
 
 Start by creating a custom model which **you will be benchmarking** by inheriting the `DeepEvalBaseLLM` class (visit the [custom models section](metrics-introduction#using-a-custom-llm) for a full guide on how to create a custom model):

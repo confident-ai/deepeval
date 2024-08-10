@@ -66,20 +66,20 @@ async def measure_metric_task(
 ):
     while not progress.finished:
         start_time = time.perf_counter()
-        metric_metadata = None
+        metric_data = None
         if cached_test_case is not None:
             # cached test case will always be None for conversational test case (from a_execute_test_cases)
             cached_metric_data = Cache.get_metric_data(metric, cached_test_case)
             if cached_metric_data:
-                metric_metadata = cached_metric_data.metric_metadata
+                metric_data = cached_metric_data.metric_data
 
-        if metric_metadata:
+        if metric_data:
             ## only change metric state, not configs
-            metric.score = metric_metadata.score
-            metric.success = metric_metadata.success
-            metric.reason = metric_metadata.reason
-            metric.evaluation_cost = metric_metadata.evaluation_cost
-            metric.verbose_logs = metric_metadata.verbose_logs
+            metric.score = metric_data.score
+            metric.success = metric_data.success
+            metric.reason = metric_data.reason
+            metric.evaluation_cost = metric_data.evaluation_cost
+            metric.verbose_logs = metric_data.verbose_logs
             finish_text = "Read from Cache"
         else:
             try:
@@ -148,28 +148,28 @@ async def measure_metrics_with_indicator(
     else:
         tasks = []
         for metric in metrics:
-            metric_metadata = None
+            metric_data = None
             # cached test case will always be None for conversationals
             if cached_test_case is not None:
                 cached_metric_data = Cache.get_metric_data(
                     metric, cached_test_case
                 )
                 if cached_metric_data:
-                    metric_metadata = cached_metric_data.metric_metadata
+                    metric_data = cached_metric_data.metric_data
 
-            if metric_metadata:
+            if metric_data:
                 ## Here we're setting the metric state from metrics metadata cache,
                 ## and later using the metric state to create a new metrics metadata cache
                 ## WARNING: Potential for bugs, what will happen if a metric changes state in between
                 ## test cases?
-                metric.score = metric_metadata.score
-                metric.threshold = metric_metadata.threshold
-                metric.success = metric_metadata.success
-                metric.reason = metric_metadata.reason
-                metric.strict_mode = metric_metadata.strict_mode
-                metric.evaluation_model = metric_metadata.evaluation_model
-                metric.evaluation_cost = metric_metadata.evaluation_cost
-                metric.verbose_logs = metric_metadata.verbose_logs
+                metric.score = metric_data.score
+                metric.threshold = metric_data.threshold
+                metric.success = metric_data.success
+                metric.reason = metric_data.reason
+                metric.strict_mode = metric_data.strict_mode
+                metric.evaluation_model = metric_data.evaluation_model
+                metric.evaluation_cost = metric_data.evaluation_cost
+                metric.verbose_logs = metric_data.verbose_logs
             else:
                 if isinstance(test_case, ConversationalTestCase):
                     tc = test_case.messages[len(test_case.messages) - 1]

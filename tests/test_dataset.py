@@ -8,7 +8,6 @@ from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluate import aggregate_metric_pass_rates, TestResult
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.test_run.api import MetricMetadata
 
 
 class FakeMetric1(BaseMetric):

@@ -22,7 +22,7 @@ from deepeval.test_run import (
     test_run_manager,
     LLMApiTestCase,
     ConversationalApiTestCase,
-    MetricMetadata,
+    MetricData,
 )
 from deepeval.utils import get_is_running_deepeval, set_indicator
 from deepeval.test_run.cache import (
@@ -39,7 +39,7 @@ class TestResult:
     """Returned from run_test"""
 
     success: bool
-    metrics_metadata: List[MetricMetadata]
+    metrics_data: List[MetricData]
     input: str
     actual_output: str
     expected_output: str
@@ -47,10 +47,10 @@ class TestResult:
     retrieval_context: List[str]
 
 
-def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
+def create_metric_data(metric: BaseMetric) -> MetricData:
     if metric.error is not None:
-        return MetricMetadata(
-            metric=metric.__name__,
+        return MetricData(
+            name=metric.__name__,
             threshold=metric.threshold,
             score=None,
             reason=None,
@@ -62,8 +62,8 @@ def create_metric_metadata(metric: BaseMetric) -> MetricMetadata:
             verboseLogs=metric.verbose_logs,
         )
     else:
-        return MetricMetadata(
-            metric=metric.__name__,
+        return MetricData(
+            name=metric.__name__,
             score=metric.score,
             threshold=metric.threshold,
             reason=metric.reason,
@@ -86,7 +86,7 @@ def create_test_result(
 
     return TestResult(
         success=tc.success,
-        metrics_metadata=tc.metrics_metadata,
+        metrics_data=tc.metrics_data,
         input=tc.input,
         actual_output=tc.actual_output,
         expected_output=tc.expected_output,
@@ -138,7 +138,7 @@ def create_api_test_case(
             toolsUsed=test_case.tools_used,
             expectedTools=test_case.expected_tools,
             success=success,
-            metricsMetadata=None,
+            metricsData=None,
             runDuration=None,
             evaluationCost=None,
             order=order,
@@ -159,7 +159,7 @@ def create_api_test_case(
                 PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
             ),
             success=True,
-            metricsMetadata=None,
+            metricsData=None,
             runDuration=0,
             evaluationCost=None,
             order=test_case._dataset_rank,
@@ -246,15 +246,15 @@ def execute_test_cases(
                 test_start_time = time.perf_counter()
                 read_all_metrics_from_cache = True
                 for metric in llm_metrics:
-                    metric_metadata = None
+                    metric_data = None
                     if cached_test_case is not None:
                         cached_metric_data = Cache.get_metric_data(
                             metric, cached_test_case
                         )
                         if cached_metric_data:
-                            metric_metadata = cached_metric_data.metric_metadata
+                            metric_data = cached_metric_data.metric_data
 
-                    if metric_metadata is None:
+                    if metric_data is None:
                         read_all_metrics_from_cache = False
                         metric.async_mode = False  # Override metric async
                         try:
@@ -267,15 +267,15 @@ def execute_test_cases(
                                 )
                             else:
                                 raise
-                        metric_metadata = create_metric_metadata(metric)
+                        metric_data = create_metric_data(metric)
 
                     # here, we will check for an additional property on the flattened test cases to see if updating is necessary
-                    api_test_case.update_metric_metadata(metric_metadata)
+                    api_test_case.update_metric_data(metric_data)
                     if metric.error is None:
-                        cache_metric_metadata = deepcopy(metric_metadata)
-                        cache_metric_metadata.evaluation_cost = 0  # Cached metrics will have evaluation cost as 0, not None.
+                        cache_metric_data = deepcopy(metric_data)
+                        cache_metric_data.evaluation_cost = 0  # Cached metrics will have evaluation cost as 0, not None.
                         updated_cached_metric_data = CachedMetricData(
-                            metric_metadata=cache_metric_metadata,
+                            metric_data=cache_metric_data,
                             metric_configuration=Cache.create_metric_configuration(
                                 metric
                             ),
@@ -332,8 +332,8 @@ def execute_test_cases(
                                 )
                             else:
                                 raise
-                        metric_metadata = create_metric_metadata(metric)
-                        api_test_case.update_metric_metadata(metric_metadata)
+                        metric_data = create_metric_data(metric)
+                        api_test_case.update_metric_data(metric_data)
 
                 test_end_time = time.perf_counter()
                 if len(conversational_metrics) > 0:
@@ -417,16 +417,16 @@ async def a_execute_test_cases(
                 )
 
                 for metric in llm_metrics:
-                    metric_metadata = create_metric_metadata(metric)
-                    api_test_case.update_metric_metadata(metric_metadata)
+                    metric_data = create_metric_data(metric)
+                    api_test_case.update_metric_data(metric_data)
 
                     if metric.error is None:
-                        cache_metric_metadata = deepcopy(metric_metadata)
-                        cache_metric_metadata.evaluation_cost = (
+                        cache_metric_data = deepcopy(metric_data)
+                        cache_metric_data.evaluation_cost = (
                             0  # Create new copy and save 0 for cost
                         )
                         updated_cached_metric_data = CachedMetricData(
-                            metric_metadata=cache_metric_metadata,
+                            metric_data=cache_metric_data,
                             metric_configuration=Cache.create_metric_configuration(
                                 metric
                             ),
@@ -472,8 +472,8 @@ async def a_execute_test_cases(
                     conversational_metrics, test_case, None, ignore_errors
                 )
                 for metric in conversational_metrics:
-                    metric_metadata = create_metric_metadata(metric)
-                    api_test_case.update_metric_metadata(metric_metadata)
+                    metric_data = create_metric_data(metric)
+                    api_test_case.update_metric_data(metric_data)
 
                 test_end_time = time.perf_counter()
                 if len(conversational_metrics) > 0:
@@ -514,25 +514,25 @@ def assert_test(
         )[0]
 
     if not test_result.success:
-        failed_metrics_metadata: List[MetricMetadata] = []
+        failed_metrics_data: List[MetricData] = []
         # even for conversations, test_result right now is just the
         # result for the last message
-        for metric_metadata in test_result.metrics_metadata:
-            if metric_metadata.error is not None:
-                failed_metrics_metadata.append(metric_metadata)
+        for metric_data in test_result.metrics_data:
+            if metric_data.error is not None:
+                failed_metrics_data.append(metric_data)
             else:
                 # This try block is for user defined custom metrics,
                 # which might not handle the score == undefined case elegantly
                 try:
-                    if not metric_metadata.success:
-                        failed_metrics_metadata.append(metric_metadata)
+                    if not metric_data.success:
+                        failed_metrics_data.append(metric_data)
                 except:
-                    failed_metrics_metadata.append(metric_metadata)
+                    failed_metrics_data.append(metric_data)
 
         failed_metrics_str = ", ".join(
             [
-                f"{metrics_metadata.metric} (score: {metrics_metadata.score}, threshold: {metrics_metadata.threshold}, strict: {metrics_metadata.strict_mode}, error: {metrics_metadata.error})"
-                for metrics_metadata in failed_metrics_metadata
+                f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error})"
+                for metrics_data in failed_metrics_data
             ]
         )
         raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
@@ -609,30 +609,27 @@ def print_test_result(test_result: TestResult):
     print("")
     print("=" * 70 + "\n")
     print("Metrics Summary\n")
-    for metric_metadata in test_result.metrics_metadata:
+    for metric_data in test_result.metrics_data:
         successful = True
-        if metric_metadata.error is not None:
+        if metric_data.error is not None:
             successful = False
         else:
             # This try block is for user defined custom metrics,
             # which might not handle the score == undefined case elegantly
             try:
-                if not metric_metadata.success:
+                if not metric_data.success:
                     successful = False
             except:
                 successful = False
 
         if not successful:
             print(
-                f"  - ❌ {metric_metadata.metric} (score: {metric_metadata.score}, threshold: {metric_metadata.threshold}, strict: {metric_metadata.strict_mode}, evaluation model: {metric_metadata.evaluation_model}, reason: {metric_metadata.reason}, error: {metric_metadata.error})"
+                f"  - ❌ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
             )
         else:
             print(
-                f"  - ✅ {metric_metadata.metric} (score: {metric_metadata.score}, threshold: {metric_metadata.threshold}, strict: {metric_metadata.strict_mode}, evaluation model: {metric_metadata.evaluation_model}, reason: {metric_metadata.reason}, error: {metric_metadata.error})"
+                f"  - ✅ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
             )
-        # if metrics_metadata.score_breakdown:
-        #     for metric_name, score in metrics_metadata.score_breakdown.items():
-        #         print(f"      - {metric_name} (score: {score})")
 
     print("")
     print("For test case:\n")
@@ -648,13 +645,13 @@ def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     metric_successes = {}
 
     for result in test_results:
-        for metric_metadata in result.metrics_metadata:
-            metric_name = metric_metadata.metric
+        for metric_data in result.metrics_data:
+            metric_name = metric_data.name
             if metric_name not in metric_counts:
                 metric_counts[metric_name] = 0
                 metric_successes[metric_name] = 0
             metric_counts[metric_name] += 1
-            if metric_metadata.success:
+            if metric_data.success:
                 metric_successes[metric_name] += 1
 
     metric_pass_rates = {
