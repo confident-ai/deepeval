@@ -187,45 +187,45 @@ class TestRun(BaseModel):
         metrics_dict: Dict[str, List[float]] = {}
         valid_scores = 0
         for test_case in self.test_cases:
-            if test_case.metrics_metadata is None:
+            if test_case.metrics_data is None:
                 continue
-            for metric_metadata in test_case.metrics_metadata:
-                metric = metric_metadata.metric
-                score = metric_metadata.score
+            for metric_data in test_case.metrics_data:
+                name = metric_data.name
+                score = metric_data.score
                 if score is None:
                     continue
                 valid_scores += 1
-                if metric in metrics_dict:
-                    metrics_dict[metric].append(score)
+                if name in metrics_dict:
+                    metrics_dict[name].append(score)
                 else:
-                    metrics_dict[metric] = [score]
+                    metrics_dict[name] = [score]
 
         for convo_test_case in self.conversational_test_cases:
-            if convo_test_case.metrics_metadata is not None:
-                for metric_metadata in convo_test_case.metrics_metadata:
-                    metric = metric_metadata.metric
-                    score = metric_metadata.score
+            if convo_test_case.metrics_data is not None:
+                for metric_data in convo_test_case.metrics_data:
+                    name = metric_data.name
+                    score = metric_data.score
                     if score is None:
                         continue
                     valid_scores += 1
-                    if metric in metrics_dict:
-                        metrics_dict[metric].append(score)
+                    if name in metrics_dict:
+                        metrics_dict[name].append(score)
                     else:
-                        metrics_dict[metric] = [score]
+                        metrics_dict[name] = [score]
 
             for message in convo_test_case.messages:
-                if message.metrics_metadata is None:
+                if message.metrics_data is None:
                     continue
-                for metric_metadata in message.metrics_metadata:
-                    metric = metric_metadata.metric
-                    score = metric_metadata.score
+                for metric_data in message.metrics_data:
+                    name = metric_data.name
+                    score = metric_data.score
                     if score is None:
                         continue
                     valid_scores += 1
-                    if metric in metrics_dict:
-                        metrics_dict[metric].append(score)
+                    if name in metrics_dict:
+                        metrics_dict[name].append(score)
                     else:
-                        metrics_dict[metric] = [score]
+                        metrics_dict[name] = [score]
 
         # metrics_scores combines both conversational and nonconvo scores
         # might need to separate in the future
@@ -392,8 +392,8 @@ class TestRunManager:
             fail_count = 0
             test_case_name = test_case.name
 
-            for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.success:
+            for metric_data in test_case.metrics_data:
+                if metric_data.success:
                     pass_count += 1
                 else:
                     fail_count += 1
@@ -406,27 +406,27 @@ class TestRunManager:
                 f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
             )
 
-            for metric_metadata in test_case.metrics_metadata:
-                if metric_metadata.error:
+            for metric_data in test_case.metrics_data:
+                if metric_data.error:
                     status = "[red]ERRORED[/red]"
-                elif metric_metadata.success:
+                elif metric_data.success:
                     status = "[green]PASSED[/green]"
                 else:
                     status = "[red]FAILED[/red]"
 
-                evaluation_model = metric_metadata.evaluation_model
+                evaluation_model = metric_data.evaluation_model
                 if evaluation_model is None:
                     evaluation_model = "n/a"
 
-                if metric_metadata.score is not None:
-                    metric_score = round(metric_metadata.score, 2)
+                if metric_data.score is not None:
+                    metric_score = round(metric_data.score, 2)
                 else:
                     metric_score = None
 
                 table.add_row(
                     "",
-                    str(metric_metadata.metric),
-                    f"{metric_score} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason}, error={metric_metadata.error})",
+                    str(metric_data.name),
+                    f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
                     status,
                     "",
                 )
@@ -444,7 +444,7 @@ class TestRunManager:
             test_run.conversational_test_cases
         ):
             for test_case in conversational_test_case.messages:
-                if test_case.metrics_metadata is None:
+                if test_case.metrics_data is None:
                     # skip if no evaluation
                     continue
 
@@ -452,8 +452,8 @@ class TestRunManager:
                 fail_count = 0
                 test_case_name = test_case.name
 
-                for metric_metadata in test_case.metrics_metadata:
-                    if metric_metadata.success:
+                for metric_data in test_case.metrics_data:
+                    if metric_data.success:
                         pass_count += 1
                     else:
                         fail_count += 1
@@ -466,27 +466,27 @@ class TestRunManager:
                     f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
                 )
 
-                for metric_metadata in test_case.metrics_metadata:
-                    if metric_metadata.error:
+                for metric_data in test_case.metrics_data:
+                    if metric_data.error:
                         status = "[red]ERRORED[/red]"
-                    elif metric_metadata.success:
+                    elif metric_data.success:
                         status = "[green]PASSED[/green]"
                     else:
                         status = "[red]FAILED[/red]"
 
-                    evaluation_model = metric_metadata.evaluation_model
+                    evaluation_model = metric_data.evaluation_model
                     if evaluation_model is None:
                         evaluation_model = "n/a"
 
-                    if metric_metadata.score is not None:
-                        metric_score = round(metric_metadata.score, 2)
+                    if metric_data.score is not None:
+                        metric_score = round(metric_data.score, 2)
                     else:
                         metric_score = None
 
                     table.add_row(
                         "",
-                        str(metric_metadata.metric),
-                        f"{metric_score} (threshold={metric_metadata.threshold}, evaluation model={evaluation_model}, reason={metric_metadata.reason}, error={metric_metadata.error})",
+                        str(metric_data.name),
+                        f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
                         status,
                         "",
                     )
@@ -540,6 +540,8 @@ class TestRunManager:
             except AttributeError:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
+
+            print(body)
 
             api = Api()
             result = api.post_request(

@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Union, Dict
 
 
-class MetricMetadata(BaseModel):
-    metric: str
+class MetricData(BaseModel):
+    name: str
     threshold: float
     success: bool
     score: Optional[float] = None
@@ -27,8 +27,8 @@ class LLMApiTestCase(BaseModel):
     # make optional, not all test cases in a conversation will be evaluated
     success: Union[bool, None] = Field(None)
     # make optional, not all test cases in a conversation will be evaluated
-    metrics_metadata: Union[List[MetricMetadata], None] = Field(
-        None, alias="metricsMetadata"
+    metrics_data: Union[List[MetricData], None] = Field(
+        None, alias="metricsData"
     )
     # make optional, not all test cases in a conversation will be evaluated
     run_duration: Union[float, None] = Field(None, alias="runDuration")
@@ -43,21 +43,21 @@ class LLMApiTestCase(BaseModel):
     traceStack: Optional[dict] = Field(None)
     conversational_instance_id: Optional[int] = Field(None)
 
-    def update_metric_metadata(self, metric_metadata: MetricMetadata):
-        if self.metrics_metadata is None:
-            self.metrics_metadata = [metric_metadata]
+    def update_metric_data(self, metric_data: MetricData):
+        if self.metrics_data is None:
+            self.metrics_data = [metric_data]
         else:
-            self.metrics_metadata.append(metric_metadata)
+            self.metrics_data.append(metric_data)
 
         if self.success is None:
             # self.success will be None when it is a message
             # in that case we will be setting success for the first time
-            self.success = metric_metadata.success
+            self.success = metric_data.success
         else:
-            if metric_metadata.success is False:
+            if metric_data.success is False:
                 self.success = False
 
-        evaluationCost = metric_metadata.evaluation_cost
+        evaluationCost = metric_data.evaluation_cost
         if evaluationCost is None:
             return
 
@@ -74,9 +74,9 @@ class ConversationalApiTestCase(BaseModel):
     name: str
     success: bool
     instance_id: Optional[int] = Field(None)
-    # metrics_metadata can be None when we're not evaluating using conversational metrics
-    metrics_metadata: Union[List[MetricMetadata], None] = Field(
-        None, alias="metricsMetadata"
+    # metrics_data can be None when we're not evaluating using conversational metrics
+    metrics_data: Union[List[MetricData], None] = Field(
+        None, alias="metricsData"
     )
     run_duration: float = Field(0.0, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
@@ -85,16 +85,16 @@ class ConversationalApiTestCase(BaseModel):
     )
     order: Union[int, None] = Field(None)
 
-    def update_metric_metadata(self, metric_metadata: MetricMetadata):
-        if self.metrics_metadata is None:
-            self.metrics_metadata = [metric_metadata]
+    def update_metric_data(self, metrics_data: MetricData):
+        if self.metrics_data is None:
+            self.metrics_data = [metrics_data]
         else:
-            self.metrics_metadata.append(metric_metadata)
+            self.metrics_data.append(metrics_data)
 
-        if metric_metadata.success is False:
+        if metrics_data.success is False:
             self.success = False
 
-        evaluationCost = metric_metadata.evaluation_cost
+        evaluationCost = metrics_data.evaluation_cost
         if evaluationCost is None:
             return
 
