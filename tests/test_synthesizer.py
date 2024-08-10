@@ -126,6 +126,18 @@ document_paths = [file_path1, file_path2, file_path3]
 # #     return loaded_docs
 
 
+def test_context_generator_generate_contexts():
+    embedder = initialize_embedding_model("text-embedding-3-large")
+    context_generator = ContextGenerator(
+        document_paths=[file_path3, file_path2, file_path1], embedder=embedder
+    )
+    context_generator._load_docs()
+
+    contexts, _ = context_generator.generate_contexts(5)
+    # it should have generated 1 context for the first file (which contains 1 chunk), 2 for the second file (which has 2 chunks) and 5 contexts for the third file (which contains only >5 chunks)
+    assert len(contexts) == 8
+
+
 # # embedder = initialize_embedding_model("text-embedding-3-large")
 # # context_generator = ContextGenerator(
 # #     document_paths=document_paths, embedder=embedder
@@ -141,6 +153,7 @@ document_paths = [file_path1, file_path2, file_path3]
 # # Test Generate from Docs ###############################
 # synthesizer_sync = Synthesizer(async_mode=False)
 # synthesizer_async = Synthesizer(async_mode=True)
+# test_context_generator_generate_contexts()
 
 
 # def test_generate_goldens_from_docs(

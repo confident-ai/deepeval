@@ -516,5 +516,6 @@ async def main():
     )
 
 
-# Run the main function
-asyncio.run(main())
+if __name__ == "__main__":
+    # Run the main function
+    asyncio.run(main())
