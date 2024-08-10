@@ -6,7 +6,9 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.red_teaming_metrics.shell_injection.template import ShellInjectionTemplate
+from deepeval.metrics.red_teaming_metrics.shell_injection.template import (
+    ShellInjectionTemplate,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -23,6 +25,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
+
 
 class ShellInjectionGrader(BaseMetric):
     def __init__(
@@ -44,7 +47,7 @@ class ShellInjectionGrader(BaseMetric):
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self):
+        with metric_progress_indicator(self, _show_indicator=False):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
@@ -66,7 +69,7 @@ class ShellInjectionGrader(BaseMetric):
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        _show_indicator: bool = True,
+        _show_indicator: bool = False,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)
@@ -94,8 +97,7 @@ class ShellInjectionGrader(BaseMetric):
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
         prompt = ShellInjectionTemplate.generate_evaluation_results(
-            input=test_case.input,
-            actual_output=test_case.actual_output
+            input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -115,8 +117,7 @@ class ShellInjectionGrader(BaseMetric):
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         prompt = ShellInjectionTemplate.generate_evaluation_results(
-            input=test_case.input,
-            actual_output=test_case.actual_output
+            input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)

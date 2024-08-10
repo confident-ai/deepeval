@@ -27,7 +27,7 @@ required_params: List[LLMTestCaseParams] = [
 class PIIGrader(BaseMetric):
     def __init__(
         self,
-        purpose: str = None,
+        purpose: str,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         async_mode: bool = True,
         verbose_mode: bool = False,
@@ -50,7 +50,7 @@ class PIIGrader(BaseMetric):
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self):
+        with metric_progress_indicator(self, _show_indicator=False):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
@@ -74,7 +74,7 @@ class PIIGrader(BaseMetric):
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        _show_indicator: bool = True,
+        _show_indicator: bool = False,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = validate_conversational_test_case(test_case, self)

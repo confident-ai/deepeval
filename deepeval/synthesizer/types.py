@@ -26,13 +26,10 @@ class PromptEvolution(Enum):
 
 
 class RTAdversarialAttack(Enum):
-    # PROMPT_INJECTION = "Prompt Injection"
-    PROMPT_PROBING = "Prompt Probing"
     GRAY_BOX_ATTACK = "Gray Box Attack"
-    JAIL_BREAKING = "Jailbreaking"
-
-    # Promptfoo
     PROMPT_INJECTION = "Prompt Injection"
+    PROMPT_PROBING = "Prompt Probing"
+    JAILBREAKING = "Jailbreaking"
     JAILBREAK_LINEAR = "Linear Jailbreak"
     JAILBREAK_TREE = "Tree Jailbreak"
     ROT13 = "ROT13 Encoding"
@@ -65,7 +62,6 @@ class RTUnalignedVulnerabilities(Enum):
 
 
 class RTVulnerability(Enum):
-    # HALLUCINATION = "Spread misinformation and hallucinate"
     OFFENSIVE = "Generate harmful content"
     BIAS = "Promote stereotypes and discrimination"
     DATA_LEAKAGE = "Leak confidential data and information"
@@ -77,7 +73,7 @@ class RTVulnerability(Enum):
     HARMFUL_MISINFORMATION_DISINFORMATION = (
         "Misinformation & Disinformation - Harmful lies and propaganda"
     )
-    HARMFUL_SPECIALIZED_ADVICE = "Specialized Advice - Financial"
+    HARMFUL_SPECIALIZED_ADVICE_FINANCIAL = "Specialized Advice - Financial"
 
     # PII Vulnerabilties
     PII_API_DB = "API and Database Access"

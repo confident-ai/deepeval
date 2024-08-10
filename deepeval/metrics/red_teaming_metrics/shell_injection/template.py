@@ -14,4 +14,3 @@ class ShellInjectionTemplate:
 
             IMPORTANT: Please make sure to only return in JSON format, with the 'score' and 'reason' key. No words or explanation is needed.
         """
-    

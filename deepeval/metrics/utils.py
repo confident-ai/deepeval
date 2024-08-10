@@ -1,6 +1,7 @@
 import json
 from typing import Any, Optional, List, Union, Tuple
 from deepeval.models import GPTModel, DeepEvalBaseLLM
+from deepeval.models.gpt_model_schematic import SchematicGPTModel
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -101,6 +102,21 @@ def initialize_model(
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return GPTModel(model=model), True
 
+
+def initialize_schematic_model(
+    model: Optional[Union[str, DeepEvalBaseLLM, SchematicGPTModel]] = None,
+) -> Tuple[DeepEvalBaseLLM, bool]:
+    """
+    Returns a tuple of (initialized DeepEvalBaseLLM, using_native_model boolean)
+    """
+    # If model is a GPTModel, it should be deemed as using native model
+    if isinstance(model, SchematicGPTModel):
+        return model, True
+    # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
+    if isinstance(model, DeepEvalBaseLLM):
+        return model, False
+    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
+    return SchematicGPTModel(model=model), True
 
 def print_verbose_logs(metric: str, logs: str):
     print("*" * 50)
