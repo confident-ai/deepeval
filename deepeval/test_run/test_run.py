@@ -246,8 +246,7 @@ class TestRun(BaseModel):
                     test_failed += 1
 
         for test_case in self.conversational_test_cases:
-            # we don't count for conversational test cases success,
-            # because that would be double counting
+            # we don't count for conversational messages success
             if test_case.success is not None:
                 if test_case.success:
                     test_passed += 1
