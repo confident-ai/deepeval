@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from deepeval.test_case import LLMTestCaseParams, LLMTestCase
 from deepeval.types import Languages
-from deepeval.test_run.api import MetricMetadata
+from deepeval.test_run.api import MetricData
 from deepeval.utils import (
     delete_file_if_exists,
     serialize,
@@ -40,7 +40,7 @@ class MetricConfiguration(BaseModel):
 
 
 class CachedMetricData(BaseModel):
-    metric_metadata: MetricMetadata
+    metric_data: MetricData
     metric_configuration: MetricConfiguration
 
 
@@ -281,7 +281,7 @@ class Cache:
             return None
         for cached_metric_data in cached_test_case.cached_metrics_data:
             if (
-                cached_metric_data.metric_metadata.metric == metric.__name__
+                cached_metric_data.metric_data.name == metric.__name__
                 and Cache.same_metric_configs(
                     metric,
                     cached_metric_data.metric_configuration,
