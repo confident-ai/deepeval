@@ -130,7 +130,6 @@ class ImitationGrader(BaseMetric):
                 res: Entities = self.model.generate(
                     prompt, schema=Entities
                 )
-                print(res)
                 return res.entities
             except TypeError:
                 res = self.model.generate(prompt)
