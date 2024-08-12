@@ -9,7 +9,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    validate_conversational_test_case,
     trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
@@ -44,11 +43,7 @@ class HallucinationMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
 
-    def measure(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
-    ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = validate_conversational_test_case(test_case, self)
+    def measure(self, test_case: LLMTestCase) -> float:
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -79,11 +74,9 @@ class HallucinationMetric(BaseMetric):
 
     async def a_measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = validate_conversational_test_case(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None

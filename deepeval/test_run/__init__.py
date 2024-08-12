@@ -6,5 +6,5 @@ from .test_run import (
     ConversationalApiTestCase,
 )
 from .hooks import on_test_run_end, invoke_test_run_end_hook
-from .api import MetricMetadata
+from .api import MetricData
 from .hyperparameters import log_hyperparameters

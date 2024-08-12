@@ -3,6 +3,10 @@
 </p>
 
 <p align="center">
+    <h1 align="center">The LLM Evaluation Framework</h1>
+</p>
+
+<p align="center">
     <a href="https://discord.com/invite/a3K9c8GRGt">
         <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/a3K9c8GRGt?style=flat">
     </a>

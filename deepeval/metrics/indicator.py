@@ -6,7 +6,7 @@ from typing import List, Optional, Union
 import time
 import asyncio
 
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import BaseMetric, BaseConversationalMetric
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import show_indicator
 from deepeval.test_run.cache import CachedTestCase, Cache
@@ -14,7 +14,8 @@ from deepeval.telemetry import capture_metric_type
 
 
 def format_metric_description(
-    metric: BaseMetric, async_mode: Optional[bool] = None
+    metric: Union[BaseMetric, BaseConversationalMetric],
+    async_mode: Optional[bool] = None,
 ):
     if async_mode is None:
         run_async = metric.async_mode
@@ -58,40 +59,35 @@ def metric_progress_indicator(
 async def measure_metric_task(
     task_id,
     progress,
-    metric: BaseMetric,
+    metric: Union[BaseMetric, BaseConversationalMetric],
     test_case: Union[LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
 ):
     while not progress.finished:
         start_time = time.perf_counter()
-        metric_metadata = None
+        metric_data = None
         if cached_test_case is not None:
-            # cached test casr will always be None for conversational test case (from a_execute_test_cases)
+            # cached test case will always be None for conversational test case (from a_execute_test_cases)
             cached_metric_data = Cache.get_metric_data(metric, cached_test_case)
             if cached_metric_data:
-                metric_metadata = cached_metric_data.metric_metadata
+                metric_data = cached_metric_data.metric_data
 
-        if metric_metadata:
+        if metric_data:
             ## only change metric state, not configs
-            metric.score = metric_metadata.score
-            metric.success = metric_metadata.success
-            metric.reason = metric_metadata.reason
-            metric.evaluation_cost = metric_metadata.evaluation_cost
-            metric.verbose_logs = metric_metadata.verbose_logs
+            metric.score = metric_data.score
+            metric.success = metric_data.success
+            metric.reason = metric_data.reason
+            metric.evaluation_cost = metric_data.evaluation_cost
+            metric.verbose_logs = metric_data.verbose_logs
             finish_text = "Read from Cache"
         else:
-            if isinstance(test_case, ConversationalTestCase):
-                tc = test_case.messages[len(test_case.messages) - 1]
-            else:
-                tc = test_case
-
             try:
-                await metric.a_measure(tc, _show_indicator=False)
+                await metric.a_measure(test_case, _show_indicator=False)
                 finish_text = "Done"
             except TypeError:
                 try:
-                    await metric.a_measure(tc)
+                    await metric.a_measure(test_case)
                     finish_text = "Done"
                 except Exception as e:
                     if ignore_errors:
@@ -119,7 +115,7 @@ async def measure_metric_task(
 
 
 async def measure_metrics_with_indicator(
-    metrics: List[BaseMetric],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     test_case: Union[LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
@@ -152,28 +148,28 @@ async def measure_metrics_with_indicator(
     else:
         tasks = []
         for metric in metrics:
-            metric_metadata = None
+            metric_data = None
             # cached test case will always be None for conversationals
             if cached_test_case is not None:
                 cached_metric_data = Cache.get_metric_data(
                     metric, cached_test_case
                 )
                 if cached_metric_data:
-                    metric_metadata = cached_metric_data.metric_metadata
+                    metric_data = cached_metric_data.metric_data
 
-            if metric_metadata:
+            if metric_data:
                 ## Here we're setting the metric state from metrics metadata cache,
                 ## and later using the metric state to create a new metrics metadata cache
                 ## WARNING: Potential for bugs, what will happen if a metric changes state in between
                 ## test cases?
-                metric.score = metric_metadata.score
-                metric.threshold = metric_metadata.threshold
-                metric.success = metric_metadata.success
-                metric.reason = metric_metadata.reason
-                metric.strict_mode = metric_metadata.strict_mode
-                metric.evaluation_model = metric_metadata.evaluation_model
-                metric.evaluation_cost = metric_metadata.evaluation_cost
-                metric.verbose_logs = metric_metadata.verbose_logs
+                metric.score = metric_data.score
+                metric.threshold = metric_data.threshold
+                metric.success = metric_data.success
+                metric.reason = metric_data.reason
+                metric.strict_mode = metric_data.strict_mode
+                metric.evaluation_model = metric_data.evaluation_model
+                metric.evaluation_cost = metric_data.evaluation_cost
+                metric.verbose_logs = metric_data.verbose_logs
             else:
                 if isinstance(test_case, ConversationalTestCase):
                     tc = test_case.messages[len(test_case.messages) - 1]

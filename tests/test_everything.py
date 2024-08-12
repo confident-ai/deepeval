@@ -7,6 +7,7 @@ from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
+    Message,
 )
 from deepeval.types import Languages
 from deepeval.metrics import (
@@ -21,6 +22,7 @@ from deepeval.metrics import (
     GEval,
     SummarizationMetric,
     ToolCorrectnessMetric,
+    ConversationRelevancy,
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
@@ -141,6 +143,8 @@ def test_everything():
         verbose_mode=verbose_mode,
     )
 
+    metric12 = ConversationRelevancy()
+
     test_case = LLMTestCase(
         input="What is this",
         actual_output="this is a latte",
@@ -148,9 +152,14 @@ def test_everything():
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
     )
-    c_test_case = ConversationalTestCase(messages=[test_case, test_case])
+    c_test_case = ConversationalTestCase(
+        messages=[
+            Message(should_evaluate=False, llm_test_case=test_case),
+            Message(should_evaluate=False, llm_test_case=test_case),
+        ]
+    )
     assert_test(
-        test_case,
+        c_test_case,
         [
             metric1,
             metric2,
@@ -163,12 +172,13 @@ def test_everything():
             # metric9,
             # metric10,
             # metric11,
+            metric12,
         ],
         # run_async=False,
     )
 
 
-# @pytest.mark.skip(reason="openadi is expensive")
+@pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)

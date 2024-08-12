@@ -10,7 +10,7 @@ from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard.template import BigBenchHardTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
-from deepeval.benchmarks.models import *
+from deepeval.benchmarks.schema import *
 
 
 class BigBenchHard(DeepEvalBaseBenchmark):

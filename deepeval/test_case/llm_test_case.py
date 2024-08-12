@@ -26,7 +26,7 @@ class LLMTestCase:
     comments: Optional[str] = None
     tools_used: Optional[List[str]] = None
     expected_tools: Optional[List[str]] = None
-    reasoning: Optional[List[str]] = None
+    reasoning: Optional[str] = None
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
@@ -65,10 +65,3 @@ class LLMTestCase:
                 raise TypeError(
                     "'expected_tools' must be None or a list of strings"
                 )
-
-        # Ensure `reasoning` is None or a list of strings
-        if self.reasoning is not None:
-            if not isinstance(self.reasoning, list) or not all(
-                isinstance(item, str) for item in self.reasoning
-            ):
-                raise TypeError("'reasoning' must be None or a list of strings")
