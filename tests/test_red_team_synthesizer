@@ -153,7 +153,7 @@ def main():
     )
 
     print(results)
-    print(red_teamer.vulnerability_breakdown)
+    print(red_teamer.vulnerability_scores_breakdown)
 
 if __name__ == "__main__":
     main()

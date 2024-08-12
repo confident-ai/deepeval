@@ -14,6 +14,7 @@ module.exports = {
         "evaluation-test-cases",
         "evaluation-datasets",
         "evaluation-datasets-synthetic-data",
+        "evaluation-red-teaming",
         {
           type: "category",
           label: "Metrics",
@@ -71,9 +72,7 @@ module.exports = {
         {
           type: "category",
           label: "Evaluation & Testing",
-          items: [
-            "confident-ai-testing-n-evaluation-test-run",
-          ],
+          items: ["confident-ai-testing-n-evaluation-test-run"],
           collapsed: false,
         },
         {
@@ -84,6 +83,7 @@ module.exports = {
             "confident-ai-llm-monitoring-conversations",
             "confident-ai-llm-monitoring-evaluations",
             "confident-ai-llm-monitoring-dataset",
+            "evaluation-red-teaming",
           ],
           collapsed: false,
         },

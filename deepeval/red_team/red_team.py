@@ -179,7 +179,6 @@ class RedTeamer:
                         actual_output=actual_output,
                     )
                     metric.measure(test_case)
-
                     scores.append(metric.score)
                     red_teaming_results_breakdown.append({
                         "Vulnerability": vulnerability_value,
@@ -199,7 +198,8 @@ class RedTeamer:
             # Convert results to pandas DataFrames
             df_results = pd.DataFrame(red_teaming_results)
             df_breakdown = pd.DataFrame(red_teaming_results_breakdown)
-            self.vulnerability_breakdown = df_breakdown
+            self.vulnerability_scores_breakdown = df_breakdown
+            self.vulnerability_scores = df_results
         
             return df_results
     
@@ -240,15 +240,18 @@ class RedTeamer:
             for score, test_case, reason in vulnerability_results:
                 red_teaming_results_breakdown.append({
                     "Vulnerability": vulnerability_value,
-                    "Test Case": test_case,
+                    "Input": test_case.input,
+                    "Target Output": test_case.actual_output,
                     "Score": score,
-                    "Reason": reason
+                    "Reason": reason,
                 })
+
         
         # Convert the results to pandas DataFrames
         red_teaming_results_df = pd.DataFrame(red_teaming_results)
         red_teaming_results_breakdown_df = pd.DataFrame(red_teaming_results_breakdown)
-        self.vulnerability_breakdown = red_teaming_results_breakdown_df
+        self.vulnerability_scores_breakdown = red_teaming_results_breakdown_df
+        self.vulnerability_scores = red_teaming_results_df
         
         return red_teaming_results_df
     
