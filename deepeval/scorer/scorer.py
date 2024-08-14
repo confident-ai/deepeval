@@ -128,7 +128,7 @@ class Scorer:
         predictions: Union[str, List[str]],
         model: Optional[str] = "microsoft/deberta-large-mnli",
         lang: Optional[str] = "en",
-    ) -> float:
+    ) -> dict[str, np.ndarray]:
         """
         Calculate BERTScore for one or more reference sentences compared to one or more prediction sentences using a specified BERT model.
 
