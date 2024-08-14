@@ -1,6 +1,6 @@
 from copy import deepcopy
 import os
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Sequence
 import time
 from dataclasses import dataclass
 
@@ -539,7 +539,7 @@ def assert_test(
 
 
 def evaluate(
-    test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
+    test_cases: Sequence[Union[LLMTestCase, ConversationalTestCase]],
     metrics: List[BaseMetric],
     hyperparameters: Optional[Dict[str, Union[str, int, float]]] = None,
     run_async: bool = True,
