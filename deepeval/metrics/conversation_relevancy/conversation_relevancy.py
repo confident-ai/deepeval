@@ -29,7 +29,7 @@ required_params: List[LLMTestCaseParams] = [
 ]
 
 
-class ConversationRelevancy(BaseConversationalMetric):
+class ConversationRelevancyMetric(BaseConversationalMetric):
     def __init__(
         self,
         threshold: float = 0.5,

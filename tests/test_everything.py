@@ -22,7 +22,7 @@ from deepeval.metrics import (
     GEval,
     SummarizationMetric,
     ToolCorrectnessMetric,
-    ConversationRelevancy,
+    ConversationRelevancyMetric,
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
