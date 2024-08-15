@@ -65,6 +65,7 @@ class GEval(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        _include_g_eval_suffix: bool = True,
     ):
         self.name = name
         self.evaluation_params = evaluation_params
@@ -93,6 +94,7 @@ class GEval(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self._include_g_eval_suffix = _include_g_eval_suffix
 
     def measure(self, test_case: LLMTestCase) -> float:
         check_llm_test_case_params(test_case, self.evaluation_params, self)
@@ -422,4 +424,7 @@ class GEval(BaseMetric):
 
     @property
     def __name__(self):
-        return f"{self.name} (GEval)"
+        if self._include_g_eval_suffix:
+            return f"{self.name} (GEval)"
+        else:
+            return self.name
