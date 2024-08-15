@@ -25,7 +25,7 @@ from deepeval.utils import (
     is_confident,
     is_in_ci_env,
 )
-from deepeval.test_run.cache import test_run_cache_manager
+from deepeval.test_run.cache import global_test_run_cache_manager
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
 
@@ -654,19 +654,21 @@ class TestRunManager:
         if valid_scores == 0:
             print("All metrics errored for all test cases, please try again.")
             delete_file_if_exists(self.temp_file_name)
-            delete_file_if_exists(test_run_cache_manager.temp_cache_file_name)
+            delete_file_if_exists(
+                global_test_run_cache_manager.temp_cache_file_name
+            )
             return
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
         test_run.sort_test_cases()
         test_run.delete_test_case_instance_ids()
 
-        if test_run_cache_manager.disable_write_cache is None:
-            test_run_cache_manager.disable_write_cache = (
+        if global_test_run_cache_manager.disable_write_cache is None:
+            global_test_run_cache_manager.disable_write_cache = (
                 get_is_running_deepeval() == False
             )
 
-        test_run_cache_manager.wrap_up_cached_test_run()
+        global_test_run_cache_manager.wrap_up_cached_test_run()
 
         if display_table:
             self.display_results_table(test_run)
@@ -676,4 +678,4 @@ class TestRunManager:
         self.post_test_run(test_run)
 
 
-test_run_manager = TestRunManager()
+global_test_run_manager = TestRunManager()
