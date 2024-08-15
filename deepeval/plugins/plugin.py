@@ -4,7 +4,7 @@ import json
 from rich import print
 from typing import Optional, Any
 from deepeval.constants import PYTEST_RUN_TEST_NAME
-from deepeval.test_run import test_run_manager
+from deepeval.test_run import global_test_run_manager
 from deepeval.utils import get_is_running_deepeval
 
 
@@ -12,8 +12,8 @@ def pytest_sessionstart(session: pytest.Session):
     is_running_deepeval = get_is_running_deepeval()
 
     if is_running_deepeval:
-        test_run_manager.save_to_disk = True
-        test_run_manager.create_test_run(
+        global_test_run_manager.save_to_disk = True
+        global_test_run_manager.create_test_run(
             file_name=session.config.getoption("file_or_dir")[0]
         )
 
