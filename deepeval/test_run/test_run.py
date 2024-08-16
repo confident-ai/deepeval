@@ -149,10 +149,7 @@ class TestRun(BaseModel):
 
     def sort_test_cases(self):
         self.test_cases.sort(
-            key=lambda x: (
-                x.order if x.order is not None else float("inf"),
-                x.name,
-            )
+            key=lambda x: (x.order if x.order is not None else float("inf"))
         )
         # Optionally update order only if not already set
         highest_order = 0
@@ -162,10 +159,7 @@ class TestRun(BaseModel):
             highest_order = test_case.order + 1
 
         self.conversational_test_cases.sort(
-            key=lambda x: (
-                x.order if x.order is not None else float("inf"),
-                x.name,
-            )
+            key=lambda x: (x.order if x.order is not None else float("inf"))
         )
         # Optionally update order only if not already set
         highest_order = 0
