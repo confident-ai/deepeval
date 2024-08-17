@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepeval.api import Api, Endpoints
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.monitor.api import APIFeedback
 
 
@@ -26,8 +26,9 @@ def send_feedback(
             # Pydantic version below 2.0
             body = api_event.dict(by_alias=True, exclude_none=True)
 
-        api.post_request(
-            endpoint=Endpoints.FEEDBACK_ENDPOINT.value,
+        api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.FEEDBACK_ENDPOINT,
             body=body,
         )
 

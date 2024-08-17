@@ -12,7 +12,7 @@ from rich.console import Console
 from rich import print
 
 from deepeval.metrics import BaseMetric
-from deepeval.api import Api, Endpoints
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_run.api import (
     LLMApiTestCase,
     ConversationalApiTestCase,
@@ -533,8 +533,9 @@ class TestRunManager:
                 body = test_run.dict(by_alias=True, exclude_none=True)
 
             api = Api()
-            result = api.post_request(
-                endpoint=Endpoints.TEST_RUN_ENDPOINT.value,
+            result = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.TEST_RUN_ENDPOINT,
                 body=body,
             )
             response = TestRunHttpResponse(
