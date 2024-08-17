@@ -35,7 +35,7 @@ def run_confident_evaluation(
             body=body,
         )
         if result:
-            print("ok bitch")
+            pass
     else:
         raise Exception(
             "To run evaluations on Confident AI, run `deepeval login`."
