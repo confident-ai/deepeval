@@ -10,7 +10,7 @@ from deepeval.metrics.red_teaming_metrics.contracts.template import ContractsTem
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    validate_conversational_test_case,
+    check_conversational_test_case_params,
     trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,

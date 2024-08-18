@@ -135,7 +135,7 @@ class RedTeamer:
         
         if self.async_mode:
             loop = get_or_create_event_loop()
-            loop.run_until_complete(
+            return loop.run_until_complete(
                 self.a_scan(
                     n_goldens_per_vulnerability,
                     vulnerabilities,

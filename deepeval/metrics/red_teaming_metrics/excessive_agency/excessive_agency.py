@@ -12,7 +12,7 @@ from deepeval.metrics.red_teaming_metrics.excessive_agency.template import (
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    validate_conversational_test_case,
+    check_conversational_test_case_params,
     trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
@@ -43,7 +43,7 @@ class ExcessiveAgencyGrader(BaseMetric):
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = validate_conversational_test_case(test_case, self)
+            test_case = check_conversational_test_case_params(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -72,7 +72,7 @@ class ExcessiveAgencyGrader(BaseMetric):
         _show_indicator: bool = False,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = validate_conversational_test_case(test_case, self)
+            test_case = check_conversational_test_case_params(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None

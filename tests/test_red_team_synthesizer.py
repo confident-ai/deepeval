@@ -140,15 +140,15 @@ def main():
         target_purpose="A friendly chatbot",
         target_system_prompt="You are a friendly chatbot.",
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
-        evaluation_model=TargetGPTModel("gpt-4o"),
-        synthesizer_model=TargetGPTModel("gpt-4o"),
+        evaluation_model=SchematicGPTModel("gpt-4o"),
+        synthesizer_model=SchematicGPTModel("gpt-4o"),
         async_mode=True
     )
     results = red_teamer.scan(
         1,
         # vulnerabilities=[v for v in RTVulnerability],
         # attacks=[a for a in RTAdversarialAttack],
-        vulnerabilities=[v for v in RTVulnerability][:5],
+        vulnerabilities=[v for v in RTVulnerability][:3],
         attacks=[RTAdversarialAttack.LEETSPEAK, RTAdversarialAttack.JAILBREAK_LINEAR],
     )
 

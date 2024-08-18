@@ -6,11 +6,11 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.red_teaming_metrics.hallucination.template import HallucinationTepmlate
+from deepeval.metrics.red_teaming_metrics.hallucination.template import HallucinationTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    validate_conversational_test_case,
+    check_conversational_test_case_params,
     trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
@@ -46,7 +46,7 @@ class HallucinationGrader(BaseMetric):
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = validate_conversational_test_case(test_case, self)
+            test_case = check_conversational_test_case_params(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -75,7 +75,7 @@ class HallucinationGrader(BaseMetric):
         _show_indicator: bool = False,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = validate_conversational_test_case(test_case, self)
+            test_case = check_conversational_test_case_params(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -101,7 +101,7 @@ class HallucinationGrader(BaseMetric):
     ):
         if self.purpose:
             return self.purpose
-        prompt = HallucinationTepmlate.extract_purpose(self.system_prompt)
+        prompt = HallucinationTemplate.extract_purpose(self.system_prompt)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
@@ -123,7 +123,7 @@ class HallucinationGrader(BaseMetric):
     ):
         if self.purpose:
             return self.purpose
-        prompt = HallucinationTepmlate.extract_purpose(self.system_prompt)
+        prompt = HallucinationTemplate.extract_purpose(self.system_prompt)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
@@ -143,7 +143,7 @@ class HallucinationGrader(BaseMetric):
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
-        prompt = HallucinationTepmlate.generate_evaluation_results(
+        prompt = HallucinationTemplate.generate_evaluation_results(
             actual_output=test_case.actual_output,
             purpose=self.purpose,
         )
@@ -164,7 +164,7 @@ class HallucinationGrader(BaseMetric):
                 return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
-        prompt = HallucinationTepmlate.generate_evaluation_results(
+        prompt = HallucinationTemplate.generate_evaluation_results(
             actual_output=test_case.actual_output,
             purpose=self.purpose,
         )
