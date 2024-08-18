@@ -104,7 +104,37 @@ metric = HallucinationMetric()
 dataset.evaluate([metric])
 ```
 
-## Evaluate Your Dataset
+## Evaluate Your Dataset on Confident AI
+
+You can run evaluations on Confident AI's infrastructure in a 4-step process:
+
+1. [Create an experiment](confident-ai-testing-n-evaluation-experiments) and specify which metrics you wish to run evaluations with on Confident AI.
+2. Pull dataset from Confident AI.
+3. Populate missing required fields such as `actual_output`s in your dataset by prompting your LLM application with such test cases.
+4. Send over the populated dataset to Confident AI by providing the name of the experiment you created in step 1.
+
+```python
+from deepeval import confident_evaluate
+from deepeval.dataset import EvaluationDataset
+
+# Initialize empty dataset object
+dataset = EvaluationDataset()
+
+# Pull from Confident
+dataset.pull(alias="My Confident Dataset")
+
+# Hypothetical function to populate 'actual_outputs' in test cases of dataset
+populate_dataset(dataset)
+
+# Send populated dataset over to Confident AI for evaluation
+confident_evaluate(experiment_name="My Experiment", dataset)
+```
+
+:::info
+Evaluations happens on Confident AI's infrastructure.
+:::
+
+## Evaluate Your Dataset Using `deepeval`
 
 You can start running evaluations as usual once you have your dataset pulled from Confident AI. Remember, a dataset is simply a list of test cases, so what you previously learned on [evaluating test cases](evaluation-test-cases#assert-a-test-case) still applies.
 
