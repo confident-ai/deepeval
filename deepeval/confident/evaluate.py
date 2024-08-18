@@ -1,4 +1,6 @@
-from typing import List, Union
+from typing import List, Optional, Union
+import webbrowser
+from rich.console import Console
 
 from deepeval.confident.api import (
     Api,
@@ -6,14 +8,18 @@ from deepeval.confident.api import (
     DEEPEVAL_BASE_URL,
     HttpMethods,
 )
-from deepeval.confident.types import ConfidentEvaluateRequestData
+from deepeval.confident.types import (
+    ConfidentEvaluateRequestData,
+    ConfidentEvaluateResponseData,
+)
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import is_confident
 
 
-def run_confident_evaluation(
+def confident_evaluate(
     experiment_name: str,
     test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
+    disable_browser_opening: Optional[bool] = False,
 ):
     if is_confident():
         api = Api(base_url=DEEPEVAL_BASE_URL)
@@ -35,7 +41,17 @@ def run_confident_evaluation(
             body=body,
         )
         if result:
-            pass
+            response = ConfidentEvaluateResponseData(
+                link=result["link"],
+            )
+            Console().print(
+                f"✅ Evaluation of experiment {experiment_name} starter! View progress on "
+                f"[link={response.link}]{response.link}[/link]"
+            )
+
+            if disable_browser_opening == False:
+                webbrowser.open(response.link)
+
     else:
         raise Exception(
             "To run evaluations on Confident AI, run `deepeval login`."

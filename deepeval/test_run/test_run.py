@@ -532,7 +532,6 @@ class TestRunManager:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
 
-            print(body)
             api = Api()
             result = api.send_request(
                 method=HttpMethods.POST,
@@ -597,7 +596,6 @@ class TestRunManager:
                         body=body,
                     )
                 except Exception as e:
-                    print(str(e))
                     message = f"Unexpected error when sending some test cases. Incomplete test run available at {link}"
                     raise Exception(message) from e
 

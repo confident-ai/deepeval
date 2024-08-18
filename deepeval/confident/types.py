@@ -9,3 +9,7 @@ class ConfidentEvaluateRequestData(BaseModel):
     test_cases: List[Union[LLMTestCase, ConversationalTestCase]] = Field(
         alias="testCases"
     )
+
+
+class ConfidentEvaluateResponseData(BaseModel):
+    link: str

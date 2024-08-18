@@ -4,7 +4,7 @@ from typing import List, Optional, Union, Dict
 import time
 from dataclasses import dataclass
 
-from deepeval.confident.evaluate import run_confident_evaluation
+from deepeval.confident.evaluate import confident_evaluate
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -564,7 +564,7 @@ def evaluate(
     experiment_name: Optional[str] = None,
 ):
     if experiment_name is not None:
-        run_confident_evaluation(
+        confident_evaluate(
             experiment_name=experiment_name, test_cases=test_cases
         )
         return
