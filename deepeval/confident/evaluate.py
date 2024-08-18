@@ -40,6 +40,7 @@ def confident_evaluate(
             endpoint=Endpoints.EVALUATE_ENDPOINT,
             body=body,
         )
+
         if result:
             response = ConfidentEvaluateResponseData(
                 link=result["link"],
