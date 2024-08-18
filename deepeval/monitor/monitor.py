@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Union, Any
 
-from deepeval.api import Api, Endpoints
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.monitor.api import (
     APIEvent,
@@ -90,8 +90,9 @@ def monitor(
             # Pydantic version below 2.0
             body = api_event.dict(by_alias=True, exclude_none=True)
 
-        result = api.post_request(
-            endpoint=Endpoints.EVENT_ENDPOINT.value,
+        result = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.EVENT_ENDPOINT,
             body=body,
         )
         response = EventHttpResponse(eventId=result["eventId"])

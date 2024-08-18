@@ -12,7 +12,7 @@ from rich.console import Console
 from rich import print
 
 from deepeval.metrics import BaseMetric
-from deepeval.api import Api, Endpoints
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_run.api import (
     LLMApiTestCase,
     ConversationalApiTestCase,
@@ -532,9 +532,11 @@ class TestRunManager:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
 
+            print(body)
             api = Api()
-            result = api.post_request(
-                endpoint=Endpoints.TEST_RUN_ENDPOINT.value,
+            result = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.TEST_RUN_ENDPOINT,
                 body=body,
             )
             response = TestRunHttpResponse(
@@ -589,11 +591,13 @@ class TestRunManager:
                     )
 
                 try:
-                    result = api.put_request(
-                        endpoint=Endpoints.TEST_RUN_ENDPOINT.value,
+                    result = api.send_request(
+                        method=HttpMethods.PUT,
+                        endpoint=Endpoints.TEST_RUN_ENDPOINT,
                         body=body,
                     )
                 except Exception as e:
+                    print(str(e))
                     message = f"Unexpected error when sending some test cases. Incomplete test run available at {link}"
                     raise Exception(message) from e
 

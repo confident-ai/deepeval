@@ -11,7 +11,7 @@ import time
 import ast
 
 from deepeval.metrics import BaseMetric
-from deepeval.api import Api, Endpoints
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
@@ -338,8 +338,9 @@ class EvaluationDataset:
                 body = api_dataset.dict(by_alias=True, exclude_none=True)
 
             api = Api()
-            result = api.post_request(
-                endpoint=Endpoints.DATASET_ENDPOINT.value,
+            result = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.DATASET_ENDPOINT,
                 body=body,
             )
             if result:
@@ -371,8 +372,9 @@ class EvaluationDataset:
                     total=100,
                 )
                 start_time = time.perf_counter()
-                result = api.get_request(
-                    endpoint=Endpoints.DATASET_ENDPOINT.value,
+                result = api.send_request(
+                    method=HttpMethods.GET,
+                    endpoint=Endpoints.DATASET_ENDPOINT,
                     params={"alias": alias},
                 )
 
