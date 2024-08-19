@@ -438,7 +438,7 @@ class EvaluationDataset:
             RTAdversarialAttack.PROMPT_INJECTION,
             RTAdversarialAttack.PROMPT_PROBING,
             RTAdversarialAttack.GRAY_BOX_ATTACK,
-            RTAdversarialAttack.JAIL_BREAKING,
+            RTAdversarialAttack.JAILBREAKING,
         ],
         vulnerabilities: List[RTVulnerability] = [
             RTVulnerability.BIAS,

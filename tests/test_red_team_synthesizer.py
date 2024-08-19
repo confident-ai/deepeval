@@ -1,21 +1,21 @@
-from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
-from langchain_openai import ChatOpenAI, AzureChatOpenAI
-from openai import OpenAI, AsyncOpenAI
-from typing import Optional, Tuple
-from pydantic import BaseModel
-import instructor
-import logging
 import openai
+import logging
+import asyncio
+from typing import Optional, Tuple
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
+from langchain_community.callbacks import get_openai_callback
+from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.red_team import RedTeamer
 from deepeval.models import DeepEvalBaseLLM
-
+from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.models.gpt_model_schematic import SchematicGPTModel
+from deepeval.synthesizer import RTAdversarialAttack, RTVulnerability
 
 def log_retry_error(retry_state):
     logging.error(
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
-
 
 valid_gpt_models = [
     "gpt-4o-mini",
@@ -37,7 +37,7 @@ valid_gpt_models = [
 default_gpt_model = "gpt-4o"
 
 
-class SchematicGPTModel(DeepEvalBaseLLM):
+class TargetGPTModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model: Optional[str] = None,
@@ -56,7 +56,6 @@ class SchematicGPTModel(DeepEvalBaseLLM):
             model_name = default_gpt_model
 
         self._openai_api_key = _openai_api_key
-        self.is_azure_model: bool
         # args and kwargs will be passed to the underlying model, in load_model function
         self.args = args
         self.kwargs = kwargs
@@ -107,32 +106,22 @@ class SchematicGPTModel(DeepEvalBaseLLM):
         retry=retry_if_exception_type(openai.RateLimitError),
         after=log_retry_error,
     )
-    def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[str, float]:
-        client = instructor.from_openai(OpenAI())
-        response = client.chat.completions.create(
-            model=self.model_name,
-            response_model=schema,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return response
+    def generate(self, prompt: str) -> Tuple[str, float]:
+        chat_model = self.load_model()
+        with get_openai_callback() as cb:
+            res = chat_model.invoke(prompt)
+            return res.content
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
         after=log_retry_error,
     )
-    async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[str, float]:
-        client = instructor.from_openai(AsyncOpenAI())
-        response = await client.chat.completions.create(
-            model=self.model_name,
-            response_model=schema,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return response
+    async def a_generate(self, prompt: str) -> Tuple[str, float]:
+        chat_model = self.load_model()
+        with get_openai_callback() as cb:
+            res = await chat_model.ainvoke(prompt)
+            return res.content
 
     def should_use_azure_openai(self):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
@@ -143,3 +132,28 @@ class SchematicGPTModel(DeepEvalBaseLLM):
             return "azure openai"
         elif self.model_name:
             return self.model_name
+
+
+def main():
+
+    red_teamer = RedTeamer(
+        target_purpose="A friendly chatbot",
+        target_system_prompt="You are a friendly chatbot.",
+        target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
+        evaluation_model=SchematicGPTModel("gpt-4o"),
+        synthesizer_model=SchematicGPTModel("gpt-4o"),
+        async_mode=True
+    )
+    results = red_teamer.scan(
+        1,
+        # vulnerabilities=[v for v in RTVulnerability],
+        # attacks=[a for a in RTAdversarialAttack],
+        vulnerabilities=[v for v in RTVulnerability][:3],
+        attacks=[RTAdversarialAttack.LEETSPEAK, RTAdversarialAttack.JAILBREAK_LINEAR],
+    )
+
+    print(results)
+    print(red_teamer.vulnerability_scores_breakdown)
+
+if __name__ == "__main__":
+    main()
