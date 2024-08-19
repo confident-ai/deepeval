@@ -8,9 +8,7 @@ from deepeval.metrics.conversation_completeness.template import (
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    get_messages_in_sliding_window,
     process_llm_test_cases,
-    process_llm_test_cases_windows,
     trimAndLoadJson,
     initialize_model,
 )
@@ -30,7 +28,7 @@ required_params: List[LLMTestCaseParams] = [
 ]
 
 
-class ConversationCompleteness(BaseConversationalMetric):
+class ConversationCompletenessMetric(BaseConversationalMetric):
     def __init__(
         self,
         threshold: float = 0.5,

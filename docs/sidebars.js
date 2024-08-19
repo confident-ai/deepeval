@@ -71,6 +71,15 @@ module.exports = {
         "confident-ai-introduction",
         {
           type: "category",
+          label: "Evaluation & Testing",
+          items: [
+            "confident-ai-testing-n-evaluation-experiments",
+            "confident-ai-testing-n-evaluation-test-run",
+          ],
+          collapsed: false,
+        },
+        {
+          type: "category",
           label: "Datasets",
           items: [
             "confident-ai-evaluation-dataset-management",
@@ -80,13 +89,7 @@ module.exports = {
         },
         {
           type: "category",
-          label: "Evaluation & Testing",
-          items: ["confident-ai-testing-n-evaluation-test-run"],
-          collapsed: false,
-        },
-        {
-          type: "category",
-          label: "LLM Monitoring",
+          label: "LLM Observability",
           items: [
             "confident-ai-llm-monitoring",
             "confident-ai-llm-monitoring-conversations",

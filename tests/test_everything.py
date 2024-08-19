@@ -22,7 +22,7 @@ from deepeval.metrics import (
     GEval,
     SummarizationMetric,
     ToolCorrectnessMetric,
-    ConversationRelevancy,
+    ConversationRelevancyMetric,
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
@@ -86,7 +86,7 @@ strict_mode = False
 verbose_mode = False
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -143,7 +143,7 @@ def test_everything():
         verbose_mode=verbose_mode,
     )
 
-    metric12 = ConversationRelevancy()
+    metric12 = ConversationRelevancyMetric()
 
     test_case = LLMTestCase(
         input="What is this",

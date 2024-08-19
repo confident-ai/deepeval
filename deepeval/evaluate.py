@@ -4,6 +4,7 @@ from typing import List, Optional, Union, Dict
 import time
 from dataclasses import dataclass
 
+from deepeval.confident.evaluate import confident_evaluate
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -19,14 +20,15 @@ from deepeval.metrics.indicator import (
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import (
-    test_run_manager,
+    global_test_run_manager,
     LLMApiTestCase,
     ConversationalApiTestCase,
     MetricData,
+    TestRunManager,
 )
 from deepeval.utils import get_is_running_deepeval, set_indicator
 from deepeval.test_run.cache import (
-    test_run_cache_manager,
+    global_test_run_cache_manager,
     Cache,
     CachedTestCase,
     CachedMetricData,
@@ -187,9 +189,14 @@ def execute_test_cases(
     use_cache: bool,
     save_to_disk: bool = False,
     verbose_mode: Optional[bool] = None,
+    test_run_manager: Optional[TestRunManager] = None,
 ) -> List[TestResult]:
     test_results: List[TestResult] = []
-    test_run_cache_manager.disable_write_cache = save_to_disk == False
+    global_test_run_cache_manager.disable_write_cache = save_to_disk == False
+
+    if test_run_manager is None:
+        test_run_manager = global_test_run_manager
+
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
 
@@ -232,7 +239,7 @@ def execute_test_cases(
                 cached_test_case = None
                 if use_cache:
                     cached_test_case = (
-                        test_run_cache_manager.get_cached_test_case(
+                        global_test_run_cache_manager.get_cached_test_case(
                             test_case, test_run.hyperparameters
                         )
                     )
@@ -295,12 +302,12 @@ def execute_test_cases(
                 test_run_manager.update_test_run(api_test_case, test_case)
 
                 ### Cache Test Run ###
-                test_run_cache_manager.cache_test_case(
+                global_test_run_cache_manager.cache_test_case(
                     test_case,
                     new_cached_test_case,
                     test_run.hyperparameters,
                 )
-                test_run_cache_manager.cache_test_case(
+                global_test_run_cache_manager.cache_test_case(
                     test_case,
                     new_cached_test_case,
                     test_run.hyperparameters,
@@ -353,9 +360,14 @@ async def a_execute_test_cases(
     use_cache: bool,
     save_to_disk: bool = False,
     verbose_mode: Optional[bool] = None,
+    test_run_manager: Optional[TestRunManager] = None,
 ) -> List[TestResult]:
     test_results: List[TestResult] = []
-    test_run_cache_manager.disable_write_cache = save_to_disk == False
+    global_test_run_cache_manager.disable_write_cache = save_to_disk == False
+
+    if test_run_manager is None:
+        test_run_manager = global_test_run_manager
+
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
 
@@ -399,7 +411,7 @@ async def a_execute_test_cases(
                 # only use cache when NOT conversational test case
                 if use_cache:
                     cached_test_case = (
-                        test_run_cache_manager.get_cached_test_case(
+                        global_test_run_cache_manager.get_cached_test_case(
                             test_case,
                             test_run.hyperparameters,
                         )
@@ -446,12 +458,12 @@ async def a_execute_test_cases(
                 test_run_manager.update_test_run(api_test_case, test_case)
 
                 ### Cache Test Run ###
-                test_run_cache_manager.cache_test_case(
+                global_test_run_cache_manager.cache_test_case(
                     test_case,
                     new_cached_test_case,
                     test_run.hyperparameters,
                 )
-                test_run_cache_manager.cache_test_case(
+                global_test_run_cache_manager.cache_test_case(
                     test_case,
                     new_cached_test_case,
                     test_run.hyperparameters,
@@ -549,7 +561,14 @@ def evaluate(
     use_cache: bool = False,
     ignore_errors: bool = False,
     verbose_mode: Optional[bool] = None,
+    experiment_name: Optional[str] = None,
 ):
+    if experiment_name is not None:
+        confident_evaluate(
+            experiment_name=experiment_name, test_cases=test_cases
+        )
+        return
+
     if hyperparameters is not None:
         if (
             hyperparameters.get("model") is None
@@ -562,7 +581,7 @@ def evaluate(
 
     set_indicator(show_indicator)
 
-    test_run_manager.reset()
+    global_test_run_manager.reset()
     start_time = time.perf_counter()
     if print_results:
         print("Evaluating test cases...")
@@ -598,10 +617,10 @@ def evaluate(
 
         aggregate_metric_pass_rates(test_results)
 
-    test_run = test_run_manager.get_test_run()
+    test_run = global_test_run_manager.get_test_run()
     test_run.hyperparameters = hyperparameters
-    test_run_manager.save_test_run()
-    test_run_manager.wrap_up_test_run(run_duration, display_table=False)
+    global_test_run_manager.save_test_run()
+    global_test_run_manager.wrap_up_test_run(run_duration, display_table=False)
     return test_results
 
 

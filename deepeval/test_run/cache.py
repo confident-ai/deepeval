@@ -267,7 +267,7 @@ class TestRunCacheManager:
             delete_file_if_exists(self.temp_cache_file_name)
 
 
-test_run_cache_manager = TestRunCacheManager()
+global_test_run_cache_manager = TestRunCacheManager()
 
 ############ Helper Functions #############
 

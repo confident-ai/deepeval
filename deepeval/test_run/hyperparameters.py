@@ -1,6 +1,6 @@
 from typing import Union
 
-from .test_run import test_run_manager
+from .test_run import global_test_run_manager
 
 
 def process_hyperparameters(hyperparameters) -> Union[dict, None]:
@@ -31,7 +31,7 @@ def process_hyperparameters(hyperparameters) -> Union[dict, None]:
 
 def log_hyperparameters(model: str, prompt_template: str):
     def decorator(func):
-        test_run = test_run_manager.get_test_run()
+        test_run = global_test_run_manager.get_test_run()
 
         def modified_hyperparameters():
             base_hyperparameters = func()
@@ -41,7 +41,7 @@ def log_hyperparameters(model: str, prompt_template: str):
 
         hyperparameters = process_hyperparameters(modified_hyperparameters())
         test_run.hyperparameters = hyperparameters
-        test_run_manager.save_test_run()
+        global_test_run_manager.save_test_run()
 
         # Define the wrapper function that will be the actual decorator
         def wrapper(*args, **kwargs):

@@ -11,6 +11,7 @@ from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login_with_confident_api_key
 from deepeval.telemetry import *
 from deepeval.integrations import trace_langchain, trace_llama_index
+from deepeval.confident import confident_evaluate
 
 __all__ = [
     "login_with_confident_api_key",
@@ -23,6 +24,7 @@ __all__ = [
     "send_feedback",
     "trace_langchain",
     "trace_llama_index",
+    "confident_evaluate",
 ]
 
 

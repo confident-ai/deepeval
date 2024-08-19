@@ -115,7 +115,8 @@ def check_llm_test_case_params(
     metric: BaseMetric,
 ):
     if isinstance(test_case, LLMTestCase) is False:
-        metric.error = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
+        error_str = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
+        metric.error = error_str
         raise ValueError(error_str)
 
     missing_params = []
