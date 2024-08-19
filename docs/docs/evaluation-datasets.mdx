@@ -6,10 +6,11 @@ sidebar_label: Datasets
 
 ## Quick Summary
 
-In `deepeval`, an evaluation dataset, or just dataset, is a collection of `LLMTestCase`s and/or `Golden`s. There are two approaches to evaluating datasets in `deepeval`:
+In `deepeval`, an evaluation dataset, or just dataset, is a collection of `LLMTestCase`s and/or `Golden`s. There are three approaches to evaluating datasets in `deepeval`:
 
 1. using `@pytest.mark.parametrize` and `assert_test`
 2. using `evaluate`
+3. using `confident_evaluate` (evaluates on Confident AI instead of locally)
 
 ## Create An Evaluation Dataset
 
@@ -236,15 +237,13 @@ Visit the [test cases section](evaluation-test-cases) to learn what argument the
 
 ## Evaluate Your Dataset on Confident AI
 
-Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead.
-
-First, [login to Confident AI](confident-ai-introduction#login-to-confident-ai):
+Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](confident-ai-introduction#login-to-confident-ai):
 
 ```console
 deepeval login
 ```
 
-Then define metrics by [creating an experiment](confident-ai-testing-n-evaluation-experiments#creating-an-experiment) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
+Then, define metrics by [creating an experiment](confident-ai-testing-n-evaluation-experiments#creating-an-experiment) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
 
 ```python
 from deepeval import confident_evaluate

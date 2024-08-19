@@ -304,21 +304,33 @@ If you have reached this point, you've likely ran `deepeval test run` multiple t
 deepeval login
 ```
 
-**Confident AI** is the platform that unlocks `deepeval`'s full potential, and allows anyone to easily:
-
-- keep track of and debug historical test run results
-- discover optimal hyperparameters, such as the best models and prompt templates to use
-- centralize and synthesize evaluation datasets on the cloud
-- safeguard against breaking changes in CI/CD pipelines
-- run real-time evaluations in production, with custom metrics
-
-:::info
-[Click here](confident-ai-introduction) for the full documentation on using Confident AI with `deepeval`.
+:::note
+Follow the instructions displayed on the CLI to create an account, get your Confident API key, and paste it in the CLI. You should see a message congratulating your successful login.
 :::
 
-Follow the instructions displayed on the CLI to create an account, get your Confident API key, and paste it in the CLI. You should see a message congratulating your successful login.
+[Confident AI](https://www.confident-ai.com/) is an all-in-one platform that unlocks `deepeval`'s full potential, and allows anyone to easily:
 
-Once logged in, you'll be able to view test run results on Confident AI each time you execute a test run:
+- Run evaluations directly on Confident AI (instead of locally via `deepeval`)
+- Keep track of and debug historical test run results
+- Discover optimal hyperparameters, such as the best models and prompt templates to use
+- Centralize and synthesize evaluation datasets on the cloud
+- Safeguard against breaking changes in CI/CD pipelines
+- Monitor and trace LLM applications
+- Run real-time evaluations in production, with custom metrics
+
+:::tip
+[Click here](confident-ai-introduction) for the full documentation on using Confident AI through `deepeval`.
+:::
+
+By logging in, you can:
+
+- **Run evaluations directly on Confident AI's infrastructure (recommended)**
+- Run evaluations locally via `deepeval` and have it sent to Confident AI upon completion
+
+Both workflows would allow you to view, share, edit, and comment on resulting test runs on Confident AI.
+
+:::info
+If you do decide to stick to running evaluations locally instead, you'll be able to view test run results on Confident AI each time you execute a test run:
 
 ```python title="test_example.py"
 from deepeval import assert_test
@@ -326,23 +338,36 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
 def test_answer_relevancy():
-    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-    test_case = LLMTestCase(
-        input="What if these shoes don't fit?",
-        actual_output="We offer a 30-day full refund at no extra cost."
-    )
-    assert_test(test_case, [answer_relevancy_metric])
+    test_case = LLMTestCase(input="...", actual_output="...")
+    assert_test(test_case, [AnswerRelevancyMetric()])
 ```
 
 ```console
 deepeval test run test_example.py
 ```
 
-**You should now see a link being returned upon test completion.** Paste it in your browser to view results.
+Once evaluation has finished, the test run result will be automatically sent to Confident AI. You should now see a link being returned upon test completion, and you can paste it in your browser to view results.
+:::
 
-### Managing Datasets On The Cloud
+### Running Evaluations On Confident AI
 
-`deepeval` allows you to push and pull datasets stored on Confident AI. This is similar to pushing and pulling a repo from GitHub. To push a dataset to Confident AI, create an `EvaluationDataset` instance, populate it with test cases, and use the `push()` method:
+Confident AI allows anyone to define (custom) LLM evaluation metrics and run evaluations scalably on the cloud.
+
+All you need to do is [create an experiment on Confident AI](confident-ai-testing-n-evaluation-experiments#creating-an-experiment) and send over test cases that you wish to be evaluated. All compute and LLMs required for evaluation will be provided by Confident AI.
+
+```python
+from deepeval import confident_evaluate
+from deepeval.test_case import LLMTestCase
+
+confident_evaluate(
+    experiment_name="Your Experiment Name",
+    test_cases=[LLMTestCase(...)]
+)
+```
+
+### Managing and Generating Datasets
+
+`deepeval` allows you to push and pull datasets stored on Confident AI, which is similar to pushing and pulling a repo from GitHub. To push a dataset to Confident AI, create an `EvaluationDataset` instance, populate it with test cases, and use the `push()` method:
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -353,34 +378,20 @@ dataset.push(alias="My First Dataset")
 
 You can now edit, comment on, and manage test cases on the cloud instead of locally in a CSV file.
 
-:::info
-You can also create a dataset on Confident AI without going through `deepeval`.
+:::note
+You can also create a dataset directly on Confident AI without going through `deepeval`.
 :::
 
 To pull the dataset for evaluation, use the `pull()` method and evaluate it as shown in previous sections:
 
-```python title="test_example.py"
-import pytest
-from deepeval import assert_test
+```python
+from deepeval import confident_evaluate
 from deepeval.dataset import EvaluationDataset
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
 
 dataset = EvaluationDataset()
 dataset.pull(alias="My First Dataset")
 
-# Loop through test cases using Pytest
-@pytest.mark.parametrize(
-    "test_case",
-    dataset,
-)
-def test_customer_chatbot(test_case: LLMTestCase):
-    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-    assert_test(test_case, [answer_relevancy_metric])
-```
-
-```console
-deepeval test run test_example.py
+confident_evaluate(experiment_name="Your Experiment Name", dataset)
 ```
 
 :::tip
@@ -392,6 +403,10 @@ To see a concrete example and a more detailed explanation, visit the [evaluating
 ### Optimizing Hyperparameters
 
 Confident AI helps you easily discover the optimal set of hyperparameters, which in `deepeval` refers to properties such as the models, prompt templates, etc. used when generating the `actual_output`s for each `LLMTestCase`.
+
+:::caution
+We're currently in the process of adding greater support for this feature but for now this section is only applicable if you're running evaluations locally using `deepeval`.
+:::
 
 To discover which set of hyperparameters gives you the best evaluation metrics results, use the `@deepeval.log_hyperparameters` decorator:
 
@@ -459,7 +474,7 @@ Feel free to execute this in a nested for loop to figure out the best hyperparam
 
 ### Monitoring LLM Responses
 
-Confident AI allows anyone to [monitor and evaluate LLM responses in real-time.](confident-ai-llm-monitoring) A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
+Confident AI allows anyone to [monitor, trace, and evaluate LLM responses in real-time.](confident-ai-llm-monitoring) A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
 
 ```python
 import deepeval
@@ -477,7 +492,14 @@ response_id = deepeval.monitor(
 Confident AI will automatically run evaluations for each incoming LLM response on metrics you have turned on. Simply head over to the 'Project Details' page on Confident AI to turn on these real-time metrics.
 
 :::info
-You can find more information on [running real-time evaluations here.](confident-ai-llm-monitoring-evaluations)
+You can also trace LLM applications on Confident AI. Learn more about how to setup tracing [here.](confident-ai-tracing)
+
+<video width="100%" autoPlay loop muted playsInlines>
+  <source
+    src="https://confident-bucket.s3.amazonaws.com/tracing.mp4"
+    type="video/mp4"
+  />
+</video>
 :::
 
 ### Sending Human Feedback
