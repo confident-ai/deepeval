@@ -70,19 +70,19 @@ module.exports = {
         "confident-ai-introduction",
         {
           type: "category",
-          label: "Datasets",
+          label: "Evaluation & Testing",
           items: [
-            "confident-ai-evaluation-dataset-management",
-            "confident-ai-evaluation-dataset-evaluation",
+            "confident-ai-testing-n-evaluation-experiments",
+            "confident-ai-testing-n-evaluation-test-run",
           ],
           collapsed: false,
         },
         {
           type: "category",
-          label: "Evaluation & Testing",
+          label: "Datasets",
           items: [
-            "confident-ai-testing-n-evaluation-experiments",
-            "confident-ai-testing-n-evaluation-test-run",
+            "confident-ai-evaluation-dataset-management",
+            "confident-ai-evaluation-dataset-evaluation",
           ],
           collapsed: false,
         },

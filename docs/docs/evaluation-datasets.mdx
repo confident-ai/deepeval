@@ -161,13 +161,18 @@ dataset.add_test_cases_from_csv_file(
 Since `expected_output`, `context`, and `retrieval_context` are optional parameters for an `LLMTestCase`, these fields are similarily **optional** parameters when adding test cases from an existing dataset.
 :::
 
-## Evaluate Your Dataset With Pytest
+## Evaluate Your Dataset Using `deepeval`
 
-Before we begin, we highly recommend [logging into Confident AI](https://app.confident-ai.com) to keep track of all evaluation results on the cloud:
+:::tip
+Before we begin, we highly recommend [logging into Confident AI](https://app.confident-ai.com) to keep track of all evaluation results created by `deepeval` on the cloud:
 
 ```console
 deepeval login
 ```
+
+:::
+
+### With Pytest
 
 `deepeval` utilizes the `@pytest.mark.parametrize` decorator to loop through entire datasets.
 
@@ -206,9 +211,9 @@ To run several tests cases at once in parallel, use the optional `-n` flag follo
 deepeval test run test_bulk.py -n 3
 ```
 
-## Evaluate Your Dataset Without Pytest
+### Without Pytest
 
-Alternately, you can use `deepeval`'s `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
+You can use `deepeval`'s `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
 
 ```python
 from deepeval import evaluate
@@ -227,4 +232,29 @@ evaluate(dataset, [hallucination_metric, answer_relevancy_metric])
 
 :::info
 Visit the [test cases section](evaluation-test-cases) to learn what argument the `evaluate()` function accepts.
+:::
+
+## Evaluate Your Dataset on Confident AI
+
+Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead.
+
+First, [login to Confident AI](confident-ai-introduction#login-to-confident-ai):
+
+```console
+deepeval login
+```
+
+Then define metrics by [creating an experiment](confident-ai-testing-n-evaluation-experiments#creating-an-experiment) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
+
+```python
+from deepeval import confident_evaluate
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(test_cases=[...])
+
+confident_evaluate(experiment_name="My First Experiment", dataset)
+```
+
+:::tip
+You can find the full tutorial on running evaluations on Confident AI [here.](confident-ai-testing-n-evaluation-experiments)
 :::

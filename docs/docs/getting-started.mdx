@@ -34,14 +34,14 @@ In your newly created virtual environment, run:
 pip install -U deepeval
 ```
 
-You can also keep track of all evaluation results by logging onto [Confident AI, an all in one evaluation platform](https://app.confident-ai.com):
+`deepeval` runs evaluations locally on your enviornment. However, you can also **run evaluations directly on** [Confident AI](confident-ai-introduction), an all in one evaluation platform:
 
 ```console
 deepeval login
 ```
 
-:::note
-**[Contact us](https://calendly.com/jeffreyip-myw/confident-ai-intro-call)** if you're dealing with sensitive data that has to reside in your private VPCs.
+:::tip
+Running evaluations on Confident AI's infrastructure may use Confident AI's proprietary models instead. **[Contact us](https://calendly.com/jeffreyip-myw/confident-ai-intro-call)** if you're dealing with sensitive data that has to reside in your private VPCs.
 :::
 
 ## Create Your First Test Case
@@ -75,7 +75,7 @@ deepeval test run test_example.py
 - The variable `retrieval_context` contains the retrieved context from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an default metric provided by `deepeval` for you to evaluate your LLM output's relevancy based on the provided retrieval context.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
-:::tip
+:::info
 You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running the `AnswerRelevancyMetric`, since the `AnswerRelevancyMetric` is an LLM-evaluated metric.
 
 To use **ANY** custom LLM of your choice, [check out this part of the docs](evaluation-introduction#using-a-custom-llm).
