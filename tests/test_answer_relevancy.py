@@ -2,9 +2,9 @@
 """
 
 import pytest
+from deepeval.metrics.answer_relevancy.schema import Verdicts
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
 from deepeval import assert_test
 
 question = "What are the primary benefits of meditation?"
@@ -81,3 +81,12 @@ def test_answer_relevancy():
         retrieval_context=[one, two, three],
     )
     assert_test(test_case, [metric])
+
+
+def test_verdict_schema():
+    from tests.custom_judge import CustomJudge
+    judge = CustomJudge("mock")
+    schema = Verdicts
+    answer = ('{\n"verdicts": [\n{\n"verdict": "yes"\n},\n{\n    "verdict": "no",\n    "reason": "blah blah"\n},'
+              '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}')
+    res: Verdicts = judge.generate(answer, schema=schema)

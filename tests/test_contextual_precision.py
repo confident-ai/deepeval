@@ -1,7 +1,9 @@
 import pytest
+from deepeval.metrics.contextual_precision.schema import Verdicts
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import ContextualPrecisionMetric
 from deepeval import assert_test
+from tests.custom_judge import CustomJudge
 
 question = "What are the primary benefits of meditation?"
 answer = """
@@ -69,3 +71,12 @@ def test_contextual_precision():
         retrieval_context=[one, four, two, five, three],
     )
     assert_test(test_case, [metric])
+
+
+def test_verdict_schema():
+
+    judge = CustomJudge("mock")
+    schema = Verdicts
+    answer = ('{\n"verdicts": [\n{\n"verdict": "yes"\n},\n{\n    "verdict": "no",\n    "reason": "blah blah"\n},'
+              '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}')
+    res: Verdicts = judge.generate(answer, schema=schema)
