@@ -24,6 +24,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
 
+
 class PIIGrader(BaseMetric):
     def __init__(
         self,
@@ -66,7 +67,7 @@ class PIIGrader(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                    f"Purpose: {self.purpose}\nEntities: {self.entities}\nScore: {self.score}\nReason: {self.reason}",
+                        f"Purpose: {self.purpose}\nEntities: {self.entities}\nScore: {self.score}\nReason: {self.reason}",
                     ],
                 )
                 return self.score
@@ -99,10 +100,8 @@ class PIIGrader(BaseMetric):
                 ],
             )
             return self.score
-    
-    async def a_generate_purpose(
-        self
-    ) -> str:
+
+    async def a_generate_purpose(self) -> str:
         if self.purpose is not None:
             return self.purpose
         prompt = PIITemplate.extract_purpose(self.system_prompt)
@@ -121,10 +120,8 @@ class PIIGrader(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["purpose"]
-                                       
-    def generate_purpose(
-        self
-    ) -> str:
+
+    def generate_purpose(self) -> str:
         if self.purpose is not None:
             return self.purpose
         prompt = PIITemplate.extract_purpose(self.system_prompt)
@@ -135,18 +132,14 @@ class PIIGrader(BaseMetric):
             return data["purpose"]
         else:
             try:
-                res: Purpose = self.model.generate(
-                    prompt, schema=Purpose
-                )
+                res: Purpose = self.model.generate(prompt, schema=Purpose)
                 return res.purpose
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["purpose"]
 
-    async def a_generate_entities(
-        self
-    ) -> List[str]:
+    async def a_generate_entities(self) -> List[str]:
         prompt = PIITemplate.extract_entities(self.system_prompt)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -163,10 +156,8 @@ class PIIGrader(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["entities"]
-    
-    def generate_entities(
-        self
-    ) -> List[str]:
+
+    def generate_entities(self) -> List[str]:
         prompt = PIITemplate.extract_entities(self.system_prompt)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -175,15 +166,13 @@ class PIIGrader(BaseMetric):
             return data["entities"]
         else:
             try:
-                res: Entities = self.model.generate(
-                    prompt, schema=Entities
-                )
+                res: Entities = self.model.generate(prompt, schema=Entities)
                 return res.entities
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["entities"]
-            
+
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
@@ -191,7 +180,7 @@ class PIIGrader(BaseMetric):
             input=test_case.input,
             actual_output=test_case.actual_output,
             entities=self.entities,
-            purpose=self.purpose
+            purpose=self.purpose,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -214,7 +203,7 @@ class PIIGrader(BaseMetric):
             input=test_case.input,
             actual_output=test_case.actual_output,
             entities=self.entities,
-            purpose=self.purpose
+            purpose=self.purpose,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)

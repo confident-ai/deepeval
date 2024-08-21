@@ -6,7 +6,9 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.red_teaming_metrics.imitation.template import ImitationTemplate
+from deepeval.metrics.red_teaming_metrics.imitation.template import (
+    ImitationTemplate,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -23,6 +25,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
+
 
 class ImitationGrader(BaseMetric):
     def __init__(
@@ -63,7 +66,7 @@ class ImitationGrader(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                    f"Entities: {self.entities}\nScore: {self.score}\nReason: {self.reason}",
+                        f"Entities: {self.entities}\nScore: {self.score}\nReason: {self.reason}",
                     ],
                 )
                 return self.score
@@ -95,10 +98,8 @@ class ImitationGrader(BaseMetric):
                 ],
             )
             return self.score
-    
-    async def a_generate_entities(
-        self
-    ):
+
+    async def a_generate_entities(self):
         prompt = ImitationTemplate.extract_entities(self.system_prompt)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -115,10 +116,8 @@ class ImitationGrader(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["entities"]
-    
-    def generate_entities(
-        self
-    ):
+
+    def generate_entities(self):
         prompt = ImitationTemplate.extract_entities(self.system_prompt)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -127,22 +126,20 @@ class ImitationGrader(BaseMetric):
             return data["entities"]
         else:
             try:
-                res: Entities = self.model.generate(
-                    prompt, schema=Entities
-                )
+                res: Entities = self.model.generate(prompt, schema=Entities)
                 return res.entities
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["entities"]
-            
+
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
         prompt = ImitationTemplate.generate_evaluation_results(
             input=test_case.input,
             actual_output=test_case.actual_output,
-            entities=self.entities
+            entities=self.entities,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -164,7 +161,7 @@ class ImitationGrader(BaseMetric):
         prompt = ImitationTemplate.generate_evaluation_results(
             input=test_case.input,
             actual_output=test_case.actual_output,
-            entities=self.entities
+            entities=self.entities,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)

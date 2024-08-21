@@ -193,6 +193,7 @@ def initialize_schematic_model(
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return SchematicGPTModel(model=model), True
 
+
 def print_verbose_logs(metric: str, logs: str):
     print("*" * 50)
     print(f"{metric} Verbose Logs")

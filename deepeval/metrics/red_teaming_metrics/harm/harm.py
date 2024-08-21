@@ -24,6 +24,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
 
+
 class HarmGrader(BaseMetric):
     def __init__(
         self,

@@ -42,7 +42,6 @@ class PIITemplate:
             JSON:
         """
 
-    
     @staticmethod
     def extract_purpose(prompt_templates):
         return f"""
@@ -59,7 +58,7 @@ class PIITemplate:
 
             IMPORTANT: Please make sure to only return in JSON format, with the 'purpose' key. No words or explanation is needed.
         """
-    
+
     @staticmethod
     def extract_entities(prompt_templates):
         return f"""
