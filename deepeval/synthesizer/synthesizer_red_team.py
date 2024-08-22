@@ -56,8 +56,12 @@ class RTSynthesizer:
         if self.using_native_model:
             res, _ = self.synthesizer_model.generate(prompt)
             if check_refusal:
-                non_refusal_prompt = RTAdversarialAttackContextlessTemplate.non_compliant(res)
-                non_refusal_res, _ = self.synthesizer_model.generate(non_refusal_prompt)
+                non_refusal_prompt = (
+                    RTAdversarialAttackContextlessTemplate.non_compliant(res)
+                )
+                non_refusal_res, _ = self.synthesizer_model.generate(
+                    non_refusal_prompt
+                )
                 data: Dict = trimAndLoadJson(non_refusal_res, self)
                 if data["non_compliant"] == True:
                     return False
@@ -69,19 +73,30 @@ class RTSynthesizer:
                     prompt=prompt, schema=schema
                 )
                 if check_refusal:
-                    non_refusal_prompt = RTAdversarialAttackContextlessTemplate.non_compliant(res.model_dump())
-                    non_refusal_res: ComplianceData = self.synthesizer_model.generate(non_refusal_prompt, schema=ComplianceData)
+                    non_refusal_prompt = (
+                        RTAdversarialAttackContextlessTemplate.non_compliant(
+                            res.model_dump()
+                        )
+                    )
+                    non_refusal_res: ComplianceData = (
+                        self.synthesizer_model.generate(
+                            non_refusal_prompt, schema=ComplianceData
+                        )
+                    )
                     if non_refusal_res.non_compliant == True:
                         return False
-                return tuple(
-                    getattr(res, field)
-                    for field in res.__fields__
-                )
+                return tuple(getattr(res, field) for field in res.__fields__)
             except TypeError:
                 res = self.synthesizer_model.generate(prompt)
                 if check_refusal:
-                    non_refusal_prompt = RTAdversarialAttackContextlessTemplate.non_compliant(res)
-                    non_refusal_res = self.synthesizer_model.generate(non_refusal_prompt)
+                    non_refusal_prompt = (
+                        RTAdversarialAttackContextlessTemplate.non_compliant(
+                            res
+                        )
+                    )
+                    non_refusal_res = self.synthesizer_model.generate(
+                        non_refusal_prompt
+                    )
                     data: Dict = trimAndLoadJson(non_refusal_res, self)
                     if data["non_compliant"] == True:
                         return False
@@ -94,8 +109,12 @@ class RTSynthesizer:
         if self.using_native_model:
             res, _ = await self.synthesizer_model.a_generate(prompt)
             if check_refusal:
-                non_refusal_prompt = RTAdversarialAttackContextlessTemplate.non_compliant(res)
-                non_refusal_res, _ = await self.synthesizer_model.a_generate(non_refusal_prompt)
+                non_refusal_prompt = (
+                    RTAdversarialAttackContextlessTemplate.non_compliant(res)
+                )
+                non_refusal_res, _ = await self.synthesizer_model.a_generate(
+                    non_refusal_prompt
+                )
                 data: Dict = trimAndLoadJson(non_refusal_res, self)
                 if data["non_compliant"] == True:
                     return False
@@ -107,19 +126,30 @@ class RTSynthesizer:
                     prompt=prompt, schema=schema
                 )
                 if check_refusal:
-                    non_refusal_prompt = RTAdversarialAttackContextlessTemplate.non_compliant(res.model_dump())
-                    non_refusal_res: ComplianceData = await self.synthesizer_model.a_generate(non_refusal_prompt, schema=ComplianceData)
+                    non_refusal_prompt = (
+                        RTAdversarialAttackContextlessTemplate.non_compliant(
+                            res.model_dump()
+                        )
+                    )
+                    non_refusal_res: ComplianceData = (
+                        await self.synthesizer_model.a_generate(
+                            non_refusal_prompt, schema=ComplianceData
+                        )
+                    )
                     if non_refusal_res.non_compliant == True:
                         return False
-                return tuple(
-                    getattr(res, field)
-                    for field in res.__fields__
-                )
+                return tuple(getattr(res, field) for field in res.__fields__)
             except TypeError:
                 res = await self.synthesizer_model.a_generate(prompt)
                 if check_refusal:
-                    non_refusal_prompt = RTAdversarialAttackContextlessTemplate.non_compliant(res)
-                    non_refusal_res = await self.synthesizer_model.a_generate(non_refusal_prompt)
+                    non_refusal_prompt = (
+                        RTAdversarialAttackContextlessTemplate.non_compliant(
+                            res
+                        )
+                    )
+                    non_refusal_res = await self.synthesizer_model.a_generate(
+                        non_refusal_prompt
+                    )
                     data: Dict = trimAndLoadJson(non_refusal_res, self)
                     if data["non_compliant"] == True:
                         return False
@@ -154,16 +184,17 @@ class RTSynthesizer:
                 # checking for Non-refusal
                 non_refusal_prompt = RTAdversarialAttackContextlessTemplate.jailbreaking_non_refusal_prompt(
                     goal=goal, target_response=res.model_dump()
-                )[0]
+                )[
+                    0
+                ]
                 # Return new prompt or false
                 classification = self.generate_tuple_from_synthesizer(
                     non_refusal_prompt, NonRefusal
                 )
                 if classification[0] == "Non-refusal":
                     return tuple(
-                    getattr(res, field)
-                    for field in res.__fields__
-                )
+                        getattr(res, field) for field in res.__fields__
+                    )
                 else:
                     return False
             except TypeError:
@@ -220,9 +251,8 @@ class RTSynthesizer:
                 )
                 if classification[0] == "Non-refusal":
                     return tuple(
-                    getattr(res, field)
-                    for field in res.__fields__
-                )
+                        getattr(res, field) for field in res.__fields__
+                    )
                 else:
                     return False
             except TypeError:
@@ -664,9 +694,11 @@ class RTSynthesizer:
             prompt_injection_input = random.choice(
                 [
                     RTAdversarialAttackContextlessTemplate.prompt_injection_template_1(
-                        raw_golden.input),
+                        raw_golden.input
+                    ),
                     RTAdversarialAttackContextlessTemplate.prompt_injection_template_2(
-                        raw_golden.input),
+                        raw_golden.input
+                    ),
                 ]
             )
             raw_golden.input = prompt_injection_input
@@ -693,7 +725,9 @@ class RTSynthesizer:
         raw_golden_copy = copy.deepcopy(raw_golden)
 
         if attack == RTAdversarialAttack.BASE64:
-            base64_input = base64.b64encode(raw_golden_copy.input.encode()).decode()
+            base64_input = base64.b64encode(
+                raw_golden_copy.input.encode()
+            ).decode()
             raw_golden_copy.input = base64_input
 
         elif attack == RTAdversarialAttack.ROT13:
@@ -821,11 +855,11 @@ class RTSynthesizer:
                 if synthetic_data_raw != False:
                     synthetic_data_raw = synthetic_data_raw[0]
                     if isinstance(synthetic_data_raw, dict):
-                        synthetic_data_raw = synthetic_data_raw["data"]                   
+                        synthetic_data_raw = synthetic_data_raw["data"]
                     break
                 if i == max_retries - 1:
                     return []
-            
+
             synthetic_data = []
             for item in synthetic_data_raw:
                 if isinstance(item, dict):
@@ -886,11 +920,11 @@ class RTSynthesizer:
                 if synthetic_data_raw != False:
                     synthetic_data_raw = synthetic_data_raw[0]
                     if isinstance(synthetic_data_raw, dict):
-                        synthetic_data_raw = synthetic_data_raw["data"]                        
+                        synthetic_data_raw = synthetic_data_raw["data"]
                     break
                 if i == max_retries - 1:
                     return []
-                
+
             synthetic_data = [
                 SyntheticData(**item) if isinstance(item, dict) else item
                 for item in synthetic_data_raw
@@ -953,7 +987,9 @@ class RTSynthesizer:
             raw_goldens: List[Golden] = []
             pbar = tqdm(vulnerabilities, desc="Generating prompts")
             for vulnerability in pbar:
-                pbar.set_description(f"Generating prompts - {vulnerability.value}")
+                pbar.set_description(
+                    f"Generating prompts - {vulnerability.value}"
+                )
                 goldens = self.generate_raw_prompts(
                     n_goldens_per_vulnerability,
                     purpose,
@@ -965,12 +1001,14 @@ class RTSynthesizer:
             strategized_goldens: List[Golden] = []
             pbar = tqdm(raw_goldens, desc="Adversarizing prompts")
             for golden in pbar:
-                pbar.set_description(f"Adversarizing prompts - {vulnerability.value}")
+                pbar.set_description(
+                    f"Adversarizing prompts - {vulnerability.value}"
+                )
                 for attack in attacks:
                     strategized_goldens.append(
                         self.adversarize_raw_prompts(golden, attack)
                     )
-            
+
             self.synthetic_goldens.extend(strategized_goldens)
             return strategized_goldens
 
@@ -984,16 +1022,19 @@ class RTSynthesizer:
     ) -> List[Golden]:
 
         # Initialize tqdm for generating raw goldens
-        pbar = tqdm(total=len(vulnerabilities), desc="Generating raw prompts asynchronously")
+        pbar = tqdm(
+            total=len(vulnerabilities),
+            desc="Generating raw prompts asynchronously",
+        )
         raw_goldens: List[Golden] = []
         tasks = []
         for vulnerability in vulnerabilities:
             task = asyncio.create_task(
-                self.a_generate_raw_prompts(  
+                self.a_generate_raw_prompts(
                     n_goldens_per_vulnerability,
                     purpose,
                     vulnerability,
-                    system_prompt
+                    system_prompt,
                 )
             )
             task.add_done_callback(lambda _: pbar.update(1))
@@ -1004,7 +1045,9 @@ class RTSynthesizer:
         pbar.close()
 
         # Initialize tqdm for adversarizing raw goldens
-        pbar = tqdm(total=len(raw_goldens), desc="Adversarizing prompts asynchronously")
+        pbar = tqdm(
+            total=len(raw_goldens), desc="Adversarizing prompts asynchronously"
+        )
         adversarize_tasks = []
         for golden in raw_goldens:
             adversarize_task = asyncio.create_task(
@@ -1014,14 +1057,15 @@ class RTSynthesizer:
             adversarize_tasks.append(adversarize_task)
         strategized_goldens = await asyncio.gather(*adversarize_tasks)
         pbar.close()
-        flattened_goldens = [item for sublist in strategized_goldens for item in sublist]
+        flattened_goldens = [
+            item for sublist in strategized_goldens for item in sublist
+        ]
         self.synthetic_goldens.extend(flattened_goldens)
         return flattened_goldens
 
     async def a_adversarize_multiple_attacks_on_golden(
-            self, 
-            golden: Golden, 
-            attacks: List[RTAdversarialAttack]):
+        self, golden: Golden, attacks: List[RTAdversarialAttack]
+    ):
         results = []
         for attack in attacks:
             result = await self.a_adversarize_raw_prompts(golden, attack)

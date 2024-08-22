@@ -12,10 +12,12 @@ from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.synthesizer import RTAdversarialAttack, RTVulnerability
 
+
 def log_retry_error(retry_state):
     logging.error(
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
+
 
 valid_gpt_models = [
     "gpt-4o-mini",
@@ -142,18 +144,22 @@ def main():
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
         evaluation_model=SchematicGPTModel("gpt-4o"),
         synthesizer_model=SchematicGPTModel("gpt-4o"),
-        async_mode=True
+        async_mode=True,
     )
     results = red_teamer.scan(
         1,
         # vulnerabilities=[v for v in RTVulnerability],
         # attacks=[a for a in RTAdversarialAttack],
         vulnerabilities=[v for v in RTVulnerability][:3],
-        attacks=[RTAdversarialAttack.LEETSPEAK, RTAdversarialAttack.JAILBREAK_LINEAR],
+        attacks=[
+            RTAdversarialAttack.LEETSPEAK,
+            RTAdversarialAttack.JAILBREAK_LINEAR,
+        ],
     )
 
     print(results)
     print(red_teamer.vulnerability_scores_breakdown)
+
 
 if __name__ == "__main__":
     main()

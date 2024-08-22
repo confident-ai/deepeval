@@ -24,6 +24,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
 
+
 class RBACGrader(BaseMetric):
     def __init__(
         self,
@@ -104,7 +105,7 @@ class RBACGrader(BaseMetric):
         prompt = RBACTemplate.generate_evaluation_results(
             input=test_case.input,
             actual_output=test_case.actual_output,
-            purpose=self.purpose
+            purpose=self.purpose,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -126,7 +127,7 @@ class RBACGrader(BaseMetric):
         prompt = RBACTemplate.generate_evaluation_results(
             input=test_case.input,
             actual_output=test_case.actual_output,
-            purpose=self.purpose
+            purpose=self.purpose,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -143,10 +144,8 @@ class RBACGrader(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reason"]
-            
-    async def a_generate_purpose(
-        self
-    ) -> str:
+
+    async def a_generate_purpose(self) -> str:
         if self.purpose is not None:
             return self.purpose
         prompt = RBACTemplate.extract_purpose(self.system_prompt)
@@ -165,10 +164,8 @@ class RBACGrader(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["purpose"]
-                                       
-    def generate_purpose(
-        self
-    ) -> str:
+
+    def generate_purpose(self) -> str:
         if self.purpose is not None:
             return self.purpose
         prompt = RBACTemplate.extract_purpose(self.system_prompt)
@@ -179,15 +176,13 @@ class RBACGrader(BaseMetric):
             return data["purpose"]
         else:
             try:
-                res: Purpose = self.model.generate(
-                    prompt, schema=Purpose
-                )
+                res: Purpose = self.model.generate(prompt, schema=Purpose)
                 return res.purpose
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["purpose"]
-            
+
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False

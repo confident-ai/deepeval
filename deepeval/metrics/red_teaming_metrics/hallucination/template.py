@@ -36,7 +36,6 @@ class HallucinationTemplate:
             JSON:
         """
 
-    
     @staticmethod
     def extract_purpose(prompt_templates):
         return f"""

@@ -157,6 +157,7 @@ class GEval(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
+                    f"Criteria:\n{self.criteria}",
                     f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],

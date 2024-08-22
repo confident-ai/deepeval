@@ -6,7 +6,9 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.red_teaming_metrics.hallucination.template import HallucinationTemplate
+from deepeval.metrics.red_teaming_metrics.hallucination.template import (
+    HallucinationTemplate,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -23,6 +25,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
+
 
 class HallucinationGrader(BaseMetric):
     def __init__(
@@ -95,10 +98,8 @@ class HallucinationGrader(BaseMetric):
                 ],
             )
             return self.score
-        
-    async def a_generate_purpose(
-            self
-    ):
+
+    async def a_generate_purpose(self):
         if self.purpose:
             return self.purpose
         prompt = HallucinationTemplate.extract_purpose(self.system_prompt)
@@ -117,10 +118,8 @@ class HallucinationGrader(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["purpose"]
-                                       
-    def generate_purpose(
-            self
-    ):
+
+    def generate_purpose(self):
         if self.purpose:
             return self.purpose
         prompt = HallucinationTemplate.extract_purpose(self.system_prompt)
@@ -131,15 +130,13 @@ class HallucinationGrader(BaseMetric):
             return data["purpose"]
         else:
             try:
-                res: Purpose = self.model.generate(
-                    prompt, schema=Purpose
-                )
+                res: Purpose = self.model.generate(prompt, schema=Purpose)
                 return res.purpose
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["purpose"]
-            
+
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:

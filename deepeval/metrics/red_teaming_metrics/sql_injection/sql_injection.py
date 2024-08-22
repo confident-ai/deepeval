@@ -6,7 +6,9 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.red_teaming_metrics.sql_injection.template import SQLInjectionTemplate
+from deepeval.metrics.red_teaming_metrics.sql_injection.template import (
+    SQLInjectionTemplate,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -23,6 +25,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
+
 
 class SQLInjectionGrader(BaseMetric):
     def __init__(
@@ -47,9 +50,7 @@ class SQLInjectionGrader(BaseMetric):
         with metric_progress_indicator(self, _show_indicator=False):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case)
-                )
+                loop.run_until_complete(self.a_measure(test_case))
             else:
                 score, reason = self.evaluate(test_case)
                 self.reason = reason
@@ -94,8 +95,7 @@ class SQLInjectionGrader(BaseMetric):
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
         prompt = SQLInjectionTemplate.generate_evaluation_results(
-            input=test_case.input,
-            actual_output=test_case.actual_output
+            input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -115,8 +115,7 @@ class SQLInjectionGrader(BaseMetric):
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         prompt = SQLInjectionTemplate.generate_evaluation_results(
-            input=test_case.input,
-            actual_output=test_case.actual_output
+            input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)

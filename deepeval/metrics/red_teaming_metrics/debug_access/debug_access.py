@@ -6,7 +6,9 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.red_teaming_metrics.debug_access.template import DebugAccessTemplate
+from deepeval.metrics.red_teaming_metrics.debug_access.template import (
+    DebugAccessTemplate,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -23,6 +25,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
+
 
 class DebugAccessGrader(BaseMetric):
     def __init__(
@@ -94,8 +97,7 @@ class DebugAccessGrader(BaseMetric):
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
         prompt = DebugAccessTemplate.generate_evaluation_results(
-            input=test_case.input,
-            actual_output=test_case.actual_output
+            input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -115,8 +117,7 @@ class DebugAccessGrader(BaseMetric):
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         prompt = DebugAccessTemplate.generate_evaluation_results(
-            input=test_case.input,
-            actual_output=test_case.actual_output
+            input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
