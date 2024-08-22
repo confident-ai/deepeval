@@ -4,7 +4,7 @@ from deepeval.metrics import (
     AnswerRelevancyMetric,
 )
 from deepeval.dataset import EvaluationDataset
-from deepeval import evaluate
+from deepeval import evaluate, confident_evaluate
 
 messages = [
     Message(
@@ -34,3 +34,14 @@ metric = ConversationCompletenessMetric(verbose_mode=True)
 #     ],
 #     metrics=[metric, AnswerRelevancyMetric()],
 # )
+
+
+confident_evaluate(
+    experiment_name="Test",
+    test_cases=[
+        LLMTestCase(
+            input="+44",
+            actual_output="Thank you, Alex, for bearing with me. We now have all the information we need to proceed with opening your new bank account. I appreciate your cooperation and patience throughout this process.",
+        )
+    ],
+)

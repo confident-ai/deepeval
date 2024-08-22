@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 import logging
 import openai
-import instructor
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
 
