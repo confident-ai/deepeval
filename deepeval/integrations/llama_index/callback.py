@@ -59,7 +59,7 @@ from deepeval.tracing import (
     TraceData,
 )
 from deepeval.utils import dataclass_to_dict, class_to_dict
-from deepeval.event import track
+from deepeval import monitor
 
 events_to_ignore = [
     # CBEventType.CHUNKING,
@@ -156,7 +156,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_manager.clear_trace_stack()
 
             if trace_manager.get_outter_provider() == TraceProvider.LLAMA_INDEX:
-                track(
+                monitor(
                     event_name=current_trace_stack[0].name,
                     model=self.track_params.get("model") or "NA",
                     input=self.track_params.get("input") or "NA",
