@@ -426,8 +426,8 @@ class SummarizationMetric(BaseMetric):
             return verdicts
         else:
             try:
-                res: Verdict = await self.model.a_generate(
-                    prompt, schema=Verdict
+                res: Verdicts = await self.model.a_generate(
+                    prompt, schema=Verdicts
                 )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
@@ -461,7 +461,7 @@ class SummarizationMetric(BaseMetric):
             return verdicts
         else:
             try:
-                res: Verdict = self.model.generate(prompt, schema=Verdict)
+                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:

@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
 class ContextualPrecisionVerdict(BaseModel):
     verdict: str
-    reason: str
+    reason: Optional[str] = Field(default=None)
 
 
 class Verdicts(BaseModel):

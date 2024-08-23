@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel, Field
 
 
@@ -7,4 +8,4 @@ class ReasonScore(BaseModel):
 
 
 class Steps(BaseModel):
-    steps: str
+    steps: List[str]

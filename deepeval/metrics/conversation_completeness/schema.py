@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 
 class UserIntentions(BaseModel):
@@ -8,7 +8,7 @@ class UserIntentions(BaseModel):
 
 class ConversationCompletenessVerdict(BaseModel):
     verdict: str
-    reason: str = Field(default=None)
+    reason: Optional[str] = Field(default=None)
 
 
 class Reason(BaseModel):
