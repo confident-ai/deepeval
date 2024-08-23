@@ -53,6 +53,19 @@ Confident AI supports **multiple LangChain trace types**. For example, when you 
 - Tool
 - Generic
 
+## Returning Sources
+
+If your RAG application is returning retrieval documents using LangChain's `RunnableParallel`, you must use assign the output of your RAG chain to the `RunnableParallel` object using **only the `output` key**.
+
+```python
+from langchain_core.runnables import RunnableParallel
+...
+
+rag_chain_with_source = RunnableParallel(
+    {"context": retriever, "question": RunnablePassthrough()}
+).assign(output=rag_chain_from_docs) # use the output key
+```
+
 ## Example: Tracing your LangChain Application
 
 ### 1. Import and Configure Models
