@@ -126,120 +126,120 @@ document_paths = [file_path1, file_path2, file_path3]
 # #     return loaded_docs
 
 
-# def test_context_generator_generate_contexts():
-#     embedder = initialize_embedding_model("text-embedding-3-large")
-#     context_generator = ContextGenerator(
-#         document_paths=[file_path3, file_path2, file_path1], embedder=embedder
-#     )
-#     context_generator._load_docs()
+def test_context_generator_generate_contexts():
+    embedder = initialize_embedding_model("text-embedding-3-large")
+    context_generator = ContextGenerator(
+        document_paths=[file_path3, file_path2, file_path1], embedder=embedder
+    )
+    context_generator._load_docs()
 
-#     contexts, _ = context_generator.generate_contexts(5)
-#     # it should have generated 1 context for the first file (which contains 1 chunk), 2 for the second file (which has 2 chunks) and 5 contexts for the third file (which contains only >5 chunks)
-#     assert len(contexts) == 8
-
-
-# # # embedder = initialize_embedding_model("text-embedding-3-large")
-# # # context_generator = ContextGenerator(
-# # #     document_paths=document_paths, embedder=embedder
-# # # )
-# # # loaded_docs_sync = asyncio.run(
-# # #     test_context_generator(context_generator._load_docs)
-# # # )
-# # # loaded_docs_async = asyncio.run(
-# # #     test_context_generator(context_generator._a_load_docs, is_async=True)
-# # # )
-# # # assert loaded_docs_async == loaded_docs_async
-
-# # # Test Generate from Docs ###############################
-# # synthesizer_sync = Synthesizer(async_mode=False)
-# # synthesizer_async = Synthesizer(async_mode=True)
-# # test_context_generator_generate_contexts()
+    contexts, _ = context_generator.generate_contexts(5)
+    # it should have generated 1 context for the first file (which contains 1 chunk), 2 for the second file (which has 2 chunks) and 5 contexts for the third file (which contains only >5 chunks)
+    assert len(contexts) == 8
 
 
-# # def test_generate_goldens_from_docs(
-# #     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
-# # ):
-# #     start_time = time.time()
-# #     goldens = synthesizer.generate_goldens_from_docs(
-# #         max_goldens_per_document=2,
-# #         num_evolutions=2,
-# #         document_paths=document_paths,
-# #         use_case=usecase,
-# #     )
-# #     end_time = time.time()
-# #     duration = end_time - start_time
-# #     print("Generated goldens from docs:", len(goldens))
-# #     print(f"Time taken: {duration} seconds")
+# # embedder = initialize_embedding_model("text-embedding-3-large")
+# # context_generator = ContextGenerator(
+# #     document_paths=document_paths, embedder=embedder
+# # )
+# # loaded_docs_sync = asyncio.run(
+# #     test_context_generator(context_generator._load_docs)
+# # )
+# # loaded_docs_async = asyncio.run(
+# #     test_context_generator(context_generator._a_load_docs, is_async=True)
+# # )
+# # assert loaded_docs_async == loaded_docs_async
 
-
-# # # test_generate_goldens_from_docs(synthesizer_sync)
-# # test_generate_goldens_from_docs(synthesizer_async)
-# # test_generate_goldens_from_docs(synthesizer_sync, UseCase.TEXT2SQL)
-# # test_generate_goldens_from_docs(synthesizer_async, UseCase.TEXT2SQL)
-
-# #########################################################
-# ### Generate Red-Teaming Goldens ########################
-# #########################################################
-
+# # Test Generate from Docs ###############################
 # synthesizer_sync = Synthesizer(async_mode=False)
 # synthesizer_async = Synthesizer(async_mode=True)
+# test_context_generator_generate_contexts()
 
 
-# # Test Generate Red Team ################################
-# def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
+# def test_generate_goldens_from_docs(
+#     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
+# ):
 #     start_time = time.time()
-#     goldens = synthesizer.generate_red_teaming_goldens(
-#         max_goldens=2,
+#     goldens = synthesizer.generate_goldens_from_docs(
+#         max_goldens_per_document=2,
 #         num_evolutions=2,
-#         contexts=contexts,
+#         document_paths=document_paths,
+#         use_case=usecase,
 #     )
 #     end_time = time.time()
 #     duration = end_time - start_time
-#     print("Generated red teaming goldens with contexts:", len(goldens))
+#     print("Generated goldens from docs:", len(goldens))
 #     print(f"Time taken: {duration} seconds")
+
+
+# # test_generate_goldens_from_docs(synthesizer_sync)
+# test_generate_goldens_from_docs(synthesizer_async)
+# test_generate_goldens_from_docs(synthesizer_sync, UseCase.TEXT2SQL)
+# test_generate_goldens_from_docs(synthesizer_async, UseCase.TEXT2SQL)
+
+#########################################################
+### Generate Red-Teaming Goldens ########################
+#########################################################
+
+synthesizer_sync = Synthesizer(async_mode=False)
+synthesizer_async = Synthesizer(async_mode=True)
+
+
+# Test Generate Red Team ################################
+def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
+    start_time = time.time()
+    goldens = synthesizer.generate_red_teaming_goldens(
+        max_goldens=2,
+        num_evolutions=2,
+        contexts=contexts,
+    )
+    end_time = time.time()
+    duration = end_time - start_time
+    print("Generated red teaming goldens with contexts:", len(goldens))
+    print(f"Time taken: {duration} seconds")
+
+
+test_generate_red_teaming_goldens(synthesizer_sync)
+test_generate_red_teaming_goldens(synthesizer_async)
+
+
+# Test Generate Red Team No Context ######################
+def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
+    start_time = time.time()
+    goldens = synthesizer.generate_red_teaming_goldens(
+        max_goldens=2,
+        num_evolutions=2,
+    )
+    end_time = time.time()
+    duration = end_time - start_time
+    print("Generated red teaming goldens without context:", len(goldens))
+    print(f"Time taken: {duration} seconds")
 
 
 # test_generate_red_teaming_goldens(synthesizer_sync)
-# test_generate_red_teaming_goldens(synthesizer_async)
+test_generate_red_teaming_goldens(synthesizer_async)
+
+#########################################################
+### Generate Goldens From Scratch #######################
+#########################################################
+
+synthesizer_sync = Synthesizer(async_mode=False)
+synthesizer_async = Synthesizer(async_mode=True)
 
 
-# # Test Generate Red Team No Context ######################
-# def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
-#     start_time = time.time()
-#     goldens = synthesizer.generate_red_teaming_goldens(
-#         max_goldens=2,
-#         num_evolutions=2,
-#     )
-#     end_time = time.time()
-#     duration = end_time - start_time
-#     print("Generated red teaming goldens without context:", len(goldens))
-#     print(f"Time taken: {duration} seconds")
+def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
+    start_time = time.time()
+    goldens = synthesizer.generate_goldens_from_scratch(
+        subject="red-teaming prompts",
+        task="elicit discriminatory responses from LLMs",
+        output_format="string less than 15 words",
+        num_initial_goldens=5,
+    )
+    end_time = time.time()
+    duration = end_time - start_time
+    print("Generated goldens from scratch:", len(goldens))
+    print(f"Time taken: {duration} seconds")
 
 
-# # test_generate_red_teaming_goldens(synthesizer_sync)
-# test_generate_red_teaming_goldens(synthesizer_async)
-
-# #########################################################
-# ### Generate Goldens From Scratch #######################
-# #########################################################
-
-# synthesizer_sync = Synthesizer(async_mode=False)
-# synthesizer_async = Synthesizer(async_mode=True)
-
-
-# def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
-#     start_time = time.time()
-#     goldens = synthesizer.generate_goldens_from_scratch(
-#         subject="red-teaming prompts",
-#         task="elicit discriminatory responses from LLMs",
-#         output_format="string less than 15 words",
-#         num_initial_goldens=5,
-#     )
-#     end_time = time.time()
-#     duration = end_time - start_time
-#     print("Generated goldens from scratch:", len(goldens))
-#     print(f"Time taken: {duration} seconds")
-
-
-# test_generate_generate_goldens_from_scratch(synthesizer_sync)
-# test_generate_generate_goldens_from_scratch(synthesizer_async)
+test_generate_generate_goldens_from_scratch(synthesizer_sync)
+test_generate_generate_goldens_from_scratch(synthesizer_async)
