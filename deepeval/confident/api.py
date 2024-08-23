@@ -44,23 +44,29 @@ class Api:
         self.base_api_url = base_url or API_BASE_URL
 
     @staticmethod
-    def _http_request(method: str, url: str, headers=None, json=None):
+    def _http_request(
+        method: str, url: str, headers=None, json=None, params=None
+    ):
         session = requests.Session()
         return session.request(
             method=method,
             url=url,
             headers=headers,
             json=json,
+            params=params,
             verify=True,  # SSL verification is always enabled
         )
 
-    def send_request(self, method: HttpMethods, endpoint: Endpoints, body=None):
+    def send_request(
+        self, method: HttpMethods, endpoint: Endpoints, body=None, params=None
+    ):
         url = f"{self.base_api_url}{endpoint.value}"
         res = self._http_request(
             method=method.value,
             url=url,
             headers=self._headers,
             json=body,
+            params=params,
         )
         if res.status_code == 200:
             try:

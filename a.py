@@ -36,12 +36,12 @@ metric = ConversationCompletenessMetric(verbose_mode=True)
 # )
 
 
-confident_evaluate(
-    experiment_name="Test",
-    test_cases=[
-        LLMTestCase(
-            input="+44",
-            actual_output="Thank you, Alex, for bearing with me. We now have all the information we need to proceed with opening your new bank account. I appreciate your cooperation and patience throughout this process.",
-        )
-    ],
-)
+# confident_evaluate(
+#     experiment_name="Testm",
+#     test_cases=[
+#         LLMTestCase(
+#             input="+44",
+#             actual_output="Thank you, Alex, for bearing with me. We now have all the information we need to proceed with opening your new bank account. I appreciate your cooperation and patience throughout this process.",
+#         )
+#     ],
+# )
