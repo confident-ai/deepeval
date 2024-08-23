@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 class ContextualRecallVerdict(BaseModel):
     verdict: str
-    reason: Optional[str] = Field(default=None)
+    reason: str
 
 
 class Verdicts(BaseModel):

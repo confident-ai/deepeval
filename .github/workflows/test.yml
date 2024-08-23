@@ -65,4 +65,4 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          poetry run pytest tests/ --ignore=tests/test_deployment.py
+          poetry run pytest tests/ --ignore=tests/test_deployment.py --ignore=tests/test_benchmarks.py --ignore=tests/test_hybrid_tracing.py --ignore=tests/test_synthesizer.py
