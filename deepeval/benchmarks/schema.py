@@ -150,7 +150,7 @@ bbh_models_dict = {
 }
 
 bbh_confinement_statements_dict = {
-    "boolean_expression": "\n\nOutput 'True' or 'False'. Full answer not needed.",
+    "boolean_expressions": "\n\nOutput 'True' or 'False'. Full answer not needed.",
     "causal_judgement": "\n\nOutput 'Yes' or 'No'. Full answer not needed.",
     "date_understanding": "\n\nOutput '(A)', '(B)', '(C)', '(D)', '(E)', or '(F)'. Full answer not needed.",
     "disambiguation_qa": "\n\nOutput '(A)', '(B)', or '(C)'. Full answer not needed.",
