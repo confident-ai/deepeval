@@ -40,7 +40,7 @@ rag_chain_from_docs = (
 )
 
 rag_chain_with_source = RunnableParallel(
-    {"context": retriever, "response": RunnablePassthrough()}
-).assign(response=rag_chain_from_docs)
+    {"context": retriever, "question": RunnablePassthrough()}
+).assign(answer=rag_chain_from_docs)
 
 rag_chain_with_source.invoke("What is Task Decomposition")
