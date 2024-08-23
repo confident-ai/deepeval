@@ -12,8 +12,9 @@ from tests.custom_judge import CustomJudge
 
 def test_steps_schema():
     judge = CustomJudge("mock")
-    answer = ('{\n"steps": [\n   "step1",\n  "step2"\n]\n}')
+    answer = '{\n"steps": [\n   "step1",\n  "step2"\n]\n}'
     res: Steps = judge.generate(answer, schema=Steps)
+
 
 @pytest.mark.skip(reason="openai is expensive")
 def test_g_eval():

@@ -85,8 +85,11 @@ def test_answer_relevancy():
 
 def test_verdict_schema():
     from tests.custom_judge import CustomJudge
+
     judge = CustomJudge("mock")
     schema = Verdicts
-    answer = ('{\n"verdicts": [\n{\n"verdict": "yes"\n},\n{\n    "verdict": "no",\n    "reason": "blah blah"\n},'
-              '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}')
+    answer = (
+        '{\n"verdicts": [\n{\n"verdict": "yes"\n},\n{\n    "verdict": "no",\n    "reason": "blah blah"\n},'
+        '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}'
+    )
     res: Verdicts = judge.generate(answer, schema=schema)
