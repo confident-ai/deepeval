@@ -44,6 +44,8 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 # 🔥 Metrics and Features
 
+> You can now run DeepEval's metrics on the cloud for free directly on [Confident AI](https://confident-ai.com)'s infrastructure 😊
+
 - Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
   - G-Eval
   - Summarization
