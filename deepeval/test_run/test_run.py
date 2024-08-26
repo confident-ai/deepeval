@@ -609,7 +609,7 @@ class TestRunManager:
 
         else:
             console.print(
-                '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'
+                "✅ Tests finished! Run 'deepeval login' to view evaluation results on Confident AI. You can also run all of deepeval's metrics directly on Confident AI instead."
             )
 
     def save_test_run_locally(self):

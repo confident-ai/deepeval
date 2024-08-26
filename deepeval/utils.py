@@ -73,8 +73,14 @@ def prettify_list(lst: List[Any]):
         if isinstance(item, str):
             formatted_elements.append(f'"{item}"')
         elif isinstance(item, BaseModel):
+            try:
+                jsonObj = item.model_dump()
+            except AttributeError:
+                # Pydantic version below 2.0
+                jsonObj = item.dict()
+
             formatted_elements.append(
-                json.dumps(item.dict(), indent=4).replace("\n", "\n    ")
+                json.dumps(jsonObj, indent=4).replace("\n", "\n    ")
             )
         else:
             formatted_elements.append(repr(item))  # Fallback for other types
