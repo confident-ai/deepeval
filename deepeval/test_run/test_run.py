@@ -600,8 +600,9 @@ class TestRunManager:
                     raise Exception(message) from e
 
             console.print(
-                "✅ Tests finished! View results on "
-                f"[link={link}]{link}[/link]"
+                "🎉 Tests finished ✅! View results on "
+                f"[link={link}]{link}[/link]."
+                "‼️ NOTE: You can also run evaluations on ALL of deepeval's metrics directly on Confident AI instead."
             )
 
             if is_in_ci_env() == False:
@@ -609,7 +610,8 @@ class TestRunManager:
 
         else:
             console.print(
-                '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'
+                "🎉 Tests finished ✅! Run 'deepeval login' to view evaluation results on Confident AI. "
+                "‼️ NOTE: You can also run evaluations on ALL of deepeval's metrics directly on Confident AI instead."
             )
 
     def save_test_run_locally(self):
