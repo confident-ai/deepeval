@@ -35,6 +35,7 @@ evaluate(
         ToolCorrectnessMetric(),
     ],
     show_indicator=True,
-    run_async=False,
+    run_async=True,
     ignore_errors=True,
+    throttle_value=10,
 )

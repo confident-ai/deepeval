@@ -403,6 +403,7 @@ async def a_execute_test_cases(
     ignore_errors: bool,
     use_cache: bool,
     show_indicator: bool,
+    throttle_value: int,
     save_to_disk: bool = False,
     verbose_mode: Optional[bool] = None,
     test_run_manager: Optional[TestRunManager] = None,
@@ -463,40 +464,39 @@ async def a_execute_test_cases(
                         copied_llm_metrics: List[BaseMetric] = copy_metrics(
                             llm_metrics
                         )
-                        tasks.append(
-                            a_execute_llm_test_cases(
-                                metrics=copied_llm_metrics,
-                                test_case=test_case,
-                                test_run_manager=test_run_manager,
-                                test_results=test_results,
-                                count=llm_test_case_counter,
-                                test_run=test_run,
-                                ignore_errors=ignore_errors,
-                                use_cache=use_cache,
-                                show_indicator=show_indicator,
-                                _use_bar_indicator=_use_bar_indicator,
-                                pbar=pbar,
-                            )
+                        task = a_execute_llm_test_cases(
+                            metrics=copied_llm_metrics,
+                            test_case=test_case,
+                            test_run_manager=test_run_manager,
+                            test_results=test_results,
+                            count=llm_test_case_counter,
+                            test_run=test_run,
+                            ignore_errors=ignore_errors,
+                            use_cache=use_cache,
+                            show_indicator=show_indicator,
+                            _use_bar_indicator=_use_bar_indicator,
+                            pbar=pbar,
                         )
+                        tasks.append(asyncio.create_task(task))
 
                     elif isinstance(test_case, ConversationalTestCase):
                         conversational_test_case_counter += 1
                         copied_conversational_metrics: List[
                             BaseConversationalMetric
                         ] = copy_metrics(conversational_metrics)
-                        tasks.append(
-                            a_execute_conversational_test_cases(
-                                metrics=copied_conversational_metrics,
-                                test_case=test_case,
-                                test_run_manager=test_run_manager,
-                                count=conversational_test_case_counter,
-                                ignore_errors=ignore_errors,
-                                show_indicator=show_indicator,
-                                _use_bar_indicator=_use_bar_indicator,
-                                pbar=pbar,
-                            )
+                        task = a_execute_conversational_test_cases(
+                            metrics=copied_conversational_metrics,
+                            test_case=test_case,
+                            test_run_manager=test_run_manager,
+                            count=conversational_test_case_counter,
+                            ignore_errors=ignore_errors,
+                            show_indicator=show_indicator,
+                            _use_bar_indicator=_use_bar_indicator,
+                            pbar=pbar,
                         )
+                        tasks.append(asyncio.create_task(task))
 
+                    await asyncio.sleep(throttle_value)
             await asyncio.gather(*tasks)
     else:
         for test_case in test_cases:
@@ -509,20 +509,19 @@ async def a_execute_test_cases(
                     copied_llm_metrics: List[BaseMetric] = copy_metrics(
                         llm_metrics
                     )
-                    tasks.append(
-                        a_execute_llm_test_cases(
-                            metrics=copied_llm_metrics,
-                            test_case=test_case,
-                            test_run_manager=test_run_manager,
-                            test_results=test_results,
-                            count=llm_test_case_counter,
-                            test_run=test_run,
-                            ignore_errors=ignore_errors,
-                            use_cache=use_cache,
-                            _use_bar_indicator=_use_bar_indicator,
-                            show_indicator=show_indicator,
-                        )
+                    task = a_execute_llm_test_cases(
+                        metrics=copied_llm_metrics,
+                        test_case=test_case,
+                        test_run_manager=test_run_manager,
+                        test_results=test_results,
+                        count=llm_test_case_counter,
+                        test_run=test_run,
+                        ignore_errors=ignore_errors,
+                        use_cache=use_cache,
+                        _use_bar_indicator=_use_bar_indicator,
+                        show_indicator=show_indicator,
                     )
+                    tasks.append(asyncio.create_task((task)))
 
                 elif isinstance(test_case, ConversationalTestCase):
                     conversational_test_case_counter += 1
@@ -532,17 +531,17 @@ async def a_execute_test_cases(
                     copied_conversational_metrics = copy_metrics(
                         conversational_metrics
                     )
-                    tasks.append(
-                        a_execute_conversational_test_cases(
-                            metrics=copied_conversational_metrics,
-                            test_case=test_case,
-                            test_run_manager=test_run_manager,
-                            count=conversational_test_case_counter,
-                            ignore_errors=ignore_errors,
-                            _use_bar_indicator=_use_bar_indicator,
-                            show_indicator=show_indicator,
-                        )
+                    task = a_execute_conversational_test_cases(
+                        metrics=copied_conversational_metrics,
+                        test_case=test_case,
+                        test_run_manager=test_run_manager,
+                        count=conversational_test_case_counter,
+                        ignore_errors=ignore_errors,
+                        _use_bar_indicator=_use_bar_indicator,
+                        show_indicator=show_indicator,
                     )
+                    tasks.append(asyncio.create_task((task)))
+                await asyncio.sleep(throttle_value)
         await asyncio.gather(*tasks)
 
     return test_results
@@ -741,6 +740,7 @@ def evaluate(
     use_cache: bool = False,
     ignore_errors: bool = False,
     verbose_mode: Optional[bool] = None,
+    throttle_value: int = 0,
 ):
     if hyperparameters is not None:
         if (
@@ -774,6 +774,7 @@ def evaluate(
                     verbose_mode=verbose_mode,
                     save_to_disk=write_cache,
                     show_indicator=show_indicator,
+                    throttle_value=throttle_value,
                 )
             )
         else:
