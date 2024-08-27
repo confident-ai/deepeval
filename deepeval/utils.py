@@ -132,23 +132,6 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
     return loop
 
 
-def show_indicator():
-    try:
-        if os.environ["DISABLE_DEEPEVAL_INDICATOR"] == "YES":
-            return False
-        else:
-            return True
-    except:
-        return True
-
-
-def set_indicator(show_indicator: bool):
-    if show_indicator:
-        os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "NO"
-    else:
-        os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "YES"
-
-
 def should_ignore_errors():
     try:
         if os.environ["IGNORE_DEEPEVAL_ERRORS"] == "YES":

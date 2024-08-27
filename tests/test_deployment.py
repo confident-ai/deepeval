@@ -1,3 +1,4 @@
+import time
 import pytest
 import random
 import deepeval
@@ -29,6 +30,8 @@ class FakeMetric(BaseMetric):
         # You can also optionally set a reason for the score returned.
         # This is particularly useful for a score computed using LLMs
         self.reason = "This async metric looking good!"
+        random_sleep_time = random.uniform(1, 5)
+        time.sleep(random_sleep_time)
         return self.score
 
     def is_successful(self):
@@ -52,18 +55,3 @@ dataset.pull(alias="test")
 def test_customer_chatbot(test_case: LLMTestCase):
     fake_metric = FakeMetric()
     assert_test(test_case, [fake_metric])
-
-
-prompt_template = """You are a helpful assistant, answer the following question in a non-judgemental tone.
-
-Question:
-{question}
-"""
-
-
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
-def hyperparameters():
-    return {
-        "chunk_size": 500,
-        "temperature": 0,
-    }

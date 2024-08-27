@@ -174,7 +174,7 @@ def test_everything():
             # metric11,
             metric12,
         ],
-        # run_async=False,
+        run_async=True,
     )
 
 

@@ -1,3 +1,4 @@
+import inspect
 import json
 from typing import Any, Dict, Optional, List, Union, Tuple
 from deepeval.models import GPTModel, DeepEvalBaseLLM
@@ -10,6 +11,21 @@ from deepeval.test_case import (
     ConversationalTestCase,
     Message,
 )
+
+
+def copy_metrics(
+    metrics: Union[List[BaseMetric], List[BaseConversationalMetric]]
+) -> Union[List[BaseMetric], List[BaseConversationalMetric]]:
+    copied_metrics = []
+    for metric in metrics:
+        metric_class = type(metric)
+        args = vars(metric)
+
+        signature = inspect.signature(metric_class.__init__)
+        valid_params = signature.parameters.keys()
+        valid_args = {key: args[key] for key in valid_params if key in args}
+        copied_metrics.append(metric_class(**valid_args))
+    return copied_metrics
 
 
 def process_llm_test_cases(
