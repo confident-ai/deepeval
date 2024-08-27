@@ -1,5 +1,6 @@
 from typing import List
 
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.utils import prettify_list, get_lcs
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -36,25 +37,30 @@ class ToolCorrectnessMetric(BaseMetric):
         self.should_exact_match = should_exact_match
         self.should_consider_ordering = should_consider_ordering
 
-    def measure(self, test_case: LLMTestCase) -> float:
-        check_llm_test_case_params(test_case, required_params, self)
-        self.tools_used: List[str] = test_case.tools_used
-        self.expected_tools: List[str] = test_case.expected_tools
-        self.score = self._calculate_score()
-        self.reason = self._generate_reason()
-        self.success = self.score >= self.threshold
-        self.verbose_logs = construct_verbose_logs(
-            self,
-            steps=[
-                f"Expected Tools:\n{prettify_list(self.expected_tools)}",
-                f"Tools Used:\n{prettify_list(self.tools_used)}",
-                f"Score: {self.score}\nReason: {self.reason}",
-            ],
-        )
-        return self.score
+    def measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        with metric_progress_indicator(self, _show_indicator=_show_indicator):
+            check_llm_test_case_params(test_case, required_params, self)
+            self.tools_used: List[str] = test_case.tools_used
+            self.expected_tools: List[str] = test_case.expected_tools
+            self.score = self._calculate_score()
+            self.reason = self._generate_reason()
+            self.success = self.score >= self.threshold
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    f"Expected Tools:\n{prettify_list(self.expected_tools)}",
+                    f"Tools Used:\n{prettify_list(self.tools_used)}",
+                    f"Score: {self.score}\nReason: {self.reason}",
+                ],
+            )
+            return self.score
 
-    async def a_measure(self, test_case: LLMTestCase) -> float:
-        return self.measure(test_case)
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        return self.measure(test_case, _show_indicator=_show_indicator)
 
     def _generate_reason(self):
         if self.should_exact_match:

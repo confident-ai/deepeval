@@ -8,7 +8,6 @@ import asyncio
 
 from deepeval.metrics import BaseMetric, BaseConversationalMetric
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
-from deepeval.utils import show_indicator
 from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
 
@@ -21,11 +20,6 @@ def format_metric_description(
         run_async = metric.async_mode
     else:
         run_async = async_mode
-
-    if run_async:
-        is_async = "yes"
-    else:
-        is_async = "no"
 
     return f"✨ You're running DeepEval's latest [rgb(106,0,255)]{metric.__name__} Metric[/rgb(106,0,255)]! [rgb(55,65,81)](using {metric.evaluation_model}, strict={metric.strict_mode}, async_mode={run_async})...[/rgb(55,65,81)]"
 
@@ -40,7 +34,7 @@ def metric_progress_indicator(
 ):
     with capture_metric_type(metric.__name__):
         console = Console(file=sys.stderr)  # Direct output to standard error
-        if _show_indicator and show_indicator():
+        if _show_indicator:
             with Progress(
                 SpinnerColumn(style="rgb(106,0,255)"),
                 TextColumn("[progress.description]{task.description}"),
@@ -119,8 +113,9 @@ async def measure_metrics_with_indicator(
     test_case: Union[LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
+    show_indicator: bool,
 ):
-    if show_indicator():
+    if show_indicator:
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
             TextColumn("[progress.description]{task.description}"),

@@ -29,8 +29,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self.include_reason = include_reason
         self.strict_mode = strict_mode
 
-    def measure(self, test_case: ConversationalTestCase):
-        with metric_progress_indicator(self):
+    def measure(
+        self, test_case: ConversationalTestCase, _show_indicator: bool = True
+    ):
+        with metric_progress_indicator(self, _show_indicator=_show_indicator):
             self.knowledges: List[Knowledge] = self._generate_knowledges(
                 test_case
             )

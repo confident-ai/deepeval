@@ -144,6 +144,7 @@ def test_everything():
     )
 
     metric12 = ConversationRelevancyMetric()
+    metric13 = ToolCorrectnessMetric()
 
     test_case = LLMTestCase(
         input="What is this",
@@ -170,11 +171,12 @@ def test_everything():
             # metric7,
             # metric8,
             # metric9,
-            # metric10,
+            metric10,
             # metric11,
             metric12,
+            metric13,
         ],
-        # run_async=False,
+        run_async=True,
     )
 
 
