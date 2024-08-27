@@ -24,6 +24,7 @@ def copy_metrics(
         signature = inspect.signature(metric_class.__init__)
         valid_params = signature.parameters.keys()
         valid_args = {key: args[key] for key in valid_params if key in args}
+
         copied_metrics.append(metric_class(**valid_args))
     return copied_metrics
 

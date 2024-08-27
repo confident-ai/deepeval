@@ -170,7 +170,7 @@ def test_everything():
             # metric7,
             # metric8,
             # metric9,
-            # metric10,
+            metric10,
             # metric11,
             metric12,
         ],

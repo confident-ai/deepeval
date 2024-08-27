@@ -1,5 +1,5 @@
 from deepeval import evaluate
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric, GEval
 from deepeval.models import GPTModel
 from deepeval.test_case.conversational_test_case import (
     ConversationalTestCase,
