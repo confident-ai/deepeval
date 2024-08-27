@@ -385,7 +385,7 @@ def execute_test_cases(
 
     if show_indicator and _use_bar_indicator:
         with tqdm(
-            desc=f"Evaluating {len(test_cases)} test case(s) in parallel",
+            desc=f"Evaluating {len(test_cases)} test case(s) sequentially",
             unit="test case",
             total=len(test_cases),
             bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
@@ -447,7 +447,7 @@ async def a_execute_test_cases(
 
     if show_indicator and _use_bar_indicator:
         with tqdm_asyncio(
-            desc=f"Evaluating {len(test_cases)} test case(s) sequentially",
+            desc=f"Evaluating {len(test_cases)} test case(s) in parallel",
             unit="test case",
             total=len(test_cases),
             bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",

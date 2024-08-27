@@ -1,5 +1,8 @@
 from deepeval import evaluate
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric, GEval
+from deepeval.metrics.tool_correctness.tool_correctness import (
+    ToolCorrectnessMetric,
+)
 from deepeval.models import GPTModel
 from deepeval.test_case.conversational_test_case import (
     ConversationalTestCase,
@@ -29,7 +32,9 @@ evaluate(
     metrics=[
         BiasMetric(model=GPTModel(model="gpt-4o-mini")),
         AnswerRelevancyMetric(),
+        ToolCorrectnessMetric(),
     ],
     show_indicator=True,
-    run_async=True,
+    run_async=False,
+    ignore_errors=True,
 )
