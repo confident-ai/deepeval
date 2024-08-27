@@ -687,6 +687,7 @@ def assert_test(
                 ignore_errors=should_ignore_errors(),
                 use_cache=should_use_cache(),
                 verbose_mode=should_verbose_print(),
+                throttle_value=0,
                 save_to_disk=get_is_running_deepeval(),
                 show_indicator=True,
                 _use_bar_indicator=False,
