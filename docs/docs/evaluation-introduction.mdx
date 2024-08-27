@@ -208,7 +208,7 @@ def function_to_be_called_after_test_run():
 
 ## Evaluating Without Pytest
 
-Alternately, you can use `deepeval`'s `evaluate` function. This approach avoids the CLI (if you're in a notebook environment), but does not allow for parallel test execution.
+Alternately, you can use `deepeval`'s `evaluate` function. This approach avoids the CLI (if you're in a notebook environment), and allows for parallel test execution as well.
 
 ```python
 from deepeval import evaluate
@@ -221,17 +221,18 @@ answer_relevancy_metric = AnswerRelevancyMetric()
 evaluate(dataset, [answer_relevancy_metric])
 ```
 
-There are two mandatory and eight optional arguments when calling the `evaluate()` function:
+There are two mandatory and nine optional arguments when calling the `evaluate()` function:
 
-- `test_case`: an `LLMTestCase`
+- `test_cases`: a list of `LLMTestCase`s/`ConversationalTestCase`s, or an `EvaluationDataset`
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of test cases **AND** metrics. Defaulted to `True`.
+- [Optional] `throttle_value`: an integer that determines how long (in seconds) to throttle the evaluation of each test case. You can increase this value if your evaluation model is running into rate limit errors. Defaulted to 0.
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for eac test case. Defaulted to `False`.
 - [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
-- [Optional] `show_indicator`: a boolean which when set to `True`, shows the progress indicator for each individual metric. Defaulted to `True`.
+- [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
 
 :::tip
