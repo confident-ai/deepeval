@@ -30,7 +30,6 @@ evaluate(
         BiasMetric(model=GPTModel(model="gpt-4o-mini")),
         AnswerRelevancyMetric(),
     ],
-    show_indicator=False,
+    show_indicator=True,
     run_async=True,
-    use_cache=True,
 )

@@ -4,9 +4,10 @@ import os
 from typing import List, Optional, Union, Dict
 import time
 from dataclasses import dataclass
-
+from rich.console import Console
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm
+
 from deepeval.metrics.utils import copy_metrics
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
@@ -383,13 +384,11 @@ def execute_test_cases(
                     pbar.update(1)
 
     if show_indicator and _use_bar_indicator:
-        CYAN = "\033[96m"
-        RESET = "\033[0m"
         with tqdm(
-            desc=f"You're evaluating {len(test_cases)} test case(s) using {CYAN}DeepEval{RESET} (async mode=False)",
+            desc=f"Evaluating {len(test_cases)} test case(s) in parallel",
             unit="test case",
             total=len(test_cases),
-            bar_format="✨ {desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
+            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
         ) as pbar:
             evaluate_test_cases(pbar)
     else:
@@ -447,13 +446,11 @@ async def a_execute_test_cases(
     tasks = []
 
     if show_indicator and _use_bar_indicator:
-        CYAN = "\033[96m"
-        RESET = "\033[0m"
         with tqdm_asyncio(
-            desc=f"You're evaluating {len(test_cases)} test case(s) using {CYAN}DeepEval{RESET} (async_mode=True)",
+            desc=f"Evaluating {len(test_cases)} test case(s) sequentially",
             unit="test case",
             total=len(test_cases),
-            bar_format="✨ {desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
+            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
         ) as pbar:
             for test_case in test_cases:
                 with capture_evaluation_run("test case"):
@@ -757,6 +754,14 @@ def evaluate(
 
     global_test_run_manager.reset()
     start_time = time.perf_counter()
+
+    if show_indicator:
+        console = Console()
+        for metric in metrics:
+            console.print(
+                format_metric_description(metric, async_mode=run_async)
+            )
+
     with capture_evaluation_run("evaluate()"):
         if run_async:
             loop = get_or_create_event_loop()
