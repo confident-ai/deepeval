@@ -93,7 +93,8 @@ def check_conversational_test_case_params(
     metric: BaseConversationalMetric,
 ):
     if isinstance(test_case, ConversationalTestCase) is False:
-        metric.error = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
+        error_str = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
+        metric.error = error_str
         raise ValueError(error_str)
 
     if len(test_case.messages) == 0:
