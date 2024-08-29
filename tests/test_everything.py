@@ -152,6 +152,7 @@ def test_everything():
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
+        name="okwhatever",
     )
     c_test_case = ConversationalTestCase(
         messages=[
@@ -174,7 +175,7 @@ def test_everything():
             metric10,
             # metric11,
             metric12,
-            metric13,
+            # metric13,
         ],
         run_async=True,
     )

@@ -27,6 +27,7 @@ class LLMTestCase:
     tools_used: Optional[List[str]] = None
     expected_tools: Optional[List[str]] = None
     reasoning: Optional[str] = None
+    name: Optional[str] = field(default=None)
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)

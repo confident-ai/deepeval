@@ -132,7 +132,10 @@ def create_api_test_case(
             trace_stack = None
         else:
             success = True
-            name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
+            if test_case.name is not None:
+                name = test_case.name
+            else:
+                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
             order = test_case._dataset_rank
             trace_stack = get_trace_stack()
 
@@ -162,10 +165,15 @@ def create_api_test_case(
         return api_test_case
 
     elif isinstance(test_case, ConversationalTestCase):
-        api_test_case = ConversationalApiTestCase(
-            name=os.getenv(
+        if test_case.name:
+            name = test_case.name
+        else:
+            name = os.getenv(
                 PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
-            ),
+            )
+
+        api_test_case = ConversationalApiTestCase(
+            name=name,
             success=True,
             metricsData=None,
             runDuration=0,
