@@ -233,6 +233,17 @@ test_case = LLMTestCase(
 )
 ```
 
+### Name
+
+If you're using Confident AI, the `name` parameter allows you to optionally provide a string identifier to search and filter for your `LLMTestCase`s on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
+
+```python
+test_case = LLMTestCase(
+    name="my-external-unique-id",
+    ...
+)
+```
+
 ## Conversational Test Case
 
 A `ConversationalTestCase` in `deepeval` is simply a list of `Message`s, and a `Message` is composed of an `LLMTestCase`s. While an `LLMTestCase` represents an individual LLM interaction, a `ConversationalTestCase` encapsulates a series of `LLMTestCase`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
