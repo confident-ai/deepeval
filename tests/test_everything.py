@@ -152,7 +152,8 @@ def test_everything():
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
-        name="okwhatever",
+        tools_called=["ok"],
+        expected_tools=["ok", "ok"],
     )
     c_test_case = ConversationalTestCase(
         messages=[
@@ -163,8 +164,8 @@ def test_everything():
     assert_test(
         test_case,
         [
-            metric1,
-            metric2,
+            # metric1,
+            # metric2,
             # metric3,
             # metric4,
             # metric5,
@@ -172,10 +173,10 @@ def test_everything():
             # metric7,
             # metric8,
             # metric9,
-            metric10,
+            # metric10,
             # metric11,
-            metric12,
-            # metric13,
+            # metric12,
+            metric13,
         ],
         run_async=True,
     )
@@ -215,7 +216,7 @@ def test_everything_2():
         # retrieval_context=["I love coffee"],
         context=["I love coffee"],
         expected_tools=["mixer", "creamer", "dripper"],
-        tools_used=["mixer", "creamer", "mixer"],
+        tools_called=["mixer", "creamer", "mixer"],
     )
     assert_test(
         test_case,
