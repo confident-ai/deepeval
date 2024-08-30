@@ -399,13 +399,6 @@ If you're using Confident AI, the optional `name` parameter allows you to provid
 ```python
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 
-test_case = LLMTestCase(
-    name="my-external-unique-id",
-    ...
-)
-
-convo_test_case = ConversationalTestCase(
-    name="my-external-unique-id",
-    ...
-)
+test_case = LLMTestCase(name="my-external-unique-id", ...)
+convo_test_case = ConversationalTestCase(name="my-external-unique-id", ...)
 ```
