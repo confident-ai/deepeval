@@ -166,18 +166,15 @@ async def measure_metrics_with_indicator(
                 metric.evaluation_cost = metric_data.evaluation_cost
                 metric.verbose_logs = metric_data.verbose_logs
             else:
-                if isinstance(test_case, ConversationalTestCase):
-                    tc = test_case.messages[len(test_case.messages) - 1]
-                else:
-                    tc = test_case
-
-                tasks.append(safe_a_measure(metric, tc, ignore_errors))
+                tasks.append(safe_a_measure(metric, test_case, ignore_errors))
 
         await asyncio.gather(*tasks)
 
 
 async def safe_a_measure(
-    metric: BaseMetric, tc: LLMTestCase, ignore_errors: bool
+    metric: BaseMetric,
+    tc: Union[LLMTestCase, ConversationalTestCase],
+    ignore_errors: bool,
 ):
     try:
         try:

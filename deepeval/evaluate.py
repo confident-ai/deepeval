@@ -44,15 +44,14 @@ from deepeval.tracing import get_trace_stack
 
 @dataclass
 class TestResult:
-    """Returned from run_test"""
-
     success: bool
     metrics_data: List[MetricData]
-    input: str
-    actual_output: str
-    expected_output: str
-    context: List[str]
-    retrieval_context: List[str]
+    conversational: bool
+    input: Optional[str] = None
+    actual_output: Optional[str] = None
+    expected_output: Optional[str] = None
+    context: Optional[List[str]] = None
+    retrieval_context: Optional[List[str]] = None
 
 
 def create_metric_data(metric: BaseMetric) -> MetricData:
@@ -88,19 +87,22 @@ def create_test_result(
     test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
 ) -> TestResult:
     if isinstance(test_case, ConversationalApiTestCase):
-        tc = test_case.messages[len(test_case.messages) - 1]
+        return TestResult(
+            success=test_case.success,
+            metrics_data=test_case.metrics_data,
+            conversational=True,
+        )
     else:
-        tc = test_case
-
-    return TestResult(
-        success=tc.success,
-        metrics_data=tc.metrics_data,
-        input=tc.input,
-        actual_output=tc.actual_output,
-        expected_output=tc.expected_output,
-        context=tc.context,
-        retrieval_context=tc.retrieval_context,
-    )
+        return TestResult(
+            success=test_case.success,
+            metrics_data=test_case.metrics_data,
+            input=test_case.input,
+            actual_output=test_case.actual_output,
+            expected_output=test_case.expected_output,
+            context=test_case.context,
+            retrieval_context=test_case.retrieval_context,
+            conversational=False,
+        )
 
 
 # Used to cache llm test cases that are part of conversation
@@ -339,9 +341,6 @@ def execute_test_cases(
                         to_temp=True,
                     )
 
-                    test_result = create_test_result(api_test_case)
-                    test_results.append(test_result)
-
                 # No caching for conversational metrics yet
                 elif isinstance(test_case, ConversationalTestCase):
                     conversational_test_case_count += 1
@@ -387,6 +386,9 @@ def execute_test_cases(
 
                     ### Update Test Run ###
                     test_run_manager.update_test_run(api_test_case, test_case)
+
+                test_result = create_test_result(api_test_case)
+                test_results.append(test_result)
 
                 if pbar is not None:
                     pbar.update(1)
@@ -496,6 +498,7 @@ async def a_execute_test_cases(
                             metrics=copied_conversational_metrics,
                             test_case=test_case,
                             test_run_manager=test_run_manager,
+                            test_results=test_results,
                             count=conversational_test_case_counter,
                             ignore_errors=ignore_errors,
                             show_indicator=show_indicator,
@@ -543,6 +546,7 @@ async def a_execute_test_cases(
                         metrics=copied_conversational_metrics,
                         test_case=test_case,
                         test_run_manager=test_run_manager,
+                        test_results=test_results,
                         count=conversational_test_case_counter,
                         ignore_errors=ignore_errors,
                         _use_bar_indicator=_use_bar_indicator,
@@ -643,6 +647,7 @@ async def a_execute_conversational_test_cases(
     metrics: List[BaseConversationalMetric],
     test_case: ConversationalTestCase,
     test_run_manager: TestRunManager,
+    test_results: List[TestResult],
     count: int,
     ignore_errors: bool,
     show_indicator: bool,
@@ -676,6 +681,8 @@ async def a_execute_conversational_test_cases(
 
     ### Update Test Run ###
     test_run_manager.update_test_run(api_test_case, test_case)
+
+    test_results.append(create_test_result(api_test_case))
 
     if pbar is not None:
         pbar.update(1)
@@ -839,12 +846,18 @@ def print_test_result(test_result: TestResult):
             )
 
     print("")
-    print("For test case:\n")
-    print(f"  - input: {test_result.input}")
-    print(f"  - actual output: {test_result.actual_output}")
-    print(f"  - expected output: {test_result.expected_output}")
-    print(f"  - context: {test_result.context}")
-    print(f"  - retrieval context: {test_result.retrieval_context}")
+    if test_result.conversational:
+        print("For conversational test case:\n")
+        print(
+            f"  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full."
+        )
+    else:
+        print("For test case:\n")
+        print(f"  - input: {test_result.input}")
+        print(f"  - actual output: {test_result.actual_output}")
+        print(f"  - expected output: {test_result.expected_output}")
+        print(f"  - context: {test_result.context}")
+        print(f"  - retrieval context: {test_result.retrieval_context}")
 
 
 def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:

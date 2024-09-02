@@ -86,7 +86,7 @@ strict_mode = False
 verbose_mode = True
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -162,7 +162,7 @@ def test_everything():
         ]
     )
     assert_test(
-        test_case,
+        c_test_case,
         [
             # metric1,
             # metric2,
@@ -175,7 +175,7 @@ def test_everything():
             # metric9,
             # metric10,
             # metric11,
-            # metric12,
+            metric12,
             metric13,
         ],
         run_async=True,
