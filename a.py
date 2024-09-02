@@ -20,4 +20,8 @@ test_case = ConversationalTestCase(
     messages=[Message(llm_test_case=llm_test_case)]
 )
 
-evaluate(test_cases=[test_case, llm_test_case], metrics=[metric, AnswerRelevancyMetric()], run_async=False)
+evaluate(
+    test_cases=[test_case, llm_test_case],
+    metrics=[metric, AnswerRelevancyMetric()],
+    run_async=False,
+)
