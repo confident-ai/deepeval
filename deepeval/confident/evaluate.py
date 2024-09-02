@@ -57,6 +57,8 @@ def confident_evaluate(
                     body=body,
                 )
             except Exception as e:
+                end_time = time.perf_counter()
+                time_taken = format(end_time - start_time, ".2f")
                 finished_description = f"{progress.tasks[task_id].description} [rgb(245,5,57)]Errored! ({time_taken}s)"
                 progress.update(task_id, description=finished_description)
                 raise e
