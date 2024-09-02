@@ -1,11 +1,12 @@
 from deepeval import confident_evaluate, evaluate
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, Message
-from deepeval.metrics import ConversationRelevancyMetric
+from deepeval.metrics import ConversationRelevancyMetric, AnswerRelevancyMetric
 
 # confident_evaluate(
 #     experiment_name="Redteam",
 #     test_cases=[LLMTestCase(name="test", input="...", actual_output="...")],
 # )
+
 
 metric = ConversationRelevancyMetric()
 llm_test_case = LLMTestCase(
@@ -19,4 +20,4 @@ test_case = ConversationalTestCase(
     messages=[Message(llm_test_case=llm_test_case)]
 )
 
-evaluate(test_cases=[test_case], metrics=[metric])
+evaluate(test_cases=[test_case, llm_test_case], metrics=[metric, AnswerRelevancyMetric()], run_async=False)

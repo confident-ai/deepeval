@@ -172,7 +172,7 @@ async def measure_metrics_with_indicator(
 
 
 async def safe_a_measure(
-    metric: BaseMetric,
+    metric: Union[BaseMetric, BaseConversationalMetric],
     tc: Union[LLMTestCase, ConversationalTestCase],
     ignore_errors: bool,
 ):
