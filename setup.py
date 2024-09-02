@@ -32,7 +32,7 @@ setup(
         "importlib-metadata>=6.0.2",
         "tenacity~=8.4.1",
         "opentelemetry-api~=1.24.0",
-        "opentelemetry-sdk~==1.24.0",
+        "opentelemetry-sdk~=1.24.0",
         "opentelemetry-exporter-otlp-proto-grpc~=1.24.0",
         "grpcio~=1.63.0",
     ],
