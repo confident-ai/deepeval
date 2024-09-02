@@ -1,9 +1,14 @@
+import asyncio
 from copy import deepcopy
 import os
 from typing import List, Optional, Union, Dict
 import time
 from dataclasses import dataclass
+from rich.console import Console
+from tqdm.asyncio import tqdm_asyncio
+from tqdm import tqdm
 
+from deepeval.metrics.utils import copy_metrics
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -14,19 +19,22 @@ from deepeval.utils import (
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import BaseMetric, BaseConversationalMetric
 from deepeval.metrics.indicator import (
+    format_metric_description,
     measure_metrics_with_indicator,
 )
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import (
-    test_run_manager,
+    global_test_run_manager,
     LLMApiTestCase,
     ConversationalApiTestCase,
     MetricData,
+    TestRunManager,
+    TestRun,
 )
-from deepeval.utils import get_is_running_deepeval, set_indicator
+from deepeval.utils import get_is_running_deepeval
 from deepeval.test_run.cache import (
-    test_run_cache_manager,
+    global_test_run_cache_manager,
     Cache,
     CachedTestCase,
     CachedMetricData,
@@ -124,7 +132,10 @@ def create_api_test_case(
             trace_stack = None
         else:
             success = True
-            name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
+            if test_case.name is not None:
+                name = test_case.name
+            else:
+                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
             order = test_case._dataset_rank
             trace_stack = get_trace_stack()
 
@@ -135,7 +146,7 @@ def create_api_test_case(
             expectedOutput=test_case.expected_output,
             context=test_case.context,
             retrievalContext=test_case.retrieval_context,
-            toolsUsed=test_case.tools_used,
+            toolsCalled=test_case.tools_called,
             expectedTools=test_case.expected_tools,
             success=success,
             metricsData=None,
@@ -154,10 +165,15 @@ def create_api_test_case(
         return api_test_case
 
     elif isinstance(test_case, ConversationalTestCase):
-        api_test_case = ConversationalApiTestCase(
-            name=os.getenv(
+        if test_case.name:
+            name = test_case.name
+        else:
+            name = os.getenv(
                 PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
-            ),
+            )
+
+        api_test_case = ConversationalApiTestCase(
+            name=name,
             success=True,
             metricsData=None,
             runDuration=0,
@@ -185,11 +201,17 @@ def execute_test_cases(
     metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     ignore_errors: bool,
     use_cache: bool,
+    show_indicator: bool,
     save_to_disk: bool = False,
     verbose_mode: Optional[bool] = None,
+    test_run_manager: Optional[TestRunManager] = None,
+    _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
-    test_results: List[TestResult] = []
-    test_run_cache_manager.disable_write_cache = save_to_disk == False
+    global_test_run_cache_manager.disable_write_cache = save_to_disk == False
+
+    if test_run_manager is None:
+        test_run_manager = global_test_run_manager
+
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
 
@@ -197,20 +219,6 @@ def execute_test_cases(
         for metric in metrics:
             metric.verbose_mode = verbose_mode
 
-    global llm_test_case_lookup_map
-    llm_test_case_lookup_map = {}
-    for test_case in test_cases:
-        if isinstance(test_case, ConversationalTestCase):
-            for message in test_case.messages:
-                # Messages in a conversation must be appended
-                # at the end of test_cases to ensure conversational test cases
-                # are always created before its messages, and llm_test_case_count
-                # is always right
-                if message.should_evaluate:
-                    test_cases.append(message.llm_test_case)
-
-    llm_test_case_count = -1
-    conversational_test_case_count = -1
     conversational_metrics: List[BaseConversationalMetric] = []
     llm_metrics: List[BaseMetric] = []
     for metric in metrics:
@@ -219,129 +227,180 @@ def execute_test_cases(
         elif isinstance(metric, BaseConversationalMetric):
             conversational_metrics.append(metric)
 
+    global llm_test_case_lookup_map
+    llm_test_case_lookup_map = {}
     for test_case in test_cases:
-        with capture_evaluation_run("test case"):
-            for metric in metrics:
-                metric.error = None  # Reset metric error
+        if isinstance(test_case, ConversationalTestCase):
+            for message in test_case.messages:
+                if message.should_evaluate:
+                    test_cases.append(message.llm_test_case)
 
-            if isinstance(test_case, LLMTestCase):
-                if len(llm_metrics) == 0:
-                    continue
+    test_results: List[TestResult] = []
 
-                llm_test_case_count += 1
-                cached_test_case = None
-                if use_cache:
-                    cached_test_case = (
-                        test_run_cache_manager.get_cached_test_case(
-                            test_case, test_run.hyperparameters
+    def evaluate_test_cases(pbar: Optional[tqdm] = None):
+        llm_test_case_count = -1
+        conversational_test_case_count = -1
+        show_metric_indicator = show_indicator and not _use_bar_indicator
+        for test_case in test_cases:
+            with capture_evaluation_run("test case"):
+                for metric in metrics:
+                    metric.error = None  # Reset metric error
+
+                if isinstance(test_case, LLMTestCase):
+                    if len(llm_metrics) == 0:
+                        continue
+
+                    llm_test_case_count += 1
+                    cached_test_case = None
+                    if use_cache:
+                        cached_test_case = (
+                            global_test_run_cache_manager.get_cached_test_case(
+                                test_case, test_run.hyperparameters
+                            )
+                        )
+
+                    ##### Metric Calculation #####
+                    api_test_case: LLMApiTestCase = create_api_test_case(
+                        test_case, llm_test_case_count
+                    )
+                    new_cached_test_case: CachedTestCase = CachedTestCase()
+
+                    test_start_time = time.perf_counter()
+                    read_all_metrics_from_cache = True
+                    for metric in llm_metrics:
+                        metric_data = None
+                        if cached_test_case is not None:
+                            cached_metric_data = Cache.get_metric_data(
+                                metric, cached_test_case
+                            )
+                            if cached_metric_data:
+                                metric_data = cached_metric_data.metric_data
+
+                        if metric_data is None:
+                            read_all_metrics_from_cache = False
+                            metric.async_mode = False  # Override metric async
+                            try:
+                                metric.measure(
+                                    test_case,
+                                    _show_indicator=show_metric_indicator,
+                                )
+                            except TypeError:
+                                try:
+                                    metric.measure(test_case)
+                                except Exception as e:
+                                    if ignore_errors:
+                                        metric.error = str(e)
+                                        metric.success = False
+                                    else:
+                                        raise
+                            except Exception as e:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
+                            metric_data = create_metric_data(metric)
+
+                        # here, we will check for an additional property on the flattened test cases to see if updating is necessary
+                        api_test_case.update_metric_data(metric_data)
+                        if metric.error is None:
+                            cache_metric_data = deepcopy(metric_data)
+                            cache_metric_data.evaluation_cost = 0  # Cached metrics will have evaluation cost as 0, not None.
+                            updated_cached_metric_data = CachedMetricData(
+                                metric_data=cache_metric_data,
+                                metric_configuration=Cache.create_metric_configuration(
+                                    metric
+                                ),
+                            )
+                            new_cached_test_case.cached_metrics_data.append(
+                                updated_cached_metric_data
+                            )
+
+                    test_end_time = time.perf_counter()
+                    if read_all_metrics_from_cache:
+                        run_duration = 0
+                    else:
+                        run_duration = test_end_time - test_start_time
+                    api_test_case.update_run_duration(run_duration)
+
+                    ### Update Test Run ###
+                    test_run_manager.update_test_run(api_test_case, test_case)
+
+                    ### Cache Test Run ###
+                    global_test_run_cache_manager.cache_test_case(
+                        test_case,
+                        new_cached_test_case,
+                        test_run.hyperparameters,
+                    )
+                    global_test_run_cache_manager.cache_test_case(
+                        test_case,
+                        new_cached_test_case,
+                        test_run.hyperparameters,
+                        to_temp=True,
+                    )
+
+                    test_result = create_test_result(api_test_case)
+                    test_results.append(test_result)
+
+                # No caching for conversational metrics yet
+                elif isinstance(test_case, ConversationalTestCase):
+                    conversational_test_case_count += 1
+                    api_test_case: ConversationalApiTestCase = (
+                        create_api_test_case(
+                            test_case, conversational_test_case_count
                         )
                     )
 
-                ##### Metric Calculation #####
-                api_test_case: LLMApiTestCase = create_api_test_case(
-                    test_case, llm_test_case_count
-                )
-                new_cached_test_case: CachedTestCase = CachedTestCase()
-
-                test_start_time = time.perf_counter()
-                read_all_metrics_from_cache = True
-                for metric in llm_metrics:
-                    metric_data = None
-                    if cached_test_case is not None:
-                        cached_metric_data = Cache.get_metric_data(
-                            metric, cached_test_case
-                        )
-                        if cached_metric_data:
-                            metric_data = cached_metric_data.metric_data
-
-                    if metric_data is None:
-                        read_all_metrics_from_cache = False
-                        metric.async_mode = False  # Override metric async
-                        try:
-                            metric.measure(test_case)
-                        except Exception as e:
-                            if ignore_errors:
-                                metric.error = str(e)  # Override metric error
-                                metric.success = (
-                                    False  # Override metric success
+                    test_start_time = time.perf_counter()
+                    for metric in conversational_metrics:
+                        # Skip non conversational metrics for converstaional test cases
+                        if isinstance(metric, BaseConversationalMetric):
+                            metric.async_mode = False  # Override metric async
+                            try:
+                                metric.measure(
+                                    test_case,
+                                    _show_indicator=show_metric_indicator,
                                 )
-                            else:
-                                raise
-                        metric_data = create_metric_data(metric)
+                            except TypeError:
+                                try:
+                                    metric.measure(test_case)
+                                except Exception as e:
+                                    if ignore_errors:
+                                        metric.error = str(e)
+                                        metric.success = False
+                                    else:
+                                        raise
+                            except Exception as e:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
 
-                    # here, we will check for an additional property on the flattened test cases to see if updating is necessary
-                    api_test_case.update_metric_data(metric_data)
-                    if metric.error is None:
-                        cache_metric_data = deepcopy(metric_data)
-                        cache_metric_data.evaluation_cost = 0  # Cached metrics will have evaluation cost as 0, not None.
-                        updated_cached_metric_data = CachedMetricData(
-                            metric_data=cache_metric_data,
-                            metric_configuration=Cache.create_metric_configuration(
-                                metric
-                            ),
-                        )
-                        new_cached_test_case.cached_metrics_data.append(
-                            updated_cached_metric_data
-                        )
+                            metric_data = create_metric_data(metric)
+                            api_test_case.update_metric_data(metric_data)
 
-                test_end_time = time.perf_counter()
-                if read_all_metrics_from_cache:
-                    run_duration = 0
-                else:
-                    run_duration = test_end_time - test_start_time
-                api_test_case.update_run_duration(run_duration)
+                    test_end_time = time.perf_counter()
+                    if len(conversational_metrics) > 0:
+                        run_duration = test_end_time - test_start_time
+                        api_test_case.update_run_duration(run_duration)
 
-                ### Update Test Run ###
-                test_run_manager.update_test_run(api_test_case, test_case)
+                    ### Update Test Run ###
+                    test_run_manager.update_test_run(api_test_case, test_case)
 
-                ### Cache Test Run ###
-                test_run_cache_manager.cache_test_case(
-                    test_case,
-                    new_cached_test_case,
-                    test_run.hyperparameters,
-                )
-                test_run_cache_manager.cache_test_case(
-                    test_case,
-                    new_cached_test_case,
-                    test_run.hyperparameters,
-                    to_temp=True,
-                )
+                if pbar is not None:
+                    pbar.update(1)
 
-                test_result = create_test_result(api_test_case)
-                test_results.append(test_result)
-
-            # No caching for conversational metrics yet
-            elif isinstance(test_case, ConversationalTestCase):
-                conversational_test_case_count += 1
-                api_test_case: ConversationalApiTestCase = create_api_test_case(
-                    test_case, conversational_test_case_count
-                )
-
-                test_start_time = time.perf_counter()
-                for metric in conversational_metrics:
-                    # Skip non conversational metrics for converstaional test cases
-                    if isinstance(metric, BaseConversationalMetric):
-                        metric.async_mode = False  # Override metric async
-                        try:
-                            metric.measure(test_case)
-                        except Exception as e:
-                            if ignore_errors:
-                                metric.error = str(e)  # Override metric error
-                                metric.success = (
-                                    False  # Override metric success
-                                )
-                            else:
-                                raise
-                        metric_data = create_metric_data(metric)
-                        api_test_case.update_metric_data(metric_data)
-
-                test_end_time = time.perf_counter()
-                if len(conversational_metrics) > 0:
-                    run_duration = test_end_time - test_start_time
-                    api_test_case.update_run_duration(run_duration)
-
-                ### Update Test Run ###
-                test_run_manager.update_test_run(api_test_case, test_case)
+    if show_indicator and _use_bar_indicator:
+        with tqdm(
+            desc=f"Evaluating {len(test_cases)} test case(s) sequentially",
+            unit="test case",
+            total=len(test_cases),
+            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
+        ) as pbar:
+            evaluate_test_cases(pbar)
+    else:
+        evaluate_test_cases()
 
     return test_results
 
@@ -351,17 +410,32 @@ async def a_execute_test_cases(
     metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     ignore_errors: bool,
     use_cache: bool,
+    show_indicator: bool,
+    throttle_value: int,
     save_to_disk: bool = False,
     verbose_mode: Optional[bool] = None,
+    test_run_manager: Optional[TestRunManager] = None,
+    _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
-    test_results: List[TestResult] = []
-    test_run_cache_manager.disable_write_cache = save_to_disk == False
+    global_test_run_cache_manager.disable_write_cache = save_to_disk == False
+
+    if test_run_manager is None:
+        test_run_manager = global_test_run_manager
+
     test_run_manager.save_to_disk = save_to_disk
     test_run = test_run_manager.get_test_run()
 
     if verbose_mode is not None:
         for metric in metrics:
             metric.verbose_mode = verbose_mode
+
+    llm_metrics: List[BaseMetric] = []
+    conversational_metrics: List[BaseConversationalMetric] = []
+    for metric in metrics:
+        if isinstance(metric, BaseMetric):
+            llm_metrics.append(metric)
+        elif isinstance(metric, BaseConversationalMetric):
+            conversational_metrics.append(metric)
 
     global llm_test_case_lookup_map
     llm_test_case_lookup_map = {}
@@ -375,115 +449,236 @@ async def a_execute_test_cases(
                 if message.should_evaluate:
                     test_cases.append(message.llm_test_case)
 
-    llm_test_case_count = -1
-    conversational_test_case_count = -1
-    conversational_metrics: List[BaseConversationalMetric] = []
-    llm_metrics: List[BaseMetric] = []
-    for metric in metrics:
-        if isinstance(metric, BaseMetric):
-            llm_metrics.append(metric)
-        elif isinstance(metric, BaseConversationalMetric):
-            conversational_metrics.append(metric)
+    llm_test_case_counter = -1
+    conversational_test_case_counter = -1
+    test_results: List[TestResult] = []
+    tasks = []
 
-    for test_case in test_cases:
-        with capture_evaluation_run("test case"):
-            if isinstance(test_case, LLMTestCase):
-                if len(llm_metrics) == 0:
-                    continue
+    if show_indicator and _use_bar_indicator:
+        with tqdm_asyncio(
+            desc=f"Evaluating {len(test_cases)} test case(s) in parallel",
+            unit="test case",
+            total=len(test_cases),
+            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
+        ) as pbar:
+            for test_case in test_cases:
+                with capture_evaluation_run("test case"):
+                    if isinstance(test_case, LLMTestCase):
+                        if len(llm_metrics) == 0:
+                            pbar.update(1)
+                            continue
 
-                llm_test_case_count += 1
-                cached_test_case = None
-                for metric in metrics:
-                    metric.error = None  # Reset metric error
-
-                # only use cache when NOT conversational test case
-                if use_cache:
-                    cached_test_case = (
-                        test_run_cache_manager.get_cached_test_case(
-                            test_case,
-                            test_run.hyperparameters,
+                        llm_test_case_counter += 1
+                        copied_llm_metrics: List[BaseMetric] = copy_metrics(
+                            llm_metrics
                         )
+                        task = a_execute_llm_test_cases(
+                            metrics=copied_llm_metrics,
+                            test_case=test_case,
+                            test_run_manager=test_run_manager,
+                            test_results=test_results,
+                            count=llm_test_case_counter,
+                            test_run=test_run,
+                            ignore_errors=ignore_errors,
+                            use_cache=use_cache,
+                            show_indicator=show_indicator,
+                            _use_bar_indicator=_use_bar_indicator,
+                            pbar=pbar,
+                        )
+                        tasks.append(asyncio.create_task(task))
+
+                    elif isinstance(test_case, ConversationalTestCase):
+                        conversational_test_case_counter += 1
+                        copied_conversational_metrics: List[
+                            BaseConversationalMetric
+                        ] = copy_metrics(conversational_metrics)
+                        task = a_execute_conversational_test_cases(
+                            metrics=copied_conversational_metrics,
+                            test_case=test_case,
+                            test_run_manager=test_run_manager,
+                            count=conversational_test_case_counter,
+                            ignore_errors=ignore_errors,
+                            show_indicator=show_indicator,
+                            _use_bar_indicator=_use_bar_indicator,
+                            pbar=pbar,
+                        )
+                        tasks.append(asyncio.create_task(task))
+
+                    await asyncio.sleep(throttle_value)
+            await asyncio.gather(*tasks)
+    else:
+        for test_case in test_cases:
+            with capture_evaluation_run("test case"):
+                if isinstance(test_case, LLMTestCase):
+                    if len(llm_metrics) == 0:
+                        continue
+                    llm_test_case_counter += 1
+
+                    copied_llm_metrics: List[BaseMetric] = copy_metrics(
+                        llm_metrics
                     )
+                    task = a_execute_llm_test_cases(
+                        metrics=copied_llm_metrics,
+                        test_case=test_case,
+                        test_run_manager=test_run_manager,
+                        test_results=test_results,
+                        count=llm_test_case_counter,
+                        test_run=test_run,
+                        ignore_errors=ignore_errors,
+                        use_cache=use_cache,
+                        _use_bar_indicator=_use_bar_indicator,
+                        show_indicator=show_indicator,
+                    )
+                    tasks.append(asyncio.create_task((task)))
 
-                ##### Metric Calculation #####
-                api_test_case = create_api_test_case(
-                    test_case, llm_test_case_count
-                )
-
-                new_cached_test_case: CachedTestCase = CachedTestCase()
-                test_start_time = time.perf_counter()
-                await measure_metrics_with_indicator(
-                    llm_metrics, test_case, cached_test_case, ignore_errors
-                )
-
-                for metric in llm_metrics:
-                    metric_data = create_metric_data(metric)
-                    api_test_case.update_metric_data(metric_data)
-
-                    if metric.error is None:
-                        cache_metric_data = deepcopy(metric_data)
-                        cache_metric_data.evaluation_cost = (
-                            0  # Create new copy and save 0 for cost
-                        )
-                        updated_cached_metric_data = CachedMetricData(
-                            metric_data=cache_metric_data,
-                            metric_configuration=Cache.create_metric_configuration(
-                                metric
-                            ),
-                        )
-                        new_cached_test_case.cached_metrics_data.append(
-                            updated_cached_metric_data
-                        )
-
-                test_end_time = time.perf_counter()
-                run_duration = test_end_time - test_start_time
-                # Quick hack to check if all metrics were from cache
-                if run_duration < 1:
-                    run_duration = 0
-                api_test_case.update_run_duration(run_duration)
-
-                ### Update Test Run ###
-                test_run_manager.update_test_run(api_test_case, test_case)
-
-                ### Cache Test Run ###
-                test_run_cache_manager.cache_test_case(
-                    test_case,
-                    new_cached_test_case,
-                    test_run.hyperparameters,
-                )
-                test_run_cache_manager.cache_test_case(
-                    test_case,
-                    new_cached_test_case,
-                    test_run.hyperparameters,
-                    to_temp=True,
-                )
-
-                test_result = create_test_result(api_test_case)
-                test_results.append(test_result)
-
-            elif isinstance(test_case, ConversationalTestCase):
-                conversational_test_case_count += 1
-                api_test_case: ConversationalApiTestCase = create_api_test_case(
-                    test_case, conversational_test_case_count
-                )
-
-                test_start_time = time.perf_counter()
-                await measure_metrics_with_indicator(
-                    conversational_metrics, test_case, None, ignore_errors
-                )
-                for metric in conversational_metrics:
-                    metric_data = create_metric_data(metric)
-                    api_test_case.update_metric_data(metric_data)
-
-                test_end_time = time.perf_counter()
-                if len(conversational_metrics) > 0:
-                    run_duration = test_end_time - test_start_time
-                    api_test_case.update_run_duration(run_duration)
-
-                ### Update Test Run ###
-                test_run_manager.update_test_run(api_test_case, test_case)
+                elif isinstance(test_case, ConversationalTestCase):
+                    conversational_test_case_counter += 1
+                    copied_conversational_metrics: List[
+                        BaseConversationalMetric
+                    ] = []
+                    copied_conversational_metrics = copy_metrics(
+                        conversational_metrics
+                    )
+                    task = a_execute_conversational_test_cases(
+                        metrics=copied_conversational_metrics,
+                        test_case=test_case,
+                        test_run_manager=test_run_manager,
+                        count=conversational_test_case_counter,
+                        ignore_errors=ignore_errors,
+                        _use_bar_indicator=_use_bar_indicator,
+                        show_indicator=show_indicator,
+                    )
+                    tasks.append(asyncio.create_task((task)))
+                await asyncio.sleep(throttle_value)
+        await asyncio.gather(*tasks)
 
     return test_results
+
+
+async def a_execute_llm_test_cases(
+    metrics: List[BaseMetric],
+    test_case: LLMTestCase,
+    test_run_manager: TestRunManager,
+    test_results: List[TestResult],
+    count: int,
+    test_run: TestRun,
+    ignore_errors: bool,
+    use_cache: bool,
+    show_indicator: bool,
+    _use_bar_indicator: bool,
+    pbar: Optional[tqdm_asyncio] = None,
+):
+    show_metrics_indicator = show_indicator and not _use_bar_indicator
+
+    cached_test_case = None
+    for metric in metrics:
+        metric.error = None  # Reset metric error
+
+    # only use cache when NOT conversational test case
+    if use_cache:
+        cached_test_case = global_test_run_cache_manager.get_cached_test_case(
+            test_case,
+            test_run.hyperparameters,
+        )
+
+    ##### Metric Calculation #####
+    api_test_case = create_api_test_case(test_case, count)
+    new_cached_test_case: CachedTestCase = CachedTestCase()
+    test_start_time = time.perf_counter()
+    await measure_metrics_with_indicator(
+        metrics=metrics,
+        test_case=test_case,
+        cached_test_case=cached_test_case,
+        ignore_errors=ignore_errors,
+        show_indicator=show_metrics_indicator,
+    )
+
+    for metric in metrics:
+        metric_data = create_metric_data(metric)
+        api_test_case.update_metric_data(metric_data)
+
+        if metric.error is None:
+            cache_metric_data = deepcopy(metric_data)
+            cache_metric_data.evaluation_cost = (
+                0  # Create new copy and save 0 for cost
+            )
+            updated_cached_metric_data = CachedMetricData(
+                metric_data=cache_metric_data,
+                metric_configuration=Cache.create_metric_configuration(metric),
+            )
+            new_cached_test_case.cached_metrics_data.append(
+                updated_cached_metric_data
+            )
+
+    test_end_time = time.perf_counter()
+    run_duration = test_end_time - test_start_time
+    # Quick hack to check if all metrics were from cache
+    if run_duration < 1:
+        run_duration = 0
+    api_test_case.update_run_duration(run_duration)
+
+    ### Update Test Run ###
+    test_run_manager.update_test_run(api_test_case, test_case)
+
+    ### Cache Test Run ###
+    global_test_run_cache_manager.cache_test_case(
+        test_case,
+        new_cached_test_case,
+        test_run.hyperparameters,
+    )
+    global_test_run_cache_manager.cache_test_case(
+        test_case,
+        new_cached_test_case,
+        test_run.hyperparameters,
+        to_temp=True,
+    )
+
+    test_results.append(create_test_result(api_test_case))
+
+    if pbar is not None:
+        pbar.update(1)
+
+
+async def a_execute_conversational_test_cases(
+    metrics: List[BaseConversationalMetric],
+    test_case: ConversationalTestCase,
+    test_run_manager: TestRunManager,
+    count: int,
+    ignore_errors: bool,
+    show_indicator: bool,
+    _use_bar_indicator: bool,
+    pbar: Optional[tqdm_asyncio] = None,
+):
+    show_metrics_indicator = show_indicator and not _use_bar_indicator
+
+    for metric in metrics:
+        metric.error = None  # Reset metric error
+
+    api_test_case: ConversationalApiTestCase = create_api_test_case(
+        test_case, count
+    )
+    test_start_time = time.perf_counter()
+    await measure_metrics_with_indicator(
+        metrics=metrics,
+        test_case=test_case,
+        cached_test_case=None,
+        ignore_errors=ignore_errors,
+        show_indicator=show_metrics_indicator,
+    )
+    for metric in metrics:
+        metric_data = create_metric_data(metric)
+        api_test_case.update_metric_data(metric_data)
+
+    test_end_time = time.perf_counter()
+    if len(metrics) > 0:
+        run_duration = test_end_time - test_start_time
+        api_test_case.update_run_duration(run_duration)
+
+    ### Update Test Run ###
+    test_run_manager.update_test_run(api_test_case, test_case)
+
+    if pbar is not None:
+        pbar.update(1)
 
 
 def assert_test(
@@ -500,7 +695,10 @@ def assert_test(
                 ignore_errors=should_ignore_errors(),
                 use_cache=should_use_cache(),
                 verbose_mode=should_verbose_print(),
+                throttle_value=0,
                 save_to_disk=get_is_running_deepeval(),
+                show_indicator=True,
+                _use_bar_indicator=False,
             )
         )[0]
     else:
@@ -511,6 +709,8 @@ def assert_test(
             use_cache=should_use_cache(),
             verbose_mode=should_verbose_print(),
             save_to_disk=get_is_running_deepeval(),
+            show_indicator=True,
+            _use_bar_indicator=False,
         )[0]
 
     if not test_result.success:
@@ -549,6 +749,7 @@ def evaluate(
     use_cache: bool = False,
     ignore_errors: bool = False,
     verbose_mode: Optional[bool] = None,
+    throttle_value: int = 0,
 ):
     if hyperparameters is not None:
         if (
@@ -560,12 +761,15 @@ def evaluate(
             )
         hyperparameters = process_hyperparameters(hyperparameters)
 
-    set_indicator(show_indicator)
-
-    test_run_manager.reset()
+    global_test_run_manager.reset()
     start_time = time.perf_counter()
-    if print_results:
-        print("Evaluating test cases...")
+
+    if show_indicator:
+        console = Console()
+        for metric in metrics:
+            console.print(
+                format_metric_description(metric, async_mode=run_async)
+            )
 
     with capture_evaluation_run("evaluate()"):
         if run_async:
@@ -578,6 +782,8 @@ def evaluate(
                     use_cache=use_cache,
                     verbose_mode=verbose_mode,
                     save_to_disk=write_cache,
+                    show_indicator=show_indicator,
+                    throttle_value=throttle_value,
                 )
             )
         else:
@@ -588,6 +794,7 @@ def evaluate(
                 use_cache=use_cache,
                 verbose_mode=verbose_mode,
                 save_to_disk=write_cache,
+                show_indicator=show_indicator,
             )
 
     end_time = time.perf_counter()
@@ -598,10 +805,10 @@ def evaluate(
 
         aggregate_metric_pass_rates(test_results)
 
-    test_run = test_run_manager.get_test_run()
+    test_run = global_test_run_manager.get_test_run()
     test_run.hyperparameters = hyperparameters
-    test_run_manager.save_test_run()
-    test_run_manager.wrap_up_test_run(run_duration, display_table=False)
+    global_test_run_manager.save_test_run()
+    global_test_run_manager.wrap_up_test_run(run_duration, display_table=False)
     return test_results
 
 

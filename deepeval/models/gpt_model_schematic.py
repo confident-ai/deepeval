@@ -3,7 +3,6 @@ from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from openai import OpenAI, AsyncOpenAI
 from typing import Optional, Tuple
 from pydantic import BaseModel
-import instructor
 import logging
 import openai
 
@@ -110,12 +109,15 @@ class SchematicGPTModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
+        import instructor
+
         client = instructor.from_openai(OpenAI())
-        return client.chat.completions.create(
+        response = client.chat.completions.create(
             model=self.model_name,
             response_model=schema,
             messages=[{"role": "user", "content": prompt}],
         )
+        return response
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
@@ -125,6 +127,8 @@ class SchematicGPTModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
+        import instructor
+
         client = instructor.from_openai(AsyncOpenAI())
         response = await client.chat.completions.create(
             model=self.model_name,

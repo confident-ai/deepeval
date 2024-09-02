@@ -10,7 +10,7 @@ class LLMTestCaseParams(Enum):
     EXPECTED_OUTPUT = "expected_output"
     CONTEXT = "context"
     RETRIEVAL_CONTEXT = "retrieval_context"
-    TOOLS_USED = "tools_used"
+    TOOLS_CALLED = "tools_called"
     EXPECTED_TOOLS = "expected_tools"
     REASONING = "reasoning"
 
@@ -24,9 +24,10 @@ class LLMTestCase:
     retrieval_context: Optional[List[str]] = None
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
-    tools_used: Optional[List[str]] = None
+    tools_called: Optional[List[str]] = None
     expected_tools: Optional[List[str]] = None
     reasoning: Optional[str] = None
+    name: Optional[str] = field(default=None)
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
@@ -48,13 +49,13 @@ class LLMTestCase:
                     "'retrieval_context' must be None or a list of strings"
                 )
 
-        # Ensure `tools_used` is None or a list of strings
-        if self.tools_used is not None:
-            if not isinstance(self.tools_used, list) or not all(
-                isinstance(item, str) for item in self.tools_used
+        # Ensure `tools_called` is None or a list of strings
+        if self.tools_called is not None:
+            if not isinstance(self.tools_called, list) or not all(
+                isinstance(item, str) for item in self.tools_called
             ):
                 raise TypeError(
-                    "'tools_used' must be None or a list of strings"
+                    "'tools_called' must be None or a list of strings"
                 )
 
         # Ensure `expected_tools` is None or a list of strings

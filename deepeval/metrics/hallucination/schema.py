@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
 class HallucinationVerdict(BaseModel):
     verdict: str
-    reason: str = Field(default=None)
+    reason: str
 
 
 class Verdicts(BaseModel):

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -8,7 +8,7 @@ class Statements(BaseModel):
 
 class AnswerRelvancyVerdict(BaseModel):
     verdict: str
-    reason: str = Field(default=None)
+    reason: Optional[str] = Field(default=None)
 
 
 class Verdicts(BaseModel):

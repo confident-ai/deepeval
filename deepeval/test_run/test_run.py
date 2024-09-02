@@ -12,7 +12,7 @@ from rich.console import Console
 from rich import print
 
 from deepeval.metrics import BaseMetric
-from deepeval.api import Api, Endpoints
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_run.api import (
     LLMApiTestCase,
     ConversationalApiTestCase,
@@ -25,7 +25,7 @@ from deepeval.utils import (
     is_confident,
     is_in_ci_env,
 )
-from deepeval.test_run.cache import test_run_cache_manager
+from deepeval.test_run.cache import global_test_run_cache_manager
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
 
@@ -149,10 +149,7 @@ class TestRun(BaseModel):
 
     def sort_test_cases(self):
         self.test_cases.sort(
-            key=lambda x: (
-                x.order if x.order is not None else float("inf"),
-                x.name,
-            )
+            key=lambda x: (x.order if x.order is not None else float("inf"))
         )
         # Optionally update order only if not already set
         highest_order = 0
@@ -162,10 +159,7 @@ class TestRun(BaseModel):
             highest_order = test_case.order + 1
 
         self.conversational_test_cases.sort(
-            key=lambda x: (
-                x.order if x.order is not None else float("inf"),
-                x.name,
-            )
+            key=lambda x: (x.order if x.order is not None else float("inf"))
         )
         # Optionally update order only if not already set
         highest_order = 0
@@ -539,8 +533,9 @@ class TestRunManager:
                 body = test_run.dict(by_alias=True, exclude_none=True)
 
             api = Api()
-            result = api.post_request(
-                endpoint=Endpoints.TEST_RUN_ENDPOINT.value,
+            result = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.TEST_RUN_ENDPOINT,
                 body=body,
             )
             response = TestRunHttpResponse(
@@ -595,8 +590,9 @@ class TestRunManager:
                     )
 
                 try:
-                    result = api.put_request(
-                        endpoint=Endpoints.TEST_RUN_ENDPOINT.value,
+                    result = api.send_request(
+                        method=HttpMethods.PUT,
+                        endpoint=Endpoints.TEST_RUN_ENDPOINT,
                         body=body,
                     )
                 except Exception as e:
@@ -604,8 +600,9 @@ class TestRunManager:
                     raise Exception(message) from e
 
             console.print(
-                "✅ Tests finished! View results on "
-                f"[link={link}]{link}[/link]"
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! View results on "
+                f"[link={link}]{link}[/link]."
+                "\n‼️  NOTE: You can also run evaluations on ALL of deepeval's metrics directly on Confident AI instead."
             )
 
             if is_in_ci_env() == False:
@@ -613,7 +610,8 @@ class TestRunManager:
 
         else:
             console.print(
-                '✅ Tests finished! Run "deepeval login" to view evaluation results on the web.'
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run 'deepeval login' to view evaluation results on Confident AI. "
+                "\n‼️  NOTE: You can also run evaluations on ALL of deepeval's metrics directly on Confident AI instead."
             )
 
     def save_test_run_locally(self):
@@ -654,19 +652,21 @@ class TestRunManager:
         if valid_scores == 0:
             print("All metrics errored for all test cases, please try again.")
             delete_file_if_exists(self.temp_file_name)
-            delete_file_if_exists(test_run_cache_manager.temp_cache_file_name)
+            delete_file_if_exists(
+                global_test_run_cache_manager.temp_cache_file_name
+            )
             return
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
         test_run.sort_test_cases()
         test_run.delete_test_case_instance_ids()
 
-        if test_run_cache_manager.disable_write_cache is None:
-            test_run_cache_manager.disable_write_cache = (
+        if global_test_run_cache_manager.disable_write_cache is None:
+            global_test_run_cache_manager.disable_write_cache = (
                 get_is_running_deepeval() == False
             )
 
-        test_run_cache_manager.wrap_up_cached_test_run()
+        global_test_run_cache_manager.wrap_up_cached_test_run()
 
         if display_table:
             self.display_results_table(test_run)
@@ -676,4 +676,4 @@ class TestRunManager:
         self.post_test_run(test_run)
 
 
-test_run_manager = TestRunManager()
+global_test_run_manager = TestRunManager()

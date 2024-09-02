@@ -1,7 +1,9 @@
 import pytest
 from deepeval import assert_test
+from deepeval.metrics.summarization.schema import Verdicts
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import SummarizationMetric
+from tests.custom_judge import CustomJudge
 
 
 @pytest.mark.skip(reason="openai is expensive")
@@ -27,3 +29,14 @@ def test_summarization():
     test_case = LLMTestCase(input=input, actual_output=output)
 
     assert_test(test_case, [metric])
+
+
+def test_verdict_schema():
+
+    judge = CustomJudge("mock")
+    schema = Verdicts
+    answer = (
+        '{\n"verdicts": [\n{\n"verdict": "yes"\n},\n{\n    "verdict": "no",\n    "reason": "blah blah"\n},'
+        '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}'
+    )
+    res: Verdicts = judge.generate(answer, schema=schema)

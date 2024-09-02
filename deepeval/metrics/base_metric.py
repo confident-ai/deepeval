@@ -5,6 +5,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 
 
 class BaseMetric:
+    threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None
     reason: Optional[str] = None
@@ -17,14 +18,6 @@ class BaseMetric:
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
-
-    @property
-    def threshold(self) -> float:
-        return self._threshold
-
-    @threshold.setter
-    def threshold(self, value: float):
-        self._threshold = value
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
@@ -46,6 +39,7 @@ class BaseMetric:
 
 
 class BaseConversationalMetric:
+    threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None
     reason: Optional[str] = None
@@ -58,14 +52,6 @@ class BaseConversationalMetric:
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
-
-    @property
-    def threshold(self) -> float:
-        return self._threshold
-
-    @threshold.setter
-    def threshold(self, value: float):
-        self._threshold = value
 
     @abstractmethod
     def measure(

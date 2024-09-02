@@ -65,6 +65,7 @@ class GEval(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        _include_g_eval_suffix: bool = True,
     ):
         self.name = name
         self.evaluation_params = evaluation_params
@@ -93,12 +94,15 @@ class GEval(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self._include_g_eval_suffix = _include_g_eval_suffix
 
-    def measure(self, test_case: LLMTestCase) -> float:
+    def measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
         check_llm_test_case_params(test_case, self.evaluation_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self):
+        with metric_progress_indicator(self, _show_indicator=_show_indicator):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
@@ -155,6 +159,7 @@ class GEval(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
+                    f"Criteria:\n{self.criteria}",
                     f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -422,4 +427,7 @@ class GEval(BaseMetric):
 
     @property
     def __name__(self):
-        return f"{self.name} (GEval)"
+        if self._include_g_eval_suffix:
+            return f"{self.name} (GEval)"
+        else:
+            return self.name

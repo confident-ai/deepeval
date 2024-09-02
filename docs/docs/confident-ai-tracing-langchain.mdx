@@ -53,6 +53,19 @@ Confident AI supports **multiple LangChain trace types**. For example, when you 
 - Tool
 - Generic
 
+## Returning Sources
+
+If your RAG application is returning retrieval documents using LangChain's `RunnableParallel`, you must use assign the output of your RAG chain to the `RunnableParallel` object using **only the `output` key**.
+
+```python
+from langchain_core.runnables import RunnableParallel
+...
+
+rag_chain_with_source = RunnableParallel(
+    {"context": retriever, "question": RunnablePassthrough()}
+).assign(output=rag_chain_from_docs) # use the output key
+```
+
 ## Example: Tracing your LangChain Application
 
 ### 1. Import and Configure Models
@@ -77,10 +90,13 @@ Load web-based documents, process them into manageable chunks, and index using C
 ```python
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+...
 
 loader = WebBaseLoader(web_paths=("https://example.com/data",))
 docs = loader.load()
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000, chunk_overlap=200
+)
 splits = text_splitter.split_documents(docs)
 vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
 ```
@@ -90,6 +106,8 @@ vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
 Create a Retrieval-Augmented Generation chain that integrates retrieval, formatting, and generative responses.
 
 ```python
+...
+
 retriever = vectorstore.as_retriever()
 prompt = hub.pull("rlm/rag-prompt")
 
@@ -109,7 +127,9 @@ rag_chain = (
 Trace the RAG chain with DeepEval and run queries asynchronously.
 
 ```python
+import asyncio
 import deepeval
+...
 
 deepeval.trace_langchain()
 
@@ -118,6 +138,5 @@ async def main():
     responses = [rag_chain.invoke(query) for query in queries]
     return responses
 
-import asyncio
 asyncio.run(main())
 ```

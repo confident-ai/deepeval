@@ -1,10 +1,19 @@
 import pytest
+from deepeval.metrics.g_eval.schema import Steps
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import GEval
 from deepeval import assert_test
 from langchain.schema import AIMessage
 from unittest import mock
 import os
+
+from tests.custom_judge import CustomJudge
+
+
+def test_steps_schema():
+    judge = CustomJudge("mock")
+    answer = '{\n"steps": [\n   "step1",\n  "step2"\n]\n}'
+    res: Steps = judge.generate(answer, schema=Steps)
 
 
 @pytest.mark.skip(reason="openai is expensive")

@@ -1,7 +1,9 @@
 import pytest
+from deepeval.metrics.toxicity.schema import Verdicts
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import ToxicityMetric
 from deepeval import assert_test
+from tests.custom_judge import CustomJudge
 
 output = """
 This implementation seems a bit convoluted. 
@@ -19,3 +21,14 @@ def test_bias():
     )
     metric = ToxicityMetric()
     assert_test(test_case, [metric])
+
+
+def test_verdict_schema():
+
+    judge = CustomJudge("mock")
+    schema = Verdicts
+    answer = (
+        '{\n"verdicts": [\n{\n"verdict": "yes"\n},\n{\n    "verdict": "no",\n    "reason": "blah blah"\n},'
+        '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}'
+    )
+    res: Verdicts = judge.generate(answer, schema=schema)

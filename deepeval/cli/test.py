@@ -7,7 +7,7 @@ import sys
 from typing_extensions import Annotated
 from typing import Optional
 
-from deepeval.test_run import test_run_manager, TEMP_FILE_NAME
+from deepeval.test_run import global_test_run_manager, TEMP_FILE_NAME
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.utils import (
     delete_file_if_exists,
@@ -99,7 +99,7 @@ def run(
     set_should_ignore_errors(ignore_errors)
     set_verbose_mode(verbose)
 
-    test_run_manager.reset()
+    global_test_run_manager.reset()
 
     pytest_args = [test_file_or_directory]
 
@@ -138,7 +138,7 @@ def run(
         pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
-    test_run_manager.wrap_up_test_run(run_duration)
+    global_test_run_manager.wrap_up_test_run(run_duration)
 
     invoke_test_run_end_hook()
 

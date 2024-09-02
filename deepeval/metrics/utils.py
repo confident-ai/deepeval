@@ -1,6 +1,8 @@
+import inspect
 import json
 from typing import Any, Dict, Optional, List, Union, Tuple
 from deepeval.models import GPTModel, DeepEvalBaseLLM
+from deepeval.models.gpt_model_schematic import SchematicGPTModel
 
 from deepeval.metrics import BaseMetric, BaseConversationalMetric
 from deepeval.test_case import (
@@ -9,6 +11,22 @@ from deepeval.test_case import (
     ConversationalTestCase,
     Message,
 )
+
+
+def copy_metrics(
+    metrics: Union[List[BaseMetric], List[BaseConversationalMetric]]
+) -> Union[List[BaseMetric], List[BaseConversationalMetric]]:
+    copied_metrics = []
+    for metric in metrics:
+        metric_class = type(metric)
+        args = vars(metric)
+
+        signature = inspect.signature(metric_class.__init__)
+        valid_params = signature.parameters.keys()
+        valid_args = {key: args[key] for key in valid_params if key in args}
+
+        copied_metrics.append(metric_class(**valid_args))
+    return copied_metrics
 
 
 def process_llm_test_cases(
@@ -60,11 +78,11 @@ def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
 
         # don't add new line for penultimate step
         if i < len(steps) - 2:
-            verbose_logs += "\n\n"
+            verbose_logs += " \n \n"
 
     if metric.verbose_mode:
         # only print reason and score for deepeval
-        print_verbose_logs(metric.__name__, verbose_logs + f"\n\n{steps[-1]}")
+        print_verbose_logs(metric.__name__, verbose_logs + f"\n \n{steps[-1]}")
 
     return verbose_logs
 
@@ -75,7 +93,8 @@ def check_conversational_test_case_params(
     metric: BaseConversationalMetric,
 ):
     if isinstance(test_case, ConversationalTestCase) is False:
-        metric.error = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
+        error_str = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
+        metric.error = error_str
         raise ValueError(error_str)
 
     if len(test_case.messages) == 0:
@@ -114,7 +133,8 @@ def check_llm_test_case_params(
     metric: BaseMetric,
 ):
     if isinstance(test_case, LLMTestCase) is False:
-        metric.error = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
+        error_str = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
+        metric.error = error_str
         raise ValueError(error_str)
 
     missing_params = []
@@ -174,6 +194,22 @@ def initialize_model(
         return model, False
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return GPTModel(model=model), True
+
+
+def initialize_schematic_model(
+    model: Optional[Union[str, DeepEvalBaseLLM, SchematicGPTModel]] = None,
+) -> Tuple[DeepEvalBaseLLM, bool]:
+    """
+    Returns a tuple of (initialized DeepEvalBaseLLM, using_native_model boolean)
+    """
+    # If model is a GPTModel, it should be deemed as using native model
+    if isinstance(model, SchematicGPTModel):
+        return model, True
+    # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
+    if isinstance(model, DeepEvalBaseLLM):
+        return model, False
+    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
+    return SchematicGPTModel(model=model), True
 
 
 def print_verbose_logs(metric: str, logs: str):

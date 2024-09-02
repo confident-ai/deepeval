@@ -1,55 +1,53 @@
 ---
 id: confident-ai-testing-n-evaluation-test-run
-title: Test Runs and Experiments
-sidebar_label: Test Runs & Experiments
+title: Test Runs
+sidebar_label: Test Runs
 ---
 
-## Quick Summary
+A test run on Confident AI is a collection of evaluated test cases and their corresponding metric scores. There are two ways to produce a test run on Confident AI:
 
-A test run on Confident AI (and `deepeval`), is a collection of evaluated test cases and their corresponding metric scores. For example, a test run can be the result of evaluated test cases using the `AnswerRelevancyMetric`.
+- running an experiment directly on Confident AI's infrastructure by sending test cases to Confident AI
+- evaluating test cases locally on `deepeval` and sending it to Confident AI after evaluation
+
+## Running A Test Run on Confident AI
+
+You can evaluate your LLM application on Confident AI's infrastructure by first [creating an experiment](confident-ai-testing-n-evaluation-experiments#creating-an-experiment) on Confident AI and define metrics of your choice before sending over test cases (with `actual_output`s populated by your LLM application) for evaluation.
 
 ```python
-from deepeval import evaluate
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval import confident_evaluate
 from deepeval.test_case import LLMTestCase
 
-metric = AnswerRelevancyMetric()
-test_case = LLMTestCase(input="...", actual_output="...", retrieval_context=[...])
-
-evaluate(test_cases=[test_case], metrics=[metric])
-```
-
-Test runs are useful because they are a convenient way to compare and experiment with different hyperparameters in an LLM application, such as which prompt templates and LLMs to use. Confident AI keeps track of your test run histories in both development and CI/CD pipelines and allows you to:
-
-- Visualize test run results
-- Experiment with the optimal hyperparameters (eg. prompt templates, model used, etc.) your LLM application
-
-For example, to choose the optimal LLM for a particular use case, simply use different LLMs to generate `actual_output`s for the same set of test cases, and apply the same metric to them, which allows you to see which LLM gives the best metric scores. Since test run results enables the experimention of different hyperparameter choices and LLM system architectures, **a test run can also be known as an experiment.**
-
-:::tip
-To associate different hyperparameters with each test run, simply supply the hyperparameters argument with a flat JSON to log any custom hyperparameter of your choice (you can learn more about the `evaluate()` function [here](evaluation-introduction#evaluating-without-pytest)):
-
-```python
-...
-
-evaluate(
-    test_cases=[test_case],
-    metrics=[metric],
-    hyperparameters={"model": "gpt4o", "prompt template": "..."}
+confident_evaluate(
+    experiment_name="My First Experiment",
+    test_cases=[LLMTestCase(...)]
 )
 ```
 
-This will allow you easily to filter for the best hyperparameter choices on Confident AI.
-
+:::info
+You should refer to the [experiments](confident-ai-evaluation-experiments) section if you're unsure what an experiment is on Confident AI.
 :::
 
-## Running A Test Run
+There are two mandatory and one optional arguments when calling the `confident_evaluate()` function:
 
-Although in the previous section you saw how you could evaluate lone test cases, we're going to show how you can leverage Confident AI's datasets feature to keep the dataset used in different test runs/experiments standardized.
+- `experiment_name`: a string that specifies the name of the experiment you wish to evaluate your test cases against on Confident AI.
+- `test_cases`: a list of `LLMTestCase`s/`ConversationalTestCase`s **OR** an `EvaluationDataset`. Confident AI will evaluate your LLM application using the metrics you defined for this particular experiment for all test cases.
+- `disable_browser_opening`: a boolean which when set to `True`, will disable the auto-opening of the browser, which brings you to the experiment page of `experiment_name`.
+
+:::tip
+You can also provide a [`name` when creating an `LLMTestCase`](evaluation-test-cases#labeling-test-cases-for-confident-ai). This is particularly useful if you're importing test cases from an external datasource and would like a way to label, identify and search for them on Confident AI.
+:::
+
+## Running A Test Run via `deepeval`
+
+:::note
+We're going to show a full example which includes the [datasets feature](confident-ai-evaluation-dataset-evaluation) from Confident AI in this example. You can similarly apply the `confident_evaluate()` function to the examples below to run evaluations on Confident AI instead.
+:::
 
 ### Using the `evaluate()` Function
 
-You can use the `evaluate()` function to run a test run. All test run results will be automatically sent to Confident AI once you're [logged in.](confident-ai-introduction#login-to-confident-ai) First, pull the dataset:
+You can use `deepeval`'s `evaluate()` function to run a test run. All test run results will be automatically sent to Confident AI if you're [logged in.](confident-ai-introduction#login-to-confident-ai)
+
+First, pull the dataset:
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -223,11 +221,19 @@ You don't have to necessarily use `poetry` for installation or follow each step 
 
 ## Test Runs On Confident AI
 
-All test runs are automatically sent to Confident AI after `evaluate()` or `deepeval test run` for anyone in your organization to view, download, and comment on. Confident AI also keeps track of additional metadata such as time taken for a test run to finish executing, and the evaluation cost associated with this test run.
+All test runs created, on Confident AI or locally via `deepeval`(ie. `evaluate()` or `deepeval test run`), are automatically sent to Confident AI for anyone in your organization to view, share, download, and comment on.
+
+:::info
+Confident AI also keeps track of additional metadata such as time taken for a test run to finish executing, and the evaluation cost associated with this test run.
+:::
 
 ### Viewing Test Cases
 
 ![ok](https://confident-bucket.s3.amazonaws.com/test-cases.svg)
+
+:::tip
+You can also filter for test case pass/fail status, metric scores, and even custom test case names that you provide when sending over test cases.
+:::
 
 ### Download Test Cases
 
@@ -238,6 +244,10 @@ All test runs are automatically sent to Confident AI after `evaluate()` or `deep
 ![ok](https://confident-bucket.s3.amazonaws.com/test-run-comment.svg)
 
 ## Iterating on Hyperparameters
+
+:::note
+This section is currently only available if you're running evaluations locally via `deepeval`.
+:::
 
 In the first section, we saw how to execute a test run by dynamically generating `actual_output` for pulled datasets at evaluation time. To experiemnt with different hyperparameter values to iterate towards the optimal LLM to use for your LLM application for example, you should **associate hyperparameter values to test runs to compare and pick the best hyperparameters on Confident AI.**
 

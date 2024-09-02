@@ -19,7 +19,7 @@ While a `ConversationalTestCase` is a list of messages represented by `LLMTestCa
 - [Optional] `expected_output`
 - [Optional] `context`
 - [Optional] `retrieval_context`
-- [Optional] `tools_used`
+- [Optional] `tools_called`
 - [Optional] `expected_tools`
 
 Here's an example implementation of a test case:
@@ -33,7 +33,7 @@ test_case = LLMTestCase(
     actual_output="We offer a 30-day full refund at no extra cost.",
     context=["All customers are eligible for a 30 day full refund at no extra cost."],
     retrieval_context=["Only shoes can be refunded."],
-    tools_used=["WebSearch"],
+    tools_called=["WebSearch"],
     expected_tools=["WebSearch", "QueryDatabase"]
 )
 ```
@@ -41,7 +41,7 @@ test_case = LLMTestCase(
 :::info
 Since `deepeval` is an LLM evaluation framework, the ** `input` and `actual_output` are always mandatory.** However, this does not mean they are necessarily used for evaluation.
 
-Additionally, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output`, `context`, `tools_used`, and/or `expected_tools` as additional parameters. For example, you won't need `expected_output`, `context`, `tools_used`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
+Additionally, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output`, `context`, `tools_called`, and/or `expected_tools` as additional parameters. For example, you won't need `expected_output`, `context`, `tools_called`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
 :::
 
 ## LLM Test Case
@@ -193,9 +193,9 @@ test_case = LLMTestCase(
 Remember, `context` is the ideal retrieval results for a given input and typically come from your evaluation dataset, whereas `retrieval_context` is your LLM application's actual retrieval results. So, while they might look similar at times, they are not the same.
 :::
 
-### Tools Used
+### Tools Called
 
-The `tools_used` parameter is an **optional** parameter that represents the tools your LLM agent actually invoked during execution. By providing `tools_used`, you can evaluate how effectively your LLM agent utilized the tools available to it.
+The `tools_called` parameter is an **optional** parameter that represents the tools your LLM agent actually invoked during execution. By providing `tools_called`, you can evaluate how effectively your LLM agent utilized the tools available to it.
 
 ```python
 # A hypothetical LLM application example
@@ -206,12 +206,12 @@ test_case = LLMTestCase(
     input="Why did the chicken cross the road?",
     actual_output=chatbot.run(input),
     # Replace this with the tools that were actually used
-    tools_used=["WebSearch", "DatabaseQuery"]
+    tools_called=["WebSearch", "DatabaseQuery"]
 )
 ```
 
 :::note
-`tools_used` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
+`tools_called` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
 :::
 
 ### Expected Tools
@@ -228,7 +228,7 @@ test_case = LLMTestCase(
     input=input,
     actual_output=chatbot.run(input),
     # Replace this with the tools that were actually used
-    tools_used=["WebSearch", "DatabaseQuery"],
+    tools_called=["WebSearch", "DatabaseQuery"],
     expected_tools=["DatabaseQuery"]
 )
 ```
@@ -359,15 +359,16 @@ evaluate([test_case], [metric])
 
 There are two mandatory and eight optional arguments when calling the `evaluate()` function:
 
-- `test_case`: an `LLMTestCase`
+- `test_cases`: a list of `LLMTestCase`s/`ConversationalTestCase`s, or an `EvaluationDataset`
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of test cases **AND** metrics. Defaulted to `True`.
+- [Optional] `throttle_value`: an integer that determines how long (in seconds) to throttle the evaluation of each test case. You can increase this value if your evaluation model is running into rate limit errors. Defaulted to 0.
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for eac test case. Defaulted to `False`.
 - [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
-- [Optional] `show_indicator`: a boolean which when set to `True`, shows the progress indicator for each individual metric. Defaulted to `True`.
+- [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
 
 :::tip DID YOU KNOW?
@@ -390,3 +391,14 @@ evaluate(
 
 For more examples of `evaluate`, visit the [datasets section](evaluation-datasets).
 :::
+
+## Labeling Test Cases for Confident AI
+
+If you're using Confident AI, the optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
+
+```python
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
+
+test_case = LLMTestCase(name="my-external-unique-id", ...)
+convo_test_case = ConversationalTestCase(name="my-external-unique-id", ...)
+```

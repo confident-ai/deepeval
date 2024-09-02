@@ -106,6 +106,8 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-ada-002")
 Load and process documents to generate nodes, then create a vector store index for querying.
 
 ```python
+...
+
 documents = SimpleDirectoryReader("data").load_data()
 node_parser = SentenceSplitter(chunk_size=200, chunk_overlap=20)
 nodes = node_parser.get_nodes_from_documents(documents, show_progress=True)
@@ -122,6 +124,9 @@ async def chatbot(input):
 Trace the chatbot with DeepEval and run queries asynchronously.
 
 ```python
+import deepeval
+...
+
 deepeval.trace_llama_index()
 
 async def main():

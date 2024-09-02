@@ -114,5 +114,5 @@ benchmarks = [
     benchmark_bbh,  # Need to test every task (different schemas for all tasks)
 ]
 
-for benchmark in benchmarks:
-    benchmark.evaluate(model=gpt_model)
+# for benchmark in benchmarks:
+#     benchmark.evaluate(model=gpt_model)

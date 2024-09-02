@@ -1,8 +1,9 @@
 import pytest
+from deepeval.metrics.hallucination.schema import Verdicts
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import HallucinationMetric
 from deepeval import assert_test
-import deepeval
+from tests.custom_judge import CustomJudge
 
 
 @pytest.mark.skip(reason="openai is expensive")
@@ -46,15 +47,15 @@ def test_hallucination_metric_3():
     assert_test(test_case, [metric])
 
 
-# prompt_template = """You are a helpful assistant, answer the following question without using any prior knowledge.
+def test_verdict_schema():
 
-# Question:
-# {question}
-# """
-
-
-# @deepeval.log_hyperparameters(model="gpt-4", prompt_template=prompt_template)
-# def hyperparameters():
-#     return {
-#         "model": "gpt-4",
-#     }
+    judge = CustomJudge("mock")
+    schema = Verdicts
+    answer = (
+        '{\n"verdicts": [\n'
+        '{\n"verdict": "yes",\n"reason": ""\n},\n'
+        '{\n"verdict": "no",\n"reason": "blah blah"\n},\n'
+        '{\n"verdict": "yes",\n"reason": ""\n}\n'
+        "]\n}"
+    )
+    res: Verdicts = judge.generate(answer, schema=schema)

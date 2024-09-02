@@ -4,7 +4,6 @@ import asyncio
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -54,11 +53,13 @@ class SummarizationMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
 
-    def measure(self, test_case: LLMTestCase) -> float:
+    def measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self):
+        with metric_progress_indicator(self, _show_indicator=_show_indicator):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
@@ -426,8 +427,8 @@ class SummarizationMetric(BaseMetric):
             return verdicts
         else:
             try:
-                res: Verdict = await self.model.a_generate(
-                    prompt, schema=Verdict
+                res: Verdicts = await self.model.a_generate(
+                    prompt, schema=Verdicts
                 )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
@@ -461,7 +462,7 @@ class SummarizationMetric(BaseMetric):
             return verdicts
         else:
             try:
-                res: Verdict = self.model.generate(prompt, schema=Verdict)
+                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:

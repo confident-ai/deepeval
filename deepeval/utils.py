@@ -73,8 +73,14 @@ def prettify_list(lst: List[Any]):
         if isinstance(item, str):
             formatted_elements.append(f'"{item}"')
         elif isinstance(item, BaseModel):
+            try:
+                jsonObj = item.model_dump()
+            except AttributeError:
+                # Pydantic version below 2.0
+                jsonObj = item.dict()
+
             formatted_elements.append(
-                json.dumps(item.dict(), indent=4).replace("\n", "\n    ")
+                json.dumps(jsonObj, indent=4).replace("\n", "\n    ")
             )
         else:
             formatted_elements.append(repr(item))  # Fallback for other types
@@ -124,23 +130,6 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
     return loop
-
-
-def show_indicator():
-    try:
-        if os.environ["DISABLE_DEEPEVAL_INDICATOR"] == "YES":
-            return False
-        else:
-            return True
-    except:
-        return True
-
-
-def set_indicator(show_indicator: bool):
-    if show_indicator:
-        os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "NO"
-    else:
-        os.environ["DISABLE_DEEPEVAL_INDICATOR"] = "YES"
 
 
 def should_ignore_errors():

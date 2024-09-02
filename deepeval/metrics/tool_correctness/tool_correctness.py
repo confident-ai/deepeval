@@ -1,5 +1,6 @@
 from typing import List
 
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.utils import prettify_list, get_lcs
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -14,7 +15,7 @@ from deepeval.metrics import BaseMetric
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.TOOLS_USED,
+    LLMTestCaseParams.TOOLS_CALLED,
     LLMTestCaseParams.EXPECTED_TOOLS,
 ]
 
@@ -36,33 +37,38 @@ class ToolCorrectnessMetric(BaseMetric):
         self.should_exact_match = should_exact_match
         self.should_consider_ordering = should_consider_ordering
 
-    def measure(self, test_case: LLMTestCase) -> float:
-        check_llm_test_case_params(test_case, required_params, self)
-        self.tools_used: List[str] = test_case.tools_used
-        self.expected_tools: List[str] = test_case.expected_tools
-        self.score = self._calculate_score()
-        self.reason = self._generate_reason()
-        self.success = self.score >= self.threshold
-        self.verbose_logs = construct_verbose_logs(
-            self,
-            steps=[
-                f"Expected Tools:\n{prettify_list(self.expected_tools)}",
-                f"Tools Used:\n{prettify_list(self.tools_used)}",
-                f"Score: {self.score}\nReason: {self.reason}",
-            ],
-        )
-        return self.score
+    def measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        with metric_progress_indicator(self, _show_indicator=_show_indicator):
+            check_llm_test_case_params(test_case, required_params, self)
+            self.tools_called: List[str] = test_case.tools_called
+            self.expected_tools: List[str] = test_case.expected_tools
+            self.score = self._calculate_score()
+            self.reason = self._generate_reason()
+            self.success = self.score >= self.threshold
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    f"Expected Tools:\n{prettify_list(self.expected_tools)}",
+                    f"Tools Called:\n{prettify_list(self.tools_called)}",
+                    f"Score: {self.score}\nReason: {self.reason}",
+                ],
+            )
+            return self.score
 
-    async def a_measure(self, test_case: LLMTestCase) -> float:
-        return self.measure(test_case)
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = True
+    ) -> float:
+        return self.measure(test_case, _show_indicator=_show_indicator)
 
     def _generate_reason(self):
         if self.should_exact_match:
-            return f"{'Exact match' if self.tools_used == self.expected_tools else 'Not an exact match'}: expected {self.expected_tools}, called {self.tools_used}."
+            return f"{'Exact match' if self.tools_called == self.expected_tools else 'Not an exact match'}: expected {self.expected_tools}, called {self.tools_called}."
 
         elif self.should_consider_ordering:
-            lcs = get_lcs(self.expected_tools, self.tools_used)
-            missing = set(self.expected_tools) - set(self.tools_used)
+            lcs = get_lcs(self.expected_tools, self.tools_called)
+            missing = set(self.expected_tools) - set(self.tools_called)
             out_of_order = set(self.expected_tools) - set(lcs)
 
             if len(lcs) == len(self.expected_tools):
@@ -73,10 +79,10 @@ class ToolCorrectnessMetric(BaseMetric):
                     issues.append(f"missing tools {list(missing)}")
                 if out_of_order:
                     issues.append(f"out-of-order tools {list(out_of_order)}")
-                return f"Incorrect tool usage: {' and '.join(issues)}; expected {self.expected_tools}, called {self.tools_used}."
+                return f"Incorrect tool usage: {' and '.join(issues)}; expected {self.expected_tools}, called {self.tools_called}."
 
         else:
-            used_expected = set(self.tools_used).intersection(
+            used_expected = set(self.tools_called).intersection(
                 set(self.expected_tools)
             )
             missing = set(self.expected_tools) - used_expected
@@ -84,20 +90,20 @@ class ToolCorrectnessMetric(BaseMetric):
             if len(used_expected) == len(self.expected_tools):
                 return f"All expected tools {self.expected_tools} were called (order not considered)."
             else:
-                return f"Incomplete tool usage: missing tools {list(missing)}; expected {self.expected_tools}, called {self.tools_used}."
+                return f"Incomplete tool usage: missing tools {list(missing)}; expected {self.expected_tools}, called {self.tools_called}."
 
     def _calculate_score(self):
         if self.should_exact_match:
-            return 1.0 if self.tools_used == self.expected_tools else 0.0
+            return 1.0 if self.tools_called == self.expected_tools else 0.0
 
         elif self.should_consider_ordering:
             longest_common_subsequence = get_lcs(
-                self.expected_tools, self.tools_used
+                self.expected_tools, self.tools_called
             )
             score = len(longest_common_subsequence) / len(self.expected_tools)
 
         else:
-            used_expected_tools = set(self.tools_used).intersection(
+            used_expected_tools = set(self.tools_called).intersection(
                 set(self.expected_tools)
             )
             score = len(used_expected_tools) / len(self.expected_tools)

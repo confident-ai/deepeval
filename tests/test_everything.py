@@ -22,7 +22,7 @@ from deepeval.metrics import (
     GEval,
     SummarizationMetric,
     ToolCorrectnessMetric,
-    ConversationRelevancy,
+    ConversationRelevancyMetric,
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
@@ -83,7 +83,7 @@ being composed mostly of rock and metal.
 """
 
 strict_mode = False
-verbose_mode = False
+verbose_mode = True
 
 
 @pytest.mark.skip(reason="openai is expensive")
@@ -143,7 +143,8 @@ def test_everything():
         verbose_mode=verbose_mode,
     )
 
-    metric12 = ConversationRelevancy()
+    metric12 = ConversationRelevancyMetric()
+    metric13 = ToolCorrectnessMetric()
 
     test_case = LLMTestCase(
         input="What is this",
@@ -151,6 +152,8 @@ def test_everything():
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
+        tools_called=["ok"],
+        expected_tools=["ok", "ok"],
     )
     c_test_case = ConversationalTestCase(
         messages=[
@@ -159,10 +162,10 @@ def test_everything():
         ]
     )
     assert_test(
-        c_test_case,
+        test_case,
         [
-            metric1,
-            metric2,
+            # metric1,
+            # metric2,
             # metric3,
             # metric4,
             # metric5,
@@ -172,9 +175,10 @@ def test_everything():
             # metric9,
             # metric10,
             # metric11,
-            metric12,
+            # metric12,
+            metric13,
         ],
-        # run_async=False,
+        run_async=True,
     )
 
 
@@ -212,7 +216,7 @@ def test_everything_2():
         # retrieval_context=["I love coffee"],
         context=["I love coffee"],
         expected_tools=["mixer", "creamer", "dripper"],
-        tools_used=["mixer", "creamer", "mixer"],
+        tools_called=["mixer", "creamer", "mixer"],
     )
     assert_test(
         test_case,
