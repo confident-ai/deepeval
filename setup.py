@@ -18,7 +18,7 @@ setup(
         "tabulate",
         "typer",
         "rich",
-        "protobuf==4.25.1",
+        "protobuf",
         "pydantic",  # loosen pydantic requirements as we support multiple
         "sentry-sdk",
         "pytest-repeat",
@@ -31,10 +31,10 @@ setup(
         "docx2txt~=0.8",
         "importlib-metadata>=6.0.2",
         "tenacity~=8.4.1",
-        "opentelemetry-api==1.25.0",
-        "opentelemetry-sdk==1.25.0",
-        "opentelemetry-exporter-otlp-proto-grpc==1.25.0",
-        "grpcio==1.63.0",
+        "opentelemetry-api~=1.24.0",
+        "opentelemetry-sdk~==1.24.0",
+        "opentelemetry-exporter-otlp-proto-grpc~=1.24.0",
+        "grpcio~=1.63.0",
     ],
     extras_require={
         "dev": ["black"],
