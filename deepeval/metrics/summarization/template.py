@@ -2,9 +2,9 @@ class SummarizationTemplate:
     @staticmethod
     def generate_reason(contradictions, redundancies, questions, score):
         return f"""You will be given the following: 1) information in the summary contradicting the original text, 2) extra information in the summary not mentioned in the original text, 3) [Optional] questions cannot be answered by the summary. Your task is to explain the quality of this summarization task.
-Given the summarization score, which is a 0-1 score indicating how good the summary is to the original text (higher the better), CONCISELY summarize the provided information to justify the score.  
+Given the summarization score, which is a 0-1 score indicating how good the summary is to the original text (higher the better), CONCISELY summarize the provided information to justify the score.
 
-** 
+**
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {{
@@ -55,11 +55,33 @@ JSON:
 
     @staticmethod
     def generate_questions(text, n):
-        return f"""Based on the given text, generate {n} closed-ended questions that can be answered with either a 'yes' or 'no'. 
-The questions generated should ALWAYS result in a 'yes' based on the given text. 
-        
+        return f"""Based on the given text, generate {n} closed-ended questions that can be answered with either a 'yes' or 'no'.
+
+        The given text is a survey question followed by a collection of survey responses separated by the | character.
+        Frame questions as "Is x mentioned in the responses?". To generate these questions:
+            a) Analyze the original responses to identify the most frequent themes or opinions. Ignore irrelevant or gibberish responses.
+            b) Create a list of these themes, ranked by frequency.
+            c) Generate yes/no questions for each major theme, starting with the most frequent.
+            d) Generate 90% of the questions based on the most frequent themes. And 10% based on the less frequent themes.
+
+        The questions generated should ALWAYS result in a 'yes' based on the given text.
+        ALWAYS make one of the questions about the overall sentiment or tone of the responses.
+
+Example:
+Example Text:
+"survey_question: Why do you not like this product? survey_responses: too expensive|hate the color|color|color|price|not sure|shape|price|haha"
+
+Example JSON:
+{{
+    "questions": [
+        'Is product color mentioned in the responses?', 'Is product price mentioned in the responses?', 'Is product shape mentioned in the responses?', 'Are the responses negative in tone?'
+    ]
+}}
+===== END OF EXAMPLE ======
+
+
 ** IMPORTANT
-Only return a JSON with a 'questions' key, which is a list of strings. 
+Only return a JSON with a 'questions' key, which is a list of strings.
 The questions have to be STRICTLY closed ended.
 The given text should be able to answer 'yes' for each question.
 **
@@ -71,9 +93,11 @@ JSON:
 
     @staticmethod
     def generate_alignment_verdicts(orignal_text, summary_claims):
-        return f"""Based on the given summary claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH piece of info contradicts any facts in the original text. The JSON will have 2 fields: 'verdict' and 'reason'.
-The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given summary claim agrees with the original text. 
-Provide a 'reason' ONLY if the answer is 'no' OR 'idk'. 
+        return f"""Based on the given summary claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH piece of info contradicts the original text. The JSON will have 2 fields: 'verdict' and 'reason'.
+        The original text is a survey question followed by a collection of responses. The summary claims are drawn from the summary of the survey responses.
+        You should check wether the summary claims agree with conclusions that can be made from the survey responses.
+The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given summary claim agrees with the original text.
+Provide a 'reason' ONLY if the answer is 'no' OR 'idk'.
 The provided summary claims is drawn from the summary. Try to provide a correction in the reason using the facts in the original text.
 
 **
@@ -103,7 +127,7 @@ Example:
             "verdict": "no",
             "reason": "The summary claims Einstein is a Germen chef, which is not correct as the original text states he was a German scientist instead."
         }},
-    ]  
+    ]
 }}
 ===== END OF EXAMPLE ======
 

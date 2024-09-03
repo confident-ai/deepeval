@@ -66,7 +66,9 @@ class SummarizationMetric(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.truths: List[str] = self._generate_claims(test_case.input)
+                # self.truths: List[str] = self._generate_claims(test_case.input)
+                self.truths = test_case.input
+                self.claims = test_case.actual_output
                 self.claims: List[str] = self._generate_claims(
                     test_case.actual_output
                 )
@@ -88,7 +90,8 @@ class SummarizationMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Truths:\n{prettify_list(self.truths)}",
+                        # f"Truths:\n{prettify_list(self.truths)}",
+                        f"Truths:\n{self.truths}",
                         f"Claims:\n{prettify_list(self.claims)}",
                         f"Assessment Questions:\n{prettify_list(self.assessment_questions)}",
                         f"Coverage Verdicts:\n{prettify_list(self.coverage_verdicts)}",

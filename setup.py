@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 from deepeval._version import __version__
 
 setup(
-    name="deepeval",
+    name="ms-deepeval",
     version=__version__,
     url="https://github.com/confident-ai/deepeval",
     author="Confident AI",

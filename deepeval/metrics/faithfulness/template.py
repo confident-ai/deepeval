@@ -1,20 +1,30 @@
 class FaithfulnessTemplate:
     @staticmethod
     def generate_claims(text):
-        return f"""Based on the given text, please generate a comprehensive list of FACTUAL claims that can inferred from the provided text.
+        return f"""Based on the given text, please generate a comprehensive list of FACTUAL claims that can be inferred from the provided text.
+        Make each fact stand-alone meaning each fact should have the context of the summary.
+        To generate claims:
+            a) Extract key statements from the summary.
+            b) Rephrase them as declarative sentences without specific numbers.
+            c) Include claims about relative popularity or frequency (e.g., "Opinion A was more common than Opinion B").
 
-Example:
-Example Text: 
-"Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
+The text is a summary of the survey responses.
 
-Example JSON: 
+Example 1:
+Example Text:
+"Customers expressed a strong preference for the product in black (~10 comments), with blue also being a popular choice (~5 comments). Other colors mentioned include white, red, green, purple, and beige (~3 comments)."
+
+Example JSON:
 {{
     "claims": [
-        "Einstein won the noble prize for his discovery of the photoelectric effect.",
-        "Einstein won the noble prize in 1968."
-    ]  
+        "Customers expressed a strong preference for the product in black.",
+        "Blue was a popular choice among customers.",
+        "White, red, green, purple, and beige were also mentioned as color choices.",
+        "Black was more popular than blue.",
+        "Blue was more popular than white, red, green, purple, and beige."
+    ]
 }}
-===== END OF EXAMPLE ======
+===== END OF EXAMPLES ======
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "claims" key as a list of strings. No words or explanation is needed.
@@ -33,15 +43,15 @@ JSON:
         return f"""Based on the given text, please generate a comprehensive list of FACTUAL, undisputed truths that can inferred from the provided text.
 
 Example:
-Example Text: 
+Example Text:
 "Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
 
-Example JSON: 
+Example JSON:
 {{
     "truths": [
         "Einstein won the noble prize for his discovery of the photoelectric effect.",
         "Einstein won the noble prize in 1968."
-    ]  
+    ]
 }}
 ===== END OF EXAMPLE ======
 
@@ -59,8 +69,8 @@ JSON:
     @staticmethod
     def generate_verdicts(claims, retrieval_context):
         return f"""Based on the given claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH claim contradicts any facts in the retrieval context. The JSON will have 2 fields: 'verdict' and 'reason'.
-The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given claim agrees with the context. 
-Provide a 'reason' ONLY if the answer is 'no'. 
+The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given claim agrees with the context.
+Provide a 'reason' ONLY if the answer is 'no'.
 The provided claim is drawn from the actual output. Try to provide a correction in the reason using the facts in the retrieval context.
 
 **
@@ -88,7 +98,7 @@ Example:
             "verdict": "no",
             "reason": "The actual output claims Einstein is a Germen chef, which is not correct as the retrieval context states he was a German scientist instead."
         }},
-    ]  
+    ]
 }}
 ===== END OF EXAMPLE ======
 
@@ -111,9 +121,9 @@ JSON:
     @staticmethod
     def generate_reason(score, contradictions):
         return f"""Below is a list of Contradictions. It is a list of strings explaining why the 'actual output' does not align with the information presented in the 'retrieval context'. Contradictions happen in the 'actual output', NOT the 'retrieval context'.
-Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is to the retrieval context (higher the better), CONCISELY summarize the contradictions to justify the score. 
+Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is to the retrieval context (higher the better), CONCISELY summarize the contradictions to justify the score.
 
-** 
+**
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
 Example JSON:
 {{
