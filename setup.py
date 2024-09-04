@@ -5,10 +5,10 @@ from deepeval._version import __version__
 setup(
     name="ms-deepeval",
     version=__version__,
-    url="https://github.com/confident-ai/deepeval",
-    author="Confident AI",
-    author_email="jeffreyip@confident-ai.com",
-    description="The open-source evaluation framework for LLMs.",
+    url="https://github.com/MakerSights/ms-deepeval",
+    author="Confident AI / MakerSights",
+    author_email="jeffreyip@confident-ai.com / elham.karami@makersights.com",
+    description="MS evaluation framework for LLMs forked from the open-source framework deepeval.",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
