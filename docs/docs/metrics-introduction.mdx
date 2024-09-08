@@ -88,6 +88,31 @@ Note that the `model-version` is **optional**. If you ever wish to stop using Az
 deepeval unset-azure-openai
 ```
 
+## Using local LLM models
+
+There are several local LLM providers that offer an OpenAI API compatible endpoint, like Ollama or LM Studio. To use them with `deepeval` you need to configure them using the CLI. This will make `deepeval` use the local LLM model for **all** LLM-based metrics.
+
+To configure any of those providers, you need to supply the base URL where the service is running. These are some of the most popular alternatives for base URLs:
+
+- Ollama: http://localhost:11434/v1/
+- LM Studio: http://localhost:1234/v1/
+
+So, to configure a model using Ollama, use the following command:
+
+```
+deepeval set-local-model --model-name=<model_name> \
+    --base-url="http://localhost:11434/v1/" \
+    --api-key="ollama"
+```
+
+Where model_name is one of the LLM that appears when executing `ollama list`. For additional instructions about model availability and base URLs, consult the provider's documentation.
+
+If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
+
+```console
+deepeval unset-local-model
+```
+
 ## Using A Custom LLM
 
 `deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
