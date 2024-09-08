@@ -23,7 +23,10 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         model_name = None
         if isinstance(model, str):
             model_name = model
-            if model_name not in valid_openai_embedding_models:
+            if (
+                not self.should_use_local_embeddings()
+                and model_name not in valid_openai_embedding_models
+            ):
                 raise ValueError(
                     f"Invalid model. Available OpenAI Embedding models: {', '.join(model for model in valid_openai_embedding_models)}"
                 )
@@ -56,8 +59,21 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
                 openai_api_key=openai_api_key,
                 **self.kwargs,
             )
-
-        return OpenAIEmbeddings(model=self.model_name, **self.kwargs)
+        elif self.should_use_local_embeddings():
+            base_url = KEY_FILE_HANDLER.fetch_data(
+                KeyValues.LOCAL_EMBEDDING_BASE_URL
+            )
+            api_key = KEY_FILE_HANDLER.fetch_data(
+                KeyValues.LOCAL_EMBEDDING_API_KEY
+            )
+            return OpenAIEmbeddings(
+                model=self.model_name,
+                openai_api_base=base_url,
+                openai_api_key=api_key,
+                **self.kwargs,
+            )
+        else:
+            return OpenAIEmbeddings(model=self.model_name, **self.kwargs)
 
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
@@ -79,8 +95,14 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
         return value.lower() == "yes" if value is not None else False
 
+    def should_use_local_embeddings(self):
+        value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LOCAL_EMBEDDINGS)
+        return value.lower() == "yes" if value is not None else False
+
     def get_model_name(self):
         if self.should_use_azure_openai():
             return "azure openai"
+        elif self.should_use_local_embeddings():
+            return "local embeddings"
         elif self.model_name:
             return self.model_name
