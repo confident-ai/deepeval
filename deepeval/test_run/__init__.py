@@ -3,6 +3,7 @@ from .test_run import (
     global_test_run_manager,
     TEMP_FILE_NAME,
     LLMApiTestCase,
+    MLLMApiTestCase,
     ConversationalApiTestCase,
     TestRunManager,
 )

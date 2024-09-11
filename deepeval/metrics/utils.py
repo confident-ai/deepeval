@@ -1,21 +1,23 @@
 import inspect
 import json
 from typing import Any, Dict, Optional, List, Union, Tuple
-from deepeval.models import GPTModel, DeepEvalBaseLLM
+from deepeval.models import GPTModel, DeepEvalBaseLLM, MultimodalGPTModel, DeepEvalBaseMLLM
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 
-from deepeval.metrics import BaseMetric, BaseConversationalMetric
+from deepeval.metrics import BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
+    MLLMTestCase,
+    MLLMTestCaseParams,
     ConversationalTestCase,
     Message,
 )
 
 
 def copy_metrics(
-    metrics: Union[List[BaseMetric], List[BaseConversationalMetric]]
-) -> Union[List[BaseMetric], List[BaseConversationalMetric]]:
+    metrics: Union[List[BaseMetric], List[BaseConversationalMetric], List[BaseMultimodalMetric]]
+) -> Union[List[BaseMetric], List[BaseConversationalMetric], List[BaseMultimodalMetric]]:
     copied_metrics = []
     for metric in metrics:
         metric_class = type(metric)
@@ -157,6 +159,36 @@ def check_llm_test_case_params(
         raise ValueError(error_str)
 
 
+def check_mllm_test_case_params(
+    test_case: MLLMTestCase,
+    test_case_params: List[MLLMTestCaseParams],
+    metric: BaseMetric,
+):
+    if isinstance(test_case, MLLMTestCase) is False:
+        error_str = f"Unable to evaluate test cases that are not of type 'MLLMTestCase' using the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise ValueError(error_str)
+
+    missing_params = []
+    for param in test_case_params:
+        if getattr(test_case, param.value) is None:
+            missing_params.append(f"'{param.value}'")
+
+    if missing_params:
+        if len(missing_params) == 1:
+            missing_params_str = missing_params[0]
+        elif len(missing_params) == 2:
+            missing_params_str = " and ".join(missing_params)
+        else:
+            missing_params_str = (
+                ", ".join(missing_params[:-1]) + ", and " + missing_params[-1]
+            )
+
+        error_str = f"{missing_params_str} cannot be None for the '{metric.__name__}' metric"
+        metric.error = error_str
+        raise ValueError(error_str)
+
+
 def trimAndLoadJson(
     input_string: str, metric: Optional[BaseMetric] = None
 ) -> Any:
@@ -194,6 +226,32 @@ def initialize_model(
         return model, False
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return GPTModel(model=model), True
+
+
+def initialize_multimodal_model(
+    model: Optional[Union[str, DeepEvalBaseMLLM, MultimodalGPTModel]] = None,
+) -> Tuple[DeepEvalBaseLLM, bool]:
+    """
+    Returns a tuple of (initialized DeepEvalBaseMLLM, using_native_model boolean)
+    """
+    # If model is a MultimodalGPTModel, it should be deemed as using native model
+    if isinstance(model, MultimodalGPTModel):
+        return model, True
+    # If model is a DeepEvalBaseMLLM but not a MultimodalGPTModel, we can not assume it is a native model
+    if isinstance(model, DeepEvalBaseMLLM):
+        return model, False
+    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
+    return MultimodalGPTModel(model=model), True
+
+
+def print_verbose_logs(metric: str, logs: str):
+    print("*" * 50)
+    print(f"{metric} Verbose Logs")
+    print("*" * 50)
+    print("")
+    print(logs)
+    print("")
+    print("=" * 70)
 
 
 def initialize_schematic_model(

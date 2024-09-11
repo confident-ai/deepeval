@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Union, Dict
-
+from PIL.Image import Image as ImageType
 
 class MetricData(BaseModel):
     name: str
@@ -42,6 +42,51 @@ class LLMApiTestCase(BaseModel):
     comments: Optional[str] = Field(None)
     traceStack: Optional[dict] = Field(None)
     conversational_instance_id: Optional[int] = Field(None)
+
+    def update_metric_data(self, metric_data: MetricData):
+        if self.metrics_data is None:
+            self.metrics_data = [metric_data]
+        else:
+            self.metrics_data.append(metric_data)
+
+        if self.success is None:
+            # self.success will be None when it is a message
+            # in that case we will be setting success for the first time
+            self.success = metric_data.success
+        else:
+            if metric_data.success is False:
+                self.success = False
+
+        evaluationCost = metric_data.evaluation_cost
+        if evaluationCost is None:
+            return
+
+        if self.evaluation_cost is None:
+            self.evaluation_cost = evaluationCost
+        else:
+            self.evaluation_cost += evaluationCost
+
+    def update_run_duration(self, run_duration: float):
+        self.run_duration = run_duration
+
+
+class MLLMApiTestCase(BaseModel):
+    name: str
+    input_text: str = Field(..., alias="inputText")
+    actual_output_image: ImageType = Field(..., alias="actualOutputImage")
+    input_image: Optional[ImageType] = Field(None, alias="inputImage")
+    actual_output_text: Optional[str] = Field(None, alias="actualOutputText")
+    success: Union[bool, None] = Field(None)
+    # make optional, not all test cases in a conversation will be evaluated
+    metrics_data: Union[List[MetricData], None] = Field(
+        None, alias="metricsData"
+    )
+    run_duration: Union[float, None] = Field(None, alias="runDuration")
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+    order: Union[int, None] = Field(None)
+
+    # Allow arbitrary types
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def update_metric_data(self, metric_data: MetricData):
         if self.metrics_data is None:

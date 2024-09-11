@@ -10,15 +10,20 @@ import portalocker
 from rich.table import Table
 from rich.console import Console
 from rich import print
+import base64
+from io import BytesIO
+from PIL import Image
+from PIL.Image import Image as ImageType
 
 from deepeval.metrics import BaseMetric
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_run.api import (
     LLMApiTestCase,
+    MLLMApiTestCase,
     ConversationalApiTestCase,
     TestRunHttpResponse,
 )
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
@@ -88,6 +93,9 @@ class TestRun(BaseModel):
     conversational_test_cases: List[ConversationalApiTestCase] = Field(
         alias="conversationalTestCases", default_factory=lambda: []
     )
+    mllm_test_cases: List[MLLMApiTestCase] = Field(
+        alias="MLLMTestCases", default_factory=lambda: []
+    )
     metrics_scores: List[MetricScores] = Field(
         default_factory=lambda: [], alias="metricsScores"
     )
@@ -100,10 +108,12 @@ class TestRun(BaseModel):
     dataset_id: Optional[str] = Field(None, alias="datasetId")
 
     def add_test_case(
-        self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
+        self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase, MLLMApiTestCase]
     ):
         if isinstance(api_test_case, ConversationalApiTestCase):
             self.conversational_test_cases.append(api_test_case)
+        elif isinstance(api_test_case, MLLMApiTestCase):
+            self.mllm_test_cases.append(api_test_case)
         else:
             if api_test_case.conversational_instance_id is not None:
                 for conversational_test_case in self.conversational_test_cases:
@@ -139,7 +149,7 @@ class TestRun(BaseModel):
                 self.evaluation_cost += api_test_case.evaluation_cost
 
     def set_dataset_properties(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+        self, test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
     ):
         if self.dataset_alias is None:
             self.dataset_alias = test_case._dataset_alias
@@ -164,6 +174,12 @@ class TestRun(BaseModel):
         # Optionally update order only if not already set
         highest_order = 0
         for test_case in self.conversational_test_cases:
+            if test_case.order is None:
+                test_case.order = highest_order
+            highest_order = test_case.order + 1
+        # Optionally update order only if not already set
+        highest_order = 0
+        for test_case in self.mllm_test_cases:
             if test_case.order is None:
                 test_case.order = highest_order
             highest_order = test_case.order + 1
@@ -220,8 +236,22 @@ class TestRun(BaseModel):
                         metrics_dict[name].append(score)
                     else:
                         metrics_dict[name] = [score]
+        
+        for test_case in self.mllm_test_cases:
+            if test_case.metrics_data is None:
+                continue
+            for metric_data in test_case.metrics_data:
+                name = metric_data.name
+                score = metric_data.score
+                if score is None:
+                    continue
+                valid_scores += 1
+                if name in metrics_dict:
+                    metrics_dict[name].append(score)
+                else:
+                    metrics_dict[name] = [score]
 
-        # metrics_scores combines both conversational and nonconvo scores
+        # metrics_scores combines both conversational and nonconvo and mllm scores
         # might need to separate in the future
         self.metrics_scores = [
             MetricScores(metric=metric, scores=scores)
@@ -246,6 +276,13 @@ class TestRun(BaseModel):
                     test_passed += 1
                 else:
                     test_failed += 1
+        
+        for test_case in self.mllm_test_cases:
+            if test_case.success is not None:
+                if test_case.success:
+                    test_passed += 1
+                else:
+                    test_failed += 1
 
         self.test_passed = test_passed
         self.test_failed = test_failed
@@ -256,12 +293,39 @@ class TestRun(BaseModel):
         except AttributeError:
             # Pydantic version below 2.0
             body = self.dict(by_alias=True, exclude_none=True)
+        
+        # Convert images to base64
+        def encode_image(image: ImageType):
+            buffered = BytesIO()
+            image.save(buffered, format=image.format)
+            return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+        # Replace image fields with base64-encoded strings
+        for test_case in body.get('MLLMTestCases', []):
+            if 'actualOutputImage' in test_case:
+                test_case['actualOutputImage'] = encode_image(test_case['actualOutputImage'])
+            if 'inputImage' in test_case and test_case['inputImage'] is not None:
+                test_case['inputImage'] = encode_image(test_case['inputImage'])
+        
         json.dump(body, f)
         return self
 
     @classmethod
     def load(cls, f):
-        return cls(**json.load(f))
+        def decode_image(base64_string):
+            image_data = base64.b64decode(base64_string)
+            return Image.open(BytesIO(image_data))
+
+        data: dict = json.load(f)
+        
+        # Convert base64-encoded strings back to images
+        for test_case in data.get('MLLMTestCases', []):
+            if 'actualOutputImage' in test_case:
+                test_case['actualOutputImage'] = decode_image(test_case['actualOutputImage'])
+            if 'inputImage' in test_case and test_case['inputImage'] is not None:
+                test_case['inputImage'] = decode_image(test_case['inputImage'])
+        
+        return cls(**data)
 
 
 class TestRunManager:
@@ -333,8 +397,8 @@ class TestRunManager:
 
     def update_test_run(
         self,
-        api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase, MLLMApiTestCase],
+        test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     ):
         if self.save_to_disk:
             try:
@@ -377,6 +441,8 @@ class TestRunManager:
         table.add_column("Score", justify="left")
         table.add_column("Status", justify="left")
         table.add_column("Overall Success Rate", justify="left")
+        print(test_run.mllm_test_cases)
+        print(test_run.test_cases)
 
         for index, test_case in enumerate(test_run.test_cases):
             pass_count = 0
@@ -533,6 +599,59 @@ class TestRunManager:
                     "",
                     "",
                 )
+                
+        for index, test_case in enumerate(test_run.mllm_test_cases):
+            pass_count = 0
+            fail_count = 0
+            test_case_name = test_case.name
+
+            for metric_data in test_case.metrics_data:
+                if metric_data.success:
+                    pass_count += 1
+                else:
+                    fail_count += 1
+
+            table.add_row(
+                test_case_name,
+                "",
+                "",
+                "",
+                f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
+            )
+
+            for metric_data in test_case.metrics_data:
+                if metric_data.error:
+                    status = "[red]ERRORED[/red]"
+                elif metric_data.success:
+                    status = "[green]PASSED[/green]"
+                else:
+                    status = "[red]FAILED[/red]"
+
+                evaluation_model = metric_data.evaluation_model
+                if evaluation_model is None:
+                    evaluation_model = "n/a"
+
+                if metric_data.score is not None:
+                    metric_score = round(metric_data.score, 2)
+                else:
+                    metric_score = None
+
+                table.add_row(
+                    "",
+                    str(metric_data.name),
+                    f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
+                    status,
+                    "",
+                )
+
+            if index is not len(self.test_run.test_cases) - 1:
+                table.add_row(
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                )
 
         print(table)
         print(
@@ -570,11 +689,13 @@ class TestRunManager:
             test_run.test_cases = initial_batch
             test_run.conversational_test_cases = initial_conversational_batch
             try:
-                body = test_run.model_dump(by_alias=True, exclude_none=True)
+                body = test_run.model_dump(by_alias=True, exclude_none=True, exclude={"MLLMTestCases"})
             except AttributeError:
                 # Pydantic version below 2.0
-                body = test_run.dict(by_alias=True, exclude_none=True)
-
+                body = test_run.dict(by_alias=True, exclude_none=True, exclude={"MLLMTestCases"})
+            if 'MLLMTestCases' in body:
+                del body['MLLMTestCases']
+            
             api = Api()
             result = api.send_request(
                 method=HttpMethods.POST,
@@ -686,6 +807,7 @@ class TestRunManager:
         elif (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
+            and len(test_run.mllm_test_cases) == 0
         ):
             print("No test cases found, please try again.")
             delete_file_if_exists(self.temp_file_name)
@@ -716,7 +838,9 @@ class TestRunManager:
 
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
-        self.post_test_run(test_run)
+
+        if len(test_run.test_cases) > 0 or len(test_run.conversational_test_cases) > 0:
+            self.post_test_run(test_run)
 
 
 global_test_run_manager = TestRunManager()

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from rich.console import Console
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm
+from PIL.Image import Image as ImageType
 
 from deepeval.metrics.utils import copy_metrics
 from deepeval.test_run.hyperparameters import process_hyperparameters
@@ -17,16 +18,17 @@ from deepeval.utils import (
     should_verbose_print,
 )
 from deepeval.telemetry import capture_evaluation_run
-from deepeval.metrics import BaseMetric, BaseConversationalMetric
+from deepeval.metrics import BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
 from deepeval.metrics.indicator import (
     format_metric_description,
     measure_metrics_with_indicator,
 )
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import (
     global_test_run_manager,
     LLMApiTestCase,
+    MLLMApiTestCase,
     ConversationalApiTestCase,
     MetricData,
     TestRunManager,
@@ -44,6 +46,7 @@ from deepeval.tracing import get_trace_stack
 
 @dataclass
 class TestResult:
+    """Returned from run_test"""
     success: bool
     metrics_data: List[MetricData]
     conversational: bool
@@ -53,6 +56,15 @@ class TestResult:
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
 
+@dataclass
+class MLLMTestResult:
+    """Returned from run_test"""
+    success: bool
+    metrics_data: List[MetricData]
+    input_text: str
+    actual_output_image: ImageType
+    input_image: ImageType
+    actual_output_text: str
 
 def create_metric_data(metric: BaseMetric) -> MetricData:
     if metric.error is not None:
@@ -84,8 +96,18 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
 
 
 def create_test_result(
-    test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
-) -> TestResult:
+    test_case: Union[LLMApiTestCase, ConversationalApiTestCase, MLLMApiTestCase],
+) -> Union[TestResult, MLLMTestResult]:
+    if isinstance(test_case, MLLMApiTestCase):
+        return MLLMTestResult(
+            success=test_case.success,
+            metrics_data=test_case.metrics_data,
+            input_text=test_case.input_text,
+            actual_output_image=test_case.actual_output_image,
+            input_image=test_case.input_image,
+            actual_output_text=test_case.actual_output_text,
+        )
+    
     if isinstance(test_case, ConversationalApiTestCase):
         return TestResult(
             success=test_case.success,
@@ -111,7 +133,7 @@ conversational_test_case_lookup_map: Dict[int, ConversationalApiTestCase] = {}
 
 
 def create_api_test_case(
-    test_case: Union[LLMTestCase, ConversationalTestCase],
+    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     index: Optional[int] = None,
     conversational_instance_id: Optional[int] = None,
     additional_metadata: Optional[Dict] = None,
@@ -196,11 +218,29 @@ def create_api_test_case(
         ]
 
         return api_test_case
+    
+    elif isinstance(test_case, MLLMTestCase):
+        name = os.getenv(
+            PYTEST_RUN_TEST_NAME, f"mllm_test_case_{index}"
+        )
+        api_test_case = MLLMApiTestCase(
+            name=name,
+            inputText=test_case.input_text,
+            actualOutputImage=test_case.actual_output_image,
+            inputImage=test_case.input_image,
+            actualOutputText=test_case.input_text,
+            success=True,
+            metricsData=None,
+            runDuration=0,
+            evaluationCost=None,
+            order=test_case._dataset_rank
+        )
+        return api_test_case
 
 
 def execute_test_cases(
-    test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
-    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
+    test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]],
     ignore_errors: bool,
     use_cache: bool,
     show_indicator: bool,
@@ -223,11 +263,14 @@ def execute_test_cases(
 
     conversational_metrics: List[BaseConversationalMetric] = []
     llm_metrics: List[BaseMetric] = []
+    mllm_metrics: List[BaseMultimodalMetric] = []
     for metric in metrics:
         if isinstance(metric, BaseMetric):
             llm_metrics.append(metric)
         elif isinstance(metric, BaseConversationalMetric):
             conversational_metrics.append(metric)
+        elif isinstance(metric, BaseMultimodalMetric):
+            mllm_metrics.append(metric)
 
     global llm_test_case_lookup_map
     llm_test_case_lookup_map = {}
@@ -237,11 +280,12 @@ def execute_test_cases(
                 if message.should_evaluate:
                     test_cases.append(message.llm_test_case)
 
-    test_results: List[TestResult] = []
+    test_results: List[Union[TestResult, MLLMTestResult]] = []
 
     def evaluate_test_cases(pbar: Optional[tqdm] = None):
         llm_test_case_count = -1
         conversational_test_case_count = -1
+        mllm_test_case_count = -1
         show_metric_indicator = show_indicator and not _use_bar_indicator
         for test_case in test_cases:
             with capture_evaluation_run("test case"):
@@ -386,7 +430,51 @@ def execute_test_cases(
 
                     ### Update Test Run ###
                     test_run_manager.update_test_run(api_test_case, test_case)
+                    
 
+                # No caching and not sending test cases to Confident AI for multimodal metrics yet
+                elif isinstance(test_case, MLLMTestCase):
+                    mllm_test_case_count += 1
+                    api_test_case: MLLMApiTestCase = create_api_test_case(
+                        test_case, mllm_test_case_count
+                    )
+
+                    test_start_time = time.perf_counter()
+                    for metric in mllm_metrics:
+                        # Skip non multimodal metrics for mllm test cases
+                        if isinstance(metric, BaseMultimodalMetric):
+                            metric.async_mode = False  # Override metric async
+                            try:
+                                metric.measure(
+                                    test_case,
+                                    _show_indicator=show_metric_indicator,
+                                )
+                            except TypeError:
+                                try:
+                                    metric.measure(test_case)
+                                except Exception as e:
+                                    if ignore_errors:
+                                        metric.error = str(e)
+                                        metric.success = False
+                                    else:
+                                        raise
+                            except Exception as e:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
+                            metric_data = create_metric_data(metric)
+                            api_test_case.update_metric_data(metric_data)
+
+                    test_end_time = time.perf_counter()
+                    if len(mllm_metrics) > 0:
+                        run_duration = test_end_time - test_start_time
+                        api_test_case.update_run_duration(run_duration)
+
+                    ### Update Test Run ###
+                    test_run_manager.update_test_run(api_test_case, test_case)
+                
                 test_result = create_test_result(api_test_case)
                 test_results.append(test_result)
 
@@ -403,13 +491,13 @@ def execute_test_cases(
             evaluate_test_cases(pbar)
     else:
         evaluate_test_cases()
-
+                
     return test_results
 
 
 async def a_execute_test_cases(
-    test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
-    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
+    test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]],
     ignore_errors: bool,
     use_cache: bool,
     show_indicator: bool,
@@ -419,6 +507,7 @@ async def a_execute_test_cases(
     test_run_manager: Optional[TestRunManager] = None,
     _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
+
     global_test_run_cache_manager.disable_write_cache = save_to_disk == False
 
     if test_run_manager is None:
@@ -433,11 +522,14 @@ async def a_execute_test_cases(
 
     llm_metrics: List[BaseMetric] = []
     conversational_metrics: List[BaseConversationalMetric] = []
+    mllm_metrics: List[BaseMultimodalMetric] = []
     for metric in metrics:
         if isinstance(metric, BaseMetric):
             llm_metrics.append(metric)
         elif isinstance(metric, BaseConversationalMetric):
             conversational_metrics.append(metric)
+        elif isinstance(metric, BaseMultimodalMetric):
+            mllm_metrics.append(metric)
 
     global llm_test_case_lookup_map
     llm_test_case_lookup_map = {}
@@ -453,7 +545,8 @@ async def a_execute_test_cases(
 
     llm_test_case_counter = -1
     conversational_test_case_counter = -1
-    test_results: List[TestResult] = []
+    mllm_test_case_counter = -1
+    test_results: List[Union[TestResult, MLLMTestCase]] = []
     tasks = []
 
     if show_indicator and _use_bar_indicator:
@@ -500,6 +593,24 @@ async def a_execute_test_cases(
                             test_run_manager=test_run_manager,
                             test_results=test_results,
                             count=conversational_test_case_counter,
+                            ignore_errors=ignore_errors,
+                            show_indicator=show_indicator,
+                            _use_bar_indicator=_use_bar_indicator,
+                            pbar=pbar,
+                        )
+                        tasks.append(asyncio.create_task(task))
+                    
+                    elif isinstance(test_case, MLLMTestCase):
+                        mllm_test_case_counter += 1
+                        copied_multimodal_metrics: List[
+                            BaseMultimodalMetric
+                        ] = copy_metrics(mllm_metrics)
+                        task = a_execute_mllm_test_cases(
+                            metrics=copied_multimodal_metrics,
+                            test_case=test_case,
+                            test_run_manager=test_run_manager,
+                            test_results=test_results,
+                            count=mllm_test_case_counter,
                             ignore_errors=ignore_errors,
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
@@ -553,6 +664,24 @@ async def a_execute_test_cases(
                         show_indicator=show_indicator,
                     )
                     tasks.append(asyncio.create_task((task)))
+
+                elif isinstance(test_case, MLLMTestCase):
+                        mllm_test_case_counter += 1
+                        copied_multimodal_metrics: List[
+                            BaseMultimodalMetric
+                        ] = copy_metrics(mllm_metrics)
+                        task = a_execute_mllm_test_cases(
+                            metrics=copied_multimodal_metrics,
+                            test_case=test_case,
+                            test_run_manager=test_run_manager,
+                            test_results=test_results,
+                            count=mllm_test_case_counter,
+                            ignore_errors=ignore_errors,
+                            _use_bar_indicator=_use_bar_indicator,
+                            show_indicator=show_indicator,
+                        )
+                        tasks.append(asyncio.create_task(task))
+
                 await asyncio.sleep(throttle_value)
         await asyncio.gather(*tasks)
 
@@ -563,7 +692,7 @@ async def a_execute_llm_test_cases(
     metrics: List[BaseMetric],
     test_case: LLMTestCase,
     test_run_manager: TestRunManager,
-    test_results: List[TestResult],
+    test_results: List[Union[TestResult, MLLMTestCase]],
     count: int,
     test_run: TestRun,
     ignore_errors: bool,
@@ -647,7 +776,7 @@ async def a_execute_conversational_test_cases(
     metrics: List[BaseConversationalMetric],
     test_case: ConversationalTestCase,
     test_run_manager: TestRunManager,
-    test_results: List[TestResult],
+    test_results: List[Union[TestResult, MLLMTestCase]],
     count: int,
     ignore_errors: bool,
     show_indicator: bool,
@@ -688,9 +817,53 @@ async def a_execute_conversational_test_cases(
         pbar.update(1)
 
 
+async def a_execute_mllm_test_cases(
+    metrics: List[BaseMultimodalMetric],
+    test_case: MLLMTestCase,
+    test_run_manager: TestRunManager,
+    test_results: List[Union[TestResult, MLLMTestCase]],
+    count: int,
+    ignore_errors: bool,
+    show_indicator: bool,
+    _use_bar_indicator: bool,
+    pbar: Optional[tqdm_asyncio] = None,
+):
+    show_metrics_indicator = show_indicator and not _use_bar_indicator
+
+    for metric in metrics:
+        metric.error = None  # Reset metric error
+
+    api_test_case: MLLMApiTestCase = create_api_test_case(
+        test_case, count
+    )
+    test_start_time = time.perf_counter()
+    await measure_metrics_with_indicator(
+        metrics=metrics,
+        test_case=test_case,
+        cached_test_case=None,
+        ignore_errors=ignore_errors,
+        show_indicator=show_metrics_indicator,
+    )
+    for metric in metrics:
+        metric_data = create_metric_data(metric)
+        api_test_case.update_metric_data(metric_data)
+
+    test_end_time = time.perf_counter()
+    if len(metrics) > 0:
+        run_duration = test_end_time - test_start_time
+        api_test_case.update_run_duration(run_duration)
+
+    ### Update Test Run ###
+    test_run_manager.update_test_run(api_test_case, test_case)
+    test_results.append(create_test_result(api_test_case))
+
+    if pbar is not None:
+        pbar.update(1)
+
+
 def assert_test(
-    test_case: Union[LLMTestCase, ConversationalTestCase],
-    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
+    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]],
     run_async: bool = True,
 ):
     if run_async:
@@ -746,7 +919,7 @@ def assert_test(
 
 
 def evaluate(
-    test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
+    test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
     metrics: List[BaseMetric],
     hyperparameters: Optional[Dict[str, Union[str, int, float]]] = None,
     run_async: bool = True,
@@ -819,7 +992,7 @@ def evaluate(
     return test_results
 
 
-def print_test_result(test_result: TestResult):
+def print_test_result(test_result: Union[TestResult, MLLMTestResult]):
     print("")
     print("=" * 70 + "\n")
     print("Metrics Summary\n")
@@ -846,21 +1019,29 @@ def print_test_result(test_result: TestResult):
             )
 
     print("")
-    if test_result.conversational:
-        print("For conversational test case:\n")
-        print(
-            f"  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full."
-        )
-    else:
+    
+    if isinstance(test_result, MLLMTestResult):
         print("For test case:\n")
-        print(f"  - input: {test_result.input}")
-        print(f"  - actual output: {test_result.actual_output}")
-        print(f"  - expected output: {test_result.expected_output}")
-        print(f"  - context: {test_result.context}")
-        print(f"  - retrieval context: {test_result.retrieval_context}")
+        print(f"  - input text: {test_result.input_text}")
+        print(f"  - actual output image: {test_result.actual_output_image}")
+        print(f"  - input image: {test_result.input_image}")
+        print(f"  - actual output text: {test_result.actual_output_text}")
+    else:
+        if test_result.conversational:
+            print("For conversational test case:\n")
+            print(
+                f"  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full."
+            )
+        else:
+            print("For test case:\n")
+            print(f"  - input: {test_result.input}")
+            print(f"  - actual output: {test_result.actual_output}")
+            print(f"  - expected output: {test_result.expected_output}")
+            print(f"  - context: {test_result.context}")
+            print(f"  - retrieval context: {test_result.retrieval_context}")
 
 
-def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
+def aggregate_metric_pass_rates(test_results: List[Union[TestResult, MLLMTestResult]]) -> dict:
     metric_counts = {}
     metric_successes = {}
 

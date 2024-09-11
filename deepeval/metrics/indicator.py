@@ -6,8 +6,8 @@ from typing import List, Optional, Union
 import time
 import asyncio
 
-from deepeval.metrics import BaseMetric, BaseConversationalMetric
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.metrics import BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
 
@@ -53,8 +53,8 @@ def metric_progress_indicator(
 async def measure_metric_task(
     task_id,
     progress,
-    metric: Union[BaseMetric, BaseConversationalMetric],
-    test_case: Union[LLMTestCase, ConversationalTestCase],
+    metric: Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric],
+    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
 ):
@@ -109,8 +109,8 @@ async def measure_metric_task(
 
 
 async def measure_metrics_with_indicator(
-    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
-    test_case: Union[LLMTestCase, ConversationalTestCase],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]],
+    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
     show_indicator: bool,
@@ -172,8 +172,8 @@ async def measure_metrics_with_indicator(
 
 
 async def safe_a_measure(
-    metric: Union[BaseMetric, BaseConversationalMetric],
-    tc: Union[LLMTestCase, ConversationalTestCase],
+    metric: Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric],
+    tc: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     ignore_errors: bool,
 ):
     try:
