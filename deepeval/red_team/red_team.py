@@ -28,6 +28,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.dataset.golden import Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import get_or_create_event_loop
+from deepeval.telemetry import capture_red_teamer_run
 
 
 class RedTeamer:
@@ -251,14 +252,21 @@ class RedTeamer:
         vulnerabilities: List[RTVulnerability],
         attacks: List[RTAdversarialAttack],
     ):
-        red_teaming_goldens = self.rt_synthesizer.generate_red_teaming_goldens(
-            n_goldens_per_vulnerability=n_goldens_per_vulnerability,
-            vulnerabilities=vulnerabilities,
-            attacks=attacks,
-            purpose=self.target_purpose,
-            system_prompt=self.target_system_prompt,
-        )
-        return red_teaming_goldens
+        with capture_red_teamer_run(
+            "generate "
+            + n_goldens_per_vulnerability * len(vulnerabilities)
+            + " goldens"
+        ):
+            red_teaming_goldens = (
+                self.rt_synthesizer.generate_red_teaming_goldens(
+                    n_goldens_per_vulnerability=n_goldens_per_vulnerability,
+                    vulnerabilities=vulnerabilities,
+                    attacks=attacks,
+                    purpose=self.target_purpose,
+                    system_prompt=self.target_system_prompt,
+                )
+            )
+            return red_teaming_goldens
 
     async def a_generate_red_teaming_goldens(
         self,
@@ -266,16 +274,21 @@ class RedTeamer:
         vulnerabilities: List[RTVulnerability],
         attacks: List[RTAdversarialAttack],
     ):
-        red_teaming_goldens = (
-            await self.rt_synthesizer.a_generate_red_teaming_goldens(
-                n_goldens_per_vulnerability=n_goldens_per_vulnerability,
-                vulnerabilities=vulnerabilities,
-                attacks=attacks,
-                purpose=self.target_purpose,
-                system_prompt=self.target_system_prompt,
+        with capture_red_teamer_run(
+            "generate "
+            + n_goldens_per_vulnerability * len(vulnerabilities)
+            + " goldens"
+        ):
+            red_teaming_goldens = (
+                await self.rt_synthesizer.a_generate_red_teaming_goldens(
+                    n_goldens_per_vulnerability=n_goldens_per_vulnerability,
+                    vulnerabilities=vulnerabilities,
+                    attacks=attacks,
+                    purpose=self.target_purpose,
+                    system_prompt=self.target_system_prompt,
+                )
             )
-        )
-        return red_teaming_goldens
+            return red_teaming_goldens
 
     def scan(
         self,
@@ -283,7 +296,6 @@ class RedTeamer:
         vulnerabilities: List[RTVulnerability],
         attacks: List[RTAdversarialAttack],
     ):
-
         if self.async_mode:
             loop = get_or_create_event_loop()
             return loop.run_until_complete(
@@ -294,11 +306,91 @@ class RedTeamer:
                 )
             )
         else:
+            with capture_red_teamer_run("scan"):
+                # initialize metric map
+                metrics_map = self.initialize_metrics_map()
+
+                # generate red_teaming goldens
+                red_teaming_goldens = self.generate_red_teaming_goldens(
+                    n_goldens_per_vulnerability=n_goldens_per_vulnerability,
+                    vulnerabilities=vulnerabilities,
+                    attacks=attacks,
+                )
+
+                # create red_teaming goldens dict by vulnerability
+                golden_dict = {}
+                for golden in red_teaming_goldens:
+                    vulnerability: RTVulnerability = golden.additional_metadata[
+                        "vulnerability"
+                    ]
+                    if golden_dict.get(vulnerability.value, None) is None:
+                        golden_dict[vulnerability.value] = [golden]
+                    else:
+                        golden_dict[vulnerability.value].append(golden)
+
+                # evalute each golden by vulnerability
+                red_teaming_results = []
+                red_teaming_results_breakdown = []
+
+                pbar = tqdm(
+                    golden_dict.items(), desc="Evaluating vulnerability"
+                )
+                for vulnerability_value, goldens_list in pbar:
+                    pbar.set_description(
+                        f"Evaluating vulnerability - {vulnerability.value}"
+                    )
+                    scores = []
+                    for golden in goldens_list:
+                        metric: BaseMetric = metrics_map[vulnerability_value]()
+                        # Generate actual output using the 'input'
+                        actual_output = (
+                            self.target_model.generate(golden.input),
+                        )
+                        test_case = LLMTestCase(
+                            input=golden.input,
+                            actual_output=actual_output,
+                        )
+                        metric.measure(test_case)
+                        scores.append(metric.score)
+                        red_teaming_results_breakdown.append(
+                            {
+                                "Vulnerability": vulnerability_value,
+                                "Input": test_case.input,
+                                "Target Output": test_case.actual_output,
+                                "Score": metric.score,
+                                "Reason": metric.reason,
+                            }
+                        )
+
+                    # Calculate average score for the current vulnerability
+                    average_score = sum(scores) / len(scores) if scores else 0
+                    red_teaming_results.append(
+                        {
+                            "Vulnerability": vulnerability_value,
+                            "Average Score": average_score,
+                        }
+                    )
+
+                # Convert results to pandas DataFrames
+                df_results = pd.DataFrame(red_teaming_results)
+                df_breakdown = pd.DataFrame(red_teaming_results_breakdown)
+                self.vulnerability_scores_breakdown = df_breakdown
+                self.vulnerability_scores = df_results
+
+                return df_results
+
+    async def a_scan(
+        self,
+        n_goldens_per_vulnerability: int,
+        vulnerabilities: List[RTVulnerability],
+        attacks: List[RTAdversarialAttack],
+    ):
+        with capture_red_teamer_run("scan"):
             # initialize metric map
             metrics_map = self.initialize_metrics_map()
 
             # generate red_teaming goldens
-            red_teaming_goldens = self.generate_red_teaming_goldens(
+            red_teaming_goldens = await self.a_generate_red_teaming_goldens(
                 n_goldens_per_vulnerability=n_goldens_per_vulnerability,
                 vulnerabilities=vulnerabilities,
                 attacks=attacks,
@@ -315,120 +407,49 @@ class RedTeamer:
                 else:
                     golden_dict[vulnerability.value].append(golden)
 
-            # evalute each golden by vulnerability
             red_teaming_results = []
             red_teaming_results_breakdown = []
 
-            pbar = tqdm(golden_dict.items(), desc="Evaluating vulnerability")
+            pbar = tqdm(
+                golden_dict.items(),
+                desc="Evaluating vulnerability asynchronously",
+            )
             for vulnerability_value, goldens_list in pbar:
-                pbar.set_description(
-                    f"Evaluating vulnerability - {vulnerability.value}"
-                )
-                scores = []
-                for golden in goldens_list:
-                    metric: BaseMetric = metrics_map[vulnerability_value]()
-                    # Generate actual output using the 'input'
-                    actual_output = (self.target_model.generate(golden.input),)
-                    test_case = LLMTestCase(
-                        input=golden.input,
-                        actual_output=actual_output,
+                avg_score, vulnerability_results = (
+                    await self.a_evaluate_vulnerability(
+                        vulnerability_value, goldens_list, metrics_map
                     )
-                    metric.measure(test_case)
-                    scores.append(metric.score)
+                )
+
+                red_teaming_results.append(
+                    {
+                        "Vulnerability": vulnerability_value,
+                        "Average Score": avg_score,
+                    }
+                )
+
+                for score, test_case, reason in vulnerability_results:
                     red_teaming_results_breakdown.append(
                         {
                             "Vulnerability": vulnerability_value,
                             "Input": test_case.input,
                             "Target Output": test_case.actual_output,
-                            "Score": metric.score,
-                            "Reason": metric.reason,
+                            "Score": score,
+                            "Reason": reason,
                         }
                     )
 
-                # Calculate average score for the current vulnerability
-                average_score = sum(scores) / len(scores) if scores else 0
-                red_teaming_results.append(
-                    {
-                        "Vulnerability": vulnerability_value,
-                        "Average Score": average_score,
-                    }
-                )
-
-            # Convert results to pandas DataFrames
-            df_results = pd.DataFrame(red_teaming_results)
-            df_breakdown = pd.DataFrame(red_teaming_results_breakdown)
-            self.vulnerability_scores_breakdown = df_breakdown
-            self.vulnerability_scores = df_results
-
-            return df_results
-
-    async def a_scan(
-        self,
-        n_goldens_per_vulnerability: int,
-        vulnerabilities: List[RTVulnerability],
-        attacks: List[RTAdversarialAttack],
-    ):
-        # initialize metric map
-        metrics_map = self.initialize_metrics_map()
-
-        # generate red_teaming goldens
-        red_teaming_goldens = await self.a_generate_red_teaming_goldens(
-            n_goldens_per_vulnerability=n_goldens_per_vulnerability,
-            vulnerabilities=vulnerabilities,
-            attacks=attacks,
-        )
-
-        # create red_teaming goldens dict by vulnerability
-        golden_dict = {}
-        for golden in red_teaming_goldens:
-            vulnerability: RTVulnerability = golden.additional_metadata[
-                "vulnerability"
-            ]
-            if golden_dict.get(vulnerability.value, None) is None:
-                golden_dict[vulnerability.value] = [golden]
-            else:
-                golden_dict[vulnerability.value].append(golden)
-
-        red_teaming_results = []
-        red_teaming_results_breakdown = []
-
-        pbar = tqdm(
-            golden_dict.items(), desc="Evaluating vulnerability asynchronously"
-        )
-        for vulnerability_value, goldens_list in pbar:
-            avg_score, vulnerability_results = (
-                await self.a_evaluate_vulnerability(
-                    vulnerability_value, goldens_list, metrics_map
-                )
+            # Convert the results to pandas DataFrames
+            red_teaming_results_df = pd.DataFrame(red_teaming_results)
+            red_teaming_results_breakdown_df = pd.DataFrame(
+                red_teaming_results_breakdown
             )
-
-            red_teaming_results.append(
-                {
-                    "Vulnerability": vulnerability_value,
-                    "Average Score": avg_score,
-                }
+            self.vulnerability_scores_breakdown = (
+                red_teaming_results_breakdown_df
             )
+            self.vulnerability_scores = red_teaming_results_df
 
-            for score, test_case, reason in vulnerability_results:
-                red_teaming_results_breakdown.append(
-                    {
-                        "Vulnerability": vulnerability_value,
-                        "Input": test_case.input,
-                        "Target Output": test_case.actual_output,
-                        "Score": score,
-                        "Reason": reason,
-                    }
-                )
-
-        # Convert the results to pandas DataFrames
-        red_teaming_results_df = pd.DataFrame(red_teaming_results)
-        red_teaming_results_breakdown_df = pd.DataFrame(
-            red_teaming_results_breakdown
-        )
-        self.vulnerability_scores_breakdown = red_teaming_results_breakdown_df
-        self.vulnerability_scores = red_teaming_results_df
-
-        return red_teaming_results_df
+            return red_teaming_results_df
 
     async def a_evaluate_golden(self, golden, vulnerability_value, metrics_map):
         metric: BaseMetric = metrics_map[vulnerability_value]()
