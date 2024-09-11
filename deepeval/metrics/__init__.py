@@ -1,4 +1,4 @@
-from .base_metric import BaseMetric, BaseConversationalMetric
+from .base_metric import BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
 
 from .bias.bias import BiasMetric
 from .toxicity.toxicity import ToxicityMetric
@@ -12,6 +12,7 @@ from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
+from .viescore.viescore import VIEScore
 from .conversation_relevancy.conversation_relevancy import (
     ConversationRelevancyMetric,
 )

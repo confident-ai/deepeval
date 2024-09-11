@@ -1,21 +1,23 @@
 import logging
 import openai
-
-from typing import Optional, Tuple
+import base64
+from PIL.Image import Image as ImageType
+from io import BytesIO
+from openai import OpenAI, AsyncOpenAI
+from typing import Optional, Tuple, List
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_community.callbacks import get_openai_callback
 from langchain.schema import AIMessage, HumanMessage
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseMLLM
 
 
 def log_retry_error(retry_state):
     logging.error(
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
-
 
 valid_gpt_models = [
     "gpt-4o-mini",
@@ -34,8 +36,22 @@ valid_gpt_models = [
     "gpt-3.5-turbo-0125",
 ]
 
-default_gpt_model = "gpt-4o"
+model_pricing = {
+    "gpt-4o-mini": {"input": 0.150 / 1e6, "output": 0.600 / 1e6},
+    "gpt-4o": {"input": 5.00 / 1e6, "output": 15.00 / 1e6},
+    "gpt-4-turbo": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
+    "gpt-4-turbo-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
+    "gpt-4-0125-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
+    "gpt-4-1106-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
+    "gpt-4": {"input": 30.00 / 1e6, "output": 60.00 / 1e6},
+    "gpt-4-32k": {"input": 60.00 / 1e6, "output": 120.00 / 1e6},
+    "gpt-3.5-turbo-1106": {"input": 1.00 / 1e6, "output": 2.00 / 1e6},
+    "gpt-3.5-turbo": {"input": 1.50 / 1e6, "output": 2.00 / 1e6},
+    "gpt-3.5-turbo-16k": {"input": 3.00 / 1e6, "output": 4.00 / 1e6},
+    "gpt-3.5-turbo-0125": {"input": 0.50 / 1e6, "output": 1.50 / 1e6},
+}
 
+default_gpt_model = "gpt-4o"
 
 class GPTModel(DeepEvalBaseLLM):
     def __init__(
@@ -184,3 +200,146 @@ class GPTModel(DeepEvalBaseLLM):
             return "azure openai"
         elif self.model_name:
             return self.model_name
+
+###############################################
+# Multimodal Model
+###############################################
+
+
+valid_multimodal_gpt_models = [
+    "gpt-4o-mini",
+    "gpt-4o",
+    "gpt-4-turbo",
+    "gpt-4-turbo-preview",
+    "gpt-4-0125-preview",
+    "gpt-4-1106-preview",
+    "gpt-4",
+    "gpt-4-32k",
+    "gpt-4-0613",
+    "gpt-4-32k-0613",
+]
+
+default_multimodal_gpt_model = "gpt-4o"
+
+class MultimodalGPTModel(DeepEvalBaseMLLM):
+    def __init__(
+        self,
+        model: Optional[str] = None,
+        _openai_api_key: Optional[str] = None,
+        *args,
+        **kwargs,
+    ):
+        model_name = None
+        if isinstance(model, str):
+            model_name = model
+            if model_name not in valid_multimodal_gpt_models:
+                raise ValueError(
+                    f"Invalid model. Available Multimodal GPT models: {', '.join(model for model in valid_multimodal_gpt_models)}"
+                )
+        elif model is None:
+            model_name = default_multimodal_gpt_model
+
+        self._openai_api_key = _openai_api_key
+        self.args = args
+        self.kwargs = kwargs
+        self.model_name = model_name
+
+    def calculate_cost(self, input_tokens: int, output_tokens: int, model_name: str) -> float:
+        pricing = model_pricing.get(model_name, model_pricing["gpt-4o"])  # Default to 'gpt-4o' if model not found
+        input_cost = input_tokens * pricing["input"]
+        output_cost = output_tokens * pricing["output"]
+        return input_cost + output_cost
+
+    def calculate_image_tokens(self, image: ImageType, detail: str = 'auto') -> int:
+        width, height = image.size
+
+        def high_detail_cost() -> int:
+            if max(width, height) > 2048:
+                scale_factor = 2048 / max(width, height)
+                width = int(width * scale_factor)
+                height = int(height * scale_factor)
+            scale_factor = 768 / min(width, height)
+            width = int(width * scale_factor)
+            height = int(height * scale_factor)
+            tiles = (width // 512) * (height // 512)
+            return 85 + (170 * tiles)
+        
+        if detail == 'low':
+            return 85
+        if detail == 'high':
+            return high_detail_cost() 
+        if width > 1024 or height > 1024:
+            return high_detail_cost()
+        return 85
+
+
+    def encode_pil_image(self, pil_image: ImageType):
+        image_buffer = BytesIO()
+        pil_image.save(image_buffer, format='JPEG')
+        image_bytes = image_buffer.getvalue()
+        base64_encoded_image = base64.b64encode(image_bytes).decode('utf-8')
+        return base64_encoded_image
+
+    def generate_prompt(self, images: List[ImageType] = [], text_prompt: str = ""):
+        prompt = []
+        text_dict = {
+                    "type": "text",
+                    "text": text_prompt
+                }
+        prompt.append(text_dict)
+        for image in images:
+            visual_dict = {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"}
+                }
+            prompt.append(visual_dict)
+        return prompt
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(openai.RateLimitError),
+        after=log_retry_error,
+    )
+    def generate(self, input_text: str, input_images: List[ImageType]) -> Tuple[str, float]:
+        client = OpenAI()
+        prompt = self.generate_prompt(input_images, input_text)
+        response = client.chat.completions.create(
+            model=self.model_name,
+            messages=[
+                {
+                "role": "user",
+                "content": prompt
+                }
+            ],
+        )
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
+        total_cost = self.calculate_cost(input_tokens, output_tokens, self.model_name)
+        generated_text = response.choices[0].message.content
+        return generated_text, total_cost
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(openai.RateLimitError),
+        after=log_retry_error,
+    )
+    async def a_generate(self, input_text: str, input_images: List[ImageType]) -> Tuple[str, float]:
+        client = AsyncOpenAI()
+        prompt = self.generate_prompt(input_images, input_text)
+        response = await client.chat.completions.create(
+            model=self.model_name,
+            messages=[
+                {
+                "role": "user",
+                "content": prompt
+                }
+            ],
+        )
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
+        total_cost = self.calculate_cost(input_tokens, output_tokens, self.model_name)
+        generated_text = response.choices[0].message.content
+        return generated_text, total_cost
+
+    def get_model_name(self):
+        return self.model_name
