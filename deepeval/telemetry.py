@@ -97,3 +97,14 @@ def capture_synthesizer_run(max_generations: int = None):
             yield span
     else:
         yield
+
+
+@contextmanager
+def capture_red_teamer_run(task: str):
+    if not telemetry_opt_out():
+        with tracer.start_as_current_span(
+            f"Invokved redteamer: ({task})"
+        ) as span:
+            yield span
+    else:
+        yield
