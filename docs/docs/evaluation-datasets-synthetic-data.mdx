@@ -363,6 +363,47 @@ deepeval set-azure-openai-embedding --embedding_deployment-name=<embedding_deplo
 The first command configures `deepeval` to use Azure OpenAI LLM globally, while the second command configures `deepeval` to use Azure OpenAI's embedding models globally.
 :::
 
+## Using local LLM models
+
+There are several local LLM providers that offer an OpenAI API compatible endpoint, like Ollama or LM Studio. You can use them with `deepeval` by setting several parameters from the CLI. To configure any of those providers, you need to supply the base URL where the service is running. These are some of the most popular alternatives for base URLs:
+
+- Ollama: http://localhost:11434/v1/
+- LM Studio: http://localhost:1234/v1/
+
+For example to use a local model served by Ollama, use the following command:
+
+```console
+deepeval set-local-model --model-name=<model_name> \
+    --base-url="http://localhost:11434/v1/" \
+    --api-key="ollama"
+```
+
+Where model_name is one of the LLM that appears when executing `ollama list`. 
+
+If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
+
+```console
+deepeval unset-local-model
+```
+
+Then, run this to set the local Embeddings model:
+
+```console
+deepeval set-local-embeddings --model-name=<embedding_model_name> \
+    --base-url="http://localhost:11434/v1/" \
+    --api-key="ollama"
+```
+
+To revert back to the default OpenAI embeddings run:
+
+```console
+deepeval unset-local-embeddings
+```
+
+
+
+For additional instructions about LLM model and embeddings model availability and base URLs, consult the provider's documentation.
+
 ### Using Any Custom Model
 
 Alternatively, you can also create a custom embedding model in code by inheriting the base `DeepEvalBaseEmbeddingModel` class. Here is an example of using the same custom Azure OpenAI embedding model but created in code instead using langchain's `langchain_openai` module:

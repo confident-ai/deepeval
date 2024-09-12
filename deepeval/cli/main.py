@@ -93,6 +93,7 @@ def set_azure_openai_env(
         )
 
     KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "YES")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "NO")
 
     print(
         ":raising_hands: Congratulations! You're now using Azure OpenAI for all evals that require an LLM."
@@ -111,6 +112,8 @@ def set_azure_openai_embedding_env(
         KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
         azure_embedding_deployment_name,
     )
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI_EMBEDDING, "YES")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_EMBEDDINGS, "NO")
 
     print(
         ":raising_hands: Congratulations! You're now using Azure OpenAI Embeddings within DeepEval."
@@ -129,6 +132,96 @@ def unset_azure_openai_env():
 
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-azure-openai-embedding")
+def unset_azure_openai_embedding_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_AZURE_OPENAI_EMBEDDING)
+
+    print(
+        ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
+    )
+
+
+@app.command(name="set-local-model")
+def set_local_model_env(
+    model_name: str = typer.Option(
+        ..., "--model-name", help="Name of the local model"
+    ),
+    base_url: str = typer.Option(
+        ..., "--base-url", help="Base URL for the local model API"
+    ),
+    api_key: Optional[str] = typer.Option(
+        None, "--api-key", help="API key for the local model (if required)"
+    ),
+    format: Optional[str] = typer.Option(
+        "json",
+        "--format",
+        help="Format of the response from the local model (default: json)",
+    ),
+):
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_BASE_URL, base_url)
+    if api_key:
+        KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_API_KEY, api_key)
+    if format:
+        KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_FORMAT, format)
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "NO")
+    print(
+        ":raising_hands: Congratulations! You're now using a local model for all evals that require an LLM."
+    )
+
+
+@app.command(name="set-local-embeddings")
+def set_local_embeddings_env(
+    model_name: str = typer.Option(
+        ..., "--model-name", help="Name of the local embeddings model"
+    ),
+    base_url: str = typer.Option(
+        ..., "--base-url", help="Base URL for the local embeddings API"
+    ),
+    api_key: Optional[str] = typer.Option(
+        None, "--api-key", help="API key for the local embeddings (if required)"
+    ),
+):
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
+    if api_key:
+        KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_API_KEY, api_key)
+
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_EMBEDDINGS, "YES")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO")
+
+    print(
+        ":raising_hands: Congratulations! You're now using local embeddings for all evals that require text embeddings."
+    )
+
+
+@app.command(name="unset-local-model")
+def unset_local_model_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_BASE_URL)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_FORMAT)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
+
+    print(
+        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-local-embeddings")
+def unset_local_embeddings_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_BASE_URL)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_EMBEDDINGS)
+
+    print(
+        ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
     )
 
 
