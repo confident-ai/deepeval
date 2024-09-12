@@ -38,6 +38,7 @@ valid_gpt_models = [
 
 default_gpt_model = "gpt-4o"
 
+
 # Adding a custom class to enable json mode in Ollama during API calls
 class CustomChatOpenAI(ChatOpenAI):
     format: str = None
