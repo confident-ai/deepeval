@@ -1,0 +1,81 @@
+---
+id: metrics-viescore
+title: VIEScore
+sidebar_label: VIEScore
+---
+
+import Equation from "@site/src/components/equation";
+
+`VIEScore` assesses the performance of **image generation and editing tasks** by evaluating the quality of synthesized images based on semantic consistency and perceptual quality. `deepeval`'s VIEScore metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
+
+:::tip
+Using `VIEScore` with GPT-4v as the evaluation model achieves scores comparable to human ratings in text-to-image generation tasks, and is especially good at detecting undesirable artifacts.
+:::
+
+## Required Arguments
+
+To use the `VIEScore`, you'll have to provide the following arguments when creating an `MLLMTestCase`:
+
+- `input`
+- `actual_output`
+
+## Example
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import VIEScore, VIEScoreTask
+from deepeval.types import Image
+from deepeval.test_case import MLLMTestCase
+
+# Replace this with your actual MLLM application output
+actual_output=[Image(url="https://shoe-images.com/edited-shoes", local=False)]
+
+metric = VIEScore(
+    threshold=0.7,
+    model="gpt-4o",
+    include_reason=True,
+    task=VIEScoreTask.TEXT_TO_IMAGE_EDITING
+)
+test_case = MLLMTestCase(
+    input=["Change the color of the shoes to blue.", Image(url="./shoes.png", local=True)],
+    actual_output=actual_output,
+    retrieval_context=retrieval_context
+)
+
+metric.measure(test_case)
+print(metric.score)
+print(metric.reason)
+
+# or evaluate test cases in bulk
+evaluate([test_case], [metric])
+```
+
+There are six optional parameters when creating a `FaithfulnessMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom MLLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseMLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `task`: a `VIEScoreTask` enum indicating whether the task is image generation or image editing. Defaulted to `VIEScoreTask.TEXT_TO_IMAGE_GENERATION`.
+
+:::info
+`VIEScoreTask` is an **enumeration that includes two types of tasks**:
+
+- `TEXT_TO_IMAGE_GENERATION`: the input should contain exactly **0 images**, and the output should contain exactly **1 image**.
+- `TEXT_TO_IMAGE_EDITING`: For this task type, both the input and output should each contain exactly **1 image**.
+
+:::
+
+## How Is It Calculated?
+
+The `VIEScore` score is calculated according to the following equation:
+
+<Equation formula="O = \sqrt{\text{min}(\alpha_1, \ldots, \alpha_i) \cdot \text{min}(\beta_1, \ldots, \beta_i)}" />
+
+The `VIEScore` score combines Semantic Consistency (SC) and Perceptual Quality (PQ) sub-scores to provide a comprehensive evaluation of the synthesized image. The final overall score is derived by taking the square root of the product of the minimum SC and PQ scores.
+
+**1. SC Scores**: These scores assess aspects such as alignment with the prompt and resemblance to concepts. The minimum value among these sub-scores represents the SC score. During the SC evaluation, both the input conditions and the synthesized image are used.
+
+**2. PQ Scores**: These scores evaluate the naturalness and absence of artifacts in the image. The minimum value among these sub-scores represents the PQ score. For the PQ evaluation, only the synthesized image is used to prevent confusion from the input conditions.
