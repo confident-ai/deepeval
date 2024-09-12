@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Union, Dict
-from PIL.Image import Image as ImageType
+
+from deepeval.types import Image
 
 class MetricData(BaseModel):
     name: str
@@ -72,10 +73,8 @@ class LLMApiTestCase(BaseModel):
 
 class MLLMApiTestCase(BaseModel):
     name: str
-    input_text: str = Field(..., alias="inputText")
-    actual_output_image: ImageType = Field(..., alias="actualOutputImage")
-    input_image: Optional[ImageType] = Field(None, alias="inputImage")
-    actual_output_text: Optional[str] = Field(None, alias="actualOutputText")
+    input: List[Union[str, Image]] = Field(..., alias="input")
+    actual_output: List[Union[str, Image]] = Field(..., alias="actualOutput")
     success: Union[bool, None] = Field(None)
     # make optional, not all test cases in a conversation will be evaluated
     metrics_data: Union[List[MetricData], None] = Field(

@@ -13,6 +13,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     Message,
 )
+from deepeval.types import Image
 
 
 def copy_metrics(
@@ -162,8 +163,26 @@ def check_llm_test_case_params(
 def check_mllm_test_case_params(
     test_case: MLLMTestCase,
     test_case_params: List[MLLMTestCaseParams],
+    input_image_count: int,
+    actual_output_image_count: int,
     metric: BaseMetric,
 ):
+    count = 0
+    for ele in test_case.input:
+        if isinstance(ele, Image):
+            count += 1
+    if count != input_image_count:
+        error_str = f"Can only evaluate test cases with '{input_image_count}' input images using the '{metric.__name__}' metric. `{count}` found."
+        raise ValueError(error_str)
+    
+    count = 0
+    for ele in test_case.actual_output:
+        if isinstance(ele, Image):
+            count += 1
+    if count != actual_output_image_count:
+        error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
+        raise ValueError(error_str)
+    
     if isinstance(test_case, MLLMTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'MLLMTestCase' using the '{metric.__name__}' metric."
         metric.error = error_str

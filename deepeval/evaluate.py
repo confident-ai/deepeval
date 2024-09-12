@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from rich.console import Console
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm
-from PIL.Image import Image as ImageType
 
+from deepeval.types import Image
 from deepeval.metrics.utils import copy_metrics
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
@@ -61,10 +61,8 @@ class MLLMTestResult:
     """Returned from run_test"""
     success: bool
     metrics_data: List[MetricData]
-    input_text: str
-    actual_output_image: ImageType
-    input_image: ImageType
-    actual_output_text: str
+    input: List[Union[str, Image]]
+    actual_output: List[Union[str, Image]]
 
 def create_metric_data(metric: BaseMetric) -> MetricData:
     if metric.error is not None:
@@ -102,10 +100,8 @@ def create_test_result(
         return MLLMTestResult(
             success=test_case.success,
             metrics_data=test_case.metrics_data,
-            input_text=test_case.input_text,
-            actual_output_image=test_case.actual_output_image,
-            input_image=test_case.input_image,
-            actual_output_text=test_case.actual_output_text,
+            input=test_case.input,
+            actual_output=test_case.actual_output,
         )
     
     if isinstance(test_case, ConversationalApiTestCase):
@@ -225,10 +221,8 @@ def create_api_test_case(
         )
         api_test_case = MLLMApiTestCase(
             name=name,
-            inputText=test_case.input_text,
-            actualOutputImage=test_case.actual_output_image,
-            inputImage=test_case.input_image,
-            actualOutputText=test_case.input_text,
+            input=test_case.input,
+            actualOutput=test_case.actual_output,
             success=True,
             metricsData=None,
             runDuration=0,
@@ -1022,10 +1016,9 @@ def print_test_result(test_result: Union[TestResult, MLLMTestResult]):
     
     if isinstance(test_result, MLLMTestResult):
         print("For test case:\n")
-        print(f"  - input text: {test_result.input_text}")
-        print(f"  - actual output image: {test_result.actual_output_image}")
-        print(f"  - input image: {test_result.input_image}")
-        print(f"  - actual output text: {test_result.actual_output_text}")
+        print(f"  - input: {test_result.input}")
+        print(f"  - actual output: {test_result.actual_output}")
+
     else:
         if test_result.conversational:
             print("For conversational test case:\n")

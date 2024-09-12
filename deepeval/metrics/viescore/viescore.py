@@ -1,7 +1,8 @@
 from typing import Optional, List, Tuple, Union
-from PIL.Image import Image as ImageType
 import math
 import textwrap
+
+from deepeval.types import Image
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import (
     MLLMTestCaseParams, MLLMTestCase
@@ -19,6 +20,10 @@ from deepeval.metrics.viescore.schema import ReasonScore
 from deepeval.metrics.viescore.task import VIEScoreTask
 from deepeval.metrics.indicator import metric_progress_indicator
 
+required_params: List[MLLMTestCaseParams] = [
+    MLLMTestCaseParams.INPUT,
+    MLLMTestCaseParams.ACTUAL_OUTPUT,
+]
 
 class VIEScore(BaseMultimodalMetric):
     def __init__(
@@ -39,27 +44,34 @@ class VIEScore(BaseMultimodalMetric):
         self.verbose_mode = verbose_mode
         self.task = task
         self._include_VIEScore_task_name = _include_VIEScore_task_name
-        if task == VIEScoreTask.TEXT_TO_IMAGE_GENERATION:
-            self.evaluation_params = [MLLMTestCaseParams.INPUT_TEXT, MLLMTestCaseParams.ACTUAL_OUTPUT_IMAGE]
-        else:
-            self.evaluation_params = [MLLMTestCaseParams.INPUT_TEXT, MLLMTestCaseParams.INPUT_IMAGE, MLLMTestCaseParams.ACTUAL_OUTPUT_TEXT]
 
-    def measure(self, test_case: MLLMTestCase) -> float:
-        check_mllm_test_case_params(test_case, self.evaluation_params, self)
+    def measure(
+        self, 
+        test_case: MLLMTestCase, 
+        _show_indicator: bool = True
+    ) -> float:
+        if self.task == VIEScoreTask.TEXT_TO_IMAGE_GENERATION:
+            check_mllm_test_case_params(test_case, required_params, 0, 1, self)
+        elif self.task == VIEScoreTask.TEXT_TO_IMAGE_EDITING:
+            check_mllm_test_case_params(test_case, required_params, 1, 1, self)
+
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self):
+        with metric_progress_indicator(self, _show_indicator=_show_indicator):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
+                input_texts, input_images = self.separate_images_from_text(test_case.input)
+                _, output_images = self.separate_images_from_text(test_case.actual_output)
+
                 self.SC_scores, self.SC_reasoning = self._evaluate_semantic_consistency(
-                    test_case.input_text,
-                    test_case.actual_output_image,
-                    test_case.input_image
+                    "\n".join(input_texts),
+                    None if len(input_images) == 0 else input_images[0],
+                    output_images[0],
                 )
-                self.PQ_scores, self.PQ_reasoning = self._evaluate_perceptual_quality(test_case.actual_output_image)                
+                self.PQ_scores, self.PQ_reasoning = self._evaluate_perceptual_quality(output_images[0])                
                 self.score = self._calculate_score()
                 self.score = (
                     0
@@ -73,31 +85,38 @@ class VIEScore(BaseMultimodalMetric):
                     steps=[
                         f"Semantic Consistency Scores:\n{self.SC_scores}",
                         f"Semantic Consistency Reasoning:\n{self.SC_reasoning}",
-                        f"Perceptual Quality Scores:\n{self.PQ_scores}",
+                        f"Perceptual Quality Scores:\n{self.SC_scores}",
                         f"Perceptual Quality Reasoning:\n{self.PQ_reasoning}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
                 return self.score
-
+        
     async def a_measure(
         self,
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        check_mllm_test_case_params(test_case, self.evaluation_params, self)
+        if self.task == VIEScoreTask.TEXT_TO_IMAGE_GENERATION:
+            check_mllm_test_case_params(test_case, required_params, 0, 1, self)
+        elif self.task == VIEScoreTask.TEXT_TO_IMAGE_EDITING:
+            check_mllm_test_case_params(test_case, required_params, 1, 1, self)
+        
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
+            input_texts, input_images = self.separate_images_from_text(test_case.input)
+            _, output_images = self.separate_images_from_text(test_case.actual_output)
+
             self.SC_scores, self.SC_reasoning = await self._a_evaluate_semantic_consistency(
-                test_case.input_text,
-                test_case.actual_output_image,
-                test_case.input_image
+                "\n".join(input_texts),
+                None if len(input_images) == 0 else input_images[0],
+                output_images[0],
             )
-            self.PQ_scores, self.PQ_reasoning = await self._a_evaluate_perceptual_quality(test_case.actual_output_image)                
+            self.PQ_scores, self.PQ_reasoning = await self._a_evaluate_perceptual_quality(output_images[0])                
             self.score = self._calculate_score()
             self.score = (
                 0
@@ -117,100 +136,113 @@ class VIEScore(BaseMultimodalMetric):
                 ],
             )
             return self.score
+    
+    def separate_images_from_text(
+        self,
+        multimodal_list: List[Union[Image, str]]
+    ) -> Tuple[List[str], List[Image]]:
+        images: List[Image] = []
+        texts: List[str] = []
+        for item in multimodal_list:
+            if isinstance(item, Image):
+                images.append(item)
+            elif isinstance(item, str):
+                texts.append(item)
+        return texts, images
 
     async def _a_evaluate_semantic_consistency(
         self, 
         text_prompt: str, 
-        image_input: ImageType, 
-        actual_image_output: ImageType
+        image_input: Image, 
+        actual_image_output: Image
     ) -> Tuple[List[int], str]:
-        images: List[ImageType]  = []
+        images: List[Image]  = []
         if self.task == VIEScoreTask.TEXT_TO_IMAGE_GENERATION:
             images.append(image_input)
         elif self.task == VIEScoreTask.TEXT_TO_IMAGE_EDITING:
             images.extend([image_input, actual_image_output])
-        prompt = VIEScoreTemplate.generate_semantic_consistency_evaluation_results(
+        prompt = [VIEScoreTemplate.generate_semantic_consistency_evaluation_results(
             text_prompt=text_prompt, task=self.task
-        )
+        )]
         if self.using_native_model:
-            res, cost = await self.model.a_generate(input_images=images, input_text=prompt)
+            res, cost = await self.model.a_generate(prompt + images)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["score"], data["reasoning"]
         else:
             try:
-                res: ReasonScore = await self.model.a_generate(input_images=images, input_text=prompt, schema=ReasonScore)
+                res: ReasonScore = await self.model.a_generate(prompt + images, schema=ReasonScore)
                 return res.score, res.reasoning
             except TypeError:
-                res = await self.model.a_generate(input_images=images, input_text=prompt)
+                res = await self.model.a_generate(prompt + images, input_text=prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
     def _evaluate_semantic_consistency(
         self, 
         text_prompt: str, 
-        image_input: ImageType, 
-        actual_image_output: ImageType
+        image_input: Image, 
+        actual_image_output: Image
     ) -> Tuple[List[int], str]:
-        images: List[ImageType]  = []
+        images: List[Image]  = []
         if self.task == VIEScoreTask.TEXT_TO_IMAGE_GENERATION:
             images.append(image_input)
         elif self.task == VIEScoreTask.TEXT_TO_IMAGE_EDITING:
             images.extend([image_input, actual_image_output])
-        prompt = VIEScoreTemplate.generate_semantic_consistency_evaluation_results(
+        prompt = [VIEScoreTemplate.generate_semantic_consistency_evaluation_results(
             text_prompt=text_prompt, task=self.task
-        )
+        )]
         if self.using_native_model:
-            res, cost = self.model.generate(input_images=images, input_text=prompt)
+            res, cost = self.model.generate(prompt + images)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["score"], data["reasoning"]
         else:
             try:
-                res: ReasonScore = self.model.generate(input_images=images, input_text=prompt, schema=ReasonScore)
+                res: ReasonScore = self.model.generate(prompt + images, schema=ReasonScore)
                 return res.score, res.reasoning
             except TypeError:
-                res = self.model.generate(input_images=images, input_text=prompt)
+                res = self.model.generate(prompt + images)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
             
     async def _a_evaluate_perceptual_quality(
         self, 
-        actual_image_output: ImageType
+        actual_image_output: Image
     ) -> Tuple[List[int], str]:
-        images: List[ImageType]  = [actual_image_output]
-        prompt = VIEScoreTemplate.generate_perceptual_quality_evaluation_results()
+        images: List[Image]  = [actual_image_output]
+        prompt = [VIEScoreTemplate.generate_perceptual_quality_evaluation_results()]
         if self.using_native_model:
-            res, cost = await self.model.a_generate(input_images=images, input_text=prompt)
+            res, cost = await self.model.a_generate(prompt + images)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["score"], data["reasoning"]
         else:
             try:
-                res: ReasonScore = await self.model.a_generate(input_images=images, input_text=prompt, schema=ReasonScore)
+                res: ReasonScore = await self.model.a_generate(prompt + images, schema=ReasonScore)
                 return res.score, res.reasoning
             except TypeError:
-                res = await self.model.a_generate(input_images=images, input_text=prompt)
+                res = await self.model.a_generate(prompt + images)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
     def _evaluate_perceptual_quality(
         self, 
-        actual_image_output: ImageType
+        actual_image_output: Image
     ) -> Tuple[List[int], str]:
-        images: List[ImageType]  = [actual_image_output]
-        prompt = VIEScoreTemplate.generate_perceptual_quality_evaluation_results()
+        images: List[Image]  = [actual_image_output]
+        prompt = [VIEScoreTemplate.generate_perceptual_quality_evaluation_results()]
         if self.using_native_model:
-            res, cost = self.model.generate(input_images=images, input_text=prompt)
+            res, cost = self.model.generate(prompt + images)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["score"], data["reasoning"]
         else:
             try:
-                res: ReasonScore = self.model.generate(input_images=images, input_text=prompt, schema=ReasonScore)
+                res: ReasonScore = self.model.generate(prompt + images, schema=ReasonScore)
                 return res.score, res.reasoning
             except TypeError:
-                res = self.model.generate(input_images=images, input_text=prompt)
+                res = self.model.generate(prompt + images)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
         

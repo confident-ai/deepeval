@@ -4,7 +4,6 @@ from copy import deepcopy
 
 from deepeval.test_case import LLMTestCase
 
-
 @dataclass
 class Message:
     llm_test_case: LLMTestCase
@@ -13,7 +12,6 @@ class Message:
     def __post_init__(self):
         # prevent user referencing the wrong LLM test case in a conversation
         self.llm_test_case = deepcopy(self.llm_test_case)
-
 
 @dataclass
 class ConversationalTestCase:

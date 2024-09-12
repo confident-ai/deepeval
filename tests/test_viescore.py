@@ -4,21 +4,21 @@ import pytest
 from deepeval.dataset import EvaluationDataset
 from deepeval import assert_test, evaluate
 from deepeval.test_case import MLLMTestCase, LLMTestCase
-from deepeval.metrics import VIEScore, AnswerRelevancyMetric
+from deepeval.metrics import VIEScore, AnswerRelevancyMetric, VIEScoreTask
+from deepeval.types import Image
 
-# Load the WebP image using PIL
 image_path = "./data/image.webp"
-image = Image.open(image_path)
+edited_image_path = "./data/edited_image.webp"
 
 test_case_1 = MLLMTestCase(
-    input_text="generate a castle school in fantasy land with the words LLM evaluation on it",
-    actual_output_image=image,
+    input=["gesnerate a castle school in fantasy land with the words LLM evaluation on it"],
+    actual_output=[Image(image_path, local=True)],
 )
 
 test_case_2 = MLLMTestCase(
-        input_text="generate a castle school in fantasy land with the words LLM evaluation on it",
-        actual_output_image=image,
-    )
+    input=["edit this image so that it is night themed, and LLM evaluation is spelled correctly", Image(image_path, local=True)],
+    actual_output=[Image(edited_image_path, local=True)],
+)
 
 test_case_3 = LLMTestCase(
     input="What is this again?",
@@ -31,12 +31,30 @@ test_case_3 = LLMTestCase(
 )
 
 dataset = EvaluationDataset(
-    test_cases=[test_case_1, test_case_2, test_case_3]
+    test_cases=[
+        test_case_1, 
+        test_case_2, 
+        test_case_3]
 )
-#dataset.evaluate([VIEScore(verbose_mode=True), AnswerRelevancyMetric()])
-#evaluate(test_cases=[test_case_1, test_case_2, test_case_3], metrics=[VIEScore(verbose_mode=True), AnswerRelevancyMetric()], run_async=False)
+# dataset.evaluate([
+#     VIEScore(verbose_mode=True), 
+#     VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING), 
+#     AnswerRelevancyMetric()])
 
-@pytest.mark.skip(reason="openai is expensive")
+# evaluate(
+#     test_cases=[
+#         #test_case_1, 
+#         test_case_2, 
+#         test_case_3], 
+#     metrics=[
+#         #VIEScore(verbose_mode=True), 
+#         VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING), 
+#         AnswerRelevancyMetric()], 
+#     #run_async=False
+#     )
+
+#@pytest.mark.skip(reason="openai is expensive")
 def test_viescore():
     vie_score = VIEScore(verbose_mode=True)
-    assert_test(test_case_1, [vie_score, AnswerRelevancyMetric()], run_async=False)
+    vie_score_2 = VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING)
+    assert_test(test_case_2, [vie_score_2, AnswerRelevancyMetric()], run_async=False)

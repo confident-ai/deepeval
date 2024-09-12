@@ -1,18 +1,20 @@
 import logging
+import PIL.Image
 import openai
 import base64
-from PIL.Image import Image as ImageType
 from io import BytesIO
 from openai import OpenAI, AsyncOpenAI
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_community.callbacks import get_openai_callback
 from langchain.schema import AIMessage, HumanMessage
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
+from PIL.Image import Image as PILImage
+import PIL
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseMLLM
-
+from deepeval.types import Image
 
 def log_retry_error(retry_state):
     logging.error(
@@ -250,7 +252,7 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
 
-    def calculate_image_tokens(self, image: ImageType, detail: str = 'auto') -> int:
+    def calculate_image_tokens(self, image: PILImage, detail: str = 'auto') -> int:
         width, height = image.size
 
         def high_detail_cost() -> int:
@@ -273,26 +275,36 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
         return 85
 
 
-    def encode_pil_image(self, pil_image: ImageType):
+    def encode_pil_image(self, pil_image: PILImage):
         image_buffer = BytesIO()
         pil_image.save(image_buffer, format='JPEG')
         image_bytes = image_buffer.getvalue()
         base64_encoded_image = base64.b64encode(image_bytes).decode('utf-8')
         return base64_encoded_image
 
-    def generate_prompt(self, images: List[ImageType] = [], text_prompt: str = ""):
+    def generate_prompt(self, multimodal_input: List[Union[str, Image]] = []):
         prompt = []
-        text_dict = {
+        for ele in multimodal_input:
+            if isinstance(ele, str):
+                prompt.append({
                     "type": "text",
-                    "text": text_prompt
-                }
-        prompt.append(text_dict)
-        for image in images:
-            visual_dict = {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"}
-                }
-            prompt.append(visual_dict)
+                    "text": ele
+                })
+            elif isinstance(ele, Image):
+                if ele.local == True:
+                    image = PIL.Image.open(ele.url)
+                    visual_dict = {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"}
+                    }
+                else:
+                    visual_dict = {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": ele.url,
+                        },
+                    },
+                prompt.append(visual_dict)
         return prompt
 
     @retry(
@@ -300,9 +312,9 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
         retry=retry_if_exception_type(openai.RateLimitError),
         after=log_retry_error,
     )
-    def generate(self, input_text: str, input_images: List[ImageType]) -> Tuple[str, float]:
+    def generate(self, multimodal_input: List[Union[str, Image]]) -> Tuple[str, float]:
         client = OpenAI()
-        prompt = self.generate_prompt(input_images, input_text)
+        prompt = self.generate_prompt(multimodal_input)
         response = client.chat.completions.create(
             model=self.model_name,
             messages=[
@@ -323,9 +335,9 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
         retry=retry_if_exception_type(openai.RateLimitError),
         after=log_retry_error,
     )
-    async def a_generate(self, input_text: str, input_images: List[ImageType]) -> Tuple[str, float]:
+    async def a_generate(self, multimodal_input: List[Union[str, Image]]) -> Tuple[str, float]:
         client = AsyncOpenAI()
-        prompt = self.generate_prompt(input_images, input_text)
+        prompt = self.generate_prompt(multimodal_input)
         response = await client.chat.completions.create(
             model=self.model_name,
             messages=[

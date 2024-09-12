@@ -13,7 +13,6 @@ from rich import print
 import base64
 from io import BytesIO
 from PIL import Image
-from PIL.Image import Image as ImageType
 
 from deepeval.metrics import BaseMetric
 from deepeval.confident.api import Api, Endpoints, HttpMethods
@@ -293,38 +292,12 @@ class TestRun(BaseModel):
         except AttributeError:
             # Pydantic version below 2.0
             body = self.dict(by_alias=True, exclude_none=True)
-        
-        # Convert images to base64
-        def encode_image(image: ImageType):
-            buffered = BytesIO()
-            image.save(buffered, format=image.format)
-            return base64.b64encode(buffered.getvalue()).decode('utf-8')
-
-        # Replace image fields with base64-encoded strings
-        for test_case in body.get('MLLMTestCases', []):
-            if 'actualOutputImage' in test_case:
-                test_case['actualOutputImage'] = encode_image(test_case['actualOutputImage'])
-            if 'inputImage' in test_case and test_case['inputImage'] is not None:
-                test_case['inputImage'] = encode_image(test_case['inputImage'])
-        
         json.dump(body, f)
         return self
 
     @classmethod
     def load(cls, f):
-        def decode_image(base64_string):
-            image_data = base64.b64decode(base64_string)
-            return Image.open(BytesIO(image_data))
-
         data: dict = json.load(f)
-        
-        # Convert base64-encoded strings back to images
-        for test_case in data.get('MLLMTestCases', []):
-            if 'actualOutputImage' in test_case:
-                test_case['actualOutputImage'] = decode_image(test_case['actualOutputImage'])
-            if 'inputImage' in test_case and test_case['inputImage'] is not None:
-                test_case['inputImage'] = decode_image(test_case['inputImage'])
-        
         return cls(**data)
 
 
