@@ -75,7 +75,7 @@ print("Vulnerability Scores: ", results)
 
 There are 4 required parameters when calling the scan method inside `RedTeamer`:
 
-- `target_model`: a [custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` representing the model you wish to scan for risks and vulnerabilities using said `RedTeamer`.
+- `target_model`: a [custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` representing the model you wish to scan for risks and vulnerabilities for using said `RedTeamer`.
 - `attacks_per_vulnerability`: An integer specifying the number of adversarial attacks per vulnerability.
 - `vulnerabilities`: A list of `RTVulnerability` enums specifying the vulnerabilities to be tested.
 - `attacks`: A list of `RTAdversarialAttack` enums specifying the types of adversarial attacks to be used.
