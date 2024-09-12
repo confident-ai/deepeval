@@ -42,19 +42,17 @@ target_system_prompt = "You are a financial assistant designed to help users wit
 
 red_teamer = RedTeamer(
     target_purpose=target_purpose,
-    target_system_prompt=target_system_prompt,
-    target_model=CustomTargetLLM()
+    target_system_prompt=target_system_prompt
 )
 ```
 
-There are 3 required and 3 optional parameters when creating a `RedTeamer`:
+There are 2 required and 3 optional parameters when creating a `RedTeamer`:
 
 - `target_purpose`: a string specifying the purpose of the target LLM.
 - `target_system_prompt`: a string specifying your target LLM's system prompt template.
-- `target_model`: a [custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` representing your target model.
 - [Optional] `synthesizer_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` for data synthesis. Defaulted to `gpt-4o`.
 - [Optional] `evaluation_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` for evaluation. Defaulted to `gpt-4o`.
-- [Optional] `async_mode`: a boolean specifying whether to enable async mode.
+- [Optional] `async_mode`: a boolean specifying whether to enable async mode. Defaulted to `True`.
 
 :::warning
 When providing your `synthesizer_model` and `evaluation_model`, it is recommended to supply a schema argument for the `generate` and `a_generate` methods. This helps prevent invalid JSON errors during large-scale scanning. [Learn more about creating schematic custom models here](guides-using-custom-llms).
@@ -64,8 +62,10 @@ When providing your `synthesizer_model` and `evaluation_model`, it is recommende
 
 ```python
 from deepeval.red_teaming import RTAdversarialAttack, RTVulnerability
+...
 
 results = red_teamer.scan(
+    target_model=TargetLLM(),
     attacks_per_vulnerability=5,
     attacks=[a for a in RTAdversarialAttack],
     vulnerabilities=[v for v in RTVulnerability]
@@ -73,8 +73,9 @@ results = red_teamer.scan(
 print("Vulnerability Scores: ", results)
 ```
 
-There are 3 required parameters when calling the scan method inside `RedTeamer`:
+There are 4 required parameters when calling the scan method inside `RedTeamer`:
 
+- `target_model`: a [custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` representing the model you wish to red-team.
 - `attacks_per_vulnerability`: An integer specifying the number of adversarial attacks per vulnerability.
 - `vulnerabilities`: A list of `RTVulnerability` enums specifying the vulnerabilities to be tested.
 - `attacks`: A list of `RTAdversarialAttack` enums specifying the types of adversarial attacks to be used.

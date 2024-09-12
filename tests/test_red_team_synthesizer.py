@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_community.callbacks import get_openai_callback
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
-from deepeval.red_teamer import RedTeamer
+from deepeval.red_teaming import RedTeamer
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
