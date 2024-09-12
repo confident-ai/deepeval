@@ -275,9 +275,7 @@ class RedTeamer:
         attacks: List[RTAdversarialAttack],
     ):
         with capture_red_teamer_run(
-            "generate "
-            + n_goldens_per_vulnerability * len(vulnerabilities)
-            + " goldens"
+            f""" generate {n_goldens_per_vulnerability * len(vulnerabilities) } goldens """
         ):
             red_teaming_goldens = (
                 await self.rt_synthesizer.a_generate_red_teaming_goldens(
