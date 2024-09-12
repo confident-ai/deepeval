@@ -95,7 +95,6 @@ module.exports = {
             "confident-ai-llm-monitoring-conversations",
             "confident-ai-llm-monitoring-evaluations",
             "confident-ai-llm-monitoring-dataset",
-            "evaluation-red-teaming",
           ],
           collapsed: false,
         },

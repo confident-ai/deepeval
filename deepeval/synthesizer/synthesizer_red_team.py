@@ -15,12 +15,10 @@ from deepeval.synthesizer.templates.template_red_team import (
     RTAdversarialAttackContextlessTemplate,
 )
 from deepeval.synthesizer.types import RTAdversarialAttack, RTVulnerability
-from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.synthesizer.schema import *
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.dataset.golden import Golden
-from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.synthesizer.types import *
 from deepeval.utils import get_or_create_event_loop
 
@@ -287,7 +285,6 @@ class RTSynthesizer:
             )
         )
         highest_score = 0
-        best_response = ""
         redteam_history = [
             {"role": "system", "content": prompt_generation_prompt}
         ]
@@ -836,7 +833,7 @@ class RTSynthesizer:
 
     def generate_raw_prompts(
         self,
-        n_goldens_per_vulnerability: int,
+        attacks_per_vulnerability: int,
         purpose: str,
         vulnerability: RTVulnerability,
         system_prompt: Optional[str] = None,
@@ -845,7 +842,7 @@ class RTSynthesizer:
         goldens: List[Golden] = []
         if vulnerability.value not in self.unaligned_vulnerabilities:
             template = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
-                n_goldens_per_vulnerability, vulnerability, purpose
+                attacks_per_vulnerability, vulnerability, purpose
             )
 
             for i in range(max_retries):
@@ -881,7 +878,7 @@ class RTSynthesizer:
                 ]
             )
         else:
-            for _ in range(n_goldens_per_vulnerability):
+            for _ in range(attacks_per_vulnerability):
                 input = self.generate_unaligned_harmful_templates(
                     purpose, vulnerability.value
                 )
@@ -899,7 +896,7 @@ class RTSynthesizer:
 
     async def a_generate_raw_prompts(
         self,
-        n_goldens_per_vulnerability: int,
+        attacks_per_vulnerability: int,
         purpose: str,
         vulnerability: RTVulnerability,
         system_prompt: Optional[str] = None,
@@ -908,7 +905,7 @@ class RTSynthesizer:
         goldens: List[Golden] = []
         if vulnerability.value not in self.unaligned_vulnerabilities:
             template = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
-                n_goldens_per_vulnerability, vulnerability, purpose
+                attacks_per_vulnerability, vulnerability, purpose
             )
 
             for i in range(max_retries):
@@ -944,7 +941,7 @@ class RTSynthesizer:
                 ]
             )
         else:
-            for _ in range(n_goldens_per_vulnerability):
+            for _ in range(attacks_per_vulnerability):
                 input = await self.a_generate_unaligned_harmful_templates(
                     purpose, vulnerability.value
                 )
@@ -966,7 +963,7 @@ class RTSynthesizer:
 
     def generate_red_teaming_goldens(
         self,
-        n_goldens_per_vulnerability: int,
+        attacks_per_vulnerability: int,
         purpose: str,
         vulnerabilities: List[RTVulnerability],
         attacks: List[RTAdversarialAttack],
@@ -976,7 +973,7 @@ class RTSynthesizer:
             loop = get_or_create_event_loop()
             return loop.run_until_complete(
                 self.a_generate_red_teaming_goldens(
-                    n_goldens_per_vulnerability,
+                    attacks_per_vulnerability,
                     purpose,
                     vulnerabilities,
                     attacks,
@@ -991,7 +988,7 @@ class RTSynthesizer:
                     f"Generating prompts - {vulnerability.value}"
                 )
                 goldens = self.generate_raw_prompts(
-                    n_goldens_per_vulnerability,
+                    attacks_per_vulnerability,
                     purpose,
                     vulnerability,
                     system_prompt,
@@ -1014,7 +1011,7 @@ class RTSynthesizer:
 
     async def a_generate_red_teaming_goldens(
         self,
-        n_goldens_per_vulnerability: int,
+        attacks_per_vulnerability: int,
         purpose: str,
         vulnerabilities: List[RTVulnerability],
         attacks: List[RTAdversarialAttack],
@@ -1031,7 +1028,7 @@ class RTSynthesizer:
         for vulnerability in vulnerabilities:
             task = asyncio.create_task(
                 self.a_generate_raw_prompts(
-                    n_goldens_per_vulnerability,
+                    attacks_per_vulnerability,
                     purpose,
                     vulnerability,
                     system_prompt,
