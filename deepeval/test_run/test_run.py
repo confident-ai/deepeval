@@ -115,6 +115,9 @@ class TestRun(BaseModel):
                             api_test_case.order
                         ] = api_test_case
 
+                        if api_test_case.success is False:
+                            conversational_test_case.success = False
+
                         if conversational_test_case.evaluation_cost is None:
                             conversational_test_case.evaluation_cost = (
                                 api_test_case.evaluation_cost

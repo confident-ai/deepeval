@@ -49,7 +49,7 @@ def confident_evaluate(
                 body = confident_request_data.dict(
                     by_alias=True, exclude_none=True
                 )
-
+            print(body)
             try:
                 result = api.send_request(
                     method=HttpMethods.POST,
