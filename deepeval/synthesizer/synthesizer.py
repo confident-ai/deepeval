@@ -7,6 +7,7 @@ import datetime
 import random
 import math
 import asyncio
+import tqdm
 
 from deepeval.synthesizer.templates.template import (
     EvolutionTemplate,
@@ -221,6 +222,7 @@ class Synthesizer:
         text,
         num_evolutions: int,
         evolution_types: List[PromptEvolution],
+        progress_bar: tqdm.std.tqdm
     ) -> List[str]:
         evolution_methods = [
             prompt_evolution_map[evolution_type.value]
@@ -232,6 +234,7 @@ class Synthesizer:
             prompt = evolution_method(input=evolved_texts[-1])
             evolved_text, _ = self.generate(prompt)
             evolved_texts.append(evolved_text)
+            progress_bar.update(1)
         return evolved_texts
 
     async def _a_evolve_text_from_prompt(
@@ -239,6 +242,7 @@ class Synthesizer:
         text,
         num_evolutions: int,
         evolution_types: List[PromptEvolution],
+        progress_bar: tqdm.std.tqdm
     ) -> List[str]:
         evolution_methods = [
             prompt_evolution_map[evolution_type.value]
@@ -250,6 +254,7 @@ class Synthesizer:
             prompt = evolution_method(input=evolved_texts[-1])
             evolved_text, _ = await self.a_generate(prompt)
             evolved_texts.append(evolved_text)
+            progress_bar.update(1)
         return evolved_texts
 
     def _evolve_text(
@@ -339,6 +344,7 @@ class Synthesizer:
         source_files: Optional[List[str]],
         index: int,
         evolutions: List[Evolution],
+        progress_bar: tqdm.std.tqdm,
     ):
         prompt: List = SynthesizerTemplate.generate_synthetic_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
@@ -348,7 +354,7 @@ class Synthesizer:
             evolved_input = await self._a_evolve_text(
                 data.input,
                 context=context,
-                num_evolutions=num_evolutions,
+                num_evolutions=num_evolutions,  
                 evolutions=evolutions,
             )
             source_file = (
@@ -363,6 +369,9 @@ class Synthesizer:
                 )
                 golden.expected_output, _ = await self.a_generate(prompt)
             goldens.append(golden)
+            # Update tqdm progress bar after each golden processing
+            if progress_bar is not None:
+                progress_bar.update(1)
 
     async def _a_generate_text_to_sql_from_contexts(
         self,
@@ -370,6 +379,7 @@ class Synthesizer:
         goldens: List[Golden],
         include_expected_output: bool,
         max_goldens_per_context: int,
+        progress_bar: tqdm.std.tqdm,
     ):
         prompt = SynthesizerTemplate.generate_text2sql_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
@@ -385,6 +395,9 @@ class Synthesizer:
                     await self.a_generate_sql_expected_output(prompt)
                 )
             goldens.append(golden)
+            # Update tqdm progress bar after each golden processing
+            if progress_bar is not None:
+                progress_bar.update(1)
 
     async def _a_generate_red_teaming_from_contexts(
         self,
@@ -395,6 +408,7 @@ class Synthesizer:
         vulnerabilities: List[RTVulnerability],
         num_evolutions: int,
         attacks: List[RTAdversarialAttack],
+        progress_bar: tqdm.std.tqdm,
     ):
         if context:
             prompt = SynthesizerTemplate.generate_synthetic_inputs(
@@ -402,7 +416,7 @@ class Synthesizer:
             )
         else:
             prompt = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
-                max_goldens
+                max_goldens, None, None
             )
         synthetic_data = await self.a_generate_synthetic_inputs(prompt)
 
@@ -445,6 +459,9 @@ class Synthesizer:
                         )
                     golden.expected_output, _ = self.a_generate(prompt)
                 goldens.append(golden)
+            # Update tqdm progress bar after each golden processing
+            if progress_bar is not None:
+                progress_bar.update(1)
 
     #############################################################
     # Main Methods for Golden Generation
@@ -465,16 +482,15 @@ class Synthesizer:
             PromptEvolution.HYPOTHETICAL,
             PromptEvolution.IN_BREADTH,
         ],
-        _show_indicator: bool = True,
     ) -> List[Golden]:
         goldens: List[Golden] = []
         with synthesizer_progress_context(
+            "scratch",
             self.model.get_model_name(),
             None,
-            (num_initial_goldens + 1) * num_evolutions,
+            (num_initial_goldens) * (num_evolutions + 1),
             None,
-            _show_indicator,
-        ):
+        ) as progress_bar:
             prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
                 subject=subject,
                 task=task,
@@ -482,11 +498,14 @@ class Synthesizer:
                 num_initial_goldens=num_initial_goldens,
             )
             synthetic_data = self.generate_synthetic_inputs(prompt)
+            progress_bar.update(num_initial_goldens)
+
             tasks = [
                 self._a_evolve_text_from_prompt(
                     text=data.input,
                     num_evolutions=num_evolutions,
                     evolution_types=evolution_types,
+                    progress_bar=progress_bar
                 )
                 for data in synthetic_data
             ]
@@ -514,7 +533,6 @@ class Synthesizer:
             PromptEvolution.HYPOTHETICAL,
             PromptEvolution.IN_BREADTH,
         ],
-        _show_indicator: bool = True,
     ) -> List[Golden]:
         goldens: List[Golden] = []
         if self.async_mode:
@@ -527,17 +545,16 @@ class Synthesizer:
                     num_initial_goldens,
                     num_evolutions,
                     evolution_types,
-                    _show_indicator,
                 )
             )
         else:
             with synthesizer_progress_context(
+                "scratch",
                 self.model.get_model_name(),
                 None,
-                (num_initial_goldens + 1) * num_evolutions,
+                (num_initial_goldens) * (num_evolutions + 1),
                 None,
-                _show_indicator,
-            ):
+            ) as progress_bar:
                 prompt: List = (
                     PromptSynthesizerTemplate.generate_synthetic_prompts(
                         subject=subject,
@@ -547,19 +564,23 @@ class Synthesizer:
                     )
                 )
                 synthetic_data = self.generate_synthetic_inputs(prompt)
+                progress_bar.update(num_initial_goldens)
                 for data in synthetic_data:
                     evolved_prompts = self._evolve_text_from_prompt(
                         text=data.input,
                         num_evolutions=num_evolutions,
                         evolution_types=evolution_types,
+                        progress_bar=progress_bar
                     )
                     new_goldens = [
                         Golden(input=evolved_prompt)
                         for evolved_prompt in evolved_prompts
                     ]
                     goldens.extend(new_goldens)
-                    self.synthetic_goldens.extend(goldens)
-                    return goldens
+                  
+
+                self.synthetic_goldens.extend(goldens)
+                return goldens
 
     async def a_generate_red_teaming_goldens(
         self,
@@ -581,31 +602,32 @@ class Synthesizer:
             RTVulnerability.UNFORMATTED,
         ],
         use_case: UseCase = UseCase.QA,
-        _show_indicator: bool = True,
     ) -> List[Golden]:
+        contextual = contexts != None
         goldens: List[Golden] = []
         num_goldens = max_goldens
-        if not contexts:
+        if not contextual:
             contexts = [None for i in range(max_goldens)]
         else:
             num_goldens = len(contexts) * max_goldens
         if use_case == UseCase.QA:
             with synthesizer_progress_context(
+                "redteam",
                 self.model.get_model_name(),
                 None,
                 num_goldens,
                 use_case.value,
-                _show_indicator,
-            ):
+            ) as progress_bar:
                 tasks = [
                     self._a_generate_red_teaming_from_contexts(
                         contexts[i],
                         goldens,
                         include_expected_output,
-                        max_goldens,
+                        max_goldens if contextual else 1,
                         vulnerabilities,
                         num_evolutions,
                         attacks,
+                        progress_bar
                     )
                     for i in range(len(contexts))
                 ]
@@ -633,7 +655,6 @@ class Synthesizer:
             RTVulnerability.UNFORMATTED,
         ],
         use_case: UseCase = UseCase.QA,
-        _show_indicator: bool = True,
     ) -> List[Golden]:
         if self.async_mode:
             loop = get_or_create_event_loop()
@@ -646,24 +667,24 @@ class Synthesizer:
                     attacks,
                     vulnerabilities,
                     use_case,
-                    _show_indicator,
                 )
-            )
+            ) 
         else:
+            contextual = contexts != None
             num_goldens = max_goldens
-            if not contexts:
+            if not contextual:
                 contexts = [None for i in range(max_goldens)]
             else:
                 num_goldens = len(contexts) * max_goldens
             goldens: List[Golden] = []
             if use_case == UseCase.QA:
                 with synthesizer_progress_context(
+                    "redteam",
                     self.model.get_model_name(),
                     None,
                     num_goldens,
                     use_case.value,
-                    _show_indicator,
-                ):
+                ) as progress_bar:
                     for context in contexts:
                         if context:
                             prompt = (
@@ -673,7 +694,7 @@ class Synthesizer:
                             )
                         else:
                             prompt = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
-                                max_goldens
+                                1, None, None
                             )
                         synthetic_data = self.generate_synthetic_inputs(prompt)
                         for data in synthetic_data:
@@ -729,6 +750,9 @@ class Synthesizer:
                                         prompt
                                     )
                                 goldens.append(golden)
+                            # Update tqdm progress bar after each golden processing
+                            if progress_bar is not None:
+                                progress_bar.update(1)
             self.synthetic_goldens.extend(goldens)
             return goldens
 
@@ -749,17 +773,18 @@ class Synthesizer:
             Evolution.IN_BREADTH,
         ],
         use_case: UseCase = UseCase.QA,
-        _show_indicator: bool = True,
+        progress_bar: Optional[tqdm.std.tqdm] = None,
     ) -> List[Golden]:
         goldens: List[Golden] = []
         if use_case == UseCase.QA:
             with synthesizer_progress_context(
+                "default",
                 self.model.get_model_name(),
                 None,
                 len(contexts) * max_goldens_per_context,
                 use_case.value,
-                _show_indicator,
-            ):
+                progress_bar
+            ) as progress_bar:
                 tasks = [
                     self._a_generate_from_contexts(
                         context,
@@ -770,18 +795,20 @@ class Synthesizer:
                         source_files,
                         index,
                         evolutions,
+                        progress_bar
                     )
                     for index, context in enumerate(contexts)
                 ]
                 await asyncio.gather(*tasks)
         elif use_case == UseCase.TEXT2SQL:
             with synthesizer_progress_context(
+                "default",
                 self.model.get_model_name(),
                 None,
                 len(contexts) * max_goldens_per_context,
                 use_case.value,
-                _show_indicator,
-            ):
+                progress_bar
+            ) as progress_bar:
                 include_expected_output = True
                 tasks = [
                     self._a_generate_text_to_sql_from_contexts(
@@ -789,6 +816,7 @@ class Synthesizer:
                         goldens,
                         include_expected_output,
                         max_goldens_per_context,
+                        progress_bar
                     )
                     for context in contexts
                 ]
@@ -813,7 +841,7 @@ class Synthesizer:
             Evolution.IN_BREADTH,
         ],
         use_case: UseCase = UseCase.QA,
-        _show_indicator: bool = True,
+        progress_bar: Optional[tqdm.std.tqdm] = None,
     ) -> List[Golden]:
         if self.async_mode:
             loop = get_or_create_event_loop()
@@ -826,19 +854,19 @@ class Synthesizer:
                     source_files,
                     evolutions,
                     use_case,
-                    _show_indicator,
                 )
             )
         else:
             goldens: List[Golden] = []
             if use_case == UseCase.QA:
                 with synthesizer_progress_context(
+                    "default",
                     self.model.get_model_name(),
                     None,
                     len(contexts) * max_goldens_per_context,
                     use_case.value,
-                    _show_indicator,
-                ):
+                    progress_bar,
+                ) as progress_bar:
                     for i, context in enumerate(contexts):
                         prompt = SynthesizerTemplate.generate_synthetic_inputs(
                             context=context,
@@ -870,15 +898,20 @@ class Synthesizer:
                                 res, _ = self.generate(prompt)
                                 golden.expected_output = res
                             goldens.append(golden)
+                            # Update tqdm progress bar after each golden processing
+                            if progress_bar is not None:
+                                progress_bar.update(1)
+
             elif use_case == UseCase.TEXT2SQL:
                 include_expected_output = True
                 with synthesizer_progress_context(
+                    "default",
                     self.model.get_model_name(),
                     None,
                     len(contexts) * max_goldens_per_context,
                     use_case.value,
-                    _show_indicator,
-                ):
+                    progress_bar,
+                ) as progress_bar:
                     for i, context in enumerate(contexts):
                         prompt = SynthesizerTemplate.generate_text2sql_inputs(
                             context=context,
@@ -899,6 +932,10 @@ class Synthesizer:
                                     self.generate_expected_output_sql(prompt)
                                 )
                             goldens.append(golden)
+                            # Update tqdm progress bar after each golden processing
+                            if progress_bar is not None:
+                                progress_bar.update(1)
+
             self.synthetic_goldens.extend(goldens)
             return goldens
 
@@ -920,36 +957,34 @@ class Synthesizer:
             Evolution.IN_BREADTH,
         ],
         use_case: UseCase = UseCase.QA,
-        _show_indicator: bool = True,
     ):
         if self.embedder is None:
             self.embedder = OpenAIEmbeddingModel()
+        if self.context_generator is None:
+            self.context_generator = ContextGenerator(
+                document_paths,
+                embedder=self.embedder,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+            )
+        await self.context_generator._a_load_docs()
+
+        max_goldens_per_context = 2
+        if max_goldens_per_document < max_goldens_per_context:
+            max_goldens_per_context = 1
+        num_context_per_document = math.floor(
+            max_goldens_per_document / max_goldens_per_context
+        )
+        contexts, source_files = self.context_generator.generate_contexts(
+            num_context_per_document=num_context_per_document
+        )
 
         with synthesizer_progress_context(
+            "docs",
             self.model.get_model_name(),
             self.embedder.get_model_name(),
-            max_goldens_per_document * len(document_paths),
-            _show_indicator=_show_indicator,
-        ):
-            if self.context_generator is None:
-                self.context_generator = ContextGenerator(
-                    document_paths,
-                    embedder=self.embedder,
-                    chunk_size=chunk_size,
-                    chunk_overlap=chunk_overlap,
-                )
-            await self.context_generator._a_load_docs()
-
-            max_goldens_per_context = 2
-            if max_goldens_per_document < max_goldens_per_context:
-                max_goldens_per_context = 1
-            num_context = math.floor(
-                max_goldens_per_document / max_goldens_per_context
-            )
-            contexts, source_files = self.context_generator.generate_contexts(
-                num_context=num_context
-            )
-
+            len(contexts) * max_goldens_per_context,
+        ) as progress_bar:
             return await self.a_generate_goldens(
                 contexts,
                 include_expected_output,
@@ -958,7 +993,7 @@ class Synthesizer:
                 source_files,
                 evolutions=evolutions,
                 use_case=use_case,
-                _show_indicator=False,
+                progress_bar=progress_bar
             )
 
     def generate_goldens_from_docs(
@@ -983,11 +1018,6 @@ class Synthesizer:
         if self.embedder is None:
             self.embedder = OpenAIEmbeddingModel()
 
-        with synthesizer_progress_context(
-            self.model.get_model_name(),
-            self.embedder.get_model_name(),
-            max_goldens_per_document * len(document_paths),
-        ):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 return loop.run_until_complete(
@@ -1000,7 +1030,6 @@ class Synthesizer:
                         num_evolutions,
                         evolutions,
                         use_case,
-                        _show_indicator=False,
                     )
                 )
             else:
@@ -1013,28 +1042,35 @@ class Synthesizer:
                     )
 
                 self.context_generator._load_docs()
-
                 max_goldens_per_context = 2
                 if max_goldens_per_document < max_goldens_per_context:
                     max_goldens_per_context = 1
-                num_context = math.floor(
+                num_context_per_document = math.floor(
                     max_goldens_per_document / max_goldens_per_context
                 )
                 contexts, source_files = (
                     self.context_generator.generate_contexts(
-                        num_context=num_context
+                        num_context_per_document=num_context_per_document
                     )
                 )
-                return self.generate_goldens(
-                    contexts,
-                    include_expected_output,
-                    max_goldens_per_context,
-                    num_evolutions,
-                    source_files,
-                    evolutions=evolutions,
-                    use_case=use_case,
-                    _show_indicator=False,
-                )
+
+                with synthesizer_progress_context(
+                    "docs",
+                    self.model.get_model_name(),
+                    self.embedder.get_model_name(),
+                    len(contexts) * max_goldens_per_context,
+                    use_case
+                ) as progress_bar:
+                    return self.generate_goldens(
+                        contexts,
+                        include_expected_output,
+                        max_goldens_per_context,
+                        num_evolutions,
+                        source_files,
+                        evolutions=evolutions,
+                        use_case=use_case,
+                        progress_bar=progress_bar
+                    )
 
     def save_as(self, file_type: str, directory: str) -> str:
         if file_type not in valid_file_types:
