@@ -1,4 +1,8 @@
-from .base_metric import BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
+from .base_metric import (
+    BaseMetric,
+    BaseConversationalMetric,
+    BaseMultimodalMetric,
+)
 
 from .bias.bias import BiasMetric
 from .toxicity.toxicity import ToxicityMetric

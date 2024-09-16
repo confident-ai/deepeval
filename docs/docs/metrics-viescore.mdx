@@ -24,11 +24,10 @@ To use the `VIEScore`, you'll have to provide the following arguments when creat
 ```python
 from deepeval import evaluate
 from deepeval.metrics import VIEScore, VIEScoreTask
-from deepeval.types import Image
-from deepeval.test_case import MLLMTestCase
+from deepeval.test_case import MLLMTestCase, MLLMImage
 
 # Replace this with your actual MLLM application output
-actual_output=[Image(url="https://shoe-images.com/edited-shoes", local=False)]
+actual_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
 
 metric = VIEScore(
     threshold=0.7,
@@ -37,7 +36,7 @@ metric = VIEScore(
     task=VIEScoreTask.TEXT_TO_IMAGE_EDITING
 )
 test_case = MLLMTestCase(
-    input=["Change the color of the shoes to blue.", Image(url="./shoes.png", local=True)],
+    input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)],
     actual_output=actual_output,
     retrieval_context=retrieval_context
 )

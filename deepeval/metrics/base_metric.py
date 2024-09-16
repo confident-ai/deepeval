@@ -75,6 +75,7 @@ class BaseConversationalMetric:
     def __name__(self):
         return "Base Conversational Metric"
 
+
 class BaseMultimodalMetric:
     score: Optional[float] = None
     score_breakdown: Dict = None
@@ -98,9 +99,7 @@ class BaseMultimodalMetric:
         self._threshold = value
 
     @abstractmethod
-    def measure(
-        self, test_case: MLLMTestCase, *args, **kwargs
-    ) -> float:
+    def measure(self, test_case: MLLMTestCase, *args, **kwargs) -> float:
         raise NotImplementedError
 
     @abstractmethod

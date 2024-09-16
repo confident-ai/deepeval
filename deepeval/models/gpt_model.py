@@ -1,5 +1,4 @@
 import logging
-import PIL.Image
 import openai
 import base64
 from io import BytesIO
@@ -12,17 +11,17 @@ from langchain.schema import HumanMessage
 from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatResult
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
-from PIL.Image import Image as PILImage
-import PIL
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseMLLM
-from deepeval.types import Image
+from deepeval.test_case import MLLMImage
+
 
 def log_retry_error(retry_state):
     logging.error(
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
+
 
 valid_gpt_models = [
     "gpt-4o-mini",
@@ -57,6 +56,7 @@ model_pricing = {
 }
 
 default_gpt_model = "gpt-4o"
+
 
 # Adding a custom class to enable json mode in Ollama during API calls
 class CustomChatOpenAI(ChatOpenAI):
@@ -250,6 +250,7 @@ class GPTModel(DeepEvalBaseLLM):
         elif self.model_name:
             return self.model_name
 
+
 ###############################################
 # Multimodal Model
 ###############################################
@@ -269,6 +270,7 @@ valid_multimodal_gpt_models = [
 ]
 
 default_multimodal_gpt_model = "gpt-4o"
+
 
 class MultimodalGPTModel(DeepEvalBaseMLLM):
     def __init__(
@@ -293,14 +295,20 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
         self.kwargs = kwargs
         self.model_name = model_name
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int, model_name: str) -> float:
-        pricing = model_pricing.get(model_name, model_pricing["gpt-4o"])  # Default to 'gpt-4o' if model not found
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int, model_name: str
+    ) -> float:
+        pricing = model_pricing.get(
+            model_name, model_pricing["gpt-4o"]
+        )  # Default to 'gpt-4o' if model not found
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
 
-    def calculate_image_tokens(self, image: PILImage, detail: str = 'auto') -> int:
-        width, height = image.size
+    def calculate_image_tokens(
+        self, pil_image: "PILImage", detail: str = "auto"
+    ) -> int:
+        width, height = pil_image.size
 
         def high_detail_cost() -> int:
             if max(width, height) > 2048:
@@ -312,45 +320,50 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
             height = int(height * scale_factor)
             tiles = (width // 512) * (height // 512)
             return 85 + (170 * tiles)
-        
-        if detail == 'low':
+
+        if detail == "low":
             return 85
-        if detail == 'high':
-            return high_detail_cost() 
+        if detail == "high":
+            return high_detail_cost()
         if width > 1024 or height > 1024:
             return high_detail_cost()
         return 85
 
-
-    def encode_pil_image(self, pil_image: PILImage):
+    def encode_pil_image(self, pil_image: "PILImage"):
         image_buffer = BytesIO()
-        pil_image.save(image_buffer, format='JPEG')
+        pil_image.save(image_buffer, format="JPEG")
         image_bytes = image_buffer.getvalue()
-        base64_encoded_image = base64.b64encode(image_bytes).decode('utf-8')
+        base64_encoded_image = base64.b64encode(image_bytes).decode("utf-8")
         return base64_encoded_image
 
-    def generate_prompt(self, multimodal_input: List[Union[str, Image]] = []):
+    def generate_prompt(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+
         prompt = []
         for ele in multimodal_input:
             if isinstance(ele, str):
-                prompt.append({
-                    "type": "text",
-                    "text": ele
-                })
-            elif isinstance(ele, Image):
+                prompt.append({"type": "text", "text": ele})
+            elif isinstance(ele, MLLMImage):
                 if ele.local == True:
+                    import PIL.Image
+
                     image = PIL.Image.open(ele.url)
                     visual_dict = {
                         "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"}
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"
+                        },
                     }
                 else:
-                    visual_dict = {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": ele.url,
+                    visual_dict = (
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": ele.url,
+                            },
                         },
-                    },
+                    )
                 prompt.append(visual_dict)
         return prompt
 
@@ -359,21 +372,20 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
         retry=retry_if_exception_type(openai.RateLimitError),
         after=log_retry_error,
     )
-    def generate(self, multimodal_input: List[Union[str, Image]]) -> Tuple[str, float]:
+    def generate(
+        self, multimodal_input: List[Union[str, MLLMImage]]
+    ) -> Tuple[str, float]:
         client = OpenAI()
         prompt = self.generate_prompt(multimodal_input)
         response = client.chat.completions.create(
             model=self.model_name,
-            messages=[
-                {
-                "role": "user",
-                "content": prompt
-                }
-            ],
+            messages=[{"role": "user", "content": prompt}],
         )
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
-        total_cost = self.calculate_cost(input_tokens, output_tokens, self.model_name)
+        total_cost = self.calculate_cost(
+            input_tokens, output_tokens, self.model_name
+        )
         generated_text = response.choices[0].message.content
         return generated_text, total_cost
 
@@ -382,21 +394,20 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
         retry=retry_if_exception_type(openai.RateLimitError),
         after=log_retry_error,
     )
-    async def a_generate(self, multimodal_input: List[Union[str, Image]]) -> Tuple[str, float]:
+    async def a_generate(
+        self, multimodal_input: List[Union[str, MLLMImage]]
+    ) -> Tuple[str, float]:
         client = AsyncOpenAI()
         prompt = self.generate_prompt(multimodal_input)
         response = await client.chat.completions.create(
             model=self.model_name,
-            messages=[
-                {
-                "role": "user",
-                "content": prompt
-                }
-            ],
+            messages=[{"role": "user", "content": prompt}],
         )
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
-        total_cost = self.calculate_cost(input_tokens, output_tokens, self.model_name)
+        total_cost = self.calculate_cost(
+            input_tokens, output_tokens, self.model_name
+        )
         generated_text = response.choices[0].message.content
         return generated_text, total_cost
 
