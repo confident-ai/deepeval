@@ -119,12 +119,9 @@ class VIEScore(BaseMultimodalMetric):
             _, output_images = self.separate_images_from_text(
                 test_case.actual_output
             )
-            (
-                self.SC_scores,
-                self.SC_reasoning
-            ), (
+            (self.SC_scores, self.SC_reasoning), (
                 self.PQ_scores,
-                self.PQ_reasoning
+                self.PQ_reasoning,
             ) = await asyncio.gather(
                 self._a_evaluate_semantic_consistency(
                     "\n".join(input_texts),

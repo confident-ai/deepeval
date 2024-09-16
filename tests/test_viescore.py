@@ -34,22 +34,27 @@ test_case_3 = LLMTestCase(
 )
 
 dataset = EvaluationDataset(test_cases=[test_case_2, test_case_3])
-dataset.evaluate([
-    #VIEScore(verbose_mode=True),
-    VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING),
-    AnswerRelevancyMetric()])
+dataset.evaluate(
+    [
+        # VIEScore(verbose_mode=True),
+        VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING),
+        AnswerRelevancyMetric(),
+    ]
+)
 
 evaluate(
     test_cases=[
         test_case_1,
-        #test_case_2,
-        test_case_3],
+        # test_case_2,
+        test_case_3,
+    ],
     metrics=[
         VIEScore(verbose_mode=True),
-        #VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING),
-        AnswerRelevancyMetric()],
-    #run_async=False
-    )
+        # VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING),
+        AnswerRelevancyMetric(),
+    ],
+    # run_async=False
+)
 
 
 # #@pytest.mark.skip(reason="openai is expensive")
