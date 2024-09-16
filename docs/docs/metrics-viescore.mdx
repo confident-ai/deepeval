@@ -31,7 +31,6 @@ actual_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False
 
 metric = VIEScore(
     threshold=0.7,
-    model="gpt-4o",
     include_reason=True,
     task=VIEScoreTask.TEXT_TO_IMAGE_EDITING
 )
@@ -52,7 +51,6 @@ evaluate([test_case], [metric])
 There are six optional parameters when creating a `FaithfulnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom MLLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseMLLM`. Defaulted to 'gpt-4o'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -75,6 +73,10 @@ The `VIEScore` score is calculated according to the following equation:
 
 The `VIEScore` score combines Semantic Consistency (SC) and Perceptual Quality (PQ) sub-scores to provide a comprehensive evaluation of the synthesized image. The final overall score is derived by taking the square root of the product of the minimum SC and PQ scores.
 
-**1. SC Scores**: These scores assess aspects such as alignment with the prompt and resemblance to concepts. The minimum value among these sub-scores represents the SC score. During the SC evaluation, both the input conditions and the synthesized image are used.
+### SC Scores
 
-**2. PQ Scores**: These scores evaluate the naturalness and absence of artifacts in the image. The minimum value among these sub-scores represents the PQ score. For the PQ evaluation, only the synthesized image is used to prevent confusion from the input conditions.
+These scores assess aspects such as alignment with the prompt and resemblance to concepts. The minimum value among these sub-scores represents the SC score. During the SC evaluation, both the input conditions and the synthesized image are used.
+
+### PQ Scores
+
+These scores evaluate the naturalness and absence of artifacts in the image. The minimum value among these sub-scores represents the PQ score. For the PQ evaluation, only the synthesized image is used to prevent confusion from the input conditions.
