@@ -97,6 +97,15 @@ class LLMApiTestCase(BaseModel):
 
         return values
 
+    def is_multimodal(self):
+        if (
+            self.multimodal_input is not None
+            and self.multimodal_input_actual_output is not None
+        ):
+            return True
+
+        return False
+
 
 class ConversationalApiTestCase(BaseModel):
     name: str

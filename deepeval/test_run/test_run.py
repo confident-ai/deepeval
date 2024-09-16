@@ -171,12 +171,6 @@ class TestRun(BaseModel):
             if test_case.order is None:
                 test_case.order = highest_order
             highest_order = test_case.order + 1
-        # Optionally update order only if not already set
-        highest_order = 0
-        for test_case in self.mllm_test_cases:
-            if test_case.order is None:
-                test_case.order = highest_order
-            highest_order = test_case.order + 1
 
     def delete_test_case_instance_ids(self):
         for conversational_test_case in self.conversational_test_cases:
@@ -231,20 +225,6 @@ class TestRun(BaseModel):
                     else:
                         metrics_dict[name] = [score]
 
-        for test_case in self.mllm_test_cases:
-            if test_case.metrics_data is None:
-                continue
-            for metric_data in test_case.metrics_data:
-                name = metric_data.name
-                score = metric_data.score
-                if score is None:
-                    continue
-                valid_scores += 1
-                if name in metrics_dict:
-                    metrics_dict[name].append(score)
-                else:
-                    metrics_dict[name] = [score]
-
         # metrics_scores combines both conversational and nonconvo and mllm scores
         # might need to separate in the future
         self.metrics_scores = [
@@ -271,13 +251,6 @@ class TestRun(BaseModel):
                 else:
                     test_failed += 1
 
-        for test_case in self.mllm_test_cases:
-            if test_case.success is not None:
-                if test_case.success:
-                    test_passed += 1
-                else:
-                    test_failed += 1
-
         self.test_passed = test_passed
         self.test_failed = test_failed
 
@@ -294,6 +267,13 @@ class TestRun(BaseModel):
     def load(cls, f):
         data: dict = json.load(f)
         return cls(**data)
+
+    def guard_mllm_test_cases(self):
+        for test_case in self.test_cases:
+            if test_case.is_multimodal():
+                raise ValueError(
+                    "Unable to send multimodal test cases to Confident AI."
+                )
 
 
 class TestRunManager:
@@ -409,8 +389,6 @@ class TestRunManager:
         table.add_column("Score", justify="left")
         table.add_column("Status", justify="left")
         table.add_column("Overall Success Rate", justify="left")
-        print(test_run.mllm_test_cases)
-        print(test_run.test_cases)
 
         for index, test_case in enumerate(test_run.test_cases):
             pass_count = 0
@@ -567,8 +545,6 @@ class TestRunManager:
                     "",
                     "",
                 )
-
-        for index, test_case in enumerate(test_run.mllm_test_cases):
             pass_count = 0
             fail_count = 0
             test_case_name = test_case.name
@@ -657,16 +633,10 @@ class TestRunManager:
             test_run.test_cases = initial_batch
             test_run.conversational_test_cases = initial_conversational_batch
             try:
-                body = test_run.model_dump(
-                    by_alias=True, exclude_none=True, exclude={"MLLMTestCases"}
-                )
+                body = test_run.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
                 # Pydantic version below 2.0
-                body = test_run.dict(
-                    by_alias=True, exclude_none=True, exclude={"MLLMTestCases"}
-                )
-            if "MLLMTestCases" in body:
-                del body["MLLMTestCases"]
+                body = test_run.dict(by_alias=True, exclude_none=True)
 
             api = Api()
             result = api.send_request(
@@ -779,7 +749,6 @@ class TestRunManager:
         elif (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
-            and len(test_run.mllm_test_cases) == 0
         ):
             print("No test cases found, please try again.")
             delete_file_if_exists(self.temp_file_name)
@@ -815,6 +784,7 @@ class TestRunManager:
             len(test_run.test_cases) > 0
             or len(test_run.conversational_test_cases) > 0
         ):
+            test_run.guard_mllm_test_cases()
             self.post_test_run(test_run)
 
 
