@@ -29,11 +29,18 @@ module.exports = {
             "metrics-contextual-relevancy",
             "metrics-tool-correctness",
             "metrics-hallucination",
-            "metrics-viescore",
             "metrics-bias",
             "metrics-toxicity",
             "metrics-ragas",
             "metrics-custom",
+            {
+              type: "category",
+              label: "Multimodal Metrics",
+              items: [
+                "metrics-viescore",
+              ],
+              collapsed: true,
+            },
             {
               type: "category",
               label: "Conversational Metrics",
