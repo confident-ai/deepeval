@@ -58,7 +58,7 @@ class TestResult:
     success: bool
     metrics_data: Union[List[MetricData], None]
     conversational: bool
-    multimodal = bool
+    multimodal: bool
     input: Union[Optional[str], List[Union[str, MLLMImage]]] = None
     actual_output: Union[Optional[str], List[Union[str, MLLMImage]]] = None
     expected_output: Optional[str] = None

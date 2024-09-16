@@ -1,6 +1,4 @@
 import logging
-import PIL.Image
-from PIL.Image import Image as PILImage
 import openai
 import base64
 from io import BytesIO
@@ -308,9 +306,9 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
         return input_cost + output_cost
 
     def calculate_image_tokens(
-        self, image: PILImage, detail: str = "auto"
+        self, pil_image: "PILImage", detail: str = "auto"
     ) -> int:
-        width, height = image.size
+        width, height = pil_image.size
 
         def high_detail_cost() -> int:
             if max(width, height) > 2048:
@@ -331,7 +329,7 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
             return high_detail_cost()
         return 85
 
-    def encode_pil_image(self, pil_image: PILImage):
+    def encode_pil_image(self, pil_image: "PILImage"):
         image_buffer = BytesIO()
         pil_image.save(image_buffer, format="JPEG")
         image_bytes = image_buffer.getvalue()
@@ -341,12 +339,15 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
     def generate_prompt(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
+
         prompt = []
         for ele in multimodal_input:
             if isinstance(ele, str):
                 prompt.append({"type": "text", "text": ele})
             elif isinstance(ele, MLLMImage):
                 if ele.local == True:
+                    import PIL.Image
+
                     image = PIL.Image.open(ele.url)
                     visual_dict = {
                         "type": "image_url",
