@@ -23,7 +23,7 @@ from deepeval.dataset.api import (
     DatasetHttpResponse,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.utils import convert_keys_to_snake_case, is_confident
 from deepeval.synthesizer.types import *
 
@@ -31,13 +31,12 @@ valid_file_types = ["csv", "json"]
 
 
 def validate_test_case_type(
-    test_case: Union[LLMTestCase, ConversationalTestCase], subject: str
+    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase], subject: str
 ):
     if not isinstance(test_case, LLMTestCase) and not isinstance(
-        test_case, ConversationalTestCase
-    ):
+        test_case, ConversationalTestCase) and not isinstance(test_case, MLLMTestCase):
         raise TypeError(
-            f"Provided `{subject}` must be a list of LLMTestCase or ConversationalTestCase"
+            f"Provided `{subject}` must be a list of LLMTestCase, ConversationalTestCase, or MLLMTestCase"
         )
 
 
@@ -54,7 +53,7 @@ class EvaluationDataset:
 
     def __init__(
         self,
-        test_cases: List[Union[LLMTestCase, ConversationalTestCase]] = [],
+        test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]] = [],
         goldens: List[Golden] = [],
         conversational_goldens: List[ConversationalGolden] = [],
     ):
@@ -67,6 +66,7 @@ class EvaluationDataset:
 
         llm_test_cases = []
         conversational_test_cases = []
+        mllm_test_cases = []
         for test_case in test_cases:
             if isinstance(test_case, LLMTestCase):
                 test_case._dataset_rank = len(llm_test_cases)
@@ -74,9 +74,13 @@ class EvaluationDataset:
             elif isinstance(test_case, ConversationalTestCase):
                 test_case._dataset_rank = len(conversational_test_cases)
                 conversational_test_cases.append(test_case)
+            elif isinstance(test_case, MLLMTestCase):
+                test_case._dataset_rank = len(mllm_test_cases)
+                mllm_test_cases.append(test_case)
 
         self._llm_test_cases = llm_test_cases
         self._conversational_test_cases = conversational_test_cases
+        self._mllm_test_cases = mllm_test_cases
 
     def __repr__(self):
         return (
@@ -87,22 +91,23 @@ class EvaluationDataset:
         )
 
     @property
-    def test_cases(self) -> List[Union[LLMTestCase, ConversationalTestCase]]:
-        return self._llm_test_cases + self._conversational_test_cases
+    def test_cases(self) -> List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]]:
+        return self._llm_test_cases + self._conversational_test_cases + self._mllm_test_cases
 
     @test_cases.setter
     def test_cases(
-        self, test_cases: List[Union[LLMTestCase, ConversationalTestCase]]
+        self, test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]]
     ):
         if not isinstance(test_cases, list):
             raise TypeError("'test_cases' must be a list")
 
         llm_test_cases = []
         conversational_test_cases = []
+        mllm_test_cases = []
         for test_case in test_cases:
             if not isinstance(test_case, LLMTestCase) and not isinstance(
-                test_case, ConversationalTestCase
-            ):
+                test_case, ConversationalTestCase) and not isinstance(
+                test_case, MLLMTestCase):
                 continue
 
             test_case._dataset_alias = self._alias
@@ -113,12 +118,16 @@ class EvaluationDataset:
             elif isinstance(test_case, ConversationalTestCase):
                 test_case._dataset_rank = len(conversational_test_cases)
                 conversational_test_cases.append(test_case)
+            elif isinstance(test_case, MLLMTestCase):
+                test_case._dataset_rank = len(mllm_test_cases)
+                mllm_test_cases.append(test_case)
 
         self._llm_test_cases = llm_test_cases
         self._conversational_test_cases = conversational_test_cases
+        self._mllm_test_cases = mllm_test_cases
 
     def add_test_case(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+        self, test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
     ):
         validate_test_case_type(test_case, subject="test cases")
 
@@ -130,7 +139,10 @@ class EvaluationDataset:
         elif isinstance(test_case, ConversationalTestCase):
             test_case._dataset_rank = len(self._conversational_test_cases)
             self._conversational_test_cases.append(test_case)
-
+        elif isinstance(test_case, MLLMTestCase):
+            test_case._dataset_rank = len(self._mllm_test_cases)
+            self._mllm_test_cases.append(test_case)
+    
     def __iter__(self):
         return iter(self.test_cases)
 

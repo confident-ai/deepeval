@@ -277,6 +277,71 @@ message = Message(llm_test_case=LLMTestCase(...), should_evaluate=True)
 Most metrics in `deepeval` are non-conversational metrics, and the reason why `should_evaluate` is defaulted to `True` for the **last message in a `ConversationalTestCase`**, is because often times users prefer evaluating the next best LLM response given the previous conversation context, instead of all `Message`s in a `ConversationalTestCase`.
 :::
 
+## MLLM Test Case
+
+An `MLLMTestCase` in deepeval is designed to unit test outputs from MLLM (Multimodal Large Language Model) applications. Unlike an `LLMTestCase`, which only handles textual parameters, an `MLLMTestCase` accepts both text and image inputs and outputs. This is particularly useful for evaluating tasks such as text-to-image generation or MLLM-driven image editing.
+
+:::caution
+You may only evaluate `MLLMTestCase`s using multimodal metrics such as `VIEScore`.
+:::
+
+```python
+from deepeval.test_case import MLLMTestCase
+from deepeval.types import Image
+
+mllm_test_case = MLLMTestCase(
+    # Replace this with your user input
+    input=["Change the color of the shoes to blue.", Image(url="./shoes.png", local=True)]
+    # Replace this with your actual MLLM application
+    actual_output=["The original image of red shoes now shows the shoes in blue.", Image(url="https://shoe-images.com/edited-shoes", local=False)]
+)
+```
+
+### Input
+
+The `input` mimics a user interacting with your MLLM application. Like an `LLMTestCase` input, an `MLLMTestCase` input is the direct input to your prompt template, and so **SHOULD NOT CONTAIN** your prompt template.
+
+```python
+from deepeval.test_case import MLLMTestCase
+from deepeval.types import Image
+
+mllm_test_case = MLLMTestCase(
+    input=["Change the color of the shoes to blue.", Image(url="./shoes.png", local=True)]
+)
+```
+
+:::info
+The `input` parameter accepts a list of strings and `Image`s, which is a class specific `deepeval`. The `Image` class accepts an image path and automatically sets the `local` attribute to `true` or `false` depending on whether the image is locally stored or hosted online. By default, `local` is set to `false`.
+
+````python
+### Example:
+
+```python
+from deepeval import Image
+
+# Example of using the Image class
+image_input = Image(image_path="path/to/image.jpg")
+
+# image_input.local will automatically be set to `true` if the image is local
+# and `false` if the image is hosted online.
+````
+
+:::
+
+### Actual Output
+
+The actual_output is simply what your MLLM application returns for a given input. Similarly, it also accepts a list of strings and `Image`s.
+
+```python
+from deepeval.test_case import MLLMTestCase
+from deepeval.types import Image
+
+mllm_test_case = MLLMTestCase(
+    input=["Change the color of the shoes to blue.", Image(url="./shoes.png", local=True)],
+    actual_output=["The original image of red shoes now shows the shoes in blue.", Image(url="https://shoe-images.com/edited-shoes", local=False)]
+)
+```
+
 ## Assert A Test Case
 
 Before we begin going through the final sections, we highly recommend you to login to [Confident AI](https://confident-ai.com) (the platform powering deepeval) via the CLI. This way, you can keep track of all evaluation results generated each time you execute `deepeval test run`.
@@ -287,7 +352,7 @@ deepeval login
 
 Similar to Pytest, `deepeval` allows you to assert any test case you create by calling the `assert_test` function by running `deepeval test run` via the CLI.
 
-**A test case passes only if all metrics passess.** Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
+**A test case passes only if all metrics passes.** Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
 
 ```python title="test_assert_example.py"
 # A hypothetical LLM application example

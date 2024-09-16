@@ -29,6 +29,7 @@ module.exports = {
             "metrics-contextual-relevancy",
             "metrics-tool-correctness",
             "metrics-hallucination",
+            "metrics-viescore",
             "metrics-bias",
             "metrics-toxicity",
             "metrics-ragas",
