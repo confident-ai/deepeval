@@ -1,10 +1,19 @@
 import inspect
 import json
 from typing import Any, Dict, Optional, List, Union, Tuple
-from deepeval.models import GPTModel, DeepEvalBaseLLM, MultimodalGPTModel, DeepEvalBaseMLLM
+from deepeval.models import (
+    GPTModel,
+    DeepEvalBaseLLM,
+    MultimodalGPTModel,
+    DeepEvalBaseMLLM,
+)
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 
-from deepeval.metrics import BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
+from deepeval.metrics import (
+    BaseMetric,
+    BaseConversationalMetric,
+    BaseMultimodalMetric,
+)
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
@@ -12,13 +21,19 @@ from deepeval.test_case import (
     MLLMTestCaseParams,
     ConversationalTestCase,
     Message,
+    MLLMImage,
 )
-from deepeval.types import Image
 
 
 def copy_metrics(
-    metrics: Union[List[BaseMetric], List[BaseConversationalMetric], List[BaseMultimodalMetric]]
-) -> Union[List[BaseMetric], List[BaseConversationalMetric], List[BaseMultimodalMetric]]:
+    metrics: Union[
+        List[BaseMetric],
+        List[BaseConversationalMetric],
+        List[BaseMultimodalMetric],
+    ]
+) -> Union[
+    List[BaseMetric], List[BaseConversationalMetric], List[BaseMultimodalMetric]
+]:
     copied_metrics = []
     for metric in metrics:
         metric_class = type(metric)
@@ -169,20 +184,20 @@ def check_mllm_test_case_params(
 ):
     count = 0
     for ele in test_case.input:
-        if isinstance(ele, Image):
+        if isinstance(ele, MLLMImage):
             count += 1
     if count != input_image_count:
         error_str = f"Can only evaluate test cases with '{input_image_count}' input images using the '{metric.__name__}' metric. `{count}` found."
         raise ValueError(error_str)
-    
+
     count = 0
     for ele in test_case.actual_output:
-        if isinstance(ele, Image):
+        if isinstance(ele, MLLMImage):
             count += 1
     if count != actual_output_image_count:
         error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
         raise ValueError(error_str)
-    
+
     if isinstance(test_case, MLLMTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'MLLMTestCase' using the '{metric.__name__}' metric."
         metric.error = error_str

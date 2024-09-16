@@ -286,14 +286,13 @@ You may only evaluate `MLLMTestCase`s using multimodal metrics such as `VIEScore
 :::
 
 ```python
-from deepeval.test_case import MLLMTestCase
-from deepeval.types import Image
+from deepeval.test_case import MLLMTestCase, MLLMImage
 
 mllm_test_case = MLLMTestCase(
     # Replace this with your user input
-    input=["Change the color of the shoes to blue.", Image(url="./shoes.png", local=True)]
+    input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)]
     # Replace this with your actual MLLM application
-    actual_output=["The original image of red shoes now shows the shoes in blue.", Image(url="https://shoe-images.com/edited-shoes", local=False)]
+    actual_output=["The original image of red shoes now shows the shoes in blue.", MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
 )
 ```
 
@@ -302,25 +301,24 @@ mllm_test_case = MLLMTestCase(
 The `input` mimics a user interacting with your MLLM application. Like an `LLMTestCase` input, an `MLLMTestCase` input is the direct input to your prompt template, and so **SHOULD NOT CONTAIN** your prompt template.
 
 ```python
-from deepeval.test_case import MLLMTestCase
-from deepeval.types import Image
+from deepeval.test_case import MLLMTestCase, MLLMImage
 
 mllm_test_case = MLLMTestCase(
-    input=["Change the color of the shoes to blue.", Image(url="./shoes.png", local=True)]
+    input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)]
 )
 ```
 
 :::info
-The `input` parameter accepts a list of strings and `Image`s, which is a class specific `deepeval`. The `Image` class accepts an image path and automatically sets the `local` attribute to `true` or `false` depending on whether the image is locally stored or hosted online. By default, `local` is set to `false`.
+The `input` parameter accepts a list of strings and `MLLMImage`s, which is a class specific `deepeval`. The `MLLMImage` class accepts an image path and automatically sets the `local` attribute to `true` or `false` depending on whether the image is locally stored or hosted online. By default, `local` is set to `false`.
 
 ````python
 ### Example:
 
 ```python
-from deepeval import Image
+from deepeval.test_case import MLLMImage
 
-# Example of using the Image class
-image_input = Image(image_path="path/to/image.jpg")
+# Example of using the MLLMImage class
+image_input = MLLMImage(image_path="path/to/image.jpg")
 
 # image_input.local will automatically be set to `true` if the image is local
 # and `false` if the image is hosted online.
@@ -330,15 +328,14 @@ image_input = Image(image_path="path/to/image.jpg")
 
 ### Actual Output
 
-The actual_output is simply what your MLLM application returns for a given input. Similarly, it also accepts a list of strings and `Image`s.
+The actual_output is simply what your MLLM application returns for a given input. Similarly, it also accepts a list of strings and `MLLMImage`s.
 
 ```python
-from deepeval.test_case import MLLMTestCase
-from deepeval.types import Image
+from deepeval.test_case import MLLMTestCase, MLLMImage
 
 mllm_test_case = MLLMTestCase(
-    input=["Change the color of the shoes to blue.", Image(url="./shoes.png", local=True)],
-    actual_output=["The original image of red shoes now shows the shoes in blue.", Image(url="https://shoe-images.com/edited-shoes", local=False)]
+    input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)],
+    actual_output=["The original image of red shoes now shows the shoes in blue.", MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
 )
 ```
 

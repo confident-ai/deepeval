@@ -6,7 +6,11 @@ from typing import List, Optional, Union
 import time
 import asyncio
 
-from deepeval.metrics import BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
+from deepeval.metrics import (
+    BaseMetric,
+    BaseConversationalMetric,
+    BaseMultimodalMetric,
+)
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
@@ -109,7 +113,9 @@ async def measure_metric_task(
 
 
 async def measure_metrics_with_indicator(
-    metrics: List[Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]],
+    metrics: List[
+        Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
+    ],
     test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,

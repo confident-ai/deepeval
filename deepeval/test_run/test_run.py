@@ -10,15 +10,11 @@ import portalocker
 from rich.table import Table
 from rich.console import Console
 from rich import print
-import base64
-from io import BytesIO
-from PIL import Image
 
 from deepeval.metrics import BaseMetric
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_run.api import (
     LLMApiTestCase,
-    MLLMApiTestCase,
     ConversationalApiTestCase,
     TestRunHttpResponse,
 )
@@ -92,9 +88,6 @@ class TestRun(BaseModel):
     conversational_test_cases: List[ConversationalApiTestCase] = Field(
         alias="conversationalTestCases", default_factory=lambda: []
     )
-    mllm_test_cases: List[MLLMApiTestCase] = Field(
-        alias="MLLMTestCases", default_factory=lambda: []
-    )
     metrics_scores: List[MetricScores] = Field(
         default_factory=lambda: [], alias="metricsScores"
     )
@@ -107,12 +100,10 @@ class TestRun(BaseModel):
     dataset_id: Optional[str] = Field(None, alias="datasetId")
 
     def add_test_case(
-        self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase, MLLMApiTestCase]
+        self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
     ):
         if isinstance(api_test_case, ConversationalApiTestCase):
             self.conversational_test_cases.append(api_test_case)
-        elif isinstance(api_test_case, MLLMApiTestCase):
-            self.mllm_test_cases.append(api_test_case)
         else:
             if api_test_case.conversational_instance_id is not None:
                 for conversational_test_case in self.conversational_test_cases:
@@ -151,7 +142,8 @@ class TestRun(BaseModel):
                 self.evaluation_cost += api_test_case.evaluation_cost
 
     def set_dataset_properties(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     ):
         if self.dataset_alias is None:
             self.dataset_alias = test_case._dataset_alias
@@ -238,7 +230,7 @@ class TestRun(BaseModel):
                         metrics_dict[name].append(score)
                     else:
                         metrics_dict[name] = [score]
-        
+
         for test_case in self.mllm_test_cases:
             if test_case.metrics_data is None:
                 continue
@@ -278,7 +270,7 @@ class TestRun(BaseModel):
                     test_passed += 1
                 else:
                     test_failed += 1
-        
+
         for test_case in self.mllm_test_cases:
             if test_case.success is not None:
                 if test_case.success:
@@ -373,7 +365,7 @@ class TestRunManager:
 
     def update_test_run(
         self,
-        api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase, MLLMApiTestCase],
+        api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
         test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     ):
         if self.save_to_disk:
@@ -575,7 +567,7 @@ class TestRunManager:
                     "",
                     "",
                 )
-                
+
         for index, test_case in enumerate(test_run.mllm_test_cases):
             pass_count = 0
             fail_count = 0
@@ -665,13 +657,17 @@ class TestRunManager:
             test_run.test_cases = initial_batch
             test_run.conversational_test_cases = initial_conversational_batch
             try:
-                body = test_run.model_dump(by_alias=True, exclude_none=True, exclude={"MLLMTestCases"})
+                body = test_run.model_dump(
+                    by_alias=True, exclude_none=True, exclude={"MLLMTestCases"}
+                )
             except AttributeError:
                 # Pydantic version below 2.0
-                body = test_run.dict(by_alias=True, exclude_none=True, exclude={"MLLMTestCases"})
-            if 'MLLMTestCases' in body:
-                del body['MLLMTestCases']
-            
+                body = test_run.dict(
+                    by_alias=True, exclude_none=True, exclude={"MLLMTestCases"}
+                )
+            if "MLLMTestCases" in body:
+                del body["MLLMTestCases"]
+
             api = Api()
             result = api.send_request(
                 method=HttpMethods.POST,
@@ -815,7 +811,10 @@ class TestRunManager:
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
 
-        if len(test_run.test_cases) > 0 or len(test_run.conversational_test_cases) > 0:
+        if (
+            len(test_run.test_cases) > 0
+            or len(test_run.conversational_test_cases) > 0
+        ):
             self.post_test_run(test_run)
 
 

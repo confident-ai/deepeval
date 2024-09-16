@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict
 from enum import Enum
 
+
 class LLMTestCaseParams(Enum):
     INPUT = "input"
     ACTUAL_OUTPUT = "actual_output"
@@ -12,6 +13,7 @@ class LLMTestCaseParams(Enum):
     TOOLS_CALLED = "tools_called"
     EXPECTED_TOOLS = "expected_tools"
     REASONING = "reasoning"
+
 
 @dataclass
 class LLMTestCase:
