@@ -421,7 +421,9 @@ def execute_test_cases(
                         api_test_case.update_metric_data(metric_data)
 
                     test_end_time = time.perf_counter()
-                    api_test_case.update_run_duration(run_duration)
+                    if len(mllm_metrics) > 0:
+                        run_duration = test_end_time - test_start_time
+                        api_test_case.update_run_duration(run_duration)
 
                     ### Update Test Run ###
                     test_run_manager.update_test_run(api_test_case, test_case)

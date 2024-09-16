@@ -1,7 +1,7 @@
 import pytest
 
 from deepeval.dataset import EvaluationDataset
-from deepeval import assert_test
+from deepeval import assert_test, evaluate
 from deepeval.test_case import MLLMTestCase, LLMTestCase, MLLMImage
 from deepeval.metrics import VIEScore, AnswerRelevancyMetric, VIEScoreTask
 
@@ -33,31 +33,31 @@ test_case_3 = LLMTestCase(
     tools_called=["mixer", "creamer", "mixer"],
 )
 
-dataset = EvaluationDataset(test_cases=[test_case_1, test_case_2, test_case_3])
-# dataset.evaluate([
-#     VIEScore(verbose_mode=True),
-#     VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING),
-#     AnswerRelevancyMetric()])
+dataset = EvaluationDataset(test_cases=[test_case_2, test_case_3])
+dataset.evaluate([
+    #VIEScore(verbose_mode=True),
+    VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING),
+    AnswerRelevancyMetric()])
 
-# evaluate(
-#     test_cases=[
-#         #test_case_1,
-#         test_case_2,
-#         test_case_3],
-#     metrics=[
-#         #VIEScore(verbose_mode=True),
-#         VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING),
-#         AnswerRelevancyMetric()],
-#     #run_async=False
+evaluate(
+    test_cases=[
+        test_case_1,
+        #test_case_2,
+        test_case_3],
+    metrics=[
+        VIEScore(verbose_mode=True),
+        #VIEScore(verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING),
+        AnswerRelevancyMetric()],
+    #run_async=False
+    )
+
+
+# #@pytest.mark.skip(reason="openai is expensive")
+# def test_viescore():
+#     vie_score = VIEScore(verbose_mode=True)
+#     vie_score_2 = VIEScore(
+#         verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING
 #     )
-
-
-@pytest.mark.skip(reason="openai is expensive")
-def test_viescore():
-    vie_score = VIEScore(verbose_mode=True)
-    vie_score_2 = VIEScore(
-        verbose_mode=True, task=VIEScoreTask.TEXT_TO_IMAGE_EDITING
-    )
-    assert_test(
-        test_case_2, [vie_score_2, AnswerRelevancyMetric()], run_async=False
-    )
+#     assert_test(
+#         test_case_2, [vie_score_2, AnswerRelevancyMetric()], run_async=False
+#     )
