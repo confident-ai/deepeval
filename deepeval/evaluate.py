@@ -48,7 +48,7 @@ from deepeval.tracing import get_trace_stack
 class TestResult:
     """Returned from run_test"""
     success: bool
-    metrics_data: List[MetricData]
+    metrics_data: Union[List[MetricData], None]
     conversational: bool
     input: Optional[str] = None
     actual_output: Optional[str] = None
@@ -785,6 +785,7 @@ async def a_execute_conversational_test_cases(
     api_test_case: ConversationalApiTestCase = create_api_test_case(
         test_case, count
     )
+
     test_start_time = time.perf_counter()
     await measure_metrics_with_indicator(
         metrics=metrics,
@@ -990,27 +991,29 @@ def print_test_result(test_result: Union[TestResult, MLLMTestResult]):
     print("")
     print("=" * 70 + "\n")
     print("Metrics Summary\n")
-    for metric_data in test_result.metrics_data:
-        successful = True
-        if metric_data.error is not None:
-            successful = False
-        else:
-            # This try block is for user defined custom metrics,
-            # which might not handle the score == undefined case elegantly
-            try:
-                if not metric_data.success:
-                    successful = False
-            except:
-                successful = False
 
-        if not successful:
-            print(
-                f"  - ❌ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
-            )
-        else:
-            print(
-                f"  - ✅ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
-            )
+    if test_result.metrics_data is not None:
+        for metric_data in test_result.metrics_data:
+            successful = True
+            if metric_data.error is not None:
+                successful = False
+            else:
+                # This try block is for user defined custom metrics,
+                # which might not handle the score == undefined case elegantly
+                try:
+                    if not metric_data.success:
+                        successful = False
+                except:
+                    successful = False
+
+            if not successful:
+                print(
+                    f"  - ❌ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
+                )
+            else:
+                print(
+                    f"  - ✅ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
+                )
 
     print("")
     
@@ -1039,14 +1042,15 @@ def aggregate_metric_pass_rates(test_results: List[Union[TestResult, MLLMTestRes
     metric_successes = {}
 
     for result in test_results:
-        for metric_data in result.metrics_data:
-            metric_name = metric_data.name
-            if metric_name not in metric_counts:
-                metric_counts[metric_name] = 0
-                metric_successes[metric_name] = 0
-            metric_counts[metric_name] += 1
-            if metric_data.success:
-                metric_successes[metric_name] += 1
+        if result.metrics_data:
+            for metric_data in result.metrics_data:
+                metric_name = metric_data.name
+                if metric_name not in metric_counts:
+                    metric_counts[metric_name] = 0
+                    metric_successes[metric_name] = 0
+                metric_counts[metric_name] += 1
+                if metric_data.success:
+                    metric_successes[metric_name] += 1
 
     metric_pass_rates = {
         metric: (metric_successes[metric] / metric_counts[metric])

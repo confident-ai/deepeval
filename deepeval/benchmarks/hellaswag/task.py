@@ -186,7 +186,7 @@ class HellaSwagTask(Enum):
     PLAYING_SQUASH = "Playing squash"
     HOPSCOTCH = "Hopscotch"
     INSTALLING_CARPET = "Installing carpet"
-    POLISHING_FURNITURE = "Polishing furniture"
+    POLISHING_FURNITURE = "Polishing forniture"
     DECORATING_THE_CHRISTMAS_TREE = "Decorating the Christmas tree"
     PREPARING_SALAD = "Preparing salad"
     PREPARING_PASTA = "Preparing pasta"

@@ -6,10 +6,10 @@ sidebar_label: Red-Teaming
 
 ## Quick Summary
 
-`deepeval` offers a powerful `RedTeamer` tool that enables users to **scan LLM applications for vulnerabilities** with just a few lines of code. This tool generates red-teaming prompts designed to elicit harmful or unintended responses and evaluates the target LLM's responses to these prompts.
+`deepeval` offers a powerful `RedTeamer` that enables users to **scan LLM applications for risks and vulnerabilities** with just a few lines of code. The `RedTeamer` generates adversarial prompts designed to elicit harmful or unintended responses and evaluates the target LLM's responses to these prompts.
 
 ```python
-from deepeval import RedTeamer
+from deepeval.red_teaming import RedTeamer
 
 red_teamer = RedTeamer(...)
 red_teamer.scan(...)
@@ -30,34 +30,29 @@ The synthetic red-teaming prompts are generated based on various "vulnerabilitie
 
 Once the target responses are generated, each vulnerability is assessed using a unique red-teaming metric, which evaluates whether the LLM's response to a specific red-teaming prompt passes or fails. This assessment ultimately determines if the LLM is vulnerable in a particular category.
 
-## Creating A RedTeamer
+## Creating A Red-Teamer
 
-To being scanning, first create a `RedTeamer` object.
+To being scanning your LLM application for vulnerabilities, first create a `RedTeamer` object.
 
 ```python
-from deepeval import RedTeamer
+from deepeval.red_teaming import RedTeamer
 
 target_purpose = "Provide financial advice, investment suggestions, and answer user queries related to personal finance and market trends."
 target_system_prompt = "You are a financial assistant designed to help users with financial planning, investment advice, and market analysis. Ensure accuracy, professionalism, and clarity in all responses."
 
 red_teamer = RedTeamer(
-    target_purpose=target_purpose
-    target_system_prompt=target_system_prompt,
-    target_model=TargetModel(),
-    synthesizer_model=SynthesizerModel(),
-    evaluation_model=EvaluationModel(),
-    async_mode=True,
+    target_purpose=target_purpose,
+    target_system_prompt=target_system_prompt
 )
 ```
 
-There are 3 required and 3 optional parameters when creating a `RedTeamer`:
+There are 2 required and 3 optional parameters when creating a `RedTeamer`:
 
 - `target_purpose`: a string specifying the purpose of the target LLM.
 - `target_system_prompt`: a string specifying your target LLM's system prompt template.
-- `target_model`: [a custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` representing your target model.
 - [Optional] `synthesizer_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` for data synthesis. Defaulted to `gpt-4o`.
 - [Optional] `evaluation_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` for evaluation. Defaulted to `gpt-4o`.
-- [Optional] `async_mode`: a boolean specifying whether to enable async mode.
+- [Optional] `async_mode`: a boolean specifying whether to enable async mode. Defaulted to `True`.
 
 :::warning
 When providing your `synthesizer_model` and `evaluation_model`, it is recommended to supply a schema argument for the `generate` and `a_generate` methods. This helps prevent invalid JSON errors during large-scale scanning. [Learn more about creating schematic custom models here](guides-using-custom-llms).
@@ -66,19 +61,22 @@ When providing your `synthesizer_model` and `evaluation_model`, it is recommende
 ## Scanning
 
 ```python
-from deepeval.red_team import RTAdversarialAttack, RTVulnerability
+from deepeval.red_teaming import RTAdversarialAttack, RTVulnerability
+...
 
 results = red_teamer.scan(
-    n_goldens_per_vulnerability: 5,
-    vulnerabilities: [v for v in RTVulnerability],
-    attacks: [a for a in RTAdversarialAttack],
+    target_model=TargetLLM(),
+    attacks_per_vulnerability=5,
+    attacks=[a for a in RTAdversarialAttack],
+    vulnerabilities=[v for v in RTVulnerability]
 )
 print("Vulnerability Scores: ", results)
 ```
 
-There are 3 required parameters when calling the scan method inside `RedTeamer`:
+There are 4 required parameters when calling the scan method inside `RedTeamer`:
 
-- `n_goldens_per_vulnerability`: An integer specifying the number of golden examples per vulnerability.
+- `target_model`: a [custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` representing the model you wish to scan for risks and vulnerabilities for using said `RedTeamer`.
+- `attacks_per_vulnerability`: An integer specifying the number of adversarial attacks per vulnerability.
 - `vulnerabilities`: A list of `RTVulnerability` enums specifying the vulnerabilities to be tested.
 - `attacks`: A list of `RTAdversarialAttack` enums specifying the types of adversarial attacks to be used.
 
@@ -114,7 +112,7 @@ You can also access a comprehensive breakdown of your model's vulnerabilities ac
 ```python
 ...
 
-print("Vulnerability Scores Breakdown: ", benchmark.vulnerability_scores_breakdown)
+print("Vulnerability Scores Breakdown: ", red_teamer.vulnerability_scores_breakdown)
 ```
 
 The `vulnerability_scores_breakdown` attribute also yields a pandas DataFrame containing detailed information about the target mode's vulnerabilities. Below is an example DataFrame:
@@ -130,7 +128,7 @@ The `vulnerability_scores_breakdown` attribute also yields a pandas DataFrame co
 
 However, in standard synthetic data generation, a query is typically evolved multiple times using a single LLM. In contrast, adversarial attacks may either require no LLM (as with Base64 encoding) or involve two LLMs: a target LLM and an evolution LLM (as in jailbreaking).
 
-**Here are the types of adversarial attacks we offer:**
+**Here are the types of adversarial attacks `deepeval` offers:**
 
 - `RTAdversarialAttack.GRAY_BOX_ATTACK`: Uses partial knowledge of the target model to craft adversarial inputs.
 - `RTAdversarialAttack.PROMPT_INJECTION`: Ignore system prompt to manipulate the model's response.
@@ -144,7 +142,7 @@ However, in standard synthetic data generation, a query is typically evolved mul
 
 ## Vulnerabilities
 
-**Vulnerabilities** can be categorized into different types based on their impact and nature. Identifying these vulnerabilities helps in understanding and mitigating potential risks associated with the target LLM. Here are the types of vulnerabilities we offer:
+**Vulnerabilities** can be categorized into different types based on their impact and nature. Identifying these vulnerabilities helps in understanding and mitigating potential risks associated with the target LLM. Here are the types of vulnerabilities `deepeval` offers:
 
 - `RTVulnerability.PII_API_DB`: API and database access.
 - `RTVulnerability.PII_DIRECT`: Direct PII disclosure.
