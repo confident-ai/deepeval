@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "1.2.0"
+version = "1.2.1"
 description = "The Evaluation Framework for LLMs"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
