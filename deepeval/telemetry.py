@@ -3,6 +3,7 @@ import logging
 import os
 import socket
 import sys
+import uuid
 import sentry_sdk
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -11,10 +12,16 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
 
+def get_unique_id():
+    unique_id = os.getenv("DEEPEVAL_UNIQUE_ID")
+    if unique_id is None:
+        unique_id = str(uuid.uuid4())
+        os.environ["DEEPEVAL_UNIQUE_ID"] = unique_id
+    return unique_id
+
 
 def telemetry_opt_out():
     return os.getenv("DEEPEVAL_TELEMETRY_OPT_OUT") == "YES"
-
 
 def blocked_by_firewall():
     try:
@@ -74,6 +81,7 @@ if (
 def capture_evaluation_run(type: str):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Ran {type}") as span:
+            span.set_attribute("user.unique_id", get_unique_id())
             yield span
     else:
         yield
@@ -83,17 +91,19 @@ def capture_evaluation_run(type: str):
 def capture_metric_type(metric_name: str, _track: bool = True):
     if not telemetry_opt_out() and _track:
         with tracer.start_as_current_span(metric_name) as span:
+            span.set_attribute("user.unique_id", get_unique_id())
             yield span
     else:
         yield
 
 
 @contextmanager
-def capture_synthesizer_run(max_generations: int = None):
+def capture_synthesizer_run(max_generations: int = None, method: str = None):
     if not telemetry_opt_out() and max_generations is not None:
         with tracer.start_as_current_span(
-            f"Invokved synthesizer ({max_generations})"
+            f"Invoked synthesizer ({max_generations}) | Method: {method}"
         ) as span:
+            span.set_attribute("user.unique_id", get_unique_id())
             yield span
     else:
         yield
@@ -105,6 +115,7 @@ def capture_red_teamer_run(task: str):
         with tracer.start_as_current_span(
             f"Invokved redteamer: ({task})"
         ) as span:
+            span.set_attribute("user.unique_id", get_unique_id())
             yield span
     else:
         yield
