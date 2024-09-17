@@ -40,7 +40,9 @@ def synthesizer_progress_context(
             description = f"✨ 🍰 ✨ You're generating up to {max_generations} goldens using DeepEval's latest Synthesizer (using {evaluation_model} and {embedder}, use case={use_case}, method={method})! This may take a while..."
         # Direct output to stderr, using TQDM progress bar for visual feedback
         if not progress_bar:
-            with tqdm_bar(total=max_generations, desc=description, file=sys.stderr) as progress_bar:
+            with tqdm_bar(
+                total=max_generations, desc=description, file=sys.stderr
+            ) as progress_bar:
                 yield progress_bar  # Pass progress bar to use in outer loop
         else:
             yield progress_bar

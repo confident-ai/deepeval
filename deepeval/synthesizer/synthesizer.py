@@ -222,7 +222,7 @@ class Synthesizer:
         text,
         num_evolutions: int,
         evolution_types: List[PromptEvolution],
-        progress_bar: tqdm.std.tqdm
+        progress_bar: tqdm.std.tqdm,
     ) -> List[str]:
         evolution_methods = [
             prompt_evolution_map[evolution_type.value]
@@ -242,7 +242,7 @@ class Synthesizer:
         text,
         num_evolutions: int,
         evolution_types: List[PromptEvolution],
-        progress_bar: tqdm.std.tqdm
+        progress_bar: tqdm.std.tqdm,
     ) -> List[str]:
         evolution_methods = [
             prompt_evolution_map[evolution_type.value]
@@ -354,7 +354,7 @@ class Synthesizer:
             evolved_input = await self._a_evolve_text(
                 data.input,
                 context=context,
-                num_evolutions=num_evolutions,  
+                num_evolutions=num_evolutions,
                 evolutions=evolutions,
             )
             source_file = (
@@ -505,7 +505,7 @@ class Synthesizer:
                     text=data.input,
                     num_evolutions=num_evolutions,
                     evolution_types=evolution_types,
-                    progress_bar=progress_bar
+                    progress_bar=progress_bar,
                 )
                 for data in synthetic_data
             ]
@@ -570,14 +570,13 @@ class Synthesizer:
                         text=data.input,
                         num_evolutions=num_evolutions,
                         evolution_types=evolution_types,
-                        progress_bar=progress_bar
+                        progress_bar=progress_bar,
                     )
                     new_goldens = [
                         Golden(input=evolved_prompt)
                         for evolved_prompt in evolved_prompts
                     ]
                     goldens.extend(new_goldens)
-                  
 
                 self.synthetic_goldens.extend(goldens)
                 return goldens
@@ -627,7 +626,7 @@ class Synthesizer:
                         vulnerabilities,
                         num_evolutions,
                         attacks,
-                        progress_bar
+                        progress_bar,
                     )
                     for i in range(len(contexts))
                 ]
@@ -668,7 +667,7 @@ class Synthesizer:
                     vulnerabilities,
                     use_case,
                 )
-            ) 
+            )
         else:
             contextual = contexts != None
             num_goldens = max_goldens
@@ -783,7 +782,7 @@ class Synthesizer:
                 None,
                 len(contexts) * max_goldens_per_context,
                 use_case.value,
-                progress_bar
+                progress_bar,
             ) as progress_bar:
                 tasks = [
                     self._a_generate_from_contexts(
@@ -795,7 +794,7 @@ class Synthesizer:
                         source_files,
                         index,
                         evolutions,
-                        progress_bar
+                        progress_bar,
                     )
                     for index, context in enumerate(contexts)
                 ]
@@ -807,7 +806,7 @@ class Synthesizer:
                 None,
                 len(contexts) * max_goldens_per_context,
                 use_case.value,
-                progress_bar
+                progress_bar,
             ) as progress_bar:
                 include_expected_output = True
                 tasks = [
@@ -816,7 +815,7 @@ class Synthesizer:
                         goldens,
                         include_expected_output,
                         max_goldens_per_context,
-                        progress_bar
+                        progress_bar,
                     )
                     for context in contexts
                 ]
@@ -993,7 +992,7 @@ class Synthesizer:
                 source_files,
                 evolutions=evolutions,
                 use_case=use_case,
-                progress_bar=progress_bar
+                progress_bar=progress_bar,
             )
 
     def generate_goldens_from_docs(
@@ -1059,7 +1058,7 @@ class Synthesizer:
                     self.model.get_model_name(),
                     self.embedder.get_model_name(),
                     len(contexts) * max_goldens_per_context,
-                    use_case
+                    use_case,
                 ) as progress_bar:
                     return self.generate_goldens(
                         contexts,
@@ -1069,7 +1068,7 @@ class Synthesizer:
                         source_files,
                         evolutions=evolutions,
                         use_case=use_case,
-                        progress_bar=progress_bar
+                        progress_bar=progress_bar,
                     )
 
     def save_as(self, file_type: str, directory: str) -> str:

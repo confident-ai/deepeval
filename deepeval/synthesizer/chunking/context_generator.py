@@ -28,8 +28,12 @@ class ContextGenerator:
 
         # TODO: Potential bug, calling generate_goldens_from_docs
         # twice in a notebook enviornment will not refresh source_files_to_chunks_map
-        self.doc_to_chunker_map: Optional[Dict[str, List[DocumentChunker]]] = None
-        self.source_files_to_chunks_map: Optional[Dict[str, List[DocumentChunker]]] = None
+        self.doc_to_chunker_map: Optional[Dict[str, List[DocumentChunker]]] = (
+            None
+        )
+        self.source_files_to_chunks_map: Optional[
+            Dict[str, List[DocumentChunker]]
+        ] = None
 
     ############### Generate Topics ########################
     def generate_contexts(
@@ -40,23 +44,34 @@ class ContextGenerator:
         source_files: List[str] = []
 
         # Check if chunk_size is valid for document lengths
-        min_doc_token_count = min(chunker.text_token_count for chunker in self.doc_to_chunker_map.values())
-        num_contexts_limit = 1 + math.floor((min_doc_token_count - self.chunk_size) / (self.chunk_size - self.chunk_overlap))
+        min_doc_token_count = min(
+            chunker.text_token_count
+            for chunker in self.doc_to_chunker_map.values()
+        )
+        num_contexts_limit = 1 + math.floor(
+            (min_doc_token_count - self.chunk_size)
+            / (self.chunk_size - self.chunk_overlap)
+        )
         if num_contexts_limit < num_context_per_document:
-            suggested_chunk_size = (min_doc_token_count + (self.chunk_overlap * (num_context_per_document - 1))) // num_context_per_document
+            suggested_chunk_size = (
+                min_doc_token_count
+                + (self.chunk_overlap * (num_context_per_document - 1))
+            ) // num_context_per_document
             raise ValueError(
                 f"Your smallest document is only sized {min_doc_token_count}."
                 f"Please adjust the chunk_size to no more than {suggested_chunk_size}."
             )
-        
+
         # Chunk docs
         self.source_files_to_chunks_map = {}
         for key, chunker in self.doc_to_chunker_map.items():
             self.source_files_to_chunks_map[key] = chunker.chunk_doc()
 
         # Generate contexts
-        for path, document_chunks in tqdm_bar(self.source_files_to_chunks_map.items(), desc="Processing files"):
-            num_chunks = len(document_chunks)            
+        for path, document_chunks in tqdm_bar(
+            self.source_files_to_chunks_map.items(), desc="Processing files"
+        ):
+            num_chunks = len(document_chunks)
 
             min_num_context = min(num_context_per_document, num_chunks)
             clusters = self._get_n_random_clusters(
@@ -72,6 +87,7 @@ class ContextGenerator:
     ############### Load Docs #############################
     async def _a_load_docs(self) -> Dict[str, List[Chunk]]:
         doc_to_chunker_map = {}
+
         async def a_process_document(path):
             doc_chunker = DocumentChunker(
                 self.embedder, self.chunk_size, self.chunk_overlap
@@ -79,10 +95,10 @@ class ContextGenerator:
             await doc_chunker.a_load_doc(path)
             if path not in doc_to_chunker_map:
                 doc_to_chunker_map[path] = doc_chunker
+
         tasks = [a_process_document(path) for path in self.document_paths]
         await asyncio.gather(*tasks)
         self.doc_to_chunker_map = doc_to_chunker_map
-
 
     def _load_docs(self) -> Dict[str, List[Chunk]]:
         doc_to_chunker_map = {}
@@ -94,7 +110,6 @@ class ContextGenerator:
             if path not in doc_to_chunker_map:
                 doc_to_chunker_map[path] = doc_chunker
         self.doc_to_chunker_map = doc_to_chunker_map
-
 
     ############### Search N Chunks ########################
     def _get_n_random_clusters(
@@ -112,14 +127,12 @@ class ContextGenerator:
             chunk_cluster.append(cluster)
         return chunk_cluster
 
-
     def _get_n_random_chunks(self, path: str, n: int) -> List[str]:
         self.check_if_docs_are_loaded()
 
         document_chunks = self.source_files_to_chunks_map[path]
         n = min(len(document_chunks), n)
         return random.sample(document_chunks, n)
-
 
     def _get_n_other_similar_chunks(
         self,
@@ -156,7 +169,6 @@ class ContextGenerator:
         top_n_indices = sorted_indices[:n]
         similar_chunks = [document_chunks[i] for i in top_n_indices]
         return similar_chunks
-
 
     def check_if_docs_are_loaded(self):
         if self.doc_to_chunker_map == None:

@@ -12,6 +12,7 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
 
+
 def get_unique_id():
     unique_id = os.getenv("DEEPEVAL_UNIQUE_ID")
     if unique_id is None:
@@ -22,6 +23,7 @@ def get_unique_id():
 
 def telemetry_opt_out():
     return os.getenv("DEEPEVAL_TELEMETRY_OPT_OUT") == "YES"
+
 
 def blocked_by_firewall():
     try:
