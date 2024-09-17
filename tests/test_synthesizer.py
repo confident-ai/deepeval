@@ -102,7 +102,7 @@ def test_generate_goldens(
     print("Generated goldens:", len(goldens))
     print(f"Time taken: {duration} seconds")
     dataset = EvaluationDataset(goldens=goldens)
-    dataset.push(alias=dataset_alias)
+    # dataset.push(alias=dataset_alias)
 
 
 # test_generate_goldens(synthesizer_sync, dataset_alias="QA")
@@ -179,7 +179,7 @@ def test_generate_goldens_from_docs(
     print("Generated goldens from docs:", goldens)
     print(f"Time taken: {duration} seconds")
     dataset = EvaluationDataset(goldens=goldens)
-    dataset.push(alias=dataset_alias)
+    # dataset.push(alias=dataset_alias)
 
 
 # test_generate_goldens_from_docs(synthesizer_sync, dataset_alias="QA From Docs")
@@ -214,7 +214,7 @@ def test_generate_red_teaming_goldens(
     print("Generated red teaming goldens with contexts:", len(goldens))
     print(f"Time taken: {duration} seconds")
     dataset = EvaluationDataset(goldens=goldens)
-    dataset.push(alias=dataset_alias)
+    # dataset.push(alias=dataset_alias)
 
 
 test_generate_red_teaming_goldens(
@@ -239,7 +239,7 @@ def test_generate_red_teaming_goldens(
     print("Generated red teaming goldens without context:", len(goldens))
     print(f"Time taken: {duration} seconds")
     dataset = EvaluationDataset(goldens=goldens)
-    dataset.push(alias=dataset_alias)
+    # dataset.push(alias=dataset_alias)
 
 
 test_generate_red_teaming_goldens(
@@ -273,7 +273,7 @@ def test_generate_generate_goldens_from_scratch(
     print("Generated goldens from scratch:", len(goldens))
     print(f"Time taken: {duration} seconds")
     dataset = EvaluationDataset(goldens=goldens)
-    dataset.push(alias=dataset_alias)
+    # dataset.push(alias=dataset_alias)
 
 
 test_generate_generate_goldens_from_scratch(
