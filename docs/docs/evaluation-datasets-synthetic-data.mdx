@@ -6,7 +6,9 @@ sidebar_label: Synthesizer
 
 ## Quick Summary
 
-`deepeval` offers a data `Synthesizer` for anyone to easily generate evaluation datasets from scratch. The `Synthesizer` class is a synthetic data generator that first uses an LLM to generate a series of `input`s, before evolving each `input` to make them more complex and realistic. These evolved inputs are then used to create a **list of synthetic `Golden`s**, which makes up your synthetic `EvaluationDataset`.
+DeepEval's `Synthesizer` offers a **fast and easy to automatically get started with testing** your LLM by generating high-quality evaluation datasets (inputs, expected outputs, and contexts) from scratch.
+
+The `Synthesizer` class is a synthetic data generator that first uses an LLM to generate a series of `input`s, before evolving each `input` to make them more complex and realistic. These evolved inputs are then used to create a list of synthetic `Golden`s, which makes up your synthetic `EvaluationDataset`.
 
 :::tip Did You Know?
 `deepeval`'s `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244)
@@ -27,7 +29,7 @@ synthesizer = Synthesizer()
 There are two optional parameters when creating a `Synthesizer`:
 
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
-- [Optional] `multithreading`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `embedder`: a string specifying which of OpenAI's embedding models to use, **OR** [any custom embedding model](#using-a-custom-embedding-model) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
 
 :::info
@@ -47,10 +49,6 @@ There are 4 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Gold
 
 To generate synthetic `Golden`s from documents, simply provide a list of document paths:
 
-:::note
-The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
-:::
-
 ```python
 from deepeval.synthesizer import Synthesizer
 
@@ -69,7 +67,7 @@ There are one mandatory and seven optional parameters when using the `generate_g
 - [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered for context extraction within each document. Defaulted to 1024.
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during context extraction. Defaulted to 0.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
-- [Optional] `evolutions`: a list of `Evolution`s, specifying the type of data evolution used. Defaulted to all `Evolution`s.
+- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal percentage.
 
 :::info
 `Evolution` is an `ENUM` that specifies the different data evolution techniques you wish to employee to make synthetic `Golden`s more realistic.
@@ -77,18 +75,24 @@ There are one mandatory and seven optional parameters when using the `generate_g
 ```python
 from deepeval.synthesizer import Evolution
 
-available_evolutions = [
-    Evolution.REASONING,
-    Evolution.MULTICONTEXT,
-    Evolution.CONCRETIZING,
-    Evolution.CONSTRAINED,
-    Evolution.COMPARATIVE,
-    Evolution.HYPOTHETICAL,
-    Evolution.IN_BREADTH
-]
+available_evolutions = {
+    Evolution.REASONING: 1/7,
+    Evolution.MULTICONTEXT: 1/7,
+    Evolution.CONCRETIZING: 1/7,
+    Evolution.CONSTRAINED: 1/7,
+    Evolution.COMPARATIVE: 1/7,
+    Evolution.HYPOTHETICAL: 1/7,
+    Evolution.IN_BREADTH: 1/7,
+}
 ```
 
 For those interested in what these evolutions mean, you can [read this article here.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
+:::
+
+The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
+
+:::caution
+The synthesizer will raise an error if `chunk_size` is too large for `max_goldens_per_document`, and suggest **the appropriate number of chunks** to use.
 :::
 
 ### 2. Generating From Provided Contexts
@@ -118,7 +122,7 @@ There are one mandatory and five optional parameters when using the `generate_go
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
 - [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
-- [Optional] `evolutions`: a list of `Evolution`s, specifying the type of data evolution used. Defaulted to all `Evolution`s.
+- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal percentage.
 
 :::caution
 While the previous methods first use an LLM to generate a series of inputs based on the provided context before evolving them, `generate_goldens_from_inputs` simply evolves the provided list of inputs into more complex and diverse `Golden`s. It's also important to note that this method will only populate the input field of each generated `Golden`.
@@ -151,8 +155,8 @@ There are six optional parameters when using the `generate_red_teaming_goldens` 
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
 - [Optional] `max_goldens`: the maximum number of golden to be generated if `contexts` isn't supplied. If `contexts` is supplied, `max_goldens` will be confined to the length of `contexts`. Defaulted to 2.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated `Golden`. Defaulted to 1.
-- [Optional] `attacks`: a list of `RTAdversarialAttack`s, specifying the types of adversarial attacks you want generated for your synthetic `Golden`s. Defaulted to all `RTAdversarialAttack`s.
-- [Optional] `vulnerabilities`: a list of `RTVulnerability`s, representing the undesirable vulnerability you are trying to elicit. Defaulted to all `RTVulnerability`s.
+- [Optional] `attacks`: a dict of `RTAdversarialAttack`s keys and sampling probability values, specifying the distribution of adversarial attacks you want generated for your synthetic `Golden`s. Defaulted to all `RTAdversarialAttack`s.
+- [Optional] `vulnerabilities`: a dict of `RTVulnerability`s keys and sampling probability values, representing the distribution of undesirable vulnerability you are trying to elicit. Defaulted to all `RTVulnerability`s.
 
 :::info
 `RTAdversarialAttack` is an `ENUM` that specifies the different **types of red teaming** attacks (prompt injection, prompt probing, etc.) you wish to include in your final dataset, while the `RTVulnerability` `ENUM` specifies the type of vulnerability and risk you are trying to assess your LLM application on (hallucination, bias, etc.):
@@ -160,20 +164,20 @@ There are six optional parameters when using the `generate_red_teaming_goldens` 
 ```python
 from deepeval.synthesizer import RTAdversarialAttack, RTVulnerability
 
-available_red_teaming_attacks = [
-    RTAdversarialAttack.PROMPT_INJECTION,
-    RTAdversarialAttack.PROMPT_PROBING,
-    RTAdversarialAttack.GRAY_BOX_ATTACK,
-    RTAdversarialAttack.JAIL_BREAKING
-]
+available_red_teaming_attacks =  {
+    RTAdversarialAttack.PROMPT_INJECTION: 0.25,
+    RTAdversarialAttack.PROMPT_PROBING: 0.25,
+    RTAdversarialAttack.GRAY_BOX_ATTACK: 0.25,
+    RTAdversarialAttack.JAILBREAKING: 0.25,
+},
 
-available_red_teaming_vulnerabilities = [
-    RTVulnerability.HALLUCINATION,
-    RTVulnerability.OFFENSIVE,
-    RTVulnerability.BIAS,
-    RTVulnerability.DATA_LEAKAGE,
-    RTVulnerability.UNFORMATTED
-]
+available_red_teaming_vulnerabilities = {
+    RTVulnerability.BIAS: 0.2,
+    RTVulnerability.DATA_LEAKAGE: 0.2,
+    RTVulnerability.HALLUCINATION: 0.2,
+    RTVulnerability.OFFENSIVE: 0.2,
+    RTVulnerability.UNFORMATTED: 0.2,
+}
 ```
 
 [Click here to learn more](https://www.confident-ai.com/blog/red-teaming-llms-a-step-by-step-guide) about the different types of adversarial attacks and vulnerabilities used for red teaming.
@@ -202,22 +206,6 @@ synthesizer.generate_goldens_from_scratch(
 
 This method is a **2-step function** that first generates a list of prompts about a given subject for a certain task and in a certain output format, before using the generated list of prompts to generate more prompts through data evolution.
 
-:::info```python
-from deepeval.synthesizer import Synthesizer
-
-synthesizer = Synthesizer()
-synthesizer.generate_goldens_from_scratch(
-subject="Harmful and toxic prompts, with emphasis on dark humor",
-task="Red-team LLMs",
-output_format="string",
-num_initial_goldens=25,
-num_evolutions=20
-)
-
-````
-
-This method is a **2-step function** that first generates a list of prompts about a given subject for a certain task and in a certain output format, before using the generated list of prompts to generate more prompts through data evolution.
-
 :::info
 The subject, task, and output format parameters are all strings that are inserted into a predefined prompt template, meaning these parameters are **flexible and will need to be iterated on** for optimal results.
 :::
@@ -229,9 +217,8 @@ There are four mandatory and three optional parameters when using the `generate_
 - `output_format`: a string, representing the expected output format. This is not equivalent to python `type`s but simply gives you more control over the structure of your synthetic data.
 - `num_initial_goldens`: the number of goldens generated before consequent evolutions
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated prompt. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
-- [Optional] `evolution_types`: a list of `PromptEvolution`, specifying methods used during data evolution. Defaulted to all `PromptEvolution`s.
-The subject, task, and output format parameters are all strings that are inserted into a predefined prompt template, meaning these parameters are **flexible and will need to be iterated on** for optimal results.
-
+- [Optional] `evolutions`: a dict with `PropmtEvolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal percentage.
+  The subject, task, and output format parameters are all strings that are inserted into a predefined prompt template, meaning these parameters are **flexible and will need to be iterated on** for optimal results.
 
 :::info
 `PromptEvolution` is an `ENUM` that specifies the different data evolution techniques you wish to employee to make synthetic contextless `Golden`s more realistic.
@@ -239,18 +226,37 @@ The subject, task, and output format parameters are all strings that are inserte
 ```python
 from deepeval.synthesizer import PromptEvolution
 
-available_evolutions = [
-    PromptEvolution.REASONING,
-    PromptEvolution.CONCRETIZING,
-    PromptEvolution.CONSTRAINED,
-    PromptEvolution.COMPARATIVE,
-    PromptEvolution.HYPOTHETICAL,
-    PromptEvolution.IN_BREADTH
-]
+available_evolutions = {
+    PromptEvolution.REASONING: 1/6,
+    PromptEvolution.CONCRETIZING: 1/6,
+    PromptEvolution.CONSTRAINED: 1/6,
+    PromptEvolution.COMPARATIVE: 1/6,
+    PromptEvolution.HYPOTHETICAL: 1/6,
+    PromptEvolution.IN_BREADTH: 1/6
+}
 ```
 
 For those interested in what these evolutions mean, you can [read this article here.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
 :::
+
+## Convert to DataFrame
+
+To convert your synthetically generated goldens into a DataFrame, simply call the `to_pandas` method on the synthesizer object:
+
+```python
+dataframe = synthesizer.to_pandas()
+print(dataframe)
+```
+
+### Sample Dataframe
+
+Here’s an example of what the resulting DataFrame might look like:
+
+| Input                                          | Actual Output | Expected Output | Context                                                               | Retrieval Context | Chunks per Context | Context Length | Attack Type | Evolutions | Source File |
+| ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | ------------------ | -------------- | ----------- | ---------- | ----------- |
+| Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                  | 60             | None        | None       | file1.txt   |
+| What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                  | 55             | None        | None       | file2.txt   |
+| ...                                            | ...           | ...             | ...                                                                   | ...               | ...                | ...            | ...         | ...        | ...         |
 
 ## Saving Generated Goldens
 
@@ -261,7 +267,7 @@ synthesizer.save_as(
     file_type='json', # or 'csv'
     directory="./synthetic_data"
 )
-````
+```
 
 ## Using Synthesizer Within An Evaluation Dataset
 
@@ -378,7 +384,7 @@ deepeval set-local-model --model-name=<model_name> \
     --api-key="ollama"
 ```
 
-Where model_name is one of the LLM that appears when executing `ollama list`. 
+Where model_name is one of the LLM that appears when executing `ollama list`.
 
 If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
 
@@ -399,8 +405,6 @@ To revert back to the default OpenAI embeddings run:
 ```console
 deepeval unset-local-embeddings
 ```
-
-
 
 For additional instructions about LLM model and embeddings model availability and base URLs, consult the provider's documentation.
 

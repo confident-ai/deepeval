@@ -1131,7 +1131,7 @@ class Synthesizer:
                 if _send_data == True:
                     self.wrap_up_synthesis()
                 return goldens
-    
+     
 
     def to_pandas(self):
         # Prepare data for the DataFrame
