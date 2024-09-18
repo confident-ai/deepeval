@@ -478,7 +478,6 @@ class EvaluationDataset:
             RTVulnerability.UNFORMATTED,
         ],
         use_case: UseCase = UseCase.QA,
-        _show_indicator: bool = True,
     ):
         from deepeval.synthesizer import Synthesizer
 
@@ -494,9 +493,9 @@ class EvaluationDataset:
                 max_goldens=max_goldens,
                 num_evolutions=num_evolutions,
                 attacks=attacks,
-                _show_indicator=_show_indicator,
                 vulnerabilities=vulnerabilities,
                 use_case=use_case,
+                _send_data=False
             )
         )
 
@@ -535,6 +534,7 @@ class EvaluationDataset:
                 source_files=source_files,
                 evolutions=evolutions,
                 use_case=use_case,
+                _send_data=False
             )
         )
 
@@ -555,6 +555,7 @@ class EvaluationDataset:
             Evolution.HYPOTHETICAL,
             Evolution.IN_BREADTH,
         ],
+        use_case: UseCase = UseCase.QA,
         synthesizer=None,
     ):
         from deepeval.synthesizer import Synthesizer
@@ -573,6 +574,8 @@ class EvaluationDataset:
                 chunk_overlap=chunk_overlap,
                 num_evolutions=num_evolutions,
                 evolutions=evolutions,
+                use_case=use_case,
+                _send_data=False
             )
         )
 
