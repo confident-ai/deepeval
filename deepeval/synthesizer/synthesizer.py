@@ -1017,59 +1017,59 @@ class Synthesizer:
         if self.embedder is None:
             self.embedder = OpenAIEmbeddingModel()
 
-            if self.async_mode:
-                loop = get_or_create_event_loop()
-                return loop.run_until_complete(
-                    self.a_generate_goldens_from_docs(
-                        document_paths,
-                        include_expected_output,
-                        max_goldens_per_document,
-                        chunk_size,
-                        chunk_overlap,
-                        num_evolutions,
-                        evolutions,
-                        use_case,
-                    )
-                )
-            else:
-                if self.context_generator is None:
-                    self.context_generator = ContextGenerator(
-                        document_paths,
-                        embedder=self.embedder,
-                        chunk_size=chunk_size,
-                        chunk_overlap=chunk_overlap,
-                    )
-
-                self.context_generator._load_docs()
-                max_goldens_per_context = 2
-                if max_goldens_per_document < max_goldens_per_context:
-                    max_goldens_per_context = 1
-                num_context_per_document = math.floor(
-                    max_goldens_per_document / max_goldens_per_context
-                )
-                contexts, source_files = (
-                    self.context_generator.generate_contexts(
-                        num_context_per_document=num_context_per_document
-                    )
-                )
-
-                with synthesizer_progress_context(
-                    "docs",
-                    self.model.get_model_name(),
-                    self.embedder.get_model_name(),
-                    len(contexts) * max_goldens_per_context,
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            return loop.run_until_complete(
+                self.a_generate_goldens_from_docs(
+                    document_paths,
+                    include_expected_output,
+                    max_goldens_per_document,
+                    chunk_size,
+                    chunk_overlap,
+                    num_evolutions,
+                    evolutions,
                     use_case,
-                ) as progress_bar:
-                    return self.generate_goldens(
-                        contexts,
-                        include_expected_output,
-                        max_goldens_per_context,
-                        num_evolutions,
-                        source_files,
-                        evolutions=evolutions,
-                        use_case=use_case,
-                        progress_bar=progress_bar,
-                    )
+                )
+            )
+        else:
+            if self.context_generator is None:
+                self.context_generator = ContextGenerator(
+                    document_paths,
+                    embedder=self.embedder,
+                    chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap,
+                )
+
+            self.context_generator._load_docs()
+            max_goldens_per_context = 2
+            if max_goldens_per_document < max_goldens_per_context:
+                max_goldens_per_context = 1
+            num_context_per_document = math.floor(
+                max_goldens_per_document / max_goldens_per_context
+            )
+            contexts, source_files = (
+                self.context_generator.generate_contexts(
+                    num_context_per_document=num_context_per_document
+                )
+            )
+
+            with synthesizer_progress_context(
+                "docs",
+                self.model.get_model_name(),
+                self.embedder.get_model_name(),
+                len(contexts) * max_goldens_per_context,
+                use_case,
+            ) as progress_bar:
+                return self.generate_goldens(
+                    contexts,
+                    include_expected_output,
+                    max_goldens_per_context,
+                    num_evolutions,
+                    source_files,
+                    evolutions=evolutions,
+                    use_case=use_case,
+                    progress_bar=progress_bar,
+                )
 
     def save_as(self, file_type: str, directory: str) -> str:
         if file_type not in valid_file_types:
