@@ -1047,10 +1047,8 @@ class Synthesizer:
             num_context_per_document = math.floor(
                 max_goldens_per_document / max_goldens_per_context
             )
-            contexts, source_files = (
-                self.context_generator.generate_contexts(
-                    num_context_per_document=num_context_per_document
-                )
+            contexts, source_files = self.context_generator.generate_contexts(
+                num_context_per_document=num_context_per_document
             )
 
             with synthesizer_progress_context(
