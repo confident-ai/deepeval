@@ -15,14 +15,17 @@ from deepeval.confident.types import (
     ConfidentEvaluateResponseData,
 )
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case.utils import check_valid_test_cases_type
 from deepeval.utils import is_confident
 
 
 def confident_evaluate(
     experiment_name: str,
-    test_cases: List[Union[LLMTestCase, ConversationalTestCase]],
+    test_cases: Union[List[LLMTestCase], List[ConversationalTestCase]],
     disable_browser_opening: Optional[bool] = False,
 ):
+    check_valid_test_cases_type(test_cases)
+
     if is_confident():
         response = None
         with Progress(

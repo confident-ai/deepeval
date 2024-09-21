@@ -638,6 +638,9 @@ class TestRunManager:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
 
+            print(body)
+            return
+
             api = Api()
             result = api.send_request(
                 method=HttpMethods.POST,

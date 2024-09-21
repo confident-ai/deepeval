@@ -9,6 +9,7 @@ from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm
 
 from deepeval.metrics.utils import copy_metrics
+from deepeval.test_case.utils import check_valid_test_cases_type
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -176,9 +177,10 @@ def create_api_test_case(
         return api_test_case
     else:
         # LLM and MLLM test case
-        if llm_test_case_lookup_map.get(id(test_case)):
-            api_test_case = llm_test_case_lookup_map[id(test_case)]
-            return llm_test_case_lookup_map[id(test_case)]
+        instance_id = id(test_case)
+        if llm_test_case_lookup_map.get(instance_id):
+            api_test_case = llm_test_case_lookup_map[instance_id]
+            return llm_test_case_lookup_map[instance_id]
 
         if conversational_instance_id:
             success = None
@@ -198,6 +200,8 @@ def create_api_test_case(
                 name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
             order = test_case._dataset_rank
             trace_stack = get_trace_stack()
+
+        print(conversational_instance_id, "@")
 
         if isinstance(test_case, LLMTestCase):
             api_test_case = LLMApiTestCase(
@@ -219,7 +223,7 @@ def create_api_test_case(
                 traceStack=trace_stack,
                 conversational_instance_id=conversational_instance_id,
             )
-        else:
+        elif isinstance(test_case, MLLMTestCase):
             api_test_case = LLMApiTestCase(
                 name=name,
                 multimodalInput=test_case.input,
@@ -235,6 +239,7 @@ def create_api_test_case(
                 conversational_instance_id=conversational_instance_id,
             )
 
+        llm_test_case_lookup_map[instance_id] = api_test_case
         return api_test_case
 
 
@@ -545,8 +550,8 @@ async def a_execute_test_cases(
                     test_cases.append(message.llm_test_case)
 
     llm_test_case_counter = -1
-    conversational_test_case_counter = -1
     mllm_test_case_counter = -1
+    conversational_test_case_counter = -1
     test_results: List[Union[TestResult, MLLMTestCase]] = []
     tasks = []
 
@@ -920,7 +925,9 @@ def assert_test(
 
 
 def evaluate(
-    test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
+    test_cases: Union[
+        List[Union[LLMTestCase, MLLMTestCase]], List[ConversationalTestCase]
+    ],
     metrics: List[BaseMetric],
     hyperparameters: Optional[Dict[str, Union[str, int, float]]] = None,
     run_async: bool = True,
@@ -932,6 +939,8 @@ def evaluate(
     verbose_mode: Optional[bool] = None,
     throttle_value: int = 0,
 ):
+    check_valid_test_cases_type(test_cases)
+
     if hyperparameters is not None:
         if (
             hyperparameters.get("model") is None
