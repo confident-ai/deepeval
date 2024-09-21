@@ -201,8 +201,6 @@ def create_api_test_case(
             order = test_case._dataset_rank
             trace_stack = get_trace_stack()
 
-        print(conversational_instance_id, "@")
-
         if isinstance(test_case, LLMTestCase):
             api_test_case = LLMApiTestCase(
                 name=name,
