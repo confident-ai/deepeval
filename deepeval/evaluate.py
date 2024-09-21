@@ -884,7 +884,7 @@ def assert_test(
                 throttle_value=0,
                 save_to_disk=get_is_running_deepeval(),
                 show_indicator=True,
-                _use_bar_indicator=False,
+                _use_bar_indicator=True,
             )
         )[0]
     else:
