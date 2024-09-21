@@ -86,7 +86,7 @@ strict_mode = False
 verbose_mode = True
 
 
-# @pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -157,12 +157,12 @@ def test_everything():
     )
     c_test_case = ConversationalTestCase(
         messages=[
-            Message(should_evaluate=False, llm_test_case=test_case),
+            Message(should_evaluate=True, llm_test_case=test_case),
             Message(should_evaluate=False, llm_test_case=test_case),
         ]
     )
     assert_test(
-        c_test_case,
+        test_case,
         [
             # metric1,
             # metric2,
@@ -174,7 +174,7 @@ def test_everything():
             # metric8,
             # metric9,
             # metric10,
-            # metric11,
+            metric11,
             metric12,
             metric13,
         ],
@@ -217,6 +217,13 @@ def test_everything_2():
         context=["I love coffee"],
         expected_tools=["mixer", "creamer", "dripper"],
         tools_called=["mixer", "creamer", "mixer"],
+    )
+    c_test_case = ConversationalTestCase(
+        name="testing_",
+        messages=[
+            Message(should_evaluate=True, llm_test_case=test_case),
+            Message(should_evaluate=False, llm_test_case=test_case),
+        ],
     )
     assert_test(
         test_case,

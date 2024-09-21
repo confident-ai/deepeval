@@ -123,9 +123,10 @@ class TestRun(BaseModel):
                                 api_test_case.evaluation_cost
                             )
                         else:
-                            conversational_test_case.evaluation_cost += (
-                                api_test_case.evaluation_cost
-                            )
+                            if api_test_case.evaluation_cost is not None:
+                                conversational_test_case.evaluation_cost += (
+                                    api_test_case.evaluation_cost
+                                )
 
                         conversational_test_case.run_duration += (
                             api_test_case.run_duration
@@ -391,6 +392,9 @@ class TestRunManager:
         table.add_column("Overall Success Rate", justify="left")
 
         for index, test_case in enumerate(test_run.test_cases):
+            if test_case.metrics_data is None:
+                continue
+
             pass_count = 0
             fail_count = 0
             test_case_name = test_case.name
@@ -450,44 +454,45 @@ class TestRunManager:
             fail_count = 0
             conversational_test_case_name = conversational_test_case.name
 
-            for metric_data in conversational_test_case.metrics_data:
-                if metric_data.success:
-                    pass_count += 1
-                else:
-                    fail_count += 1
-
-            table.add_row(
-                conversational_test_case_name,
-                "",
-                "",
-                "",
-                f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
-            )
-
-            for metric_data in conversational_test_case.metrics_data:
-                if metric_data.error:
-                    status = "[red]ERRORED[/red]"
-                elif metric_data.success:
-                    status = "[green]PASSED[/green]"
-                else:
-                    status = "[red]FAILED[/red]"
-
-                evaluation_model = metric_data.evaluation_model
-                if evaluation_model is None:
-                    evaluation_model = "n/a"
-
-                if metric_data.score is not None:
-                    metric_score = round(metric_data.score, 2)
-                else:
-                    metric_score = None
-
+            if conversational_test_case.metrics_data is not None:
+                for metric_data in conversational_test_case.metrics_data:
+                    if metric_data.success:
+                        pass_count += 1
+                    else:
+                        fail_count += 1
                 table.add_row(
+                    conversational_test_case_name,
                     "",
-                    str(metric_data.name),
-                    f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
-                    status,
                     "",
+                    "",
+                    f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
                 )
+
+            if conversational_test_case.metrics_data is not None:
+                for metric_data in conversational_test_case.metrics_data:
+                    if metric_data.error:
+                        status = "[red]ERRORED[/red]"
+                    elif metric_data.success:
+                        status = "[green]PASSED[/green]"
+                    else:
+                        status = "[red]FAILED[/red]"
+
+                    evaluation_model = metric_data.evaluation_model
+                    if evaluation_model is None:
+                        evaluation_model = "n/a"
+
+                    if metric_data.score is not None:
+                        metric_score = round(metric_data.score, 2)
+                    else:
+                        metric_score = None
+
+                    table.add_row(
+                        "",
+                        str(metric_data.name),
+                        f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
+                        status,
+                        "",
+                    )
 
             for test_case in conversational_test_case.messages:
                 if test_case.metrics_data is None:
@@ -543,48 +548,6 @@ class TestRunManager:
                     "",
                     "",
                     "",
-                    "",
-                )
-            pass_count = 0
-            fail_count = 0
-            test_case_name = test_case.name
-
-            for metric_data in test_case.metrics_data:
-                if metric_data.success:
-                    pass_count += 1
-                else:
-                    fail_count += 1
-
-            table.add_row(
-                test_case_name,
-                "",
-                "",
-                "",
-                f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
-            )
-
-            for metric_data in test_case.metrics_data:
-                if metric_data.error:
-                    status = "[red]ERRORED[/red]"
-                elif metric_data.success:
-                    status = "[green]PASSED[/green]"
-                else:
-                    status = "[red]FAILED[/red]"
-
-                evaluation_model = metric_data.evaluation_model
-                if evaluation_model is None:
-                    evaluation_model = "n/a"
-
-                if metric_data.score is not None:
-                    metric_score = round(metric_data.score, 2)
-                else:
-                    metric_score = None
-
-                table.add_row(
-                    "",
-                    str(metric_data.name),
-                    f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
-                    status,
                     "",
                 )
 
