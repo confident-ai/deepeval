@@ -1,9 +1,6 @@
-from chromadb.api.models.Collection import Collection
 from typing import List, Tuple, Dict, Optional
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm as tqdm_bar
-import chromadb
-import asyncio
 import random
 import math
 import os
@@ -20,6 +17,8 @@ class ContextGenerator:
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
     ):
+        from chromadb.api.models.Collection import Collection
+
         self.embedder = embedder
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -155,6 +154,8 @@ class ContextGenerator:
 
     async def _a_load_docs(self):
         async def a_process_document(path):
+            import chromadb
+
             try:
                 # Create ChromaDB client
                 full_document_path, _ = os.path.splitext(path)
@@ -187,6 +188,8 @@ class ContextGenerator:
 
     def _load_docs(self):
         for path in tqdm_bar(self.document_paths, "✨ 🚀 ✨ Loading Documents"):
+            import chromadb
+
             try:
                 # Create ChromaDB client
                 full_document_path, _ = os.path.splitext(path)

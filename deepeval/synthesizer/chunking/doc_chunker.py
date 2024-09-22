@@ -1,5 +1,4 @@
 from langchain_core.documents import Document as LCDocument
-from chromadb.api.models.Collection import Collection
 from langchain_community.document_loaders import (
     PyPDFLoader,
     TextLoader,
@@ -9,10 +8,6 @@ from langchain_community.document_loaders.base import BaseLoader
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
 from typing import Optional, List, Dict
-from pydantic import BaseModel
-import numpy as np
-import chromadb
-import uuid
 import os
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
@@ -25,6 +20,8 @@ class DocumentChunker:
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
     ):
+        from chromadb.api.models.Collection import Collection
+
         self.source_file: Optional[str] = None
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -50,6 +47,8 @@ class DocumentChunker:
             raise ValueError(
                 "Document Chunker has yet to properly load documents"
             )
+
+        import chromadb
 
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
@@ -86,6 +85,8 @@ class DocumentChunker:
             raise ValueError(
                 "Document Chunker has yet to properly load documents"
             )
+
+        import chromadb
 
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)

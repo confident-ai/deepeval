@@ -22,21 +22,21 @@ test_case2 = ConversationalTestCase(
     ]
 )
 
-# confident_evaluate(experiment_name="Redteam", test_cases=[test_case, LLMTestCase(input="ok", actual_output="what?")])
+confident_evaluate(experiment_name="Convo", test_cases=[test_case])
 
 
-evaluate(
-    test_cases=[
-        LLMTestCase(
-            input="Message input", actual_output="Message actual output"
-        )
-    ],
-    metrics=[
-        AnswerRelevancyMetric(),
-        BiasMetric(),
-        FaithfulnessMetric(),
-        ConversationCompletenessMetric(),
-    ],
-    run_async=True,
-    ignore_errors=True,
-)
+# evaluate(
+#     test_cases=[
+#         LLMTestCase(
+#             input="Message input", actual_output="Message actual output"
+#         )
+#     ],
+#     metrics=[
+#         AnswerRelevancyMetric(),
+#         BiasMetric(),
+#         FaithfulnessMetric(),
+#         ConversationCompletenessMetric(),
+#     ],
+#     run_async=True,
+#     ignore_errors=True,
+# )
