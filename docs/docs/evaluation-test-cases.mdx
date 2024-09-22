@@ -235,12 +235,12 @@ test_case = LLMTestCase(
 
 ## Conversational Test Case
 
-A `ConversationalTestCase` in `deepeval` is simply a list of `Message`s, and a `Message` is composed of an `LLMTestCase`s. While an `LLMTestCase` represents an individual LLM interaction, a `ConversationalTestCase` encapsulates a series of `LLMTestCase`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
+A `ConversationalTestCase` in `deepeval` is simply a list of conversation `turns`s, and a turn is of type `LLMTestCase`s. While an `LLMTestCase`/turn represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `LLMTestCase`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
 
-While you cannot use a conversational metric on an `LLMTestCase`, a `ConversationalTestCase` can be evaluated using both non-conversational and conversational metrics.
+While you cannot use a conversational metric on an `LLMTestCase`, a `ConversationalTestCase` can be evaluated using **both non-conversational and conversational metrics.**
 
 ```python
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, Message
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 
 llm_test_case = LLMTestCase(
     # Replace this with your user input
@@ -249,32 +249,15 @@ llm_test_case = LLMTestCase(
     actual_output="Quite frankly, I don't want to know..."
 )
 
-test_case = ConversationalTestCase(
-    messages=[Message(llm_test_case=llm_test_case)]
-)
+test_case = ConversationalTestCase(turns=[llm_test_case])
 ```
 
 :::tip Did you know?
-You can apply both non-conversational and conversational metrics to a `ConversationalTestCase`. Non-conversational metrics (which are metrics used for individual `LLMTestCase`s instead), when applied to a `ConversationalTestCase`, will simply evaluate `Message`s in a `ConversationalTestCase` individually depending on whether `should_evaluate` is `True`.
-
-Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly specified, the term 'metrics' also refer to non-conversational metrics throughout `deepeval`.
+You can apply both non-conversational and conversational metrics to a `ConversationalTestCase`. Conversational metrics evaluate the entire conversational as a whole, and non-conversational metrics (which are metrics used for individual `LLMTestCase`s), when applied to a `ConversationalTestCase`, will evaluate the **last** turn in a `ConversationalTestCase`. This is because often times users prefer evaluating the last best LLM `actual_output` given the previous conversation context, instead of individual `turns` in a `ConversationalTestCase`.
 :::
 
-### Message
-
-A `Message` in `deepeval` is what makes up a `ConversationalTestCase`. It has the following parameters:
-
-- `llm_test_case`: an `LLMTestCase`, conversational metrics will evaluate a conversation based on the provided `LLMTestCase` for each `Message`.
-- `should_evaluate`: a boolean when set to `True`, will enable the evaluation of said `llm_test_case` via non-conversational `deepeval` metrics, as if it is an individual `LLMTestCase`. When not specified, the `should_evaluate` parameter is defaulted to `False` for **all `Message`s except for the last one** in a `ConversationalTestCase`. The `should_evaluate` parameter's only purpose is to determine whether it should be evaluated individually when a non-conversational metric is applied, and has no bearing on whether it should be evaluated or considered for evaluation for conversational metrics.
-
-```python
-from deepeval.test_case import LLMTestCase, Message
-
-message = Message(llm_test_case=LLMTestCase(...), should_evaluate=True)
-```
-
-:::info
-Most metrics in `deepeval` are non-conversational metrics, and the reason why `should_evaluate` is defaulted to `True` for the **last message in a `ConversationalTestCase`**, is because often times users prefer evaluating the next best LLM response given the previous conversation context, instead of all `Message`s in a `ConversationalTestCase`.
+:::note
+Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly specified, the term 'metrics' also refer to non-conversational metrics throughout `deepeval`.
 :::
 
 ## MLLM Test Case

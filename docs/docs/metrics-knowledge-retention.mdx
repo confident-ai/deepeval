@@ -10,7 +10,7 @@ The knowledge retention metric is a conversational metric that determines whethe
 
 ## Required Arguments
 
-To use the `KnowledgeRetentionMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`s for each `Message` in a `ConversationalTestCase`:
+To use the `KnowledgeRetentionMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`s for each turn in a `ConversationalTestCase`:
 
 - `input`
 - `actual_output`
@@ -22,7 +22,7 @@ Let's take this conversation as an example:
 ```python
 from deepeval.test_case import LLMTestCase
 
-messages = [
+turns = [
     LLMTestCase(
         input="",
         actual_output="Hello! I'm here to assist you with opening a new bank account. To start, may I have your full name, please?"
@@ -85,7 +85,7 @@ from deepeval.metrics import KnowledgeRetentionMetric
 from deepeval.test_case import ConversationalTestCase
 ...
 
-test_case = ConversationalTestCase(messages=messages)
+test_case = ConversationalTestCase(turns=turns)
 metric = KnowledgeRetentionMetric(threshold=0.5)
 
 metric.measure(test_case)
@@ -105,9 +105,9 @@ There are five optional parameters when creating a `KnowledgeRetentionMetric`:
 
 The `KnowledgeRetentionMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Messages without Knowledge Attritions}}{\text{Total Number of Messages}}" />
+<Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Turns without Knowledge Attritions}}{\text{Total Number of Turns}}" />
 
-The `KnowledgeRetentionMetric` first uses an LLM to extract knowledge gained throughout `messages`, before using the same LLM to determine whether each corresponding LLM responses indicates an inability to recall said knowledge.
+The `KnowledgeRetentionMetric` first uses an LLM to extract knowledge gained throughout `turns`, before using the same LLM to determine whether each corresponding LLM responses indicates an inability to recall said knowledge.
 
 :::info
 Unlike other metrics, the `KnowledgeRetentionMetric` is still in beta, and we would love to hear any suggestions on our [discord channel.](https://discord.com/invite/a3K9c8GRGt)

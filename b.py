@@ -24,12 +24,13 @@ test_case2 = ConversationalTestCase(
 
 # confident_evaluate(experiment_name="Redteam", test_cases=[test_case, LLMTestCase(input="ok", actual_output="what?")])
 
-print(test_case.turns)
-
-[print(turn) for index, turn in enumerate(test_case.turns)]
 
 evaluate(
-    test_cases=[test_case],
+    test_cases=[
+        LLMTestCase(
+            input="Message input", actual_output="Message actual output"
+        )
+    ],
     metrics=[
         AnswerRelevancyMetric(),
         BiasMetric(),
