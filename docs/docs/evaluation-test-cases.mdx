@@ -253,7 +253,7 @@ test_case = ConversationalTestCase(turns=[llm_test_case])
 ```
 
 :::tip Did you know?
-You can apply both non-conversational and conversational metrics to a `ConversationalTestCase`. Conversational metrics evaluate the entire conversational as a whole, and non-conversational metrics (which are metrics used for individual `LLMTestCase`s), when applied to a `ConversationalTestCase`, will evaluate the **last** turn in a `ConversationalTestCase`. This is because often times users prefer evaluating the last best LLM `actual_output` given the previous conversation context, instead of individual `turns` in a `ConversationalTestCase`.
+You can apply both non-conversational and conversational metrics to a `ConversationalTestCase`. Conversational metrics evaluate the entire conversational as a whole, and non-conversational metrics (which are metrics used for individual `LLMTestCase`s), when applied to a `ConversationalTestCase`, will evaluate the **last** turn in a `ConversationalTestCase`. This is because it is more useful to evaluate the last best LLM `actual_output` given the previous conversation context, instead of all individual `turns` in a `ConversationalTestCase`.
 :::
 
 :::note
