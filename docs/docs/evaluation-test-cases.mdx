@@ -421,8 +421,8 @@ evaluate([test_case], [metric])
 
 There are two mandatory and eight optional arguments when calling the `evaluate()` function:
 
-- `test_cases`: a list of `LLMTestCase`s/`ConversationalTestCase`s, or an `EvaluationDataset`
-- `metrics`: a list of metrics of type `BaseMetric`
+- `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
+- `metrics`: a list of metrics of type `BaseMetric`.
 - [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of test cases **AND** metrics. Defaulted to `True`.
 - [Optional] `throttle_value`: an integer that determines how long (in seconds) to throttle the evaluation of each test case. You can increase this value if your evaluation model is running into rate limit errors. Defaulted to 0.
