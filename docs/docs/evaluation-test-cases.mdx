@@ -235,7 +235,7 @@ test_case = LLMTestCase(
 
 ## Conversational Test Case
 
-A `ConversationalTestCase` in `deepeval` is simply a list of conversation `turns`s, and a turn is of type `LLMTestCase`s. While an `LLMTestCase`/turn represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `LLMTestCase`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
+A `ConversationalTestCase` in `deepeval` is simply a list of conversation `turns`, and a turn is of type `LLMTestCase`s. While an `LLMTestCase` represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `LLMTestCase`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
 
 While you cannot use a conversational metric on an `LLMTestCase`, a `ConversationalTestCase` can be evaluated using **both non-conversational and conversational metrics.**
 
