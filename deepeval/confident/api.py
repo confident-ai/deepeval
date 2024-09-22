@@ -76,10 +76,15 @@ class Api:
         elif res.status_code == 409 and body:
             message = res.json().get("message", "Conflict occurred.")
 
-            # Prompt user for input
-            user_input = input(f"{message} [y/N]: ").strip().lower()
+            # Prompt the user for action
+            user_input = input(f"{message} Would you like to overwrite it? [y/N] or change the alias [c]: ").strip().lower()
+
             if user_input == "y":
                 body["overwrite"] = True
+                return self.send_request(method, endpoint, body)
+            elif user_input == "c":
+                new_alias = input("Enter a new alias: ").strip()
+                body["alias"] = new_alias
                 return self.send_request(method, endpoint, body)
             else:
                 print("Aborted.")

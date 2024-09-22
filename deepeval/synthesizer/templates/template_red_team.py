@@ -1,14 +1,14 @@
 import random
 from enum import Enum
-from typing import Optional
+from typing import Optional, Dict
 from deepeval.synthesizer.types import RTVulnerability
 
 
 class RedTeamSynthesizerTemplate:
 
     @staticmethod
-    def convert_to_red_team(input, context, vulnerabilities):
-        vulnerability = random.choice(vulnerabilities)
+    def convert_to_red_team(input, context, vulnerabilities: Dict):
+        vulnerability = random.choices(list(vulnerabilities.keys()), list(vulnerabilities.values()))[0]
         return (
             RTAdversarialAttackTemplate.base_instruction
             + f"""
