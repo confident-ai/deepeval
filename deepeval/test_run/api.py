@@ -111,13 +111,11 @@ class ConversationalApiTestCase(BaseModel):
     name: str
     success: bool
     instance_id: Optional[int] = Field(None)
-    # metrics_data can be None when we're not evaluating using conversational metrics
-    metrics_data: Union[List[MetricData], None] = Field(
-        None, alias="metricsData"
-    )
+    # metrics_data can never be None
+    metrics_data: List[MetricData] = Field(alias="metricsData")
     run_duration: float = Field(0.0, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
-    messages: List[LLMApiTestCase] = Field(
+    turns: List[LLMApiTestCase] = Field(
         default_factory=lambda: [], alias="testCases"
     )
     order: Union[int, None] = Field(None)

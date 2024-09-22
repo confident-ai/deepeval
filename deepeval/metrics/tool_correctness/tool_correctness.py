@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.utils import prettify_list, get_lcs
@@ -9,6 +9,7 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
+    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 
@@ -38,10 +39,15 @@ class ToolCorrectnessMetric(BaseMetric):
         self.should_consider_ordering = should_consider_ordering
 
     def measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        _show_indicator: bool = True,
     ) -> float:
+        if isinstance(test_case, ConversationalTestCase):
+            test_case = test_case.turns[0]
+        check_llm_test_case_params(test_case, required_params, self)
+
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
-            check_llm_test_case_params(test_case, required_params, self)
             self.tools_called: List[str] = test_case.tools_called
             self.expected_tools: List[str] = test_case.expected_tools
             self.score = self._calculate_score()

@@ -62,10 +62,10 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 )
             else:
                 llm_test_cases: List[LLMTestCase] = []
-                for message in test_case.messages:
-                    llm_test_cases.append(message.llm_test_case)
+                for turn in test_case.turns:
+                    llm_test_cases.append(turn)
 
-                self.messages = process_llm_test_cases(
+                self.turns = process_llm_test_cases(
                     llm_test_cases, required_params
                 )
                 self.user_intentions = self._extract_user_intentions()
@@ -80,7 +80,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Messages:\n{prettify_list(self.messages)}",
+                        f"Turns:\n{prettify_list(self.turns)}",
                         f"User Intentions:\n{prettify_list(self.user_intentions)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
@@ -100,12 +100,10 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             self, async_mode=True, _show_indicator=_show_indicator
         ):
             llm_test_cases: List[LLMTestCase] = []
-            for message in test_case.messages:
-                llm_test_cases.append(message.llm_test_case)
+            for turn in test_case.turns:
+                llm_test_cases.append(turn)
 
-            self.messages = process_llm_test_cases(
-                llm_test_cases, required_params
-            )
+            self.turns = process_llm_test_cases(llm_test_cases, required_params)
             self.user_intentions = await self._a_extract_user_intentions()
             self.verdicts = await asyncio.gather(
                 *[
@@ -120,7 +118,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Messages:\n{prettify_list(self.messages)}",
+                    f"Turns:\n{prettify_list(self.turns)}",
                     f"User Intentions:\n{prettify_list(self.user_intentions)}",
                     f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
@@ -182,7 +180,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         self, intention: str
     ) -> ConversationCompletenessVerdict:
         prompt = ConversationCompletenessTemplate.generate_verdicts(
-            messages=self.messages, intention=intention
+            messages=self.turns, intention=intention
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -206,7 +204,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         self, intention: str
     ) -> ConversationCompletenessVerdict:
         prompt = ConversationCompletenessTemplate.generate_verdicts(
-            messages=self.messages, intention=intention
+            messages=self.turns, intention=intention
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -226,7 +224,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
 
     async def _a_extract_user_intentions(self) -> List[str]:
         prompt = ConversationCompletenessTemplate.extract_user_intentions(
-            messages=self.messages
+            messages=self.turns
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -246,7 +244,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
 
     def _extract_user_intentions(self) -> List[str]:
         prompt = ConversationCompletenessTemplate.extract_user_intentions(
-            messages=self.messages
+            messages=self.turns
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)

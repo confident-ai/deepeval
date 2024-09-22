@@ -111,9 +111,9 @@ class TestRun(BaseModel):
                         api_test_case.conversational_instance_id
                         == conversational_test_case.instance_id
                     ):
-                        conversational_test_case.messages[
-                            api_test_case.order
-                        ] = api_test_case
+                        conversational_test_case.turns[api_test_case.order] = (
+                            api_test_case
+                        )
 
                         if api_test_case.success is False:
                             conversational_test_case.success = False
@@ -176,8 +176,8 @@ class TestRun(BaseModel):
     def delete_test_case_instance_ids(self):
         for conversational_test_case in self.conversational_test_cases:
             del conversational_test_case.instance_id
-            for message in conversational_test_case.messages:
-                del message.conversational_instance_id
+            for turn in conversational_test_case.turns:
+                del turn.conversational_instance_id
 
         for test_case in self.test_cases:
             del test_case.conversational_instance_id
@@ -212,10 +212,10 @@ class TestRun(BaseModel):
                     else:
                         metrics_dict[name] = [score]
 
-            for message in convo_test_case.messages:
-                if message.metrics_data is None:
+            for turn in convo_test_case.turns:
+                if turn.metrics_data is None:
                     continue
-                for metric_data in message.metrics_data:
+                for metric_data in turn.metrics_data:
                     name = metric_data.name
                     score = metric_data.score
                     if score is None:
@@ -494,8 +494,8 @@ class TestRunManager:
                         "",
                     )
 
-            for test_case in conversational_test_case.messages:
-                if test_case.metrics_data is None:
+            for turn in conversational_test_case.turns:
+                if turn.metrics_data is None:
                     # skip if no evaluation
                     continue
 

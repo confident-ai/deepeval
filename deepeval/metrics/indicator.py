@@ -57,8 +57,8 @@ def metric_progress_indicator(
 async def measure_metric_task(
     task_id,
     progress,
-    metric: Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric],
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    metric: Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric],
+    test_case: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
 ):
@@ -114,9 +114,9 @@ async def measure_metric_task(
 
 async def measure_metrics_with_indicator(
     metrics: List[
-        Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
+        Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric]
     ],
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    test_case: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
     show_indicator: bool,
@@ -178,8 +178,8 @@ async def measure_metrics_with_indicator(
 
 
 async def safe_a_measure(
-    metric: Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric],
-    tc: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    metric: Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric],
+    tc: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
     ignore_errors: bool,
 ):
     try:

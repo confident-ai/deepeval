@@ -8,7 +8,7 @@ from deepeval.metrics.conversation_relevancy.template import (
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    get_messages_in_sliding_window,
+    get_turns_in_sliding_window,
     process_llm_test_cases_windows,
     trimAndLoadJson,
     initialize_model,
@@ -63,20 +63,17 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                 )
             else:
                 llm_test_cases_windows: List[List[LLMTestCase]] = []
-                for window in get_messages_in_sliding_window(
-                    test_case.messages, self.window_size
+                for turns_window in get_turns_in_sliding_window(
+                    test_case.turns, self.window_size
                 ):
-                    llm_test_case_window = []
-                    for w in window:
-                        llm_test_case_window.append(w.llm_test_case)
-                    llm_test_cases_windows.append(llm_test_case_window)
+                    llm_test_cases_windows.append(turns_window)
 
-                self.messages_sliding_windows = process_llm_test_cases_windows(
+                self.turns_sliding_windows = process_llm_test_cases_windows(
                     llm_test_cases_windows, required_params
                 )
                 self.verdicts = [
                     self._generate_verdict(window)
-                    for window in self.messages_sliding_windows
+                    for window in self.turns_sliding_windows
                 ]
 
                 self.score = self._calculate_score()
@@ -85,7 +82,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Message Sliding Windows (size={self.window_size}):\n{prettify_list(self.messages_sliding_windows)}",
+                        f"Turns Sliding Windows (size={self.window_size}):\n{prettify_list(self.turns_sliding_windows)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -104,21 +101,18 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             self, async_mode=True, _show_indicator=_show_indicator
         ):
             llm_test_cases_windows: List[List[LLMTestCase]] = []
-            for window in get_messages_in_sliding_window(
-                test_case.messages, self.window_size
+            for turns_window in get_turns_in_sliding_window(
+                test_case.turns, self.window_size
             ):
-                llm_test_case_window = []
-                for w in window:
-                    llm_test_case_window.append(w.llm_test_case)
-                llm_test_cases_windows.append(llm_test_case_window)
+                llm_test_cases_windows.append(turns_window)
 
-            self.messages_sliding_windows = process_llm_test_cases_windows(
+            self.turns_sliding_windows = process_llm_test_cases_windows(
                 llm_test_cases_windows, required_params
             )
             self.verdicts = await asyncio.gather(
                 *[
                     self._a_generate_verdict(window)
-                    for window in self.messages_sliding_windows
+                    for window in self.turns_sliding_windows
                 ]
             )
 
@@ -128,7 +122,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Message Sliding Windows (size={self.window_size}):\n{prettify_list(self.messages_sliding_windows)}",
+                    f"Turns Sliding Windows (size={self.window_size}):\n{prettify_list(self.turns_sliding_windows)}",
                     f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],

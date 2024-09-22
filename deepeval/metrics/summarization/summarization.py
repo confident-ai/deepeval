@@ -4,6 +4,7 @@ import asyncio
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
+    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -54,8 +55,12 @@ class SummarizationMetric(BaseMetric):
         self.verbose_mode = verbose_mode
 
     def measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
+        self,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
+        _show_indicator: bool = True,
     ) -> float:
+        if isinstance(test_case, ConversationalTestCase):
+            test_case = test_case.turns[0]
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -101,9 +106,11 @@ class SummarizationMetric(BaseMetric):
 
     async def a_measure(
         self,
-        test_case: LLMTestCase,
+        test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
     ) -> float:
+        if isinstance(test_case, ConversationalTestCase):
+            test_case = test_case.turns[0]
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None

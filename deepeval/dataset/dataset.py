@@ -413,7 +413,7 @@ class EvaluationDataset:
                     result["conversationalGoldens"]
                 ):
                     if "goldens" in cg:
-                        cg["messages"] = cg.pop("goldens")
+                        cg["turns"] = cg.pop("goldens")
                     conversational_goldens.append(ConversationalGolden(**cg))
 
                 response = DatasetHttpResponse(

@@ -3,11 +3,13 @@ from langchain_openai import OpenAIEmbeddings
 import random
 
 import deepeval
+from deepeval.metrics.conversation_completeness.conversation_completeness import (
+    ConversationCompletenessMetric,
+)
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
-    Message,
 )
 from deepeval.types import Languages
 from deepeval.metrics import (
@@ -145,6 +147,7 @@ def test_everything():
 
     metric12 = ConversationRelevancyMetric()
     metric13 = ToolCorrectnessMetric()
+    metric14 = ConversationCompletenessMetric()
 
     test_case = LLMTestCase(
         input="What is this",
@@ -155,28 +158,24 @@ def test_everything():
         tools_called=["ok"],
         expected_tools=["ok", "ok"],
     )
-    c_test_case = ConversationalTestCase(
-        messages=[
-            Message(should_evaluate=True, llm_test_case=test_case),
-            Message(should_evaluate=False, llm_test_case=test_case),
-        ]
-    )
+    c_test_case = ConversationalTestCase(turns=[test_case, test_case])
     assert_test(
-        test_case,
+        c_test_case,
         [
-            # metric1,
-            # metric2,
-            # metric3,
-            # metric4,
-            # metric5,
-            # metric6,
-            # metric7,
-            # metric8,
-            # metric9,
-            # metric10,
+            metric1,
+            metric2,
+            metric3,
+            metric4,
+            metric5,
+            metric6,
+            metric7,
+            metric8,
+            metric9,
+            metric10,
             metric11,
             metric12,
             metric13,
+            metric14,
         ],
         run_async=True,
     )
@@ -219,11 +218,7 @@ def test_everything_2():
         tools_called=["mixer", "creamer", "mixer"],
     )
     c_test_case = ConversationalTestCase(
-        name="testing_",
-        messages=[
-            Message(should_evaluate=True, llm_test_case=test_case),
-            Message(should_evaluate=False, llm_test_case=test_case),
-        ],
+        name="testing_", turns=[test_case, test_case]
     )
     assert_test(
         test_case,

@@ -28,7 +28,7 @@ class ConversationalGolden(BaseModel):
         default=None, serialization_alias="additionalMetadata"
     )
     comments: Optional[str] = Field(default=None)
-    messages: List[Golden] = Field(
+    turns: List[Golden] = Field(
         default_factory=lambda: [],
         serialization_alias="goldens",
     )

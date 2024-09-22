@@ -1,5 +1,5 @@
 from deepeval import confident_evaluate, evaluate
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, Message
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.metrics import ConversationRelevancyMetric, AnswerRelevancyMetric
 
 confident_evaluate(
@@ -14,10 +14,6 @@ confident_evaluate(
 #     input="Why did the chicken cross the road?",
 #     # Replace this with your actual LLM application
 #     actual_output="Quite frankly, I don't want to know...",
-# )
-
-# test_case = ConversationalTestCase(
-#     messages=[Message(llm_test_case=llm_test_case)]
 # )
 
 # evaluate(
