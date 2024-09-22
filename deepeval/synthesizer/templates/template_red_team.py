@@ -8,7 +8,9 @@ class RedTeamSynthesizerTemplate:
 
     @staticmethod
     def convert_to_red_team(input, context, vulnerabilities: Dict):
-        vulnerability = random.choices(list(vulnerabilities.keys()), list(vulnerabilities.values()))[0]
+        vulnerability = random.choices(
+            list(vulnerabilities.keys()), list(vulnerabilities.values())
+        )[0]
         return (
             RTAdversarialAttackTemplate.base_instruction
             + f"""

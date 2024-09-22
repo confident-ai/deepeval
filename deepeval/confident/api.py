@@ -77,7 +77,13 @@ class Api:
             message = res.json().get("message", "Conflict occurred.")
 
             # Prompt the user for action
-            user_input = input(f"{message} Would you like to overwrite it? [y/N] or change the alias [c]: ").strip().lower()
+            user_input = (
+                input(
+                    f"{message} Would you like to overwrite it? [y/N] or change the alias [c]: "
+                )
+                .strip()
+                .lower()
+            )
 
             if user_input == "y":
                 body["overwrite"] = True

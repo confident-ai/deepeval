@@ -72,7 +72,7 @@ class FakeMetric(BaseMetric):
         return "Fake"
 
 
-#@pytest.mark.skip(reason="openai is very expensive")
+# @pytest.mark.skip(reason="openai is very expensive")
 def test_answer_relevancy():
     metric = FakeMetric(threshold=0.5)
     test_case = LLMTestCase(

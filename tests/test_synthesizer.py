@@ -9,7 +9,12 @@ from deepeval.dataset import EvaluationDataset
 from deepeval.models import OpenAIEmbeddingModel
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
-from deepeval.synthesizer import Evolution, PromptEvolution, RTAdversarialAttack, RTVulnerability
+from deepeval.synthesizer import (
+    Evolution,
+    PromptEvolution,
+    RTAdversarialAttack,
+    RTVulnerability,
+)
 
 #########################################################
 ### Context #############################################
@@ -84,6 +89,7 @@ document_paths = [file_path1, file_path2, file_path3]
 ### Test Context Generator ##############################
 #########################################################
 
+
 async def test_context_generator(
     load_docs_function: Callable, is_async: bool = False
 ):
@@ -101,11 +107,14 @@ async def test_context_generator(
 def test_context_generator_generate_contexts():
     embedder = initialize_embedding_model("text-embedding-3-large")
     context_generator = ContextGenerator(
-        document_paths=[file_path3, file_path2, file_path1], embedder=embedder, chunk_size=66
+        document_paths=[file_path3, file_path2, file_path1],
+        embedder=embedder,
+        chunk_size=66,
     )
     context_generator._load_docs()
     contexts, _ = context_generator.generate_contexts(5)
     assert len(contexts) == 15
+
 
 embedder = initialize_embedding_model("text-embedding-3-large")
 context_generator = ContextGenerator(
@@ -124,6 +133,7 @@ test_context_generator_generate_contexts()
 ### Generate Goldens ####################################
 #########################################################
 
+
 def test_generate_goldens(
     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
 ):
@@ -131,10 +141,7 @@ def test_generate_goldens(
     goldens = synthesizer.generate_goldens(
         max_goldens_per_context=2,
         num_evolutions=2,
-        evolutions={
-            Evolution.COMPARATIVE: 0.2,
-            Evolution.HYPOTHETICAL: 0.8
-        },
+        evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
         contexts=sql_context,
         use_case=usecase,
     )
@@ -143,6 +150,7 @@ def test_generate_goldens(
     print("Generated goldens:", len(goldens))
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
+
 
 synthesizer_sync = Synthesizer(async_mode=False)
 synthesizer_async = Synthesizer(async_mode=True)
@@ -166,19 +174,17 @@ def test_generate_goldens_from_docs(
     goldens = synthesizer.generate_goldens_from_docs(
         max_goldens_per_document=5,
         num_evolutions=1,
-        evolutions={
-            Evolution.COMPARATIVE: 0.2,
-            Evolution.HYPOTHETICAL: 0.8
-        },
+        evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
         document_paths=document_paths,
         use_case=usecase,
-        chunk_size=65
+        chunk_size=65,
     )
     end_time = time.time()
     duration = end_time - start_time
     print("Generated goldens from docs:", goldens)
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
+
 
 synthesizer_sync = Synthesizer(async_mode=False, model=SchematicGPTModel())
 synthesizer_async = Synthesizer(async_mode=True, model=SchematicGPTModel())
@@ -194,6 +200,7 @@ test_generate_goldens_from_docs(synthesizer_async, UseCase.TEXT2SQL)
 ### Generate Red-Teaming Goldens with Context ###########
 #########################################################
 
+
 def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
     start_time = time.time()
     goldens = synthesizer.generate_red_teaming_goldens(
@@ -202,11 +209,11 @@ def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
         contexts=contexts,
         attacks={
             RTAdversarialAttack.GRAY_BOX_ATTACK: 0.2,
-            RTAdversarialAttack.PROMPT_INJECTION: 0.8
+            RTAdversarialAttack.PROMPT_INJECTION: 0.8,
         },
         vulnerabilities={
             RTVulnerability.BIAS: 0.2,
-            RTVulnerability.DATA_LEAKAGE: 0.8
+            RTVulnerability.DATA_LEAKAGE: 0.8,
         },
     )
     end_time = time.time()
@@ -214,6 +221,7 @@ def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
     print("Generated red teaming goldens with contexts:", len(goldens))
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
+
 
 synthesizer_sync = Synthesizer(async_mode=False)
 synthesizer_async = Synthesizer(async_mode=True)
@@ -224,6 +232,7 @@ test_generate_red_teaming_goldens(synthesizer_async)
 ### Generate Red-Teaming Goldens without Context ########
 #########################################################
 
+
 def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
     start_time = time.time()
     goldens = synthesizer.generate_red_teaming_goldens(
@@ -231,11 +240,11 @@ def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
         num_evolutions=2,
         attacks={
             RTAdversarialAttack.GRAY_BOX_ATTACK: 0.2,
-            RTAdversarialAttack.PROMPT_INJECTION: 0.8
+            RTAdversarialAttack.PROMPT_INJECTION: 0.8,
         },
         vulnerabilities={
             RTVulnerability.BIAS: 0.2,
-            RTVulnerability.DATA_LEAKAGE: 0.8
+            RTVulnerability.DATA_LEAKAGE: 0.8,
         },
     )
     end_time = time.time()
@@ -243,6 +252,7 @@ def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
     print("Generated red teaming goldens without context:", len(goldens))
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
+
 
 synthesizer_sync = Synthesizer(async_mode=False)
 synthesizer_async = Synthesizer(async_mode=True)
@@ -253,6 +263,7 @@ test_generate_red_teaming_goldens(synthesizer_async)
 ### Generate Goldens From Scratch #######################
 #########################################################
 
+
 def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
     start_time = time.time()
     goldens = synthesizer.generate_goldens_from_scratch(
@@ -261,7 +272,7 @@ def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
         output_format="string less than 15 words",
         evolutions={
             PromptEvolution.COMPARATIVE: 0.2,
-            PromptEvolution.HYPOTHETICAL: 0.8
+            PromptEvolution.HYPOTHETICAL: 0.8,
         },
         num_initial_goldens=5,
         num_evolutions=1,
@@ -272,8 +283,8 @@ def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
 
+
 synthesizer_sync = Synthesizer(async_mode=False)
 synthesizer_async = Synthesizer(async_mode=True)
 test_generate_generate_goldens_from_scratch(synthesizer_sync)
 test_generate_generate_goldens_from_scratch(synthesizer_async)
-

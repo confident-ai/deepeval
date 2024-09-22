@@ -495,7 +495,7 @@ class EvaluationDataset:
                 attacks=attacks,
                 vulnerabilities=vulnerabilities,
                 use_case=use_case,
-                _send_data=False
+                _send_data=False,
             )
         )
 
@@ -534,7 +534,7 @@ class EvaluationDataset:
                 source_files=source_files,
                 evolutions=evolutions,
                 use_case=use_case,
-                _send_data=False
+                _send_data=False,
             )
         )
 
@@ -575,7 +575,7 @@ class EvaluationDataset:
                 num_evolutions=num_evolutions,
                 evolutions=evolutions,
                 use_case=use_case,
-                _send_data=False
+                _send_data=False,
             )
         )
 
