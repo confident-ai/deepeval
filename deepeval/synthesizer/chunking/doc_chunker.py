@@ -61,7 +61,7 @@ class DocumentChunker:
             )
             return collection
 
-        except ValueError:
+        except:
             # Convert raw sections to processed chunks
             collection = client.create_collection(
                 name=f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
@@ -99,7 +99,7 @@ class DocumentChunker:
             )
             return collection
 
-        except ValueError:
+        except:
             # Convert raw sections to processed chunks
             collection = client.create_collection(
                 name=f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
