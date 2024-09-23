@@ -1083,38 +1083,21 @@ class Synthesizer:
         if self.embedder is None:
             self.embedder = OpenAIEmbeddingModel()
 
-            if self.async_mode:
-                loop = get_or_create_event_loop()
-                return loop.run_until_complete(
-                    self.a_generate_goldens_from_docs(
-                        document_paths,
-                        include_expected_output,
-                        max_goldens_per_document,
-                        chunk_size,
-                        chunk_overlap,
-                        num_evolutions,
-                        evolutions,
-                        use_case,
-                        _send_data,
-                    )
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            return loop.run_until_complete(
+                self.a_generate_goldens_from_docs(
+                    document_paths,
+                    include_expected_output,
+                    max_goldens_per_document,
+                    chunk_size,
+                    chunk_overlap,
+                    num_evolutions,
+                    evolutions,
+                    use_case,
+                    _send_data,
                 )
-            else:
-                if self.context_generator is None:
-                    self.context_generator = ContextGenerator(
-                        document_paths,
-                        embedder=self.embedder,
-                        chunk_size=chunk_size,
-                        chunk_overlap=chunk_overlap,
-                    )
-
-                self.context_generator._load_docs()
-                max_goldens_per_context = 2
-                if max_goldens_per_document < max_goldens_per_context:
-                    max_goldens_per_context = 1
-                num_context_per_document = math.floor(
-                    max_goldens_per_document / max_goldens_per_context
-                )
-
+            )
         else:
             if self.context_generator is None:
                 self.context_generator = ContextGenerator(
@@ -1128,7 +1111,9 @@ class Synthesizer:
                 max_goldens_per_context = 2
                 if max_goldens_per_document < max_goldens_per_context:
                     max_goldens_per_context = 1
-
+                num_context_per_document = math.floor(
+                max_goldens_per_document / max_goldens_per_context
+                )
                 contexts, source_files = (
                     self.context_generator.generate_contexts(
                         num_context_per_document=num_context_per_document
