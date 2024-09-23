@@ -1112,7 +1112,7 @@ class Synthesizer:
                 if max_goldens_per_document < max_goldens_per_context:
                     max_goldens_per_context = 1
                 num_context_per_document = math.floor(
-                max_goldens_per_document / max_goldens_per_context
+                    max_goldens_per_document / max_goldens_per_context
                 )
                 contexts, source_files = (
                     self.context_generator.generate_contexts(
