@@ -1207,13 +1207,14 @@ class Synthesizer:
         return df
 
     def wrap_up_synthesis(self):
+        return
         console = Console()
-        if len(self.synthetic_goldens) == 0:
-            raise ValueError(
-                "Unable to push empty dataset to Confident AI. There must be at least one dataset or golden data entry."
-            )
-        alias = input("Enter the dataset alias: ").strip()
         if is_confident():
+            alias = input("Enter the dataset alias: ").strip()
+            if len(self.synthetic_goldens) == 0:
+                raise ValueError(
+                    "Unable to push empty dataset to Confident AI. There must be at least one dataset or golden data entry."
+                )
             try:
                 console.print(
                     "Sending a large dataset to Confident AI. This might take a bit longer than usual..."
