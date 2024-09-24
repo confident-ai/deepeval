@@ -6,6 +6,7 @@ from typing import List, Optional, Union
 import time
 import asyncio
 
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
@@ -61,6 +62,7 @@ async def measure_metric_task(
     test_case: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
+    skip_on_missing_params: bool,
 ):
     while not progress.finished:
         start_time = time.perf_counter()
@@ -83,17 +85,32 @@ async def measure_metric_task(
             try:
                 await metric.a_measure(test_case, _show_indicator=False)
                 finish_text = "Done"
-            except TypeError:
-                try:
-                    await metric.a_measure(test_case)
-                    finish_text = "Done"
-                except Exception as e:
+            except MissingTestCaseParamsError as e:
+                if skip_on_missing_params:
+                    metric.skipped = True
+                    return
+                else:
                     if ignore_errors:
                         metric.error = str(e)
                         metric.success = False  # Override metric success
                         finish_text = "Errored"
                     else:
                         raise
+            except TypeError:
+                try:
+                    await metric.a_measure(test_case)
+                    finish_text = "Done"
+                except MissingTestCaseParamsError as e:
+                    if skip_on_missing_params:
+                        metric.skipped = True
+                        return
+                    else:
+                        if ignore_errors:
+                            metric.error = str(e)
+                            metric.success = False  # Override metric success
+                            finish_text = "Errored"
+                        else:
+                            raise
             except Exception as e:
                 if ignore_errors:
                     metric.error = str(e)
@@ -119,6 +136,7 @@ async def measure_metrics_with_indicator(
     test_case: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
+    skip_on_missing_params: bool,
     show_indicator: bool,
 ):
     if show_indicator:
@@ -143,6 +161,7 @@ async def measure_metrics_with_indicator(
                         test_case,
                         cached_test_case,
                         ignore_errors,
+                        skip_on_missing_params,
                     )
                 )
             await asyncio.gather(*tasks)
@@ -172,7 +191,11 @@ async def measure_metrics_with_indicator(
                 metric.evaluation_cost = metric_data.evaluation_cost
                 metric.verbose_logs = metric_data.verbose_logs
             else:
-                tasks.append(safe_a_measure(metric, test_case, ignore_errors))
+                tasks.append(
+                    safe_a_measure(
+                        metric, test_case, ignore_errors, skip_on_missing_params
+                    )
+                )
 
         await asyncio.gather(*tasks)
 
@@ -181,12 +204,33 @@ async def safe_a_measure(
     metric: Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric],
     tc: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
     ignore_errors: bool,
+    skip_on_missing_params: bool,
 ):
     try:
+        await metric.a_measure(tc, _show_indicator=False)
+    except MissingTestCaseParamsError as e:
+        if skip_on_missing_params:
+            metric.skipped = True
+            return
+        else:
+            if ignore_errors:
+                metric.error = str(e)
+                metric.success = False
+            else:
+                raise
+    except TypeError:
         try:
-            await metric.a_measure(tc, _show_indicator=False)
-        except TypeError:
             await metric.a_measure(tc)
+        except MissingTestCaseParamsError as e:
+            if skip_on_missing_params:
+                metric.skipped = True
+                return
+            else:
+                if ignore_errors:
+                    metric.error = str(e)
+                    metric.success = False
+                else:
+                    raise
     except Exception as e:
         if ignore_errors:
             metric.error = str(e)
