@@ -36,7 +36,7 @@ Provide a 'reason' ONLY IF verdict is no. You MUST quote the irrelevant parts of
 **
 IMPORTANT: Please make sure to only return in JSON format.
 Example Context: "Einstein won the Nobel Prize for his discovery of the photoelectric effect. He won the Nobel Prize in 1968. There was a cat."
-Example Input: "When what was some of Einstein's achievements?"
+Example Input: "What were some of Einstein's achievements?"
 
 Example:
 {{
