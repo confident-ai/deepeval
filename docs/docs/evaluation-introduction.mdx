@@ -186,7 +186,7 @@ deepeval test run test_example.py -v
 When a metric's `verbose_mode` is `True`, it prints the intermediate steps used to calculate said metric to the console during evaluation.
 :::
 
-### Skip Test Cases With Missing Parameters
+### Skip Test Cases
 
 The `-s` flag (with no arguments) allows you to skip metric executions where the test case has missing//insufficient parameters (such as `retrieval_context`) that is required for evaluation. An example of where this is helpful is if you're using a metric such as the `ContextualPrecisionMetric` but don't want to apply it when the `retrieval_context` is `None`.
 
