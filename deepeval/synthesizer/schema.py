@@ -2,6 +2,15 @@ from typing import List, Literal
 from pydantic import BaseModel
 
 
+class RewrittenInput(BaseModel):
+    rewritten_input: str
+
+
+class InputFeedback(BaseModel):
+    score: float
+    feedback: str
+    
+
 class SyntheticData(BaseModel):
     input: str
 

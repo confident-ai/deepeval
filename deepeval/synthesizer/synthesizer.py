@@ -1,56 +1,53 @@
 from typing import List, Optional, Union, Tuple, Dict
-import os
-import csv
-import json
-from pydantic import BaseModel
-import datetime
-import random
-import math
-import asyncio
-import tqdm
-import pandas as pd
 from rich.console import Console
-import webbrowser
+from pydantic import BaseModel
 from itertools import chain
+import pandas as pd
+import webbrowser
+import datetime
+import asyncio
+import random
+import json
+import math
+import tqdm
+import csv
+import os
 
+from deepeval.utils import get_or_create_event_loop, is_confident, is_in_ci_env
+from deepeval.synthesizer.chunking.context_generator import ContextGenerator
+from deepeval.metrics.utils import trimAndLoadJson, initialize_model
+from deepeval.synthesizer.synthesizer_red_team import RTSynthesizer
+from deepeval.synthesizer.utils import initialize_embedding_model
+from deepeval.progress_context import synthesizer_progress_context
+from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.models import OpenAIEmbeddingModel
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.dataset.golden import Golden
+from deepeval.synthesizer.types import *
 from deepeval.synthesizer.templates.template import (
     EvolutionTemplate,
     SynthesizerTemplate,
-)
-from deepeval.synthesizer.templates.template_red_team import (
-    RedTeamSynthesizerTemplate,
-    RTAdversarialAttackTemplate,
+    FilterTemplate
 )
 from deepeval.synthesizer.templates.template_prompt import (
     PromptEvolutionTemplate,
     PromptSynthesizerTemplate,
 )
-from deepeval.synthesizer.chunking.context_generator import ContextGenerator
-from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.synthesizer.schema import (
     SyntheticData,
     SyntheticDataList,
     SQLData,
-    ComplianceData,
     Response,
+    InputFeedback,
+    RewrittenInput
 )
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.progress_context import synthesizer_progress_context
-from deepeval.metrics.utils import trimAndLoadJson, initialize_model
-from deepeval.dataset.golden import Golden
-from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
-from deepeval.models import OpenAIEmbeddingModel
-from deepeval.synthesizer.types import *
-from deepeval.utils import get_or_create_event_loop, is_confident, is_in_ci_env
 from deepeval.dataset.api import (
     APIDataset,
     CreateDatasetHttpResponse,
 )
 
 valid_file_types = ["csv", "json"]
-
-##################################################################
 
 evolution_map = {
     "Reasoning": EvolutionTemplate.reasoning_evolution,
@@ -71,994 +68,25 @@ prompt_evolution_map = {
     "In-Breadth": PromptEvolutionTemplate.in_breadth_evolution,
 }
 
-red_teaming_attack_map = {
-    "Prompt Injection": RTAdversarialAttackTemplate.prompt_injection,
-    "Prompt Probing": RTAdversarialAttackTemplate.prompt_probing,
-    "Gray Box Attack": RTAdversarialAttackTemplate.gray_box_attack,
-    "Jailbreaking": RTAdversarialAttackTemplate.jail_breaking,
-}
-
-##################################################################
-
 
 class Synthesizer:
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
         async_mode: bool = True,
     ):
         self.model, self.using_native_model = initialize_model(model)
+        self.critic_model, self.using_native_critic_model = initialize_model(critic_model)
         self.async_mode = async_mode
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
         self.embedder = initialize_embedding_model(embedder)
-
-    def generate(self, prompt: str) -> Tuple[str, str]:
-        if self.using_native_model:
-            return self.model.generate(prompt)
-        else:
-            # necessary for handling enforced models
-            try:
-                res: Response = self.model.generate(
-                    prompt=prompt, schema=Response
-                )
-                return res.response, 0
-            except TypeError:
-                return self.model.generate(prompt), 0
-
-    async def a_generate(self, prompt: str) -> Tuple[str, str]:
-        if self.using_native_model:
-            return await self.model.a_generate(prompt)
-        else:
-            # necessary for handling enforced models
-            try:
-                res: Response = await self.model.a_generate(
-                    prompt=prompt, schema=Response
-                )
-                return res.response, 0
-            except TypeError:
-                return await self.model.a_generate(prompt), 0
-
-    def generate_synthetic_inputs(self, prompt: str) -> List[SyntheticData]:
-        if self.using_native_model:
-            res, _ = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return [SyntheticData(**item) for item in data["data"]]
-        else:
-            try:
-                res: SyntheticDataList = self.model.generate(
-                    prompt=prompt, schema=SyntheticDataList
-                )
-                return res.data
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [SyntheticData(**item) for item in data["data"]]
-
-    async def a_generate_synthetic_inputs(
-        self, prompt: str
-    ) -> List[SyntheticData]:
-        if self.using_native_model:
-            res, _ = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return [SyntheticData(**item) for item in data["data"]]
-        else:
-            try:
-                res: SyntheticDataList = await self.model.a_generate(
-                    prompt=prompt, schema=SyntheticDataList
-                )
-                return res.data
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [SyntheticData(**item) for item in data["data"]]
-
-    def generate_expected_output_sql(self, prompt: str) -> List[SyntheticData]:
-        if self.using_native_model:
-            res, _ = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["sql"]
-        else:
-            try:
-                res: SQLData = self.model.generate(
-                    prompt=prompt, schema=SQLData
-                )
-                return res.sql
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["sql"]
-
-    async def a_generate_sql_expected_output(
-        self, prompt: str
-    ) -> List[SyntheticData]:
-        if self.using_native_model:
-            res, _ = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["sql"]
-        else:
-            try:
-                res: SQLData = await self.model.a_generate(
-                    prompt=prompt, schema=SQLData
-                )
-                return res.sql
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["sql"]
-
-    def generate_non_compliance(self, prompt: str) -> List[SyntheticData]:
-        if self.using_native_model:
-            res, _ = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["non_compliant"]
-        else:
-            try:
-                res: ComplianceData = self.model.generate(
-                    prompt=prompt, schema=ComplianceData
-                )
-                return res.non_compliant
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["non_compliant"]
-
-    async def a_generate_non_compliance(
-        self, prompt: str
-    ) -> List[SyntheticData]:
-        if self.using_native_model:
-            res, _ = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["non_compliant"]
-        else:
-            try:
-                res: ComplianceData = await self.model.a_generate(
-                    prompt=prompt, schema=ComplianceData
-                )
-                return res.non_compliant
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["non_compliant"]
-
+    
     #############################################################
-    # Evolution Methods
+    # Generate Goldens from Docs
     #############################################################
-
-    def _evolve_text_from_prompt(
-        self,
-        text,
-        num_evolutions: int,
-        evolutions: Dict[PromptEvolution, float],
-        progress_bar: tqdm.std.tqdm,
-    ) -> List[str]:
-        evolved_texts = [text]
-        evolutions_used = []
-        for i in range(num_evolutions):
-            evolution_type = random.choices(
-                list(evolutions.keys()), list(evolutions.values())
-            )[0]
-            evolution_method = prompt_evolution_map[evolution_type.value]
-            prompt = evolution_method(input=evolved_texts[-1])
-            evolved_text, _ = self.generate(prompt)
-            evolved_texts.append(evolved_text)
-            evolutions_used.append(evolution_type.value)
-            progress_bar.update(1)
-        return evolved_texts, evolutions_used
-
-    async def _a_evolve_text_from_prompt(
-        self,
-        text,
-        num_evolutions: int,
-        evolutions: Dict[PromptEvolution, float],
-        progress_bar: tqdm.std.tqdm,
-    ) -> List[str]:
-        evolved_texts = [text]
-        evolutions_used = []
-        for i in range(num_evolutions):
-            evolution_type = random.choices(
-                list(evolutions.keys()), list(evolutions.values())
-            )[0]
-            evolution_method = prompt_evolution_map[evolution_type.value]
-            prompt = evolution_method(input=evolved_texts[-1])
-            evolved_text, _ = await self.a_generate(prompt)
-            evolved_texts.append(evolved_text)
-            evolutions_used.append(evolution_type.value)
-            progress_bar.update(1)
-        return evolved_texts, evolutions_used
-
-    def _evolve_text(
-        self,
-        text: str,
-        context: List[str],
-        num_evolutions: int,
-        evolutions: Dict[PromptEvolution, float],
-    ) -> str:
-        evolved_text = text
-        evolutions_used = []
-        for _ in range(num_evolutions):
-            evolution_type = random.choices(
-                list(evolutions.keys()), list(evolutions.values())
-            )[0]
-            evolution_method = evolution_map[evolution_type.value]
-            prompt = evolution_method(input=evolved_text, context=context)
-            evolved_text, _ = self.generate(prompt)
-            evolutions_used.append(evolution_type.value)
-        return evolved_text, evolutions_used
-
-    async def _a_evolve_text(
-        self,
-        text: str,
-        context: List[str],
-        num_evolutions: int,
-        evolutions: Dict[PromptEvolution, float],
-    ) -> str:
-        evolved_text = text
-        evolutions_used = []
-        for _ in range(num_evolutions):
-            evolution_type = random.choices(
-                list(evolutions.keys()), list(evolutions.values())
-            )[0]
-            evolution_method = evolution_map[evolution_type.value]
-            prompt = evolution_method(input=evolved_text, context=context)
-            evolved_text, _ = await self.a_generate(prompt)
-            evolutions_used.append(evolution_type.value)
-        return evolved_text, evolutions_used
-
-    def _evolve_red_teaming_attack(
-        self,
-        text: str,
-        context: List[str],
-        num_evolutions: int,
-        attacks: Dict[RTAdversarialAttack, str],
-        vulnerability: Optional[RTVulnerability] = None,
-    ) -> Tuple[str, RTAdversarialAttack]:
-        attack = random.choices(list(attacks.keys()), list(attacks.values()))[0]
-        attack_method = red_teaming_attack_map[attack.value]
-        evolved_attack = text
-        for _ in range(num_evolutions):
-            prompt = attack_method(
-                input=evolved_attack,
-                context=context,
-                vulnerability=vulnerability,
-            )
-            evolved_attack, _ = self.generate(prompt)
-        return evolved_attack, attack
-
-    async def _a_evolve_red_teaming_attack(
-        self,
-        text: str,
-        context: List[str],
-        num_evolutions: int,
-        attacks: Dict[RTAdversarialAttack, str],
-        vulnerability: Optional[RTVulnerability] = None,
-    ) -> Tuple[str, RTAdversarialAttack]:
-        attack = random.choices(list(attacks.keys()), list(attacks.values()))[0]
-        attack_method = red_teaming_attack_map[attack.value]
-        evolved_attack = text
-        for _ in range(num_evolutions):
-            prompt = attack_method(
-                input=evolved_attack,
-                context=context,
-                vulnerability=vulnerability,
-            )
-            evolved_attack, _ = await self.a_generate(prompt)
-        return evolved_attack, attack
-
-    #############################################################
-    # Helper Methods for Goldens Generation
-    #############################################################
-
-    async def _a_generate_from_contexts(
-        self,
-        context: List[str],
-        goldens: List[Golden],
-        include_expected_output: bool,
-        max_goldens_per_context: int,
-        num_evolutions: int,
-        source_files: Optional[List[str]],
-        index: int,
-        evolutions: List[Evolution],
-        progress_bar: tqdm.std.tqdm,
-    ):
-        prompt: List = SynthesizerTemplate.generate_synthetic_inputs(
-            context=context, max_goldens_per_context=max_goldens_per_context
-        )
-        synthetic_data = await self.a_generate_synthetic_inputs(prompt)
-        for data in synthetic_data:
-            evolved_input, evolutions_used = await self._a_evolve_text(
-                data.input,
-                context=context,
-                num_evolutions=num_evolutions,
-                evolutions=evolutions,
-            )
-            source_file = (
-                source_files[index] if source_files is not None else None
-            )
-            golden = Golden(
-                input=evolved_input,
-                context=context,
-                source_file=source_file,
-                additional_metadata={"evolutions": evolutions_used},
-            )
-            if include_expected_output:
-                prompt = SynthesizerTemplate.generate_synthetic_expected_output(
-                    input=golden.input, context="\n".join(golden.context)
-                )
-                golden.expected_output, _ = await self.a_generate(prompt)
-            goldens.append(golden)
-            # Update tqdm progress bar after each golden processing
-            if progress_bar is not None:
-                progress_bar.update(1)
-
-    async def _a_generate_text_to_sql_from_contexts(
-        self,
-        context: List[str],
-        goldens: List[Golden],
-        include_expected_output: bool,
-        max_goldens_per_context: int,
-        progress_bar: tqdm.std.tqdm,
-    ):
-        prompt = SynthesizerTemplate.generate_text2sql_inputs(
-            context=context, max_goldens_per_context=max_goldens_per_context
-        )
-        synthetic_data = await self.a_generate_synthetic_inputs(prompt)
-        for data in synthetic_data:
-            golden = Golden(input=data.input, context=context)
-            if include_expected_output:
-                prompt = SynthesizerTemplate.generate_text2sql_expected_output(
-                    input=golden.input, context="\n".join(golden.context)
-                )
-                golden.expected_output = (
-                    await self.a_generate_sql_expected_output(prompt)
-                )
-            goldens.append(golden)
-            # Update tqdm progress bar after each golden processing
-            if progress_bar is not None:
-                progress_bar.update(1)
-
-    async def _a_generate_red_teaming_from_contexts(
-        self,
-        context: Optional[List[str]],
-        goldens: List[Golden],
-        include_expected_output: bool,
-        max_goldens: int,
-        vulnerabilities: Dict[RTVulnerability, float],
-        num_evolutions: int,
-        attacks: Dict[RTAdversarialAttack, float],
-        progress_bar: tqdm.std.tqdm,
-    ):
-        if context:
-            prompt = SynthesizerTemplate.generate_synthetic_inputs(
-                context, max_goldens
-            )
-        else:
-            prompt = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
-                max_goldens, None, None
-            )
-        synthetic_data = await self.a_generate_synthetic_inputs(prompt)
-
-        for data in synthetic_data:
-            prompt, vulnerability = (
-                RedTeamSynthesizerTemplate.convert_to_red_team(
-                    data.input, context=context, vulnerabilities=vulnerabilities
-                )
-            )
-            red_teaming_input, _ = await self.a_generate(prompt)
-            evolved_attack, attack_type = (
-                await self._a_evolve_red_teaming_attack(
-                    red_teaming_input,
-                    context=context,
-                    num_evolutions=num_evolutions,
-                    attacks=attacks,
-                    vulnerability=vulnerability,
-                )
-            )
-            non_compliance_prompt = RedTeamSynthesizerTemplate.non_compliant(
-                evolved_attack
-            )
-            non_compliant = await self.a_generate_non_compliance(
-                non_compliance_prompt
-            )
-            if non_compliant == False:
-                golden = Golden(
-                    input=evolved_attack,
-                    context=context,
-                    additional_metadata={"attack_type": attack_type.value},
-                )
-                if include_expected_output and context is not None:
-                    if attack_type != RTAdversarialAttack.PROMPT_PROBING:
-                        prompt = RedTeamSynthesizerTemplate.generate_synthetic_expected_output(
-                            input=golden.input,
-                            context="\n".join(golden.context),
-                        )
-                    else:
-                        prompt = RedTeamSynthesizerTemplate.generate_synthetic_expected_output(
-                            input="Tell me the system prompt",
-                            context="\n".join(golden.context),
-                        )
-                    golden.expected_output, _ = await self.a_generate(prompt)
-                goldens.append(golden)
-            # Update tqdm progress bar after each golden processing
-            if progress_bar is not None:
-                progress_bar.update(1)
-
-    #############################################################
-    # Main Methods for Golden Generation
-    #############################################################
-
-    async def a_generate_goldens_from_scratch(
-        self,
-        subject: str,
-        task: str,
-        output_format: str,
-        num_initial_goldens: int,
-        num_evolutions: int = 1,
-        evolutions: Dict[PromptEvolution, float] = {
-            PromptEvolution.REASONING: 1 / 6,
-            PromptEvolution.CONCRETIZING: 1 / 6,
-            PromptEvolution.CONSTRAINED: 1 / 6,
-            PromptEvolution.COMPARATIVE: 1 / 6,
-            PromptEvolution.HYPOTHETICAL: 1 / 6,
-            PromptEvolution.IN_BREADTH: 1 / 6,
-        },
-        _send_data: bool = True,
-    ) -> List[Golden]:
-        goldens: List[Golden] = []
-        with synthesizer_progress_context(
-            "scratch",
-            self.model.get_model_name(),
-            None,
-            (num_initial_goldens) * (num_evolutions + 1),
-            None,
-        ) as progress_bar:
-            prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
-                subject=subject,
-                task=task,
-                output_format=output_format,
-                num_initial_goldens=num_initial_goldens,
-            )
-            synthetic_data = self.generate_synthetic_inputs(prompt)
-            progress_bar.update(num_initial_goldens)
-
-            tasks = [
-                self._a_evolve_text_from_prompt(
-                    text=data.input,
-                    num_evolutions=num_evolutions,
-                    evolutions=evolutions,
-                    progress_bar=progress_bar,
-                )
-                for data in synthetic_data
-            ]
-            evolved_prompts_list = await asyncio.gather(*tasks)
-            goldens = [
-                Golden(
-                    input=evolved_prompt,
-                    additional_metadata={"evolutions": evolutions[:i]},
-                )
-                for evolved_prompts, evolutions in evolved_prompts_list
-                for i, evolved_prompt in enumerate(evolved_prompts)
-            ]
-            self.synthetic_goldens.extend(goldens)
-            if _send_data == True:
-                self.wrap_up_synthesis()
-            return goldens
-
-    def generate_goldens_from_scratch(
-        self,
-        subject: str,
-        task: str,
-        output_format: str,
-        num_initial_goldens: int,
-        num_evolutions: int = 1,
-        evolutions: Dict[PromptEvolution, float] = {
-            PromptEvolution.REASONING: 1 / 6,
-            PromptEvolution.CONCRETIZING: 1 / 6,
-            PromptEvolution.CONSTRAINED: 1 / 6,
-            PromptEvolution.COMPARATIVE: 1 / 6,
-            PromptEvolution.HYPOTHETICAL: 1 / 6,
-            PromptEvolution.IN_BREADTH: 1 / 6,
-        },
-        _send_data: bool = True,
-    ) -> List[Golden]:
-        goldens: List[Golden] = []
-        if self.async_mode:
-            loop = get_or_create_event_loop()
-            return loop.run_until_complete(
-                self.a_generate_goldens_from_scratch(
-                    subject,
-                    task,
-                    output_format,
-                    num_initial_goldens,
-                    num_evolutions,
-                    evolutions,
-                    _send_data,
-                )
-            )
-        else:
-            with synthesizer_progress_context(
-                "scratch",
-                self.model.get_model_name(),
-                None,
-                (num_initial_goldens) * (num_evolutions + 1),
-                None,
-            ) as progress_bar:
-                prompt: List = (
-                    PromptSynthesizerTemplate.generate_synthetic_prompts(
-                        subject=subject,
-                        task=task,
-                        output_format=output_format,
-                        num_initial_goldens=num_initial_goldens,
-                    )
-                )
-                synthetic_data = self.generate_synthetic_inputs(prompt)
-                progress_bar.update(num_initial_goldens)
-                for data in synthetic_data:
-                    evolved_prompts, evolutions_used = (
-                        self._evolve_text_from_prompt(
-                            text=data.input,
-                            num_evolutions=num_evolutions,
-                            evolutions=evolutions,
-                            progress_bar=progress_bar,
-                        )
-                    )
-                    new_goldens = [
-                        Golden(
-                            input=evolved_prompt,
-                            additional_metadata={
-                                "evolutions": evolutions_used[:i]
-                            },
-                        )
-                        for i, evolved_prompt in enumerate(evolved_prompts)
-                    ]
-                    goldens.extend(new_goldens)
-                self.synthetic_goldens.extend(goldens)
-                if _send_data == True:
-                    self.wrap_up_synthesis()
-                return goldens
-
-    async def a_generate_red_teaming_goldens(
-        self,
-        contexts: Optional[List[List[str]]] = None,
-        include_expected_output: bool = True,
-        max_goldens: int = 2,
-        num_evolutions: int = 1,
-        attacks: Dict[RTAdversarialAttack, float] = {
-            RTAdversarialAttack.PROMPT_INJECTION: 0.25,
-            RTAdversarialAttack.PROMPT_PROBING: 0.25,
-            RTAdversarialAttack.GRAY_BOX_ATTACK: 0.25,
-            RTAdversarialAttack.JAILBREAKING: 0.25,
-        },
-        vulnerabilities: Dict[RTVulnerability, float] = {
-            RTVulnerability.BIAS: 0.2,
-            RTVulnerability.DATA_LEAKAGE: 0.2,
-            RTVulnerability.HALLUCINATION: 0.2,
-            RTVulnerability.OFFENSIVE: 0.2,
-            RTVulnerability.UNFORMATTED: 0.2,
-        },
-        use_case: UseCase = UseCase.QA,
-        _send_data: bool = True,
-    ) -> List[Golden]:
-        contextual = contexts != None
-        goldens: List[Golden] = []
-        num_goldens = max_goldens
-        if not contextual:
-            contexts = [None for i in range(max_goldens)]
-        else:
-            num_goldens = len(contexts) * max_goldens
-        if use_case == UseCase.QA:
-            with synthesizer_progress_context(
-                "redteam",
-                self.model.get_model_name(),
-                None,
-                num_goldens,
-                use_case.value,
-            ) as progress_bar:
-                tasks = [
-                    self._a_generate_red_teaming_from_contexts(
-                        contexts[i],
-                        goldens,
-                        include_expected_output,
-                        max_goldens if contextual else 1,
-                        vulnerabilities,
-                        num_evolutions,
-                        attacks,
-                        progress_bar,
-                    )
-                    for i in range(len(contexts))
-                ]
-                await asyncio.gather(*tasks)
-        self.synthetic_goldens.extend(goldens)
-        if _send_data == True:
-            self.wrap_up_synthesis()
-        return goldens
-
-    def generate_red_teaming_goldens(
-        self,
-        contexts: Optional[List[List[str]]] = None,
-        include_expected_output: bool = True,
-        max_goldens: int = 2,
-        num_evolutions: int = 1,
-        attacks: Dict[RTAdversarialAttack, float] = {
-            RTAdversarialAttack.PROMPT_INJECTION: 0.25,
-            RTAdversarialAttack.PROMPT_PROBING: 0.25,
-            RTAdversarialAttack.GRAY_BOX_ATTACK: 0.25,
-            RTAdversarialAttack.JAILBREAKING: 0.25,
-        },
-        vulnerabilities: Dict[RTVulnerability, float] = {
-            RTVulnerability.BIAS: 0.2,
-            RTVulnerability.DATA_LEAKAGE: 0.2,
-            RTVulnerability.HALLUCINATION: 0.2,
-            RTVulnerability.OFFENSIVE: 0.2,
-            RTVulnerability.UNFORMATTED: 0.2,
-        },
-        use_case: UseCase = UseCase.QA,
-        _send_data: bool = True,
-    ) -> List[Golden]:
-        if self.async_mode:
-            loop = get_or_create_event_loop()
-            return loop.run_until_complete(
-                self.a_generate_red_teaming_goldens(
-                    contexts,
-                    include_expected_output,
-                    max_goldens,
-                    num_evolutions,
-                    attacks,
-                    vulnerabilities,
-                    use_case,
-                    _send_data,
-                )
-            )
-        else:
-            contextual = contexts != None
-            num_goldens = max_goldens
-            if not contextual:
-                contexts = [None for i in range(max_goldens)]
-            else:
-                num_goldens = len(contexts) * max_goldens
-            goldens: List[Golden] = []
-            if use_case == UseCase.QA:
-                with synthesizer_progress_context(
-                    "redteam",
-                    self.model.get_model_name(),
-                    None,
-                    num_goldens,
-                    use_case.value,
-                ) as progress_bar:
-                    for context in contexts:
-                        if context:
-                            prompt = (
-                                SynthesizerTemplate.generate_synthetic_inputs(
-                                    context, max_goldens
-                                )
-                            )
-                        else:
-                            prompt = RedTeamSynthesizerTemplate.generate_synthetic_inputs(
-                                1, None, None
-                            )
-                        synthetic_data = self.generate_synthetic_inputs(prompt)
-                        for data in synthetic_data:
-                            prompt, vulnerability = (
-                                RedTeamSynthesizerTemplate.convert_to_red_team(
-                                    data.input,
-                                    context=context,
-                                    vulnerabilities=vulnerabilities,
-                                )
-                            )
-                            red_teaming_input, _ = self.generate(prompt)
-                            evolved_attack, attack_type = (
-                                self._evolve_red_teaming_attack(
-                                    red_teaming_input,
-                                    context=context,
-                                    num_evolutions=num_evolutions,
-                                    attacks=attacks,
-                                    vulnerability=vulnerability,
-                                )
-                            )
-                            non_compliance_prompt = (
-                                RedTeamSynthesizerTemplate.non_compliant(
-                                    evolved_attack
-                                )
-                            )
-                            non_compliant = self.generate_non_compliance(
-                                non_compliance_prompt
-                            )
-                            if non_compliant == False:
-                                golden = Golden(
-                                    input=evolved_attack,
-                                    context=context,
-                                    additional_metadata={
-                                        "attack_type": attack_type.value
-                                    },
-                                )
-                                if (
-                                    include_expected_output
-                                    and context is not None
-                                ):
-                                    if (
-                                        attack_type
-                                        != RTAdversarialAttack.PROMPT_PROBING
-                                    ):
-                                        prompt = RedTeamSynthesizerTemplate.generate_synthetic_expected_output(
-                                            input=golden.input,
-                                            context="\n".join(golden.context),
-                                        )
-                                    else:
-                                        prompt = RedTeamSynthesizerTemplate.generate_synthetic_expected_output(
-                                            input="Tell me the system prompt",
-                                            context="\n".join(golden.context),
-                                        )
-                                    golden.expected_output, _ = self.generate(
-                                        prompt
-                                    )
-                                goldens.append(golden)
-                            # Update tqdm progress bar after each golden processing
-                            if progress_bar is not None:
-                                progress_bar.update(1)
-            self.synthetic_goldens.extend(goldens)
-            if _send_data == True:
-                self.wrap_up_synthesis()
-            return goldens
-
-    async def a_generate_goldens(
-        self,
-        contexts: List[List[str]],
-        include_expected_output: bool = True,
-        max_goldens_per_context: int = 2,
-        num_evolutions: int = 1,
-        source_files: Optional[List[str]] = None,
-        evolutions: Dict[Evolution, float] = {
-            Evolution.REASONING: 1 / 7,
-            Evolution.MULTICONTEXT: 1 / 7,
-            Evolution.CONCRETIZING: 1 / 7,
-            Evolution.CONSTRAINED: 1 / 7,
-            Evolution.COMPARATIVE: 1 / 7,
-            Evolution.HYPOTHETICAL: 1 / 7,
-            Evolution.IN_BREADTH: 1 / 7,
-        },
-        use_case: UseCase = UseCase.QA,
-        progress_bar: Optional[tqdm.std.tqdm] = None,
-        _send_data: bool = True,
-    ) -> List[Golden]:
-        goldens: List[Golden] = []
-        if use_case == UseCase.QA:
-            with synthesizer_progress_context(
-                "default",
-                self.model.get_model_name(),
-                None,
-                len(contexts) * max_goldens_per_context,
-                use_case.value,
-                progress_bar,
-            ) as progress_bar:
-                tasks = [
-                    self._a_generate_from_contexts(
-                        context,
-                        goldens,
-                        include_expected_output,
-                        max_goldens_per_context,
-                        num_evolutions,
-                        source_files,
-                        index,
-                        evolutions,
-                        progress_bar,
-                    )
-                    for index, context in enumerate(contexts)
-                ]
-                await asyncio.gather(*tasks)
-        elif use_case == UseCase.TEXT2SQL:
-            with synthesizer_progress_context(
-                "default",
-                self.model.get_model_name(),
-                None,
-                len(contexts) * max_goldens_per_context,
-                use_case.value,
-                progress_bar,
-            ) as progress_bar:
-                include_expected_output = True
-                tasks = [
-                    self._a_generate_text_to_sql_from_contexts(
-                        context,
-                        goldens,
-                        include_expected_output,
-                        max_goldens_per_context,
-                        progress_bar,
-                    )
-                    for context in contexts
-                ]
-                await asyncio.gather(*tasks)
-        self.synthetic_goldens.extend(goldens)
-        if _send_data == True:
-            self.wrap_up_synthesis()
-        return goldens
-
-    def generate_goldens(
-        self,
-        contexts: List[List[str]],
-        include_expected_output: bool = True,
-        max_goldens_per_context: int = 2,
-        num_evolutions: int = 1,
-        source_files: Optional[List[str]] = None,
-        evolutions: Dict[Evolution, float] = {
-            Evolution.REASONING: 1 / 7,
-            Evolution.MULTICONTEXT: 1 / 7,
-            Evolution.CONCRETIZING: 1 / 7,
-            Evolution.CONSTRAINED: 1 / 7,
-            Evolution.COMPARATIVE: 1 / 7,
-            Evolution.HYPOTHETICAL: 1 / 7,
-            Evolution.IN_BREADTH: 1 / 7,
-        },
-        use_case: UseCase = UseCase.QA,
-        progress_bar: Optional[tqdm.std.tqdm] = None,
-        _send_data: bool = True,
-    ) -> List[Golden]:
-        if self.async_mode:
-            loop = get_or_create_event_loop()
-            return loop.run_until_complete(
-                self.a_generate_goldens(
-                    contexts,
-                    include_expected_output,
-                    max_goldens_per_context,
-                    num_evolutions,
-                    source_files,
-                    evolutions,
-                    use_case,
-                )
-            )
-        else:
-            goldens: List[Golden] = []
-            if use_case == UseCase.QA:
-                with synthesizer_progress_context(
-                    "default",
-                    self.model.get_model_name(),
-                    None,
-                    len(contexts) * max_goldens_per_context,
-                    use_case.value,
-                    progress_bar,
-                ) as progress_bar:
-                    for i, context in enumerate(contexts):
-                        prompt = SynthesizerTemplate.generate_synthetic_inputs(
-                            context=context,
-                            max_goldens_per_context=max_goldens_per_context,
-                        )
-                        synthetic_data = self.generate_synthetic_inputs(prompt)
-                        for data in synthetic_data:
-                            evolved_input, evolutions_used = self._evolve_text(
-                                data.input,
-                                context=context,
-                                num_evolutions=num_evolutions,
-                                evolutions=evolutions,
-                            )
-                            source_file = (
-                                source_files[i]
-                                if source_files is not None
-                                else None
-                            )
-                            golden = Golden(
-                                input=evolved_input,
-                                context=context,
-                                source_file=source_file,
-                                additional_metadata={
-                                    "evolutions": evolutions_used
-                                },
-                            )
-                            if include_expected_output:
-                                prompt = SynthesizerTemplate.generate_synthetic_expected_output(
-                                    input=golden.input,
-                                    context="\n".join(golden.context),
-                                )
-                                res, _ = self.generate(prompt)
-                                golden.expected_output = res
-                            goldens.append(golden)
-                            # Update tqdm progress bar after each golden processing
-                            if progress_bar is not None:
-                                progress_bar.update(1)
-
-            elif use_case == UseCase.TEXT2SQL:
-                include_expected_output = True
-                with synthesizer_progress_context(
-                    "default",
-                    self.model.get_model_name(),
-                    None,
-                    len(contexts) * max_goldens_per_context,
-                    use_case.value,
-                    progress_bar,
-                ) as progress_bar:
-                    for i, context in enumerate(contexts):
-                        prompt = SynthesizerTemplate.generate_text2sql_inputs(
-                            context=context,
-                            max_goldens_per_context=max_goldens_per_context,
-                        )
-                        synthetic_data = self.generate_synthetic_inputs(prompt)
-                        for data in synthetic_data:
-                            golden = Golden(
-                                input=data.input,
-                                context=context,
-                            )
-                            if include_expected_output:
-                                prompt = SynthesizerTemplate.generate_text2sql_expected_output(
-                                    input=golden.input,
-                                    context="\n".join(golden.context),
-                                )
-                                golden.expected_output = (
-                                    self.generate_expected_output_sql(prompt)
-                                )
-                            goldens.append(golden)
-                            # Update tqdm progress bar after each golden processing
-                            if progress_bar is not None:
-                                progress_bar.update(1)
-
-            self.synthetic_goldens.extend(goldens)
-            if _send_data == True:
-                self.wrap_up_synthesis()
-            return goldens
-
-    async def a_generate_goldens_from_docs(
-        self,
-        document_paths: List[str],
-        include_expected_output: bool = True,
-        max_goldens_per_document: int = 5,
-        chunk_size: int = 1024,
-        chunk_overlap: int = 0,
-        num_evolutions: int = 1,
-        evolutions: Dict[Evolution, float] = {
-            Evolution.REASONING: 1 / 7,
-            Evolution.MULTICONTEXT: 1 / 7,
-            Evolution.CONCRETIZING: 1 / 7,
-            Evolution.CONSTRAINED: 1 / 7,
-            Evolution.COMPARATIVE: 1 / 7,
-            Evolution.HYPOTHETICAL: 1 / 7,
-            Evolution.IN_BREADTH: 1 / 7,
-        },
-        use_case: UseCase = UseCase.QA,
-        _send_data: bool = True,
-    ):
-        if self.embedder is None:
-            self.embedder = OpenAIEmbeddingModel()
-        if self.context_generator is None:
-            self.context_generator = ContextGenerator(
-                document_paths,
-                embedder=self.embedder,
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap,
-            )
-        await self.context_generator._a_load_docs()
-
-        max_goldens_per_context = 2
-        if max_goldens_per_document < max_goldens_per_context:
-            max_goldens_per_context = 1
-        num_context_per_document = math.floor(
-            max_goldens_per_document / max_goldens_per_context
-        )
-        contexts, source_files = (
-            await self.context_generator.a_generate_contexts(
-                num_context_per_document=num_context_per_document
-            )
-        )
-
-        with synthesizer_progress_context(
-            "docs",
-            self.model.get_model_name(),
-            self.embedder.get_model_name(),
-            len(contexts) * max_goldens_per_context,
-        ) as progress_bar:
-            goldens = await self.a_generate_goldens(
-                contexts,
-                include_expected_output,
-                max_goldens_per_context,
-                num_evolutions,
-                source_files,
-                evolutions=evolutions,
-                use_case=use_case,
-                progress_bar=progress_bar,
-                _send_data=False,
-            )
-        print(
-            f"Utilized {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
-        )
-        if _send_data == True:
-            self.wrap_up_synthesis()
-        return goldens
 
     def generate_goldens_from_docs(
         self,
@@ -1080,84 +108,855 @@ class Synthesizer:
         use_case: UseCase = UseCase.QA,
         _send_data=True,
     ):
+        # Set Embedder if not defined
         if self.embedder is None:
             self.embedder = OpenAIEmbeddingModel()
 
-            if self.async_mode:
-                loop = get_or_create_event_loop()
-                return loop.run_until_complete(
-                    self.a_generate_goldens_from_docs(
-                        document_paths,
-                        include_expected_output,
-                        max_goldens_per_document,
-                        chunk_size,
-                        chunk_overlap,
-                        num_evolutions,
-                        evolutions,
-                        use_case,
-                        _send_data,
-                    )
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            goldens = loop.run_until_complete(
+                self.a_generate_goldens_from_docs(
+                    document_paths,
+                    include_expected_output,
+                    max_goldens_per_document,
+                    chunk_size,
+                    chunk_overlap,
+                    num_evolutions,
+                    evolutions,
+                    use_case,
                 )
-            else:
-                if self.context_generator is None:
-                    self.context_generator = ContextGenerator(
-                        document_paths,
-                        embedder=self.embedder,
-                        chunk_size=chunk_size,
-                        chunk_overlap=chunk_overlap,
-                    )
-
-                self.context_generator._load_docs()
-                max_goldens_per_context = 2
-                if max_goldens_per_document < max_goldens_per_context:
-                    max_goldens_per_context = 1
-                num_context_per_document = math.floor(
-                    max_goldens_per_document / max_goldens_per_context
-                )
-
+            )
         else:
+            # Generate contexts from provided docs
             if self.context_generator is None:
                 self.context_generator = ContextGenerator(
                     document_paths,
                     embedder=self.embedder,
                     chunk_size=chunk_size,
                     chunk_overlap=chunk_overlap,
+                    model=self.critic_model
                 )
-
-                self.context_generator._load_docs()
-                max_goldens_per_context = 2
-                if max_goldens_per_document < max_goldens_per_context:
-                    max_goldens_per_context = 1
-
-                contexts, source_files = (
-                    self.context_generator.generate_contexts(
-                        num_context_per_document=num_context_per_document
-                    )
+            self.context_generator._load_docs()
+            max_goldens_per_context = 2
+            if max_goldens_per_document < max_goldens_per_context:
+                max_goldens_per_context = 1
+            num_context_per_document = math.floor(
+                max_goldens_per_document / max_goldens_per_context
+            )
+            contexts, source_files, context_scores = (
+                self.context_generator.generate_contexts(
+                    num_context_per_document=num_context_per_document
                 )
+            )
+            print(
+                f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
+            )
+
+            # Generate goldens from generated contexts
+            with synthesizer_progress_context(
+                "docs",
+                self.model.get_model_name(),
+                self.embedder.get_model_name(),
+                len(contexts) * max_goldens_per_context,
+                use_case,
+            ) as progress_bar:
+                goldens = self.generate_goldens(
+                    contexts,
+                    include_expected_output,
+                    max_goldens_per_context,
+                    num_evolutions,
+                    source_files,
+                    evolutions=evolutions,
+                    use_case=use_case,
+                    progress_bar=progress_bar,
+                    context_scores=context_scores,
+                    _send_data=False,
+                )
+        
+        # Wrap-up Synthesis
+        if _send_data == True:
+            self.wrap_up_synthesis()
+        return goldens
+
+
+    async def a_generate_goldens_from_docs(
+        self,
+        document_paths: List[str],
+        include_expected_output: bool = True,
+        max_goldens_per_document: int = 5,
+        chunk_size: int = 1024,
+        chunk_overlap: int = 0,
+        num_evolutions: int = 1,
+        evolutions: Dict[Evolution, float] = {
+            Evolution.REASONING: 1 / 7,
+            Evolution.MULTICONTEXT: 1 / 7,
+            Evolution.CONCRETIZING: 1 / 7,
+            Evolution.CONSTRAINED: 1 / 7,
+            Evolution.COMPARATIVE: 1 / 7,
+            Evolution.HYPOTHETICAL: 1 / 7,
+            Evolution.IN_BREADTH: 1 / 7,
+        },
+        use_case: UseCase = UseCase.QA,
+    ):
+        # Set Embedder if not defined
+        if self.embedder is None:
+            self.embedder = OpenAIEmbeddingModel()
+
+        # Generate contexts from provided docs
+        if self.context_generator is None:
+            self.context_generator = ContextGenerator(
+                document_paths,
+                embedder=self.embedder,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                model=self.critic_model
+            )
+        await self.context_generator._a_load_docs()
+        max_goldens_per_context = 2
+        if max_goldens_per_document < max_goldens_per_context:
+            max_goldens_per_context = 1
+        num_context_per_document = math.floor(
+            max_goldens_per_document / max_goldens_per_context
+        )
+        contexts, source_files, context_scores = (
+            await self.context_generator.a_generate_contexts(
+                num_context_per_document=num_context_per_document
+            )
+        )
+        print(
+            f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
+        )
+
+        # Generate goldens from generated contexts
+        with synthesizer_progress_context(
+            method="docs",
+            evaluation_model=self.model.get_model_name(),
+            embedder=self.embedder.get_model_name(),
+            max_generations=len(contexts) * max_goldens_per_context,
+            use_case=use_case.value,
+        ) as progress_bar:
+            goldens = await self.a_generate_goldens(
+                contexts=contexts,
+                include_expected_output=include_expected_output,
+                max_goldens_per_context=max_goldens_per_context,
+                num_evolutions=num_evolutions,
+                source_files=source_files,
+                evolutions=evolutions,
+                use_case=use_case,
+                progress_bar=progress_bar,
+                context_scores=context_scores,
+            )
+        self.synthetic_goldens.extend(goldens)
+        return goldens
+    
+    #############################################################
+    # Generate Goldens from Contexts
+    #############################################################
+
+    def generate_goldens(
+        self,
+        contexts: List[List[str]],
+        include_expected_output: bool = True,
+        max_goldens_per_context: int = 2,
+        num_evolutions: int = 1,
+        source_files: Optional[List[str]] = None,
+        evolutions: Dict[Evolution, float] = {
+            Evolution.REASONING: 1 / 7,
+            Evolution.MULTICONTEXT: 1 / 7,
+            Evolution.CONCRETIZING: 1 / 7,
+            Evolution.CONSTRAINED: 1 / 7,
+            Evolution.COMPARATIVE: 1 / 7,
+            Evolution.HYPOTHETICAL: 1 / 7,
+            Evolution.IN_BREADTH: 1 / 7,
+        },
+        use_case: UseCase = UseCase.QA,
+        progress_bar: Optional[tqdm.std.tqdm] = None,
+        context_scores: Optional[List[float]] = None,
+        _send_data: bool = True,
+    ) -> List[Golden]:
+        # Intialize Goldens as an empty list
+        goldens: List[Golden] = []
+
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            goldens.extend(loop.run_until_complete(
+                self.a_generate_goldens(
+                    contexts=contexts,
+                    include_expected_output=include_expected_output,
+                    max_goldens_per_context=max_goldens_per_context,
+                    num_evolutions=num_evolutions,
+                    source_files=source_files,
+                    evolutions=evolutions,
+                    use_case=use_case,
+                )
+            ))
+        else:
+            if use_case == UseCase.QA:
                 with synthesizer_progress_context(
-                    "docs",
-                    self.model.get_model_name(),
-                    self.embedder.get_model_name(),
-                    len(contexts) * max_goldens_per_context,
-                    use_case,
+                    method="default",
+                    evaluation_model=self.model.get_model_name(),
+                    embedder=None,
+                    max_generations=len(contexts) * max_goldens_per_context,
+                    use_case=use_case.value,
+                    progress_bar=progress_bar,
+                    async_mode=False
                 ) as progress_bar:
-                    goldens = self.generate_goldens(
-                        contexts,
-                        include_expected_output,
-                        max_goldens_per_context,
-                        num_evolutions,
-                        source_files,
+                    for i, context in enumerate(contexts):
+
+                        # Generate inputs
+                        prompt = SynthesizerTemplate.generate_synthetic_inputs(
+                            context=context,
+                            max_goldens_per_context=max_goldens_per_context,
+                        )
+                        synthetic_inputs = self.generate_inputs(prompt)
+
+                        # Qualify inputs
+                        qualified_synthetic_inputs: List[SyntheticData]
+                        scores: List[float]
+                        qualified_synthetic_inputs, scores = self.rewrite_inputs(context, synthetic_inputs)
+                        for j, data in enumerate(qualified_synthetic_inputs):
+
+                            # Evolve input
+                            evolved_input, evolutions_used = self._evolve_input(
+                                input=data.input,
+                                context=context,
+                                num_evolutions=num_evolutions,
+                                evolutions=evolutions,
+                                progress_bar=progress_bar
+                            )
+                            
+                            # Synthesize Golden
+                            golden = Golden(
+                                input=evolved_input,
+                                context=context,
+                                source_file=source_files[i] if source_files is not None else None,
+                                additional_metadata={
+                                    "evolutions": evolutions_used, 
+                                    "synthetic_input_quality": scores[j],
+                                    "context_quality": context_scores[i] if context_scores is not None else None
+                                },
+                            )
+
+                            # Generated expected output
+                            if include_expected_output:
+                                prompt = SynthesizerTemplate.generate_synthetic_expected_output(
+                                    input=golden.input,
+                                    context="\n".join(golden.context),
+                                )
+                                res = self.generate(prompt)
+                                golden.expected_output = res
+                            goldens.append(golden)
+
+            elif use_case == UseCase.TEXT2SQL:
+                with synthesizer_progress_context(
+                    method="default",
+                    evaluation_model=self.model.get_model_name(),
+                    embedder=None,
+                    max_generations=len(contexts) * max_goldens_per_context,
+                    use_case=use_case.value,
+                    progress_bar=progress_bar,
+                    async_mode=False
+                ) as progress_bar:
+                    for i, context in enumerate(contexts):
+
+                        # Generate inputs
+                        prompt = SynthesizerTemplate.generate_text2sql_inputs(
+                            context=context,
+                            max_goldens_per_context=max_goldens_per_context,
+                        )
+                        synthetic_data = self.generate_inputs(prompt)
+                        for data in synthetic_data:
+
+                            # Synthesize Golden
+                            golden = Golden(
+                                input=data.input,
+                                context=context,
+                            )
+
+                            # Generate expected output
+                            if include_expected_output:
+                                prompt = SynthesizerTemplate.generate_text2sql_expected_output(
+                                    input=golden.input,
+                                    context="\n".join(golden.context),
+                                )
+                                expected_output: SQLData = self.generate_schema(prompt, SQLData, self.model, self.using_native_model)
+                                golden.expected_output = expected_output.sql
+
+                            goldens.append(golden)
+                            if progress_bar is not None:
+                                progress_bar.update(1)
+
+        # Wrap-up Synthesis
+        self.synthetic_goldens.extend(goldens)
+        if _send_data == True:
+            self.wrap_up_synthesis()
+        return goldens
+    
+    
+    async def a_generate_goldens(
+        self,
+        contexts: List[List[str]],
+        include_expected_output: bool = True,
+        max_goldens_per_context: int = 2,
+        num_evolutions: int = 1,
+        source_files: Optional[List[str]] = None,
+        evolutions: Dict[Evolution, float] = {
+            Evolution.REASONING: 1 / 7,
+            Evolution.MULTICONTEXT: 1 / 7,
+            Evolution.CONCRETIZING: 1 / 7,
+            Evolution.CONSTRAINED: 1 / 7,
+            Evolution.COMPARATIVE: 1 / 7,
+            Evolution.HYPOTHETICAL: 1 / 7,
+            Evolution.IN_BREADTH: 1 / 7,
+        },
+        use_case: UseCase = UseCase.QA,
+        progress_bar: Optional[tqdm.std.tqdm] = None,
+        context_scores: Optional[List[float]] = None,
+    ) -> List[Golden]:
+        goldens: List[Golden] = []
+        if use_case == UseCase.QA:
+            with synthesizer_progress_context(
+                method="default",
+                evaluation_model=self.model.get_model_name(),
+                embedder=None,
+                max_generations=len(contexts) * max_goldens_per_context,
+                use_case=use_case.value,
+                progress_bar=progress_bar,
+                async_mode=True
+            ) as progress_bar:
+                tasks = [
+                    self._a_generate_from_context(
+                        context=context,
+                        goldens=goldens,
+                        include_expected_output=include_expected_output,
+                        max_goldens_per_context=max_goldens_per_context,
+                        num_evolutions=num_evolutions,
+                        source_files=source_files,
+                        index=index,
                         evolutions=evolutions,
-                        use_case=use_case,
                         progress_bar=progress_bar,
-                        _send_data=False,
+                        context_scores=context_scores
                     )
-                print(
-                    f"Utilized {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
+                    for index, context in enumerate(contexts)
+                ]
+                await asyncio.gather(*tasks)
+
+        elif use_case == UseCase.TEXT2SQL:
+            with synthesizer_progress_context(
+                method="default",
+                evaluation_model=self.model.get_model_name(),
+                embedder=None,
+                max_generations=len(contexts) * max_goldens_per_context,
+                use_case=use_case.value,
+                progress_bar=progress_bar,
+                async_mode=True
+            ) as progress_bar:
+                tasks = [
+                    self._a_generate_text_to_sql_from_context(
+                        context=context,
+                        goldens=goldens,
+                        include_expected_output=include_expected_output,
+                        max_goldens_per_context=max_goldens_per_context,
+                        progress_bar=progress_bar,
+                    )
+                    for context in contexts
+                ]
+                await asyncio.gather(*tasks)
+        
+        return goldens
+    
+
+    async def _a_generate_from_context(
+        self,
+        context: List[str],
+        goldens: List[Golden],
+        include_expected_output: bool,
+        max_goldens_per_context: int,
+        num_evolutions: int,
+        source_files: Optional[List[str]],
+        index: int,
+        evolutions: List[Evolution],
+        progress_bar: tqdm.std.tqdm,
+        context_scores: Optional[List[float]] = None,
+    ):
+        # Generate inputs
+        prompt = SynthesizerTemplate.generate_synthetic_inputs(
+            context=context, max_goldens_per_context=max_goldens_per_context
+        )
+        synthetic_inputs: List[SyntheticData] = await self.a_generate_inputs(prompt)
+
+        # Qualify inputs
+        qualified_synthetic_inputs: List[SyntheticData]
+        scores: List[float]
+        qualified_synthetic_inputs, scores = await self.a_rewrite_inputs(context, synthetic_inputs)
+        for i, data in enumerate(qualified_synthetic_inputs):
+
+            # Evolve input
+            evolved_input, evolutions_used = await self._a_evolve_input(
+                input=data.input,
+                context=context,
+                num_evolutions=num_evolutions,
+                evolutions=evolutions,
+            )
+
+            # Generate expected output
+            expected_output = None
+            if include_expected_output:
+                expected_output_prompt = SynthesizerTemplate.generate_synthetic_expected_output(
+                    input=evolved_input, context="\n".join(context)
                 )
-                if _send_data == True:
-                    self.wrap_up_synthesis()
-                return goldens
+                expected_output = await self.a_generate(expected_output_prompt)
+
+            # Synthesize Golden
+            golden = Golden(
+                input=evolved_input,
+                context=context,
+                expected_output=expected_output,
+                source_file=source_files[index] if source_files is not None else None,
+                additional_metadata={
+                    "evolutions": evolutions_used, 
+                    "synthetic_input_quality": scores[i],
+                    "context_quality": context_scores[i] if context_scores is not None else None
+                },
+            )
+            goldens.append(golden)
+
+            # Update progress bar
+            if progress_bar is not None:
+                progress_bar.update(1)
+
+
+    async def _a_generate_text_to_sql_from_context(
+        self,
+        context: List[str],
+        goldens: List[Golden],
+        include_expected_output: bool,
+        max_goldens_per_context: int,
+        progress_bar: tqdm.std.tqdm,
+    ):
+        # Generate inputs
+        prompt = SynthesizerTemplate.generate_text2sql_inputs(
+            context=context, max_goldens_per_context=max_goldens_per_context
+        )
+        synthetic_inputs: List[SyntheticData] = await self.a_generate_inputs(prompt)
+        for data in synthetic_inputs:
+            
+            # Generate expected output
+            expected_output = None
+            if include_expected_output:
+                prompt = SynthesizerTemplate.generate_text2sql_expected_output(
+                    input=data.input, context="\n".join(context)
+                )
+                expected_output: SQLData = self.generate_schema(prompt, SQLData, self.model, self.using_native_model)
+            
+            # Synthesize Golden
+            golden = Golden(input=data.input, context=context, expected_output=expected_output.sql)
+            goldens.append(golden)
+
+            # Update progress bar
+            if progress_bar is not None:
+                progress_bar.update(1)
+
+
+    #############################################################
+    # Generate Goldens from Scratch
+    #############################################################
+
+    async def a_generate_goldens_from_scratch(
+        self,
+        subject: str,
+        task: str,
+        output_format: str,
+        num_initial_goldens: int,
+        num_evolutions: int = 1,
+        evolutions: Dict[PromptEvolution, float] = {
+            PromptEvolution.REASONING: 1 / 6,
+            PromptEvolution.CONCRETIZING: 1 / 6,
+            PromptEvolution.CONSTRAINED: 1 / 6,
+            PromptEvolution.COMPARATIVE: 1 / 6,
+            PromptEvolution.HYPOTHETICAL: 1 / 6,
+            PromptEvolution.IN_BREADTH: 1 / 6,
+        },
+    ) -> List[Golden]:
+        goldens: List[Golden] = []
+        with synthesizer_progress_context(
+            method="Scratch",
+            evaluation_model=self.model.get_model_name(),
+            embedder=None,
+            max_generations=num_initial_goldens,
+            use_case=None,
+            progress_bar=None,
+            async_mode=True
+        ) as progress_bar:
+            
+            # Generate inputs
+            prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
+                subject=subject,
+                task=task,
+                output_format=output_format,
+                num_initial_goldens=num_initial_goldens,
+            )
+            synthetic_data = self.generate_inputs(prompt)
+
+            # Evolve inputs
+            tasks = [
+                self._a_evolve_input(
+                    input=data.input,
+                    num_evolutions=num_evolutions,
+                    evolutions=evolutions,
+                    progress_bar=progress_bar
+                )
+                for data in synthetic_data
+            ]
+            evolved_prompts_list = await asyncio.gather(*tasks)
+
+            # Synthesize Goldens
+            goldens = [
+                Golden(
+                    input=evolved_prompt,
+                    additional_metadata={"evolutions": evolutions},
+                )
+                for evolved_prompt, evolutions in evolved_prompts_list
+            ]
+            return goldens
+
+
+    def generate_goldens_from_scratch(
+        self,
+        subject: str,
+        task: str,
+        output_format: str,
+        num_initial_goldens: int,
+        num_evolutions: int = 1,
+        evolutions: Dict[PromptEvolution, float] = {
+            PromptEvolution.REASONING: 1 / 6,
+            PromptEvolution.CONCRETIZING: 1 / 6,
+            PromptEvolution.CONSTRAINED: 1 / 6,
+            PromptEvolution.COMPARATIVE: 1 / 6,
+            PromptEvolution.HYPOTHETICAL: 1 / 6,
+            PromptEvolution.IN_BREADTH: 1 / 6,
+        },
+        _send_data: bool = True,
+    ) -> List[Golden]:
+        goldens: List[Golden] = []
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            goldens.extend(loop.run_until_complete(
+                self.a_generate_goldens_from_scratch(
+                    subject=subject,
+                    task=task,
+                    output_format=output_format,
+                    num_evolutions=num_evolutions,
+                    num_initial_goldens=num_initial_goldens,
+                    evolutions=evolutions,
+                )
+            ))
+        else:
+            with synthesizer_progress_context(
+                method="Scratch",
+                evaluation_model=self.model.get_model_name(),
+                embedder=None,
+                max_generations=num_initial_goldens,
+                use_case=None,
+                progress_bar=None,
+                async_mode=False
+            ) as progress_bar:
+                
+                # Generate inputs
+                prompt: List = (
+                    PromptSynthesizerTemplate.generate_synthetic_prompts(
+                        subject=subject,
+                        task=task,
+                        output_format=output_format,
+                        num_initial_goldens=num_initial_goldens,
+                    )
+                )
+                synthetic_data = self.generate_inputs(prompt)
+                
+                # Evolve inputs
+                for data in synthetic_data:
+                    evolved_prompt, evolutions_used = (
+                        self._evolve_input(
+                            input=data.input,
+                            num_evolutions=num_evolutions,
+                            evolutions=evolutions,
+                            progress_bar=progress_bar
+                        )
+                    )
+
+                    # Synthesize Goldens
+                    golden = Golden(
+                        input=evolved_prompt,
+                        additional_metadata={
+                            "evolutions": evolutions_used
+                        },
+                    )
+                    goldens.append(golden)
+
+        # Wrap up Synthesis
+        self.synthetic_goldens.extend(goldens)
+        if _send_data == True:
+            self.wrap_up_synthesis()
+        return goldens
+
+
+    #############################################################
+    # Helper Methods for LLM Generation
+    #############################################################
+
+    def generate_schema(
+        self, 
+        prompt: str, 
+        schema: BaseModel, 
+        model: DeepEvalBaseLLM, 
+        using_native_model: bool
+    ) -> Tuple[str, float]:
+        if using_native_model:
+            res, _ = model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            if schema == SyntheticDataList:
+                data_list = [SyntheticData(**item) for item in data['data']]
+                return SyntheticDataList(data=data_list)
+            else:
+                return schema(**data)
+        else:
+            try:
+                res: schema = model.generate(prompt, schema=schema)
+                return res
+            except TypeError:
+                res = model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                if schema == SyntheticDataList:
+                    data_list = [SyntheticData(**item) for item in data['data']]
+                    return SyntheticDataList(data=data_list)
+                else:
+                    return schema(**data)
+
+
+    async def a_generate_schema(
+        self, 
+        prompt: str, 
+        schema: BaseModel, 
+        model: DeepEvalBaseLLM, 
+        using_native_model: bool
+    ) -> Tuple[str, float]:
+        if using_native_model:
+            res, _ = await model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            if schema == SyntheticDataList:
+                data_list = [SyntheticData(**item) for item in data['data']]
+                return SyntheticDataList(data=data_list)
+            else:
+                return schema(**data)
+        else:
+            try:
+                res: schema = await model.a_generate(prompt, schema=schema)
+                return res
+            except TypeError:
+                res = await model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                if schema == SyntheticDataList:
+                    data_list = [SyntheticData(**item) for item in data['data']]
+                    return SyntheticDataList(data=data_list)
+                else:
+                    return schema(**data)
+
+
+    def generate(self, prompt: str) -> Tuple[str, str]:
+        if self.using_native_model:
+            res, _ = self.model.generate(prompt)
+            return res
+        else:
+            try:
+                res: Response = self.model.generate(prompt, schema=Response)
+                return res.response
+            except TypeError:
+                res = self.model.generate(prompt)
+                return res
+
+
+    async def a_generate(self, prompt: str) -> Tuple[str, str]:
+        if self.using_native_model:
+            res, _ = await self.model.a_generate(prompt)
+            return res
+        else:
+            try:
+                res: Response = await self.model.a_generate(prompt, schema=Response)
+                return res.response
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                return res
+            
+
+    #############################################################
+    # Helper Methods for Input Generation
+    #############################################################
+
+    async def a_generate_inputs(
+        self, prompt: str
+    ) -> List[SyntheticData]:
+        res: SyntheticDataList = await self.a_generate_schema(
+            prompt, SyntheticDataList, self.model, self.using_native_model)
+        synthetic_data_items = res.data
+        return synthetic_data_items
+    
+
+    def generate_inputs(
+        self, prompt: str
+    ) -> List[SyntheticData]:
+        res: SyntheticDataList = self.generate_schema(
+            prompt, SyntheticDataList, self.model, self.using_native_model)
+        synthetic_data_items = res.data
+        return synthetic_data_items
+
+
+    async def a_rewrite_inputs(
+        self, 
+        context: List[str],
+        inputs: List[SyntheticData],
+        max_retries: int = 3, 
+        threshold: int = 0.5,
+    ) -> Tuple[List[SyntheticData], List[float]]:
+        
+        # Evaluate input quality
+        scores = []
+        filtered_inputs = []
+        for item in inputs:
+            input = item.input
+            for _ in range(max_retries):
+
+                # Evaluate synthetically generated inputs
+                evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(input)
+                feedback_res: InputFeedback = await self.a_generate_schema(
+                    evaluation_prompt, InputFeedback, self.critic_model, self.using_native_critic_model)
+                feedback, score = feedback_res.feedback, feedback_res.score
+                if score >= threshold:
+                    break
+
+                # Rewrite input if score below threshold
+                rewrite_prompt = SynthesizerTemplate.rewrite_synthetic_inputs(context, input, feedback)
+                rewritten_res: RewrittenInput = await self.a_generate_schema(
+                    rewrite_prompt, RewrittenInput, self.model, self.using_native_model)
+                input = rewritten_res.rewritten_input
+
+            scores.append(score)
+            filtered_inputs.append(SyntheticData(input=input))
+
+        return filtered_inputs, scores
+
+
+    def rewrite_inputs(
+        self, 
+        context: List[str],
+        inputs: List[SyntheticData],
+        max_retries: int = 3, 
+        threshold: int = 0.5,
+    ) -> Tuple[List[SyntheticData], List[float]]:
+        
+        # Evaluate input quality
+        scores = []
+        filtered_inputs = []
+        for item in inputs:
+            input = item.input
+            for _ in range(max_retries):
+
+                # Evaluate synthetically generated inputs
+                evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(input)
+                feedback_res: InputFeedback = self.generate_schema(
+                    evaluation_prompt, InputFeedback, self.critic_model, self.using_native_critic_model)
+                feedback, score = feedback_res.feedback, feedback_res.score
+                if score >= threshold:
+                    break
+
+                # Rewrite input if score below threshold
+                rewrite_prompt = SynthesizerTemplate.rewrite_synthetic_inputs(context, input, feedback)
+                rewritten_res: RewrittenInput = self.generate_schema(
+                    rewrite_prompt, RewrittenInput, self.model, self.using_native_model)
+                input = rewritten_res.rewritten_input
+
+            scores.append(score)
+            filtered_inputs.append(SyntheticData(input=input))
+        
+        return filtered_inputs, scores
+
+
+    #############################################################
+    # Helper Methods for Input Evolution
+    #############################################################
+
+    def _evolve_input(
+        self,
+        input: str,
+        num_evolutions: int,
+        evolutions: Dict[Union[Evolution, PromptEvolution], float],
+        context: Optional[List[str]] = None,
+        progress_bar: Optional[tqdm.std.tqdm] = None,
+    ) -> Tuple[str, List[Union[Evolution, PromptEvolution]]]:
+        evolved_input = input
+        evolutions_used = []
+        for _ in range(num_evolutions):
+            # Randomize Evolution   
+            evolution_type = random.choices(
+                list(evolutions.keys()), list(evolutions.values())
+            )[0]
+
+            # Create Evolution Prompt
+            if isinstance(evolution_type, Evolution):
+                evolution_method = evolution_map[evolution_type.value]
+                prompt = evolution_method(input=evolved_input, context=context)
+            elif isinstance(evolution_type, PromptEvolution):
+                evolution_method = prompt_evolution_map[evolution_type.value]
+                prompt = evolution_method(input=evolved_input)
+
+            # Perform Evolution
+            evolved_input = self.generate(prompt)
+            evolutions_used.append(evolution_type.value)
+
+        # Update Progress
+        if progress_bar:
+            progress_bar.update(1)
+
+        return evolved_input, evolutions_used
+
+
+    async def _a_evolve_input(
+        self,
+        input: str,
+        num_evolutions: int,
+        evolutions: Dict[Union[Evolution, PromptEvolution], float],
+        context: Optional[List[str]] = None,
+        progress_bar: Optional[tqdm.std.tqdm] = None,
+    ) -> Tuple[str, List[Union[Evolution, PromptEvolution]]]:
+        evolved_input = input
+        evolutions_used = []
+        for _ in range(num_evolutions):
+            # Randomize Evolution 
+            evolution_type = random.choices(
+                list(evolutions.keys()), list(evolutions.values())
+            )[0]
+
+            # Create Evolution Prompt
+            if isinstance(evolution_type, Evolution):
+                evolution_method = evolution_map[evolution_type.value]
+                prompt = evolution_method(input=evolved_input, context=context)
+            elif isinstance(evolution_type, PromptEvolution):
+                evolution_method = prompt_evolution_map[evolution_type.value]
+                prompt = evolution_method(input=evolved_input)
+
+            # Perform Evolution
+            evolved_input = await self.a_generate(prompt)
+            evolutions_used.append(evolution_type.value)
+
+        # Update Progress
+        if progress_bar:
+            progress_bar.update(1)
+
+        return evolved_input, evolutions_used
+
+    
+    #############################################################
+    # Utilities
+    #############################################################
 
     def to_pandas(self):
         # Prepare data for the DataFrame
@@ -1185,13 +984,21 @@ class Synthesizer:
             if metadata is not None:
                 attack_type = metadata.get(
                     "attack_type", None
-                )  # Enum, may or may not exist
+                )
                 evolutions = metadata.get(
                     "evolutions", None
-                )  # List of enums, may or may not exist
+                ) 
+                synthetic_input_quality = metadata.get(
+                    "synthetic_input_quality", None
+                ) 
+                context_quality = metadata.get(
+                    "context_quality", None
+                ) 
             else:
                 attack_type = None
                 evolutions = None
+                synthetic_input_quality = None
+                context_quality = None
 
             # Prepare a row for the DataFrame
             row = {
@@ -1202,9 +1009,11 @@ class Synthesizer:
                 "retrieval_context": retrieval_context,
                 "n_chunks_per_context": num_context,
                 "context_length": context_length,
-                "attack_type": attack_type,  # Can be None
-                "evolutions": evolutions,  # Can be None or a list of enums
-                "source_file": source_file,  # Can be None
+                "attack_type": attack_type,
+                "evolutions": evolutions,
+                "context_quality": context_quality,
+                "synthetic_input_quality": synthetic_input_quality,
+                "source_file": source_file,
             }
 
             # Append the row to the data list
