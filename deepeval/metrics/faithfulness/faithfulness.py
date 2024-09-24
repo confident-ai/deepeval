@@ -17,7 +17,7 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.faithfulness.schema import *
+from deepeval.metrics.faithfulness.schema import FaithfulnessVerdict, Verdicts, Reason, Truths, Claims
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -35,6 +35,7 @@ class FaithfulnessMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        limit_count: int = 0,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -43,6 +44,7 @@ class FaithfulnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.limit_count = limit_count
 
     def measure(
         self,
@@ -61,8 +63,8 @@ class FaithfulnessMetric(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.truths = self._generate_truths(test_case.retrieval_context)
-                self.claims = self._generate_claims(test_case.actual_output)
+                self.truths = self._generate_truths(test_case.retrieval_context, self.limit_count)
+                self.claims = self._generate_claims(test_case.actual_output, self.limit_count)
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -228,9 +230,10 @@ class FaithfulnessMetric(BaseMetric):
                 ]
                 return verdicts
 
-    async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
+    async def _a_generate_truths(self, retrieval_context: str, limit_count: int = 0) -> List[str]:
         prompt = FaithfulnessTemplate.generate_truths(
-            text="\n\n".join(retrieval_context)
+            text="\n\n".join(retrieval_context),
+            limit_count=limit_count
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -246,9 +249,10 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    def _generate_truths(self, retrieval_context: str) -> List[str]:
+    def _generate_truths(self, retrieval_context: str, limit_count: int = 0) -> List[str]:
         prompt = FaithfulnessTemplate.generate_truths(
-            text="\n\n".join(retrieval_context)
+            text="\n\n".join(retrieval_context),
+            limit_count=limit_count
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -264,8 +268,8 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    async def _a_generate_claims(self, actual_output: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
+    async def _a_generate_claims(self, actual_output: str, limit_count: int = 0) -> List[str]:
+        prompt = FaithfulnessTemplate.generate_claims(text=actual_output, limit_count=limit_count)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
@@ -280,8 +284,8 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
 
-    def _generate_claims(self, actual_output: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
+    def _generate_claims(self, actual_output: str, limit_count: int = 0) -> List[str]:
+        prompt = FaithfulnessTemplate.generate_claims(text=actual_output, limit_count=limit_count)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
