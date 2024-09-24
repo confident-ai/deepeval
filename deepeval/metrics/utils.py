@@ -1,6 +1,7 @@
 import inspect
 import json
 from typing import Any, Dict, Optional, List, Union, Tuple
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.models import (
     GPTModel,
     DeepEvalBaseLLM,
@@ -113,7 +114,7 @@ def check_conversational_test_case_params(
     if len(test_case.turns) == 0:
         error_str = "'turns' in conversational test case cannot be empty."
         metric.error = error_str
-        raise ValueError(error_str)
+        raise MissingTestCaseParamsError(error_str)
 
     for turn in test_case.turns:
         test_case = turn
@@ -136,7 +137,7 @@ def check_conversational_test_case_params(
 
             error_str = f"{missing_params_str} for `llm_test_case` turns cannot be None for the '{metric.__name__}' metric"
             metric.error = error_str
-            raise ValueError(error_str)
+            raise MissingTestCaseParamsError(error_str)
 
 
 def check_llm_test_case_params(
@@ -166,7 +167,7 @@ def check_llm_test_case_params(
 
         error_str = f"{missing_params_str} cannot be None for the '{metric.__name__}' metric"
         metric.error = error_str
-        raise ValueError(error_str)
+        raise MissingTestCaseParamsError(error_str)
 
 
 def check_mllm_test_case_params(
@@ -214,7 +215,7 @@ def check_mllm_test_case_params(
 
         error_str = f"{missing_params_str} cannot be None for the '{metric.__name__}' metric"
         metric.error = error_str
-        raise ValueError(error_str)
+        raise MissingTestCaseParamsError(error_str)
 
 
 def trimAndLoadJson(

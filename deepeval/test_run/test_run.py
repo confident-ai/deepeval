@@ -349,6 +349,12 @@ class TestRunManager:
         api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
         test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     ):
+        if (
+            api_test_case.metrics_data is not None
+            and len(api_test_case.metrics_data) == 0
+        ):
+            return
+
         if self.save_to_disk:
             try:
                 with portalocker.Lock(

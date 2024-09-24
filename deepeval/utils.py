@@ -132,6 +132,23 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
     return loop
 
 
+def should_skip_on_missing_params():
+    try:
+        if os.environ["SKIP_DEEPEVAL_MISSING_PARAMS"] == "YES":
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+def set_should_skip_on_missing_params(yes: bool):
+    if yes:
+        os.environ["SKIP_DEEPEVAL_MISSING_PARAMS"] = "YES"
+    else:
+        os.environ["SKIP_DEEPEVAL_MISSING_PARAMS"] = "NO"
+
+
 def should_ignore_errors():
     try:
         if os.environ["IGNORE_DEEPEVAL_ERRORS"] == "YES":

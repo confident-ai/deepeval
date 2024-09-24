@@ -12,6 +12,7 @@ from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.utils import (
     delete_file_if_exists,
     set_should_ignore_errors,
+    set_should_skip_on_missing_params,
     set_should_use_cache,
     set_verbose_mode,
 )
@@ -75,6 +76,12 @@ def run(
         "-i",
         help="Whether to ignore errors or not",
     ),
+    skip_on_missing_params: Optional[bool] = typer.Option(
+        False,
+        "--skip-on-missing-params",
+        "-s",
+        help="Whether to skip test cases with missing parameters",
+    ),
     verbose: Optional[bool] = typer.Option(
         None,
         "--verbose",
@@ -97,6 +104,7 @@ def run(
     should_use_cache = use_cache and repeat is None
     set_should_use_cache(should_use_cache)
     set_should_ignore_errors(ignore_errors)
+    set_should_skip_on_missing_params(skip_on_missing_params)
     set_verbose_mode(verbose)
 
     global_test_run_manager.reset()
