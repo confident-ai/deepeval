@@ -18,6 +18,7 @@ class BaseMetric:
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
+    skipped = False
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
@@ -52,6 +53,7 @@ class BaseConversationalMetric:
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
+    skipped = False
 
     @abstractmethod
     def measure(
@@ -89,6 +91,7 @@ class BaseMultimodalMetric:
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
+    skipped = False
 
     @property
     def threshold(self) -> float:

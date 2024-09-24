@@ -1,0 +1,2 @@
+class MissingTestCaseParamsError(Exception):
+    pass

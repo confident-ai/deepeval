@@ -8,12 +8,14 @@ from rich.console import Console
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm
 
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
 from deepeval.test_case.utils import check_valid_test_cases_type
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.utils import (
     get_or_create_event_loop,
     should_ignore_errors,
+    should_skip_on_missing_params,
     should_use_cache,
     should_verbose_print,
 )
@@ -181,6 +183,7 @@ def create_api_test_case(
             test_case.additional_metadata = additional_metadata
             test_case.comments = comments
             trace_stack = None
+            metrics_data = None
         else:
             success = True
             if test_case.name is not None:
@@ -189,6 +192,7 @@ def create_api_test_case(
                 name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
             order = test_case._dataset_rank
             trace_stack = get_trace_stack()
+            metrics_data = []
 
         if isinstance(test_case, LLMTestCase):
             api_test_case = LLMApiTestCase(
@@ -201,7 +205,7 @@ def create_api_test_case(
                 toolsCalled=test_case.tools_called,
                 expectedTools=test_case.expected_tools,
                 success=success,
-                metricsData=None,
+                metricsData=metrics_data,
                 runDuration=None,
                 evaluationCost=None,
                 order=order,
@@ -216,7 +220,7 @@ def create_api_test_case(
                 multimodalInput=test_case.input,
                 multimodalActualOutput=test_case.actual_output,
                 success=success,
-                metricsData=None,
+                metricsData=metrics_data,
                 runDuration=None,
                 evaluationCost=None,
                 order=order,
@@ -235,6 +239,7 @@ def execute_test_cases(
     metrics: List[
         Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
     ],
+    skip_on_missing_params: bool,
     ignore_errors: bool,
     use_cache: bool,
     show_indicator: bool,
@@ -259,6 +264,7 @@ def execute_test_cases(
     llm_metrics: List[BaseMetric] = []
     mllm_metrics: List[BaseMultimodalMetric] = []
     for metric in metrics:
+        metric.async_mode = False
         if isinstance(metric, BaseMetric):
             llm_metrics.append(metric)
         elif isinstance(metric, BaseConversationalMetric):
@@ -309,15 +315,32 @@ def execute_test_cases(
 
                         if metric_data is None:
                             read_all_metrics_from_cache = False
-                            metric.async_mode = False  # Override metric async
                             try:
                                 metric.measure(
                                     test_case,
                                     _show_indicator=show_metric_indicator,
                                 )
+                            except MissingTestCaseParamsError as e:
+                                if skip_on_missing_params:
+                                    continue
+                                else:
+                                    if ignore_errors:
+                                        metric.error = str(e)
+                                        metric.success = False
+                                    else:
+                                        raise
                             except TypeError:
                                 try:
                                     metric.measure(test_case)
+                                except MissingTestCaseParamsError as e:
+                                    if skip_on_missing_params:
+                                        continue
+                                    else:
+                                        if ignore_errors:
+                                            metric.error = str(e)
+                                            metric.success = False
+                                        else:
+                                            raise
                                 except Exception as e:
                                     if ignore_errors:
                                         metric.error = str(e)
@@ -380,15 +403,32 @@ def execute_test_cases(
                     )
                     test_start_time = time.perf_counter()
                     for metric in mllm_metrics:
-                        metric.async_mode = False  # Override metric async
                         try:
                             metric.measure(
                                 test_case,
                                 _show_indicator=show_metric_indicator,
                             )
+                        except MissingTestCaseParamsError as e:
+                            if skip_on_missing_params:
+                                continue
+                            else:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
                         except TypeError:
                             try:
                                 metric.measure(test_case)
+                            except MissingTestCaseParamsError as e:
+                                if skip_on_missing_params:
+                                    continue
+                                else:
+                                    if ignore_errors:
+                                        metric.error = str(e)
+                                        metric.success = False
+                                    else:
+                                        raise
                             except Exception as e:
                                 if ignore_errors:
                                     metric.error = str(e)
@@ -426,15 +466,32 @@ def execute_test_cases(
 
                     test_start_time = time.perf_counter()
                     for metric in metrics:
-                        metric.async_mode = False  # Override metric async
                         try:
                             metric.measure(
                                 test_case,
                                 _show_indicator=show_metric_indicator,
                             )
+                        except MissingTestCaseParamsError as e:
+                            if skip_on_missing_params:
+                                continue
+                            else:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
                         except TypeError:
                             try:
                                 metric.measure(test_case)
+                            except MissingTestCaseParamsError as e:
+                                if skip_on_missing_params:
+                                    continue
+                                else:
+                                    if ignore_errors:
+                                        metric.error = str(e)
+                                        metric.success = False
+                                    else:
+                                        raise
                             except Exception as e:
                                 if ignore_errors:
                                     metric.error = str(e)
@@ -484,6 +541,7 @@ async def a_execute_test_cases(
         Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
     ],
     ignore_errors: bool,
+    skip_on_missing_params: bool,
     use_cache: bool,
     show_indicator: bool,
     throttle_value: int,
@@ -548,6 +606,7 @@ async def a_execute_test_cases(
                             count=llm_test_case_counter,
                             test_run=test_run,
                             ignore_errors=ignore_errors,
+                            skip_on_missing_params=skip_on_missing_params,
                             use_cache=use_cache,
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
@@ -567,6 +626,7 @@ async def a_execute_test_cases(
                             test_results=test_results,
                             count=mllm_test_case_counter,
                             ignore_errors=ignore_errors,
+                            skip_on_missing_params=skip_on_missing_params,
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             pbar=pbar,
@@ -583,6 +643,7 @@ async def a_execute_test_cases(
                             test_results=test_results,
                             count=conversational_test_case_counter,
                             ignore_errors=ignore_errors,
+                            skip_on_missing_params=skip_on_missing_params,
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             pbar=pbar,
@@ -667,6 +728,7 @@ async def a_execute_llm_test_cases(
     count: int,
     test_run: TestRun,
     ignore_errors: bool,
+    skip_on_missing_params: bool,
     use_cache: bool,
     show_indicator: bool,
     _use_bar_indicator: bool,
@@ -676,6 +738,7 @@ async def a_execute_llm_test_cases(
 
     cached_test_case = None
     for metric in metrics:
+        metric.skipped = False
         metric.error = None  # Reset metric error
 
     # only use cache when NOT conversational test case
@@ -693,11 +756,15 @@ async def a_execute_llm_test_cases(
         metrics=metrics,
         test_case=test_case,
         cached_test_case=cached_test_case,
+        skip_on_missing_params=skip_on_missing_params,
         ignore_errors=ignore_errors,
         show_indicator=show_metrics_indicator,
     )
 
     for metric in metrics:
+        if metric.skipped:
+            continue
+
         metric_data = create_metric_data(metric)
         api_test_case.update_metric_data(metric_data)
 
@@ -750,6 +817,7 @@ async def a_execute_mllm_test_cases(
     test_results: List[Union[TestResult, MLLMTestCase]],
     count: int,
     ignore_errors: bool,
+    skip_on_missing_params: bool,
     show_indicator: bool,
     _use_bar_indicator: bool,
     pbar: Optional[tqdm_asyncio] = None,
@@ -757,6 +825,7 @@ async def a_execute_mllm_test_cases(
     show_metrics_indicator = show_indicator and not _use_bar_indicator
 
     for metric in metrics:
+        metric.skipped = False
         metric.error = None  # Reset metric error
 
     api_test_case: LLMApiTestCase = create_api_test_case(test_case, count)
@@ -765,10 +834,14 @@ async def a_execute_mllm_test_cases(
         metrics=metrics,
         test_case=test_case,
         cached_test_case=None,
+        skip_on_missing_params=skip_on_missing_params,
         ignore_errors=ignore_errors,
         show_indicator=show_metrics_indicator,
     )
     for metric in metrics:
+        if metric.skipped:
+            continue
+
         metric_data = create_metric_data(metric)
         api_test_case.update_metric_data(metric_data)
 
@@ -793,6 +866,7 @@ async def a_execute_conversational_test_cases(
     test_results: List[Union[TestResult, MLLMTestCase]],
     count: int,
     ignore_errors: bool,
+    skip_on_missing_params: bool,
     show_indicator: bool,
     _use_bar_indicator: bool,
     pbar: Optional[tqdm_asyncio] = None,
@@ -800,6 +874,7 @@ async def a_execute_conversational_test_cases(
     show_metrics_indicator = show_indicator and not _use_bar_indicator
 
     for metric in metrics:
+        metric.skipped = False
         metric.error = None  # Reset metric error
 
     api_test_case: ConversationalApiTestCase = create_api_test_case(
@@ -811,10 +886,14 @@ async def a_execute_conversational_test_cases(
         metrics=metrics,
         test_case=test_case,
         cached_test_case=None,
+        skip_on_missing_params=skip_on_missing_params,
         ignore_errors=ignore_errors,
         show_indicator=show_metrics_indicator,
     )
     for metric in metrics:
+        if metric.skipped:
+            continue
+
         metric_data = create_metric_data(metric)
         api_test_case.update_metric_data(metric_data)
 
@@ -845,6 +924,7 @@ def assert_test(
             a_execute_test_cases(
                 [test_case],
                 metrics,
+                skip_on_missing_params=should_skip_on_missing_params(),
                 ignore_errors=should_ignore_errors(),
                 use_cache=should_use_cache(),
                 verbose_mode=should_verbose_print(),
@@ -858,6 +938,7 @@ def assert_test(
         test_result = execute_test_cases(
             [test_case],
             metrics,
+            skip_on_missing_params=should_skip_on_missing_params(),
             ignore_errors=should_ignore_errors(),
             use_cache=should_use_cache(),
             verbose_mode=should_verbose_print(),
@@ -903,6 +984,7 @@ def evaluate(
     write_cache: bool = True,
     use_cache: bool = False,
     ignore_errors: bool = False,
+    skip_on_missing_params: bool = False,
     verbose_mode: Optional[bool] = None,
     throttle_value: int = 0,
 ):
@@ -940,6 +1022,7 @@ def evaluate(
                     verbose_mode=verbose_mode,
                     save_to_disk=write_cache,
                     show_indicator=show_indicator,
+                    skip_on_missing_params=skip_on_missing_params,
                     throttle_value=throttle_value,
                 )
             )
@@ -951,6 +1034,7 @@ def evaluate(
                 use_cache=use_cache,
                 verbose_mode=verbose_mode,
                 save_to_disk=write_cache,
+                skip_on_missing_params=skip_on_missing_params,
                 show_indicator=show_indicator,
             )
 
@@ -970,32 +1054,34 @@ def evaluate(
 
 
 def print_test_result(test_result: TestResult):
+    if test_result.metrics_data is None:
+        return
+
     print("")
     print("=" * 70 + "\n")
     print("Metrics Summary\n")
 
-    if test_result.metrics_data is not None:
-        for metric_data in test_result.metrics_data:
-            successful = True
-            if metric_data.error is not None:
-                successful = False
-            else:
-                # This try block is for user defined custom metrics,
-                # which might not handle the score == undefined case elegantly
-                try:
-                    if not metric_data.success:
-                        successful = False
-                except:
+    for metric_data in test_result.metrics_data:
+        successful = True
+        if metric_data.error is not None:
+            successful = False
+        else:
+            # This try block is for user defined custom metrics,
+            # which might not handle the score == undefined case elegantly
+            try:
+                if not metric_data.success:
                     successful = False
+            except:
+                successful = False
 
-            if not successful:
-                print(
-                    f"  - ❌ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
-                )
-            else:
-                print(
-                    f"  - ✅ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
-                )
+        if not successful:
+            print(
+                f"  - ❌ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
+            )
+        else:
+            print(
+                f"  - ✅ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
+            )
 
     print("")
     if test_result.multimodal:
