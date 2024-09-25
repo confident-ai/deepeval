@@ -164,7 +164,7 @@ class Synthesizer:
                     source_files,
                     evolutions=evolutions,
                     use_case=use_case,
-                    context_scores=context_scores,
+                    _context_scores=context_scores,
                     _progress_bar=progress_bar,
                     _send_data=False,
                 )
@@ -235,7 +235,7 @@ class Synthesizer:
                 source_files=source_files,
                 evolutions=evolutions,
                 use_case=use_case,
-                context_scores=context_scores,
+                _context_scores=context_scores,
                 _progress_bar=progress_bar,
             )
         self.synthetic_goldens.extend(goldens)
@@ -262,7 +262,7 @@ class Synthesizer:
             Evolution.IN_BREADTH: 1 / 7,
         },
         use_case: UseCase = UseCase.QA,
-        context_scores: Optional[List[float]] = None,
+        _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
         _send_data: bool = True,
     ) -> List[Golden]:
@@ -325,7 +325,7 @@ class Synthesizer:
                                 additional_metadata={
                                     "evolutions": evolutions_used, 
                                     "synthetic_input_quality": scores[j],
-                                    "context_quality": context_scores[i] if context_scores is not None else None
+                                    "context_quality": _context_scores[i] if _context_scores is not None else None
                                 },
                             )
 
@@ -402,7 +402,7 @@ class Synthesizer:
             Evolution.IN_BREADTH: 1 / 7,
         },
         use_case: UseCase = UseCase.QA,
-        context_scores: Optional[List[float]] = None,
+        _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
     ) -> List[Golden]:
         goldens: List[Golden] = []
@@ -427,7 +427,7 @@ class Synthesizer:
                         index=index,
                         evolutions=evolutions,
                         progress_bar=progress_bar,
-                        context_scores=context_scores
+                        context_scores=_context_scores
                     )
                     for index, context in enumerate(contexts)
                 ]
