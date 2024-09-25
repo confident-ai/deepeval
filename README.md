@@ -248,7 +248,7 @@ dataset.evaluate([answer_relevancy_metric])
 
 # Real-time Evaluations on Confident AI
 
-We offer a [free web platform](https://app.confident-ai.com) for you to:
+We offer a [web platform](https://app.confident-ai.com) for you to:
 
 1. Log and view all the test results / metrics data from DeepEval's test runs.
 2. Debug evaluation results via LLM traces.
