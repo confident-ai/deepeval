@@ -94,8 +94,9 @@ class SynthesizerTemplate:
 
         Generated Response:
         """
-    
+
     staticmethod
+
     def generate_synthetic_inputs(context, max_goldens_per_context):
         return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
         The `input` can either be a question or a statement that can be addressed by the given context.
@@ -133,7 +134,7 @@ class SynthesizerTemplate:
 
         JSON:
         """
-    
+
     @staticmethod
     def rewrite_synthetic_inputs(context, original_query, feedback):
         return f"""I want you to act as a query rewriter. Based on the provided context, original query, and feedback, generate a rewritten query that improves its clarity and answerability based on the feedback provided.
@@ -173,9 +174,11 @@ class SynthesizerTemplate:
         JSON:
         """
 
+
 ######################################################################################################
 ##### Filter #########################################################################################
 ######################################################################################################
+
 
 class FilterTemplate:
 
@@ -230,7 +233,7 @@ class FilterTemplate:
 
         JSON:
         """
-    
+
     @staticmethod
     def evaluate_context(context):
         return f"""Given a context, complete the following task and return the result in VALID JSON format: Evaluate the supplied context and assign a numerical score between 0 (Low) and 1 (High) for each of the following criteria in your JSON response:
@@ -299,11 +302,11 @@ class FilterTemplate:
         JSON:
         """
 
-    
 
 ######################################################################################################
 ##### Approach similar to https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py ######
 ######################################################################################################
+
 
 class EvolutionTemplate:
 

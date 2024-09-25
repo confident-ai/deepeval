@@ -9,7 +9,7 @@ class RewrittenInput(BaseModel):
 class InputFeedback(BaseModel):
     score: float
     feedback: str
-    
+
 
 class SyntheticData(BaseModel):
     input: str

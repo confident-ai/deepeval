@@ -93,7 +93,7 @@ document_paths = [file_path1, file_path2, file_path3]
 # inputs, scores = synthesizer_sync.generate_and_filter_synthetic_inputs(
 #     context = [context_1, context_2, context_3, context_4],
 #     max_goldens_per_context = 3,
-#     max_retries = 3, 
+#     max_retries = 3,
 #     threshold = 0.5,
 # )
 # print(inputs)
@@ -102,7 +102,7 @@ document_paths = [file_path1, file_path2, file_path3]
 #     synthesizer_sync.a_generate_and_filter_synthetic_inputs(
 #         context = [context_1, context_2, context_3, context_4],
 #         max_goldens_per_context = 3,
-#         max_retries = 3, 
+#         max_retries = 3,
 #         threshold = 0.5,
 #     )
 # )
@@ -188,6 +188,7 @@ document_paths = [file_path1, file_path2, file_path3]
 ### Generate Goldens From Docs ##########################
 #########################################################
 
+
 def test_generate_goldens_from_docs(
     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
 ):
@@ -222,6 +223,7 @@ test_generate_goldens_from_docs(synthesizer_async, UseCase.TEXT2SQL)
 #########################################################
 ### Generate Goldens From Scratch #######################
 #########################################################
+
 
 def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
     start_time = time.time()

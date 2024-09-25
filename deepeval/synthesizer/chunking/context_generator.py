@@ -6,10 +6,14 @@ import random
 import math
 import os
 
-from deepeval.models.base_model import DeepEvalBaseEmbeddingModel, DeepEvalBaseLLM
+from deepeval.models.base_model import (
+    DeepEvalBaseEmbeddingModel,
+    DeepEvalBaseLLM,
+)
 from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.synthesizer.templates.template import FilterTemplate
+
 
 class ContextScore(BaseModel):
     clarity: float
@@ -23,11 +27,12 @@ class ContextGenerator:
         self,
         document_paths: List[str],
         embedder: DeepEvalBaseEmbeddingModel,
-        model: Optional[Union[str, DeepEvalBaseLLM]] = None,        
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
     ):
         from chromadb.api.models.Collection import Collection
+
         self.model, self.using_native_model = initialize_model(model)
         self.embedder = embedder
         self.chunk_size = chunk_size
@@ -41,7 +46,6 @@ class ContextGenerator:
         self.source_files_to_collections_map: Optional[
             Dict[str, Collection]
         ] = None
-
 
     async def a_generate_contexts(
         self, num_context_per_document: int, max_context_size: int = 3
@@ -88,19 +92,21 @@ class ContextGenerator:
                 *tasks, desc="✨ 📚 ✨ Chunking Documents"
             )
 
-         # Generate contexts
+        # Generate contexts
         for path, collection in tqdm_bar(
             self.source_files_to_collections_map.items(),
             desc="✨ 🧩 ✨ Generating Contexts",
         ):
             num_chunks = collection.count()
             min_num_context = min(num_context_per_document, num_chunks)
-            contexts_per_doc, scores_per_doc = self._get_n_random_contexts_per_doc(
+            contexts_per_doc, scores_per_doc = (
+                self._get_n_random_contexts_per_doc(
                     path=path,
                     n_contexts_per_doc=min_num_context,
                     context_size=max_context_size,
                     similarity_threshold=0.5,
                 )
+            )
             contexts.extend(contexts_per_doc)
             scores.extend(scores_per_doc)
             for _ in contexts_per_doc:
@@ -145,26 +151,27 @@ class ContextGenerator:
             ):
                 self.source_files_to_collections_map[key] = chunker.chunk_doc()
 
-         # Generate contexts
+        # Generate contexts
         for path, collection in tqdm_bar(
             self.source_files_to_collections_map.items(),
             desc="✨ 🧩 ✨ Generating Contexts",
         ):
             num_chunks = collection.count()
             min_num_context = min(num_context_per_document, num_chunks)
-            contexts_per_doc, scores_per_doc = self._get_n_random_contexts_per_doc(
+            contexts_per_doc, scores_per_doc = (
+                self._get_n_random_contexts_per_doc(
                     path=path,
                     n_contexts_per_doc=min_num_context,
                     context_size=max_context_size,
                     similarity_threshold=0.5,
                 )
+            )
             contexts.extend(contexts_per_doc)
             scores.extend(scores_per_doc)
             for _ in contexts_per_doc:
                 source_files.append(path)
             self.total_chunks += num_chunks
         return contexts, source_files, scores
-
 
     async def _a_load_docs(self):
         async def a_process_document(path):
@@ -200,7 +207,6 @@ class ContextGenerator:
         tasks = [a_process_document(path) for path in self.document_paths]
         await tqdm_asyncio.gather(*tasks, desc="✨ 🚀 ✨ Loading Documents")
 
-
     def _load_docs(self):
         for path in tqdm_bar(self.document_paths, "✨ 🚀 ✨ Loading Documents"):
             import chromadb
@@ -230,7 +236,6 @@ class ContextGenerator:
                 doc_chunker.load_doc(path)
                 if path not in self.doc_to_chunker_map:
                     self.doc_to_chunker_map[path] = doc_chunker
-
 
     def _get_n_random_contexts_per_doc(
         self,
@@ -281,47 +286,68 @@ class ContextGenerator:
                     context.append(similar_chunk_text)
             contexts.append(context)
         return contexts, scores
-    
 
-    def evaluate_chunk(
-        self, chunk
-    ) -> float:
+    def evaluate_chunk(self, chunk) -> float:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
             res, _ = self.model.generate(prompt)
             data = trimAndLoadJson(res, self)
-            score = (data["clarity"] + data["depth"] + data["structure"] + data["relevance"])/4
+            score = (
+                data["clarity"]
+                + data["depth"]
+                + data["structure"]
+                + data["relevance"]
+            ) / 4
             return score
         else:
             try:
-                res: ContextScore = self.model.generate(prompt, schema=ContextScore)
-                return (res.clarity + res.depth + res.structure + res.relevance)/4
+                res: ContextScore = self.model.generate(
+                    prompt, schema=ContextScore
+                )
+                return (
+                    res.clarity + res.depth + res.structure + res.relevance
+                ) / 4
             except TypeError:
                 res, _ = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                score = (data["clarity"] + data["depth"] + data["structure"] + data["relevance"])/4
+                score = (
+                    data["clarity"]
+                    + data["depth"]
+                    + data["structure"]
+                    + data["relevance"]
+                ) / 4
                 return score
-    
 
-    async def a_evaluate_chunk(
-        self, chunk
-    ) -> float:
+    async def a_evaluate_chunk(self, chunk) -> float:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
             res, _ = await self.model.a_generate(prompt)
             data = trimAndLoadJson(res, self)
-            score = (data["clarity"] + data["depth"] + data["structure"] + data["relevance"])/4
+            score = (
+                data["clarity"]
+                + data["depth"]
+                + data["structure"]
+                + data["relevance"]
+            ) / 4
             return score
         else:
             try:
-                res: ContextScore = await self.model.a_generate(prompt, schema=ContextScore)
-                return (res.clarity + res.depth + res.structure + res.relevance)/4
+                res: ContextScore = await self.model.a_generate(
+                    prompt, schema=ContextScore
+                )
+                return (
+                    res.clarity + res.depth + res.structure + res.relevance
+                ) / 4
             except TypeError:
                 res, _ = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                score = (data["clarity"] + data["depth"] + data["structure"] + data["relevance"])/4
+                score = (
+                    data["clarity"]
+                    + data["depth"]
+                    + data["structure"]
+                    + data["relevance"]
+                ) / 4
                 return score
-
 
     def _get_n_random_chunks_per_doc(
         self, path: str, n_chunks: int
@@ -353,7 +379,7 @@ class ContextGenerator:
         for chunk in chunks:
             # Evaluate the chunk
             score = self.evaluate_chunk(chunk)
-            
+
             if score > minimum_threshold:
                 evaluated_chunks.append(chunk)
                 scores.append(score)
@@ -369,7 +395,6 @@ class ContextGenerator:
                 break
 
         return evaluated_chunks, scores
-
 
     def check_if_docs_are_loaded(self):
         if (

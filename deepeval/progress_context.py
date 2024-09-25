@@ -34,7 +34,7 @@ def synthesizer_progress_context(
     max_generations: str = None,
     use_case: str = "QA",
     progress_bar: Optional[tqdm.std.tqdm] = None,
-    async_mode: bool = False
+    async_mode: bool = False,
 ) -> Generator[Optional[tqdm.std.tqdm], None, None]:
     with capture_synthesizer_run(max_generations, method):
         if embedder is None:
