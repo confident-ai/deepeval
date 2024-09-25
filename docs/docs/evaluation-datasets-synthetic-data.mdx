@@ -38,12 +38,11 @@ As you'll learn later, an embedding model is only used when using the `generate_
 
 ## Using Synthesizer As A Standalone
 
-There are 4 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
+There are 3 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
 
 1. Generating synthetic `Golden`s using **context extracted from documents.**
 2. Generating synthetic `Golden`s from a **list of provided context.**
-3. Generating synthetic adversarial `Golden`s for red teaming.
-4. Generating synthetic `Golden`s from **scratch**
+3. Generating synthetic `Golden`s from **scratch**
 
 ### 1. Generating From Documents
 
@@ -63,7 +62,8 @@ There are one mandatory and seven optional parameters when using the `generate_g
 
 - `document_paths`: a list strings, representing the path to the documents from which contexts will be extracted from. Supported documents types include: `.txt`, `.docx`, and `.pdf`.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
-- [Optional] `max_goldens_per_document`: the maximum number of goldens to be generated per document. Defaulted to 5.
+- [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
+- [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
 - [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered for context extraction within each document. Defaulted to 1024.
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during context extraction. Defaulted to 0.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
@@ -128,62 +128,7 @@ There are one mandatory and five optional parameters when using the `generate_go
 While the previous methods first use an LLM to generate a series of inputs based on the provided context before evolving them, `generate_goldens_from_inputs` simply evolves the provided list of inputs into more complex and diverse `Golden`s. It's also important to note that this method will only populate the input field of each generated `Golden`.
 :::
 
-### 3. Generating Adversarial `Goldens` for Red Teaming
-
-`deepeval` also allows you to generate adversarial `Goldens` to [red team LLM applications](https://www.confident-ai.com/blog/red-teaming-llms-a-step-by-step-guide). You can also optionally provide a list of contexts to keep each generated synthetic `Golden` grounded in your data.
-
-:::tip
-This is especially helpful for assessing your LLM application's **risks and vulnerabilities**.
-:::
-
-```python
-from deepeval.synthesizer import Synthesizer
-
-synthesizer = Synthesizer()
-synthesizer.generate_red_teaming_goldens(
-    # Optionally provide a list of context to keep adversarial goldens grounded
-    contexts=[
-        ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
-        ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
-    ]
-)
-```
-
-There are six optional parameters when using the `generate_red_teaming_goldens` method:
-
-- [Optional] `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area. When `contexts` is supplied, the `Synthesizer` generates adversarial goldens **based on information presented in contexts**. If not, they are generated from scratch.
-- [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
-- [Optional] `max_goldens`: the maximum number of golden to be generated if `contexts` isn't supplied. If `contexts` is supplied, `max_goldens` will be confined to the length of `contexts`. Defaulted to 2.
-- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated `Golden`. Defaulted to 1.
-- [Optional] `attacks`: a dict of `RTAdversarialAttack`s keys and sampling probability values, specifying the distribution of adversarial attacks you want generated for your synthetic `Golden`s. Defaulted to all `RTAdversarialAttack`s.
-- [Optional] `vulnerabilities`: a dict of `RTVulnerability`s keys and sampling probability values, representing the distribution of undesirable vulnerability you are trying to elicit. Defaulted to all `RTVulnerability`s.
-
-:::info
-`RTAdversarialAttack` is an `ENUM` that specifies the different **types of red teaming** attacks (prompt injection, prompt probing, etc.) you wish to include in your final dataset, while the `RTVulnerability` `ENUM` specifies the type of vulnerability and risk you are trying to assess your LLM application on (hallucination, bias, etc.):
-
-```python
-from deepeval.synthesizer import RTAdversarialAttack, RTVulnerability
-
-available_red_teaming_attacks =  {
-    RTAdversarialAttack.PROMPT_INJECTION: 0.25,
-    RTAdversarialAttack.PROMPT_PROBING: 0.25,
-    RTAdversarialAttack.GRAY_BOX_ATTACK: 0.25,
-    RTAdversarialAttack.JAILBREAKING: 0.25,
-},
-
-available_red_teaming_vulnerabilities = {
-    RTVulnerability.BIAS: 0.2,
-    RTVulnerability.DATA_LEAKAGE: 0.2,
-    RTVulnerability.HALLUCINATION: 0.2,
-    RTVulnerability.OFFENSIVE: 0.2,
-    RTVulnerability.UNFORMATTED: 0.2,
-}
-```
-
-[Click here to learn more](https://www.confident-ai.com/blog/red-teaming-llms-a-step-by-step-guide) about the different types of adversarial attacks and vulnerabilities used for red teaming.
-:::
-
-### 4. Generating From Scratch
+### 3. Generating From Scratch
 
 If you do not have a list of example prompts, or wish to solely rely on an LLM generation for synthesis, you can also generate synthetic `Golden`s simply by specifying the subject, task, and output format you wish your prompts to follow.
 
@@ -252,11 +197,11 @@ print(dataframe)
 
 Here’s an example of what the resulting DataFrame might look like:
 
-| Input                                          | Actual Output | Expected Output | Context                                                               | Retrieval Context | Chunks per Context | Context Length | Attack Type | Evolutions | Source File |
-| ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | ------------------ | -------------- | ----------- | ---------- | ----------- |
-| Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                  | 60             | None        | None       | file1.txt   |
-| What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                  | 55             | None        | None       | file2.txt   |
-| ...                                            | ...           | ...             | ...                                                                   | ...               | ...                | ...            | ...         | ...        | ...         |
+| input                                          | actual_output | expected_output | context                                                               | retrieval_context | n_chunks_per_context | context_length | context_quality | synthetic_input_quality | evolutions | source_file |
+| ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | -------------------- | -------------- | --------------- | ----------------------- | ---------- | ----------- |
+| Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                    | 60             | None            | file1.txt               | None       | file1.txt   |
+| What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                    | 55             | None            | file2.txt               | None       | file2.txt   |
+| ...                                            | ...           | ...             | ...                                                                   | ...               | ...                  | ...            | ...             | ...                     | ...        | ...         |
 
 ## Saving Generated Goldens
 
