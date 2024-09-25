@@ -2,9 +2,9 @@ class FaithfulnessTemplate:
     @staticmethod
     def generate_claims(text, limit_count):
         if limit_count>0:
-            limit = f"the {limit_count} most important"
-        else: limit = "the most important"
-        return f"""Based on the given text, please generate a comprehensive list of {limit} FACTUAL claims that can inferred from the provided text.
+            limit = f" the {limit_count} most important"
+        else: limit = ""
+        return f"""Based on the given text, please generate a comprehensive list of{limit} FACTUAL claims that can inferred from the provided text.
 
 Example:
 Example Text: 
@@ -34,12 +34,12 @@ JSON:
     @staticmethod
     def generate_truths(text, limit_count):
         if limit_count>0:
-            limit = f"the {limit_count} most important"
+            limit = f" the {limit_count} most important"
             limit_addition = " per document"
         else:
-            limit = "the most important"
+            limit = ""
             limit_addition = ""
-        return f"""Based on the given text, please generate a comprehensive list of {limit} FACTUAL, undisputed truths{limit_addition}, that can inferred from the provided text.
+        return f"""Based on the given text, please generate a comprehensive list of{limit} FACTUAL, undisputed truths{limit_addition}, that can inferred from the provided text.
 
 Example:
 Example Text: 
