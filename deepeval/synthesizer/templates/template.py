@@ -79,70 +79,231 @@ class SynthesizerTemplate:
         """
 
     @staticmethod
-    def generate_synthetic_inputs(context, max_goldens_per_context):
-        return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
-            The `input` can either be a question or a statement that can be addressed by the given context.
-
-            **
-            IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
-            You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting reptitive.
-
-            Example context: ["Einstein won the Nobel Prize for his discovery of penicillin.", "Einstein won the Nobel Prize in 1968."]
-            Example max goldens per context: 2
-            Example JSON:
-            {{
-                "data": [
-                    {{
-                        "input": "What was Einstein known for?"
-                    }},
-                    {{
-                        "input": "Einstein was a smart guy huh"
-                    }}
-                ]  
-            }}
-
-
-            You should NOT incorporate any prior knowledge you have and take each context at face value.
-            You MUST include at least one statement as the input.
-            `input` MUST be a STRING.
-            You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting reptitive.
-            **
-
-            Max Goldens Per Context:
-            {max_goldens_per_context}
-
-            Context:
-            {context}
-
-            JSON:
-            """
-
-    @staticmethod
     def generate_synthetic_expected_output(input, context):
         return f"""Given the input, which may or may not be a question, generate a response using information presented in context.
 
-**
-                IMPORTANT: Please make sure to generate a response that is concise and straight to the point, and uses supporting information in context.
-                **
+        **
+        IMPORTANT: Please make sure to generate a response that is concise and straight to the point, and uses supporting information in context.
+        **
 
-                Context:
-                {context}
+        Context:
+        {context}
 
-                Input:
-                {input}
+        Input:
+        {input}
 
-                Generated Response:
-                """
+        Generated Response:
+        """
+    
+    staticmethod
+    def generate_synthetic_inputs(context, max_goldens_per_context):
+        return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
+        The `input` can either be a question or a statement that can be addressed by the given context.
 
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
+        You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting reptitive.
+
+        Example context: ["Einstein won the Nobel Prize for his discovery of penicillin.", "Einstein won the Nobel Prize in 1968."]
+        Example max goldens per context: 2
+        Example JSON:
+        {{
+            "data": [
+                {{
+                    "input": "What was Einstein known for?"
+                }},
+                {{
+                    "input": "Einstein was a smart guy huh"
+                }}
+            ]  
+        }}
+
+
+        You should NOT incorporate any prior knowledge you have and take each context at face value.
+        You MUST include at least one statement as the input.
+        `input` MUST be a STRING.
+        You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting reptitive.
+        **
+
+        Max Goldens Per Context:
+        {max_goldens_per_context}
+
+        Context:
+        {context}
+
+        JSON:
+        """
+    
+    @staticmethod
+    def rewrite_synthetic_inputs(context, original_query, feedback):
+        return f"""I want you to act as a query rewriter. Based on the provided context, original query, and feedback, generate a rewritten query that improves its clarity and answerability based on the feedback provided.
+
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'rewritten_input' key.
+
+        Example context: "The Golden Gate Bridge, located in San Francisco, was completed in 1937 and is known for its Art Deco design. It connects the city of San Francisco to Marin County and spans the Golden Gate Strait."
+        Example query: "When was the bridge completed?"
+        Example feedback: "The question asks about the completion of 'the bridge' but does not specify which bridge it refers to. There are many famous bridges, and without specifying the name, the question is too vague. To improve clarity, include the bridge's name."
+        Example JSON:
+        {{
+            "rewritten_input": "When was the Golden Gate Bridge completed?"
+        }}
+
+        Example context: "The paper 'Advancements in Quantum Computing' by Dr. Alice Thompson discusses breakthroughs in quantum algorithms and was published in 2022. It explores the potential applications of quantum computing in cryptography and drug discovery."
+        Example query: "What applications of quantum computing are discussed in the paper?"
+        Example feedback: "The query is asking about applications of quantum computing but doesn't specify which paper is being referenced. Since many papers may discuss quantum computing, it would help to specify the title or author of the paper to improve clarity."
+        Example JSON:
+        {{
+            "rewritten_input": "What applications of quantum computing are discussed in the paper 'Advancements in Quantum Computing' by Dr. Alice Thompson?"
+        }}
+
+        You should NOT incorporate any prior knowledge and should base the rewritten query only on the context and feedback provided.
+        The `rewritten_input` MUST be a STRING.
+        **
+
+        Context:
+        {context}
+
+        Query:
+        {original_query}
+
+        Feedback:
+        {feedback}
+
+        JSON:
+        """
+
+######################################################################################################
+##### Filter #########################################################################################
+######################################################################################################
+
+class FilterTemplate:
+
+    @staticmethod
+    def evaluate_synthetic_inputs(query):
+        return f"""Evaluate the provided synthetic query (which may be a question, task, or instruction) for clarity and answerability, assuming sufficient domain knowledge. Use the following criteria to guide your assessment:
+
+        1. **Self-Containment**: Can the query be understood and completed without needing additional context or external references not provided within the query itself? It should be self-sufficient, meaning it doesn't depend on specific documents, tables, or prior knowledge not included in the query.
+        2. **Clear Objective**: Does the query clearly convey its intent? It should specify what information, action, or response is being requested, allowing for a direct and appropriate answer or execution without ambiguity.
+
+        Based on these criteria, assign a score between 0 and 1, where:
+        - "1" means the query is clear, self-contained, and answerable.
+        - "0" means the query is vague, relies on external references, or is unclear in its intent.
+        - Scores between 0 and 1 indicate partial clarity or answerability, where the query meets some but not all of the criteria.
+
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'feedback' and 'score' keys.
+
+        Example query: "What technological innovations have changed communication over the last 20 years?"
+        Example JSON:
+        {{
+            "feedback": "The query is somewhat vague as it asks about 'technological innovations' without specifying particular areas of communication (e.g., social media, messaging apps). It could be improved by narrowing the focus to a specific type of innovation or timeframe.",
+            "score": 0.5
+        }}
+
+        Example query: "Explain the impact of renewable energy policies in Germany on local economies in 2021."
+        Example JSON:
+        {{
+            "feedback": "This query clearly specifies the focus (renewable energy policies), the region (Germany), and the timeframe (2021). It is self-contained and answerable without needing additional context, making it clear and effective.",
+            "score": 1.0
+        }}
+
+        Example query: "What are the main criticisms of the current education system in the United States?"
+        Example JSON:
+        {{
+            "feedback": "The question is broad and lacks specificity, as 'main criticisms' could refer to various aspects (e.g., funding, curriculum, access). To improve clarity, it could specify which aspect of the education system is being critiqued.",
+            "score": 0.4
+        }}
+
+        Example query: "Discuss the role of AI in healthcare, particularly in diagnostics, as noted in the last report."
+        Example JSON:
+        {{
+            "feedback": "This question refers to 'the last report' without providing context or details, making it unclear and dependent on external information. It would be clearer if it provided some background on the report or defined what aspects of AI in diagnostics to address.",
+            "score": 0.3
+        }}
+                
+        The `feedback` MUST be a STRING and `score` must be a float from 0 to 1.
+        **
+                
+        Query:
+        {query}
+
+        JSON:
+        """
+    
+    @staticmethod
+    def evaluate_context(context):
+        return f"""Given a context, complete the following task and return the result in VALID JSON format: Evaluate the supplied context and assign a numerical score between 0 (Low) and 1 (High) for each of the following criteria in your JSON response:
+
+        - **clarity**: Assess how clear and comprehensible the information is. A score of 1 indicates that the context is straightforward and easily understandable, while a score of 0 reflects vagueness or confusion in the information presented.
+        - **depth**: Evaluate the extent of detailed analysis and the presence of original insights within the context. A high score (1) suggests a thorough and thought-provoking examination, while a low score (0) indicates a shallow overview of the subject.
+        - **structure**: Review how well the content is organized and whether it follows a logical progression. A score of 1 is given to contexts that are coherently structured and flow well, whereas a score of 0 is for those that lack organization or clarity in their progression.
+        - **relevance**: Analyze the importance of the content in relation to the main topic, awarding a score of 1 for contexts that stay focused on the subject without unnecessary diversions, and a score of 0 for those that include unrelated or irrelevant information.
+
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'clarity', 'depth', 'structure', abd 'relevance' keys.
+
+        Example context: "Artificial intelligence is rapidly changing various sectors, from healthcare to finance, by enhancing efficiency and enabling better decision-making."
+        Example JSON:
+        {{
+            "clarity": 1,
+            "depth": 0.8,
+            "structure": 0.9,
+            "relevance": 1
+        }}
+
+        Example context: "Cats are great pets. They like to sleep and play."
+        Example JSON:
+        {{
+            "clarity": 0.5,
+            "depth": 0.3,
+            "structure": 0.4,
+            "relevance": 0.5
+        }}
+
+        Example context: "Artificial intelligence is rapidly changing various sectors, from healthcare to finance, by enhancing efficiency and enabling better decision-making."
+        Example JSON:
+        {{
+            "clarity": 1,
+            "depth": 0.9,
+            "structure": 1,
+            "relevance": 1
+        }}
+
+        Example context: "Artificial intelligence is rapidly changing various sectors, from healthcare to finance, by enhancing efficiency and enabling better decision-making."
+        Example JSON:
+        {{
+            "clarity": 0.4,
+            "depth": 0,
+            "structure": 0.3,
+            "relevance": 0.2
+        }}
+
+        Example context: "The impact of globalization on local cultures is complex, with both positive and negative effects. It can lead to cultural exchange but also to the erosion of local traditions."
+        Example JSON:
+        {{
+            "clarity": 0.9,
+            "depth": 0.8,
+            "structure": 0.9,
+            "relevance": 1
+        }}
+
+
+        `clarity`, `depth`, `structure`, and `relevance` MUST be floats from 0 to 1.
+        Make sure your JSON response is valid and properly formatted.
+        **
+
+        context:
+        {context}
+
+        JSON:
+        """
+
+    
 
 ######################################################################################################
 ##### Approach similar to https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py ######
 ######################################################################################################
-
-
-# generate_deepen_prompt
-# "If #The Given Prompt# contains inquiries about certain issues, the depth and breadth of the inquiry can be increased."
-
 
 class EvolutionTemplate:
 

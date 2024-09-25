@@ -85,10 +85,33 @@ sql_context = [
 ]
 document_paths = [file_path1, file_path2, file_path3]
 
-#########################################################
-### Test Context Generator ##############################
-#########################################################
+# #########################################################
+# ### Test Input Generator ################################
+# #########################################################
 
+# synthesizer_sync = Synthesizer(async_mode=False)
+# inputs, scores = synthesizer_sync.generate_and_filter_synthetic_inputs(
+#     context = [context_1, context_2, context_3, context_4],
+#     max_goldens_per_context = 3,
+#     max_retries = 3, 
+#     threshold = 0.5,
+# )
+# print(inputs)
+# print(scores)
+# inputs, scores = asyncio.run(
+#     synthesizer_sync.a_generate_and_filter_synthetic_inputs(
+#         context = [context_1, context_2, context_3, context_4],
+#         max_goldens_per_context = 3,
+#         max_retries = 3, 
+#         threshold = 0.5,
+#     )
+# )
+# print(inputs)
+# print(scores)
+
+# #########################################################
+# ### Test Context Generator ##############################
+# #########################################################
 
 # async def test_context_generator(
 #     load_docs_function: Callable, is_async: bool = False
@@ -102,7 +125,6 @@ document_paths = [file_path1, file_path2, file_path3]
 #     duration = end_time - start_time
 #     print(f"Time taken: {duration} seconds")
 #     return loaded_docs
-
 
 # def test_context_generator_generate_contexts():
 #     embedder = initialize_embedding_model("text-embedding-3-large")
@@ -133,7 +155,6 @@ document_paths = [file_path1, file_path2, file_path3]
 ### Generate Goldens ####################################
 #########################################################
 
-
 # def test_generate_goldens(
 #     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
 # ):
@@ -142,15 +163,16 @@ document_paths = [file_path1, file_path2, file_path3]
 #         max_goldens_per_context=2,
 #         num_evolutions=2,
 #         evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
+#         #contexts=contexts,
 #         contexts=sql_context,
 #         use_case=usecase,
+#         _send_data=False,
 #     )
 #     end_time = time.time()
 #     duration = end_time - start_time
 #     print("Generated goldens:", len(goldens))
 #     print(f"Time taken: {duration} seconds")
 #     print(synthesizer.to_pandas())
-
 
 # synthesizer_sync = Synthesizer(async_mode=False)
 # synthesizer_async = Synthesizer(async_mode=True)
@@ -166,18 +188,19 @@ document_paths = [file_path1, file_path2, file_path3]
 ### Generate Goldens From Docs ##########################
 #########################################################
 
-
 def test_generate_goldens_from_docs(
     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
 ):
     start_time = time.time()
     goldens = synthesizer.generate_goldens_from_docs(
-        max_goldens_per_document=5,
+        max_goldens_per_context=2,
+        max_contexts_per_document=3,
         num_evolutions=1,
         evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
         document_paths=document_paths,
         use_case=usecase,
         chunk_size=65,
+        _send_data=False,
     )
     end_time = time.time()
     duration = end_time - start_time
@@ -197,72 +220,8 @@ test_generate_goldens_from_docs(synthesizer_sync, UseCase.TEXT2SQL)
 test_generate_goldens_from_docs(synthesizer_async, UseCase.TEXT2SQL)
 
 #########################################################
-### Generate Red-Teaming Goldens with Context ###########
-#########################################################
-
-
-def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
-    start_time = time.time()
-    goldens = synthesizer.generate_red_teaming_goldens(
-        max_goldens=2,
-        num_evolutions=2,
-        contexts=contexts,
-        attacks={
-            RTAdversarialAttack.GRAY_BOX_ATTACK: 0.2,
-            RTAdversarialAttack.PROMPT_INJECTION: 0.8,
-        },
-        vulnerabilities={
-            RTVulnerability.BIAS: 0.2,
-            RTVulnerability.DATA_LEAKAGE: 0.8,
-        },
-    )
-    end_time = time.time()
-    duration = end_time - start_time
-    print("Generated red teaming goldens with contexts:", len(goldens))
-    print(f"Time taken: {duration} seconds")
-    print(synthesizer.to_pandas())
-
-
-synthesizer_sync = Synthesizer(async_mode=False)
-synthesizer_async = Synthesizer(async_mode=True)
-test_generate_red_teaming_goldens(synthesizer_sync)
-test_generate_red_teaming_goldens(synthesizer_async)
-
-#########################################################
-### Generate Red-Teaming Goldens without Context ########
-#########################################################
-
-
-def test_generate_red_teaming_goldens(synthesizer: Synthesizer):
-    start_time = time.time()
-    goldens = synthesizer.generate_red_teaming_goldens(
-        max_goldens=2,
-        num_evolutions=2,
-        attacks={
-            RTAdversarialAttack.GRAY_BOX_ATTACK: 0.2,
-            RTAdversarialAttack.PROMPT_INJECTION: 0.8,
-        },
-        vulnerabilities={
-            RTVulnerability.BIAS: 0.2,
-            RTVulnerability.DATA_LEAKAGE: 0.8,
-        },
-    )
-    end_time = time.time()
-    duration = end_time - start_time
-    print("Generated red teaming goldens without context:", len(goldens))
-    print(f"Time taken: {duration} seconds")
-    print(synthesizer.to_pandas())
-
-
-synthesizer_sync = Synthesizer(async_mode=False)
-synthesizer_async = Synthesizer(async_mode=True)
-test_generate_red_teaming_goldens(synthesizer_sync)
-test_generate_red_teaming_goldens(synthesizer_async)
-
-#########################################################
 ### Generate Goldens From Scratch #######################
 #########################################################
-
 
 def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
     start_time = time.time()
