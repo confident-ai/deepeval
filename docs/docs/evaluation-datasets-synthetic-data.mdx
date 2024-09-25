@@ -62,7 +62,8 @@ There are one mandatory and seven optional parameters when using the `generate_g
 
 - `document_paths`: a list strings, representing the path to the documents from which contexts will be extracted from. Supported documents types include: `.txt`, `.docx`, and `.pdf`.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
-- [Optional] `max_goldens_per_document`: the maximum number of goldens to be generated per document. Defaulted to 5.
+- [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
+- [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
 - [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered for context extraction within each document. Defaulted to 1024.
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during context extraction. Defaulted to 0.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
@@ -196,11 +197,11 @@ print(dataframe)
 
 Here’s an example of what the resulting DataFrame might look like:
 
-| Input                                          | Actual Output | Expected Output | Context                                                               | Retrieval Context | Chunks per Context | Context Length | Attack Type | Evolutions | Source File |
-| ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | ------------------ | -------------- | ----------- | ---------- | ----------- |
-| Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                  | 60             | None        | None       | file1.txt   |
-| What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                  | 55             | None        | None       | file2.txt   |
-| ...                                            | ...           | ...             | ...                                                                   | ...               | ...                | ...            | ...         | ...        | ...         |
+| input                                          | actual_output | expected_output | context                                                               | retrieval_context | n_chunks_per_context | context_length | context_quality | synthetic_input_quality | evolutions | source_file |
+| ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | -------------------- | -------------- | --------------- | ----------------------- | ---------- | ----------- |
+| Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                    | 60             | None            | file1.txt               | None       | file1.txt   |
+| What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                    | 55             | None            | file2.txt               | None       | file2.txt   |
+| ...                                            | ...           | ...             | ...                                                                   | ...               | ...                  | ...            | ...             | ...                     | ...        | ...         |
 
 ## Saving Generated Goldens
 

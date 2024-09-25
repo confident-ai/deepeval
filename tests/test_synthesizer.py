@@ -155,34 +155,34 @@ document_paths = [file_path1, file_path2, file_path3]
 ### Generate Goldens ####################################
 #########################################################
 
-def test_generate_goldens(
-    synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
-):
-    start_time = time.time()
-    goldens = synthesizer.generate_goldens(
-        max_goldens_per_context=2,
-        num_evolutions=2,
-        evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
-        #contexts=contexts,
-        contexts=sql_context,
-        use_case=usecase,
-        _send_data=False,
-    )
-    end_time = time.time()
-    duration = end_time - start_time
-    print("Generated goldens:", len(goldens))
-    print(f"Time taken: {duration} seconds")
-    print(synthesizer.to_pandas())
+# def test_generate_goldens(
+#     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
+# ):
+#     start_time = time.time()
+#     goldens = synthesizer.generate_goldens(
+#         max_goldens_per_context=2,
+#         num_evolutions=2,
+#         evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
+#         #contexts=contexts,
+#         contexts=sql_context,
+#         use_case=usecase,
+#         _send_data=False,
+#     )
+#     end_time = time.time()
+#     duration = end_time - start_time
+#     print("Generated goldens:", len(goldens))
+#     print(f"Time taken: {duration} seconds")
+#     print(synthesizer.to_pandas())
 
-synthesizer_sync = Synthesizer(async_mode=False)
-synthesizer_async = Synthesizer(async_mode=True)
-test_generate_goldens(synthesizer_sync)
-test_generate_goldens(synthesizer_async)
+# synthesizer_sync = Synthesizer(async_mode=False)
+# synthesizer_async = Synthesizer(async_mode=True)
+# test_generate_goldens(synthesizer_sync)
+# test_generate_goldens(synthesizer_async)
 
-synthesizer_sync = Synthesizer(async_mode=False)
-synthesizer_async = Synthesizer(async_mode=True)
-test_generate_goldens(synthesizer_sync, UseCase.TEXT2SQL)
-test_generate_goldens(synthesizer_async, UseCase.TEXT2SQL)
+# synthesizer_sync = Synthesizer(async_mode=False)
+# synthesizer_async = Synthesizer(async_mode=True)
+# test_generate_goldens(synthesizer_sync, UseCase.TEXT2SQL)
+# test_generate_goldens(synthesizer_async, UseCase.TEXT2SQL)
 
 #########################################################
 ### Generate Goldens From Docs ##########################
@@ -193,7 +193,8 @@ def test_generate_goldens_from_docs(
 ):
     start_time = time.time()
     goldens = synthesizer.generate_goldens_from_docs(
-        max_goldens_per_document=5,
+        max_goldens_per_context=2,
+        max_contexts_per_document=3,
         num_evolutions=1,
         evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
         document_paths=document_paths,

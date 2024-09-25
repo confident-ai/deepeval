@@ -92,7 +92,8 @@ class Synthesizer:
         self,
         document_paths: List[str],
         include_expected_output: bool = True,
-        max_goldens_per_document: int = 5,
+        max_contexts_per_document: int = 3,
+        max_goldens_per_context: int = 2,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         num_evolutions: int = 1,
@@ -118,7 +119,8 @@ class Synthesizer:
                 self.a_generate_goldens_from_docs(
                     document_paths,
                     include_expected_output,
-                    max_goldens_per_document,
+                    max_contexts_per_document,
+                    max_goldens_per_context,
                     chunk_size,
                     chunk_overlap,
                     num_evolutions,
@@ -137,15 +139,9 @@ class Synthesizer:
                     model=self.critic_model
                 )
             self.context_generator._load_docs()
-            max_goldens_per_context = 2
-            if max_goldens_per_document < max_goldens_per_context:
-                max_goldens_per_context = 1
-            num_context_per_document = math.floor(
-                max_goldens_per_document / max_goldens_per_context
-            )
             contexts, source_files, context_scores = (
                 self.context_generator.generate_contexts(
-                    num_context_per_document=num_context_per_document
+                    num_context_per_document=max_contexts_per_document
                 )
             )
             print(
@@ -168,14 +164,14 @@ class Synthesizer:
                     source_files,
                     evolutions=evolutions,
                     use_case=use_case,
-                    progress_bar=progress_bar,
                     context_scores=context_scores,
+                    _progress_bar=progress_bar,
                     _send_data=False,
                 )
         
         # Wrap-up Synthesis
         if _send_data == True:
-            self.wrap_up_synthesis()
+            self._wrap_up_synthesis()
         return goldens
 
 
@@ -183,7 +179,8 @@ class Synthesizer:
         self,
         document_paths: List[str],
         include_expected_output: bool = True,
-        max_goldens_per_document: int = 5,
+        max_contexts_per_document: int = 3,
+        max_goldens_per_context: int = 2,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         num_evolutions: int = 1,
@@ -212,15 +209,10 @@ class Synthesizer:
                 model=self.critic_model
             )
         await self.context_generator._a_load_docs()
-        max_goldens_per_context = 2
-        if max_goldens_per_document < max_goldens_per_context:
-            max_goldens_per_context = 1
-        num_context_per_document = math.floor(
-            max_goldens_per_document / max_goldens_per_context
-        )
+        
         contexts, source_files, context_scores = (
             await self.context_generator.a_generate_contexts(
-                num_context_per_document=num_context_per_document
+                num_context_per_document=max_contexts_per_document
             )
         )
         print(
@@ -243,8 +235,8 @@ class Synthesizer:
                 source_files=source_files,
                 evolutions=evolutions,
                 use_case=use_case,
-                progress_bar=progress_bar,
                 context_scores=context_scores,
+                _progress_bar=progress_bar,
             )
         self.synthetic_goldens.extend(goldens)
         return goldens
@@ -270,8 +262,8 @@ class Synthesizer:
             Evolution.IN_BREADTH: 1 / 7,
         },
         use_case: UseCase = UseCase.QA,
-        progress_bar: Optional[tqdm.std.tqdm] = None,
         context_scores: Optional[List[float]] = None,
+        _progress_bar: Optional[tqdm.std.tqdm] = None,
         _send_data: bool = True,
     ) -> List[Golden]:
         # Intialize Goldens as an empty list
@@ -298,7 +290,7 @@ class Synthesizer:
                     embedder=None,
                     max_generations=len(contexts) * max_goldens_per_context,
                     use_case=use_case.value,
-                    progress_bar=progress_bar,
+                    progress_bar=_progress_bar,
                     async_mode=False
                 ) as progress_bar:
                     for i, context in enumerate(contexts):
@@ -308,12 +300,12 @@ class Synthesizer:
                             context=context,
                             max_goldens_per_context=max_goldens_per_context,
                         )
-                        synthetic_inputs = self.generate_inputs(prompt)
+                        synthetic_inputs = self._generate_inputs(prompt)
 
                         # Qualify inputs
                         qualified_synthetic_inputs: List[SyntheticData]
                         scores: List[float]
-                        qualified_synthetic_inputs, scores = self.rewrite_inputs(context, synthetic_inputs)
+                        qualified_synthetic_inputs, scores = self._rewrite_inputs(context, synthetic_inputs)
                         for j, data in enumerate(qualified_synthetic_inputs):
 
                             # Evolve input
@@ -343,7 +335,7 @@ class Synthesizer:
                                     input=golden.input,
                                     context="\n".join(golden.context),
                                 )
-                                res = self.generate(prompt)
+                                res = self._generate(prompt)
                                 golden.expected_output = res
                             goldens.append(golden)
 
@@ -354,7 +346,7 @@ class Synthesizer:
                     embedder=None,
                     max_generations=len(contexts) * max_goldens_per_context,
                     use_case=use_case.value,
-                    progress_bar=progress_bar,
+                    progress_bar=_progress_bar,
                     async_mode=False
                 ) as progress_bar:
                     for i, context in enumerate(contexts):
@@ -364,7 +356,7 @@ class Synthesizer:
                             context=context,
                             max_goldens_per_context=max_goldens_per_context,
                         )
-                        synthetic_data = self.generate_inputs(prompt)
+                        synthetic_data = self._generate_inputs(prompt)
                         for data in synthetic_data:
 
                             # Synthesize Golden
@@ -379,7 +371,7 @@ class Synthesizer:
                                     input=golden.input,
                                     context="\n".join(golden.context),
                                 )
-                                expected_output: SQLData = self.generate_schema(prompt, SQLData, self.model, self.using_native_model)
+                                expected_output: SQLData = self._generate_schema(prompt, SQLData, self.model, self.using_native_model)
                                 golden.expected_output = expected_output.sql
 
                             goldens.append(golden)
@@ -389,7 +381,7 @@ class Synthesizer:
         # Wrap-up Synthesis
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
-            self.wrap_up_synthesis()
+            self._wrap_up_synthesis()
         return goldens
     
     
@@ -410,8 +402,8 @@ class Synthesizer:
             Evolution.IN_BREADTH: 1 / 7,
         },
         use_case: UseCase = UseCase.QA,
-        progress_bar: Optional[tqdm.std.tqdm] = None,
         context_scores: Optional[List[float]] = None,
+        _progress_bar: Optional[tqdm.std.tqdm] = None,
     ) -> List[Golden]:
         goldens: List[Golden] = []
         if use_case == UseCase.QA:
@@ -421,7 +413,7 @@ class Synthesizer:
                 embedder=None,
                 max_generations=len(contexts) * max_goldens_per_context,
                 use_case=use_case.value,
-                progress_bar=progress_bar,
+                progress_bar=_progress_bar,
                 async_mode=True
             ) as progress_bar:
                 tasks = [
@@ -448,7 +440,7 @@ class Synthesizer:
                 embedder=None,
                 max_generations=len(contexts) * max_goldens_per_context,
                 use_case=use_case.value,
-                progress_bar=progress_bar,
+                progress_bar=_progress_bar,
                 async_mode=True
             ) as progress_bar:
                 tasks = [
@@ -483,12 +475,12 @@ class Synthesizer:
         prompt = SynthesizerTemplate.generate_synthetic_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
         )
-        synthetic_inputs: List[SyntheticData] = await self.a_generate_inputs(prompt)
+        synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(prompt)
 
         # Qualify inputs
         qualified_synthetic_inputs: List[SyntheticData]
         scores: List[float]
-        qualified_synthetic_inputs, scores = await self.a_rewrite_inputs(context, synthetic_inputs)
+        qualified_synthetic_inputs, scores = await self._a_rewrite_inputs(context, synthetic_inputs)
         for i, data in enumerate(qualified_synthetic_inputs):
 
             # Evolve input
@@ -505,7 +497,7 @@ class Synthesizer:
                 expected_output_prompt = SynthesizerTemplate.generate_synthetic_expected_output(
                     input=evolved_input, context="\n".join(context)
                 )
-                expected_output = await self.a_generate(expected_output_prompt)
+                expected_output = await self._a_generate(expected_output_prompt)
 
             # Synthesize Golden
             golden = Golden(
@@ -538,7 +530,7 @@ class Synthesizer:
         prompt = SynthesizerTemplate.generate_text2sql_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
         )
-        synthetic_inputs: List[SyntheticData] = await self.a_generate_inputs(prompt)
+        synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(prompt)
         for data in synthetic_inputs:
             
             # Generate expected output
@@ -547,7 +539,7 @@ class Synthesizer:
                 prompt = SynthesizerTemplate.generate_text2sql_expected_output(
                     input=data.input, context="\n".join(context)
                 )
-                expected_output: SQLData = self.generate_schema(prompt, SQLData, self.model, self.using_native_model)
+                expected_output: SQLData = self._generate_schema(prompt, SQLData, self.model, self.using_native_model)
             
             # Synthesize Golden
             golden = Golden(input=data.input, context=context, expected_output=expected_output.sql)
@@ -596,7 +588,7 @@ class Synthesizer:
                 output_format=output_format,
                 num_initial_goldens=num_initial_goldens,
             )
-            synthetic_data = self.generate_inputs(prompt)
+            synthetic_data = self._generate_inputs(prompt)
 
             # Evolve inputs
             tasks = [
@@ -671,7 +663,7 @@ class Synthesizer:
                         num_initial_goldens=num_initial_goldens,
                     )
                 )
-                synthetic_data = self.generate_inputs(prompt)
+                synthetic_data = self._generate_inputs(prompt)
                 
                 # Evolve inputs
                 for data in synthetic_data:
@@ -696,121 +688,33 @@ class Synthesizer:
         # Wrap up Synthesis
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
-            self.wrap_up_synthesis()
+            self._wrap_up_synthesis()
         return goldens
 
-
-    #############################################################
-    # Helper Methods for LLM Generation
-    #############################################################
-
-    def generate_schema(
-        self, 
-        prompt: str, 
-        schema: BaseModel, 
-        model: DeepEvalBaseLLM, 
-        using_native_model: bool
-    ) -> Tuple[str, float]:
-        if using_native_model:
-            res, _ = model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            if schema == SyntheticDataList:
-                data_list = [SyntheticData(**item) for item in data['data']]
-                return SyntheticDataList(data=data_list)
-            else:
-                return schema(**data)
-        else:
-            try:
-                res: schema = model.generate(prompt, schema=schema)
-                return res
-            except TypeError:
-                res = model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                if schema == SyntheticDataList:
-                    data_list = [SyntheticData(**item) for item in data['data']]
-                    return SyntheticDataList(data=data_list)
-                else:
-                    return schema(**data)
-
-
-    async def a_generate_schema(
-        self, 
-        prompt: str, 
-        schema: BaseModel, 
-        model: DeepEvalBaseLLM, 
-        using_native_model: bool
-    ) -> Tuple[str, float]:
-        if using_native_model:
-            res, _ = await model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            if schema == SyntheticDataList:
-                data_list = [SyntheticData(**item) for item in data['data']]
-                return SyntheticDataList(data=data_list)
-            else:
-                return schema(**data)
-        else:
-            try:
-                res: schema = await model.a_generate(prompt, schema=schema)
-                return res
-            except TypeError:
-                res = await model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                if schema == SyntheticDataList:
-                    data_list = [SyntheticData(**item) for item in data['data']]
-                    return SyntheticDataList(data=data_list)
-                else:
-                    return schema(**data)
-
-
-    def generate(self, prompt: str) -> Tuple[str, str]:
-        if self.using_native_model:
-            res, _ = self.model.generate(prompt)
-            return res
-        else:
-            try:
-                res: Response = self.model.generate(prompt, schema=Response)
-                return res.response
-            except TypeError:
-                res = self.model.generate(prompt)
-                return res
-
-
-    async def a_generate(self, prompt: str) -> Tuple[str, str]:
-        if self.using_native_model:
-            res, _ = await self.model.a_generate(prompt)
-            return res
-        else:
-            try:
-                res: Response = await self.model.a_generate(prompt, schema=Response)
-                return res.response
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                return res
-            
 
     #############################################################
     # Helper Methods for Input Generation
     #############################################################
 
-    async def a_generate_inputs(
+    async def _a_generate_inputs(
         self, prompt: str
     ) -> List[SyntheticData]:
-        res: SyntheticDataList = await self.a_generate_schema(
+        res: SyntheticDataList = await self._a_generate_schema(
             prompt, SyntheticDataList, self.model, self.using_native_model)
         synthetic_data_items = res.data
         return synthetic_data_items
     
 
-    def generate_inputs(
+    def _generate_inputs(
         self, prompt: str
     ) -> List[SyntheticData]:
-        res: SyntheticDataList = self.generate_schema(
+        res: SyntheticDataList = self._generate_schema(
             prompt, SyntheticDataList, self.model, self.using_native_model)
         synthetic_data_items = res.data
         return synthetic_data_items
 
 
-    async def a_rewrite_inputs(
+    async def _a_rewrite_inputs(
         self, 
         context: List[str],
         inputs: List[SyntheticData],
@@ -827,7 +731,7 @@ class Synthesizer:
 
                 # Evaluate synthetically generated inputs
                 evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(input)
-                feedback_res: InputFeedback = await self.a_generate_schema(
+                feedback_res: InputFeedback = await self._a_generate_schema(
                     evaluation_prompt, InputFeedback, self.critic_model, self.using_native_critic_model)
                 feedback, score = feedback_res.feedback, feedback_res.score
                 if score >= threshold:
@@ -835,7 +739,7 @@ class Synthesizer:
 
                 # Rewrite input if score below threshold
                 rewrite_prompt = SynthesizerTemplate.rewrite_synthetic_inputs(context, input, feedback)
-                rewritten_res: RewrittenInput = await self.a_generate_schema(
+                rewritten_res: RewrittenInput = await self._a_generate_schema(
                     rewrite_prompt, RewrittenInput, self.model, self.using_native_model)
                 input = rewritten_res.rewritten_input
 
@@ -845,7 +749,7 @@ class Synthesizer:
         return filtered_inputs, scores
 
 
-    def rewrite_inputs(
+    def _rewrite_inputs(
         self, 
         context: List[str],
         inputs: List[SyntheticData],
@@ -862,7 +766,7 @@ class Synthesizer:
 
                 # Evaluate synthetically generated inputs
                 evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(input)
-                feedback_res: InputFeedback = self.generate_schema(
+                feedback_res: InputFeedback = self._generate_schema(
                     evaluation_prompt, InputFeedback, self.critic_model, self.using_native_critic_model)
                 feedback, score = feedback_res.feedback, feedback_res.score
                 if score >= threshold:
@@ -870,7 +774,7 @@ class Synthesizer:
 
                 # Rewrite input if score below threshold
                 rewrite_prompt = SynthesizerTemplate.rewrite_synthetic_inputs(context, input, feedback)
-                rewritten_res: RewrittenInput = self.generate_schema(
+                rewritten_res: RewrittenInput = self._generate_schema(
                     rewrite_prompt, RewrittenInput, self.model, self.using_native_model)
                 input = rewritten_res.rewritten_input
 
@@ -909,7 +813,7 @@ class Synthesizer:
                 prompt = evolution_method(input=evolved_input)
 
             # Perform Evolution
-            evolved_input = self.generate(prompt)
+            evolved_input = self._generate(prompt)
             evolutions_used.append(evolution_type.value)
 
         # Update Progress
@@ -944,7 +848,7 @@ class Synthesizer:
                 prompt = evolution_method(input=evolved_input)
 
             # Perform Evolution
-            evolved_input = await self.a_generate(prompt)
+            evolved_input = await self._a_generate(prompt)
             evolutions_used.append(evolution_type.value)
 
         # Update Progress
@@ -953,11 +857,97 @@ class Synthesizer:
 
         return evolved_input, evolutions_used
 
-    
+    ############################################################
+    # Helper Methods for LLM Generation
+    #############################################################
+
+    def _generate_schema(
+        self, 
+        prompt: str, 
+        schema: BaseModel, 
+        model: DeepEvalBaseLLM, 
+        using_native_model: bool
+    ) -> Tuple[str, float]:
+        if using_native_model:
+            res, _ = model.generate(prompt)
+            data = trimAndLoadJson(res, self)
+            if schema == SyntheticDataList:
+                data_list = [SyntheticData(**item) for item in data['data']]
+                return SyntheticDataList(data=data_list)
+            else:
+                return schema(**data)
+        else:
+            try:
+                res: schema = model.generate(prompt, schema=schema)
+                return res
+            except TypeError:
+                res = model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                if schema == SyntheticDataList:
+                    data_list = [SyntheticData(**item) for item in data['data']]
+                    return SyntheticDataList(data=data_list)
+                else:
+                    return schema(**data)
+
+
+    async def _a_generate_schema(
+        self, 
+        prompt: str, 
+        schema: BaseModel, 
+        model: DeepEvalBaseLLM, 
+        using_native_model: bool
+    ) -> Tuple[str, float]:
+        if using_native_model:
+            res, _ = await model.a_generate(prompt)
+            data = trimAndLoadJson(res, self)
+            if schema == SyntheticDataList:
+                data_list = [SyntheticData(**item) for item in data['data']]
+                return SyntheticDataList(data=data_list)
+            else:
+                return schema(**data)
+        else:
+            try:
+                res: schema = await model.a_generate(prompt, schema=schema)
+                return res
+            except TypeError:
+                res = await model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                if schema == SyntheticDataList:
+                    data_list = [SyntheticData(**item) for item in data['data']]
+                    return SyntheticDataList(data=data_list)
+                else:
+                    return schema(**data)
+
+
+    def _generate(self, prompt: str) -> Tuple[str, str]:
+        if self.using_native_model:
+            res, _ = self.model.generate(prompt)
+            return res
+        else:
+            try:
+                res: Response = self.model.generate(prompt, schema=Response)
+                return res.response
+            except TypeError:
+                res = self.model.generate(prompt)
+                return res
+
+
+    async def _a_generate(self, prompt: str) -> Tuple[str, str]:
+        if self.using_native_model:
+            res, _ = await self.model.a_generate(prompt)
+            return res
+        else:
+            try:
+                res: Response = await self.model.a_generate(prompt, schema=Response)
+                return res.response
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                return res
+            
+
     #############################################################
     # Utilities
     #############################################################
-
 
     def to_pandas(self):
         # Prepare data for the DataFrame
@@ -981,11 +971,8 @@ class Synthesizer:
                 num_context = None
                 context_length = None
 
-            # Handle metadata: check for 'attack_type' or 'evolutions'
+            # Handle metadata
             if metadata is not None:
-                attack_type = metadata.get(
-                    "attack_type", None
-                )
                 evolutions = metadata.get(
                     "evolutions", None
                 ) 
@@ -996,7 +983,6 @@ class Synthesizer:
                     "context_quality", None
                 ) 
             else:
-                attack_type = None
                 evolutions = None
                 synthetic_input_quality = None
                 context_quality = None
@@ -1010,7 +996,6 @@ class Synthesizer:
                 "retrieval_context": retrieval_context,
                 "n_chunks_per_context": num_context,
                 "context_length": context_length,
-                "attack_type": attack_type,
                 "evolutions": evolutions,
                 "context_quality": context_quality,
                 "synthetic_input_quality": synthetic_input_quality,
@@ -1023,16 +1008,15 @@ class Synthesizer:
         # Create the pandas DataFrame
         df = pd.DataFrame(data)
 
-        # Optional: Fill NaN for attack_type and evolutions for better clarity
-        df["attack_type"] = df["attack_type"].fillna("None")
+        # Optional: Fill NaN evolutions for better clarity
         df["evolutions"] = df["evolutions"].apply(
             lambda x: x if x is not None else "None"
         )
 
         return df
 
-    def wrap_up_synthesis(self):
-        return
+
+    def _wrap_up_synthesis(self):
         console = Console()
         if is_confident():
             alias = input("Enter the dataset alias: ").strip()
@@ -1072,6 +1056,7 @@ class Synthesizer:
             raise Exception(
                 "To push a dataset to Confident AI, please run `deepeval login` first."
             )
+
 
     def save_as(self, file_type: str, directory: str) -> str:
         if file_type not in valid_file_types:
