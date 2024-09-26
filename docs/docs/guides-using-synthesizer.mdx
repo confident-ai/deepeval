@@ -104,7 +104,7 @@ It’s crucial to match the `chunk_size` and `chunk_overlap` settings to the cha
 3.  **Consider Document Structure:** If your documents have natural breaks (e.g., chapters, sections, or headings), ensure your chunk size doesn't disrupt those. Customizing chunking for structured documents can improve the quality of the synthetic goldens by preserving context.
 
 :::caution
-If `chunk_size` is set too large or `chunk_overlap` too small for shorter documents, the synthesizer may raise an error. This occurs because the document must generate enough chunks to meet the max_contexts_per_document requirement.
+If `chunk_size` is set too large or `chunk_overlap` too small for shorter documents, the synthesizer may raise an error. This occurs because the document must generate enough chunks to meet the `max_contexts_per_document` requirement.
 
 :::
 
