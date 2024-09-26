@@ -54,7 +54,6 @@ from deepeval.synthesizer import Synthesizer
 synthesizer = Synthesizer()
 synthesizer.generate_goldens_from_docs(
     document_paths=['example.txt', 'example.docx', 'example.pdf'],
-    max_goldens_per_document=2
 )
 ```
 
@@ -92,7 +91,7 @@ For those interested in what these evolutions mean, you can [read this article h
 The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
 
 :::caution
-The synthesizer will raise an error if `chunk_size` is too large for `max_goldens_per_document`, and suggest **the appropriate number of chunks** to use.
+The synthesizer will raise an error if `chunk_size` is too large for required `max_contexts_per_document`, and suggest **the appropriate number of chunks** to use.
 :::
 
 ### 2. Generating From Provided Contexts
@@ -199,8 +198,8 @@ Here’s an example of what the resulting DataFrame might look like:
 
 | input                                          | actual_output | expected_output | context                                                               | retrieval_context | n_chunks_per_context | context_length | context_quality | synthetic_input_quality | evolutions | source_file |
 | ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | -------------------- | -------------- | --------------- | ----------------------- | ---------- | ----------- |
-| Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                    | 60             | None            | file1.txt               | None       | file1.txt   |
-| What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                    | 55             | None            | file2.txt               | None       | file2.txt   |
+| Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                    | 60             | 0.5             | 0.6                     | None       | file1.txt   |
+| What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                    | 55             | 0.4             | 0.9                     | None       | file2.txt   |
 | ...                                            | ...           | ...             | ...                                                                   | ...               | ...                  | ...            | ...             | ...                     | ...        | ...         |
 
 ## Saving Generated Goldens

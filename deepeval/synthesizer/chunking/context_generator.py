@@ -372,6 +372,9 @@ class ContextGenerator:
         ]
         chunks = collection.get(ids=random_ids)["documents"]
 
+        if total_chunks < n_chunks * max_retries:
+            return chunks, [self.evaluate_chunk(chunk) for chunk in chunks]
+
         # Evaluate chunks and filter those with a score > 0.5
         evaluated_chunks = []
         scores = []

@@ -36,9 +36,7 @@ module.exports = {
             {
               type: "category",
               label: "Multimodal Metrics",
-              items: [
-                "metrics-viescore",
-              ],
+              items: ["metrics-viescore"],
               collapsed: true,
             },
             {
@@ -135,6 +133,7 @@ module.exports = {
       items: [
         "guides-rag-evaluation",
         "guides-using-custom-llms",
+        "guides-using-synthesizer",
         "guides-optimizing-hyperparameters",
         "guides-regression-testing-in-cicd",
         "guides-building-custom-metrics",
