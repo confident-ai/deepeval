@@ -216,7 +216,7 @@ deepeval test run test_example.py
 A dataset in `deepeval`, or more specifically an evaluation dataset, is simply a collection of `LLMTestCases` and/or `Goldens`.
 
 :::note
-A `Golden` is simply an `LLMTestCase` with no `actual_output`, and it is an important concept if you're looking to generate LLM outputs at evlauation time. To learn more about `Golden`s, [click here.](evaluation-datasets#with-goldens)
+A `Golden` is simply an `LLMTestCase` with no `actual_output`, and it is an important concept if you're looking to generate LLM outputs at evaluation time. To learn more about `Golden`s, [click here.](evaluation-datasets#with-goldens)
 :::
 
 To create a dataset, simply initialize an `EvaluationDataset` with a list of `LLMTestCase`s or `Golden`s:
