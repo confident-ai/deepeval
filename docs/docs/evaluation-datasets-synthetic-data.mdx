@@ -26,9 +26,10 @@ from deepeval.synthesizer import Synthesizer
 synthesizer = Synthesizer()
 ```
 
-There are two optional parameters when creating a `Synthesizer`:
+There are four optional parameters when creating a `Synthesizer`:
 
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use for quality filtering, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `embedder`: a string specifying which of OpenAI's embedding models to use, **OR** [any custom embedding model](#using-a-custom-embedding-model) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
 
@@ -46,6 +47,14 @@ There are 3 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Gold
 
 ### 1. Generating From Documents
 
+:::info
+**Required:** install chromadb v0.5.3 for faster indexing and retrieval of chunks
+
+```python
+pip install chromadb==0.5.3
+```
+
+:::
 To generate synthetic `Golden`s from documents, simply provide a list of document paths:
 
 ```python
