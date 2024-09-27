@@ -47,8 +47,8 @@ There are 3 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Gold
 
 ### 1. Generating From Documents
 
-:::info
-**Required:** install chromadb v0.5.3 for faster indexing and retrieval of chunks
+:::caution
+You must install `chromadb` v0.5.3 as an additional dependency when generating from documents. The use of a vector database allows for for faster indexing and retrieval of chunks during generation.
 
 ```python
 pip install chromadb==0.5.3
