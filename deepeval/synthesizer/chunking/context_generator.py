@@ -308,7 +308,7 @@ class ContextGenerator:
                     res.clarity + res.depth + res.structure + res.relevance
                 ) / 4
             except TypeError:
-                res, _ = self.model.generate(prompt)
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 score = (
                     data["clarity"]
