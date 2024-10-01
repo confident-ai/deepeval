@@ -95,8 +95,8 @@ class FaithfulnessMetric(BaseMetric):
             self, async_mode=True, _show_indicator=_show_indicator
         ):
             self.truths, self.claims = await asyncio.gather(
-                self._a_generate_truths(test_case.retrieval_context),
-                self._a_generate_claims(test_case.actual_output),
+                self._a_generate_truths(test_case.retrieval_context, self.limit_count),
+                self._a_generate_claims(test_case.actual_output, self.limit_count),
             )
             self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()

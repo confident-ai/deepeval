@@ -73,9 +73,9 @@ class SummarizationMetric(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.truths: List[str] = self._generate_claims(test_case.input)
+                self.truths: List[str] = self._generate_claims(test_case.input, self.limit_count)
                 self.claims: List[str] = self._generate_claims(
-                    test_case.actual_output
+                    test_case.actual_output, self.limit_count
                 )
                 self.coverage_verdicts: List[SummarizationCoverageVerdict] = (
                     self._generate_coverage_verdicts(test_case)
@@ -122,8 +122,8 @@ class SummarizationMetric(BaseMetric):
             _show_indicator=_show_indicator,
         ):
             self.truths, self.claims = await asyncio.gather(
-                self._a_generate_claims(test_case.input),
-                self._a_generate_claims(test_case.actual_output),
+                self._a_generate_claims(test_case.input, self.limit_count),
+                self._a_generate_claims(test_case.actual_output, self.limit_count),
             )
             (
                 self.coverage_verdicts,
@@ -483,9 +483,9 @@ class SummarizationMetric(BaseMetric):
                 ]
                 return verdicts
 
-    async def _a_generate_claims(self, text: str) -> List[str]:
+    async def _a_generate_claims(self, text: str, limit_count: int = 0) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(text=text, limit_count=self.limit_count)
+        prompt = FaithfulnessTemplate.generate_claims(text=text, limit_count=limit_count)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
@@ -500,9 +500,9 @@ class SummarizationMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
 
-    def _generate_claims(self, text: str) -> List[str]:
+    def _generate_claims(self, text: str, limit_count: int = 0) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(text=text, limit_count=self.limit_count)
+        prompt = FaithfulnessTemplate.generate_claims(text=text, limit_count=limit_count)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
