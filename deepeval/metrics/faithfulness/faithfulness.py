@@ -17,7 +17,13 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.faithfulness.schema import FaithfulnessVerdict, Verdicts, Reason, Truths, Claims
+from deepeval.metrics.faithfulness.schema import (
+    FaithfulnessVerdict,
+    Verdicts,
+    Reason,
+    Truths,
+    Claims,
+)
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -63,8 +69,12 @@ class FaithfulnessMetric(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.truths = self._generate_truths(test_case.retrieval_context, self.limit_count)
-                self.claims = self._generate_claims(test_case.actual_output, self.limit_count)
+                self.truths = self._generate_truths(
+                    test_case.retrieval_context, self.limit_count
+                )
+                self.claims = self._generate_claims(
+                    test_case.actual_output, self.limit_count
+                )
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -95,8 +105,12 @@ class FaithfulnessMetric(BaseMetric):
             self, async_mode=True, _show_indicator=_show_indicator
         ):
             self.truths, self.claims = await asyncio.gather(
-                self._a_generate_truths(test_case.retrieval_context, self.limit_count),
-                self._a_generate_claims(test_case.actual_output, self.limit_count),
+                self._a_generate_truths(
+                    test_case.retrieval_context, self.limit_count
+                ),
+                self._a_generate_claims(
+                    test_case.actual_output, self.limit_count
+                ),
             )
             self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()
@@ -230,10 +244,11 @@ class FaithfulnessMetric(BaseMetric):
                 ]
                 return verdicts
 
-    async def _a_generate_truths(self, retrieval_context: str, limit_count: int = 0) -> List[str]:
+    async def _a_generate_truths(
+        self, retrieval_context: str, limit_count: int = 0
+    ) -> List[str]:
         prompt = FaithfulnessTemplate.generate_truths(
-            text="\n\n".join(retrieval_context),
-            limit_count=limit_count
+            text="\n\n".join(retrieval_context), limit_count=limit_count
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -249,10 +264,11 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    def _generate_truths(self, retrieval_context: str, limit_count: int = 0) -> List[str]:
+    def _generate_truths(
+        self, retrieval_context: str, limit_count: int = 0
+    ) -> List[str]:
         prompt = FaithfulnessTemplate.generate_truths(
-            text="\n\n".join(retrieval_context),
-            limit_count=limit_count
+            text="\n\n".join(retrieval_context), limit_count=limit_count
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -268,8 +284,12 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    async def _a_generate_claims(self, actual_output: str, limit_count: int = 0) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(text=actual_output, limit_count=limit_count)
+    async def _a_generate_claims(
+        self, actual_output: str, limit_count: int = 0
+    ) -> List[str]:
+        prompt = FaithfulnessTemplate.generate_claims(
+            text=actual_output, limit_count=limit_count
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
@@ -284,8 +304,12 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
 
-    def _generate_claims(self, actual_output: str, limit_count: int = 0) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(text=actual_output, limit_count=limit_count)
+    def _generate_claims(
+        self, actual_output: str, limit_count: int = 0
+    ) -> List[str]:
+        prompt = FaithfulnessTemplate.generate_claims(
+            text=actual_output, limit_count=limit_count
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost

@@ -5,7 +5,8 @@ class FaithfulnessTemplate:
             limit = " the single most important FACTUAL claim"
         elif limit_count > 0:
             limit = f" the {limit_count} most important FACTUAL claims"
-        else: limit = " FACTUAL claims"
+        else:
+            limit = " FACTUAL claims"
         return f"""Based on the given text, please generate a comprehensive list of{limit} that can inferred from the provided text.
 
 Example:
