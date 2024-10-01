@@ -23,6 +23,6 @@ class ConversationalTestCase:
         for turn in self.turns:
             if not isinstance(turn, LLMTestCase):
                 raise TypeError("'turns' must be a list of `LLMTestCases`")
-        copied_turns.append(deepcopy(turn))
+            copied_turns.append(deepcopy(turn))
 
         self.turns = copied_turns

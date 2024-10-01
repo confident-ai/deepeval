@@ -308,7 +308,7 @@ class ContextGenerator:
                     res.clarity + res.depth + res.structure + res.relevance
                 ) / 4
             except TypeError:
-                res, _ = self.model.generate(prompt)
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 score = (
                     data["clarity"]
@@ -371,6 +371,9 @@ class ContextGenerator:
             str(i) for i in random.sample(range(total_chunks), sample_size)
         ]
         chunks = collection.get(ids=random_ids)["documents"]
+
+        if total_chunks < n_chunks * max_retries:
+            return chunks, [self.evaluate_chunk(chunk) for chunk in chunks]
 
         # Evaluate chunks and filter those with a score > 0.5
         evaluated_chunks = []
