@@ -38,6 +38,7 @@ class SummarizationMetric(BaseMetric):
         async_mode=True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        limit_count: int = 0,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -53,6 +54,7 @@ class SummarizationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.limit_count = limit_count
 
     def measure(
         self,
@@ -483,7 +485,7 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(text=text)
+        prompt = FaithfulnessTemplate.generate_claims(text=text, limit_count=self.limit_count)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
@@ -500,7 +502,7 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(text=text)
+        prompt = FaithfulnessTemplate.generate_claims(text=text, limit_count=self.limit_count)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
