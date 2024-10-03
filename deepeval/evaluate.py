@@ -545,11 +545,17 @@ async def a_execute_test_cases(
     use_cache: bool,
     show_indicator: bool,
     throttle_value: int,
+    max_concurrent: int = 100,
     save_to_disk: bool = False,
     verbose_mode: Optional[bool] = None,
     test_run_manager: Optional[TestRunManager] = None,
     _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
+    semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def execute_with_semaphore(func: Callable, *args, **kwargs):
+        async with semaphore:
+            return await func(*args, **kwargs)
 
     global_test_run_cache_manager.disable_write_cache = save_to_disk == False
 
@@ -598,7 +604,8 @@ async def a_execute_test_cases(
                         copied_llm_metrics: List[BaseMetric] = copy_metrics(
                             llm_metrics
                         )
-                        task = a_execute_llm_test_cases(
+                        task = execute_with_semaphore(
+                            func=a_execute_llm_test_cases,
                             metrics=copied_llm_metrics,
                             test_case=test_case,
                             test_run_manager=test_run_manager,
@@ -619,7 +626,8 @@ async def a_execute_test_cases(
                         copied_multimodal_metrics: List[
                             BaseMultimodalMetric
                         ] = copy_metrics(mllm_metrics)
-                        task = a_execute_mllm_test_cases(
+                        task = execute_with_semaphore(
+                            func=a_execute_mllm_test_cases,
                             metrics=copied_multimodal_metrics,
                             test_case=test_case,
                             test_run_manager=test_run_manager,
@@ -636,7 +644,8 @@ async def a_execute_test_cases(
                     elif isinstance(test_case, ConversationalTestCase):
                         conversational_test_case_counter += 1
 
-                        task = a_execute_conversational_test_cases(
+                        task = execute_with_semaphore(
+                            func=a_execute_conversational_test_cases,
                             metrics=copy_metrics(metrics),
                             test_case=test_case,
                             test_run_manager=test_run_manager,
@@ -663,7 +672,8 @@ async def a_execute_test_cases(
                     copied_llm_metrics: List[BaseMetric] = copy_metrics(
                         llm_metrics
                     )
-                    task = a_execute_llm_test_cases(
+                    task = execute_with_semaphore(
+                        func=a_execute_llm_test_cases,
                         metrics=copied_llm_metrics,
                         test_case=test_case,
                         test_run_manager=test_run_manager,
@@ -685,7 +695,8 @@ async def a_execute_test_cases(
                     copied_conversational_metrics = copy_metrics(
                         conversational_metrics
                     )
-                    task = a_execute_conversational_test_cases(
+                    task = execute_with_semaphore(
+                        func=a_execute_conversational_test_cases,
                         metrics=copied_conversational_metrics,
                         test_case=test_case,
                         test_run_manager=test_run_manager,
@@ -702,7 +713,8 @@ async def a_execute_test_cases(
                     copied_multimodal_metrics: List[BaseMultimodalMetric] = (
                         copy_metrics(mllm_metrics)
                     )
-                    task = a_execute_mllm_test_cases(
+                    task = execute_with_semaphore(
+                        func=a_execute_mllm_test_cases,
                         metrics=copied_multimodal_metrics,
                         test_case=test_case,
                         test_run_manager=test_run_manager,
