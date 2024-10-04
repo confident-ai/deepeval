@@ -6,11 +6,15 @@ sidebar_label: Knowledge Retention
 
 import Equation from "@site/src/components/equation";
 
-The knowledge retention metric is a conversational metric that determines whether your LLM is able to retain factual information presented **throughout a conversation**.
+The knowledge retention metric is a conversational metric that determines whether your LLM chatbot is able to retain factual information presented **throughout a conversation**.
 
 ## Required Arguments
 
-To use the `KnowledgeRetentionMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`s for each turn in a `ConversationalTestCase`:
+To use the `KnowledgeRetentionMetric`, you'll have to provide the following arguments when creating an `ConversationalTestCase`:
+
+- `turns`
+
+Additionally, each `LLMTestCase`s for each turn in a `ConversationalTestCase` requires the following arguments:
 
 - `input`
 - `actual_output`
