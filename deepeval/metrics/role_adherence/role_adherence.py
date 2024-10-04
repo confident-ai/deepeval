@@ -2,9 +2,10 @@ import asyncio
 from typing import Optional, Union, Dict, List
 
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.metrics.conversation_completeness.template import (
-    ConversationCompletenessTemplate,
+from deepeval.metrics.role_adherence.schema import (
+    OutOfCharacterResponseIndicies,
 )
+from deepeval.metrics.role_adherence.template import RoleAdherenceTemplate
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
@@ -20,7 +21,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.conversation_completeness.schema import *
+from deepeval.metrics.conversation_relevancy.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -28,7 +29,7 @@ required_params: List[LLMTestCaseParams] = [
 ]
 
 
-class ConversationCompletenessMetric(BaseConversationalMetric):
+class RoleAdherenceMetric(BaseConversationalMetric):
     def __init__(
         self,
         threshold: float = 0.5,
@@ -37,7 +38,6 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        window_size: int = 3,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -46,12 +46,13 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.window_size = window_size
 
     def measure(
         self, test_case: ConversationalTestCase, _show_indicator: bool = True
     ):
-        check_conversational_test_case_params(test_case, required_params, self)
+        check_conversational_test_case_params(
+            test_case, required_params, self, require_chatbot_role=True
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -62,21 +63,19 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 )
             else:
                 self.turns = format_turns(test_case.turns, required_params)
-                self.user_intentions = self._extract_user_intentions()
-                self.verdicts = [
-                    self._generate_verdict(user_intention)
-                    for user_intention in self.user_intentions
-                ]
-
+                self.out_of_character_responses = (
+                    self._extract_out_of_character_responses(
+                        test_case.turns, test_case.chatbot_role
+                    )
+                )
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason()
+                self.reason = self._generate_reason(role=test_case.chatbot_role)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Turns:\n{prettify_list(self.turns)}",
-                        f"User Intentions:\n{prettify_list(self.user_intentions)}",
-                        f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        f"Chatbot Role:\n{test_case.chatbot_role}",
+                        f"Out-of-Character Turn Response(s):\n{prettify_list(self.out_of_character_responses)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
@@ -94,38 +93,33 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             self, async_mode=True, _show_indicator=_show_indicator
         ):
             self.turns = format_turns(test_case.turns, required_params)
-            self.user_intentions = await self._a_extract_user_intentions()
-            self.verdicts = await asyncio.gather(
-                *[
-                    self._a_generate_verdict(user_intention)
-                    for user_intention in self.user_intentions
-                ]
+            self.out_of_character_responses = (
+                await (
+                    self._a_extract_out_of_character_responses(
+                        test_case.turns, test_case.chatbot_role
+                    )
+                )
             )
-
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason()
+            self.reason = await self._a_generate_reason(
+                role=test_case.chatbot_role
+            )
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Turns:\n{prettify_list(self.turns)}",
-                    f"User Intentions:\n{prettify_list(self.user_intentions)}",
-                    f"Verdicts:\n{prettify_list(self.verdicts)}",
+                    f"Chatbot Role:\n{test_case.chatbot_role}",
+                    f"Out-of-Character Turn(s) Response(s):\n{prettify_list(self.out_of_character_responses)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
             return self.score
 
-    async def _a_generate_reason(self) -> str:
-        incompletenesses: List[str] = []
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                incompletenesses.append(verdict.reason)
-
-        prompt = ConversationCompletenessTemplate.generate_reason(
+    async def _a_generate_reason(self, role: str) -> str:
+        prompt = RoleAdherenceTemplate.generate_reason(
             score=self.score,
-            incompletenesses=incompletenesses,
-            intentions=self.user_intentions,
+            role=role,
+            out_of_character_responses=self.out_of_character_responses,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -141,16 +135,11 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    def _generate_reason(self) -> str:
-        incompletenesses: List[str] = []
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                incompletenesses.append(verdict.reason)
-
-        prompt = ConversationCompletenessTemplate.generate_reason(
+    def _generate_reason(self, role: str) -> str:
+        prompt = RoleAdherenceTemplate.generate_reason(
             score=self.score,
-            incompletenesses=incompletenesses,
-            intentions=self.user_intentions,
+            role=role,
+            out_of_character_responses=self.out_of_character_responses,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -166,103 +155,85 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    async def _a_generate_verdict(
-        self, intention: str
-    ) -> ConversationCompletenessVerdict:
-        prompt = ConversationCompletenessTemplate.generate_verdicts(
-            messages=self.turns, intention=intention
+    async def _a_extract_out_of_character_responses(
+        self, llm_test_cases: List[LLMTestCase], role: str
+    ) -> List[str]:
+        prompt = (
+            RoleAdherenceTemplate.extract_out_of_character_response_indicies(
+                turns=self.turns,
+                role=role,
+            )
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            return ConversationCompletenessVerdict(**data)
+            indicies = OutOfCharacterResponseIndicies(**data).indicies
         else:
             try:
-                res: ConversationCompletenessVerdict = (
-                    await self.model.a_generate(
-                        prompt, schema=ConversationCompletenessVerdict
-                    )
+                res: OutOfCharacterResponseIndicies = await self.model.generate(
+                    prompt, schema=OutOfCharacterResponseIndicies
                 )
-                return res
+                indicies = res.indicies
             except TypeError:
-                res = await self.model.a_generate(prompt)
+                res = await self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return ConversationCompletenessVerdict(**data)
+                indicies = OutOfCharacterResponseIndicies(**data).indicies
 
-    def _generate_verdict(
-        self, intention: str
-    ) -> ConversationCompletenessVerdict:
-        prompt = ConversationCompletenessTemplate.generate_verdicts(
-            messages=self.turns, intention=intention
+        out_of_character_responses: List[str] = []
+        for index in indicies:
+            try:
+                out_of_character_responses.append(
+                    f"{llm_test_cases[index].actual_output} (turn #{index+1})"
+                )
+            except:
+                pass
+        return out_of_character_responses
+
+    def _extract_out_of_character_responses(
+        self, llm_test_cases: List[LLMTestCase], role: str
+    ) -> List[str]:
+        prompt = (
+            RoleAdherenceTemplate.extract_out_of_character_response_indicies(
+                turns=self.turns,
+                role=role,
+            )
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            return ConversationCompletenessVerdict(**data)
+            indicies = OutOfCharacterResponseIndicies(**data).indicies
         else:
             try:
-                res: ConversationCompletenessVerdict = self.model.generate(
-                    prompt, schema=ConversationCompletenessVerdict
+                res: OutOfCharacterResponseIndicies = self.model.generate(
+                    prompt, schema=OutOfCharacterResponseIndicies
                 )
-                return res
+                indicies = res.indicies
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return ConversationCompletenessVerdict(**data)
+                indicies = OutOfCharacterResponseIndicies(**data).indicies
 
-    async def _a_extract_user_intentions(self) -> List[str]:
-        prompt = ConversationCompletenessTemplate.extract_user_intentions(
-            messages=self.turns
-        )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return UserIntentions(**data).intentions
-        else:
+        out_of_character_responses: List[str] = []
+        for index in indicies:
             try:
-                res: UserIntentions = await self.model.a_generate(
-                    prompt, schema=UserIntentions
+                out_of_character_responses.append(
+                    f"{llm_test_cases[index].actual_output} (turn #{index+1})"
                 )
-                return res.intentions
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return UserIntentions(**data).intentions
-
-    def _extract_user_intentions(self) -> List[str]:
-        prompt = ConversationCompletenessTemplate.extract_user_intentions(
-            messages=self.turns
-        )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return UserIntentions(**data).intentions
-        else:
-            try:
-                res: UserIntentions = self.model.generate(
-                    prompt, schema=UserIntentions
-                )
-                return res.intentions
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return UserIntentions(**data).intentions
+            except:
+                pass
+        return out_of_character_responses
 
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
+        number_of_turns = len(self.turns)
+        if number_of_turns == 0:
             return 1
 
-        relevant_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                relevant_count += 1
-
-        score = relevant_count / number_of_verdicts
+        score = (
+            number_of_turns
+            - min(len(self.out_of_character_responses), number_of_turns)
+        ) / number_of_turns
         return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
@@ -277,4 +248,4 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
 
     @property
     def __name__(self):
-        return "Conversation Completeness"
+        return "Role Adherence"

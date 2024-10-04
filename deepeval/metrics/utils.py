@@ -43,7 +43,7 @@ def copy_metrics(
     return copied_metrics
 
 
-def process_llm_test_cases(
+def format_turns(
     llm_test_cases: List[LLMTestCase], test_case_params: List[LLMTestCaseParams]
 ) -> List[Dict[str, str]]:
     res = []
@@ -105,11 +105,17 @@ def check_conversational_test_case_params(
     test_case: ConversationalTestCase,
     test_case_params: List[LLMTestCaseParams],
     metric: BaseConversationalMetric,
+    require_chatbot_role: bool = False,
 ):
     if isinstance(test_case, ConversationalTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
         metric.error = error_str
         raise ValueError(error_str)
+
+    if require_chatbot_role and test_case.chatbot_role is None:
+        error_str = f"'chatbot_role' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
 
     if len(test_case.turns) == 0:
         error_str = "'turns' in conversational test case cannot be empty."

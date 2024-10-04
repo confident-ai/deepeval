@@ -1,17 +1,12 @@
 import pytest
 from langchain_openai import OpenAIEmbeddings
-import random
 
 import deepeval
-from deepeval.metrics.conversation_completeness.conversation_completeness import (
-    ConversationCompletenessMetric,
-)
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.types import Languages
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     FaithfulnessMetric,
@@ -25,6 +20,8 @@ from deepeval.metrics import (
     SummarizationMetric,
     ToolCorrectnessMetric,
     ConversationRelevancyMetric,
+    RoleAdherenceMetric,
+    ConversationCompletenessMetric,
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
@@ -148,6 +145,7 @@ def test_everything():
     metric12 = ConversationRelevancyMetric()
     metric13 = ToolCorrectnessMetric()
     metric14 = ConversationCompletenessMetric()
+    metric15 = RoleAdherenceMetric()
 
     test_case = LLMTestCase(
         input="What is this",
@@ -176,6 +174,7 @@ def test_everything():
             # metric12,
             # metric13,
             # metric14,
+            # metric15
         ],
         run_async=True,
     )

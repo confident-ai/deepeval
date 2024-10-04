@@ -8,6 +8,7 @@ from deepeval.test_case import LLMTestCase
 @dataclass
 class ConversationalTestCase:
     turns: List[LLMTestCase]
+    chatbot_role: Optional[str] = None
     name: Optional[str] = field(default=None)
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
