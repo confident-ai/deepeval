@@ -1,18 +1,23 @@
 ---
-id: metrics-conversation-relevancy
-title: Conversation Relevancy
-sidebar_label: Conversation Relevancy
+id: metrics-role-adherence
+title: Role Adherence
+sidebar_label: Role Adherence
 ---
 
 import Equation from "@site/src/components/equation";
 
-The conversation relevancy metric is a conversational metric that determines whether your LLM chatbot is able to consistently generate relevant responses **throughout a conversation**.
+The role adherence metric is a conversational metric that determines whether your LLM chatbot is able to adhere to its given role **throughout a conversation**.
+
+:::tip
+The `RoleAdherenceMetric` is particular useful for a role-playing usecase.
+:::
 
 ## Required Arguments
 
-To use the `ConversationRelevancyMetric`, you'll have to provide the following arguments when creating an `ConversationalTestCase`:
+To use the `RoleAdherenceMetric`, you'll have to provide the following arguments when creating an `ConversationalTestCase`:
 
 - `turns`
+- `chatbot_role`
 
 Additionally, each `LLMTestCase`s for each turn in a `ConversationalTestCase` requires the following arguments:
 
@@ -25,19 +30,20 @@ Let's take this conversation as an example:
 
 ```python
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
-from deepeval.metrics import ConversationRelevancyMetric
+from deepeval.metrics import RoleAdherenceMetric
 
 convo_test_case = ConversationalTestCase(
+    chatbot_role="...",
     turns=[LLMTestCase(input="...", actual_output="...")]
 )
-metric = ConversationRelevancyMetric(threshold=0.5)
+metric = RoleAdherenceMetric(threshold=0.5)
 
 metric.measure(convo_test_case)
 print(metric.score)
 print(metric.reason)
 ```
 
-There are seven optional parameters when creating a `ConversationRelevancyMetric`:
+There are six optional parameters when creating a `RoleAdherenceMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
@@ -45,12 +51,9 @@ There are seven optional parameters when creating a `ConversationRelevancyMetric
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
-- [Optional] `window_size`: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to 3.
 
 ## How Is It Calculated?
 
-The `ConversationRelevancyMetric` score is calculated according to the following equation:
+The `RoleAdherenceMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Conversation Relevancy} = \frac{\text{Number of Turns with Relevant Actual Outputs}}{\text{Total Number of Turns}}" />
-
-The `ConversationRelevancyMetric` first constructs a sliding windows of turns for each turn, before using an LLM to determine whether the last turn in each sliding window has an `actual_output` that is relevant to the `input` based on previous conversational context found in the sliding window.
+<Equation formula="\text{Role Adherence} = \frac{\text{Number of Turns that Adhered to Specified Role in Conversation}}{\text{Total Number of Turns in Conversation}}" />

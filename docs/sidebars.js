@@ -43,6 +43,7 @@ module.exports = {
               type: "category",
               label: "Conversational Metrics",
               items: [
+                "metrics-role-adherence",
                 "metrics-conversation-completeness",
                 "metrics-conversation-relevancy",
                 "metrics-knowledge-retention",

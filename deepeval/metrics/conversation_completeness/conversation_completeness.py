@@ -8,7 +8,7 @@ from deepeval.metrics.conversation_completeness.template import (
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    process_llm_test_cases,
+    format_turns,
     trimAndLoadJson,
     initialize_model,
 )
@@ -61,13 +61,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                llm_test_cases: List[LLMTestCase] = []
-                for turn in test_case.turns:
-                    llm_test_cases.append(turn)
-
-                self.turns = process_llm_test_cases(
-                    llm_test_cases, required_params
-                )
+                self.turns = format_turns(test_case.turns, required_params)
                 self.user_intentions = self._extract_user_intentions()
                 self.verdicts = [
                     self._generate_verdict(user_intention)
@@ -99,11 +93,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            llm_test_cases: List[LLMTestCase] = []
-            for turn in test_case.turns:
-                llm_test_cases.append(turn)
-
-            self.turns = process_llm_test_cases(llm_test_cases, required_params)
+            self.turns = format_turns(test_case.turns, required_params)
             self.user_intentions = await self._a_extract_user_intentions()
             self.verdicts = await asyncio.gather(
                 *[

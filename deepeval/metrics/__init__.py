@@ -23,3 +23,6 @@ from .conversation_relevancy.conversation_relevancy import (
 from .conversation_completeness.conversation_completeness import (
     ConversationCompletenessMetric,
 )
+from .role_adherence.role_adherence import (
+    RoleAdherenceMetric,
+)

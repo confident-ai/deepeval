@@ -6,7 +6,7 @@ sidebar_label: Conversation Completeness
 
 import Equation from "@site/src/components/equation";
 
-The conversation completeness metric is a conversational metric that determines whether your LLM is able to complete an end-to-end conversation by satisfying user needs **throughout a conversation**.
+The conversation completeness metric is a conversational metric that determines whether your LLM chatbot is able to complete an end-to-end conversation by satisfying user needs **throughout a conversation**.
 
 :::note
 The `ConversationCompletenessMetric` can be used as a proxy to measure user satisfaction throughout a conversation. Conversational metrics are particular useful for an LLM chatbot use case.
@@ -14,7 +14,11 @@ The `ConversationCompletenessMetric` can be used as a proxy to measure user sati
 
 ## Required Arguments
 
-To use the `ConversationCompletenessMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`s for each turn in a `ConversationalTestCase`:
+To use the `ConversationCompletenessMetric`, you'll have to provide the following arguments when creating an `ConversationalTestCase`:
+
+- `turns`
+
+Additionally, each `LLMTestCase`s for each turn in a `ConversationalTestCase` requires the following arguments:
 
 - `input`
 - `actual_output`

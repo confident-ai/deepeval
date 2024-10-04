@@ -252,13 +252,36 @@ llm_test_case = LLMTestCase(
 test_case = ConversationalTestCase(turns=[llm_test_case])
 ```
 
+:::note
+Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly specified, the term 'metrics' also refer to non-conversational metrics throughout `deepeval`.
+:::
+
+### Turns
+
+The `turns` parameter is a list of `LLMTestCase`s and is basically a list of messages/exchanges in a user-LLM conversation. Different conversational metrics will require different LLM test case parameters for evaluation, while regular LLM system metrics will take the last `LLMTestCase` in a turn to carry out evaluation.
+
+```python
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
+
+test_case = ConversationalTestCase(turns=[LLMTestCase(...)])
+```
+
 :::tip Did you know?
 You can apply both non-conversational and conversational metrics to a `ConversationalTestCase`. Conversational metrics evaluate the entire conversational as a whole, and non-conversational metrics (which are metrics used for individual `LLMTestCase`s), when applied to a `ConversationalTestCase`, will evaluate the **last** turn in a `ConversationalTestCase`. This is because it is more useful to evaluate the last best LLM `actual_output` given the previous conversation context, instead of all individual `turns` in a `ConversationalTestCase`.
 :::
 
-:::note
-Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly specified, the term 'metrics' also refer to non-conversational metrics throughout `deepeval`.
-:::
+### Chatbot Role
+
+The `chatbot_role` parameter is an **optional** parameter that specifies what role the chatbot is supposed to play. This is currently only required for the `RoleAdherenceMetric`, where it is particularly useful for a role-playing evaluation use case.
+
+```python
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    chatbot_role="...",
+    turns=[LLMTestCase(...)]
+)
+```
 
 ## MLLM Test Case
 
