@@ -18,6 +18,11 @@ class Golden(BaseModel):
         default=None, serialization_alias="additionalMetadata"
     )
     comments: Optional[str] = Field(default=None)
+    tools_called: Optional[List[str]] = Field(
+        default=None, serialization_alias="toolsCalled")
+    expected_tools: Optional[List[str]] = Field(
+        default=None, serialization_alias="expectedTools"
+    )
     source_file: Optional[str] = Field(
         default=None, serialization_alias="sourceFile"
     )
