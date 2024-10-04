@@ -33,46 +33,42 @@ required_params: List[LLMTestCaseParams] = [
 ]
 
 
-class FakeMetric(BaseMetric):
-    def __init__(self, threshold: float = 0.5):
-        self.threshold = threshold
+from deepeval.metrics import GEval
 
-    def measure(self, test_case: LLMTestCase, _show_indicator: bool):
-        check_llm_test_case_params(test_case, required_params, self)
-        self.score = 1
-        self.success = self.score >= self.threshold
-        self.reason = "This metric looking good!"
-        return self.score
-
-    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool):
-        check_llm_test_case_params(test_case, required_params, self)
-        self.score = 1
-        self.success = self.score >= self.threshold
-        self.reason = "This metric looking good!"
-        return self.score
-
-    def is_successful(self):
-        return self.success
-
-    @property
-    def __name__(self):
-        return "Fake"
-
+correctness_metric = GEval(
+    name="Correctness",
+    criteria="Determine whether the actual output is factually correct based on the expected output.",
+    # NOTE: you can only provide either criteria or evaluation_steps, and not both
+    evaluation_steps=[
+        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
+        "You should also heavily penalize omission of detail",
+        "Vague language, or contradicting OPINIONS, are OK",
+    ],
+    evaluation_params=[
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ],
+)
 
 evaluate(
     test_cases=[
         LLMTestCase(
-            input="Message input", actual_output="Message actual output"
+            input="Message input number 1!",
+            actual_output="Message actual output number 1...",
         ),
         LLMTestCase(
-            input="Message input 2",
-            actual_output="Message actual output 2",
-            retrieval_context=[""],
+            input="Message input 2, this is just a test",
+            actual_output="Message actual output 2, this is just a test",
         ),
     ],
-    metrics=[FakeMetric(), FaithfulnessMetric()],
-    skip_on_missing_params=True,
-    ignore_errors=True,
+    metrics=[
+        correctness_metric,
+        AnswerRelevancyMetric(),
+        BiasMetric(),
+        ConversationCompletenessMetric(),
+    ],
+    # throttle_value=10,
+    max_concurrent=1,
 )
 
 # confident_evaluate(experiment_name="Convo", test_cases=[test_case])
