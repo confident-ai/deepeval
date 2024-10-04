@@ -38,7 +38,7 @@ class SummarizationMetric(BaseMetric):
         async_mode=True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        limit_count: int = 0,
+        truths_extraction_limit: Optional[int] = None,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -54,7 +54,10 @@ class SummarizationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.limit_count = limit_count
+
+        self.truths_extraction_limit = truths_extraction_limit
+        if self.truths_extraction_limit is not None:
+            self.truths_extraction_limit = max(self.truths_extraction_limit, 0)
 
     def measure(
         self,
@@ -73,11 +76,9 @@ class SummarizationMetric(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.truths: List[str] = self._generate_claims(
-                    test_case.input, self.limit_count
-                )
+                self.truths: List[str] = self._generate_truths(test_case.input)
                 self.claims: List[str] = self._generate_claims(
-                    test_case.actual_output, self.limit_count
+                    test_case.actual_output
                 )
                 self.coverage_verdicts: List[SummarizationCoverageVerdict] = (
                     self._generate_coverage_verdicts(test_case)
@@ -97,7 +98,7 @@ class SummarizationMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Truths:\n{prettify_list(self.truths)}",
+                        f"Truths (limit={self.truths_extraction_limit}):\n{prettify_list(self.truths)}",
                         f"Claims:\n{prettify_list(self.claims)}",
                         f"Assessment Questions:\n{prettify_list(self.assessment_questions)}",
                         f"Coverage Verdicts:\n{prettify_list(self.coverage_verdicts)}",
@@ -124,10 +125,8 @@ class SummarizationMetric(BaseMetric):
             _show_indicator=_show_indicator,
         ):
             self.truths, self.claims = await asyncio.gather(
-                self._a_generate_claims(test_case.input, self.limit_count),
-                self._a_generate_claims(
-                    test_case.actual_output, self.limit_count
-                ),
+                self._a_generate_truths(test_case.input),
+                self._a_generate_claims(test_case.actual_output),
             )
             (
                 self.coverage_verdicts,
@@ -148,7 +147,7 @@ class SummarizationMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Truths:\n{prettify_list(self.truths)}",
+                    f"Truths (limit={self.truths_extraction_limit}):\n{prettify_list(self.truths)}",
                     f"Claims:\n{prettify_list(self.claims)}",
                     f"Assessment Questions:\n{prettify_list(self.assessment_questions)}",
                     f"Coverage Verdicts:\n{prettify_list(self.coverage_verdicts)}",
@@ -487,13 +486,28 @@ class SummarizationMetric(BaseMetric):
                 ]
                 return verdicts
 
-    async def _a_generate_claims(
-        self, text: str, limit_count: int = 0
-    ) -> List[str]:
+    async def _a_generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(
-            text=text, limit_count=limit_count
+        prompt = FaithfulnessTemplate.generate_truths(
+            text=text, extraction_limit=self.truths_extraction_limit
         )
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["truths"]
+        else:
+            try:
+                res: Truths = await self.model.a_generate(prompt, schema=Truths)
+                return res.truths
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["truths"]
+
+    async def _a_generate_claims(self, text: str) -> List[str]:
+        # Borrow faithfulness template
+        prompt = FaithfulnessTemplate.generate_claims(text=text)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
@@ -508,11 +522,28 @@ class SummarizationMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
 
-    def _generate_claims(self, text: str, limit_count: int = 0) -> List[str]:
+    def _generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(
-            text=text, limit_count=limit_count
+        prompt = FaithfulnessTemplate.generate_truths(
+            text=text, extraction_limit=self.truths_extraction_limit
         )
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["truths"]
+        else:
+            try:
+                res: Truths = self.model.generate(prompt, schema=Truths)
+                return res.truths
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["truths"]
+
+    def _generate_claims(self, text: str) -> List[str]:
+        # Borrow faithfulness template
+        prompt = FaithfulnessTemplate.generate_claims(text=text)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
