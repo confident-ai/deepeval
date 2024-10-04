@@ -1,13 +1,10 @@
+from typing import Optional
+
+
 class FaithfulnessTemplate:
     @staticmethod
-    def generate_claims(text, limit_count: int = 0):
-        if limit_count == 1:
-            limit = " the single most important FACTUAL claim"
-        elif limit_count > 0:
-            limit = f" the {limit_count} most important FACTUAL claims"
-        else:
-            limit = " FACTUAL claims"
-        return f"""Based on the given text, please generate a comprehensive list of{limit} that can inferred from the provided text.
+    def generate_claims(text):
+        return f"""Based on the given text, please generate a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text.
 
 Example:
 Example Text: 
@@ -35,13 +32,14 @@ JSON:
 """
 
     @staticmethod
-    def generate_truths(text, limit_count: int = 0):
-        if limit_count == 1:
-            limit = " the single most important FACTUAL, undisputed truth"
-        elif limit_count > 0:
-            limit = f" the {limit_count} most important FACTUAL, undisputed truths per document"
-        else:
+    def generate_truths(text, extraction_limit: Optional[int] = None):
+        print(extraction_limit)
+        if extraction_limit is None:
             limit = " FACTUAL, undisputed truths"
+        elif extraction_limit == 1:
+            limit = " the single most important FACTUAL, undisputed truth"
+        else:
+            limit = f" the {extraction_limit} most important FACTUAL, undisputed truths per document"
         return f"""Based on the given text, please generate a comprehensive list of{limit}, that can inferred from the provided text.
 
 Example:
