@@ -22,7 +22,7 @@ def get_unique_id():
 
 
 def telemetry_opt_out():
-    return os.getenv("DEEPEVAL_ENABLE_TELEMETRY") != "YES"
+    return os.getenv("DEEPEVAL_TELEMETRY_OPT_OUT") == "YES"
 
 
 def blocked_by_firewall():
