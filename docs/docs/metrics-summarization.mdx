@@ -69,7 +69,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are eight optional parameters when instantiating an `SummarizationMetric` class:
+There are nine optional parameters when instantiating an `SummarizationMetric` class:
 
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 - [Optional] `assessment_questions`: a list of **close-ended questions that can be answered with either a 'yes' or a 'no'**. These are questions you want your summary to be able to ideally answer, and is especially helpful if you already know what a good summary for your use case looks like. If `assessment_questions` is not provided, we will generate a set of `assessment_questions` for you at evaluation time. The `assessment_questions` are used to calculate the `coverage_score`.
@@ -79,6 +79,11 @@ There are eight optional parameters when instantiating an `SummarizationMetric` 
 - [Optional] `strict_mode`: a boolean which when set to True, enforces a strict evaluation criterion. In strict mode, the metric score becomes binary: a score of 1 indicates a perfect result, and any outcome less than perfect is scored as 0. Defaulted as `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `truths_extraction_limit`: an int which when set, determines the maximum number of factual truths to extract from the `input`. The truths extracted will used to determine the `alignment_score`, and will be ordered by importance, decided by your evaluation `model`. Defaulted to `None`.
+
+:::tip
+Sometimes, you may want to only consider the most important factual truths in the `input`. If this is the case, you can choose to set the `truths_extraction_limit` parameter to limit the maximum number of truths to consider during evaluation.
+:::
 
 ## How Is It Calculated?
 

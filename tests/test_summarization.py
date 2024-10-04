@@ -6,7 +6,7 @@ from deepeval.metrics import SummarizationMetric
 from tests.custom_judge import CustomJudge
 
 
-@pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai isg expensive")
 def test_summarization():
     metric = SummarizationMetric(verbose_mode=True, truths_extraction_limit=2)
 
