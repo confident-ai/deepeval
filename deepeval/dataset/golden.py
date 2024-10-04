@@ -19,7 +19,8 @@ class Golden(BaseModel):
     )
     comments: Optional[str] = Field(default=None)
     tools_called: Optional[List[str]] = Field(
-        default=None, serialization_alias="toolsCalled")
+        default=None, serialization_alias="toolsCalled"
+    )
     expected_tools: Optional[List[str]] = Field(
         default=None, serialization_alias="expectedTools"
     )
