@@ -1,7 +1,7 @@
 import asyncio
 from copy import deepcopy
 import os
-from typing import List, Optional, Union, Dict
+from typing import Callable, List, Optional, Union, Dict
 import time
 from dataclasses import dataclass
 from rich.console import Console
@@ -545,7 +545,7 @@ async def a_execute_test_cases(
     use_cache: bool,
     show_indicator: bool,
     throttle_value: int,
-    max_concurrent: int = 100,
+    max_concurrent: int,
     save_to_disk: bool = False,
     verbose_mode: Optional[bool] = None,
     test_run_manager: Optional[TestRunManager] = None,
@@ -558,7 +558,6 @@ async def a_execute_test_cases(
             return await func(*args, **kwargs)
 
     global_test_run_cache_manager.disable_write_cache = save_to_disk == False
-
     if test_run_manager is None:
         test_run_manager = global_test_run_manager
 
@@ -941,6 +940,8 @@ def assert_test(
                 use_cache=should_use_cache(),
                 verbose_mode=should_verbose_print(),
                 throttle_value=0,
+                # this doesn't matter for pytest
+                max_concurrent=100,
                 save_to_disk=get_is_running_deepeval(),
                 show_indicator=True,
                 _use_bar_indicator=True,
@@ -999,6 +1000,7 @@ def evaluate(
     skip_on_missing_params: bool = False,
     verbose_mode: Optional[bool] = None,
     throttle_value: int = 0,
+    max_concurrent: int = 100,
 ):
     check_valid_test_cases_type(test_cases)
 
@@ -1036,6 +1038,7 @@ def evaluate(
                     show_indicator=show_indicator,
                     skip_on_missing_params=skip_on_missing_params,
                     throttle_value=throttle_value,
+                    max_concurrent=max_concurrent,
                 )
             )
         else:
