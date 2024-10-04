@@ -86,7 +86,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        check_conversational_test_case_params(test_case, required_params, self)
+        check_conversational_test_case_params(
+            test_case, required_params, self, require_chatbot_role=True
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(

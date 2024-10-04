@@ -173,8 +173,8 @@ def test_everything():
             # metric11,
             # metric12,
             # metric13,
-            # metric14,
-            # metric15
+            metric14,
+            metric15,
         ],
         run_async=True,
     )
