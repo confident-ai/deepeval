@@ -14,6 +14,6 @@ class DeepEvalBaseBenchmark(ABC, Generic[T]):
         self.dataset = dataset
 
     @abstractmethod
-    def load_benchmark_dataset(self) -> List[Golden]:
+    def load_benchmark_dataset(self, *args, **kwargs) -> List[Golden]:
         """Load the benchmark dataset and initialize tasks."""
         raise NotImplementedError
