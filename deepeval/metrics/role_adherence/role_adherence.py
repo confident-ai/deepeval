@@ -1,5 +1,4 @@
-import asyncio
-from typing import Optional, Union, Dict, List
+from typing import Optional, Union, List
 
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.role_adherence.schema import (
