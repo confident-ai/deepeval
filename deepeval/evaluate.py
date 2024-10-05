@@ -51,7 +51,6 @@ from deepeval.test_run.cache import (
     CachedTestCase,
     CachedMetricData,
 )
-from deepeval.tracing import get_trace_stack
 
 
 @dataclass
@@ -182,7 +181,6 @@ def create_api_test_case(
             # to each individual message (test case)
             test_case.additional_metadata = additional_metadata
             test_case.comments = comments
-            trace_stack = None
             metrics_data = None
         else:
             success = True
@@ -191,7 +189,6 @@ def create_api_test_case(
             else:
                 name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
             order = test_case._dataset_rank
-            trace_stack = get_trace_stack()
             metrics_data = []
 
         if isinstance(test_case, LLMTestCase):
@@ -211,7 +208,6 @@ def create_api_test_case(
                 order=order,
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
-                traceStack=trace_stack,
                 conversational_instance_id=conversational_instance_id,
             )
         elif isinstance(test_case, MLLMTestCase):
@@ -226,7 +222,6 @@ def create_api_test_case(
                 order=order,
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
-                traceStack=trace_stack,
                 conversational_instance_id=conversational_instance_id,
             )
 

@@ -12,7 +12,6 @@ from typing import (
 )
 from time import perf_counter
 import json
-import traceback
 
 from llama_index.core.bridge.pydantic import BaseModel
 from llama_index.core.callbacks.base_handler import BaseCallbackHandler
@@ -29,7 +28,6 @@ from llama_index.core.tools import ToolMetadata
 
 from deepeval.tracing import (
     trace_manager,
-    get_trace_stack,
     BaseTrace,
     LlmTrace,
     GenericTrace,
