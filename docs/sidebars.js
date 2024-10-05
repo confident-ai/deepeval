@@ -35,19 +35,19 @@ module.exports = {
             "metrics-custom",
             {
               type: "category",
-              label: "Multimodal Metrics",
-              items: ["metrics-viescore"],
+              label: "Conversational Metrics",
+              items: [
+                "metrics-role-adherence",
+                "metrics-knowledge-retention",
+                "metrics-conversation-completeness",
+                "metrics-conversation-relevancy",
+              ],
               collapsed: true,
             },
             {
               type: "category",
-              label: "Conversational Metrics",
-              items: [
-                "metrics-role-adherence",
-                "metrics-conversation-completeness",
-                "metrics-conversation-relevancy",
-                "metrics-knowledge-retention",
-              ],
+              label: "Multimodal Metrics",
+              items: ["metrics-viescore"],
               collapsed: true,
             },
           ],

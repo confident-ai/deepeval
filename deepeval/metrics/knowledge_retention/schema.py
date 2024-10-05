@@ -1,5 +1,5 @@
 from typing import List, Dict, Union, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Knowledge(BaseModel):
@@ -7,6 +7,10 @@ class Knowledge(BaseModel):
 
 
 class KnowledgeRetentionVerdict(BaseModel):
-    index: int
     verdict: str
-    reason: Optional[str] = Field(default=None)
+    index: Optional[int] = None
+    reason: Optional[str] = None
+
+
+class Reason(BaseModel):
+    reason: str
