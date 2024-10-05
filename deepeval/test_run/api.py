@@ -24,6 +24,8 @@ class LLMApiTestCase(BaseModel):
     expected_output: Optional[str] = Field(None, alias="expectedOutput")
     context: Optional[list] = Field(None)
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
+    tools_called: Optional[list] = Field(None, alias="toolsCalled")
+    expected_tools: Optional[list] = Field(None, alias="expectedTools")
 
     multimodal_input: Optional[List[Union[str, MLLMImage]]] = Field(
         None, alias="multimodalInput"
@@ -31,9 +33,6 @@ class LLMApiTestCase(BaseModel):
     multimodal_input_actual_output: Optional[List[Union[str, MLLMImage]]] = (
         Field(None, alias="multimodalActualOutput")
     )
-
-    tools_called: Optional[list] = Field(None, alias="toolsCalled")
-    expected_tools: Optional[list] = Field(None, alias="expectedTools")
 
     # make these optional, not all test cases in a conversation will be evaluated
     success: Union[bool, None] = Field(None)
@@ -49,7 +48,6 @@ class LLMApiTestCase(BaseModel):
         None, alias="additionalMetadata"
     )
     comments: Optional[str] = Field(None)
-    traceStack: Optional[dict] = Field(None)
     conversational_instance_id: Optional[int] = Field(None)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

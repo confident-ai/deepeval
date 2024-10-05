@@ -29,6 +29,6 @@ test_case = ConversationalTestCase(
 )
 metric = RoleAdherenceMetric(verbose_mode=True)
 
-evaluate(test_cases=[test_case], metrics=[metric], run_async=False)
+evaluate(test_cases=[test_case], metrics=[metric])
 
 # metric.measure(test_case=test_case)
