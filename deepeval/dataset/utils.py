@@ -14,6 +14,8 @@ def convert_test_cases_to_goldens(
             "expected_output": test_case.expected_output,
             "context": test_case.context,
             "retrieval_context": test_case.retrieval_context,
+            "tools_called": test_case.tools_called,
+            "expected_tools": test_case.expected_tools
         }
         goldens.append(Golden(**golden))
     return goldens
@@ -33,6 +35,8 @@ def convert_goldens_to_test_cases(
             context=golden.context,
             retrieval_context=golden.retrieval_context,
             additional_metadata=golden.additional_metadata,
+            tools_called=golden.tools_called,
+            expected_tools=golden.expected_tools,
             comments=golden.comments,
             _dataset_alias=_alias,
             _dataset_id=_id,
