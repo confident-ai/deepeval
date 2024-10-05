@@ -19,7 +19,7 @@ To use the `RoleAdherenceMetric`, you'll have to provide the following arguments
 - `turns`
 - `chatbot_role`
 
-Additionally, each `LLMTestCase`s for each turn in a `ConversationalTestCase` requires the following arguments:
+Additionally, each `LLMTestCase`s in `turns` requires the following arguments:
 
 - `input`
 - `actual_output`
@@ -56,4 +56,6 @@ There are six optional parameters when creating a `RoleAdherenceMetric`:
 
 The `RoleAdherenceMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Role Adherence} = \frac{\text{Number of Turns that Adhered to Specified Role in Conversation}}{\text{Total Number of Turns in Conversation}}" />
+<Equation formula="\text{Role Adherence} = \frac{\text{Number of Turns that Adhered to Chatbot Role in Conversation}}{\text{Total Number of Turns in Conversation}}" />
+
+The `RoleAdherenceMetric` first loops through each turn individually before using an LLM to determine which one of them does not adhere to the specified `chatbot_role` using previous turns as context.
