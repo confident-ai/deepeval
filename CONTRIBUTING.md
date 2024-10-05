@@ -1,18 +1,14 @@
-# Contributing A Metric
+# Contributing to DeepEval 🥳
 
-To contribute a metric, we recommend looking at a metric file to see how it's done. To contribute a metric, we simply ask for 3 things:
+Thanks for thinking about contributing to DeepEval! We accept fixes, improvements, or even entire new features. Some reasons why you might want to contribute:
 
-- An `assert` statement so users know
-- A `Metric` class so that this can be used in other areas of the codebase
-- A test to make sure it works (just a simple one to get it working - we'll personally add more ourselves as time goes on as metrics become more important!)
-- Documentation in a Markdown file showing how to use it (no need to add it to the Docusaurus Index - we are happy to handle that ourselve)
+- there's a bug that you want fixed
+- there's a cool new feature you're thinking about that might be useful for DeepEval
+- there's a metric or benchmark that you want implemented
+- there's room for improvement in the docs
 
-And that's it!
+To contribute, all we ask for is to follow existing patterns within the codebase. For example, if you're looking to add a new benchmark, look at how the different modules in the existing benchmarks are structured and implemented, and we encourage you to reuse helper functions and methods shared by similar modules.
 
-# Making code changes / bug fixes
+Other than that, there are no strict rules to follow, except for optionally running `black` to ensure good formatting. Also, there's no need to worry about failing test cases in Github Actions, as these are mostly for internal use and will only pass if triggered by a user with the correct permissions within Confident AI.
 
-We kindly ask for code changes / bug fixes to be added to another test.
-
-For most of these code-changes, a simple `black` is required to ensure good formatting.
-
-We will be adding a few more additional developer tools for linting and code formatting purposes in the future.
+Thank you and come ask any questions or discuss any new PRs you have in mind at our [discord](https://discord.com/invite/a3K9c8GRGt)!
