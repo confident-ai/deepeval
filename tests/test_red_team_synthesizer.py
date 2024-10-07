@@ -9,7 +9,7 @@ from deepeval.red_teaming import RedTeamer
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
-from deepeval.synthesizer import RTAdversarialAttack, RTVulnerability
+from deepeval.red_teaming import AttackEnhancement, Vulnerability
 
 
 def log_retry_error(retry_state):
@@ -140,22 +140,18 @@ def main():
     red_teamer = RedTeamer(
         target_purpose="A friendly chatbot",
         target_system_prompt="You are a friendly chatbot.",
-        target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
-        evaluation_model=SchematicGPTModel("gpt-4o"),
-        synthesizer_model=SchematicGPTModel("gpt-4o"),
+        evaluation_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+        synthesizer_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+        # evaluation_model="gpt-3.5-turbo-0125",
+        # synthesizer_model="gpt-3.5-turbo-0125",
         async_mode=True,
     )
     results = red_teamer.scan(
-        1,
-        # vulnerabilities=[v for v in RTVulnerability],
-        # attacks=[a for a in RTAdversarialAttack],
-        vulnerabilities=[v for v in RTVulnerability][:3],
-        attacks=[
-            RTAdversarialAttack.LEETSPEAK,
-            RTAdversarialAttack.JAILBREAK_LINEAR,
-        ],
+        target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
+        attacks_per_vulnerability=2,
+        # attack_enhancements={AttackEnhancement.JAILBREAK_LINEAR: 1},
+        vulnerabilities=[Vulnerability.BIAS, Vulnerability.DATA_LEAKAGE],
     )
-
     print(results)
     print(red_teamer.vulnerability_scores_breakdown)
 

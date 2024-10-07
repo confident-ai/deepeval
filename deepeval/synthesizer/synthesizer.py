@@ -16,7 +16,6 @@ import os
 from deepeval.utils import get_or_create_event_loop, is_confident, is_in_ci_env
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
-from deepeval.synthesizer.synthesizer_red_team import RTSynthesizer
 from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
@@ -916,7 +915,7 @@ class Synthesizer:
         schema: BaseModel,
         model: DeepEvalBaseLLM,
         using_native_model: bool,
-    ) -> Tuple[str, float]:
+    ) -> BaseModel:
         if using_native_model:
             res, _ = model.generate(prompt)
             data = trimAndLoadJson(res, self)
@@ -944,7 +943,7 @@ class Synthesizer:
         schema: BaseModel,
         model: DeepEvalBaseLLM,
         using_native_model: bool,
-    ) -> Tuple[str, float]:
+    ) -> BaseModel:
         if using_native_model:
             res, _ = await model.a_generate(prompt)
             data = trimAndLoadJson(res, self)
@@ -966,7 +965,7 @@ class Synthesizer:
                 else:
                     return schema(**data)
 
-    def _generate(self, prompt: str) -> Tuple[str, str]:
+    def _generate(self, prompt: str) -> str:
         if self.using_native_model:
             res, _ = self.model.generate(prompt)
             return res
@@ -978,7 +977,7 @@ class Synthesizer:
                 res = self.model.generate(prompt)
                 return res
 
-    async def _a_generate(self, prompt: str) -> Tuple[str, str]:
+    async def _a_generate(self, prompt: str) -> str:
         if self.using_native_model:
             res, _ = await self.model.a_generate(prompt)
             return res
