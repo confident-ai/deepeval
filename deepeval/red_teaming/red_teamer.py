@@ -3,8 +3,8 @@ import pandas as pd
 from tqdm import tqdm
 from typing import Dict, List, Optional, Union
 
-from deepeval.synthesizer.types import RTAdversarialAttack, RTVulnerability
-from deepeval.synthesizer.synthesizer_red_team import RTSynthesizer
+from deepeval.red_teaming.types import AttackEnhancement, Vulnerability
+from deepeval.red_teaming.synthesizer import AttackSynthesizer
 from deepeval.synthesizer.schema import *
 from deepeval.synthesizer.types import *
 from deepeval.models import DeepEvalBaseLLM
@@ -22,8 +22,8 @@ class RedTeamer:
         self,
         target_purpose: str,
         target_system_prompt: str,
-        synthesizer_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        synthesizer_model: Optional[Union[str, DeepEvalBaseLLM]] = "gpt-3.5-turbo-0125",
+        evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = "gpt-4o",
         async_mode: bool = True,
     ):
         self.target_purpose = target_purpose
@@ -37,248 +37,26 @@ class RedTeamer:
         self.async_mode = async_mode
         self.synthetic_goldens: List[Golden] = []
 
-    def get_red_teaming_metrics_map(self):
-        metrics_map = {
-            RTVulnerability.BIAS: lambda: BiasGrader(
-                model=self.evaluation_model,
-                strict_mode=True,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.CONTRACTS: lambda: ContractsGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            RTVulnerability.DATA_LEAKAGE: lambda: PIIGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.DEBUG_ACCESS: lambda: DebugAccessGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            RTVulnerability.EXCESSIVE_AGENCY: lambda: ExcessiveAgencyGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            RTVulnerability.HALLUCINATION: lambda: HallucinationGrader(
-                model=self.evaluation_model, purpose=self.target_purpose
-            ),
-            RTVulnerability.HARMFUL_CHEMICAL_BIOLOGICAL_WEAPONS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_CHEMICAL_BIOLOGICAL_WEAPONS.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_CHILD_EXPLOITATION: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_CHILD_EXPLOITATION.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_COPYRIGHT_VIOLATIONS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_COPYRIGHT_VIOLATIONS.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_CYBERCRIME: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_CYBERCRIME.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_GRAPHIC_CONTENT: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_GRAPHIC_CONTENT.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_HARASSMENT_BULLYING: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_HARASSMENT_BULLYING.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_HATE: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_HATE.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_ILLEGAL_ACTIVITIES: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_ILLEGAL_ACTIVITIES.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_ILLEGAL_DRUGS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_ILLEGAL_DRUGS.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_INDISCRIMINATE_WEAPONS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_INDISCRIMINATE_WEAPONS.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_INSULTS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_INSULTS.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_INTELLECTUAL_PROPERTY: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_INTELLECTUAL_PROPERTY.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_MISINFORMATION_DISINFORMATION: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_MISINFORMATION_DISINFORMATION.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_NON_VIOLENT_CRIME: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_NON_VIOLENT_CRIME.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_PRIVACY: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_PRIVACY.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_PROFANITY: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_PROFANITY.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_RADICALIZATION: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_RADICALIZATION.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_SELF_HARM: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_SELF_HARM.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_SEX_CRIME: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_SEX_CRIME.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_SEXUAL_CONTENT: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_SEXUAL_CONTENT.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_SPECIALIZED_ADVICE_FINANCIAL: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_SPECIALIZED_ADVICE_FINANCIAL.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_UNSAFE_PRACTICES: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_UNSAFE_PRACTICES.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.HARMFUL_VIOLENT_CRIME: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.HARMFUL_VIOLENT_CRIME.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.IMITATION: lambda: ImitationGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            RTVulnerability.OFFENSIVE: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.OFFENSIVE.value,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.PII_API_DB: lambda: PIIGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.PII_DIRECT: lambda: PIIGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.PII_SESSION: lambda: PIIGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.PII_SOCIAL: lambda: PIIGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.POLITICS: lambda: PoliticsGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            RTVulnerability.RBAC: lambda: RBACGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            RTVulnerability.SHELL_INJECTION: lambda: ShellInjectionGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            RTVulnerability.SQL_INJECTION: lambda: SQLInjectionGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            RTVulnerability.UNFORMATTED: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=RTVulnerability.OFFENSIVE.value,
-                async_mode=self.async_mode,
-            ),
-        }
-        self.metrics_map = metrics_map
-        return metrics_map
-
-    def generate_red_teaming_goldens(
-        self,
-        target_model: DeepEvalBaseLLM,
-        attacks_per_vulnerability: int,
-        vulnerabilities: List[RTVulnerability],
-        attacks: List[RTAdversarialAttack],
-    ) -> List[Golden]:
-        with capture_red_teamer_run(
-            f"generate {attacks_per_vulnerability * len(vulnerabilities)} goldens"
-        ):
-            rt_synthesizer = RTSynthesizer(
-                target_model, self.synthesizer_model, self.async_mode
-            )
-            red_teaming_goldens = rt_synthesizer.generate_red_teaming_goldens(
-                attacks_per_vulnerability=attacks_per_vulnerability,
-                vulnerabilities=vulnerabilities,
-                attacks=attacks,
-                purpose=self.target_purpose,
-                system_prompt=self.target_system_prompt,
-            )
-            return red_teaming_goldens
-
-    async def a_generate_red_teaming_goldens(
-        self,
-        target_model: DeepEvalBaseLLM,
-        attacks_per_vulnerability: int,
-        vulnerabilities: List[RTVulnerability],
-        attacks: List[RTAdversarialAttack],
-    ) -> List[Golden]:
-        with capture_red_teamer_run(
-            f"generate {attacks_per_vulnerability * len(vulnerabilities)} goldens"
-        ):
-            rt_synthesizer = RTSynthesizer(
-                target_model, self.synthesizer_model, self.async_mode
-            )
-            red_teaming_goldens = (
-                await rt_synthesizer.a_generate_red_teaming_goldens(
-                    attacks_per_vulnerability=attacks_per_vulnerability,
-                    vulnerabilities=vulnerabilities,
-                    attacks=attacks,
-                    purpose=self.target_purpose,
-                    system_prompt=self.target_system_prompt,
-                )
-            )
-            return red_teaming_goldens
+    ##################################################
+    ### Scans ########################################
+    ##################################################
 
     def scan(
         self,
         target_model: DeepEvalBaseLLM,
         attacks_per_vulnerability: int,
-        vulnerabilities: List[RTVulnerability],
-        attacks: List[RTAdversarialAttack],
+        vulnerabilities: List[Vulnerability] = [v for v in Vulnerability],
+        attack_enhancements: Dict[AttackEnhancement, float] = {
+            AttackEnhancement.BASE64: 0.125,
+            AttackEnhancement.GRAY_BOX_ATTACK: 0.125,
+            AttackEnhancement.JAILBREAK_LINEAR: 0.125,
+            AttackEnhancement.JAILBREAK_TREE: 0.125,
+            AttackEnhancement.LEETSPEAK: 0.125,
+            AttackEnhancement.PROMPT_INJECTION: 0.125,
+            AttackEnhancement.PROMPT_PROBING: 0.125,
+            AttackEnhancement.ROT13: 0.125
+        },
+        max_concurrent_tasks: int = 10
     ):
         if self.async_mode:
             loop = get_or_create_event_loop()
@@ -287,71 +65,72 @@ class RedTeamer:
                     target_model,
                     attacks_per_vulnerability,
                     vulnerabilities,
-                    attacks,
+                    attack_enhancements,
+                    max_concurrent_tasks
                 )
             )
         else:
             with capture_red_teamer_run("scan"):
-                # initialize metric map
+                # Initialize metric map
                 metrics_map = self.get_red_teaming_metrics_map()
 
-                # generate red_teaming goldens
-                red_teaming_goldens = self.generate_red_teaming_goldens(
+                # Generate attacks
+                attacks = self.generate_attacks(
                     target_model=target_model,
                     attacks_per_vulnerability=attacks_per_vulnerability,
                     vulnerabilities=vulnerabilities,
-                    attacks=attacks,
+                    attack_enhancements=attack_enhancements,
                 )
 
-                # create red_teaming goldens dict by vulnerability
-                golden_dict: Dict[RTVulnerability, List[Golden]] = {}
-                for golden in red_teaming_goldens:
-                    vulnerability: RTVulnerability = golden.additional_metadata[
+                # Create a mapping of vulnerabilities to attacks
+                vulnerability_to_attacks_map: Dict["Vulnerability", List["Golden"]] = {}
+                for attack in attacks:
+                    vulnerability: Vulnerability = attack.additional_metadata.get(
                         "vulnerability"
-                    ]
-                    if golden_dict.get(vulnerability, None) is None:
-                        golden_dict[vulnerability] = [golden]
-                    else:
-                        golden_dict[vulnerability].append(golden)
+                    )
+                    if vulnerability:
+                        if vulnerability not in vulnerability_to_attacks_map:
+                            vulnerability_to_attacks_map[vulnerability] = [attack]
+                        else:
+                            vulnerability_to_attacks_map[vulnerability].append(attack)
 
-                # evalute each golden by vulnerability
+                # Evaluate each attack by vulnerability
                 red_teaming_results = []
                 red_teaming_results_breakdown = []
 
                 pbar = tqdm(
-                    golden_dict.items(), desc="Evaluating vulnerability"
+                    vulnerability_to_attacks_map.items(), desc="📝 Evaluating attack(s)"
                 )
-                for vulnerability, goldens_list in pbar:
-                    pbar.set_description(
-                        f"Evaluating vulnerability - {vulnerability.value}"
-                    )
+                for vulnerability, attacks in pbar:
                     scores = []
-                    for golden in goldens_list:
-                        metric: BaseMetric = metrics_map[vulnerability]()
-                        # Generate actual output using the 'input'
-                        actual_output = (target_model.generate(golden.input),)
+                    for attack in attacks:
+                        metric: BaseMetric = metrics_map.get(vulnerability)()
+   
                         test_case = LLMTestCase(
-                            input=golden.input,
-                            actual_output=actual_output,
+                            input=attack.input,
+                            actual_output=target_model.generate(attack.input),
                         )
                         metric.measure(test_case)
                         scores.append(metric.score)
                         red_teaming_results_breakdown.append(
                             {
                                 "Vulnerability": vulnerability.value,
-                                "Input": test_case.input,
-                                "Target Output": test_case.actual_output,
+                                "Attack Enhancement": attack.additional_metadata.get(
+                                    "attack enhancement", "Unknown"
+                                ),  # Ensure fallback value
+                                "Input": attack.input,
+                                "Target Output": attack.actual_output,
                                 "Score": metric.score,
                                 "Reason": metric.reason,
                             }
                         )
 
-                    # Calculate average score for the current vulnerability
-                    average_score = sum(scores) / len(scores) if scores else 0
+                    # Calculate average score for each vulnerability
+                    vulnerability_score = sum(scores) / len(scores) if scores else 0
                     red_teaming_results.append(
                         {
                             "Vulnerability": vulnerability.value,
-                            "Average Score": average_score,
+                            "Average Score": vulnerability_score,
                         }
                     )
 
@@ -362,51 +141,85 @@ class RedTeamer:
                 self.vulnerability_scores = df_results
 
                 return df_results
-
+    
     async def a_scan(
         self,
         target_model: DeepEvalBaseLLM,
         attacks_per_vulnerability: int,
-        vulnerabilities: List[RTVulnerability],
-        attacks: List[RTAdversarialAttack],
+        vulnerabilities: List[Vulnerability] = [v for v in Vulnerability],
+        attack_enhancements: Dict[AttackEnhancement, float]  = {
+            AttackEnhancement.BASE64: 0.125,
+            AttackEnhancement.GRAY_BOX_ATTACK: 0.125,
+            AttackEnhancement.JAILBREAK_LINEAR: 0.125,
+            AttackEnhancement.JAILBREAK_TREE: 0.125,
+            AttackEnhancement.LEETSPEAK: 0.125,
+            AttackEnhancement.PROMPT_INJECTION: 0.125,
+            AttackEnhancement.PROMPT_PROBING: 0.125,
+            AttackEnhancement.ROT13: 0.125
+        },
+        max_concurrent_tasks: int = 10  # Throttling limit, control concurrency
     ):
         with capture_red_teamer_run("scan"):
-            # initialize metric map
+            # Initialize metric map
             metrics_map = self.get_red_teaming_metrics_map()
 
-            # generate red_teaming goldens
-            red_teaming_goldens = await self.a_generate_red_teaming_goldens(
+            # Generate attacks
+            attacks = await self.a_generate_attacks(
                 target_model=target_model,
                 attacks_per_vulnerability=attacks_per_vulnerability,
                 vulnerabilities=vulnerabilities,
-                attacks=attacks,
+                attack_enhancements=attack_enhancements,
+                max_concurrent_tasks=max_concurrent_tasks
             )
 
-            # create red_teaming goldens dict by vulnerability
-            golden_dict: Dict[RTVulnerability, List[Golden]] = {}
-            for golden in red_teaming_goldens:
-                vulnerability: RTVulnerability = golden.additional_metadata[
+            # Create a mapping of vulnerabilities to attacks
+            vulnerability_to_attacks_map: Dict["Vulnerability", List["Golden"]] = {}
+            for attack in attacks:
+                vulnerability: Vulnerability = attack.additional_metadata.get(
                     "vulnerability"
-                ]
-                if golden_dict.get(vulnerability, None) is None:
-                    golden_dict[vulnerability] = [golden]
-                else:
-                    golden_dict[vulnerability].append(golden)
+                )
+                if vulnerability:
+                    if vulnerability not in vulnerability_to_attacks_map:
+                        vulnerability_to_attacks_map[vulnerability] = [attack]
+                    else:
+                        vulnerability_to_attacks_map[vulnerability].append(attack)
 
             red_teaming_results = []
             red_teaming_results_breakdown = []
 
-            pbar = tqdm(
-                golden_dict.items(),
-                desc="Evaluating vulnerability asynchronously",
-            )
-            for vulnerability, goldens_list in pbar:
-                avg_score, vulnerability_results = (
-                    await self._a_evaluate_vulnerability(
-                        target_model, vulnerability, goldens_list, metrics_map
-                    )
-                )
+            # Create a semaphore for throttling concurrent tasks
+            semaphore = asyncio.Semaphore(max_concurrent_tasks)
 
+            # Total number of attacks across all vulnerabilities
+            total_attacks = sum(len(attacks_list) for attacks_list in vulnerability_to_attacks_map.values())
+
+            # Create a progress bar for attack evaluations
+            pbar = tqdm(total=total_attacks, desc="📝 Evaluating attack(s)")
+
+            async def throttled_evaluate_vulnerability(vulnerability, attacks_list):
+                async with semaphore:  # Ensures only `max_concurrent_tasks` run concurrently
+                    avg_score, vulnerability_results = await self._a_evaluate_vulnerability(
+                        target_model, vulnerability, attacks_list, metrics_map
+                    )
+                    pbar.update(len(attacks_list))  # Update the progress bar by the number of attacks evaluated
+                    return avg_score, vulnerability_results
+
+            # Create a list of tasks for evaluating each vulnerability, with throttling
+            tasks = [
+                throttled_evaluate_vulnerability(vulnerability, attacks_list)
+                for vulnerability, attacks_list in vulnerability_to_attacks_map.items()
+            ]
+
+            # Execute tasks concurrently with throttling using asyncio.gather
+            results = await asyncio.gather(*tasks)
+
+            # Close the progress bar after all tasks are done
+            pbar.close()
+
+            # Process results
+            for (vulnerability, _), (avg_score, vulnerability_results) in zip(
+                vulnerability_to_attacks_map.items(), results
+            ):
                 red_teaming_results.append(
                     {
                         "Vulnerability": vulnerability.value,
@@ -418,6 +231,9 @@ class RedTeamer:
                     red_teaming_results_breakdown.append(
                         {
                             "Vulnerability": vulnerability.value,
+                            "Attack Enhancement": test_case.additional_metadata.get(
+                                "attack enhancement", "Unknown"
+                            ),
                             "Input": test_case.input,
                             "Target Output": test_case.actual_output,
                             "Score": score,
@@ -425,52 +241,332 @@ class RedTeamer:
                         }
                     )
 
-            # Convert the results to pandas DataFrames
+            # Convert results to pandas DataFrames
             red_teaming_results_df = pd.DataFrame(red_teaming_results)
             red_teaming_results_breakdown_df = pd.DataFrame(
                 red_teaming_results_breakdown
             )
-            self.vulnerability_scores_breakdown = (
-                red_teaming_results_breakdown_df
-            )
+            self.vulnerability_scores_breakdown = red_teaming_results_breakdown_df
             self.vulnerability_scores = red_teaming_results_df
 
             return red_teaming_results_df
 
     async def _a_evaluate_golden(
         self,
-        golden: Golden,
+        attack: Golden,
         target_model: DeepEvalBaseLLM,
-        vulnerability: RTVulnerability,
+        vulnerability: Vulnerability,
         metrics_map,
     ):
         metric: BaseMetric = metrics_map[vulnerability]()
         # Generate actual output using the 'input'
-        actual_output = await target_model.a_generate(
-            golden.input
-        )  # Assuming generate is async
+        actual_output = await target_model.a_generate(attack.input)
+
+        # No need to create another object for the enhancement if not required
+        attack_enhancement = attack.additional_metadata.get("attack enhancement", "Unknown")
+
         test_case = LLMTestCase(
-            input=golden.input,
+            input=attack.input,
             actual_output=actual_output,
+            additional_metadata={"attack enhancement": attack_enhancement}
         )
-        await metric.a_measure(test_case)  # Assuming a_measure is async
+
+        await metric.a_measure(test_case)
         return metric.score, test_case, metric.reason
+
 
     async def _a_evaluate_vulnerability(
         self,
         target_model: DeepEvalBaseLLM,
-        vulnerability: RTVulnerability,
-        goldens_list: List[Golden],
+        vulnerability: Vulnerability,
+        attacks_list: List[Golden],
         metrics_map,
     ):
         tasks = [
             self._a_evaluate_golden(
-                golden, target_model, vulnerability, metrics_map
+                attack, target_model, vulnerability, metrics_map
             )
-            for golden in goldens_list
+            for attack in attacks_list
         ]
         results = await asyncio.gather(*tasks)
 
         # Calculate the average score
         avg_score = sum(score for score, _, _ in results) / len(results)
         return avg_score, results
+    
+    ##################################################
+    ### Generating Attacks ###########################
+    ##################################################
+
+    def generate_attacks(
+        self,
+        target_model: DeepEvalBaseLLM,
+        attacks_per_vulnerability: int,
+        vulnerabilities: List[Vulnerability],
+        attack_enhancements: Dict[AttackEnhancement, float] = {
+            AttackEnhancement.BASE64: 0.125,
+            AttackEnhancement.GRAY_BOX_ATTACK: 0.125,
+            AttackEnhancement.JAILBREAK_LINEAR: 0.125,
+            AttackEnhancement.JAILBREAK_TREE: 0.125,
+            AttackEnhancement.LEETSPEAK: 0.125,
+            AttackEnhancement.PROMPT_INJECTION: 0.125,
+            AttackEnhancement.PROMPT_PROBING: 0.125,
+            AttackEnhancement.ROT13: 0.125
+        }
+    ) -> List[Golden]:
+        with capture_red_teamer_run(
+            f"generate {attacks_per_vulnerability * len(vulnerabilities)} goldens"
+        ):
+            attack_synthesizer = AttackSynthesizer(
+                target_model=target_model,
+                synthesizer_model=self.synthesizer_model,
+                async_mode=self.async_mode,
+                purpose=self.target_purpose,
+                system_prompt=self.target_system_prompt,
+            )
+            attacks = attack_synthesizer.generate_attacks(
+                attacks_per_vulnerability=attacks_per_vulnerability,
+                vulnerabilities=vulnerabilities,
+                attack_enhancements=attack_enhancements,
+            )
+            return attacks
+
+    async def a_generate_attacks(
+        self,
+        target_model: DeepEvalBaseLLM,
+        attacks_per_vulnerability: int,
+        vulnerabilities: List[Vulnerability],
+        attack_enhancements: Dict[AttackEnhancement, float]  = {
+            AttackEnhancement.BASE64: 0.125,
+            AttackEnhancement.GRAY_BOX_ATTACK: 0.125,
+            AttackEnhancement.JAILBREAK_LINEAR: 0.125,
+            AttackEnhancement.JAILBREAK_TREE: 0.125,
+            AttackEnhancement.LEETSPEAK: 0.125,
+            AttackEnhancement.PROMPT_INJECTION: 0.125,
+            AttackEnhancement.PROMPT_PROBING: 0.125,
+            AttackEnhancement.ROT13: 0.125
+        },
+        max_concurrent_tasks: int = 10
+    ) -> List[Golden]:
+        with capture_red_teamer_run(
+            f"generate {attacks_per_vulnerability * len(vulnerabilities)} goldens"
+        ):
+            # Initialize the attack synthesizer
+            attack_synthesizer = AttackSynthesizer(
+                target_model=target_model,
+                synthesizer_model=self.synthesizer_model,
+                async_mode=self.async_mode,
+                purpose=self.target_purpose,
+                system_prompt=self.target_system_prompt,
+            )
+            
+            # Call the synthesizer to generate attacks with throttling
+            attacks = await attack_synthesizer.a_generate_attacks(
+                attacks_per_vulnerability=attacks_per_vulnerability,
+                vulnerabilities=vulnerabilities,
+                attack_enhancements=attack_enhancements,
+                max_concurrent_tasks=max_concurrent_tasks  # Pass the throttling limit
+            )
+        
+        return attacks
+
+    ##################################################
+    ### Metrics Map ##################################
+    ##################################################
+
+    def get_red_teaming_metrics_map(self):
+        metrics_map = {
+            Vulnerability.BIAS: lambda: BiasGrader(
+                model=self.evaluation_model,
+                purpose=self.target_purpose,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.CONTRACTS: lambda: ContractsGrader(
+                model=self.evaluation_model, 
+                async_mode=self.async_mode
+            ),
+            Vulnerability.DATA_LEAKAGE: lambda: PIIGrader(
+                model=self.evaluation_model,
+                purpose=self.target_purpose,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.DEBUG_ACCESS: lambda: DebugAccessGrader(
+                model=self.evaluation_model, 
+                async_mode=self.async_mode
+            ),
+            Vulnerability.EXCESSIVE_AGENCY: lambda: ExcessiveAgencyGrader(
+                model=self.evaluation_model, 
+                async_mode=self.async_mode
+            ),
+            Vulnerability.HALLUCINATION: lambda: HallucinationGrader(
+                model=self.evaluation_model, 
+                purpose=self.target_purpose,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_CHEMICAL_BIOLOGICAL_WEAPONS: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_CHEMICAL_BIOLOGICAL_WEAPONS.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_CHILD_EXPLOITATION: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_CHILD_EXPLOITATION.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_COPYRIGHT_VIOLATIONS: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_COPYRIGHT_VIOLATIONS.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_CYBERCRIME: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_CYBERCRIME.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_GRAPHIC_CONTENT: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_GRAPHIC_CONTENT.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_HARASSMENT_BULLYING: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_HARASSMENT_BULLYING.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_HATE: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_HATE.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_ILLEGAL_ACTIVITIES: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_ILLEGAL_ACTIVITIES.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_ILLEGAL_DRUGS: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_ILLEGAL_DRUGS.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_INDISCRIMINATE_WEAPONS: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_INDISCRIMINATE_WEAPONS.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_INSULTS: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_INSULTS.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_INTELLECTUAL_PROPERTY: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_INTELLECTUAL_PROPERTY.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_MISINFORMATION_DISINFORMATION: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_MISINFORMATION_DISINFORMATION.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_NON_VIOLENT_CRIME: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_NON_VIOLENT_CRIME.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_PRIVACY: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_PRIVACY.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_PROFANITY: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_PROFANITY.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_RADICALIZATION: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_RADICALIZATION.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_SELF_HARM: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_SELF_HARM.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_SEX_CRIME: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_SEX_CRIME.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_SEXUAL_CONTENT: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_SEXUAL_CONTENT.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_SPECIALIZED_ADVICE_FINANCIAL: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_SPECIALIZED_ADVICE_FINANCIAL.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_UNSAFE_PRACTICES: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_UNSAFE_PRACTICES.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HARMFUL_VIOLENT_CRIME: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.HARMFUL_VIOLENT_CRIME.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.IMITATION: lambda: ImitationGrader(
+                model=self.evaluation_model, async_mode=self.async_mode
+            ),
+            Vulnerability.OFFENSIVE: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.OFFENSIVE.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.PII_API_DB: lambda: PIIGrader(
+                model=self.evaluation_model,
+                purpose=self.target_purpose,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.PII_DIRECT: lambda: PIIGrader(
+                model=self.evaluation_model,
+                purpose=self.target_purpose,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.PII_SESSION: lambda: PIIGrader(
+                model=self.evaluation_model,
+                purpose=self.target_purpose,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.PII_SOCIAL: lambda: PIIGrader(
+                model=self.evaluation_model,
+                purpose=self.target_purpose,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.POLITICS: lambda: PoliticsGrader(
+                model=self.evaluation_model, async_mode=self.async_mode
+            ),
+            Vulnerability.RBAC: lambda: RBACGrader(
+                model=self.evaluation_model,
+                purpose=self.target_purpose,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.SHELL_INJECTION: lambda: ShellInjectionGrader(
+                model=self.evaluation_model,
+                async_mode=self.async_mode
+            ),
+            Vulnerability.SQL_INJECTION: lambda: SQLInjectionGrader(
+                model=self.evaluation_model, 
+                async_mode=self.async_mode
+            ),
+            Vulnerability.UNFORMATTED: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.OFFENSIVE.value,
+                async_mode=self.async_mode,
+            ),
+        }
+        self.metrics_map = metrics_map
+        return metrics_map

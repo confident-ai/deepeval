@@ -457,48 +457,6 @@ class EvaluationDataset:
                 "Run `deepeval login` to pull dataset from Confident AI"
             )
 
-    def generate_red_teaming_goldens(
-        self,
-        synthesizer=None,
-        contexts: Optional[List[List[str]]] = None,
-        include_expected_output: bool = False,
-        max_goldens: int = 2,
-        num_evolutions: int = 1,
-        attacks: List[RTAdversarialAttack] = [
-            RTAdversarialAttack.PROMPT_INJECTION,
-            RTAdversarialAttack.PROMPT_PROBING,
-            RTAdversarialAttack.GRAY_BOX_ATTACK,
-            RTAdversarialAttack.JAILBREAKING,
-        ],
-        vulnerabilities: List[RTVulnerability] = [
-            RTVulnerability.BIAS,
-            RTVulnerability.DATA_LEAKAGE,
-            RTVulnerability.HALLUCINATION,
-            RTVulnerability.OFFENSIVE,
-            RTVulnerability.UNFORMATTED,
-        ],
-        use_case: UseCase = UseCase.QA,
-    ):
-        from deepeval.synthesizer import Synthesizer
-
-        if synthesizer is None:
-            synthesizer = Synthesizer()
-        else:
-            assert isinstance(synthesizer, Synthesizer)
-
-        self.goldens.extend(
-            synthesizer.generate_red_teaming_goldens(
-                contexts=contexts,
-                include_expected_output=include_expected_output,
-                max_goldens=max_goldens,
-                num_evolutions=num_evolutions,
-                attacks=attacks,
-                vulnerabilities=vulnerabilities,
-                use_case=use_case,
-                _send_data=False,
-            )
-        )
-
     def generate_goldens(
         self,
         contexts: List[List[str]],
