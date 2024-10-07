@@ -243,15 +243,16 @@ class AttackSynthesizer:
 
         # Unaligned vulnerabilities
         if vulnerability.value in self.unaligned_vulnerabilities:
-            goldens.extend(
-                Golden(
-                    input=await self.a_generate_unaligned_attack(
-                        self.purpose, vulnerability.value
-                    ),
-                    additional_metadata={"vulnerability": vulnerability},
+            for _ in range(attacks_per_vulnerability):
+                unaligned_attack_input = await self.a_generate_unaligned_attack(
+                    self.purpose, vulnerability.value
                 )
-                for _ in range(attacks_per_vulnerability)
-            )
+                goldens.append(
+                    Golden(
+                        input=unaligned_attack_input,
+                        additional_metadata={"vulnerability": vulnerability},
+                    )
+                )
 
         # Aligned vulnerabilities: LLMs can generate
         else:

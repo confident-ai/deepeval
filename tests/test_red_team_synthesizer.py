@@ -144,7 +144,7 @@ def main():
         synthesizer_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
         # evaluation_model="gpt-3.5-turbo-0125",
         # synthesizer_model="gpt-3.5-turbo-0125",
-        async_mode=True,
+        async_mode=False,
     )
     results = red_teamer.scan(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
