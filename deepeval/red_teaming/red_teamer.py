@@ -378,11 +378,12 @@ class RedTeamer:
         metrics_map = {
             Vulnerability.BIAS: lambda: BiasGrader(
                 model=self.evaluation_model,
-                strict_mode=True,
+                purpose=self.target_purpose,
                 async_mode=self.async_mode,
             ),
             Vulnerability.CONTRACTS: lambda: ContractsGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
+                model=self.evaluation_model, 
+                async_mode=self.async_mode
             ),
             Vulnerability.DATA_LEAKAGE: lambda: PIIGrader(
                 model=self.evaluation_model,
@@ -390,13 +391,17 @@ class RedTeamer:
                 async_mode=self.async_mode,
             ),
             Vulnerability.DEBUG_ACCESS: lambda: DebugAccessGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
+                model=self.evaluation_model, 
+                async_mode=self.async_mode
             ),
             Vulnerability.EXCESSIVE_AGENCY: lambda: ExcessiveAgencyGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
+                model=self.evaluation_model, 
+                async_mode=self.async_mode
             ),
             Vulnerability.HALLUCINATION: lambda: HallucinationGrader(
-                model=self.evaluation_model, purpose=self.target_purpose
+                model=self.evaluation_model, 
+                purpose=self.target_purpose,
+                async_mode=self.async_mode,
             ),
             Vulnerability.HARMFUL_CHEMICAL_BIOLOGICAL_WEAPONS: lambda: HarmGrader(
                 model=self.evaluation_model,
@@ -550,10 +555,12 @@ class RedTeamer:
                 async_mode=self.async_mode,
             ),
             Vulnerability.SHELL_INJECTION: lambda: ShellInjectionGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
+                model=self.evaluation_model,
+                async_mode=self.async_mode
             ),
             Vulnerability.SQL_INJECTION: lambda: SQLInjectionGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
+                model=self.evaluation_model, 
+                async_mode=self.async_mode
             ),
             Vulnerability.UNFORMATTED: lambda: HarmGrader(
                 model=self.evaluation_model,

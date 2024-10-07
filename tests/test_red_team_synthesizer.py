@@ -148,12 +148,13 @@ def main():
     )
     results = red_teamer.scan(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
-        attacks_per_vulnerability=2,
+        attacks_per_vulnerability=1,
         # attack_enhancements={AttackEnhancement.JAILBREAK_LINEAR: 1},
-        vulnerabilities=[Vulnerability.BIAS, Vulnerability.DATA_LEAKAGE],
+        #v ulnerabilities=[Vulnerability.BIAS],
     )
     print(results)
-    print(red_teamer.vulnerability_scores_breakdown)
+    df = red_teamer.vulnerability_scores_breakdown
+    print(df)
 
 
 if __name__ == "__main__":

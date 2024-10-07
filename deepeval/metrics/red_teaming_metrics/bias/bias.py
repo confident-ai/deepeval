@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional, List, Tuple, Union
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -6,8 +6,9 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.metrics.red_teaming_metrics.bias.template import (
+    BiasTemplate,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -16,32 +17,32 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
 )
-from deepeval.metrics.bias.template import BiasTemplate
-from deepeval.metrics.bias.schema import *
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.red_teaming_metrics.bias.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
 
-
 class BiasGrader(BaseMetric):
     def __init__(
         self,
-        threshold: float = 0.5,
+        purpose: str,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        include_reason: bool = True,
         async_mode: bool = True,
-        strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        self.threshold = 0 if strict_mode else threshold
+        self.purpose = purpose
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
-        self.include_reason = include_reason
         self.async_mode = async_mode
-        self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        try:
+            self.system_prompt = model.get_system_prompt()
+        except:
+            self.system_prompt = ""
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -58,22 +59,14 @@ class BiasGrader(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.opinions: List[str] = self._generate_opinions(
-                    test_case.actual_output
-                )
-                self.verdicts: List[BiasVerdict] = self._generate_verdicts()
-                self.score = self._calculate_score()
-                self.reason = self._generate_reason()
-                self.success = self.score <= self.threshold
+                score, reason = self.evaluate(test_case)
+                self.reason = reason
+                self.score = score
+                self.success = self.score == 1
                 self.verbose_logs = construct_verbose_logs(
                     self,
-                    steps=[
-                        f"Opinions:\n{prettify_list(self.opinions)}",
-                        f"Verdicts:\n{prettify_list(self.verdicts)}",
-                        f"Score: {self.score}\nReason: {self.reason}",
-                    ],
+                    steps=[f"Score: {self.score}\nReason: {self.reason}"],
                 )
-
                 return self.score
 
     async def a_measure(
@@ -87,188 +80,110 @@ class BiasGrader(BaseMetric):
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
-            self,
-            async_mode=True,
-            _show_indicator=_show_indicator,
+            self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.opinions: List[str] = await self._a_generate_opinions(
-                test_case.actual_output
-            )
-            self.verdicts: List[BiasVerdict] = await self._a_generate_verdicts()
-            self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason()
-            self.success = self.score <= self.threshold
+            score, reason = await self._a_evaluate(test_case)
+            self.reason = reason
+            self.score = score
+            self.success = self.score == 1
             self.verbose_logs = construct_verbose_logs(
                 self,
-                steps=[
-                    f"Opinions:\n{prettify_list(self.opinions)}",
-                    f"Verdicts:\n{prettify_list(self.verdicts)}",
-                    f"Score: {self.score}\nReason: {self.reason}",
-                ],
+                steps=[f"Score: {self.score}\nReason: {self.reason}"],
             )
-
             return self.score
 
-    async def _a_generate_reason(self) -> str:
-        if self.include_reason is False:
-            return None
-
-        biases = []
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                biases.append(verdict.reason)
-
-        prompt: dict = BiasTemplate.generate_reason(
-            biases=biases,
-            score=format(self.score, ".2f"),
-        )
-
+    async def a_generate_purpose(self):
+        if self.purpose:
+            return self.purpose
+        prompt = BiasTemplate.extract_purpose(self.system_prompt)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return data["purpose"]
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
-
-    def _generate_reason(self) -> str:
-        if self.include_reason is False:
-            return None
-
-        biases = []
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                biases.append(verdict.reason)
-
-        prompt: dict = BiasTemplate.generate_reason(
-            biases=biases,
-            score=format(self.score, ".2f"),
-        )
-
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
-        else:
-            try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
-
-    async def _a_generate_verdicts(self) -> List[BiasVerdict]:
-        if len(self.opinions) == 0:
-            return []
-
-        verdicts: List[BiasVerdict] = []
-        prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
+                res: Purpose = await self.model.a_generate(
+                    prompt, schema=Purpose
                 )
-                verdicts = [item for item in res.verdicts]
-                return verdicts
+                return res.purpose
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
-                return verdicts
+                return data["purpose"]
 
-    def _generate_verdicts(self) -> List[BiasVerdict]:
-        if len(self.opinions) == 0:
-            return []
-
-        verdicts: List[BiasVerdict] = []
-        prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
+    def generate_purpose(self):
+        if self.purpose:
+            return self.purpose
+        prompt = BiasTemplate.extract_purpose(self.system_prompt)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
-            return verdicts
+            return data["purpose"]
         else:
             try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                verdicts = [item for item in res.verdicts]
-                return verdicts
+                res: Purpose = self.model.generate(prompt, schema=Purpose)
+                return res.purpose
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
+                return data["purpose"]
 
-    async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
+    async def _a_evaluate(
+        self, test_case: LLMTestCase
+    ) -> Tuple[Union[int, float], str]:
+        prompt = BiasTemplate.generate_evaluation_results(
+            actual_output=test_case.actual_output,
+            purpose=self.purpose,
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            return data["score"], data["reason"]
         else:
             try:
-                res: Opinions = await self.model.a_generate(
-                    prompt, schema=Opinions
+                res: ReasonScore = await self.model.a_generate(
+                    prompt, schema=ReasonScore
                 )
-                return res.opinions
+                return res.score, res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["opinions"]
+                return data["score"], data["reason"]
 
-    def _generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
+    def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
+        prompt = BiasTemplate.generate_evaluation_results(
+            actual_output=test_case.actual_output,
+            purpose=self.purpose,
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            return data["score"], data["reason"]
         else:
             try:
-                res: Opinions = self.model.generate(prompt, schema=Opinions)
-                return res.opinions
+                res: ReasonScore = self.model.generate(
+                    prompt, schema=ReasonScore
+                )
+                return res.score, res.reason
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["opinions"]
-
-    def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 0
-
-        bias_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                bias_count += 1
-
-        score = bias_count / number_of_verdicts
-        return 1 if self.strict_mode and score > self.threshold else score
+                return data["score"], data["reason"]
 
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False
         else:
             try:
-                self.success = self.score <= self.threshold
+                self.score == 1
             except:
                 self.success = False
         return self.success
 
     @property
     def __name__(self):
-        return "Bias"
+        return f"Bias (Red Teaming)"
