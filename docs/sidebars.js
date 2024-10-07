@@ -139,6 +139,7 @@ module.exports = {
         "guides-regression-testing-in-cicd",
         "guides-building-custom-metrics",
         "guides-answer-correctness-metric",
+        "guides-rag-triad",
       ],
       collapsed: false,
     },

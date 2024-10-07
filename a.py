@@ -1,58 +1,29 @@
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
-from deepeval.metrics import KnowledgeRetentionMetric
+from deepeval import evaluate
+from deepeval.metrics import RoleAdherenceMetric, ConversationRelevancyMetric
+from deepeval.test_case import ConversationalTestCase, LLMTestCase
 
-turns = [
-    LLMTestCase(
-        input="",
-        actual_output="Hello! I'm here to assist you with opening a new bank account. To start, may I have your full name, please?",
-    ),
-    LLMTestCase(
-        input="Sure, it's Alex Johnson. I also have a dog called Jacky.",
-        actual_output="Great, Alex! Now, could you please provide your current address?",
-    ),
-    LLMTestCase(
-        input="123 Maple Street, Springfield.", actual_output="Is that all?"
-    ),
-    LLMTestCase(
-        input="I also have another address at 123 Broadway, NYC.",
-        actual_output="Wonderful. Next, I'll need your bank account number where we can link this new account.",
-    ),
-    LLMTestCase(
-        input="456789123",
-        actual_output="This account number seems invalid, can you please double-check?",
-    ),
-    LLMTestCase(
-        input="Sorry you're right, its 456789124.",
-        actual_output="Thank you. And for our next step, could you tell me your date of birth?",
-    ),
-    LLMTestCase(input="It's July 9th.", actual_output="What about the year?"),
-    LLMTestCase(
-        input="1990",
-        actual_output="Got it. Now, for security purposes, could you share your mother's maiden name?",
-    ),
-    LLMTestCase(
-        input="It's Smith.",
-        actual_output="Excellent. Just a few more details. What is your phone number?",
-    ),
-    LLMTestCase(
-        input="555-0102",
-        actual_output="Great, we're almost done. Could you remind me of your full name for the account documentation?",
-    ),
-    LLMTestCase(
-        input="Didn't I tell you already? It's Alex Johnson.",
-        actual_output="What is your bank account number?",
-    ),
-    LLMTestCase(
-        input="Yes, I did... It's 456789124. Are you not keeping track of this?",
-        actual_output="One last question, what is the country code of your phone number?",
-    ),
-    LLMTestCase(
-        input="+44",
-        actual_output="Thank you, Alex, for bearing with me. We now have all the information we need to proceed with opening your new bank account. I appreciate your cooperation and patience throughout this process.",
-    ),
-]
+test_case = ConversationalTestCase(
+    turns=[
+        LLMTestCase(
+            input="My order #12345 hasn't arrived. Where is it?",
+            actual_output="I apologize for the delay. Let me check on that for you. Can you confirm your name and delivery address?",
+        ),
+        LLMTestCase(
+            input="Alex Smith, 123 Main St, Anytown, USA 12345.",
+            actual_output="Thanks, Alex. Your order was shipped Monday but delayed due to weather. It should arrive by end of day today.",
+        ),
+        LLMTestCase(
+            input="I need it for tomorrow. Can you expedite it?",
+            actual_output="I'm sorry, we can't expedite it at this point. I can offer a 10% discount on your next order for the inconvenience.",
+        ),
+        LLMTestCase(
+            input="Fine. Thanks for checking.",
+            actual_output="Have you heard about our new loyalty program? You can earn points on every purchase and redeem them for exclusive rewards.",
+        ),
+    ],
+)
+metric = ConversationRelevancyMetric(verbose_mode=True, threshold=1)
 
-test_case = ConversationalTestCase(turns=turns)
-metric = KnowledgeRetentionMetric(threshold=0.5, verbose_mode=True)
+evaluate(test_cases=[test_case], metrics=[metric])
 
-metric.measure(test_case)
+# metric.measure(test_case=test_case)
