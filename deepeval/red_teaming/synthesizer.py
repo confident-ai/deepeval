@@ -68,7 +68,7 @@ class AttackSynthesizer:
         attacks_per_vulnerability: int,
         vulnerabilities: List["Vulnerability"],
         attack_enhancements: Dict["AttackEnhancement", float],
-        max_concurrent_tasks: int = 10 
+        max_concurrent_tasks: int = 10,
     ) -> List["Golden"]:
         if self.async_mode:
             # Run async function
@@ -78,13 +78,16 @@ class AttackSynthesizer:
                     attacks_per_vulnerability=attacks_per_vulnerability,
                     vulnerabilities=vulnerabilities,
                     attack_enhancements=attack_enhancements,
-                    max_concurrent_tasks=max_concurrent_tasks
+                    max_concurrent_tasks=max_concurrent_tasks,
                 )
             )
         else:
             # Generate unenhanced attacks for each vulnerability
             attacks: List[Golden] = []
-            pbar = tqdm(vulnerabilities, desc=f"💥 Generating {len(vulnerabilities) * attacks_per_vulnerability} attacks (for {len(vulnerabilities)} vulnerabilties)")
+            pbar = tqdm(
+                vulnerabilities,
+                desc=f"💥 Generating {len(vulnerabilities) * attacks_per_vulnerability} attacks (for {len(vulnerabilities)} vulnerabilties)",
+            )
             for vulnerability in pbar:
                 attacks_for_vulnerability = self.generate_base_attacks(
                     attacks_per_vulnerability,
@@ -94,9 +97,14 @@ class AttackSynthesizer:
 
             # Enhance attacks by sampling from the provided distribution
             enhanced_attacks: List[Golden] = []
-            pbar = tqdm(attacks, desc=f"✨ Enhancing {len(vulnerabilities) * attacks_per_vulnerability} attacks (using {len(attack_enhancements.keys())} enhancements)",)
+            pbar = tqdm(
+                attacks,
+                desc=f"✨ Enhancing {len(vulnerabilities) * attacks_per_vulnerability} attacks (using {len(attack_enhancements.keys())} enhancements)",
+            )
             attack_enhancement_choices = list(attack_enhancements.keys())
-            enhancement_weights = list(attack_enhancements.values())  # Weights based on distribution
+            enhancement_weights = list(
+                attack_enhancements.values()
+            )  # Weights based on distribution
 
             for attack in pbar:
                 # Randomly sample an enhancement based on the distribution
@@ -104,19 +112,20 @@ class AttackSynthesizer:
                     attack_enhancement_choices, weights=enhancement_weights, k=1
                 )[0]
 
-                enhanced_attack = self.enhance_attack(attack, sampled_enhancement)
+                enhanced_attack = self.enhance_attack(
+                    attack, sampled_enhancement
+                )
                 enhanced_attacks.append(enhanced_attack)
 
             self.synthetic_attacks.extend(enhanced_attacks)
             return enhanced_attacks
-
 
     async def a_generate_attacks(
         self,
         attacks_per_vulnerability: int,
         vulnerabilities: List["Vulnerability"],
         attack_enhancements: Dict["AttackEnhancement", float],
-        max_concurrent_tasks: int = 10
+        max_concurrent_tasks: int = 10,
     ) -> List["Golden"]:
         # Create a semaphore to control the number of concurrent tasks
         semaphore = asyncio.Semaphore(max_concurrent_tasks)
@@ -130,7 +139,9 @@ class AttackSynthesizer:
 
         async def throttled_generate_base_attack(vulnerability):
             async with semaphore:  # Throttling applied here
-                result = await self.a_generate_base_attacks(attacks_per_vulnerability, vulnerability)
+                result = await self.a_generate_base_attacks(
+                    attacks_per_vulnerability, vulnerability
+                )
                 pbar.update(1)
                 return result
 
@@ -138,7 +149,7 @@ class AttackSynthesizer:
             asyncio.create_task(throttled_generate_base_attack(vulnerability))
             for vulnerability in vulnerabilities
         ]
-        
+
         attack_results = await asyncio.gather(*generate_tasks)
         for result in attack_results:
             attacks.extend(result)
@@ -160,12 +171,15 @@ class AttackSynthesizer:
                 sampled_enhancement = random.choices(
                     attack_enhancement_choices, weights=enhancement_weights, k=1
                 )[0]
-                result = await self.a_enhance_attack(attack, sampled_enhancement)
+                result = await self.a_enhance_attack(
+                    attack, sampled_enhancement
+                )
                 pbar.update(1)
                 return result
 
         enhance_tasks = [
-            asyncio.create_task(throttled_enhance_attack(attack)) for attack in attacks
+            asyncio.create_task(throttled_enhance_attack(attack))
+            for attack in attacks
         ]
 
         enhanced_attack_results = await asyncio.gather(*enhance_tasks)
@@ -342,7 +356,9 @@ class AttackSynthesizer:
             ).enhance(attack_input)
             attack.input = enhanced_attack
 
-        attack.additional_metadata["attack enhancement"] = attack_enhancement.value
+        attack.additional_metadata["attack enhancement"] = (
+            attack_enhancement.value
+        )
         return attack
 
     async def a_enhance_attack(
@@ -397,7 +413,9 @@ class AttackSynthesizer:
             ).a_enhance(attack_input)
             attack.input = enhanced_attack
 
-        attack.additional_metadata["attack enhancement"] = attack_enhancement.value
+        attack.additional_metadata["attack enhancement"] = (
+            attack_enhancement.value
+        )
         return attack
 
     ##################################################

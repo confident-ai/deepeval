@@ -150,7 +150,7 @@ def main():
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
         attacks_per_vulnerability=1,
         # attack_enhancements={AttackEnhancement.JAILBREAK_LINEAR: 1},
-        #v ulnerabilities=[Vulnerability.BIAS],
+        # v ulnerabilities=[Vulnerability.BIAS],
     )
     print(results)
     df = red_teamer.vulnerability_scores_breakdown

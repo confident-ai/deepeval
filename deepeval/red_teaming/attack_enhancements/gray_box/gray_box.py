@@ -26,7 +26,10 @@ class GrayBox(AttackEnhancement):
 
         # Progress bar for retries (total count is double the retries: 1 for generation, 1 for compliance check)
         with tqdm(
-            total=max_retries * 2, desc="...... 🔓 Gray Box", unit="step", leave=False
+            total=max_retries * 2,
+            desc="...... 🔓 Gray Box",
+            unit="step",
+            leave=False,
         ) as pbar:
 
             for _ in range(max_retries):
@@ -63,7 +66,10 @@ class GrayBox(AttackEnhancement):
 
         # Async progress bar for retries (double the count to cover both generation and compliance check)
         pbar = async_tqdm_bar(
-            total=max_retries * 2, desc="...... 🔓 Gray Box", unit="step", leave=False
+            total=max_retries * 2,
+            desc="...... 🔓 Gray Box",
+            unit="step",
+            leave=False,
         )
 
         try:
@@ -98,7 +104,7 @@ class GrayBox(AttackEnhancement):
     ##################################################
     ### Helper Methods ###############################
     ##################################################
-    
+
     def _generate_schema(self, prompt: str, schema: BaseModel):
         """Helper method to generate the schema synchronously."""
         return generate_schema(

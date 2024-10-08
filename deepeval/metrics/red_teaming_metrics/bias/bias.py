@@ -26,6 +26,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
 
+
 class BiasGrader(BaseMetric):
     def __init__(
         self,
