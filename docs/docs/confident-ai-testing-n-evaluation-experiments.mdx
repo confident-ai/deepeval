@@ -48,3 +48,92 @@ There are two mandatory and one optional arguments when calling the `confident_e
 - `disable_browser_opening`: a boolean which when set to `True`, will disable the auto-opening of the browser, which brings you to the experiment page of `experiment_name`.
 
 Once an experiment has completed running on Confident AI's infrastructure, a test run will be produced. A test run, as will be explained in the [next section](confident-ai-testing-n-evaluation-test-run), is basically the evaluation result of your LLM application based on the results of the defined experimental evaluation metrics, and is also available to view on Confident AI.
+
+## Setting Up No-Code Experiment Runs
+
+:::tip
+This is particularly helpful if you wish to enable a no-code evaluation workflow for non-technical users.
+:::
+
+You can also setup a webhook endpoint that accepts a `POST` request over https to **enable users to run evaluations without having to code**, and start an evaluation through a click of a button instead. At a high level, you would still call the `confident_evaluate()` function as shown above, but with modifications to verify the webhook event is in fact from Confident AI.
+
+### Create a Webhook
+
+To setup a webhook on Confident AI to initiate an experiment run, follow these inital steps:
+
+1. Host an endpoint that accepts a `POST` request over **https**. You should test whether your endpoint is indeed reachable through the internet via https before continuing.
+2. Create a webhook on Confident AI at **Evaluation & Testing** > **Experiment** > **Webhook** by providing your endpoint url. This will generate a signing secret which you'll need later.
+
+:::caution
+Once you have your signing secret, which starts with the prefix `confident_`, save the signing secret securely in your environment. The signing secret will be used to verify that any request calling your endpoint is indeed from Confident AI.
+:::
+
+### Implement Your Endpoint
+
+Now that you have your endpoint up and running, write some code to make your endpoint functional by implementing these steps:
+
+1. Authenticate the webhook request by reading the "Confident-AI-Signature" from the request headers. The signature can then be verified using the `verify_confident_signature()` function provided by `deepeval`.
+2. Send a `200` OK status immediately after signature verification. You must send a `200` status code immediately because Confident AI will assume your endpoint isn't setup correctly and won't be waiting for test cases to be sent over otherwise.
+3. Trigger an experiment run by generating and sending over test cases using the `confident_evaluate()` function.
+
+Here's an example implementation of an endpoint setup using `FastAPI`:
+
+```python title="example.py"
+import os
+from fastapi import FastAPI, Request, BackgroundTasks, Header, HTTPException
+from deepeval import verify_confident_signature, confident_evaluate
+
+app = FastAPI()
+
+confident_secret = os.environ["CONFIDENT_AI_SECRET"]
+
+@app.post("/evaluation-webhook")
+async def evaluation_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    confident_ai_signature: str = Header(None)  # Read "Confident-AI-Signature" from headers
+):
+    payload = await request.body()
+
+    # Step 1: Authenticate the webhook request
+    if not verify_confident_signature(payload, confident_ai_signature, confident_secret):
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+
+    # Step 2: Send 200 OK immediately after signature verification
+    response = {"status": "Webhook received"}
+
+
+    # Step 3: Trigger an experiment run in the background
+    def evaluate():
+        # Generate test cases as usual
+        test_cases = [...]
+        confident_evaluate(
+            # use your signature here, you do not
+            # have to provide an experiment name
+            signature=confident_ai_signature,
+            test_cases=test_cases
+        )
+    background_tasks.add_task(evaluate)
+
+    return response
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
+:::info
+The example above demonstrates how to handle a webhook from Confident AI. The main idea is to authenticate the webhook request, send an immediate acknowledgment, and then process the webhook's data asynchronously. Although the example uses FastAPI, the approach can be adapted to any Python framework.
+:::
+
+Here's a breakdown of what's happening:
+
+1. **Webhook Request:** When a POST request is sent to the /evaluation-webhook endpoint, the request contains the webhook payload and a signature in the Confident-AI-Signature header.
+2. **Authenticate the Request:** The `verify_confident_signature()` function verifies that the signature is valid by comparing it with a computed signature based on the payload. If the signature doesn't match, it returns a 400 Bad Request error. This step ensures that the request is authentic.
+3. **Immediate Response:** After verifying the signature, the code sends a 200 OK response immediately.
+4. **Asynchronous Processing:** After the response is sent, an experiment is triggered in the background. In this `FastAPI` example, the `BackgroundTasks` class is used to offload the task without blocking the response. In a different framework or environment, you could use Python's `threading` or `concurrent.futures` modules to run the evaluation asynchronously instead.
+
+### Start an Evaluation
+
+You can now head back to the **Experiment Details** page and press the "Evaluate" button to trigger an experiment run. You should aim to log any errors and reach out to support@confident-ai.com for any errors during setup.
