@@ -675,6 +675,7 @@ async def a_execute_test_cases(
                         count=llm_test_case_counter,
                         test_run=test_run,
                         ignore_errors=ignore_errors,
+                        skip_on_missing_params=skip_on_missing_params,
                         use_cache=use_cache,
                         _use_bar_indicator=_use_bar_indicator,
                         show_indicator=show_indicator,
@@ -697,6 +698,7 @@ async def a_execute_test_cases(
                         test_results=test_results,
                         count=conversational_test_case_counter,
                         ignore_errors=ignore_errors,
+                        skip_on_missing_params=skip_on_missing_params,
                         _use_bar_indicator=_use_bar_indicator,
                         show_indicator=show_indicator,
                     )
@@ -715,6 +717,7 @@ async def a_execute_test_cases(
                         test_results=test_results,
                         count=mllm_test_case_counter,
                         ignore_errors=ignore_errors,
+                        skip_on_missing_params=skip_on_missing_params,
                         _use_bar_indicator=_use_bar_indicator,
                         show_indicator=show_indicator,
                     )
