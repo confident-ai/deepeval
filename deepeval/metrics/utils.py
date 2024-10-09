@@ -1,5 +1,6 @@
 import inspect
 import json
+import re
 from typing import Any, Dict, Optional, List, Union, Tuple
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.models import (
@@ -235,6 +236,8 @@ def trimAndLoadJson(
         end = len(input_string)
 
     jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
+    # Remove trailing comma if one is present
+    jsonStr = re.sub(r",\s*([\]}])", r"\1", jsonStr)
 
     try:
         return json.loads(jsonStr)
