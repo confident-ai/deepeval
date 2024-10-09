@@ -1,3 +1,15 @@
+# To run this example, you need to install the following dependencies:
+#
+# pip install datasets langchain langchain-text-splitters openai qdrant-client deepeval
+#
+
+# Set connection credentials for OpenAI, Confident AI, and Qdrant below
+
+# Then, run the following command:
+# python examples/rag_evaluation/rag_evaluation_with_qdrant.py
+
+# You can then find results of the evaluation in the Confident AI dashboard
+
 from tqdm.notebook import tqdm
 from datasets import load_dataset
 from qdrant_client import QdrantClient
@@ -55,6 +67,9 @@ for doc in docs_processed:
             "Warning: Some documents do not have 'page_content' or 'metadata' attributes."
         )
 
+# Uses FastEmbed - https://qdrant.tech/documentation/fastembed/
+# To generate embeddings for the documents
+# The default model is `BAAI/bge-small-en-v1.5`
 client.add(
     collection_name=COLLECTION_NAME,
     metadata=docs_metadatas,

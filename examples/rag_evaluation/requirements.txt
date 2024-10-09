@@ -1,5 +1,0 @@
-datasets==3.0.1
-langchain==0.3.3
-langchain-text-splitters==0.3.0
-openai==1.51.2
-qdrant-client==1.12.0
