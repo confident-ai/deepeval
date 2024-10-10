@@ -81,7 +81,7 @@ Here's an example implementation of an endpoint setup using `FastAPI`:
 ```python title="example.py"
 import os
 from fastapi import FastAPI, Request, BackgroundTasks, Header, HTTPException
-from deepeval import verify_confident_signature, confident_evaluate
+from deepeval import construct_confident_event, confident_evaluate
 
 app = FastAPI()
 
@@ -96,9 +96,7 @@ async def evaluation_webhook(
     payload = await request.body()
 
     # Step 1: Authenticate the webhook request
-    if not verify_confident_signature(payload, confident_ai_signature, confident_secret):
-        raise HTTPException(status_code=400, detail="Invalid signature")
-
+    confident_event = construct_confident_event(payload, confident_ai_signature, confident_secret)
 
     # Step 2: Send 200 OK immediately after signature verification
     response = {"status": "Webhook received"}
@@ -109,9 +107,9 @@ async def evaluation_webhook(
         # Generate test cases as usual
         test_cases = [...]
         confident_evaluate(
-            # use your signature here, you do not
+            # use your event here, you do not
             # have to provide an experiment name
-            signature=confident_ai_signature,
+            confident_event=confident_event,
             test_cases=test_cases
         )
     background_tasks.add_task(evaluate)
@@ -130,7 +128,7 @@ The example above demonstrates how to handle a webhook from Confident AI. The ma
 Here's a breakdown of what's happening:
 
 1. **Webhook Request:** When a POST request is sent to the /evaluation-webhook endpoint, the request contains the webhook payload and a signature in the Confident-AI-Signature header.
-2. **Authenticate the Request:** The `verify_confident_signature()` function verifies that the signature is valid by comparing it with a computed signature based on the payload. If the signature doesn't match, it returns a 400 Bad Request error. This step ensures that the request is authentic.
+2. **Authenticate the Request:** The `construct_confident_event()` function verifies that the signature is valid by comparing it with a computed signature based on the payload, and constructs an object for later use. If the signature doesn't match, it returns a 400 Bad Request error. This step ensures that the request is authentic.
 3. **Immediate Response:** After verifying the signature, the code sends a 200 OK response immediately.
 4. **Asynchronous Processing:** After the response is sent, an experiment is triggered in the background. In this `FastAPI` example, the `BackgroundTasks` class is used to offload the task without blocking the response. In a different framework or environment, you could use Python's `threading` or `concurrent.futures` modules to run the evaluation asynchronously instead.
 
