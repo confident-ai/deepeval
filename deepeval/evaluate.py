@@ -72,7 +72,7 @@ class TestResult:
     retrieval_context: Optional[List[str]] = None
 
 @dataclass
-class ExecuteResult:
+class EvaluateResult:
     test_results = List[TestResult]
     test_run = TestRunHttpResponse
 
@@ -1009,7 +1009,7 @@ def evaluate(
     verbose_mode: Optional[bool] = None,
     throttle_value: int = 0,
     max_concurrent: int = 100,
-) ->  ExecuteResult:
+) ->  EvaluateResult:
     check_valid_test_cases_type(test_cases)
 
     if hyperparameters is not None:
@@ -1073,7 +1073,7 @@ def evaluate(
     test_run.hyperparameters = hyperparameters
     global_test_run_manager.save_test_run()
     test_run_response = global_test_run_manager.wrap_up_test_run(run_duration, display_table=False)
-    return ExecuteResult(test_results=test_results, test_run=test_run_response)
+    return EvaluateResult(test_results=test_results, test_run=test_run_response)
 
 
 def print_test_result(test_result: TestResult):
