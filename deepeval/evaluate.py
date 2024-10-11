@@ -4,6 +4,10 @@ import os
 from typing import Callable, List, Optional, Union, Dict, Tuple
 import time
 from dataclasses import dataclass
+
+from openai import BaseModel
+
+from deepeval.test_run.api import TestRunHttpResponse
 from rich.console import Console
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm
@@ -66,6 +70,12 @@ class TestResult:
     expected_output: Optional[str] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
+
+@dataclass
+class ExecuteResult:
+    test_results = List[TestResult]
+    test_run = TestRunHttpResponse
+
 
 
 def create_metric_data(metric: BaseMetric) -> MetricData:
@@ -999,7 +1009,7 @@ def evaluate(
     verbose_mode: Optional[bool] = None,
     throttle_value: int = 0,
     max_concurrent: int = 100,
-) ->  Tuple[list[TestResult], str]:
+) ->  ExecuteResult:
     check_valid_test_cases_type(test_cases)
 
     if hyperparameters is not None:
@@ -1062,8 +1072,8 @@ def evaluate(
     test_run = global_test_run_manager.get_test_run()
     test_run.hyperparameters = hyperparameters
     global_test_run_manager.save_test_run()
-    link = global_test_run_manager.wrap_up_test_run(run_duration, display_table=False)
-    return test_results, link
+    test_run_response = global_test_run_manager.wrap_up_test_run(run_duration, display_table=False)
+    return ExecuteResult(test_results=test_results, test_run=test_run_response)
 
 
 def print_test_result(test_result: TestResult):

@@ -571,7 +571,7 @@ class TestRunManager:
             f"Total estimated evaluation tokens cost: {test_run.evaluation_cost} USD"
         )
 
-    def post_test_run(self, test_run: TestRun) -> Optional[str]:
+    def post_test_run(self, test_run: TestRun) -> Optional[TestRunHttpResponse]:
         console = Console()
 
         if is_confident() and self.disable_request is False:
@@ -682,7 +682,7 @@ class TestRunManager:
 
             if is_in_ci_env() == False:
                 webbrowser.open(link)
-            return link
+            return response
 
         else:
             console.print(
@@ -710,7 +710,7 @@ class TestRunManager:
                 print(f"Results saved in {local_folder} as {new_test_filename}")
             os.remove(new_test_filename)
 
-    def wrap_up_test_run(self, runDuration: float, display_table: bool = True) -> Optional[str]:
+    def wrap_up_test_run(self, runDuration: float, display_table: bool = True) -> Optional[TestRunHttpResponse]:
         test_run = self.get_test_run()
         if test_run is None:
             print("Test Run is empty, please try again.")
