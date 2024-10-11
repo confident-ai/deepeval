@@ -75,6 +75,11 @@ class Synthesizer:
         critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
         async_mode: bool = True,
+        context_quality_threshold: int = 0.5, 
+        context_similarity_threshold: int = 0.5,
+        context_max_retries: int = 3,
+        synthetic_input_quality_threshold: int = 0.5,
+        synthetic_input_max_retries: int = 3
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.critic_model, self.using_native_critic_model = initialize_model(
@@ -84,6 +89,13 @@ class Synthesizer:
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
         self.embedder = initialize_embedding_model(embedder)
+
+        # Quality Thresholds
+        self.context_quality_threshold = context_quality_threshold
+        self.context_similarity_threshold = context_similarity_threshold
+        self.context_max_retries = context_max_retries
+        self.synthetic_input_quality_threshold = synthetic_input_quality_threshold
+        self.synthetic_input_max_retries = synthetic_input_max_retries
 
     #############################################################
     # Generate Goldens from Docs
@@ -138,6 +150,9 @@ class Synthesizer:
                     chunk_size=chunk_size,
                     chunk_overlap=chunk_overlap,
                     model=self.critic_model,
+                    filter_threshold=self.context_quality_threshold,
+                    similarity_threshold=self.context_similarity_threshold,
+                    max_retries=self.context_max_retries
                 )
             self.context_generator._load_docs()
             contexts, source_files, context_scores = (
@@ -207,6 +222,9 @@ class Synthesizer:
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
                 model=self.critic_model,
+                filter_threshold=self.context_quality_threshold,
+                similarity_threshold=self.context_similarity_threshold,
+                max_retries=self.context_max_retries
             )
         await self.context_generator._a_load_docs()
 
@@ -745,8 +763,6 @@ class Synthesizer:
         self,
         context: List[str],
         inputs: List[SyntheticData],
-        max_retries: int = 3,
-        threshold: int = 0.5,
     ) -> Tuple[List[SyntheticData], List[float]]:
 
         # Evaluate input quality
@@ -754,7 +770,7 @@ class Synthesizer:
         filtered_inputs = []
         for item in inputs:
             input = item.input
-            for _ in range(max_retries):
+            for _ in range(self.synthetic_input_max_retries):
 
                 # Evaluate synthetically generated inputs
                 evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(
@@ -767,7 +783,7 @@ class Synthesizer:
                     self.using_native_critic_model,
                 )
                 feedback, score = feedback_res.feedback, feedback_res.score
-                if score >= threshold:
+                if score >= self.synthetic_input_quality_threshold:
                     break
 
                 # Rewrite input if score below threshold
@@ -791,8 +807,6 @@ class Synthesizer:
         self,
         context: List[str],
         inputs: List[SyntheticData],
-        max_retries: int = 3,
-        threshold: int = 0.5,
     ) -> Tuple[List[SyntheticData], List[float]]:
 
         # Evaluate input quality
@@ -800,7 +814,7 @@ class Synthesizer:
         filtered_inputs = []
         for item in inputs:
             input = item.input
-            for _ in range(max_retries):
+            for _ in range(self.synthetic_input_max_retries):
 
                 # Evaluate synthetically generated inputs
                 evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(
@@ -813,7 +827,7 @@ class Synthesizer:
                     self.using_native_critic_model,
                 )
                 feedback, score = feedback_res.feedback, feedback_res.score
-                if score >= threshold:
+                if score >= self.synthetic_input_quality_threshold:
                     break
 
                 # Rewrite input if score below threshold

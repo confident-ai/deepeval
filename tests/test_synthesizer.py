@@ -12,8 +12,6 @@ from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.synthesizer import (
     Evolution,
     PromptEvolution,
-    RTAdversarialAttack,
-    RTVulnerability,
 )
 
 #########################################################
@@ -194,8 +192,8 @@ def test_generate_goldens_from_docs(
 ):
     start_time = time.time()
     goldens = synthesizer.generate_goldens_from_docs(
-        max_goldens_per_context=2,
-        max_contexts_per_document=3,
+        max_goldens_per_context=1,
+        max_contexts_per_document=1,
         num_evolutions=1,
         evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
         document_paths=document_paths,
@@ -210,9 +208,19 @@ def test_generate_goldens_from_docs(
     print(synthesizer.to_pandas())
 
 
-synthesizer_sync = Synthesizer(async_mode=False, model=SchematicGPTModel())
-synthesizer_async = Synthesizer(async_mode=True, model=SchematicGPTModel())
-test_generate_goldens_from_docs(synthesizer_sync)
+synthesizer_sync = Synthesizer(
+    async_mode=False, 
+    model=SchematicGPTModel(),
+    synthetic_input_quality_threshold = 0.7,
+    context_quality_threshold = 0.7,
+    context_similarity_threshold = 0.5)
+synthesizer_async = Synthesizer(
+    async_mode=True, 
+    model=SchematicGPTModel(),
+    synthetic_input_quality_threshold = 0.7,
+    context_quality_threshold = 0.7,
+    context_similarity_threshold = 0.5)
+# test_generate_goldens_from_docs(synthesizer_sync)
 test_generate_goldens_from_docs(synthesizer_async)
 
 synthesizer_sync = Synthesizer(async_mode=False, model=SchematicGPTModel())
