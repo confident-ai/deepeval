@@ -72,8 +72,8 @@ class TestResult:
 
 @dataclass
 class EvaluateResult:
-    test_results = List[TestResult]
-    test_run = Optional[TestRunHttpResponse]
+    test_results: List[TestResult]
+    test_run: Optional[TestRunHttpResponse]
 
 
 def create_metric_data(metric: BaseMetric) -> MetricData:
