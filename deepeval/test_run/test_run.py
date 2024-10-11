@@ -710,7 +710,9 @@ class TestRunManager:
                 print(f"Results saved in {local_folder} as {new_test_filename}")
             os.remove(new_test_filename)
 
-    def wrap_up_test_run(self, runDuration: float, display_table: bool = True) -> Optional[TestRunHttpResponse]:
+    def wrap_up_test_run(
+        self, runDuration: float, display_table: bool = True
+    ) -> Optional[TestRunHttpResponse]:
         test_run = self.get_test_run()
         if test_run is None:
             print("Test Run is empty, please try again.")
