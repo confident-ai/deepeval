@@ -74,7 +74,7 @@ class TestResult:
 @dataclass
 class EvaluateResult:
     test_results = List[TestResult]
-    test_run = TestRunHttpResponse
+    test_run = Optional[TestRunHttpResponse]
 
 
 
