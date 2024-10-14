@@ -81,7 +81,9 @@ Here's an example implementation of an endpoint setup using `FastAPI`:
 ```python title="example.py"
 import os
 from fastapi import FastAPI, Request, BackgroundTasks, Header, HTTPException
-from deepeval import construct_confident_event, confident_evaluate
+
+from deepeval import confident_evaluate
+from deepeval.confident import construct_confident_event
 
 app = FastAPI()
 
