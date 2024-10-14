@@ -103,7 +103,6 @@ async def evaluation_webhook(
     # Step 2: Send 200 OK immediately after signature verification
     response = {"status": "Webhook received"}
 
-
     # Step 3: Trigger an experiment run in the background
     def evaluate():
         # Generate test cases as usual
