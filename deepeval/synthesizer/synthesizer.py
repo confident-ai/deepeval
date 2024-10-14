@@ -8,7 +8,8 @@ import datetime
 import asyncio
 import random
 import json
-import math
+from rich.console import Console
+from rich import print
 import tqdm
 import csv
 import os
@@ -1076,6 +1077,7 @@ class Synthesizer:
     def _wrap_up_synthesis(self):
         console = Console()
         if is_confident():
+            return
             alias = input("Enter the dataset alias: ").strip()
             if len(self.synthetic_goldens) == 0:
                 raise ValueError(
@@ -1110,8 +1112,8 @@ class Synthesizer:
                 message = f"Unexpected error when sending the dataset. Incomplete dataset push is available at {link if 'link' in locals() else 'N/A'}."
                 raise Exception(message) from e
         else:
-            raise Exception(
-                "To push a dataset to Confident AI, please run `deepeval login` first."
+            console.print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Generation finished 🎉! You can also run 'deepeval login' to generate and save goldens directly on Confident AI."
             )
 
     def save_as(self, file_type: str, directory: str) -> str:

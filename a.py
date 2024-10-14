@@ -24,6 +24,8 @@ test_case = ConversationalTestCase(
 )
 metric = ConversationRelevancyMetric(verbose_mode=True, threshold=1)
 
-evaluate(test_cases=[test_case], metrics=[metric])
+result = evaluate(test_cases=[test_case], metrics=[metric])
+
+print(result.confident_link)
 
 # metric.measure(test_case=test_case)
