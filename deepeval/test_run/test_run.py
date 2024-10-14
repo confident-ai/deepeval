@@ -571,9 +571,8 @@ class TestRunManager:
             f"Total estimated evaluation tokens cost: {test_run.evaluation_cost} USD"
         )
 
-    def post_test_run(self, test_run: TestRun):
+    def post_test_run(self, test_run: TestRun) -> Optional[str]:
         console = Console()
-
         if is_confident() and self.disable_request is False:
             BATCH_SIZE = 60
             CONVERSATIONAL_BATCH_SIZE = BATCH_SIZE // 3
@@ -677,16 +676,17 @@ class TestRunManager:
             console.print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! View results on "
                 f"[link={link}]{link}[/link]."
-                "\n‼️  NOTE: You can also run evaluations on ALL of deepeval's metrics directly on Confident AI instead."
+                "\n‼️  Friendly reminder 😇: You can also run evaluations with ALL of deepeval's metrics directly on Confident AI instead."
             )
 
             if is_in_ci_env() == False:
                 webbrowser.open(link)
 
+            return link
         else:
             console.print(
-                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run 'deepeval login' to view evaluation results on Confident AI. "
-                "\n‼️  NOTE: You can also run evaluations on ALL of deepeval's metrics directly on Confident AI instead."
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run 'deepeval login' to save and analyze evaluation results on Confident AI. "
+                "\n‼️  Friendly reminder 😇: You can also run evaluations with ALL of deepeval's metrics directly on Confident AI instead."
             )
 
     def save_test_run_locally(self):
@@ -709,7 +709,9 @@ class TestRunManager:
                 print(f"Results saved in {local_folder} as {new_test_filename}")
             os.remove(new_test_filename)
 
-    def wrap_up_test_run(self, runDuration: float, display_table: bool = True):
+    def wrap_up_test_run(
+        self, runDuration: float, display_table: bool = True
+    ) -> Optional[str]:
         test_run = self.get_test_run()
         if test_run is None:
             print("Test Run is empty, please try again.")
@@ -754,7 +756,7 @@ class TestRunManager:
             or len(test_run.conversational_test_cases) > 0
         ):
             test_run.guard_mllm_test_cases()
-            self.post_test_run(test_run)
+            return self.post_test_run(test_run)
 
 
 global_test_run_manager = TestRunManager()
