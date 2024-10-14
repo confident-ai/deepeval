@@ -75,11 +75,11 @@ class Synthesizer:
         critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
         async_mode: bool = True,
-        context_quality_threshold: int = 0.5, 
+        context_quality_threshold: int = 0.5,
         context_similarity_threshold: int = 0.5,
         context_max_retries: int = 3,
         synthetic_input_quality_threshold: int = 0.5,
-        synthetic_input_max_retries: int = 3
+        synthetic_input_max_retries: int = 3,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.critic_model, self.using_native_critic_model = initialize_model(
@@ -94,7 +94,9 @@ class Synthesizer:
         self.context_quality_threshold = context_quality_threshold
         self.context_similarity_threshold = context_similarity_threshold
         self.context_max_retries = context_max_retries
-        self.synthetic_input_quality_threshold = synthetic_input_quality_threshold
+        self.synthetic_input_quality_threshold = (
+            synthetic_input_quality_threshold
+        )
         self.synthetic_input_max_retries = synthetic_input_max_retries
 
     #############################################################
@@ -152,7 +154,7 @@ class Synthesizer:
                     model=self.critic_model,
                     filter_threshold=self.context_quality_threshold,
                     similarity_threshold=self.context_similarity_threshold,
-                    max_retries=self.context_max_retries
+                    max_retries=self.context_max_retries,
                 )
             self.context_generator._load_docs()
             contexts, source_files, context_scores = (
@@ -224,7 +226,7 @@ class Synthesizer:
                 model=self.critic_model,
                 filter_threshold=self.context_quality_threshold,
                 similarity_threshold=self.context_similarity_threshold,
-                max_retries=self.context_max_retries
+                max_retries=self.context_max_retries,
             )
         await self.context_generator._a_load_docs()
 

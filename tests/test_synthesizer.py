@@ -209,17 +209,19 @@ def test_generate_goldens_from_docs(
 
 
 synthesizer_sync = Synthesizer(
-    async_mode=False, 
+    async_mode=False,
     model=SchematicGPTModel(),
-    synthetic_input_quality_threshold = 0.7,
-    context_quality_threshold = 0.7,
-    context_similarity_threshold = 0.5)
+    synthetic_input_quality_threshold=0.7,
+    context_quality_threshold=0.7,
+    context_similarity_threshold=0.5,
+)
 synthesizer_async = Synthesizer(
-    async_mode=True, 
+    async_mode=True,
     model=SchematicGPTModel(),
-    synthetic_input_quality_threshold = 0.7,
-    context_quality_threshold = 0.7,
-    context_similarity_threshold = 0.5)
+    synthetic_input_quality_threshold=0.7,
+    context_quality_threshold=0.7,
+    context_similarity_threshold=0.5,
+)
 # test_generate_goldens_from_docs(synthesizer_sync)
 test_generate_goldens_from_docs(synthesizer_async)
 
