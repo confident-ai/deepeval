@@ -161,6 +161,9 @@ class EvaluationDataset:
             test_case._dataset_rank = len(self._mllm_test_cases)
             self._mllm_test_cases.append(test_case)
 
+    def __len__(self):
+        return len(self.test_cases)
+
     def __iter__(self):
         return iter(self.test_cases)
 
