@@ -89,56 +89,56 @@ document_paths = [file_path1, file_path2, file_path3]
 #########################################################
 
 scenarios = [
-     {
+    {
         "scenario": "Food blogger researching international cuisines.",
         "task": "Recipe assistant for suggesting regional dishes.",
-        "input_format": "3 sentences long string."
+        "input_format": "3 sentences long string.",
     },
     {
         "scenario": "Autistic kid asking about household chores.",
         "task": "Personal assistant for helping with daily tasks.",
-        "input_format": "1 sentence step-by-step instruction."
+        "input_format": "1 sentence step-by-step instruction.",
     },
     {
         "scenario": "New developer learning Python syntax.",
         "task": "Coding copilot for writing simple Python scripts.",
-        "input_format": "1-2 lines of code."
+        "input_format": "1-2 lines of code.",
     },
     {
         "scenario": "Senior citizen asking about medications.",
         "task": "Health assistant providing medication instructions.",
-        "input_format": "2 sentence easy-to-understand advice."
+        "input_format": "2 sentence easy-to-understand advice.",
     },
     {
         "scenario": "Teenager asking about personal finance.",
         "task": "Financial assistant offering budgeting tips.",
-        "input_format": "1 financial tip with a short explanation."
+        "input_format": "1 financial tip with a short explanation.",
     },
     {
         "scenario": "Entrepreneur seeking advice on launching a startup.",
         "task": "Business coach providing startup tips.",
-        "input_format": "2 action items for starting a business."
+        "input_format": "2 action items for starting a business.",
     },
     {
         "scenario": "Middle school student asking about scientific concepts.",
         "task": "Educational tutor explaining science topics.",
-        "input_format": "1 explanation of a concept in simple terms."
+        "input_format": "1 explanation of a concept in simple terms.",
     },
     {
         "scenario": "Fitness enthusiast asking about workout routines.",
         "task": "Fitness coach providing exercise suggestions.",
-        "input_format": "1 workout suggestion with a brief explanation."
+        "input_format": "1 workout suggestion with a brief explanation.",
     },
     {
         "scenario": "Artist asking for inspiration for a new project.",
         "task": "Creative assistant providing artistic ideas.",
-        "input_format": "1-2 ideas for art projects."
+        "input_format": "1-2 ideas for art projects.",
     },
     {
         "scenario": "Traveler asking about the best tourist spots.",
         "task": "Travel assistant recommending destinations.",
-        "input_format": "1 destination suggestion with a brief reason."
-    }
+        "input_format": "1 destination suggestion with a brief reason.",
+    },
 ]
 
 # #########################################################
@@ -246,9 +246,7 @@ scenarios = [
 
 
 def test_generate_goldens_from_docs(
-    synthesizer: Synthesizer, 
-    usecase: UseCase = UseCase.QA,
-    seed: int = 0
+    synthesizer: Synthesizer, usecase: UseCase = UseCase.QA, seed: int = 0
 ):
     start_time = time.time()
     goldens = synthesizer.generate_goldens_from_docs(
@@ -273,17 +271,19 @@ def test_generate_goldens_from_docs(
 
 
 synthesizer_sync = Synthesizer(
-    async_mode=False, 
+    async_mode=False,
     model=SchematicGPTModel(),
-    synthetic_input_quality_threshold = 0.7,
-    context_quality_threshold = 0.7,
-    context_similarity_threshold = 0.5)
+    synthetic_input_quality_threshold=0.7,
+    context_quality_threshold=0.7,
+    context_similarity_threshold=0.5,
+)
 synthesizer_async = Synthesizer(
-    async_mode=True, 
+    async_mode=True,
     model=SchematicGPTModel(),
-    synthetic_input_quality_threshold = 0.7,
-    context_quality_threshold = 0.7,
-    context_similarity_threshold = 0.5)
+    synthetic_input_quality_threshold=0.7,
+    context_quality_threshold=0.7,
+    context_similarity_threshold=0.5,
+)
 
 test_generate_goldens_from_docs(synthesizer_sync)
 test_generate_goldens_from_docs(synthesizer_async)

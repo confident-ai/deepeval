@@ -1,5 +1,6 @@
 from typing import Optional
 
+
 class SynthesizerTemplate:
 
     @staticmethod
@@ -80,7 +81,9 @@ class SynthesizerTemplate:
         JSON:
         """
 
-    def generate_synthetic_expected_output(input: str, context: str, expected_output_format: Optional[str]):
+    def generate_synthetic_expected_output(
+        input: str, context: str, expected_output_format: Optional[str]
+    ):
         important_section = (
             f"IMPORTANT: Please ensure that the generated response strictly adheres to the following format: {expected_output_format}, and make sure it is concise and straight to the point, using supporting information in context."
             if expected_output_format
@@ -102,15 +105,14 @@ class SynthesizerTemplate:
         Generated Response:
         """
 
-
     @staticmethod
     def generate_synthetic_inputs(
-            context: str, 
-            max_goldens_per_context: str, 
-            scenario: Optional[str], 
-            task: Optional[str], 
-            input_format: Optional[str]
-        ):
+        context: str,
+        max_goldens_per_context: str,
+        scenario: Optional[str],
+        task: Optional[str],
+        input_format: Optional[str],
+    ):
         input_format_section = (
             f"`input` MUST strictly adhere to the following format: {input_format}."
             if input_format
@@ -166,32 +168,22 @@ class SynthesizerTemplate:
 
         JSON:
         """
-    
+
     @staticmethod
     def rewrite_evolved_input(
-        evolved_input: str, 
-        scenario: Optional[str] = None, 
-        task: Optional[str] = None, 
-        input_format: Optional[str] = None
+        evolved_input: str,
+        scenario: Optional[str] = None,
+        task: Optional[str] = None,
+        input_format: Optional[str] = None,
     ):
-        scenario_section = (
-            f"Scenario: \"{scenario}\""
-            if scenario
-            else ""
-        )
+        scenario_section = f'Scenario: "{scenario}"' if scenario else ""
 
-        task_section = (
-            f"Task: \"{task}\""
-            if task
-            else ""
-        )
+        task_section = f'Task: "{task}"' if task else ""
 
         input_format_section = (
-            f"Input Format: \"{input_format}\""
-            if input_format
-            else ""
+            f'Input Format: "{input_format}"' if input_format else ""
         )
-        
+
         return f"""Given the evolved input, which may be a question or a statement, generate a JSON object with a key 'input'. This key should contain a statement or question that fits any provided scenario, aligns with the task's purpose, and matches the required input format (if specified).
 
         **
@@ -214,7 +206,6 @@ class SynthesizerTemplate:
 
         JSON:
         """
-
 
     @staticmethod
     def rewrite_synthetic_inputs(context, original_query, feedback):

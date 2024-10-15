@@ -329,7 +329,7 @@ class Synthesizer:
                         scenario=scenario,
                         task=task,
                         input_format=input_format,
-                        expected_output_format=expected_output_format
+                        expected_output_format=expected_output_format,
                     )
                 )
             )
@@ -374,13 +374,20 @@ class Synthesizer:
                             )
 
                             if input_format or scenario or task:
-                                prompt = SynthesizerTemplate.rewrite_evolved_input(
-                                    input_format=input_format,
-                                    evolved_input=evolved_input,
-                                    scenario=scenario,
-                                    task=task
+                                prompt = (
+                                    SynthesizerTemplate.rewrite_evolved_input(
+                                        input_format=input_format,
+                                        evolved_input=evolved_input,
+                                        scenario=scenario,
+                                        task=task,
+                                    )
                                 )
-                                res: SyntheticData = self._generate_schema(prompt, SyntheticData, self.model, self.using_native_model)
+                                res: SyntheticData = self._generate_schema(
+                                    prompt,
+                                    SyntheticData,
+                                    self.model,
+                                    self.using_native_model,
+                                )
                                 rewritten_evolved_input = res.input
 
                             # Synthesize Golden
@@ -408,7 +415,7 @@ class Synthesizer:
                                 prompt = SynthesizerTemplate.generate_synthetic_expected_output(
                                     input=golden.input,
                                     context="\n".join(golden.context),
-                                    expected_output_format=expected_output_format
+                                    expected_output_format=expected_output_format,
                                 )
                                 res = self._generate(prompt)
                                 golden.expected_output = res
@@ -516,7 +523,7 @@ class Synthesizer:
                         scenario=scenario,
                         task=task,
                         input_format=input_format,
-                        expected_output_format=expected_output_format
+                        expected_output_format=expected_output_format,
                     )
                     for index, context in enumerate(contexts)
                 ]
@@ -565,7 +572,7 @@ class Synthesizer:
     ):
         # Generate inputs
         prompt = SynthesizerTemplate.generate_synthetic_inputs(
-            context=context, 
+            context=context,
             max_goldens_per_context=max_goldens_per_context,
             scenario=scenario,
             task=task,
@@ -596,9 +603,9 @@ class Synthesizer:
             if include_expected_output:
                 expected_output_prompt = (
                     SynthesizerTemplate.generate_synthetic_expected_output(
-                        input=evolved_input, 
+                        input=evolved_input,
                         context="\n".join(context),
-                        expected_output_format=expected_output_format
+                        expected_output_format=expected_output_format,
                     )
                 )
                 expected_output = await self._a_generate(expected_output_prompt)
@@ -805,22 +812,25 @@ class Synthesizer:
         if _send_data == True:
             self._wrap_up_synthesis()
         return goldens
-    
 
-    def transform_distribution(self, evolutions: Dict[Evolution, float]) -> Dict[PromptEvolution, float]:
+    def transform_distribution(
+        self, evolutions: Dict[Evolution, float]
+    ) -> Dict[PromptEvolution, float]:
         prompt_evolutions: Dict[PromptEvolution, float] = {}
         for evo, weight in evolutions.items():
             prompt_evolution = self.map_evolution_to_prompt_evolution(evo)
             prompt_evolutions[prompt_evolution] = weight
         return prompt_evolutions
 
-
-    def map_evolution_to_prompt_evolution(self, evolution: Evolution) -> PromptEvolution:
+    def map_evolution_to_prompt_evolution(
+        self, evolution: Evolution
+    ) -> PromptEvolution:
         try:
             return PromptEvolution[evolution.name]
         except KeyError:
-            raise KeyError(f"Evolution '{evolution.name}' not available for this method.")
-
+            raise KeyError(
+                f"Evolution '{evolution.name}' not available for this method."
+            )
 
     #############################################################
     # Helper Methods for Input Generation
