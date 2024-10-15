@@ -373,9 +373,19 @@ class Synthesizer:
                                 progress_bar=progress_bar,
                             )
 
+                            if input_format or scenario or task:
+                                prompt = SynthesizerTemplate.rewrite_evolved_input(
+                                    input_format=input_format,
+                                    evolved_input=evolved_input,
+                                    scenario=scenario,
+                                    task=task
+                                )
+                                res: SyntheticData = self._generate_schema(prompt, SyntheticData, self.model, self.using_native_model)
+                                rewritten_evolved_input = res.input
+
                             # Synthesize Golden
                             golden = Golden(
-                                input=evolved_input,
+                                input=rewritten_evolved_input,
                                 context=context,
                                 source_file=(
                                     source_files[i]

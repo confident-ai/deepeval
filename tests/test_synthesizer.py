@@ -92,7 +92,7 @@ scenarios = [
      {
         "scenario": "Food blogger researching international cuisines.",
         "task": "Recipe assistant for suggesting regional dishes.",
-        "input_format": "Very advanced cuisine questions."
+        "input_format": "3 sentences long string."
     },
     {
         "scenario": "Autistic kid asking about household chores.",
@@ -245,48 +245,48 @@ scenarios = [
 #########################################################
 
 
-# def test_generate_goldens_from_docs(
-#     synthesizer: Synthesizer, 
-#     usecase: UseCase = UseCase.QA,
-#     seed: int = 0
-# ):
-#     start_time = time.time()
-#     goldens = synthesizer.generate_goldens_from_docs(
-#         max_goldens_per_context=1,
-#         max_contexts_per_document=1,
-#         num_evolutions=1,
-#         evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
-#         document_paths=document_paths,
-#         use_case=usecase,
-#         chunk_size=65,
-#         # scenario=scenarios[seed]["scenario"],
-#         # task=scenarios[seed]["task"],
-#         # input_format=scenarios[seed]["input_format"],
-#         # expected_output_format="3 word answer",
-#         _send_data=False,
-#     )
-#     end_time = time.time()
-#     duration = end_time - start_time
-#     print("Generated goldens from docs:", goldens)
-#     print(f"Time taken: {duration} seconds")
-#     print(synthesizer.to_pandas())
+def test_generate_goldens_from_docs(
+    synthesizer: Synthesizer, 
+    usecase: UseCase = UseCase.QA,
+    seed: int = 0
+):
+    start_time = time.time()
+    goldens = synthesizer.generate_goldens_from_docs(
+        max_goldens_per_context=1,
+        max_contexts_per_document=1,
+        num_evolutions=1,
+        evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
+        document_paths=document_paths,
+        use_case=usecase,
+        chunk_size=65,
+        scenario=scenarios[seed]["scenario"],
+        task=scenarios[seed]["task"],
+        input_format=scenarios[seed]["input_format"],
+        expected_output_format="3 word answer",
+        _send_data=False,
+    )
+    end_time = time.time()
+    duration = end_time - start_time
+    print("Generated goldens from docs:", goldens)
+    print(f"Time taken: {duration} seconds")
+    print(synthesizer.to_pandas())
 
 
-# synthesizer_sync = Synthesizer(
-#     async_mode=False, 
-#     model=SchematicGPTModel(),
-#     synthetic_input_quality_threshold = 0.7,
-#     context_quality_threshold = 0.7,
-#     context_similarity_threshold = 0.5)
-# synthesizer_async = Synthesizer(
-#     async_mode=True, 
-#     model=SchematicGPTModel(),
-#     synthetic_input_quality_threshold = 0.7,
-#     context_quality_threshold = 0.7,
-#     context_similarity_threshold = 0.5)
+synthesizer_sync = Synthesizer(
+    async_mode=False, 
+    model=SchematicGPTModel(),
+    synthetic_input_quality_threshold = 0.7,
+    context_quality_threshold = 0.7,
+    context_similarity_threshold = 0.5)
+synthesizer_async = Synthesizer(
+    async_mode=True, 
+    model=SchematicGPTModel(),
+    synthetic_input_quality_threshold = 0.7,
+    context_quality_threshold = 0.7,
+    context_similarity_threshold = 0.5)
 
-# test_generate_goldens_from_docs(synthesizer_sync)
-# test_generate_goldens_from_docs(synthesizer_async)
+test_generate_goldens_from_docs(synthesizer_sync)
+test_generate_goldens_from_docs(synthesizer_async)
 
 #########################################################
 ### Generate Goldens From Scratch #######################

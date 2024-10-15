@@ -116,9 +116,18 @@ class SynthesizerTemplate:
             if input_format
             else "`input` MUST be a STRING."
         )
-        scenario_section = f"`input`s MUST be relevant to this specific scenario: ```{scenario}``` (The scenario provides the situation in which the inputs should be interpreted or used)." if scenario else ""
-        task_section = f"`input`s MUST be framed in a way that aligns with the purpose of the following task: {task}" if task else ""
 
+        scenario_section = (
+            f"`input`s MUST be relevant to this specific scenario: ```{scenario}``` (The scenario describes the circumstances under which the inputs are generated and the user’s intent in eliciting a response)."
+            if scenario
+            else ""
+        )
+
+        task_section = (
+            f"`input`s MUST be framed in a way that evokes a response aligned with the following task: {task} (The task represents the goal or function the entity is expected to achieve when responding)."
+            if task
+            else ""
+        )
         return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
         The `input` can either be a question or a statement that can be addressed by the given context.
 
@@ -157,6 +166,55 @@ class SynthesizerTemplate:
 
         JSON:
         """
+    
+    @staticmethod
+    def rewrite_evolved_input(
+        evolved_input: str, 
+        scenario: Optional[str] = None, 
+        task: Optional[str] = None, 
+        input_format: Optional[str] = None
+    ):
+        scenario_section = (
+            f"Scenario: \"{scenario}\""
+            if scenario
+            else ""
+        )
+
+        task_section = (
+            f"Task: \"{task}\""
+            if task
+            else ""
+        )
+
+        input_format_section = (
+            f"Input Format: \"{input_format}\""
+            if input_format
+            else ""
+        )
+        
+        return f"""Given the evolved input, which may be a question or a statement, generate a JSON object with a key 'input'. This key should contain a statement or question that fits any provided scenario, aligns with the task's purpose, and matches the required input format (if specified).
+
+        **
+        IMPORTANT: Try to change the evolved input as little as possible. However, if the evolved input does not align with the provided scenario, task, or input format, it must ultimately be adjusted to fit these requirements. The output must be in JSON format, with the 'input' key only. If necessary, the evolved input should be rewritten to ensure it conforms to the scenario, task, and input format.
+
+        Example Evolved Input: "Is it okay to joke about someone losing their job in front of their coworkers if I'm just trying to lighten the mood?"
+        {f'Example Scenario: "{scenario}"' if scenario else ""}
+        {f'Example Task: "{task}"' if task else ""}
+        {f'Example Input Format: "{input_format}"' if input_format else ""}
+        Example JSON: {{
+            "input": "How can I joke about someone losing their job without making the situation worse? Is it possible to use humor here without hurting anyone's feelings?"
+        }}
+
+        Evolved Input:
+        {evolved_input}
+        
+        {scenario_section}
+        {task_section}
+        {input_format_section}
+
+        JSON:
+        """
+
 
     @staticmethod
     def rewrite_synthetic_inputs(context, original_query, feedback):
