@@ -103,8 +103,7 @@ class SynthesizerTemplate:
         """
 
 
-    staticmethod
-
+    @staticmethod
     def generate_synthetic_inputs(
             context: str, 
             max_goldens_per_context: str, 

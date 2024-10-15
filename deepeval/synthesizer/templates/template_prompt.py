@@ -10,8 +10,8 @@ class PromptSynthesizerTemplate:
         IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
         You MUST TRY to generate {num_initial_goldens} data points.
 
-        Example scenario: SQL queries querying a database called FAST_FOOD_RESTAURANTS
-        Example task: Test all the SQL probable statements
+        Example scenario: technical SWE typing SQL queries to query from a database called FAST_FOOD_RESTAURANTS
+        Example task: Text2SQL LLM Assistant
         Example input format: SQL String
         Example num initial prompts: 2
         Example JSON:
