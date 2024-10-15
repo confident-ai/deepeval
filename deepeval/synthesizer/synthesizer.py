@@ -123,6 +123,10 @@ class Synthesizer:
             Evolution.IN_BREADTH: 1 / 7,
         },
         use_case: UseCase = UseCase.QA,
+        scenario: Optional[str] = None,
+        task: Optional[str] = None,
+        input_format: Optional[str] = None,
+        expected_output_format: Optional[str] = None,
         _send_data=True,
     ):
         # Set Embedder if not defined
@@ -142,6 +146,10 @@ class Synthesizer:
                     num_evolutions,
                     evolutions,
                     use_case,
+                    scenario,
+                    task,
+                    input_format,
+                    expected_output_format,
                 )
             )
         else:
@@ -183,6 +191,10 @@ class Synthesizer:
                     source_files,
                     evolutions=evolutions,
                     use_case=use_case,
+                    scenario=scenario,
+                    task=task,
+                    input_format=input_format,
+                    expected_output_format=expected_output_format,
                     _context_scores=context_scores,
                     _progress_bar=progress_bar,
                     _send_data=False,
@@ -212,6 +224,10 @@ class Synthesizer:
             Evolution.IN_BREADTH: 1 / 7,
         },
         use_case: UseCase = UseCase.QA,
+        scenario: Optional[str] = None,
+        task: Optional[str] = None,
+        input_format: Optional[str] = None,
+        expected_output_format: Optional[str] = None,
     ):
         # Set Embedder if not defined
         if self.embedder is None:
@@ -256,6 +272,10 @@ class Synthesizer:
                 source_files=source_files,
                 evolutions=evolutions,
                 use_case=use_case,
+                scenario=scenario,
+                task=task,
+                input_format=input_format,
+                expected_output_format=expected_output_format,
                 _context_scores=context_scores,
                 _progress_bar=progress_bar,
             )
@@ -283,6 +303,10 @@ class Synthesizer:
             Evolution.IN_BREADTH: 1 / 7,
         },
         use_case: UseCase = UseCase.QA,
+        scenario: Optional[str] = None,
+        task: Optional[str] = None,
+        input_format: Optional[str] = None,
+        expected_output_format: Optional[str] = None,
         _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
         _send_data: bool = True,
@@ -302,6 +326,10 @@ class Synthesizer:
                         source_files=source_files,
                         evolutions=evolutions,
                         use_case=use_case,
+                        scenario=scenario,
+                        task=task,
+                        input_format=input_format,
+                        expected_output_format=expected_output_format
                     )
                 )
             )
@@ -322,6 +350,9 @@ class Synthesizer:
                         prompt = SynthesizerTemplate.generate_synthetic_inputs(
                             context=context,
                             max_goldens_per_context=max_goldens_per_context,
+                            scenario=scenario,
+                            task=task,
+                            input_format=input_format,
                         )
                         synthetic_inputs = self._generate_inputs(prompt)
 
@@ -342,9 +373,19 @@ class Synthesizer:
                                 progress_bar=progress_bar,
                             )
 
+                            if input_format or scenario or task:
+                                prompt = SynthesizerTemplate.rewrite_evolved_input(
+                                    input_format=input_format,
+                                    evolved_input=evolved_input,
+                                    scenario=scenario,
+                                    task=task
+                                )
+                                res: SyntheticData = self._generate_schema(prompt, SyntheticData, self.model, self.using_native_model)
+                                rewritten_evolved_input = res.input
+
                             # Synthesize Golden
                             golden = Golden(
-                                input=evolved_input,
+                                input=rewritten_evolved_input,
                                 context=context,
                                 source_file=(
                                     source_files[i]
@@ -367,6 +408,7 @@ class Synthesizer:
                                 prompt = SynthesizerTemplate.generate_synthetic_expected_output(
                                     input=golden.input,
                                     context="\n".join(golden.context),
+                                    expected_output_format=expected_output_format
                                 )
                                 res = self._generate(prompt)
                                 golden.expected_output = res
@@ -441,6 +483,10 @@ class Synthesizer:
             Evolution.IN_BREADTH: 1 / 7,
         },
         use_case: UseCase = UseCase.QA,
+        scenario: Optional[str] = None,
+        task: Optional[str] = None,
+        input_format: Optional[str] = None,
+        expected_output_format: Optional[str] = None,
         _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
     ) -> List[Golden]:
@@ -467,6 +513,10 @@ class Synthesizer:
                         evolutions=evolutions,
                         progress_bar=progress_bar,
                         context_scores=_context_scores,
+                        scenario=scenario,
+                        task=task,
+                        input_format=input_format,
+                        expected_output_format=expected_output_format
                     )
                     for index, context in enumerate(contexts)
                 ]
@@ -508,10 +558,18 @@ class Synthesizer:
         evolutions: List[Evolution],
         progress_bar: tqdm.std.tqdm,
         context_scores: Optional[List[float]] = None,
+        scenario: Optional[str] = None,
+        task: Optional[str] = None,
+        input_format: Optional[str] = None,
+        expected_output_format: Optional[str] = None,
     ):
         # Generate inputs
         prompt = SynthesizerTemplate.generate_synthetic_inputs(
-            context=context, max_goldens_per_context=max_goldens_per_context
+            context=context, 
+            max_goldens_per_context=max_goldens_per_context,
+            scenario=scenario,
+            task=task,
+            input_format=input_format,
         )
         synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(
             prompt
@@ -538,7 +596,9 @@ class Synthesizer:
             if include_expected_output:
                 expected_output_prompt = (
                     SynthesizerTemplate.generate_synthetic_expected_output(
-                        input=evolved_input, context="\n".join(context)
+                        input=evolved_input, 
+                        context="\n".join(context),
+                        expected_output_format=expected_output_format
                     )
                 )
                 expected_output = await self._a_generate(expected_output_prompt)
@@ -612,20 +672,21 @@ class Synthesizer:
 
     async def a_generate_goldens_from_scratch(
         self,
-        subject: str,
+        scenario: str,
         task: str,
-        output_format: str,
+        input_format: str,
         num_initial_goldens: int,
         num_evolutions: int = 1,
-        evolutions: Dict[PromptEvolution, float] = {
-            PromptEvolution.REASONING: 1 / 6,
-            PromptEvolution.CONCRETIZING: 1 / 6,
-            PromptEvolution.CONSTRAINED: 1 / 6,
-            PromptEvolution.COMPARATIVE: 1 / 6,
-            PromptEvolution.HYPOTHETICAL: 1 / 6,
-            PromptEvolution.IN_BREADTH: 1 / 6,
+        evolutions: Dict[Evolution, float] = {
+            Evolution.REASONING: 1 / 6,
+            Evolution.CONCRETIZING: 1 / 6,
+            Evolution.CONSTRAINED: 1 / 6,
+            Evolution.COMPARATIVE: 1 / 6,
+            Evolution.HYPOTHETICAL: 1 / 6,
+            Evolution.IN_BREADTH: 1 / 6,
         },
     ) -> List[Golden]:
+        evolutions = self.transform_distribution(evolutions)
         goldens: List[Golden] = []
         with synthesizer_progress_context(
             method="Scratch",
@@ -639,9 +700,9 @@ class Synthesizer:
 
             # Generate inputs
             prompt: List = PromptSynthesizerTemplate.generate_synthetic_prompts(
-                subject=subject,
+                scenario=scenario,
                 task=task,
-                output_format=output_format,
+                input_format=input_format,
                 num_initial_goldens=num_initial_goldens,
             )
             synthetic_data = self._generate_inputs(prompt)
@@ -670,30 +731,31 @@ class Synthesizer:
 
     def generate_goldens_from_scratch(
         self,
-        subject: str,
+        scenario: str,
         task: str,
-        output_format: str,
+        input_format: str,
         num_initial_goldens: int,
         num_evolutions: int = 1,
-        evolutions: Dict[PromptEvolution, float] = {
-            PromptEvolution.REASONING: 1 / 6,
-            PromptEvolution.CONCRETIZING: 1 / 6,
-            PromptEvolution.CONSTRAINED: 1 / 6,
-            PromptEvolution.COMPARATIVE: 1 / 6,
-            PromptEvolution.HYPOTHETICAL: 1 / 6,
-            PromptEvolution.IN_BREADTH: 1 / 6,
+        evolutions: Dict[Evolution, float] = {
+            Evolution.REASONING: 1 / 6,
+            Evolution.CONCRETIZING: 1 / 6,
+            Evolution.CONSTRAINED: 1 / 6,
+            Evolution.COMPARATIVE: 1 / 6,
+            Evolution.HYPOTHETICAL: 1 / 6,
+            Evolution.IN_BREADTH: 1 / 6,
         },
         _send_data: bool = True,
     ) -> List[Golden]:
+        evolutions = self.transform_distribution(evolutions)
         goldens: List[Golden] = []
         if self.async_mode:
             loop = get_or_create_event_loop()
             goldens.extend(
                 loop.run_until_complete(
                     self.a_generate_goldens_from_scratch(
-                        subject=subject,
+                        scenario=scenario,
                         task=task,
-                        output_format=output_format,
+                        input_format=input_format,
                         num_evolutions=num_evolutions,
                         num_initial_goldens=num_initial_goldens,
                         evolutions=evolutions,
@@ -714,9 +776,9 @@ class Synthesizer:
                 # Generate inputs
                 prompt: List = (
                     PromptSynthesizerTemplate.generate_synthetic_prompts(
-                        subject=subject,
+                        scenario=scenario,
                         task=task,
-                        output_format=output_format,
+                        input_format=input_format,
                         num_initial_goldens=num_initial_goldens,
                     )
                 )
@@ -743,6 +805,22 @@ class Synthesizer:
         if _send_data == True:
             self._wrap_up_synthesis()
         return goldens
+    
+
+    def transform_distribution(self, evolutions: Dict[Evolution, float]) -> Dict[PromptEvolution, float]:
+        prompt_evolutions: Dict[PromptEvolution, float] = {}
+        for evo, weight in evolutions.items():
+            prompt_evolution = self.map_evolution_to_prompt_evolution(evo)
+            prompt_evolutions[prompt_evolution] = weight
+        return prompt_evolutions
+
+
+    def map_evolution_to_prompt_evolution(self, evolution: Evolution) -> PromptEvolution:
+        try:
+            return PromptEvolution[evolution.name]
+        except KeyError:
+            raise KeyError(f"Evolution '{evolution.name}' not available for this method.")
+
 
     #############################################################
     # Helper Methods for Input Generation

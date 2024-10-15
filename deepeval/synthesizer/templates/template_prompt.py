@@ -1,18 +1,18 @@
 class PromptSynthesizerTemplate:
     @staticmethod
     def generate_synthetic_prompts(
-        subject: str, task: str, output_format: str, num_initial_goldens: int
+        scenario: str, task: str, input_format: str, num_initial_goldens: int
     ):
-        return f"""Generate a series of input prompts from scratch based on the provided subject, task, and output format.
-        The inputs must align with the given subject and task description, and conform to specified output format.
+        return f"""Generate a series of input prompts from scratch based on the provided scenario, task, and output format.
+        The inputs must align with the given scenario and task description, and conform to specified output format.
 
         **
         IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
         You MUST TRY to generate {num_initial_goldens} data points.
 
-        Example subject: SQL queries querying a database called FAST_FOOD_RESTAURANTS
-        Example task: Test all the SQL probable statements
-        Example output format: SQL String
+        Example scenario: technical SWE typing SQL queries to query from a database called FAST_FOOD_RESTAURANTS
+        Example task: Text2SQL LLM Assistant
+        Example input format: SQL String
         Example num initial prompts: 2
         Example JSON:
         {{
@@ -26,13 +26,13 @@ class PromptSynthesizerTemplate:
             ]  
         }}
 
-        You MUST include at least one statement as the input. `input` MUST be of `{output_format}` format.
+        You MUST include at least one statement as the input. `input` MUST be of `{input_format}` format.
         You MUST TRY to generate {num_initial_goldens} data points, unless the generated `input` is getting reptitive.
         **
 
-        subject: {subject}
+        scenario: {scenario}
         task: {task}
-        output format: {output_format}
+        input format: {input_format}
         num initial prompts: {num_initial_goldens}
         JSON:
         """
