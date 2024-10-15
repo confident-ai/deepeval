@@ -158,11 +158,11 @@ from deepeval.synthesizer import Synthesizer
 
 synthesizer = Synthesizer()
 synthesizer.generate_goldens_from_scratch(
-    scenario="Harmful and toxic prompts, with emphasis on dark humor",
-    task="Red-team LLMs",
-    output_format="2-sentence string",
+    scenario="Security engineers generating harmful and toxic prompts, focusing on dark humor, to red-team the LLM's ability to respond safely.",
+    task="Provide safe and responsible responses as an LLM chatbot to user inputs.",
+    output_format="Two-sentence response string.",
     num_initial_goldens=25,
-    num_evolutions=20
+    num_evolutions=2
 )
 ```
 
