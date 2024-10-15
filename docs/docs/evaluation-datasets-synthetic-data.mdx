@@ -26,12 +26,17 @@ from deepeval.synthesizer import Synthesizer
 synthesizer = Synthesizer()
 ```
 
-There are four optional parameters when creating a `Synthesizer`:
+There are nine optional parameters when creating a `Synthesizer`:
 
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 - [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use for quality filtering, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `embedder`: a string specifying which of OpenAI's embedding models to use, **OR** [any custom embedding model](#using-a-custom-embedding-model) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
+- [Optional] `context_quality_threshold`: a float representing the minimum quality for context selection. If the context quality is lower than this threshold, the context will be rejected. Defaulted to `0.5`.
+- [Optional] `context_similarity_threshold`: a float representing the minimum similarity score required for context matching. Contexts with similarity scores lower than this threshold will not be used. Defaulted to `0.5`.
+- [Optional] `context_max_retries`: an integer that specifies the number of times to retry context generation if it does not meet the required quality or similarity threshold. Defaulted to `3`.
+- [Optional] `synthetic_input_quality_threshold`: a float representing the minimum quality threshold for synthetic input generation. Inputs with lower quality will be rejected. Defaulted to `0.5`.
+- [Optional] `synthetic_input_max_retries`: an integer that specifies the number of times to retry synthetic input generation if it does not meet the required quality. Defaulted to `3`.
 
 :::info
 As you'll learn later, an embedding model is only used when using the `generate_goldens_from_docs()` method, so don't worry about the `embedder` parameter too much unless you're looking to use your own embedding model.
@@ -66,7 +71,7 @@ synthesizer.generate_goldens_from_docs(
 )
 ```
 
-There are one mandatory and seven optional parameters when using the `generate_goldens_from_docs` method:
+There are one mandatory and eleven optional parameters when using the `generate_goldens_from_docs` method:
 
 - `document_paths`: a list strings, representing the path to the documents from which contexts will be extracted from. Supported documents types include: `.txt`, `.docx`, and `.pdf`.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
@@ -76,6 +81,10 @@ There are one mandatory and seven optional parameters when using the `generate_g
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during context extraction. Defaulted to 0.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
 - [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal percentage.
+- [Optional] `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM to be evaluated.
+- [Optional] `task`: a string, representing the purpose of evaluating the target LLM, outlining the specific goal or focus of the evaluation.
+- [Optional] `input_format`: a string, representing the structure and format of the synthetic input, allowing for precise control over how the inputs are organized.
+- [Optional] `expected_output_format`: a string, representing the structure and format of the synthetic expected output.
 
 :::info
 `Evolution` is an `ENUM` that specifies the different data evolution techniques you wish to employee to make synthetic `Golden`s more realistic.
@@ -124,17 +133,17 @@ synthesizer.generate_goldens(
 )
 ```
 
-There are one mandatory and five optional parameters when using the `generate_goldens` method:
+There are one mandatory and seven optional parameters when using the `generate_goldens` method:
 
 - `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
 - [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
 - [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal percentage.
-
-:::caution
-While the previous methods first use an LLM to generate a series of inputs based on the provided context before evolving them, `generate_goldens_from_inputs` simply evolves the provided list of inputs into more complex and diverse `Golden`s. It's also important to note that this method will only populate the input field of each generated `Golden`.
-:::
+- [Optional] `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM to be evaluated.
+- [Optional] `task`: a string, representing the purpose of evaluating the target LLM, outlining the specific goal or focus of the evaluation.
+- [Optional] `input_format`: a string, representing the structure and format of the synthetic input, allowing for precise control over how the inputs are organized.
+- [Optional] `expected_output_format`: a string, representing the structure and format of the synthetic expected output.
 
 ### 3. Generating From Scratch
 
@@ -149,9 +158,9 @@ from deepeval.synthesizer import Synthesizer
 
 synthesizer = Synthesizer()
 synthesizer.generate_goldens_from_scratch(
-    subject="Harmful and toxic prompts, with emphasis on dark humor",
+    scenario="Harmful and toxic prompts, with emphasis on dark humor",
     task="Red-team LLMs",
-    output_format="string",
+    output_format="2-sentence string",
     num_initial_goldens=25,
     num_evolutions=20
 )
@@ -165,32 +174,12 @@ The subject, task, and output format parameters are all strings that are inserte
 
 There are four mandatory and three optional parameters when using the `generate_goldens_from_docs` method:
 
-- `subject`: a string, specifying the subject and nature of your generated `Golden`s
-- `task`: a string, representing the purpose of these evaluation `Golden`s
-- `output_format`: a string, representing the expected output format. This is not equivalent to python `type`s but simply gives you more control over the structure of your synthetic data.
-- `num_initial_goldens`: the number of goldens generated before consequent evolutions
+- `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM to be evaluated.
+- `task`: a string, representing the purpose of evaluating the target LLM, outlining the specific goal or focus of the evaluation.
+- `input_format`: a string, representing the structure and format of the synthetic input, allowing for precise control over how the inputs are organized.
+- `num_initial_goldens`: the number of goldens generated before consequent evolutions.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated prompt. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
-- [Optional] `evolutions`: a dict with `PropmtEvolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal percentage.
-  The subject, task, and output format parameters are all strings that are inserted into a predefined prompt template, meaning these parameters are **flexible and will need to be iterated on** for optimal results.
-
-:::info
-`PromptEvolution` is an `ENUM` that specifies the different data evolution techniques you wish to employee to make synthetic contextless `Golden`s more realistic.
-
-```python
-from deepeval.synthesizer import PromptEvolution
-
-available_evolutions = {
-    PromptEvolution.REASONING: 1/6,
-    PromptEvolution.CONCRETIZING: 1/6,
-    PromptEvolution.CONSTRAINED: 1/6,
-    PromptEvolution.COMPARATIVE: 1/6,
-    PromptEvolution.HYPOTHETICAL: 1/6,
-    PromptEvolution.IN_BREADTH: 1/6
-}
-```
-
-For those interested in what these evolutions mean, you can [read this article here.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
-:::
+- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s (except `MULTICONTEXT`) with equal percentage.
 
 ## Convert to DataFrame
 

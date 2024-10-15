@@ -1,3 +1,5 @@
+from typing import Optional
+
 class SynthesizerTemplate:
 
     @staticmethod
@@ -78,12 +80,17 @@ class SynthesizerTemplate:
         JSON:
         """
 
-    @staticmethod
-    def generate_synthetic_expected_output(input, context):
+    def generate_synthetic_expected_output(input: str, context: str, expected_output_format: Optional[str]):
+        important_section = (
+            f"IMPORTANT: Please ensure that the generated response strictly adheres to the following format: {expected_output_format}, and make sure it is concise and straight to the point, using supporting information in context."
+            if expected_output_format
+            else "IMPORTANT: Please make sure to generate a response that is concise and straight to the point, and uses supporting information in context."
+        )
+
         return f"""Given the input, which may or may not be a question, generate a response using information presented in context.
 
         **
-        IMPORTANT: Please make sure to generate a response that is concise and straight to the point, and uses supporting information in context.
+        {important_section}
         **
 
         Context:
@@ -95,9 +102,24 @@ class SynthesizerTemplate:
         Generated Response:
         """
 
+
     staticmethod
 
-    def generate_synthetic_inputs(context, max_goldens_per_context):
+    def generate_synthetic_inputs(
+            context: str, 
+            max_goldens_per_context: str, 
+            scenario: Optional[str], 
+            task: Optional[str], 
+            input_format: Optional[str]
+        ):
+        input_format_section = (
+            f"`input` MUST strictly adhere to the following format: {input_format}."
+            if input_format
+            else "`input` MUST be a STRING."
+        )
+        scenario_section = f"`input`s MUST be relevant to this specific scenario: ```{scenario}``` (The scenario provides the situation in which the inputs should be interpreted or used)." if scenario else ""
+        task_section = f"`input`s MUST be framed in a way that aligns with the purpose of the following task: {task}" if task else ""
+
         return f"""I want you act as a copywriter. Based on the given context, which is list of strings, please generate a list of JSON objects with a `input` key.
         The `input` can either be a question or a statement that can be addressed by the given context.
 
@@ -122,7 +144,9 @@ class SynthesizerTemplate:
 
         You should NOT incorporate any prior knowledge you have and take each context at face value.
         You MUST include at least one statement as the input.
-        `input` MUST be a STRING.
+        {input_format_section}
+        {scenario_section}
+        {task_section}
         You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting reptitive.
         **
 
