@@ -63,18 +63,17 @@ class ContextualRelevancyMetric(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.verdicts: List[ContextualRelevancyVerdict] = (
-                    self._generate_verdicts(
-                        test_case.input, test_case.retrieval_context
-                    )
-                )
+                self.verdicts_list: List[ContextualRelevancyVerdicts] = [
+                    (self._generate_verdicts(test_case.input, context))
+                    for context in test_case.retrieval_context
+                ]
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        f"Verdicts:\n{prettify_list(self.verdicts_list)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
@@ -96,9 +95,12 @@ class ContextualRelevancyMetric(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.verdicts: List[ContextualRelevancyVerdict] = (
-                await self._a_generate_verdicts(
-                    test_case.input, test_case.retrieval_context
+            self.verdicts_list: List[ContextualRelevancyVerdicts] = (
+                await asyncio.gather(
+                    *[
+                        self._a_generate_verdicts(test_case.input, context)
+                        for context in test_case.retrieval_context
+                    ]
                 )
             )
             self.score = self._calculate_score()
@@ -107,7 +109,7 @@ class ContextualRelevancyMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Verdicts:\n{prettify_list(self.verdicts)}",
+                    f"Verdicts:\n{prettify_list(self.verdicts_list)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
@@ -119,13 +121,18 @@ class ContextualRelevancyMetric(BaseMetric):
             return None
 
         irrelevancies = []
-        for verdict in self.verdicts:
-            if verdict.verdict.lower() == "no":
-                irrelevancies.append(verdict.reason)
+        relevant_statements = []
+        for verdicts in self.verdicts_list:
+            for verdict in verdicts.verdicts:
+                if verdict.verdict.lower() == "no":
+                    irrelevancies.append(verdict.reason)
+                else:
+                    relevant_statements.append(verdict.statement)
 
         prompt: dict = ContextualRelevancyTemplate.generate_reason(
             input=input,
             irrelevancies=irrelevancies,
+            relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
@@ -147,9 +154,10 @@ class ContextualRelevancyMetric(BaseMetric):
             return None
 
         irrelevancies = []
-        for verdict in self.verdicts:
-            if verdict.verdict.lower() == "no":
-                irrelevancies.append(verdict.reason)
+        for verdicts in self.verdicts_list:
+            for verdict in verdicts.verdicts:
+                if verdict.verdict.lower() == "no":
+                    irrelevancies.append(verdict.reason)
 
         prompt: dict = ContextualRelevancyTemplate.generate_reason(
             input=input,
@@ -171,77 +179,63 @@ class ContextualRelevancyMetric(BaseMetric):
                 return data["reason"]
 
     def _calculate_score(self):
-        total_verdicts = len(self.verdicts)
+        total_verdicts = 0
+        relevant_statements = 0
+        for verdicts in self.verdicts_list:
+            for verdict in verdicts.verdicts:
+                total_verdicts += 1
+                if verdict.verdict.lower() == "yes":
+                    relevant_statements += 1
+
         if total_verdicts == 0:
             return 0
 
-        relevant_nodes = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
-                relevant_nodes += 1
-
-        score = relevant_nodes / total_verdicts
+        score = relevant_statements / total_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
 
-    async def _a_generate_verdict(
-        self, prompt: str
-    ) -> ContextualRelevancyVerdict:
+    async def _a_generate_verdicts(
+        self, input: str, context: List[str]
+    ) -> ContextualRelevancyVerdicts:
+        prompt = ContextualRelevancyTemplate.generate_verdicts(
+            input=input, context=context
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            return ContextualRelevancyVerdict(**data)
+            return ContextualRelevancyVerdicts(**data)
         else:
             try:
                 res = await self.model.a_generate(
-                    prompt, schema=ContextualRelevancyVerdict
+                    prompt, schema=ContextualRelevancyVerdicts
                 )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return ContextualRelevancyVerdict(**data)
-
-    async def _a_generate_verdicts(
-        self, text: str, retrieval_context: List[str]
-    ) -> ContextualRelevancyVerdict:
-        tasks = []
-        for context in retrieval_context:
-            prompt = ContextualRelevancyTemplate.generate_verdict(
-                text=text, context=context
-            )
-            task = asyncio.create_task(self._a_generate_verdict(prompt))
-            tasks.append(task)
-        verdicts = await asyncio.gather(*tasks)
-        return verdicts
+                return ContextualRelevancyVerdicts(**data)
 
     def _generate_verdicts(
-        self, text: str, retrieval_context: List[str]
-    ) -> List[ContextualRelevancyVerdict]:
-        verdicts: List[ContextualRelevancyVerdict] = []
-        for context in retrieval_context:
-            prompt = ContextualRelevancyTemplate.generate_verdict(
-                text=text, context=context
-            )
-            if self.using_native_model:
-                res, cost = self.model.generate(prompt)
-                self.evaluation_cost += cost
+        self, input: str, context: str
+    ) -> ContextualRelevancyVerdicts:
+        prompt = ContextualRelevancyTemplate.generate_verdicts(
+            input=input, context=context
+        )
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return ContextualRelevancyVerdicts(**data)
+        else:
+            try:
+                res = self.model.generate(
+                    prompt, schema=ContextualRelevancyVerdicts
+                )
+                return res
+            except TypeError:
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdict = ContextualRelevancyVerdict(**data)
-            else:
-                try:
-                    res = self.model.generate(
-                        prompt, schema=ContextualRelevancyVerdict
-                    )
-                    verdict = res
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    verdict = ContextualRelevancyVerdict(**data)
-
-            verdicts.append(verdict)
-
-        return verdicts
+                return ContextualRelevancyVerdicts(**data)
 
     def is_successful(self) -> bool:
         if self.error is not None:

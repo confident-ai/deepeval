@@ -1,5 +1,7 @@
 import pytest
-from deepeval.metrics.contextual_relevancy.schema import Verdicts
+from deepeval.metrics.contextual_relevancy.schema import (
+    ContextualRelevancyVerdicts,
+)
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import ContextualRelevancyMetric
 from deepeval import assert_test
@@ -30,16 +32,16 @@ def test_contextual_relevancy():
         expected_output=output,
         retrieval_context=[one, two, three],
     )
-    metric = ContextualRelevancyMetric()
+    metric = ContextualRelevancyMetric(verbose_mode=True, async_mode=False)
     assert_test(test_case, [metric])
 
 
 def test_verdict_schema():
 
     judge = CustomJudge("mock")
-    schema = Verdicts
+    schema = ContextualRelevancyVerdicts
     answer = (
-        '{\n"verdicts": [\n{\n"verdict": "yes"\n},\n{\n    "verdict": "no",\n    "reason": "blah blah"\n},'
-        '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}'
+        '{\n"verdicts": [\n{\n"verdict": "yes",\n   "statement": "blah blah"\n},\n{\n    "verdict": "no",\n   "statement": "blah blah",\n    "reason": "blah blah"\n},'
+        '\n{\n    "verdict": "yes",\n   "statement": "blah blah",\n    "reason":null \n}\n]\n}'
     )
-    res: Verdicts = judge.generate(answer, schema=schema)
+    res: ContextualRelevancyVerdicts = judge.generate(answer, schema=schema)

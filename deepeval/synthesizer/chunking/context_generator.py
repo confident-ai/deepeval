@@ -481,6 +481,7 @@ class ContextGenerator:
             ) / 4
             return score
         else:
+
             try:
                 res: ContextScore = await self.model.a_generate(
                     prompt, schema=ContextScore
@@ -489,7 +490,7 @@ class ContextGenerator:
                     res.clarity + res.depth + res.structure + res.relevance
                 ) / 4
             except TypeError:
-                res, _ = await self.model.a_generate(prompt)
+                res: ContextScore = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 score = (
                     data["clarity"]
