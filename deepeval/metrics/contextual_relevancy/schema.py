@@ -3,11 +3,12 @@ from pydantic import BaseModel, Field
 
 
 class ContextualRelevancyVerdict(BaseModel):
+    statement: str
     verdict: str
     reason: Optional[str] = Field(default=None)
 
 
-class Verdicts(BaseModel):
+class ContextualRelevancyVerdicts(BaseModel):
     verdicts: List[ContextualRelevancyVerdict]
 
 
