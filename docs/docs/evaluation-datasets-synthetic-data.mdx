@@ -10,15 +10,110 @@ DeepEval's `Synthesizer` offers a **fast and easy to automatically get started w
 
 The `Synthesizer` class is a synthetic data generator that first uses an LLM to generate a series of `input`s, before evolving each `input` to make them more complex and realistic. These evolved inputs are then used to create a list of synthetic `Golden`s, which makes up your synthetic `EvaluationDataset`.
 
-:::tip Did You Know?
+:::info Did You Know?
 `deepeval`'s `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244)
 
 For those interested, here is a [great article on how `deepeval`'s synthesizer was built.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
 :::
 
-## Creating An Synthesizer
+## Synthesizer Methods Overview
 
-`deepeval`'s `Synthesizer` can be used as a standalone or within an `EvaluationDataset`. To begin, create a `Synthesizer`:
+There are 3 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
+
+1. Generating synthetic `Golden`s using **context extracted from documents.**
+2. Generating synthetic `Golden`s from a **list of provided context.**
+3. Generating synthetic `Golden`s from **scratch**
+
+### 1. Generating `Golden`s from documents
+
+If your application is a Retrieval-Augmented Generation (RAG) system, generating Goldens from documents can be particularly useful, especially if you already have access to the **documents that make up your knowledge base**. By simply providing these documents, the Synthesizer will automatically handle generating the relevant contexts needed for synthesizing test Goldens.
+
+To generate contexts from user-provided documents, the documents are first split into chunks and embedded to form a collection of nodes. Random nodes are then selected, and for each selected node, similar nodes are retrieved and grouped together to create contexts. These contexts are then used to generate synthetic inputs and outputs, which are evolved to form your Golden test dataset.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "start",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/generate_from_docs.png"
+    alt="LangChain"
+    style={{
+      marginTop: "-20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+:::tip
+When generating contexts from document chunks, you'll need to consider parameters such as `chunk_size` and `chunk_overlap`, as well as which embedding models to use, and how you'll want to qualify the selected chunks. For more details, see this guide: [Using the Synthesizer](guides-using-synthesizer).
+:::
+
+### 2. Generating `Golden`s from contexts
+
+If you already have access to prepared contexts, you can skip the document processing step entirely. Instead, simply provide these contexts to the Synthesizer, and it will handle generating the Goldens directly without the need to process documents.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "start",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/generate_from_contexts.png"
+    alt="LangChain"
+    style={{
+      marginTop: "-20px",
+      marginBottom: "-40px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+### 3. Generating `Golden`s from scratch
+
+You can also generate synthetic Goldens from scratch, without needing any documents or contexts. Simply provide the task (the goal of your application), the scenario (the environment or context in which a user interacts), and the desired input format (e.g. web search, text-to-SQL query, conversation). This way, you can customize the Goldens to reflect exactly **how you want users to interact with your system**.
+
+:::info
+This approach is particularly useful if your LLM application **doesn’t rely on RAG** or if you want to **test your LLM on queries beyond the existing knowledge base**.
+:::
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "start",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/generate_from_scratch.png"
+    alt="LangChain"
+    style={{
+      marginTop: "-20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Imagine you want to test how well your LLM chatbot can handle text-to-SQL requests. A great place to start is by generating examples from scratch. In this case, you'd want to generate Goldens where the inputs are natural language questions that need to be converted into SQL queries using the following parameters:
+
+- `task`: answering text-to-SQL queries by accessing a database and returning the results
+- `scenario`: non-technical users trying to query the database using plain English
+- `input_format`: plain english text-to-SQL queries
+
+:::note
+Note that you can also specify the scenario, task, input format, and expected output format **when generating from documents or contexts**. However, unlike those methods, you **won’t be able to generate the expected output** when starting from scratch, as there is no context to serve as the ground truth reference.
+:::
+
+## Creating a Synthesizer
+
+DeepEval's synthesizer can be used as a standalone or within an `EvaluationDataset`. To start generating Goldens using the synthesizer as a standalone, begin by creating a `Synthesizer` object:
 
 ```python
 from deepeval.synthesizer import Synthesizer
@@ -28,31 +123,114 @@ synthesizer = Synthesizer()
 
 There are nine optional parameters when creating a `Synthesizer`:
 
+- [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
+
+### Model Parameters
+
+These parameters allow you to specify which model to use for generating synthetic inputs from contexts and evolving them (`model`), which model to use for filtering during context generation and synthetic input generation (`critic_model`), and which model to use for transforming your document chunks (`embedder`).
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+class CustomSynthesizerModel(DeepEvalBaseLLM):
+...
+
+synthesizer = Synthesizer(
+    model=CustomSynthesizerModel(),
+    critic_model="gpt-4o",
+    embedder="text-embedding-ada-002",
+)
+```
+
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 - [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use for quality filtering, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `embedder`: a string specifying which of OpenAI's embedding models to use, **OR** [any custom embedding model](#using-a-custom-embedding-model) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
-- [Optional] `context_quality_threshold`: a float representing the minimum quality for context selection. If the context quality is lower than this threshold, the context will be rejected. Defaulted to `0.5`.
-- [Optional] `context_similarity_threshold`: a float representing the minimum similarity score required for context matching. Contexts with similarity scores lower than this threshold will not be used. Defaulted to `0.5`.
-- [Optional] `context_max_retries`: an integer that specifies the number of times to retry context generation if it does not meet the required quality or similarity threshold. Defaulted to `3`.
-- [Optional] `synthetic_input_quality_threshold`: a float representing the minimum quality threshold for synthetic input generation. Inputs with lower quality will be rejected. Defaulted to `0.5`.
-- [Optional] `synthetic_input_max_retries`: an integer that specifies the number of times to retry synthetic input generation if it does not meet the required quality. Defaulted to `3`.
 
 :::info
 As you'll learn later, an embedding model is only used when using the `generate_goldens_from_docs()` method, so don't worry about the `embedder` parameter too much unless you're looking to use your own embedding model.
 :::
 
-## Using Synthesizer As A Standalone
+### Filtering Parameters
 
-There are 3 approaches a `deepeval`'s `Synthesizer` can generate synthetic `Golden`s:
+These parameters allow you to control the quality of both context generation and synthetic input generation by configuring quality thresholds and max retry settings.
 
-1. Generating synthetic `Golden`s using **context extracted from documents.**
-2. Generating synthetic `Golden`s from a **list of provided context.**
-3. Generating synthetic `Golden`s from **scratch**
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer(
+    context_quality_threshold=0.6,
+    context_similarity_threshold=0.7,
+    context_max_retries=4,
+    synthetic_input_quality_threshold=0.8,
+    synthetic_input_max_retries=5,
+)
+```
+
+#### Context Filtering:
+
+:::note
+Context filtering is only applicable when using the `generate_from_docs` method.
+:::
+
+- [Optional] `context_quality_threshold`: a float representing the minimum quality threshold for context selection. If the context quality is lower than this threshold, the context will be rejected. Defaulted to `0.5`.
+- [Optional] `context_similarity_threshold`: a float representing the minimum similarity score required for context matching (via cosine similarity). Contexts with similarity scores lower than this threshold will not be used. Defaulted to `0.5`.
+- [Optional] `context_max_retries`: an integer that specifies the number of times to retry context generation if it does not meet the required quality or similarity threshold. Defaulted to `3`.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "start",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/filtering_context.png"
+    alt="LangChain"
+    style={{
+      marginTop: "-20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+#### Synthetic Input Filtering:
+
+- [Optional] `synthetic_input_quality_threshold`: a float representing the minimum quality threshold for synthetic input generation. Inputs with lower quality will be rejected. Defaulted to `0.5`.
+- [Optional] `synthetic_input_max_retries`: an integer that specifies the number of times to retry synthetic input generation if it does not meet the required quality. Defaulted to `3`.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "start",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/filtering_input.png"
+    alt="LangChain"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+
+</div>
+
+It's important to note that if the quality scores for both the input and context do not meet the required thresholds after the allowed maximum retries, the most recent generation will be used. As a result, you may find generated Goldens that do not meet the minimum thresholds in your final evaluation dataset.
+
+:::info
+To learn more about how scores for **context quality** and **input quality** are generated, [see this guide](#guides-using-synthesizer).
+:::
+
+## Generating Goldens
+
+Once you've created a `Synthesizer` object with the desired filtering parameters and models, you can begin generating Goldens.
 
 ### 1. Generating From Documents
 
-:::caution
+:::note
 You must install `chromadb` v0.5.3 as an additional dependency when generating from documents. The use of a vector database allows for for faster indexing and retrieval of chunks during generation.
 
 ```python
@@ -79,15 +257,24 @@ There are one mandatory and eleven optional parameters when using the `generate_
 - [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
 - [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered for context extraction within each document. Defaulted to 1024.
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during context extraction. Defaulted to 0.
-- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
-- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal percentage.
-- [Optional] `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM to be evaluated.
-- [Optional] `task`: a string, representing the purpose of evaluating the target LLM, outlining the specific goal or focus of the evaluation.
-- [Optional] `input_format`: a string, representing the structure and format of the synthetic input, allowing for precise control over how the inputs are organized.
-- [Optional] `expected_output_format`: a string, representing the structure and format of the synthetic expected output.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the complexity and diversity of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
+- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal probability.
+- [Optional] `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM.
+- [Optional] `task`: a string, representing task or purpose of the target LLM.
+- [Optional] `input_format`: a string, representing the ideal structure and format of the inputs to be generated.
+- [Optional] `expected_output_format`: a string, representing the ideal structure and format of the expected outputs to be generated.
 
-:::info
-`Evolution` is an `ENUM` that specifies the different data evolution techniques you wish to employee to make synthetic `Golden`s more realistic.
+#### Context Generation:
+
+A **token-based text splitter** is used to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach ensures contexts are meaningful and coherent, but might lead to variations in the expected size of each `context`.
+
+:::caution
+The synthesizer will raise an error if `chunk_size` is too large to generate n=`max_contexts_per_document` unique contexts.
+:::
+
+#### Evolutions:
+
+`Evolution` is an `ENUM` that specifies the different data evolution techniques you wish to employee to make synthetic `Golden`s more realistic. DeepEval's synthesizer supports 7 types of evolutions, which are randomly sampled based on a defined distribution. You can apply multiple evolutions to each Golden, and later access the evolution sequence through the Golden's additional metadata field.
 
 ```python
 from deepeval.synthesizer import Evolution
@@ -103,21 +290,73 @@ available_evolutions = {
 }
 ```
 
+For example, a Golden might take the following evolution route when `num_evolutions` is set to 2 and `evolutions` is a dictionary containing `Evolution.IN_BREADTH`, `Evolution.COMPARATIVE`, and `Evolution.REASONING`, with sampling probabilities of 0.4, 0.2, and 0.4, respectively:
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/evolutions.png"
+    alt="LangChain"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "400px",
+    }}
+  />
+
+</div>
+
+:::info
 For those interested in what these evolutions mean, you can [read this article here.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
 :::
 
-The `generate_goldens_from_docs` method employs a token-based text splitter to manage document chunking, meaning the `chunk_size` and `chunk_overlap` parameters do not guarantee exact context sizes. This approach is designed to ensure **meaningful and coherent context extraction**, but might lead to variations in the expected size of each `context`.
+#### Prompt Customization:
 
-:::caution
-The synthesizer will raise an error if `chunk_size` is too large for required `max_contexts_per_document`, and suggest **the appropriate number of chunks** to use.
-:::
+You can also customize the input and expected output for each golden by configuring the scenario, task, and input format parameters, which control the synthetic input, while the expected_output format controls the synthetic expected output.
+
+For example, the following example demonstrates how to use the `Synthesizer` to generate synthetic Goldens for a **text-to-SQL** use case by leveraging the table schema from the context:
+
+```python
+synthesizer.generate_goldens_from_docs(
+    document_paths=['example.txt', 'example.docx', 'example.pdf'],
+    scenario="Non-technical users trying to query a database using plain English instructions",
+    task="Answering text-to-SQL-related queries by querying a database and returning the results to users",
+    input_format="English instructions for retrieving information from a database",
+    expected_output_format="SQL query based on the given input"
+)
+```
+
+The scenario, task, and input format parameters are used to enforce the input structure during generation and after all the evolutions have been performed. The output is then generated from the final evolved input, with the output format enforced.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "start",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/synthesizer_customization.png"
+    alt="LangChain"
+    style={{
+      height: "auto",
+      maxHeight: "800px",
+    }}
+/>
+
+</div>
 
 ### 2. Generating From Provided Contexts
 
 `deepeval` also allows you to generate synthetic `Goldens` from a manually provided a list of context instead of directly generating from your documents.
 
 :::tip
-This is especially helpful if you already have an embedded knowledge base. For example, if you already have documents parsed and stored in an existing vector database, you may consider handling the logic to retrieve text chunks yourself.
+This is especially helpful if you **already have an embedded knowledge base**. For example, if you already have documents parsed and stored in an existing vector database, you may consider handling the logic to retrieve text chunks yourself.
 :::
 
 ```python
@@ -138,20 +377,16 @@ There are one mandatory and seven optional parameters when using the `generate_g
 - `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
 - [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
-- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
-- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal percentage.
-- [Optional] `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM to be evaluated.
-- [Optional] `task`: a string, representing the purpose of evaluating the target LLM, outlining the specific goal or focus of the evaluation.
-- [Optional] `input_format`: a string, representing the structure and format of the synthetic input, allowing for precise control over how the inputs are organized.
-- [Optional] `expected_output_format`: a string, representing the structure and format of the synthetic expected output.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the complexity and diversity of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
+- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal probability.
+- [Optional] `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM.
+- [Optional] `task`: a string, representing task or purpose of the target LLM.
+- [Optional] `input_format`: a string, representing the ideal structure and format of the inputs to be generated.
+- [Optional] `expected_output_format`: a string, representing the ideal structure and format of the expected outputs to be generated.
 
 ### 3. Generating From Scratch
 
-If you do not have a list of example prompts, or wish to solely rely on an LLM generation for synthesis, you can also generate synthetic `Golden`s simply by specifying the subject, task, and output format you wish your prompts to follow.
-
-:::tip
-Generating goldens from scratch is especially helpful when you wish to **evaluate your LLM on a specific task**, such as red-teaming or text-to-SQL use cases!
-:::
+If you do not have a list of example prompts, or wish to solely rely on an LLM generation for synthesis, you can also generate synthetic `Golden`s simply by specifying the scenario, task, and input format you wish your synthetic inputs to follow.
 
 ```python
 from deepeval.synthesizer import Synthesizer
@@ -166,20 +401,18 @@ synthesizer.generate_goldens_from_scratch(
 )
 ```
 
-This method is a **2-step function** that first generates a list of prompts about a given subject for a certain task and in a certain output format, before using the generated list of prompts to generate more prompts through data evolution.
-
 :::info
-The subject, task, and output format parameters are all strings that are inserted into a predefined prompt template, meaning these parameters are **flexible and will need to be iterated on** for optimal results.
+The scenario, task, and input format parameters are inserted into a pre-defined prompt template and will **need to be iterated** upon for optimal results.
 :::
 
 There are four mandatory and three optional parameters when using the `generate_goldens_from_docs` method:
 
-- `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM to be evaluated.
-- `task`: a string, representing the purpose of evaluating the target LLM, outlining the specific goal or focus of the evaluation.
-- `input_format`: a string, representing the structure and format of the synthetic input, allowing for precise control over how the inputs are organized.
-- `num_initial_goldens`: the number of goldens generated before consequent evolutions.
-- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated prompt. This parameter controls the **complexity and diversity** of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
-- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s (except `MULTICONTEXT`) with equal percentage.
+- `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM.
+- `task`: a string, representing task or purpose of the target LLM.
+- `input_format`: a string, representing the ideal structure and format of the inputs to be generated.
+- `num_initial_goldens`: the number of initial goldens generated before consequent evolutions.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated prompt. This parameter controls the complexity and diversity of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
+- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s (except `MULTICONTEXT`) with equal probability.
 
 ## Convert to DataFrame
 
@@ -194,7 +427,7 @@ print(dataframe)
 
 Here’s an example of what the resulting DataFrame might look like:
 
-| input                                          | actual_output | expected_output | context                                                               | retrieval_context | n_chunks_per_context | context_length | context_quality | synthetic_input_quality | evolutions | source_file |
+| <div style={{width: "200px"}}>input</div>      | actual_output | expected_output | <div style={{width: "280px"}}>input</div>                             | retrieval_context | n_chunks_per_context | context_length | context_quality | synthetic_input_quality | evolutions | source_file |
 | ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | -------------------- | -------------- | --------------- | ----------------------- | ---------- | ----------- |
 | Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                    | 60             | 0.5             | 0.6                     | None       | file1.txt   |
 | What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                    | 55             | 0.4             | 0.9                     | None       | file2.txt   |
@@ -248,20 +481,6 @@ Or, to `generate_goldens`:
 ...
 
 dataset.generate_goldens(
-    synthesizer=synthesizer,
-    contexts=[
-        ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
-        ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
-    ]
-)
-```
-
-Or, to `generate_red_teaming_goldens`:
-
-```python
-...
-
-dataset.generate_red_teaming_goldens(
     synthesizer=synthesizer,
     contexts=[
         ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
