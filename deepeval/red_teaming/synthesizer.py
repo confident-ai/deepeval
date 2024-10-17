@@ -32,6 +32,9 @@ from deepeval.red_teaming.attack_enhancements import (
     PromptInjection,
     PromptProbing,
     Rot13,
+    MathProblem,
+    Multilingual,
+    JailbreakingCrescendo
 )
 
 
@@ -356,6 +359,26 @@ class AttackSynthesizer:
             ).enhance(attack_input)
             attack.input = enhanced_attack
 
+        elif attack_enhancement == AttackEnhancement.MATH_PROBLEM:
+            enhanced_attack = MathProblem(
+                self.synthesizer_model, self.using_native_model
+            ).enhance(attack_input)
+            attack.input = enhanced_attack
+
+        elif attack_enhancement == AttackEnhancement.MULTILINGUAL:
+            enhanced_attack = Multilingual(
+                self.synthesizer_model, self.using_native_model
+            ).enhance(attack_input)
+            attack.input = enhanced_attack
+        
+        elif attack_enhancement == AttackEnhancement.JAILBREAK_CRESCENDO:
+            enhanced_attack = JailbreakingCrescendo(
+                self.target_model,
+                self.synthesizer_model,
+                self.using_native_model,
+            ).enhance(attack_input)
+            attack.input = enhanced_attack
+
         attack.additional_metadata["attack enhancement"] = (
             attack_enhancement.value
         )
@@ -407,6 +430,26 @@ class AttackSynthesizer:
 
         elif attack_enhancement == AttackEnhancement.JAILBREAK_TREE:
             enhanced_attack = await JailbreakingTree(
+                self.target_model,
+                self.synthesizer_model,
+                self.using_native_model,
+            ).a_enhance(attack_input)
+            attack.input = enhanced_attack
+
+        elif attack_enhancement == AttackEnhancement.MATH_PROBLEM:
+            enhanced_attack = await MathProblem(
+                self.synthesizer_model, self.using_native_model
+            ).a_enhance(attack_input)
+            attack.input = enhanced_attack
+
+        elif attack_enhancement == AttackEnhancement.MULTILINGUAL:
+            enhanced_attack = await Multilingual(
+                self.synthesizer_model, self.using_native_model
+            ).a_enhance(attack_input)
+            attack.input = enhanced_attack
+
+        elif attack_enhancement == AttackEnhancement.JAILBREAK_CRESCENDO:
+            enhanced_attack = await JailbreakingCrescendo(
                 self.target_model,
                 self.synthesizer_model,
                 self.using_native_model,

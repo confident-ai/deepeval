@@ -8,6 +8,6 @@ class EnhancedAttack(BaseModel):
 class ComplianceData(BaseModel):
     non_compliant: bool
 
+class IsMathProblem(BaseModel):
+    is_math_problem: bool
 
-class IsPromptProbing(BaseModel):
-    is_prompt_probing: bool

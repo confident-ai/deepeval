@@ -141,20 +141,21 @@ def main():
         target_purpose="A friendly chatbot",
         target_system_prompt="You are a friendly chatbot.",
         evaluation_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
-        synthesizer_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
-        # evaluation_model="gpt-3.5-turbo-0125",
-        # synthesizer_model="gpt-3.5-turbo-0125",
+        synthesizer_model=SchematicGPTModel("gpt-4o"),
         async_mode=False,
     )
     results = red_teamer.scan(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
         attacks_per_vulnerability=1,
-        # attack_enhancements={AttackEnhancement.JAILBREAK_LINEAR: 1},
-        # v ulnerabilities=[Vulnerability.BIAS],
+        attack_enhancements={AttackEnhancement.JAILBREAK_CRESCENDO: 1},
+        vulnerabilities=[v for v in Vulnerability][0:2],
     )
-    print(results)
     df = red_teamer.vulnerability_scores_breakdown
-    print(df)
+    print(results)
+    for index, row in df.iterrows():
+        print(f"Input: {row['Input']}")
+        print(f"Target Output: {row['Target Output']}")
+        print("**********************************************************")
 
 
 if __name__ == "__main__":

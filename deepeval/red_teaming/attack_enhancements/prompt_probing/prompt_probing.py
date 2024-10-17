@@ -5,7 +5,7 @@ from deepeval.red_teaming.attack_enhancements.base import AttackEnhancement
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
 from deepeval.models import DeepEvalBaseLLM
 from .template import PromptProbingTemplate
-from .schema import EnhancedAttack, ComplianceData
+from .schema import EnhancedAttack, ComplianceData, IsPromptProbing
 
 
 class PromptProbing(AttackEnhancement):
@@ -26,7 +26,7 @@ class PromptProbing(AttackEnhancement):
 
         # Progress bar for retries (total count is double the retries: 1 for generation, 1 for compliance check)
         with tqdm(
-            total=max_retries * 2,
+            total=max_retries * 3,
             desc="...... 🔎 Prompt Probing",
             unit="step",
             leave=False,
@@ -49,8 +49,13 @@ class PromptProbing(AttackEnhancement):
                 )
                 pbar.update(1)  # Update the progress bar for compliance
 
-                if not compliance_res.non_compliant:
-                    # If it's compliant, return the enhanced attack
+                # Check if rewritten prompt is a prompt probing attack
+                is_prompt_probing_prompt = PromptProbingTemplate.is_prompt_probing(res.model_dump())
+                is_prompt_probing_res: IsPromptProbing = self._generate_schema(is_prompt_probing_prompt, IsPromptProbing)
+                pbar.update(1)  # Update the progress bar
+
+                if not compliance_res.non_compliant and is_prompt_probing_res.is_prompt_probing:
+                    # If it's compliant and is a prompt probing attack, return the enhanced prompt
                     return enhanced_attack
 
         # If all retries fail, return the original attack
@@ -66,7 +71,7 @@ class PromptProbing(AttackEnhancement):
 
         # Async progress bar for retries (double the count to cover both generation and compliance check)
         pbar = async_tqdm_bar(
-            total=max_retries * 2,
+            total=max_retries * 3,
             desc="...... 🔎 Prompt Probing",
             unit="step",
             leave=False,
@@ -90,8 +95,13 @@ class PromptProbing(AttackEnhancement):
                 )
                 pbar.update(1)  # Update the progress bar for compliance
 
-                if not compliance_res.non_compliant:
-                    # If it's compliant, return the enhanced attack
+                # Check if rewritten prompt is a prompt probing attack
+                is_prompt_probing_prompt = PromptProbingTemplate.is_prompt_probing(res.model_dump())
+                is_prompt_probing_res: IsPromptProbing = await self._a_generate_schema(is_prompt_probing_prompt, IsPromptProbing)
+                pbar.update(1)  # Update the progress bar
+
+                if not compliance_res.non_compliant and is_prompt_probing_res.is_prompt_probing:
+                    # If it's compliant and is a prompt probing attack, return the enhanced prompt
                     return enhanced_attack
 
         finally:
