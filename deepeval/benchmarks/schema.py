@@ -154,7 +154,7 @@ bbh_confinement_statements_dict = {
     "causal_judgement": "\n\nOutput 'Yes' or 'No'. Full answer not needed.",
     "date_understanding": "\n\nOutput '(A)', '(B)', '(C)', '(D)', '(E)', or '(F)'. Full answer not needed.",
     "disambiguation_qa": "\n\nOutput '(A)', '(B)', or '(C)'. Full answer not needed.",
-    "dyck_language": "\n\nOutput only the sequence of parenthases characters separated by white space. Full answer not needed.",
+    "dyck_languages": "\n\nOutput only the sequence of parenthases characters separated by white space. Full answer not needed.",
     "formal_fallacies": "\n\nOutput 'invalid' or 'valid'. Full answer not needed.",
     "geometric_shapes": "\n\nOutput '(A)', '(B)', '(C)', '(D)', '(E)', '(F)', '(G)', '(H)', '(I)', '(J)', or '(K)'. Full answer not needed.",
     "hyperbaton": "\n\nOutput '(A)' or'(B)'. Full answer not needed.",
