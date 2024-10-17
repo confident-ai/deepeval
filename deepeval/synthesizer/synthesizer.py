@@ -392,7 +392,7 @@ class Synthesizer:
 
                             # Synthesize Golden
                             golden = Golden(
-                                input=rewritten_evolved_input,
+                                input=rewritten_evolved_input or evolved_input,
                                 context=context,
                                 source_file=(
                                     source_files[i]
