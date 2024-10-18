@@ -181,15 +181,11 @@ class MMLU(DeepEvalBaseBenchmark):
         return res
 
     def load_benchmark_dataset(self, task: MMLUTask) -> List[Golden]:
-        # If dataset has been previously loaded, load from
-        # instance var (to save time)
-        if self.dataset:
-            dataset = self.dataset
-        else:
-            dataset = load_dataset(
-                "lukaemon/mmlu", task.value, trust_remote_code=True
-            )
-            self.dataset = dataset
+
+        dataset = load_dataset(
+            "lukaemon/mmlu", task.value, trust_remote_code=True
+        )
+        self.dataset = dataset
 
         # If dataset has not been previously loaded, construct
         # dataset of examples and save as instance var (to save time)
