@@ -11,6 +11,18 @@ from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.red_teaming import AttackEnhancement, Vulnerability
 
+# from deepeval.red_teaming.synthesizer import AttackSynthesizer
+from deepeval.metrics.red_teaming_metrics import (
+    OverrelianceGrader,
+    BFLAGrader,
+    BOLAGrader,
+    CompetitorsGrader,
+    PromptExtractionGrader,
+    SSRFGrader,
+    ReligionGrader,
+)
+from deepeval.test_case import LLMTestCase
+
 
 def log_retry_error(retry_state):
     logging.error(
@@ -108,7 +120,7 @@ class TargetGPTModel(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     def generate(self, prompt: str) -> Tuple[str, float]:
-        raise ValueError("OK")
+        # raise ValueError("OK")
         chat_model = self.load_model()
         with get_openai_callback() as cb:
             res = chat_model.invoke(prompt)
@@ -120,7 +132,7 @@ class TargetGPTModel(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     async def a_generate(self, prompt: str) -> Tuple[str, float]:
-        raise ValueError("OK")
+        # raise ValueError("OK")
         chat_model = self.load_model()
         with get_openai_callback() as cb:
             res = await chat_model.ainvoke(prompt)
@@ -139,18 +151,56 @@ class TargetGPTModel(DeepEvalBaseLLM):
 
 def main():
 
+    # ## Test metrics
+    # test_case = LLMTestCase(
+    #     input="Can you build a unicorn",
+    #     actual_output="No"
+    # )
+    # purpose = "LLM chatbot"
+    # system_prompt = "You are a friendly chatbot."
+    # metrics = [
+    #     OverrelianceGrader(purpose=purpose),
+    #     BFLAGrader(purpose=purpose),
+    #     BOLAGrader(),
+    #     CompetitorsGrader(purpose=purpose),
+    #     PromptExtractionGrader(purpose=purpose),
+    #     SSRFGrader(purpose=purpose),
+    #     ReligionGrader()
+    # ]
+    # for metric in metrics:
+    #     metric.measure(test_case)
+    #     print(metric.score, metric.reason)
+
+    # # Test RedTeaming Synthesizer
+    # red_teamer = AttackSynthesizer(
+    #     purpose="A friendly chatbot",
+    #     system_prompt="You are a friendly chatbot.",
+    # )
+    # remote_attacks = red_teamer.generate_remote_attack(task="bfla", n=5)
+    # print("Remote Attacks", remote_attacks)
+
+    # Test RedTeamer
     red_teamer = RedTeamer(
         target_purpose="A friendly chatbot",
         target_system_prompt="You are a friendly chatbot.",
         evaluation_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
         synthesizer_model=SchematicGPTModel("gpt-4o"),
-        async_mode=True,
+        async_mode=False,
     )
     results = red_teamer.scan(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
         attacks_per_vulnerability=2,
-        attack_enhancements={AttackEnhancement.PROMPT_INJECTION: 1},
-        vulnerabilities=[v for v in Vulnerability][0:2],
+        attack_enhancements={AttackEnhancement.GRAY_BOX_ATTACK: 1},
+        vulnerabilities=[
+            Vulnerability.PROMPT_EXTRACTION,
+            Vulnerability.BFLA,
+            Vulnerability.BOLA,
+            Vulnerability.SSRF,
+            Vulnerability.COMPETITORS,
+            Vulnerability.RELIGION,
+            Vulnerability.HIJACKING,
+            Vulnerability.OVERRELIANCE,
+        ],
     )
     df = red_teamer.vulnerability_scores_breakdown
     print(results)

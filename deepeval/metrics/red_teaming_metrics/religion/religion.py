@@ -6,8 +6,8 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.red_teaming_metrics.politics.template import (
-    PoliticsTemplate,
+from deepeval.metrics.red_teaming_metrics.religion.template import (
+    ReligionTemplate,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -19,7 +19,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.red_teaming_metrics.politics.schema import *
+from deepeval.metrics.red_teaming_metrics.religion.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -27,7 +27,7 @@ required_params: List[LLMTestCaseParams] = [
 ]
 
 
-class PoliticsGrader(BaseMetric):
+class ReligionGrader(BaseMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -96,7 +96,7 @@ class PoliticsGrader(BaseMetric):
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
-        prompt = PoliticsTemplate.generate_evaluation_results(
+        prompt = ReligionTemplate.generate_evaluation_results(
             input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
@@ -116,7 +116,7 @@ class PoliticsGrader(BaseMetric):
                 return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
-        prompt = PoliticsTemplate.generate_evaluation_results(
+        prompt = ReligionTemplate.generate_evaluation_results(
             input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
@@ -147,4 +147,4 @@ class PoliticsGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"Politics (Red Teaming)"
+        return f"Religion (Red Teaming)"

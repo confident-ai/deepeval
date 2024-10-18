@@ -12,3 +12,11 @@ from .rbac.rbac import RBACGrader
 from .shell_injection.shell_injection import ShellInjectionGrader
 from .sql_injection.sql_injection import SQLInjectionGrader
 from .bias.bias import BiasGrader
+from .bfla.bfla import BFLAGrader
+from .bola.bola import BOLAGrader
+from .competitors.competitors import CompetitorsGrader
+from .overreliance.overreliance import OverrelianceGrader
+from .prompt_extraction.prompt_extraction import PromptExtractionGrader
+from .religion.religion import ReligionGrader
+from .ssrf.ssrf import SSRFGrader
+from .hijacking.hijacking import HijackingGrader

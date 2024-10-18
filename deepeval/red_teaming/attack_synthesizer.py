@@ -1,3 +1,4 @@
+import json
 import random
 import asyncio
 import requests
@@ -10,6 +11,7 @@ from deepeval.red_teaming.types import (
     AttackEnhancement,
     Vulnerability,
     UnalignedVulnerability,
+    RemoteVulnerability,
 )
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
 from deepeval.red_teaming.template import RedTeamSynthesizerTemplate
@@ -59,6 +61,9 @@ class AttackSynthesizer:
         self.synthetic_attacks: List[Attack] = []
         self.unaligned_vulnerabilities: List[str] = [
             item.value for item in UnalignedVulnerability
+        ]
+        self.remote_vulnerabilities = [
+            item.value for item in RemoteVulnerability
         ]
 
     ##################################################
@@ -218,6 +223,28 @@ class AttackSynthesizer:
                     )
                 base_attacks.append(base_attack)
 
+        # Remote vulnerabilities
+        elif vulnerability.value in self.remote_vulnerabilities:
+            try:
+                remote_attacks = self.generate_remote_attack(
+                    vulnerability.value+"asdf", attacks_per_vulnerability
+                )
+                base_attacks.extend(
+                    [
+                        Attack(
+                            input=attack,
+                            vulnerability=vulnerability,
+                        )
+                        for attack in remote_attacks
+                    ]
+                )
+            except:
+                for _ in range(attacks_per_vulnerability):              
+                    base_attacks.append(Attack(
+                        vulnerability=vulnerability,
+                        error="Error generating aligned attacks.",
+                    ))
+
         # Aligned vulnerabilities: LLMs can generate
         else:
             prompt = RedTeamSynthesizerTemplate.generate_attacks(
@@ -298,6 +325,26 @@ class AttackSynthesizer:
                     )
 
                 base_attacks.append(base_attack)
+
+        # Remote vulnerabilities
+        elif vulnerability.value in self.remote_vulnerabilities:
+            try:
+                remote_attacks = await self.a_generate_remote_attack(
+                    vulnerability.value, attacks_per_vulnerability
+                )
+                base_attacks.extend(
+                    Attack(
+                        input=attack,
+                        vulnerability=vulnerability,
+                    )
+                    for attack in remote_attacks
+                )
+            except:
+                for _ in range(attacks_per_vulnerability):
+                    base_attacks.append(Attack(
+                        vulnerability=vulnerability,
+                        error="Error generating aligned attacks.",
+                    ))
 
         # Aligned vulnerabilities: LLMs can generate
         else:
@@ -558,7 +605,7 @@ class AttackSynthesizer:
             data = response.json()
             return data.get("output")
         except Exception as err:
-            return {"error": f"API call error: {str(err)}"}
+            raise Exception(f"Error in generating attack: {str(err)}")
 
     async def a_generate_unaligned_attack(
         self, purpose: str, vulnerability: Vulnerability
@@ -578,4 +625,60 @@ class AttackSynthesizer:
                     data = await response.json()
                     return data.get("output")
             except Exception as err:
-                return {"error": f"API call error: {str(err)}"}
+                raise Exception(f"Error in generating attack: {str(err)}")
+
+    def generate_remote_attack(self, task: str, n: int):
+        body = json.dumps(
+            {
+                "task": task,
+                "purpose": self.purpose,
+                "injectVar": "attack",
+                "n": n,
+                "config": {},
+            }
+        )
+
+        try:
+            response = requests.post(
+                url="https://api.promptfoo.dev/v1/generate",
+                headers={"Content-Type": "application/json"},
+                data=body,
+            )
+            if not response.ok:
+                raise Exception(
+                    f"Promptfoo API call failed with status {response.status_code}"
+                )
+            data = response.json()
+            results = data.get("result", [])
+            attacks = [result["vars"]["attack"] for result in results]
+            return attacks
+        except Exception as err:
+            raise Exception(f"Error in generating attack: {str(err)}")
+
+    async def a_generate_remote_attack(self, task: str, n: int):
+        body = json.dumps(
+            {
+                "task": task,
+                "purpose": self.purpose,
+                "injectVar": "attack",
+                "n": n,
+                "config": {},
+            }
+        )
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(
+                    url="https://api.promptfoo.dev/v1/generate",
+                    headers={"Content-Type": "application/json"},
+                    data=body,
+                ) as response:
+                    if response.status != 200:
+                        raise Exception(
+                            f"Promptfoo API call failed with status {response.status}"
+                        )
+                    data = await response.json()
+                    results = data.get("result", [])
+                    attacks = [result["vars"]["attack"] for result in results]
+                    return attacks
+            except Exception as err:
+                raise Exception(f"Error in generating attack: {str(err)}")
