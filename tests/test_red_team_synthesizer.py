@@ -6,7 +6,7 @@ from langchain_community.callbacks import get_openai_callback
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
 from deepeval.red_teaming import RedTeamer
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, GPTModel
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.red_teaming import AttackEnhancement, Vulnerability
@@ -108,6 +108,7 @@ class TargetGPTModel(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     def generate(self, prompt: str) -> Tuple[str, float]:
+        raise ValueError("OK")
         chat_model = self.load_model()
         with get_openai_callback() as cb:
             res = chat_model.invoke(prompt)
@@ -119,6 +120,7 @@ class TargetGPTModel(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     async def a_generate(self, prompt: str) -> Tuple[str, float]:
+        raise ValueError("OK")
         chat_model = self.load_model()
         with get_openai_callback() as cb:
             res = await chat_model.ainvoke(prompt)
@@ -142,12 +144,12 @@ def main():
         target_system_prompt="You are a friendly chatbot.",
         evaluation_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
         synthesizer_model=SchematicGPTModel("gpt-4o"),
-        async_mode=False,
+        async_mode=True,
     )
     results = red_teamer.scan(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
-        attacks_per_vulnerability=1,
-        attack_enhancements={AttackEnhancement.JAILBREAK_CRESCENDO: 1},
+        attacks_per_vulnerability=2,
+        attack_enhancements={AttackEnhancement.PROMPT_INJECTION: 1},
         vulnerabilities=[v for v in Vulnerability][0:2],
     )
     df = red_teamer.vulnerability_scores_breakdown
@@ -155,6 +157,7 @@ def main():
     for index, row in df.iterrows():
         print(f"Input: {row['Input']}")
         print(f"Target Output: {row['Target Output']}")
+        print(f"Error: {row['Error']}")
         print("**********************************************************")
 
 

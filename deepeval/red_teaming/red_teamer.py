@@ -1,10 +1,11 @@
 import asyncio
 import pandas as pd
+from pydantic import Field
 from tqdm import tqdm
 from typing import Dict, List, Optional, Union
 
 from deepeval.red_teaming.types import AttackEnhancement, Vulnerability
-from deepeval.red_teaming.synthesizer import AttackSynthesizer
+from deepeval.red_teaming.attack_synthesizer import AttackSynthesizer, Attack
 from deepeval.synthesizer.schema import *
 from deepeval.synthesizer.types import *
 from deepeval.models import DeepEvalBaseLLM
@@ -15,6 +16,16 @@ from deepeval.dataset.golden import Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import get_or_create_event_loop
 from deepeval.telemetry import capture_red_teamer_run
+
+
+class VulnerabilityResult(BaseModel):
+    vulnerability: str
+    attack_enhancement: Optional[str] = None
+    input: Optional[str] = None
+    actual_output: Optional[str] = None
+    score: Optional[int] = None
+    reason: Optional[str] = None
+    error: Optional[str] = None
 
 
 class RedTeamer:
@@ -38,6 +49,11 @@ class RedTeamer:
         )
         self.async_mode = async_mode
         self.synthetic_goldens: List[Golden] = []
+        self.attack_synthesizer = AttackSynthesizer(
+            synthesizer_model=self.synthesizer_model,
+            purpose=self.target_purpose,
+            system_prompt=self.target_system_prompt,
+        )
 
     ##################################################
     ### Scans ########################################
@@ -80,30 +96,28 @@ class RedTeamer:
                 metrics_map = self.get_red_teaming_metrics_map()
 
                 # Generate attacks
-                attacks = self.generate_attacks(
-                    target_model=target_model,
-                    attacks_per_vulnerability=attacks_per_vulnerability,
-                    vulnerabilities=vulnerabilities,
-                    attack_enhancements=attack_enhancements,
+                attacks: List[Attack] = (
+                    self.attack_synthesizer.generate_attacks(
+                        target_model=target_model,
+                        attacks_per_vulnerability=attacks_per_vulnerability,
+                        vulnerabilities=vulnerabilities,
+                        attack_enhancements=attack_enhancements,
+                    )
                 )
 
                 # Create a mapping of vulnerabilities to attacks
                 vulnerability_to_attacks_map: Dict[
-                    "Vulnerability", List["Golden"]
+                    Vulnerability, List[Attack]
                 ] = {}
                 for attack in attacks:
-                    vulnerability: Vulnerability = (
-                        attack.additional_metadata.get("vulnerability")
-                    )
-                    if vulnerability:
-                        if vulnerability not in vulnerability_to_attacks_map:
-                            vulnerability_to_attacks_map[vulnerability] = [
-                                attack
-                            ]
-                        else:
-                            vulnerability_to_attacks_map[vulnerability].append(
-                                attack
-                            )
+                    if attack.vulnerability not in vulnerability_to_attacks_map:
+                        vulnerability_to_attacks_map[attack.vulnerability] = [
+                            attack
+                        ]
+                    else:
+                        vulnerability_to_attacks_map[
+                            attack.vulnerability
+                        ].append(attack)
 
                 # Evaluate each attack by vulnerability
                 red_teaming_results = []
@@ -111,40 +125,64 @@ class RedTeamer:
 
                 pbar = tqdm(
                     vulnerability_to_attacks_map.items(),
-                    desc="📝 Evaluating attack(s)",
+                    desc=f"📝 Evaluating {len(vulnerabilities)} vulnerability(s)",
                 )
                 for vulnerability, attacks in pbar:
                     scores = []
                     for attack in attacks:
                         metric: BaseMetric = metrics_map.get(vulnerability)()
+                        result = {
+                            "Vulnerability": vulnerability.value,
+                            "Attack Enhancement": attack.attack_enhancement,
+                            "Input": attack.input,
+                            "Target Output": None,
+                            "Score": None,
+                            "Reason": None,
+                            "Error": None,
+                        }
+
+                        if attack.error:
+                            result["Error"] = attack.error
+                            red_teaming_results_breakdown.append(result)
+                            continue
+
+                        try:
+                            target_output = target_model.generate(attack.input)
+                            result["Target Output"] = target_output
+                        except Exception:
+                            result["Error"] = (
+                                "Error generating output from target LLM"
+                            )
+                            red_teaming_results_breakdown.append(result)
+                            continue
 
                         test_case = LLMTestCase(
                             input=attack.input,
-                            actual_output=target_model.generate(attack.input),
-                        )
-                        metric.measure(test_case)
-                        scores.append(metric.score)
-                        red_teaming_results_breakdown.append(
-                            {
-                                "Vulnerability": vulnerability.value,
-                                "Attack Enhancement": attack.additional_metadata.get(
-                                    "attack enhancement", "Unknown"
-                                ),  # Ensure fallback value
-                                "Input": attack.input,
-                                "Target Output": test_case.actual_output,
-                                "Score": metric.score,
-                                "Reason": metric.reason,
-                            }
+                            actual_output=target_output,
                         )
 
+                        try:
+                            metric.measure(test_case)
+                            result["Score"] = metric.score
+                            result["Reason"] = metric.reason
+                            scores.append(metric.score)
+                        except Exception:
+                            result["Error"] = (
+                                f"Error evaluating target LLM output for the '{vulnerability.value}' vulnerability"
+                            )
+                            red_teaming_results_breakdown.append(result)
+                            continue
+
+                        red_teaming_results_breakdown.append(result)
+
                     # Calculate average score for each vulnerability
-                    vulnerability_score = (
-                        sum(scores) / len(scores) if scores else 0
+                    avg_vulnerability_score = (
+                        sum(scores) / len(scores) if scores else None
                     )
                     red_teaming_results.append(
                         {
                             "Vulnerability": vulnerability.value,
-                            "Average Score": vulnerability_score,
+                            "Average Score": avg_vulnerability_score,
                         }
                     )
 
@@ -181,7 +219,7 @@ class RedTeamer:
             metrics_map = self.get_red_teaming_metrics_map()
 
             # Generate attacks
-            attacks = await self.a_generate_attacks(
+            attacks = await self.attack_synthesizer.a_generate_attacks(
                 target_model=target_model,
                 attacks_per_vulnerability=attacks_per_vulnerability,
                 vulnerabilities=vulnerabilities,
@@ -190,20 +228,16 @@ class RedTeamer:
             )
 
             # Create a mapping of vulnerabilities to attacks
-            vulnerability_to_attacks_map: Dict[
-                "Vulnerability", List["Golden"]
-            ] = {}
+            vulnerability_to_attacks_map: Dict[Vulnerability, List[Attack]] = {}
             for attack in attacks:
-                vulnerability: Vulnerability = attack.additional_metadata.get(
-                    "vulnerability"
-                )
-                if vulnerability:
-                    if vulnerability not in vulnerability_to_attacks_map:
-                        vulnerability_to_attacks_map[vulnerability] = [attack]
-                    else:
-                        vulnerability_to_attacks_map[vulnerability].append(
-                            attack
-                        )
+                if attack.vulnerability not in vulnerability_to_attacks_map:
+                    vulnerability_to_attacks_map[attack.vulnerability] = [
+                        attack
+                    ]
+                else:
+                    vulnerability_to_attacks_map[attack.vulnerability].append(
+                        attack
+                    )
 
             red_teaming_results = []
             red_teaming_results_breakdown = []
@@ -213,48 +247,58 @@ class RedTeamer:
 
             # Total number of attacks across all vulnerabilities
             total_attacks = sum(
-                len(attacks_list)
-                for attacks_list in vulnerability_to_attacks_map.values()
+                len(attacks)
+                for attacks in vulnerability_to_attacks_map.values()
             )
 
             # Create a progress bar for attack evaluations
-            pbar = tqdm(total=total_attacks, desc="📝 Evaluating attack(s)")
+            pbar = tqdm(
+                total=total_attacks,
+                desc=f"📝 Evaluating {len(vulnerabilities)} vulnerability(s)",
+            )
 
-            async def throttled_evaluate_vulnerability(
-                vulnerability, attacks_list
-            ):
+            async def throttled_evaluate_vulnerability(vulnerability, attacks):
                 async with (
                     semaphore
                 ):  # Ensures only `max_concurrent_tasks` run concurrently
-                    avg_score, vulnerability_results = (
+                    vulnerability_results = (
                         await self._a_evaluate_vulnerability(
                             target_model,
                             vulnerability,
-                            attacks_list,
+                            attacks,
                             metrics_map,
                         )
                     )
                     pbar.update(
-                        len(attacks_list)
+                        len(attacks)
                     )  # Update the progress bar by the number of attacks evaluated
-                    return avg_score, vulnerability_results
+                    return vulnerability_results
 
             # Create a list of tasks for evaluating each vulnerability, with throttling
             tasks = [
-                throttled_evaluate_vulnerability(vulnerability, attacks_list)
-                for vulnerability, attacks_list in vulnerability_to_attacks_map.items()
+                throttled_evaluate_vulnerability(vulnerability, attacks)
+                for vulnerability, attacks in vulnerability_to_attacks_map.items()
             ]
-
             # Execute tasks concurrently with throttling using asyncio.gather
-            results = await asyncio.gather(*tasks)
+            vulnerability_results_list = await asyncio.gather(*tasks)
 
             # Close the progress bar after all tasks are done
             pbar.close()
 
             # Process results
-            for (vulnerability, _), (avg_score, vulnerability_results) in zip(
-                vulnerability_to_attacks_map.items(), results
+            for (vulnerability, _), vulnerability_results in zip(
+                vulnerability_to_attacks_map.items(), vulnerability_results_list
             ):
+                valid_scores = [
+                    vulnerability_result.score
+                    for vulnerability_result in vulnerability_results
+                    if vulnerability_result.score is not None
+                ]
+                if valid_scores:
+                    avg_score = sum(valid_scores) / len(valid_scores)
+                else:
+                    avg_score = None
+
                 red_teaming_results.append(
                     {
                         "Vulnerability": vulnerability.value,
@@ -262,17 +306,16 @@ class RedTeamer:
                     }
                 )
 
-                for score, test_case, reason in vulnerability_results:
+                for vulnerability_result in vulnerability_results:
                     red_teaming_results_breakdown.append(
                         {
-                            "Vulnerability": vulnerability.value,
-                            "Attack Enhancement": test_case.additional_metadata.get(
-                                "attack enhancement", "Unknown"
-                            ),
-                            "Input": test_case.input,
-                            "Target Output": test_case.actual_output,
-                            "Score": score,
-                            "Reason": reason,
+                            "Vulnerability": vulnerability_result.vulnerability,
+                            "Attack Enhancement": vulnerability_result.attack_enhancement,
+                            "Input": vulnerability_result.input,
+                            "Target Output": vulnerability_result.actual_output,
+                            "Score": vulnerability_result.score,
+                            "Reason": vulnerability_result.reason,
+                            "Error": vulnerability_result.error,
                         }
                     )
 
@@ -288,131 +331,67 @@ class RedTeamer:
 
             return red_teaming_results_df
 
-    async def _a_evaluate_golden(
+    async def _a_attack(
         self,
-        attack: Golden,
         target_model: DeepEvalBaseLLM,
+        attack: Attack,
         vulnerability: Vulnerability,
         metrics_map,
-    ):
-        metric: BaseMetric = metrics_map[vulnerability]()
-        # Generate actual output using the 'input'
-        actual_output = await target_model.a_generate(attack.input)
-
-        # No need to create another object for the enhancement if not required
-        attack_enhancement = attack.additional_metadata.get(
-            "attack enhancement", "Unknown"
+    ) -> VulnerabilityResult:
+        result = VulnerabilityResult(
+            input=attack.input,
+            vulnerability=vulnerability,
+            attack_enhancement=attack.attack_enhancement,
         )
+
+        if attack.error is not None:
+            result.error = attack.error
+            return result
+
+        metric: BaseMetric = metrics_map[vulnerability]()
+        try:
+            # Generate actual output using the 'input'
+            actual_output = await target_model.a_generate(attack.input)
+            result.actual_output = await target_model.a_generate(attack.input)
+        except:
+            result.error = "Error generating output from target LLM"
+            return result
 
         test_case = LLMTestCase(
             input=attack.input,
             actual_output=actual_output,
-            additional_metadata={"attack enhancement": attack_enhancement},
         )
 
-        await metric.a_measure(test_case)
-        return metric.score, test_case, metric.reason
+        try:
+            await metric.a_measure(test_case)
+            result.score = metric.score
+            result.reason = metric.reason
+        except:
+            result.error = f"Error evaluating target LLM output for the '{vulnerability.value}' vulnerability"
+            return result
+
+        return result
 
     async def _a_evaluate_vulnerability(
         self,
         target_model: DeepEvalBaseLLM,
         vulnerability: Vulnerability,
-        attacks_list: List[Golden],
+        attacks: List[Attack],
         metrics_map,
-    ):
-        tasks = [
-            self._a_evaluate_golden(
-                attack, target_model, vulnerability, metrics_map
-            )
-            for attack in attacks_list
-        ]
-        results = await asyncio.gather(*tasks)
+    ) -> List[VulnerabilityResult]:
+        results = await asyncio.gather(
+            *[
+                self._a_attack(
+                    target_model=target_model,
+                    attack=attack,
+                    vulnerability=vulnerability,
+                    metrics_map=metrics_map,
+                )
+                for attack in attacks
+            ]
+        )
 
-        # Calculate the average score
-        avg_score = sum(score for score, _, _ in results) / len(results)
-        return avg_score, results
-
-    ##################################################
-    ### Generating Attacks ###########################
-    ##################################################
-
-    def generate_attacks(
-        self,
-        target_model: DeepEvalBaseLLM,
-        attacks_per_vulnerability: int,
-        vulnerabilities: List[Vulnerability],
-        attack_enhancements: Dict[AttackEnhancement, float] = {
-            AttackEnhancement.BASE64: 1 / 11,
-            AttackEnhancement.GRAY_BOX_ATTACK: 1 / 11,
-            AttackEnhancement.JAILBREAK_CRESCENDO: 1 / 11,
-            AttackEnhancement.JAILBREAK_LINEAR: 1 / 11,
-            AttackEnhancement.JAILBREAK_TREE: 1 / 11,
-            AttackEnhancement.LEETSPEAK: 1 / 11,
-            AttackEnhancement.PROMPT_INJECTION: 1 / 11,
-            AttackEnhancement.PROMPT_PROBING: 1 / 11,
-            AttackEnhancement.ROT13: 1 / 11,
-            AttackEnhancement.MATH_PROBLEM: 1 / 11,
-            AttackEnhancement.MULTILINGUAL: 1 / 11,
-        },
-    ) -> List[Golden]:
-        with capture_red_teamer_run(
-            f"generate {attacks_per_vulnerability * len(vulnerabilities)} goldens"
-        ):
-            attack_synthesizer = AttackSynthesizer(
-                target_model=target_model,
-                synthesizer_model=self.synthesizer_model,
-                async_mode=self.async_mode,
-                purpose=self.target_purpose,
-                system_prompt=self.target_system_prompt,
-            )
-            attacks = attack_synthesizer.generate_attacks(
-                attacks_per_vulnerability=attacks_per_vulnerability,
-                vulnerabilities=vulnerabilities,
-                attack_enhancements=attack_enhancements,
-            )
-            return attacks
-
-    async def a_generate_attacks(
-        self,
-        target_model: DeepEvalBaseLLM,
-        attacks_per_vulnerability: int,
-        vulnerabilities: List[Vulnerability],
-        attack_enhancements: Dict[AttackEnhancement, float] = {
-            AttackEnhancement.BASE64: 1 / 11,
-            AttackEnhancement.GRAY_BOX_ATTACK: 1 / 11,
-            AttackEnhancement.JAILBREAK_CRESCENDO: 1 / 11,
-            AttackEnhancement.JAILBREAK_LINEAR: 1 / 11,
-            AttackEnhancement.JAILBREAK_TREE: 1 / 11,
-            AttackEnhancement.LEETSPEAK: 1 / 11,
-            AttackEnhancement.PROMPT_INJECTION: 1 / 11,
-            AttackEnhancement.PROMPT_PROBING: 1 / 11,
-            AttackEnhancement.ROT13: 1 / 11,
-            AttackEnhancement.MATH_PROBLEM: 1 / 11,
-            AttackEnhancement.MULTILINGUAL: 1 / 11,
-        },
-        max_concurrent_tasks: int = 10,
-    ) -> List[Golden]:
-        with capture_red_teamer_run(
-            f"generate {attacks_per_vulnerability * len(vulnerabilities)} goldens"
-        ):
-            # Initialize the attack synthesizer
-            attack_synthesizer = AttackSynthesizer(
-                target_model=target_model,
-                synthesizer_model=self.synthesizer_model,
-                async_mode=self.async_mode,
-                purpose=self.target_purpose,
-                system_prompt=self.target_system_prompt,
-            )
-
-            # Call the synthesizer to generate attacks with throttling
-            attacks = await attack_synthesizer.a_generate_attacks(
-                attacks_per_vulnerability=attacks_per_vulnerability,
-                vulnerabilities=vulnerabilities,
-                attack_enhancements=attack_enhancements,
-                max_concurrent_tasks=max_concurrent_tasks,  # Pass the throttling limit
-            )
-
-        return attacks
+        return results
 
     ##################################################
     ### Metrics Map ##################################
