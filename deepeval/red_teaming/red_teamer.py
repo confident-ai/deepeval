@@ -585,6 +585,49 @@ class RedTeamer:
                 harm_category=Vulnerability.OFFENSIVE.value,
                 async_mode=self.async_mode,
             ),
+            Vulnerability.UNFORMATTED: lambda: HarmGrader(
+                model=self.evaluation_model,
+                harm_category=Vulnerability.OFFENSIVE.value,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.BFLA: lambda: BFLAGrader(
+                purpose=self.target_purpose,
+                model=self.evaluation_model,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.BOLA: lambda: BOLAGrader(
+                model=self.evaluation_model,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.COMPETITORS: lambda: CompetitorsGrader(
+                purpose=self.target_purpose,
+                model=self.evaluation_model,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.HIJACKING: lambda: HijackingGrader(
+                purpose=self.target_purpose,
+                model=self.evaluation_model,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.RELIGION: lambda: ReligionGrader(
+                model=self.evaluation_model,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.SSRF: lambda: SSRFGrader(
+                purpose=self.target_purpose,
+                model=self.evaluation_model,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.OVERRELIANCE: lambda: OverrelianceGrader(
+                purpose=self.target_purpose,
+                model=self.evaluation_model,
+                async_mode=self.async_mode,
+            ),
+            Vulnerability.PROMPT_EXTRACTION: lambda: PromptExtractionGrader(
+                purpose=self.target_purpose,
+                model=self.evaluation_model,
+                async_mode=self.async_mode,
+            ),
         }
         self.metrics_map = metrics_map
         return metrics_map

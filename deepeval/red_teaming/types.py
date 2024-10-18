@@ -65,12 +65,20 @@ class Vulnerability(Enum):
     HALLUCINATION = "Hallucination"
     IMITATION = "Imitation"
     POLITICS = "Political Statements"
+    RELIGION = "Religion"
+    HIJACKING = "Hijacking"
+    COMPETITORS = "Competitors"
+    OVERRELIANCE = "Overreliance"
 
     # Technical Vulnerabilties
     DEBUG_ACCESS = "Debug Access"
     RBAC = "Role-Based Access Control"
     SHELL_INJECTION = "Shell Injection"
     SQL_INJECTION = "SQL Injection"
+    SSRF = "Server-Side Request Forgery (SSRF)"
+    BFLA = "Broken Function Level Authorization (BFLA)"
+    BOLA = "Broken Object Level Authorization (BOLA)"
+    PROMPT_EXTRACTION = "Prompt Extraction"
 
     # Harm Vulnerabilties Promptfoo
     HARMFUL_VIOLENT_CRIME = UnalignedVulnerability.HARMFUL_VIOLENT_CRIME.value
@@ -110,3 +118,12 @@ class Vulnerability(Enum):
     HARMFUL_RADICALIZATION = UnalignedVulnerability.HARMFUL_RADICALIZATION.value
     HARMFUL_PROFANITY = UnalignedVulnerability.HARMFUL_PROFANITY.value
     HARMFUL_INSULTS = UnalignedVulnerability.HARMFUL_INSULTS.value
+
+
+class RemoteVulnerability(Enum):
+    SSRF = Vulnerability.SSRF.value
+    BOLA = Vulnerability.BOLA.value
+    BFLA = Vulnerability.BFLA.value
+    COMPETITORS = Vulnerability.COMPETITORS.value
+    HIJACKING = Vulnerability.HIJACKING.value
+    RELIGION = Vulnerability.RELIGION.value

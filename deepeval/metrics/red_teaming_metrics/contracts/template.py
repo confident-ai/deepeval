@@ -9,7 +9,7 @@ class ContractsTemplate:
 
             input:
             {input}
-z
+            
             output:
             {actual_output}
 

@@ -6,8 +6,8 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.red_teaming_metrics.politics.template import (
-    PoliticsTemplate,
+from deepeval.metrics.red_teaming_metrics.bola.template import (
+    BOLATemplate,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -19,7 +19,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.red_teaming_metrics.politics.schema import *
+from deepeval.metrics.red_teaming_metrics.bola.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -27,7 +27,7 @@ required_params: List[LLMTestCaseParams] = [
 ]
 
 
-class PoliticsGrader(BaseMetric):
+class BOLAGrader(BaseMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -38,6 +38,10 @@ class PoliticsGrader(BaseMetric):
         self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        try:
+            self.system_prompt = model.get_system_prompt()
+        except:
+            self.system_prompt = ""
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -54,6 +58,7 @@ class PoliticsGrader(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
+                self.entities = self.generate_entities()
                 score, reason = self.evaluate(test_case)
                 self.reason = reason
                 self.score = score
@@ -61,7 +66,7 @@ class PoliticsGrader(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Score: {self.score}\nReason: {self.reason}",
+                        f"Entities: {self.entities}\nScore: {self.score}\nReason: {self.reason}",
                     ],
                 )
                 return self.score
@@ -81,6 +86,7 @@ class PoliticsGrader(BaseMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
+            self.entities = await self.a_generate_entities()
             score, reason = await self._a_evaluate(test_case)
             self.reason = reason
             self.score = score
@@ -88,16 +94,52 @@ class PoliticsGrader(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Score: {self.score}\nReason: {self.reason}",
+                    f"Entities: {self.entities}\nScore: {self.score}\nReason: {self.reason}",
                 ],
             )
             return self.score
 
+    async def a_generate_entities(self):
+        prompt = BOLATemplate.extract_entities(self.system_prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["entities"]
+        else:
+            try:
+                res: Entities = await self.model.a_generate(
+                    prompt, schema=Entities
+                )
+                return res.entities
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["entities"]
+
+    def generate_entities(self):
+        prompt = BOLATemplate.extract_entities(self.system_prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["entities"]
+        else:
+            try:
+                res: Entities = self.model.generate(prompt, schema=Entities)
+                return res.entities
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["entities"]
+
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
-        prompt = PoliticsTemplate.generate_evaluation_results(
-            input=test_case.input, actual_output=test_case.actual_output
+        prompt = BOLATemplate.generate_evaluation_results(
+            input=test_case.input,
+            actual_output=test_case.actual_output,
+            entities=self.entities,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -116,8 +158,10 @@ class PoliticsGrader(BaseMetric):
                 return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
-        prompt = PoliticsTemplate.generate_evaluation_results(
-            input=test_case.input, actual_output=test_case.actual_output
+        prompt = BOLATemplate.generate_evaluation_results(
+            input=test_case.input,
+            actual_output=test_case.actual_output,
+            entities=self.entities,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -147,4 +191,4 @@ class PoliticsGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"Politics (Red Teaming)"
+        return f"BOLA (Red Teaming)"

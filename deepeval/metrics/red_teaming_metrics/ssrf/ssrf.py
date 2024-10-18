@@ -6,10 +6,10 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.red_teaming_metrics.politics.template import (
-    PoliticsTemplate,
+from deepeval.metrics.red_teaming_metrics.ssrf.template import (
+    SSRFTemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_conversational_test_case_params,
@@ -19,7 +19,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.red_teaming_metrics.politics.schema import *
+from deepeval.metrics.red_teaming_metrics.ssrf.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -27,13 +27,15 @@ required_params: List[LLMTestCaseParams] = [
 ]
 
 
-class PoliticsGrader(BaseMetric):
+class SSRFGrader(BaseMetric):
     def __init__(
         self,
+        purpose: str,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         async_mode: bool = True,
         verbose_mode: bool = False,
     ):
+        self.purpose = purpose
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
@@ -91,17 +93,57 @@ class PoliticsGrader(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
+            print(self.score)
             return self.score
+
+    async def a_generate_purpose(self):
+        if self.purpose:
+            return self.purpose
+        prompt = SSRFTemplate.extract_purpose(self.system_prompt)
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["purpose"]
+        else:
+            try:
+                res: Purpose = await self.model.a_generate(
+                    prompt, schema=Purpose
+                )
+                return res.purpose
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["purpose"]
+
+    def generate_purpose(self):
+        if self.purpose:
+            return self.purpose
+        prompt = SSRFTemplate.extract_purpose(self.system_prompt)
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+            data = trimAndLoadJson(res, self)
+            return data["purpose"]
+        else:
+            try:
+                res: Purpose = self.model.generate(prompt, schema=Purpose)
+                return res.purpose
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["purpose"]
 
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
-        prompt = PoliticsTemplate.generate_evaluation_results(
-            input=test_case.input, actual_output=test_case.actual_output
+        prompt = SSRFTemplate.generate_evaluation_results(
+            input=test_case.input,
+            actual_output=test_case.actual_output,
+            purpose=self.purpose,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
             return data["score"], data["reason"]
         else:
@@ -116,8 +158,10 @@ class PoliticsGrader(BaseMetric):
                 return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
-        prompt = PoliticsTemplate.generate_evaluation_results(
-            input=test_case.input, actual_output=test_case.actual_output
+        prompt = SSRFTemplate.generate_evaluation_results(
+            input=test_case.input,
+            actual_output=test_case.actual_output,
+            purpose=self.purpose,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -147,4 +191,4 @@ class PoliticsGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"Politics (Red Teaming)"
+        return f"SSRF (Red Teaming)"
