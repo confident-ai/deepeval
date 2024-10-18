@@ -16,11 +16,13 @@ class AttackData(BaseModel):
     last_response_summary: str
     rationale_behind_jailbreak: str
 
+
 class RefusalData(BaseModel):
     value: bool
     description: str
     rationale: str
     metadata: int
+
 
 class EvalData(BaseModel):
     value: bool

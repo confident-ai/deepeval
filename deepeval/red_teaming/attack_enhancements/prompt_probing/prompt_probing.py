@@ -50,11 +50,18 @@ class PromptProbing(AttackEnhancement):
                 pbar.update(1)  # Update the progress bar for compliance
 
                 # Check if rewritten prompt is a prompt probing attack
-                is_prompt_probing_prompt = PromptProbingTemplate.is_prompt_probing(res.model_dump())
-                is_prompt_probing_res: IsPromptProbing = self._generate_schema(is_prompt_probing_prompt, IsPromptProbing)
+                is_prompt_probing_prompt = (
+                    PromptProbingTemplate.is_prompt_probing(res.model_dump())
+                )
+                is_prompt_probing_res: IsPromptProbing = self._generate_schema(
+                    is_prompt_probing_prompt, IsPromptProbing
+                )
                 pbar.update(1)  # Update the progress bar
 
-                if not compliance_res.non_compliant and is_prompt_probing_res.is_prompt_probing:
+                if (
+                    not compliance_res.non_compliant
+                    and is_prompt_probing_res.is_prompt_probing
+                ):
                     # If it's compliant and is a prompt probing attack, return the enhanced prompt
                     return enhanced_attack
 
@@ -96,11 +103,20 @@ class PromptProbing(AttackEnhancement):
                 pbar.update(1)  # Update the progress bar for compliance
 
                 # Check if rewritten prompt is a prompt probing attack
-                is_prompt_probing_prompt = PromptProbingTemplate.is_prompt_probing(res.model_dump())
-                is_prompt_probing_res: IsPromptProbing = await self._a_generate_schema(is_prompt_probing_prompt, IsPromptProbing)
+                is_prompt_probing_prompt = (
+                    PromptProbingTemplate.is_prompt_probing(res.model_dump())
+                )
+                is_prompt_probing_res: IsPromptProbing = (
+                    await self._a_generate_schema(
+                        is_prompt_probing_prompt, IsPromptProbing
+                    )
+                )
                 pbar.update(1)  # Update the progress bar
 
-                if not compliance_res.non_compliant and is_prompt_probing_res.is_prompt_probing:
+                if (
+                    not compliance_res.non_compliant
+                    and is_prompt_probing_res.is_prompt_probing
+                ):
                     # If it's compliant and is a prompt probing attack, return the enhanced prompt
                     return enhanced_attack
 

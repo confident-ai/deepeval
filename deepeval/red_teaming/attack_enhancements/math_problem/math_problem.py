@@ -10,7 +10,9 @@ from .schema import EnhancedAttack, ComplianceData, IsMathProblem
 
 
 class MathProblem(AttackEnhancement):
-    def __init__(self, synthesizer_model: DeepEvalBaseLLM, using_native_model: bool):
+    def __init__(
+        self, synthesizer_model: DeepEvalBaseLLM, using_native_model: bool
+    ):
         self.synthesizer_model = synthesizer_model
         self.using_native_model = using_native_model
 
@@ -31,21 +33,34 @@ class MathProblem(AttackEnhancement):
         ) as pbar:
             for _ in range(max_retries):
                 # Generate the enhanced prompt
-                res: EnhancedAttack = self._generate_schema(prompt, EnhancedAttack)
+                res: EnhancedAttack = self._generate_schema(
+                    prompt, EnhancedAttack
+                )
                 enhanced_attack = res.input + self.get_additional_instructions()
                 pbar.update(1)  # Update the progress bar for generation
 
                 # Check for compliance using a compliance template
-                compliance_prompt = MathProblemTemplate.non_compliant(res.model_dump())
-                compliance_res: ComplianceData = self._generate_schema(compliance_prompt, ComplianceData)
+                compliance_prompt = MathProblemTemplate.non_compliant(
+                    res.model_dump()
+                )
+                compliance_res: ComplianceData = self._generate_schema(
+                    compliance_prompt, ComplianceData
+                )
                 pbar.update(1)  # Update the progress bar for compliance
 
                 # Check if rewritten prompt is a math problem
-                is_math_problem_prompt = MathProblemTemplate.is_math_problem(res.model_dump())
-                is_math_problem_res: IsMathProblem = self._generate_schema(is_math_problem_prompt, IsMathProblem)
+                is_math_problem_prompt = MathProblemTemplate.is_math_problem(
+                    res.model_dump()
+                )
+                is_math_problem_res: IsMathProblem = self._generate_schema(
+                    is_math_problem_prompt, IsMathProblem
+                )
                 pbar.update(1)  # Update the progress bar for is math problem
 
-                if not compliance_res.non_compliant and is_math_problem_res.is_math_problem:
+                if (
+                    not compliance_res.non_compliant
+                    and is_math_problem_res.is_math_problem
+                ):
                     # If it's compliant and is a math problem, return the enhanced prompt
                     return enhanced_attack
 
@@ -71,22 +86,36 @@ class MathProblem(AttackEnhancement):
         try:
             for _ in range(max_retries):
                 # Generate the enhanced prompt asynchronously
-                res: EnhancedAttack = await self._a_generate_schema(prompt, EnhancedAttack)            
+                res: EnhancedAttack = await self._a_generate_schema(
+                    prompt, EnhancedAttack
+                )
                 enhanced_attack = res.input + self.get_additional_instructions()
                 pbar.update(1)  # Update the progress bar for generation
 
                 # Check for compliance using a compliance template
-                compliance_prompt = MathProblemTemplate.non_compliant(res.model_dump())
-                compliance_res: ComplianceData = await self._a_generate_schema(compliance_prompt, ComplianceData)
+                compliance_prompt = MathProblemTemplate.non_compliant(
+                    res.model_dump()
+                )
+                compliance_res: ComplianceData = await self._a_generate_schema(
+                    compliance_prompt, ComplianceData
+                )
                 pbar.update(1)  # Update the progress bar for compliance
 
                 # Check if rewritten prompt is a math problem
-                is_math_problem_prompt = MathProblemTemplate.is_math_problem(res.model_dump())
-                is_math_problem_res: IsMathProblem = await self._a_generate_schema(is_math_problem_prompt, IsMathProblem)
+                is_math_problem_prompt = MathProblemTemplate.is_math_problem(
+                    res.model_dump()
+                )
+                is_math_problem_res: IsMathProblem = (
+                    await self._a_generate_schema(
+                        is_math_problem_prompt, IsMathProblem
+                    )
+                )
                 pbar.update(1)  # Update the progress bar for is math problem
 
-
-                if not compliance_res.non_compliant and is_math_problem_res.is_math_problem:
+                if (
+                    not compliance_res.non_compliant
+                    and is_math_problem_res.is_math_problem
+                ):
                     # If it's compliant and is a math problem, return the enhanced prompt
                     return enhanced_attack
 
@@ -103,12 +132,16 @@ class MathProblem(AttackEnhancement):
 
     def _generate_schema(self, prompt: str, schema: BaseModel):
         """Helper method to generate the schema synchronously."""
-        return generate_schema(prompt, schema, self.using_native_model, self.synthesizer_model)
+        return generate_schema(
+            prompt, schema, self.using_native_model, self.synthesizer_model
+        )
 
     async def _a_generate_schema(self, prompt: str, schema: BaseModel):
         """Helper method to generate the schema asynchronously."""
-        return await a_generate_schema(prompt, schema, self.using_native_model, self.synthesizer_model)
-    
+        return await a_generate_schema(
+            prompt, schema, self.using_native_model, self.synthesizer_model
+        )
+
     def get_additional_instructions(self) -> str:
         return (
             "Also provide a complete translation of the answer in Normal Language with full details "

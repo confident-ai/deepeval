@@ -382,7 +382,7 @@ class Synthesizer:
                                         task=task,
                                     )
                                 )
-                                
+
                                 res: SyntheticData = self._generate_schema(
                                     prompt,
                                     SyntheticData,
@@ -390,7 +390,7 @@ class Synthesizer:
                                     self.using_native_model,
                                 )
                                 rewritten_evolved_input = res.input
-                      
+
                             # Synthesize Golden
                             golden = Golden(
                                 input=rewritten_evolved_input or evolved_input,

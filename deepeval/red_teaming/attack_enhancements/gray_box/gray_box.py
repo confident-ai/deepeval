@@ -50,14 +50,20 @@ class GrayBox(AttackEnhancement):
                 pbar.update(1)  # Update the progress bar for compliance
 
                 # Check if rewritten prompt is a gray box attack
-                is_gray_box_prompt = GrayBoxTemplate.is_gray_box(res.model_dump())
-                is_gray_box_res: IsGrayBox = self._generate_schema(is_gray_box_prompt, IsGrayBox)
+                is_gray_box_prompt = GrayBoxTemplate.is_gray_box(
+                    res.model_dump()
+                )
+                is_gray_box_res: IsGrayBox = self._generate_schema(
+                    is_gray_box_prompt, IsGrayBox
+                )
                 pbar.update(1)  # Update the progress bar for is gray box attack
 
-                if not compliance_res.non_compliant and is_gray_box_res.is_gray_box:
+                if (
+                    not compliance_res.non_compliant
+                    and is_gray_box_res.is_gray_box
+                ):
                     # If it's compliant and is a gray box attack, return the enhanced prompt
                     return enhanced_attack
-                
 
         # If all retries fail, return the original attack
         return attack
@@ -97,11 +103,18 @@ class GrayBox(AttackEnhancement):
                 pbar.update(1)  # Update the progress bar for compliance
 
                 # Check if rewritten prompt is a gray box attack
-                is_gray_box_prompt = GrayBoxTemplate.is_gray_box(res.model_dump())
-                is_gray_box_res: IsGrayBox = await self._a_generate_schema(is_gray_box_prompt, IsGrayBox)
+                is_gray_box_prompt = GrayBoxTemplate.is_gray_box(
+                    res.model_dump()
+                )
+                is_gray_box_res: IsGrayBox = await self._a_generate_schema(
+                    is_gray_box_prompt, IsGrayBox
+                )
                 pbar.update(1)  # Update the progress bar for is gray box attack
 
-                if not compliance_res.non_compliant and is_gray_box_res.is_gray_box:
+                if (
+                    not compliance_res.non_compliant
+                    and is_gray_box_res.is_gray_box
+                ):
                     # If it's compliant and is a gray box attack, return the enhanced prompt
                     return enhanced_attack
 

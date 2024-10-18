@@ -34,7 +34,7 @@ from deepeval.red_teaming.attack_enhancements import (
     Rot13,
     MathProblem,
     Multilingual,
-    JailbreakingCrescendo
+    JailbreakingCrescendo,
 )
 
 
@@ -370,7 +370,7 @@ class AttackSynthesizer:
                 self.synthesizer_model, self.using_native_model
             ).enhance(attack_input)
             attack.input = enhanced_attack
-        
+
         elif attack_enhancement == AttackEnhancement.JAILBREAK_CRESCENDO:
             enhanced_attack = JailbreakingCrescendo(
                 self.target_model,

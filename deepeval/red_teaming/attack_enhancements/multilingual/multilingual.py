@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from tqdm import tqdm 
+from tqdm import tqdm
 from tqdm.asyncio import tqdm as async_tqdm_bar
 import random
 import json
@@ -12,7 +12,9 @@ from .schema import EnhancedAttack, ComplianceData, IsTranslation
 
 
 class Multilingual(AttackEnhancement):
-    def __init__(self, synthesizer_model: DeepEvalBaseLLM, using_native_model: bool):
+    def __init__(
+        self, synthesizer_model: DeepEvalBaseLLM, using_native_model: bool
+    ):
         self.synthesizer_model = synthesizer_model
         self.using_native_model = using_native_model
 
@@ -33,21 +35,34 @@ class Multilingual(AttackEnhancement):
         ) as pbar:
             for _ in range(max_retries):
                 # Generate the enhanced prompt
-                res: EnhancedAttack = self._generate_schema(prompt, EnhancedAttack)
+                res: EnhancedAttack = self._generate_schema(
+                    prompt, EnhancedAttack
+                )
                 enhanced_attack = res.input
                 pbar.update(1)  # Update the progress bar for generation
 
                 # Check for compliance using a compliance template
-                compliance_prompt = MultilingualTemplate.non_compliant(res.model_dump())
-                compliance_res: ComplianceData = self._generate_schema(compliance_prompt, ComplianceData)
+                compliance_prompt = MultilingualTemplate.non_compliant(
+                    res.model_dump()
+                )
+                compliance_res: ComplianceData = self._generate_schema(
+                    compliance_prompt, ComplianceData
+                )
                 pbar.update(1)  # Update the progress bar for compliance
 
                 # Check if rewritten prompt is a translation
-                is_translation_prompt = MultilingualTemplate.is_translation(res.model_dump())
-                is_translation_res: IsTranslation = self._generate_schema(is_translation_prompt, IsTranslation)
+                is_translation_prompt = MultilingualTemplate.is_translation(
+                    res.model_dump()
+                )
+                is_translation_res: IsTranslation = self._generate_schema(
+                    is_translation_prompt, IsTranslation
+                )
                 pbar.update(1)  # Update the progress bar for is a translation
 
-                if not compliance_res.non_compliant and is_translation_res.is_translation:
+                if (
+                    not compliance_res.non_compliant
+                    and is_translation_res.is_translation
+                ):
                     # If it's compliant and is a translation, return the enhanced prompt
                     return enhanced_attack
 
@@ -73,21 +88,36 @@ class Multilingual(AttackEnhancement):
         try:
             for _ in range(max_retries):
                 # Generate the enhanced prompt asynchronously
-                res: EnhancedAttack = await self._a_generate_schema(prompt, EnhancedAttack)
+                res: EnhancedAttack = await self._a_generate_schema(
+                    prompt, EnhancedAttack
+                )
                 enhanced_attack = res.input
                 pbar.update(1)  # Update the progress bar for generation
 
                 # Check for compliance using a compliance template
-                compliance_prompt = MultilingualTemplate.non_compliant(res.model_dump())
-                compliance_res: ComplianceData = await self._a_generate_schema(compliance_prompt, ComplianceData)
+                compliance_prompt = MultilingualTemplate.non_compliant(
+                    res.model_dump()
+                )
+                compliance_res: ComplianceData = await self._a_generate_schema(
+                    compliance_prompt, ComplianceData
+                )
                 pbar.update(1)  # Update the progress bar for compliance
 
                 # Check if rewritten prompt is a translation
-                is_translation_prompt = MultilingualTemplate.is_translation(res.model_dump())
-                is_translation_res: IsTranslation = await self._a_generate_schema(is_translation_prompt, IsTranslation)
+                is_translation_prompt = MultilingualTemplate.is_translation(
+                    res.model_dump()
+                )
+                is_translation_res: IsTranslation = (
+                    await self._a_generate_schema(
+                        is_translation_prompt, IsTranslation
+                    )
+                )
                 pbar.update(1)  # Update the progress bar for is a translation
 
-                if not compliance_res.non_compliant and is_translation_res.is_translation:
+                if (
+                    not compliance_res.non_compliant
+                    and is_translation_res.is_translation
+                ):
                     # If it's compliant and is a translation, return the enhanced prompt
                     return enhanced_attack
 
@@ -104,8 +134,12 @@ class Multilingual(AttackEnhancement):
 
     def _generate_schema(self, prompt: str, schema: BaseModel):
         """Helper method to generate the schema synchronously."""
-        return generate_schema(prompt, schema, self.using_native_model, self.synthesizer_model)
+        return generate_schema(
+            prompt, schema, self.using_native_model, self.synthesizer_model
+        )
 
     async def _a_generate_schema(self, prompt: str, schema: BaseModel):
         """Helper method to generate the schema asynchronously."""
-        return await a_generate_schema(prompt, schema, self.using_native_model, self.synthesizer_model)
+        return await a_generate_schema(
+            prompt, schema, self.using_native_model, self.synthesizer_model
+        )

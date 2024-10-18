@@ -14,6 +14,7 @@ class AttackEnhancement(Enum):
     MATH_PROBLEM = "Math Problem"
     MULTILINGUAL = "Multilingual"
 
+
 class UnalignedVulnerability(Enum):
     HARMFUL_VIOLENT_CRIME = "Violent Crimes"
     HARMFUL_NON_VIOLENT_CRIME = "Non-Violent Crimes"

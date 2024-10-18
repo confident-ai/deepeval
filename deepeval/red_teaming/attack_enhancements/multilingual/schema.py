@@ -11,4 +11,3 @@ class ComplianceData(BaseModel):
 
 class IsTranslation(BaseModel):
     is_translation: bool
-

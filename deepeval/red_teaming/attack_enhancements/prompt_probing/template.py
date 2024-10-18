@@ -63,7 +63,7 @@ class PromptProbingTemplate:
             
             JSON:
             """
-    
+
     @staticmethod
     def is_prompt_probing(response):
         return f"""
@@ -95,4 +95,3 @@ class PromptProbingTemplate:
             
             JSON:
             """
-
