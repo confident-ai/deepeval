@@ -116,7 +116,7 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict.strip().lower() == "yes":
                 factual_alignments.append(verdict.reason)
             else:
                 contradictions.append(verdict.reason)
@@ -148,7 +148,7 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict.strip().lower() == "yes":
                 factual_alignments.append(verdict.reason)
             else:
                 contradictions.append(verdict.reason)
