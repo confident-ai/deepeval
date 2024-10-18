@@ -1,12 +1,10 @@
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
-from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from openai import OpenAI, AsyncOpenAI
 from typing import Optional, Tuple
 from pydantic import BaseModel
 import logging
 import openai
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
 
 
@@ -62,44 +60,7 @@ class SchematicGPTModel(DeepEvalBaseLLM):
         super().__init__(model_name)
 
     def load_model(self):
-        if self.should_use_azure_openai():
-            openai_api_key = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_OPENAI_API_KEY
-            )
-
-            openai_api_version = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.OPENAI_API_VERSION
-            )
-            azure_deployment = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_DEPLOYMENT_NAME
-            )
-            azure_endpoint = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_OPENAI_ENDPOINT
-            )
-
-            model_version = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_MODEL_VERSION
-            )
-
-            if model_version is None:
-                model_version = ""
-
-            return AzureChatOpenAI(
-                openai_api_version=openai_api_version,
-                azure_deployment=azure_deployment,
-                azure_endpoint=azure_endpoint,
-                openai_api_key=openai_api_key,
-                model_version=model_version,
-                *self.args,
-                **self.kwargs,
-            )
-
-        return ChatOpenAI(
-            model_name=self.model_name,
-            openai_api_key=self._openai_api_key,
-            *self.args,
-            **self.kwargs,
-        )
+        pass
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
@@ -111,7 +72,7 @@ class SchematicGPTModel(DeepEvalBaseLLM):
     ) -> Tuple[str, float]:
         import instructor
 
-        client = instructor.from_openai(OpenAI())
+        client = instructor.from_openai(OpenAI(api_key=self._openai_api_key))
         response = client.chat.completions.create(
             model=self.model_name,
             response_model=schema,
@@ -129,7 +90,9 @@ class SchematicGPTModel(DeepEvalBaseLLM):
     ) -> Tuple[str, float]:
         import instructor
 
-        client = instructor.from_openai(AsyncOpenAI())
+        client = instructor.from_openai(
+            AsyncOpenAI(api_key=self._openai_api_key)
+        )
         response = await client.chat.completions.create(
             model=self.model_name,
             response_model=schema,
@@ -137,12 +100,5 @@ class SchematicGPTModel(DeepEvalBaseLLM):
         )
         return response
 
-    def should_use_azure_openai(self):
-        value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
-        return value.lower() == "yes" if value is not None else False
-
     def get_model_name(self):
-        if self.should_use_azure_openai():
-            return "azure openai"
-        elif self.model_name:
-            return self.model_name
+        return self.model_name
