@@ -40,11 +40,7 @@ class UnalignedVulnerability(Enum):
 
 
 class Vulnerability(Enum):
-    OFFENSIVE = "Generate harmful content"
-    BIAS = "Promote stereotypes and discrimination"
-    DATA_LEAKAGE = "Leak confidential data and information"
-    UNFORMATTED = "Output undesirable formats"
-
+    
     # Harm Vulnerabilties
     HARMFUL_PRIVACY = "Privacy violations"
     HARMFUL_INTELLECTUAL_PROPERTY = "Intellectual Property violation"
@@ -52,12 +48,16 @@ class Vulnerability(Enum):
         "Misinformation & Disinformation - Harmful lies and propaganda"
     )
     HARMFUL_SPECIALIZED_ADVICE_FINANCIAL = "Specialized Advice - Financial"
+    OFFENSIVE = "Generate harmful content"
+    BIAS = "Promote stereotypes and discrimination"
+    UNFORMATTED = "Output undesirable formats"
 
     # PII Vulnerabilties
     PII_API_DB = "API and Database Access"
     PII_DIRECT = "Direct PII Disclosure"
     PII_SESSION = "Session PII Leak"
     PII_SOCIAL = "Social Engineering PII Disclosure"
+    DATA_LEAKAGE = "Leak confidential data and information"
 
     # Brand Vulnerabilties
     CONTRACTS = "Contracts"
@@ -80,7 +80,7 @@ class Vulnerability(Enum):
     BOLA = "bola"
     PROMPT_EXTRACTION = "Prompt Extraction"
 
-    # Harm Vulnerabilties Promptfoo
+    # Unaligned Harm Vulnerabilties
     HARMFUL_VIOLENT_CRIME = UnalignedVulnerability.HARMFUL_VIOLENT_CRIME.value
     HARMFUL_NON_VIOLENT_CRIME = (
         UnalignedVulnerability.HARMFUL_NON_VIOLENT_CRIME.value
@@ -127,3 +127,64 @@ class RemoteVulnerability(Enum):
     COMPETITORS = Vulnerability.COMPETITORS.value
     HIJACKING = Vulnerability.HIJACKING.value
     RELIGION = Vulnerability.RELIGION.value
+
+vulnerability_categories = {
+    "Harmful Risks": [
+        Vulnerability.HARMFUL_PRIVACY,
+        Vulnerability.HARMFUL_INTELLECTUAL_PROPERTY,
+        Vulnerability.HARMFUL_MISINFORMATION_DISINFORMATION,
+        Vulnerability.HARMFUL_SPECIALIZED_ADVICE_FINANCIAL,
+        Vulnerability.OFFENSIVE,
+        Vulnerability.BIAS,
+        Vulnerability.UNFORMATTED
+    ],
+    "Critical Harmful Risks": [
+        Vulnerability.HARMFUL_VIOLENT_CRIME,
+        Vulnerability.HARMFUL_NON_VIOLENT_CRIME,
+        Vulnerability.HARMFUL_SEX_CRIME,
+        Vulnerability.HARMFUL_CHILD_EXPLOITATION,
+        Vulnerability.HARMFUL_INDISCRIMINATE_WEAPONS,
+        Vulnerability.HARMFUL_HATE,
+        Vulnerability.HARMFUL_SELF_HARM,
+        Vulnerability.HARMFUL_SEXUAL_CONTENT,
+        Vulnerability.HARMFUL_CYBERCRIME,
+        Vulnerability.HARMFUL_CHEMICAL_BIOLOGICAL_WEAPONS,
+        Vulnerability.HARMFUL_ILLEGAL_DRUGS,
+        Vulnerability.HARMFUL_COPYRIGHT_VIOLATIONS,
+        Vulnerability.HARMFUL_HARASSMENT_BULLYING,
+        Vulnerability.HARMFUL_ILLEGAL_ACTIVITIES,
+        Vulnerability.HARMFUL_GRAPHIC_CONTENT,
+        Vulnerability.HARMFUL_UNSAFE_PRACTICES,
+        Vulnerability.HARMFUL_RADICALIZATION,
+        Vulnerability.HARMFUL_PROFANITY,
+        Vulnerability.HARMFUL_INSULTS
+    ],
+    "Data Protection Risks": [
+        Vulnerability.PII_API_DB,
+        Vulnerability.PII_DIRECT,
+        Vulnerability.PII_SESSION,
+        Vulnerability.PII_SOCIAL,
+        Vulnerability.DATA_LEAKAGE
+    ],
+    "Brand Integrity Risks": [
+        Vulnerability.CONTRACTS,
+        Vulnerability.EXCESSIVE_AGENCY,
+        Vulnerability.HALLUCINATION,
+        Vulnerability.IMITATION,
+        Vulnerability.POLITICS,
+        Vulnerability.RELIGION,
+        Vulnerability.HIJACKING,
+        Vulnerability.COMPETITORS,
+        Vulnerability.OVERRELIANCE
+    ],
+    "Technical Risks": [
+        Vulnerability.DEBUG_ACCESS,
+        Vulnerability.RBAC,
+        Vulnerability.SHELL_INJECTION,
+        Vulnerability.SQL_INJECTION,
+        Vulnerability.SSRF,
+        Vulnerability.BFLA,
+        Vulnerability.BOLA,
+        Vulnerability.PROMPT_EXTRACTION
+    ]
+}
