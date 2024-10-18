@@ -319,7 +319,7 @@ class AttackSynthesizer:
 
         # Remote vulnerabilities
         elif vulnerability.value in self.remote_vulnerabilities:
-            remote_attacks = self.a_generate_remote_attack(
+            remote_attacks = await self.a_generate_remote_attack(
                 vulnerability.value, attacks_per_vulnerability
             )
             base_attacks.extend(

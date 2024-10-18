@@ -10,7 +10,7 @@ from deepeval.models import DeepEvalBaseLLM, GPTModel
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.red_teaming import AttackEnhancement, Vulnerability
-from deepeval.red_teaming.synthesizer import AttackSynthesizer
+# from deepeval.red_teaming.synthesizer import AttackSynthesizer
 from deepeval.metrics.red_teaming_metrics import (
     OverrelianceGrader,
     BFLAGrader,
