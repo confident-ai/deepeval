@@ -93,7 +93,6 @@ class CompetitorsGrader(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            print(self.score)
             return self.score
 
     async def a_generate_purpose(self):
