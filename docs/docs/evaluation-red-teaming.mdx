@@ -87,14 +87,17 @@ results = red_teamer.scan(
     target_model=TargetLLM(),
     attacks_per_vulnerability=5,
     attack_enhancements={
-        AttackEnhancement.BASE64: 0.125,
-        AttackEnhancement.GRAY_BOX_ATTACK: 0.125,
-        AttackEnhancement.JAILBREAK_LINEAR: 0.125,
-        AttackEnhancement.JAILBREAK_TREE: 0.125,
-        AttackEnhancement.LEETSPEAK: 0.125,
-        AttackEnhancement.PROMPT_INJECTION: 0.125,
-        AttackEnhancement.PROMPT_PROBING: 0.125,
-        AttackEnhancement.ROT13: 0.125
+        AttackEnhancement.BASE64: 1/11,
+        AttackEnhancement.GRAY_BOX_ATTACK: 1/11,
+        AttackEnhancement.JAILBREAK_CRESCENDO: 1/11,
+        AttackEnhancement.JAILBREAK_LINEAR: 1/11,
+        AttackEnhancement.JAILBREAK_TREE: 1/11,
+        AttackEnhancement.LEETSPEAK: 1/11,
+        AttackEnhancement.PROMPT_INJECTION: 1/11,
+        AttackEnhancement.PROMPT_PROBING: 1/11,
+        AttackEnhancement.ROT13: 1/11,
+        AttackEnhancement.MATH_PROBLEM: 1/11,
+        AttackEnhancement.MULTILINGUAL: 1/11,
     },
     vulnerabilities=[v for v in Vulnerability]
 )

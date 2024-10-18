@@ -6,3 +6,6 @@ from .leetspeak import Leetspeak
 from .prompt_injection import PromptInjection
 from .prompt_probing import PromptProbing
 from .rot13 import Rot13
+from .math_problem import MathProblem
+from .multilingual import Multilingual
+from .jailbreaking_crescendo import JailbreakingCrescendo
