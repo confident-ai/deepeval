@@ -97,8 +97,7 @@ class ReligionGrader(BaseMetric):
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
         prompt = ReligionTemplate.generate_evaluation_results(
-            input=test_case.input,
-            actual_output=test_case.actual_output
+            input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -118,8 +117,7 @@ class ReligionGrader(BaseMetric):
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         prompt = ReligionTemplate.generate_evaluation_results(
-            input=test_case.input,
-            actual_output=test_case.actual_output
+            input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)

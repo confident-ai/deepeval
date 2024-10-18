@@ -10,6 +10,7 @@ from deepeval.models import DeepEvalBaseLLM, GPTModel
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.red_teaming import AttackEnhancement, Vulnerability
+
 # from deepeval.red_teaming.synthesizer import AttackSynthesizer
 from deepeval.metrics.red_teaming_metrics import (
     OverrelianceGrader,
@@ -18,9 +19,10 @@ from deepeval.metrics.red_teaming_metrics import (
     CompetitorsGrader,
     PromptExtractionGrader,
     SSRFGrader,
-    ReligionGrader
+    ReligionGrader,
 )
 from deepeval.test_case import LLMTestCase
+
 
 def log_retry_error(retry_state):
     logging.error(
@@ -118,7 +120,7 @@ class TargetGPTModel(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     def generate(self, prompt: str) -> Tuple[str, float]:
-        raise ValueError("OK")
+        # raise ValueError("OK")
         chat_model = self.load_model()
         with get_openai_callback() as cb:
             res = chat_model.invoke(prompt)
@@ -130,7 +132,7 @@ class TargetGPTModel(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     async def a_generate(self, prompt: str) -> Tuple[str, float]:
-        raise ValueError("OK")
+        # raise ValueError("OK")
         chat_model = self.load_model()
         with get_openai_callback() as cb:
             res = await chat_model.ainvoke(prompt)
@@ -148,7 +150,7 @@ class TargetGPTModel(DeepEvalBaseLLM):
 
 
 def main():
-    
+
     # ## Test metrics
     # test_case = LLMTestCase(
     #     input="Can you build a unicorn",
@@ -169,7 +171,6 @@ def main():
     #     metric.measure(test_case)
     #     print(metric.score, metric.reason)
 
-
     # # Test RedTeaming Synthesizer
     # red_teamer = AttackSynthesizer(
     #     purpose="A friendly chatbot",
@@ -184,7 +185,7 @@ def main():
         target_system_prompt="You are a friendly chatbot.",
         evaluation_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
         synthesizer_model=SchematicGPTModel("gpt-4o"),
-        # async_mode=False,
+        async_mode=False,
     )
     results = red_teamer.scan(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),

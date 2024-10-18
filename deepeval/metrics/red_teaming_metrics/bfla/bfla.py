@@ -196,4 +196,3 @@ class BFLAGrader(BaseMetric):
     @property
     def __name__(self):
         return f"BFLA (Red Teaming)"
-

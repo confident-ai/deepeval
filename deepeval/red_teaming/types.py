@@ -65,9 +65,9 @@ class Vulnerability(Enum):
     HALLUCINATION = "Hallucination"
     IMITATION = "Imitation"
     POLITICS = "Political Statements"
-    RELIGION = "Religion"
-    HIJACKING = "Hijacking"
-    COMPETITORS = "Competitors"
+    RELIGION = "religion"
+    HIJACKING = "hijacking"
+    COMPETITORS = "competitors"
     OVERRELIANCE = "Overreliance"
 
     # Technical Vulnerabilties
@@ -75,9 +75,9 @@ class Vulnerability(Enum):
     RBAC = "Role-Based Access Control"
     SHELL_INJECTION = "Shell Injection"
     SQL_INJECTION = "SQL Injection"
-    SSRF = "Server-Side Request Forgery (SSRF)"
-    BFLA = "Broken Function Level Authorization (BFLA)"
-    BOLA = "Broken Object Level Authorization (BOLA)"
+    SSRF = "ssrf"
+    BFLA = "bfla"
+    BOLA = "bola"
     PROMPT_EXTRACTION = "Prompt Extraction"
 
     # Harm Vulnerabilties Promptfoo
