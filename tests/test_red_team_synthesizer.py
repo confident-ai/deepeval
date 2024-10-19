@@ -189,17 +189,10 @@ def main():
     )
     results = red_teamer.scan(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
-        attacks_per_vulnerability=2,
-        attack_enhancements={AttackEnhancement.GRAY_BOX_ATTACK: 1},
+        attacks_per_vulnerability=1,
+        attack_enhancements={AttackEnhancement.BASE64: 1},
         vulnerabilities=[
-            Vulnerability.PROMPT_EXTRACTION,
-            Vulnerability.BFLA,
-            Vulnerability.BOLA,
-            Vulnerability.SSRF,
-            Vulnerability.COMPETITORS,
-            Vulnerability.RELIGION,
-            Vulnerability.HIJACKING,
-            Vulnerability.OVERRELIANCE,
+          v for v in Vulnerability
         ],
     )
     df = red_teamer.vulnerability_scores_breakdown
