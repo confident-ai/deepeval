@@ -12,6 +12,8 @@ from deepeval.red_teaming.types import (
     Vulnerability,
     UnalignedVulnerability,
     RemoteVulnerability,
+    remote_vulnerability_to_api_code_map,
+    unaligned_vulnerability_to_api_code_map
 )
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
 from deepeval.red_teaming.template import RedTeamSynthesizerTemplate
@@ -210,9 +212,10 @@ class AttackSynthesizer:
         if vulnerability.value in self.unaligned_vulnerabilities:
             for _ in range(attacks_per_vulnerability):
                 try:
+                    vulnerability_code = unaligned_vulnerability_to_api_code_map[vulnerability]
                     base_attack = Attack(
                         input=self.generate_unaligned_attack(
-                            self.purpose, vulnerability.value
+                            self.purpose, vulnerability_code
                         ),
                         vulnerability=vulnerability,
                     )
@@ -226,8 +229,9 @@ class AttackSynthesizer:
         # Remote vulnerabilities
         elif vulnerability.value in self.remote_vulnerabilities:
             try:
+                vulnerability_code = remote_vulnerability_to_api_code_map[vulnerability]
                 remote_attacks = self.generate_remote_attack(
-                    vulnerability.value+"asdf", attacks_per_vulnerability
+                    vulnerability_code, attacks_per_vulnerability
                 )
                 base_attacks.extend(
                     [
@@ -239,11 +243,13 @@ class AttackSynthesizer:
                     ]
                 )
             except:
-                for _ in range(attacks_per_vulnerability):              
-                    base_attacks.append(Attack(
-                        vulnerability=vulnerability,
-                        error="Error generating aligned attacks.",
-                    ))
+                for _ in range(attacks_per_vulnerability):
+                    base_attacks.append(
+                        Attack(
+                            vulnerability=vulnerability,
+                            error="Error generating aligned attacks.",
+                        )
+                    )
 
         # Aligned vulnerabilities: LLMs can generate
         else:
@@ -309,9 +315,10 @@ class AttackSynthesizer:
         if vulnerability.value in self.unaligned_vulnerabilities:
             for _ in range(attacks_per_vulnerability):
                 try:
+                    vulnerability_code = unaligned_vulnerability_to_api_code_map[vulnerability]
                     unaligned_attack_input = (
                         await self.a_generate_unaligned_attack(
-                            self.purpose, vulnerability.value
+                            self.purpose, vulnerability_code
                         )
                     )
                     base_attack = Attack(
@@ -329,8 +336,9 @@ class AttackSynthesizer:
         # Remote vulnerabilities
         elif vulnerability.value in self.remote_vulnerabilities:
             try:
+                vulnerability_code = remote_vulnerability_to_api_code_map[vulnerability]
                 remote_attacks = await self.a_generate_remote_attack(
-                    vulnerability.value, attacks_per_vulnerability
+                    vulnerability_code, attacks_per_vulnerability
                 )
                 base_attacks.extend(
                     Attack(
@@ -341,10 +349,12 @@ class AttackSynthesizer:
                 )
             except:
                 for _ in range(attacks_per_vulnerability):
-                    base_attacks.append(Attack(
-                        vulnerability=vulnerability,
-                        error="Error generating aligned attacks.",
-                    ))
+                    base_attacks.append(
+                        Attack(
+                            vulnerability=vulnerability,
+                            error="Error generating aligned attacks.",
+                        )
+                    )
 
         # Aligned vulnerabilities: LLMs can generate
         else:

@@ -423,119 +423,119 @@ class RedTeamer:
                 purpose=self.target_purpose,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_CHEMICAL_BIOLOGICAL_WEAPONS: lambda: HarmGrader(
+            Vulnerability.CHEMICAL_BIOLOGICAL_WEAPONS: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_CHEMICAL_BIOLOGICAL_WEAPONS.value,
+                harm_category=Vulnerability.CHEMICAL_BIOLOGICAL_WEAPONS.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_CHILD_EXPLOITATION: lambda: HarmGrader(
+            Vulnerability.CHILD_EXPLOITATION: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_CHILD_EXPLOITATION.value,
+                harm_category=Vulnerability.CHILD_EXPLOITATION.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_COPYRIGHT_VIOLATIONS: lambda: HarmGrader(
+            Vulnerability.COPYRIGHT_VIOLATIONS: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_COPYRIGHT_VIOLATIONS.value,
+                harm_category=Vulnerability.COPYRIGHT_VIOLATIONS.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_CYBERCRIME: lambda: HarmGrader(
+            Vulnerability.CYBERCRIME: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_CYBERCRIME.value,
+                harm_category=Vulnerability.CYBERCRIME.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_GRAPHIC_CONTENT: lambda: HarmGrader(
+            Vulnerability.GRAPHIC_CONTENT: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_GRAPHIC_CONTENT.value,
+                harm_category=Vulnerability.GRAPHIC_CONTENT.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_HARASSMENT_BULLYING: lambda: HarmGrader(
+            Vulnerability.HARASSMENT_BULLYING: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_HARASSMENT_BULLYING.value,
+                harm_category=Vulnerability.HARASSMENT_BULLYING.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_HATE: lambda: HarmGrader(
+            Vulnerability.HATE: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_HATE.value,
+                harm_category=Vulnerability.HATE.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_ILLEGAL_ACTIVITIES: lambda: HarmGrader(
+            Vulnerability.ILLEGAL_ACTIVITIES: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_ILLEGAL_ACTIVITIES.value,
+                harm_category=Vulnerability.ILLEGAL_ACTIVITIES.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_ILLEGAL_DRUGS: lambda: HarmGrader(
+            Vulnerability.ILLEGAL_DRUGS: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_ILLEGAL_DRUGS.value,
+                harm_category=Vulnerability.ILLEGAL_DRUGS.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_INDISCRIMINATE_WEAPONS: lambda: HarmGrader(
+            Vulnerability.INDISCRIMINATE_WEAPONS: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_INDISCRIMINATE_WEAPONS.value,
+                harm_category=Vulnerability.INDISCRIMINATE_WEAPONS.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_INSULTS: lambda: HarmGrader(
+            Vulnerability.INSULTS: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_INSULTS.value,
+                harm_category=Vulnerability.INSULTS.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_INTELLECTUAL_PROPERTY: lambda: HarmGrader(
+            Vulnerability.INTELLECTUAL_PROPERTY: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_INTELLECTUAL_PROPERTY.value,
+                harm_category=Vulnerability.INTELLECTUAL_PROPERTY.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_MISINFORMATION_DISINFORMATION: lambda: HarmGrader(
+            Vulnerability.MISINFORMATION_DISINFORMATION: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_MISINFORMATION_DISINFORMATION.value,
+                harm_category=Vulnerability.MISINFORMATION_DISINFORMATION.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_NON_VIOLENT_CRIME: lambda: HarmGrader(
+            Vulnerability.NON_VIOLENT_CRIME: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_NON_VIOLENT_CRIME.value,
+                harm_category=Vulnerability.NON_VIOLENT_CRIME.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_PRIVACY: lambda: HarmGrader(
+            Vulnerability.PRIVACY: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_PRIVACY.value,
+                harm_category=Vulnerability.PRIVACY.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_PROFANITY: lambda: HarmGrader(
+            Vulnerability.PROFANITY: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_PROFANITY.value,
+                harm_category=Vulnerability.PROFANITY.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_RADICALIZATION: lambda: HarmGrader(
+            Vulnerability.RADICALIZATION: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_RADICALIZATION.value,
+                harm_category=Vulnerability.RADICALIZATION.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_SELF_HARM: lambda: HarmGrader(
+            Vulnerability.SELF_HARM: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_SELF_HARM.value,
+                harm_category=Vulnerability.SELF_HARM.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_SEX_CRIME: lambda: HarmGrader(
+            Vulnerability.SEX_CRIME: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_SEX_CRIME.value,
+                harm_category=Vulnerability.SEX_CRIME.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_SEXUAL_CONTENT: lambda: HarmGrader(
+            Vulnerability.SEXUAL_CONTENT: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_SEXUAL_CONTENT.value,
+                harm_category=Vulnerability.SEXUAL_CONTENT.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_SPECIALIZED_ADVICE_FINANCIAL: lambda: HarmGrader(
+            Vulnerability.SPECIALIZED_FINANCIAL_ADVICE: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_SPECIALIZED_ADVICE_FINANCIAL.value,
+                harm_category=Vulnerability.SPECIALIZED_FINANCIAL_ADVICE.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_UNSAFE_PRACTICES: lambda: HarmGrader(
+            Vulnerability.UNSAFE_PRACTICES: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_UNSAFE_PRACTICES.value,
+                harm_category=Vulnerability.UNSAFE_PRACTICES.value,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HARMFUL_VIOLENT_CRIME: lambda: HarmGrader(
+            Vulnerability.VIOLENT_CRIME: lambda: HarmGrader(
                 model=self.evaluation_model,
-                harm_category=Vulnerability.HARMFUL_VIOLENT_CRIME.value,
+                harm_category=Vulnerability.VIOLENT_CRIME.value,
                 async_mode=self.async_mode,
             ),
             Vulnerability.IMITATION: lambda: ImitationGrader(
@@ -579,16 +579,6 @@ class RedTeamer:
             ),
             Vulnerability.SQL_INJECTION: lambda: SQLInjectionGrader(
                 model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            Vulnerability.UNFORMATTED: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.OFFENSIVE.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.UNFORMATTED: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.OFFENSIVE.value,
-                async_mode=self.async_mode,
             ),
             Vulnerability.BFLA: lambda: BFLAGrader(
                 purpose=self.target_purpose,
