@@ -4,7 +4,11 @@ from pydantic import Field
 from tqdm import tqdm
 from typing import Dict, List, Optional, Union
 
-from deepeval.red_teaming.types import AttackEnhancement, Vulnerability
+from deepeval.red_teaming.types import (
+    AttackEnhancement,
+    Vulnerability,
+    llm_risk_categories_map,
+)
 from deepeval.red_teaming.attack_synthesizer import AttackSynthesizer, Attack
 from deepeval.synthesizer.schema import *
 from deepeval.synthesizer.types import *
@@ -19,7 +23,7 @@ from deepeval.telemetry import capture_red_teamer_run
 
 
 class VulnerabilityResult(BaseModel):
-    vulnerability: str
+    vulnerability: Vulnerability
     attack_enhancement: Optional[str] = None
     input: Optional[str] = None
     actual_output: Optional[str] = None
@@ -131,9 +135,13 @@ class RedTeamer:
                     scores = []
                     for attack in attacks:
                         metric: BaseMetric = metrics_map.get(vulnerability)()
+                        risk = llm_risk_categories_map.get(vulnerability)
                         result = {
                             "Vulnerability": vulnerability.value,
                             "Attack Enhancement": attack.attack_enhancement,
+                            "Risk Category": (
+                                risk.value if risk is not None else "Others"
+                            ),
                             "Input": attack.input,
                             "Target Output": None,
                             "Score": None,
@@ -307,10 +315,16 @@ class RedTeamer:
                 )
 
                 for vulnerability_result in vulnerability_results:
+                    risk = llm_risk_categories_map.get(
+                        vulnerability_result.vulnerability
+                    )
                     red_teaming_results_breakdown.append(
                         {
                             "Vulnerability": vulnerability_result.vulnerability,
                             "Attack Enhancement": vulnerability_result.attack_enhancement,
+                            "Risk Category": (
+                                risk.value if risk is not None else "Others"
+                            ),
                             "Input": vulnerability_result.input,
                             "Target Output": vulnerability_result.actual_output,
                             "Score": vulnerability_result.score,

@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Dict
 
 
 class AttackEnhancement(Enum):
@@ -99,6 +100,7 @@ class Vulnerability(Enum):
         UnalignedVulnerability.CHEMICAL_BIOLOGICAL_WEAPONS.value
     )
 
+
 class LLMRiskCategories(Enum):
     RESPONSIBLE_AI = "Responsible AI"
     ILLEGAL = "Illegal"
@@ -107,7 +109,7 @@ class LLMRiskCategories(Enum):
     UNAUTHORIZED_ACCESS = "Unauthorized Access"
 
 
-llm_risk_categories_map = {
+llm_risk_categories_map: Dict[Vulnerability, LLMRiskCategories] = {
     # Responsible AI
     Vulnerability.BIAS: LLMRiskCategories.RESPONSIBLE_AI,
     Vulnerability.POLITICS: LLMRiskCategories.RESPONSIBLE_AI,

@@ -185,22 +185,21 @@ def main():
         target_system_prompt="You are a friendly chatbot.",
         evaluation_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
         synthesizer_model=SchematicGPTModel("gpt-4o"),
-        async_mode=False,
+        async_mode=True,
     )
     results = red_teamer.scan(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
         attacks_per_vulnerability=1,
         attack_enhancements={AttackEnhancement.BASE64: 1},
-        vulnerabilities=[
-          v for v in Vulnerability
-        ],
+        vulnerabilities=[Vulnerability.BFLA],
     )
     df = red_teamer.vulnerability_scores_breakdown
     print(results)
     for index, row in df.iterrows():
-        print(f"Input: {row['Input']}")
-        print(f"Target Output: {row['Target Output']}")
-        print(f"Error: {row['Error']}")
+        # print(f"Input: {row['Input']}")
+        # print(f"Target Output: {row['Target Output']}")
+        # print(f"Error: {row['Error']}")
+        print(row)
         print("**********************************************************")
 
 
