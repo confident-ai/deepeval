@@ -162,7 +162,7 @@ bbh_confinement_statements_dict = {
     "logical_deduction_five_objects": "\n\nOutput '(A)', '(B)', '(C)', '(D)', or '(E)'. Full answer not needed.",
     "logical_deduction_seven_objects": "\n\nOutput '(A)', '(B)', '(C)', '(D)', '(E)', '(F)', or '(G)'. Full answer not needed.",
     "movie_recommendation": "\n\nOutput '(A)', '(B)', '(C)', '(D)', or '(E)'. Full answer not needed.",
-    "multi_step_arithmetic": "\n\nOutput the numerical answer. Full answer not needed.",
+    "multistep_arithmetic_two": "\n\nOutput the numerical answer. Full answer not needed.",
     "navigate": "\n\nOutput 'Yes' or 'No'. Full answer not needed.",
     "object_counting": "\n\nOutput the numerical answer. Full answer not needed.",
     "penguins_in_a_table": "\n\nOutput '(A)', '(B)', '(C)', '(D)', or '(E)'. Full answer not needed.",
