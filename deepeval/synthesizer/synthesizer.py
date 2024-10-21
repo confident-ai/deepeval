@@ -389,11 +389,11 @@ class Synthesizer:
                                     self.model,
                                     self.using_native_model,
                                 )
-                                rewritten_evolved_input = res.input
+                                evolved_input = res.input
 
                             # Synthesize Golden
                             golden = Golden(
-                                input=rewritten_evolved_input or evolved_input,
+                                input=evolved_input,
                                 context=context,
                                 source_file=(
                                     source_files[i]
@@ -598,6 +598,24 @@ class Synthesizer:
                 num_evolutions=num_evolutions,
                 evolutions=evolutions,
             )
+
+            if input_format or scenario or task:
+                prompt = (
+                    SynthesizerTemplate.rewrite_evolved_input(
+                        input_format=input_format,
+                        evolved_input=evolved_input,
+                        scenario=scenario,
+                        task=task,
+                    )
+                )
+
+                res: SyntheticData = await self._a_generate_schema(
+                    prompt,
+                    SyntheticData,
+                    self.model,
+                    self.using_native_model,
+                )
+                evolved_input = res.input
 
             # Generate expected output
             expected_output = None
