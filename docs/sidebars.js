@@ -14,7 +14,15 @@ module.exports = {
         "evaluation-test-cases",
         "evaluation-datasets",
         "evaluation-datasets-synthetic-data",
-        "evaluation-red-teaming",
+        {
+          type: "category",
+          label: "Red-Teaming",
+          items: [
+            "red-teaming-introduction",
+            "red-teaming-vulnerabilities",
+            "red-teaming-attack-enhancements",
+          ],
+        },
         {
           type: "category",
           label: "Metrics",
