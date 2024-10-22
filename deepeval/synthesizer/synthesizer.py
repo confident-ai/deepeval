@@ -600,13 +600,11 @@ class Synthesizer:
             )
 
             if input_format or scenario or task:
-                prompt = (
-                    SynthesizerTemplate.rewrite_evolved_input(
-                        input_format=input_format,
-                        evolved_input=evolved_input,
-                        scenario=scenario,
-                        task=task,
-                    )
+                prompt = SynthesizerTemplate.rewrite_evolved_input(
+                    input_format=input_format,
+                    evolved_input=evolved_input,
+                    scenario=scenario,
+                    task=task,
                 )
 
                 res: SyntheticData = await self._a_generate_schema(
