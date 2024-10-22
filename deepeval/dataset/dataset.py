@@ -590,7 +590,7 @@ class EvaluationDataset:
                 num_initial_goldens=num_initial_goldens,
                 num_evolutions=num_evolutions,
                 evolutions=evolutions,
-                _send_data=False
+                _send_data=False,
             )
         )
 

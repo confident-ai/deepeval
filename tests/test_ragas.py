@@ -29,6 +29,7 @@ context = [
     "The final match took place on July 15, 2018, in Moscow, Russia at Luzhniki Stadium.",
 ]
 
+
 @pytest.mark.skip(reason="openai is expensive")
 def test_ragas_score():
     test_case = LLMTestCase(
@@ -65,9 +66,4 @@ def test_everything():
     ragas = RagasMetric(
         model=ChatOpenAI(model_name="gpt-3.5-turbo"), embeddings=embeddings
     )
-    assert_test(
-        test_case,
-        [
-            ragas
-        ]
-    )
+    assert_test(test_case, [ragas])

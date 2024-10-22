@@ -169,6 +169,7 @@ scenarios = [
 # ### Test Context Generator ##############################
 # #########################################################
 
+
 async def test_context_generator(
     load_docs_function: Callable, is_async: bool = False
 ):
@@ -181,6 +182,7 @@ async def test_context_generator(
     duration = end_time - start_time
     print(f"Time taken: {duration} seconds")
     return loaded_docs
+
 
 def test_context_generator_generate_contexts():
     embedder = initialize_embedding_model("text-embedding-3-large")
@@ -211,6 +213,7 @@ def test_context_generator_generate_contexts():
 ### Generate Goldens ####################################
 #########################################################
 
+
 def test_generate_goldens(
     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
 ):
@@ -219,7 +222,7 @@ def test_generate_goldens(
         max_goldens_per_context=2,
         num_evolutions=2,
         evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
-        #contexts=contexts,
+        # contexts=contexts,
         contexts=sql_context,
         use_case=usecase,
         _send_data=False,
@@ -229,6 +232,7 @@ def test_generate_goldens(
     print("Generated goldens:", len(goldens))
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
+
 
 # synthesizer_sync = Synthesizer(async_mode=False)
 # synthesizer_async = Synthesizer(async_mode=True)
@@ -243,6 +247,7 @@ def test_generate_goldens(
 #########################################################
 ### Generate Goldens From Docs ##########################
 #########################################################
+
 
 def test_generate_goldens_from_docs(
     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA, seed: int = 0
@@ -290,6 +295,7 @@ def test_generate_goldens_from_docs(
 #########################################################
 ### Generate Goldens From Scratch #######################
 #########################################################
+
 
 def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
     start_time = time.time()

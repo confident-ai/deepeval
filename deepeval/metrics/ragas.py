@@ -15,9 +15,11 @@ from deepeval.telemetry import capture_metric_type
 def format_ragas_metric_name(name: str):
     return f"{name} (ragas)"
 
+
 #############################################################
 # Context Precision
 #############################################################
+
 
 class RAGASContextualPrecisionMetric(BaseMetric):
     """This metric checks the contextual precision using Ragas"""
@@ -76,7 +78,9 @@ class RAGASContextualPrecisionMetric(BaseMetric):
             self.score = context_precision_score
             return self.score
 
-    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool = False):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = False
+    ):
         return self.measure(test_case)
 
     def is_successful(self):
@@ -90,6 +94,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 #############################################################
 # Context Recall
 #############################################################
+
 
 class RAGASContextualRecallMetric(BaseMetric):
     """This metric checks the context recall using Ragas"""
@@ -106,7 +111,9 @@ class RAGASContextualRecallMetric(BaseMetric):
         if isinstance(model, str):
             self.evaluation_model = model
 
-    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool = False):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = False
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -156,6 +163,7 @@ class RAGASContextualRecallMetric(BaseMetric):
 # Context Entities Recall
 #############################################################
 
+
 class RAGASContextualEntitiesRecall(BaseMetric):
     """This metric checks the context entities recall using Ragas"""
 
@@ -171,7 +179,9 @@ class RAGASContextualEntitiesRecall(BaseMetric):
         if isinstance(model, str):
             self.evaluation_model = model
 
-    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool = False):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = False
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -298,6 +308,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 # Response Relevancy
 #############################################################
 
+
 class RAGASAnswerRelevancyMetric(BaseMetric):
     """This metric checks the answer relevancy using Ragas"""
 
@@ -315,7 +326,9 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
             self.evaluation_model = model
         self.embeddings = embeddings
 
-    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool = False):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = False
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -372,6 +385,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
 # Faithfulness
 #############################################################
 
+
 class RAGASFaithfulnessMetric(BaseMetric):
     def __init__(
         self,
@@ -385,7 +399,9 @@ class RAGASFaithfulnessMetric(BaseMetric):
         if isinstance(model, str):
             self.evaluation_model = model
 
-    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool = False):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = False
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -436,6 +452,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
 # RAGAS Metric
 #############################################################
 
+
 class RagasMetric(BaseMetric):
     """This metric checks if the output is more than 3 letters"""
 
@@ -451,7 +468,9 @@ class RagasMetric(BaseMetric):
             self.evaluation_model = model
         self.embeddings = embeddings
 
-    async def a_measure(self, test_case: LLMTestCase, _show_indicator: bool = False):
+    async def a_measure(
+        self, test_case: LLMTestCase, _show_indicator: bool = False
+    ):
         return self.measure(test_case)
 
     def measure(self, test_case: LLMTestCase):
@@ -504,9 +523,12 @@ class RagasMetric(BaseMetric):
 
 def import_ragas():
     import ragas
+
     required_version = "0.2.1"
     if not hasattr(ragas, "__version__"):
         raise ImportError("Version information is not available for ragas.")
     installed_version = ragas.__version__
     if installed_version < required_version:
-        raise ImportError(f"ragas version {required_version} or higher is required, but {installed_version} is installed.")
+        raise ImportError(
+            f"ragas version {required_version} or higher is required, but {installed_version} is installed."
+        )
