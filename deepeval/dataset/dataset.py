@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 from dataclasses import dataclass, field
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -460,64 +460,29 @@ class EvaluationDataset:
                 "Run `deepeval login` to pull dataset from Confident AI"
             )
 
-    def generate_goldens(
-        self,
-        contexts: List[List[str]],
-        include_expected_output: bool = False,
-        max_goldens_per_context: int = 2,
-        num_evolutions: int = 1,
-        source_files: Optional[List[str]] = None,
-        evolutions: List[Evolution] = [
-            Evolution.REASONING,
-            Evolution.MULTICONTEXT,
-            Evolution.CONCRETIZING,
-            Evolution.CONSTRAINED,
-            Evolution.COMPARATIVE,
-            Evolution.HYPOTHETICAL,
-            Evolution.IN_BREADTH,
-        ],
-        use_case: UseCase = UseCase.QA,
-        synthesizer=None,
-    ):
-        from deepeval.synthesizer import Synthesizer
-
-        if synthesizer is None:
-            synthesizer = Synthesizer()
-        else:
-            assert isinstance(synthesizer, Synthesizer)
-
-        self.goldens.extend(
-            synthesizer.generate_goldens(
-                contexts=contexts,
-                include_expected_output=include_expected_output,
-                max_goldens_per_context=max_goldens_per_context,
-                num_evolutions=num_evolutions,
-                source_files=source_files,
-                evolutions=evolutions,
-                use_case=use_case,
-                _send_data=False,
-            )
-        )
-
     def generate_goldens_from_docs(
         self,
         document_paths: List[str],
-        include_expected_output: bool = False,
-        max_goldens_per_context: int = 2,
+        include_expected_output: bool = True,
         max_contexts_per_document: int = 3,
+        max_goldens_per_context: int = 2,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         num_evolutions: int = 1,
-        evolutions: List[Evolution] = [
-            Evolution.REASONING,
-            Evolution.MULTICONTEXT,
-            Evolution.CONCRETIZING,
-            Evolution.CONSTRAINED,
-            Evolution.COMPARATIVE,
-            Evolution.HYPOTHETICAL,
-            Evolution.IN_BREADTH,
-        ],
+        evolutions: Dict[Evolution, float] = {
+            Evolution.REASONING: 1 / 7,
+            Evolution.MULTICONTEXT: 1 / 7,
+            Evolution.CONCRETIZING: 1 / 7,
+            Evolution.CONSTRAINED: 1 / 7,
+            Evolution.COMPARATIVE: 1 / 7,
+            Evolution.HYPOTHETICAL: 1 / 7,
+            Evolution.IN_BREADTH: 1 / 7,
+        },
         use_case: UseCase = UseCase.QA,
+        scenario: Optional[str] = None,
+        task: Optional[str] = None,
+        input_format: Optional[str] = None,
+        expected_output_format: Optional[str] = None,
         synthesizer=None,
     ):
         from deepeval.synthesizer import Synthesizer
@@ -538,7 +503,94 @@ class EvaluationDataset:
                 num_evolutions=num_evolutions,
                 evolutions=evolutions,
                 use_case=use_case,
+                scenario=scenario,
+                task=task,
+                input_format=input_format,
+                expected_output_format=expected_output_format,
                 _send_data=False,
+            )
+        )
+
+    def generate_goldens(
+        self,
+        contexts: List[List[str]],
+        include_expected_output: bool = True,
+        max_goldens_per_context: int = 2,
+        num_evolutions: int = 1,
+        source_files: Optional[List[str]] = None,
+        evolutions: Dict[Evolution, float] = {
+            Evolution.REASONING: 1 / 7,
+            Evolution.MULTICONTEXT: 1 / 7,
+            Evolution.CONCRETIZING: 1 / 7,
+            Evolution.CONSTRAINED: 1 / 7,
+            Evolution.COMPARATIVE: 1 / 7,
+            Evolution.HYPOTHETICAL: 1 / 7,
+            Evolution.IN_BREADTH: 1 / 7,
+        },
+        use_case: UseCase = UseCase.QA,
+        scenario: Optional[str] = None,
+        task: Optional[str] = None,
+        input_format: Optional[str] = None,
+        expected_output_format: Optional[str] = None,
+        synthesizer=None,
+    ):
+        from deepeval.synthesizer import Synthesizer
+
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert isinstance(synthesizer, Synthesizer)
+
+        self.goldens.extend(
+            synthesizer.generate_goldens(
+                contexts=contexts,
+                include_expected_output=include_expected_output,
+                max_goldens_per_context=max_goldens_per_context,
+                num_evolutions=num_evolutions,
+                source_files=source_files,
+                evolutions=evolutions,
+                use_case=use_case,
+                scenario=scenario,
+                task=task,
+                input_format=input_format,
+                expected_output_format=expected_output_format,
+                _send_data=False,
+            )
+        )
+
+    def generate_goldens_from_scratch(
+        self,
+        scenario: str,
+        task: str,
+        input_format: str,
+        num_initial_goldens: int,
+        num_evolutions: int = 1,
+        evolutions: Dict[Evolution, float] = {
+            Evolution.REASONING: 1 / 6,
+            Evolution.CONCRETIZING: 1 / 6,
+            Evolution.CONSTRAINED: 1 / 6,
+            Evolution.COMPARATIVE: 1 / 6,
+            Evolution.HYPOTHETICAL: 1 / 6,
+            Evolution.IN_BREADTH: 1 / 6,
+        },
+        synthesizer=None,
+    ):
+        from deepeval.synthesizer import Synthesizer
+
+        if synthesizer is None:
+            synthesizer = Synthesizer()
+        else:
+            assert isinstance(synthesizer, Synthesizer)
+
+        self.goldens.extend(
+            synthesizer.generate_goldens_from_scratch(
+                scenario=scenario,
+                task=task,
+                input_format=input_format,
+                num_initial_goldens=num_initial_goldens,
+                num_evolutions=num_evolutions,
+                evolutions=evolutions,
+                _send_data=False
             )
         )
 
