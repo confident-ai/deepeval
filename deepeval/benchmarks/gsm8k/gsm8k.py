@@ -9,6 +9,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.gsm8k.template import GSM8KTemplate
 from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import NumberSchema
+from deepeval.telemetry import capture_benchmark_run
 
 
 class GSM8K(DeepEvalBaseBenchmark):
@@ -32,32 +33,33 @@ class GSM8K(DeepEvalBaseBenchmark):
         self.overall_score: Optional[float] = None
 
     def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
-        overall_correct_predictions = 0
-        overall_total_predictions = self.n_problems
-        predictions_row = []
+        with capture_benchmark_run("GSM8K", len(self.tasks)):
+            overall_correct_predictions = 0
+            overall_total_predictions = self.n_problems
+            predictions_row = []
 
-        # Solving each problem
-        goldens = self.load_benchmark_dataset()[: self.n_problems]
-        for golden in tqdm(
-            goldens, desc=f"Processing {self.n_problems} problems"
-        ):
-            prediction, score = self.predict(model, golden).values()
-            if score:
-                overall_correct_predictions += 1
-            predictions_row.append((golden.input, prediction, score))
+            # Solving each problem
+            goldens = self.load_benchmark_dataset()[: self.n_problems]
+            for golden in tqdm(
+                goldens, desc=f"Processing {self.n_problems} problems"
+            ):
+                prediction, score = self.predict(model, golden).values()
+                if score:
+                    overall_correct_predictions += 1
+                predictions_row.append((golden.input, prediction, score))
 
-        # Calculate overall accuracy
-        overall_accuracy = (
-            overall_correct_predictions / overall_total_predictions
-        )
-        print(f"Overall GSM8K Accuracy: {overall_accuracy}")
+            # Calculate overall accuracy
+            overall_accuracy = (
+                overall_correct_predictions / overall_total_predictions
+            )
+            print(f"Overall GSM8K Accuracy: {overall_accuracy}")
 
-        self.predictions = pd.DataFrame(
-            predictions_row, columns=["Input", "Prediction", "Correct"]
-        )
-        self.overall_score = overall_accuracy
+            self.predictions = pd.DataFrame(
+                predictions_row, columns=["Input", "Prediction", "Correct"]
+            )
+            self.overall_score = overall_accuracy
 
-        return overall_accuracy
+            return overall_accuracy
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template

@@ -177,11 +177,13 @@ class Synthesizer:
 
             # Generate goldens from generated contexts
             with synthesizer_progress_context(
-                "docs",
-                self.model.get_model_name(),
-                self.embedder.get_model_name(),
-                len(contexts) * max_goldens_per_context,
-                use_case,
+                method="docs",
+                num_evolutions=num_evolutions,
+                evolutions=evolutions,
+                evaluation_model=self.model.get_model_name(),
+                embedder=self.embedder.get_model_name(),
+                max_generations=len(contexts) * max_goldens_per_context,
+                use_case=use_case,
             ) as progress_bar:
                 goldens = self.generate_goldens(
                     contexts,
@@ -259,6 +261,8 @@ class Synthesizer:
         # Generate goldens from generated contexts
         with synthesizer_progress_context(
             method="docs",
+            num_evolutions=num_evolutions,
+            evolutions=evolutions,
             evaluation_model=self.model.get_model_name(),
             embedder=self.embedder.get_model_name(),
             max_generations=len(contexts) * max_goldens_per_context,
@@ -337,6 +341,8 @@ class Synthesizer:
             if use_case == UseCase.QA:
                 with synthesizer_progress_context(
                     method="default",
+                    num_evolutions=num_evolutions,
+                    evolutions=evolutions,
                     evaluation_model=self.model.get_model_name(),
                     embedder=None,
                     max_generations=len(contexts) * max_goldens_per_context,
@@ -425,6 +431,8 @@ class Synthesizer:
             elif use_case == UseCase.TEXT2SQL:
                 with synthesizer_progress_context(
                     method="default",
+                    num_evolutions=num_evolutions,
+                    evolutions=evolutions,
                     evaluation_model=self.model.get_model_name(),
                     embedder=None,
                     max_generations=len(contexts) * max_goldens_per_context,
@@ -502,6 +510,8 @@ class Synthesizer:
         if use_case == UseCase.QA:
             with synthesizer_progress_context(
                 method="default",
+                num_evolutions=num_evolutions,
+                evolutions=evolutions,
                 evaluation_model=self.model.get_model_name(),
                 embedder=None,
                 max_generations=len(contexts) * max_goldens_per_context,
@@ -533,6 +543,8 @@ class Synthesizer:
         elif use_case == UseCase.TEXT2SQL:
             with synthesizer_progress_context(
                 method="default",
+                num_evolutions=num_evolutions,
+                evolutions=evolutions,
                 evaluation_model=self.model.get_model_name(),
                 embedder=None,
                 max_generations=len(contexts) * max_goldens_per_context,
@@ -714,6 +726,8 @@ class Synthesizer:
         goldens: List[Golden] = []
         with synthesizer_progress_context(
             method="Scratch",
+            num_evolutions=num_evolutions,
+            evolutions=evolutions,
             evaluation_model=self.model.get_model_name(),
             embedder=None,
             max_generations=num_initial_goldens,
@@ -789,6 +803,8 @@ class Synthesizer:
         else:
             with synthesizer_progress_context(
                 method="Scratch",
+                num_evolutions=num_evolutions,
+                evolutions=evolutions,
                 evaluation_model=self.model.get_model_name(),
                 embedder=None,
                 max_generations=num_initial_goldens,
