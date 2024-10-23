@@ -95,7 +95,11 @@ class RedTeamer:
                 )
             )
         else:
-            with capture_red_teamer_run("scan"):
+            with capture_red_teamer_run(
+                attacks_per_vulnerability=attacks_per_vulnerability,
+                vulnerabilities=vulnerabilities,
+                attack_enhancements=attack_enhancements
+            ):
                 # Initialize metric map
                 metrics_map = self.get_red_teaming_metrics_map()
 
@@ -222,7 +226,11 @@ class RedTeamer:
         },
         max_concurrent_tasks: int = 10,  # Throttling limit, control concurrency
     ):
-        with capture_red_teamer_run("scan"):
+        with capture_red_teamer_run(
+            attacks_per_vulnerability=attacks_per_vulnerability,
+            vulnerabilities=vulnerabilities,
+            attack_enhancements=attack_enhancements
+        ):
             # Initialize metric map
             metrics_map = self.get_red_teaming_metrics_map()
 

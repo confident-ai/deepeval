@@ -3,6 +3,7 @@ from typing import Optional
 from rich import print
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.cli.test import app as test_app
+from deepeval.telemetry import capture_login_event
 import webbrowser
 
 app = typer.Typer(name="deepeval")
@@ -28,34 +29,38 @@ def login(
         help="Use the existing API key stored in the key file if present.",
     ),
 ):
-    # Use the confident_api_key if it is provided, otherwise proceed with existing logic
-    if use_existing:
-        confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
-        if confident_api_key:
-            print("Using existing API key.")
+    with capture_login_event() as span:
+        # Use the confident_api_key if it is provided, otherwise proceed with existing logic
+        try:
+            if use_existing:
+                confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
+                if confident_api_key:
+                    print("Using existing API key.")
 
-    if confident_api_key:
-        api_key = confident_api_key
-    else:
-        """Login to the DeepEval platform."""
-        print("Welcome to [bold]DeepEval[/bold]!")
-        print(
-            "Login and grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
-        )
-        webbrowser.open("https://app.confident-ai.com")
-        if api_key == "":
-            while True:
-                api_key = input("Paste your API Key: ").strip()
-                if api_key:
-                    break
-                else:
-                    print("API Key cannot be empty. Please try again.\n")
+            if confident_api_key:
+                api_key = confident_api_key
+            else:
+                """Login to the DeepEval platform."""
+                print("Welcome to [bold]DeepEval[/bold]!")
+                print(
+                    "Login and grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
+                )
+                webbrowser.open("https://app.confident-ai.com")
+                if api_key == "":
+                    while True:
+                        api_key = input("Paste your API Key: ").strip()
+                        if api_key:
+                            break
+                        else:
+                            print("API Key cannot be empty. Please try again.\n")
 
-    KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
-    print("Congratulations! Login successful :raising_hands: ")
-    print(
-        "If you are new to DeepEval, follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/docs/getting-started]https://docs.confident-ai.com/docs/getting-started[/link][/bold]"
-    )
+            KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
+            print("Congratulations! Login successful :raising_hands: ")
+            print(
+                "If you are new to DeepEval, follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/docs/getting-started]https://docs.confident-ai.com/docs/getting-started[/link][/bold]"
+            )
+        except:
+            span.set_attribute("completed", False)
 
 
 @app.command(name="set-azure-openai")
