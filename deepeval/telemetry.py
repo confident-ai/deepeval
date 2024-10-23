@@ -20,36 +20,43 @@ class Feature(Enum):
     EVALUATION = "evaluation"
     UNKNOWN = "unknown"
 
-UNIQUE_ID_FILE = '.deepeval_unique_id.txt'
-LAST_FEATURE_FILE = '.deepeval_last_feature.txt'
+TELEMETRY_DATA_FILE = '.telemetry_data.txt'
 
 #########################################################
 ### Context Managers ####################################
 #########################################################
 
-def get_unique_id(file_path=UNIQUE_ID_FILE):
+def get_unique_id(file_path=TELEMETRY_DATA_FILE):
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
-            unique_id = f.read().strip()
+            data = f.read().strip().split('\n')
+            unique_id = data[0] if len(data) > 0 else str(uuid.uuid4())
     else:
         unique_id = str(uuid.uuid4())
+        # Initialize the file with the new unique ID and unknown feature
         with open(file_path, 'w') as f:
-            f.write(unique_id)
+            f.write(f"{unique_id}\n{Feature.UNKNOWN.value}")
     return unique_id
 
-
-def get_last_feature(file_path=LAST_FEATURE_FILE):
+def get_last_feature(file_path=TELEMETRY_DATA_FILE):
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
-            last_feature = f.read().strip()
+            data = f.read().strip().split('\n')
+            last_feature = data[1] if len(data) > 1 else Feature.UNKNOWN.value
             return Feature(last_feature) if last_feature in Feature._value2member_map_ else Feature.UNKNOWN
     else:
         return Feature.UNKNOWN
 
-
-def set_last_feature(feature: Feature, file_path=LAST_FEATURE_FILE):
+def set_last_feature(feature: Feature, file_path=TELEMETRY_DATA_FILE):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as f:
+            data = f.read().strip().split('\n')
+            unique_id = data[0]  # Keep the existing unique_id
+    else:
+        unique_id = str(uuid.uuid4())
+    
     with open(file_path, 'w') as f:
-        f.write(feature.value)
+        f.write(f"{unique_id}\n{feature.value}")
 
 
 #########################################################
