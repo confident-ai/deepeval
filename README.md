@@ -69,7 +69,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - TruthfulQA
   - HumanEval
   - GSM8K
-- [Automatically integrated with Confident AI](https://app.confident-ai.com) for continous evaluation throughout the lifetime of your LLM (app):
+- [Automatically integrated with Confident AI](https://app.confident-ai.com?utm_source=GitHub) for continous evaluation throughout the lifetime of your LLM (app):
   - log evaluation results and analyze metrics pass / fails
   - compare and pick the optimal hyperparameters (eg. prompt templates, chunk size, models used, etc.) based on evaluation results
   - debug evaluation results via LLM traces
@@ -248,7 +248,7 @@ dataset.evaluate([answer_relevancy_metric])
 
 # Real-time Evaluations on Confident AI
 
-We offer a [web platform](https://app.confident-ai.com) for you to:
+We offer a [web platform](https://app.confident-ai.com?utm_source=Github) for you to:
 
 1. Log and view all the test results / metrics data from DeepEval's test runs.
 2. Debug evaluation results via LLM traces.
