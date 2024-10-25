@@ -48,7 +48,7 @@ def login(
                     "Login and grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
                 )
                 webbrowser.open(
-                    "https://app.confident-ai.com?utm_source=deepeval"
+                    "https://app.confident-ai.com/auth/signup?utm_source=deepeval"
                 )
                 if api_key == "":
                     while True:

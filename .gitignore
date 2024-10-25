@@ -162,6 +162,7 @@ docs/.docusaurus
 node_modules
 .deepeval
 .deepeval-cache.json
+.deepeval_telemtry.txt
 
 # deepeval tests
 secrets
