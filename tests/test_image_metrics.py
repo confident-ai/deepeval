@@ -3,7 +3,11 @@ import pytest
 from deepeval.dataset import EvaluationDataset
 from deepeval import assert_test, evaluate
 from deepeval.test_case import MLLMTestCase, LLMTestCase, MLLMImage
-from deepeval.metrics import AnswerRelevancyMetric, ImageEditingMetric, TextToImageMetric
+from deepeval.metrics import (
+    AnswerRelevancyMetric,
+    ImageEditingMetric,
+    TextToImageMetric,
+)
 
 image_path = "./data/image.webp"
 edited_image_path = "./data/edited_image.webp"
@@ -44,7 +48,7 @@ llm_test_case = LLMTestCase(
 
 # dataset = EvaluationDataset(
 #     test_cases=[
-#         # text_to_image_test_case, 
+#         # text_to_image_test_case,
 #         image_editing_test_case,
 #         llm_test_case
 #     ]
@@ -59,9 +63,9 @@ llm_test_case = LLMTestCase(
 
 evaluate(
     test_cases=[
-        text_to_image_test_case, 
+        text_to_image_test_case,
         # image_editing_test_case,
-        llm_test_case
+        llm_test_case,
     ],
     metrics=[
         TextToImageMetric(),

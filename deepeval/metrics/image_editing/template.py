@@ -17,9 +17,7 @@ class ImageEditingTemplate:
     )
 
     @staticmethod
-    def generate_semantic_consistency_evaluation_results(
-        text_prompt: str
-    ):
+    def generate_semantic_consistency_evaluation_results(text_prompt: str):
         return textwrap.dedent(
             f"""
             {ImageEditingTemplate.context}
