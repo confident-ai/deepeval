@@ -14,11 +14,11 @@
 
 <h4 align="center">
     <p>
-        <a href="https://docs.confident-ai.com/docs/getting-started">Documentation</a> |
+        <a href="https://docs.confident-ai.com/docs/getting-started?utm_source=GitHub">Documentation</a> |
         <a href="#-metrics-and-features">Metrics and Features</a> |
         <a href="#-quickstart">Getting Started</a> |
         <a href="#-integrations">Integrations</a> |
-        <a href="https://confident-ai.com">Confident AI</a>
+        <a href="https://confident-ai.com?utm_source=GitHub">Confident AI</a>
     <p>
 </h4>
 
@@ -44,7 +44,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 # 🔥 Metrics and Features
 
-> ‼️ You can now run DeepEval's metrics on the cloud for free directly on [Confident AI](https://confident-ai.com)'s infrastructure 🥳
+> ‼️ You can now run DeepEval's metrics on the cloud for free directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)'s infrastructure 🥳
 
 - Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
   - G-Eval
@@ -61,7 +61,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 - Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**. Do this via the CLI in a Pytest-like manner, or through our `evaluate()` function.
 - Create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
 - Integrates seamlessly with **ANY** CI/CD environment.
-- Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://docs.confident-ai.com/docs/benchmarks-introduction), which includes:
+- Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://docs.confident-ai.com/docs/benchmarks-introduction?utm_source=GitHub), which includes:
   - MMLU
   - HellaSwag
   - DROP
@@ -84,8 +84,8 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 # 🔌 Integrations
 
-- 🦄 LlamaIndex, to [**unit test RAG applications in CI/CD**](https://docs.confident-ai.com/docs/integrations-llamaindex)
-- 🤗 Hugging Face, to [**enable real-time evaluations during LLM fine-tuning**](https://docs.confident-ai.com/docs/integrations-huggingface)
+- 🦄 LlamaIndex, to [**unit test RAG applications in CI/CD**](https://docs.confident-ai.com/docs/integrations-llamaindex?utm_source=GitHub)
+- 🤗 Hugging Face, to [**enable real-time evaluations during LLM fine-tuning**](https://docs.confident-ai.com/docs/integrations-huggingface?utm_source=GitHub)
 
 <br />
 
@@ -109,7 +109,7 @@ To login, run:
 deepeval login
 ```
 
-Follow the instructions in the CLI to create an account, copy your API key, and paste it into the CLI. All test cases will automatically be logged (find more information on data privacy [here](https://docs.confident-ai.com/docs/data-privacy)).
+Follow the instructions in the CLI to create an account, copy your API key, and paste it into the CLI. All test cases will automatically be logged (find more information on data privacy [here](https://docs.confident-ai.com/docs/data-privacy?utm_source=GitHub)).
 
 ## Writing your first test case
 
@@ -137,7 +137,7 @@ def test_case():
     )
     assert_test(test_case, [answer_relevancy_metric])
 ```
-Set your `OPENAI_API_KEY` as an environment variable (you can also evaluate using your own custom model, for more details visit [this part of our docs](https://docs.confident-ai.com/docs/metrics-introduction#using-a-custom-llm)):
+Set your `OPENAI_API_KEY` as an environment variable (you can also evaluate using your own custom model, for more details visit [this part of our docs](https://docs.confident-ai.com/docs/metrics-introduction#using-a-custom-llm?utm_source=GitHub)):
 
 ```
 export OPENAI_API_KEY="..."
@@ -155,7 +155,7 @@ deepeval test run test_chatbot.py
 - The variable `retrieval_context` contains the relevant information from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an out-of-the-box metric provided by DeepEval. It helps evaluate the relevancy of your LLM output based on the provided context.
 - The metric score ranges from 0 - 1. The `threshold=0.5` threshold ultimately determines whether your test has passed or not.
 
-[Read our documentation](https://docs.confident-ai.com/docs/getting-started) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
+[Read our documentation](https://docs.confident-ai.com/docs/getting-started?utm_source=GitHub) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
 
 <br />
 
@@ -257,7 +257,7 @@ We offer a [web platform](https://app.confident-ai.com?utm_source=Github) for yo
 5. Track events in production and augment your evaluation dataset for continous evaluation.
 6. Track events in production, view evaluation results and historical insights.
 
-Everything on Confident AI, including how to use Confident is available [here](https://docs.confident-ai.com/docs/confident-ai-introduction).
+Everything on Confident AI, including how to use Confident is available [here](https://docs.confident-ai.com/docs/confident-ai-introduction?utm_source=GitHub).
 
 To begin, login from the CLI:
 
