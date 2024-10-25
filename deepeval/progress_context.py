@@ -10,6 +10,7 @@ import sys
 
 from deepeval.telemetry import capture_synthesizer_run
 
+
 @contextmanager
 def progress_context(
     description: str, total: int = 9999, transient: bool = True
@@ -30,14 +31,16 @@ def synthesizer_progress_context(
     method: str,
     evaluation_model: str,
     num_evolutions: int,
-    evolutions:  Dict,
+    evolutions: Dict,
     embedder: Optional[str] = None,
     max_generations: str = None,
     use_case: str = "QA",
     progress_bar: Optional[tqdm.std.tqdm] = None,
     async_mode: bool = False,
 ) -> Generator[Optional[tqdm.std.tqdm], None, None]:
-    with capture_synthesizer_run(method, max_generations, num_evolutions, evolutions):
+    with capture_synthesizer_run(
+        method, max_generations, num_evolutions, evolutions
+    ):
         if embedder is None:
             description = f"✨ Generating up to {max_generations} goldens using DeepEval (using {evaluation_model}, use case={use_case}, method={method})"
         else:

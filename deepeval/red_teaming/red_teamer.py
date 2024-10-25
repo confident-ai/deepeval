@@ -98,7 +98,7 @@ class RedTeamer:
             with capture_red_teamer_run(
                 attacks_per_vulnerability=attacks_per_vulnerability,
                 vulnerabilities=vulnerabilities,
-                attack_enhancements=attack_enhancements
+                attack_enhancements=attack_enhancements,
             ):
                 # Initialize metric map
                 metrics_map = self.get_red_teaming_metrics_map()
@@ -229,7 +229,7 @@ class RedTeamer:
         with capture_red_teamer_run(
             attacks_per_vulnerability=attacks_per_vulnerability,
             vulnerabilities=vulnerabilities,
-            attack_enhancements=attack_enhancements
+            attack_enhancements=attack_enhancements,
         ):
             # Initialize metric map
             metrics_map = self.get_red_teaming_metrics_map()

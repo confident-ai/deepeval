@@ -44,7 +44,9 @@ class HumanEval(DeepEvalBaseBenchmark):
                 task_correct = 0
                 overall_total_predictions += 1
                 # Calculate task accuracy
-                prediction, score = self.predict(model, task, golden, k).values()
+                prediction, score = self.predict(
+                    model, task, golden, k
+                ).values()
                 if score:
                     task_correct = 1
                     overall_correct_predictions += 1
@@ -65,9 +67,12 @@ class HumanEval(DeepEvalBaseBenchmark):
             # Create a DataFrame from task_results_data
             # Columns: 'Task', 'Input', 'Prediction', 'Score'
             self.predictions = pd.DataFrame(
-                predictions_row, columns=["Task", "Input", "Prediction", "Correct"]
+                predictions_row,
+                columns=["Task", "Input", "Prediction", "Correct"],
             )
-            self.task_scores = pd.DataFrame(scores_row, columns=["Task", "Score"])
+            self.task_scores = pd.DataFrame(
+                scores_row, columns=["Task", "Score"]
+            )
             self.overall_score = overall_accuracy
 
             return overall_accuracy

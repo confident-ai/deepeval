@@ -13,6 +13,7 @@ from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import *
 from deepeval.telemetry import capture_benchmark_run
 
+
 class BigBenchHard(DeepEvalBaseBenchmark):
     def __init__(
         self,
@@ -71,7 +72,9 @@ class BigBenchHard(DeepEvalBaseBenchmark):
                             )
                 else:
                     # Calculate task accuracy
-                    for golden in tqdm(goldens, desc=f"Processing {task.value}"):
+                    for golden in tqdm(
+                        goldens, desc=f"Processing {task.value}"
+                    ):
                         prediction, score = self.predict(
                             model, task, golden
                         ).values()
@@ -82,7 +85,9 @@ class BigBenchHard(DeepEvalBaseBenchmark):
                             (task.value, golden.input, prediction, score)
                         )
 
-                task_accuracy = task_correct_predictions / task_total_predictions
+                task_accuracy = (
+                    task_correct_predictions / task_total_predictions
+                )
                 print(
                     f"Big Bench Hard Task Accuracy (task={task.value}): {task_accuracy}"
                 )
@@ -97,9 +102,12 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             # Create a DataFrame from task_results_data
             # Columns: 'Task', 'Input', 'Prediction', 'Score'
             self.predictions = pd.DataFrame(
-                predictions_row, columns=["Task", "Input", "Prediction", "Correct"]
+                predictions_row,
+                columns=["Task", "Input", "Prediction", "Correct"],
             )
-            self.task_scores = pd.DataFrame(scores_row, columns=["Task", "Score"])
+            self.task_scores = pd.DataFrame(
+                scores_row, columns=["Task", "Score"]
+            )
             self.overall_score = overall_accuracy
 
             return overall_accuracy

@@ -58,7 +58,9 @@ class DROP(DeepEvalBaseBenchmark):
                         desc=f"Batch Processing {task.value} (batch_size={batch_size})",
                     ):
                         goldens_batch = goldens[i : i + batch_size]
-                        batch_predictions = self.batch_predict(model, goldens_batch)
+                        batch_predictions = self.batch_predict(
+                            model, goldens_batch
+                        )
                         for golden, prediction_dict in zip(
                             goldens_batch, batch_predictions
                         ):
@@ -71,7 +73,9 @@ class DROP(DeepEvalBaseBenchmark):
                                 (task.value, golden.input, prediction, score)
                             )
                 else:
-                    for golden in tqdm(goldens, desc=f"Processing {task.value}"):
+                    for golden in tqdm(
+                        goldens, desc=f"Processing {task.value}"
+                    ):
                         prediction, score = self.predict(model, golden).values()
                         if score:
                             task_correct_predictions += 1
@@ -80,8 +84,12 @@ class DROP(DeepEvalBaseBenchmark):
                             (task.value, golden.input, prediction, score)
                         )
 
-                task_accuracy = task_correct_predictions / task_total_predictions
-                print(f"DROP Task Accuracy (task={task.value}): {task_accuracy}")
+                task_accuracy = (
+                    task_correct_predictions / task_total_predictions
+                )
+                print(
+                    f"DROP Task Accuracy (task={task.value}): {task_accuracy}"
+                )
                 scores_row.append((task.value, task_accuracy))
 
             # Calculate overall accuracy
@@ -93,9 +101,12 @@ class DROP(DeepEvalBaseBenchmark):
             # Create a DataFrame from task_results_data
             # Columns: 'Task', 'Input', 'Prediction', 'Score'
             self.predictions = pd.DataFrame(
-                predictions_row, columns=["Task", "Input", "Prediction", "Correct"]
+                predictions_row,
+                columns=["Task", "Input", "Prediction", "Correct"],
             )
-            self.task_scores = pd.DataFrame(scores_row, columns=["Task", "Score"])
+            self.task_scores = pd.DataFrame(
+                scores_row, columns=["Task", "Score"]
+            )
             self.overall_score = overall_accuracy
 
             return overall_accuracy
