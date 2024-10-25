@@ -5,7 +5,7 @@ import textwrap
 
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
-from deepeval.metrics.viescore.template import VIEScoreTemplate
+from deepeval.metrics.image_editing.template import ImageEditingTemplate
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -14,8 +14,7 @@ from deepeval.metrics.utils import (
     initialize_multimodal_model,
 )
 from deepeval.models import DeepEvalBaseMLLM
-from deepeval.metrics.viescore.schema import ReasonScore
-from deepeval.metrics.viescore.task import VIEScoreTask
+from deepeval.metrics.image_editing.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 
 required_params: List[MLLMTestCaseParams] = [
@@ -24,16 +23,14 @@ required_params: List[MLLMTestCaseParams] = [
 ]
 
 
-class VIEScore(BaseMultimodalMetric):
+class ImageEditingMetric(BaseMultimodalMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
-        task: VIEScoreTask = VIEScoreTask.TEXT_TO_IMAGE_GENERATION,
         threshold: float = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        _include_VIEScore_task_name: bool = True,
     ):
         self.model, self.using_native_model = initialize_multimodal_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -41,16 +38,11 @@ class VIEScore(BaseMultimodalMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
-        self.task = task
-        self._include_VIEScore_task_name = _include_VIEScore_task_name
 
     def measure(
         self, test_case: MLLMTestCase, _show_indicator: bool = True
     ) -> float:
-        if self.task == VIEScoreTask.TEXT_TO_IMAGE_GENERATION:
-            check_mllm_test_case_params(test_case, required_params, 0, 1, self)
-        elif self.task == VIEScoreTask.TEXT_TO_IMAGE_EDITING:
-            check_mllm_test_case_params(test_case, required_params, 1, 1, self)
+        check_mllm_test_case_params(test_case, required_params, 1, 1, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -102,10 +94,7 @@ class VIEScore(BaseMultimodalMetric):
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        if self.task == VIEScoreTask.TEXT_TO_IMAGE_GENERATION:
-            check_mllm_test_case_params(test_case, required_params, 0, 1, self)
-        elif self.task == VIEScoreTask.TEXT_TO_IMAGE_EDITING:
-            check_mllm_test_case_params(test_case, required_params, 1, 1, self)
+        check_mllm_test_case_params(test_case, required_params, 1, 1, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -169,13 +158,10 @@ class VIEScore(BaseMultimodalMetric):
         actual_image_output: MLLMImage,
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
-        if self.task == VIEScoreTask.TEXT_TO_IMAGE_GENERATION:
-            images.append(image_input)
-        elif self.task == VIEScoreTask.TEXT_TO_IMAGE_EDITING:
-            images.extend([image_input, actual_image_output])
+        images.extend([image_input, actual_image_output])
         prompt = [
-            VIEScoreTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt, task=self.task
+            ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
+                text_prompt=text_prompt
             )
         ]
         if self.using_native_model:
@@ -203,13 +189,10 @@ class VIEScore(BaseMultimodalMetric):
         actual_image_output: MLLMImage,
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
-        if self.task == VIEScoreTask.TEXT_TO_IMAGE_GENERATION:
-            images.append(image_input)
-        elif self.task == VIEScoreTask.TEXT_TO_IMAGE_EDITING:
-            images.extend([image_input, actual_image_output])
+        images.extend([image_input, actual_image_output])
         prompt = [
-            VIEScoreTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt, task=self.task
+            ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
+                text_prompt=text_prompt
             )
         ]
         if self.using_native_model:
@@ -233,7 +216,7 @@ class VIEScore(BaseMultimodalMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
         prompt = [
-            VIEScoreTemplate.generate_perceptual_quality_evaluation_results()
+            ImageEditingTemplate.generate_perceptual_quality_evaluation_results()
         ]
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt + images)
@@ -256,7 +239,7 @@ class VIEScore(BaseMultimodalMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
         prompt = [
-            VIEScoreTemplate.generate_perceptual_quality_evaluation_results()
+            ImageEditingTemplate.generate_perceptual_quality_evaluation_results()
         ]
         if self.using_native_model:
             res, cost = self.model.generate(prompt + images)
@@ -304,7 +287,4 @@ class VIEScore(BaseMultimodalMetric):
 
     @property
     def __name__(self):
-        if self._include_VIEScore_task_name:
-            return f"{self.task.value} (VIEScore)"
-        else:
-            return "VIEScore"
+        return "Image Editing"

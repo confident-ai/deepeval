@@ -54,8 +54,8 @@ module.exports = {
             },
             {
               type: "category",
-              label: "Multimodal Metrics",
-              items: ["metrics-viescore"],
+              label: "Image Metrics",
+              items: ["metrics-text-to-image", "metrics-image-editing"],
               collapsed: true,
             },
           ],
