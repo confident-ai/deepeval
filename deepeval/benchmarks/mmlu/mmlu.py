@@ -11,6 +11,7 @@ from deepeval.benchmarks.mmlu.template import MMLUTemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import MultipleChoiceSchema
+from deepeval.telemetry import capture_benchmark_run
 
 
 class MMLU(DeepEvalBaseBenchmark):
@@ -30,70 +31,71 @@ class MMLU(DeepEvalBaseBenchmark):
     def evaluate(
         self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
     ) -> Dict:
-        overall_correct_predictions = 0
-        overall_total_predictions = 0
-        predictions_row = []
-        scores_row = []
-        use_batch = should_use_batch(model, batch_size)
+        with capture_benchmark_run("MMLU", len(self.tasks)):
+            overall_correct_predictions = 0
+            overall_total_predictions = 0
+            predictions_row = []
+            scores_row = []
+            use_batch = should_use_batch(model, batch_size)
 
-        for task in self.tasks:
-            goldens = self.load_benchmark_dataset(task)
-            task_correct_predictions = 0
-            task_total_predictions = len(goldens)
-            overall_total_predictions += len(goldens)
+            for task in self.tasks:
+                goldens = self.load_benchmark_dataset(task)
+                task_correct_predictions = 0
+                task_total_predictions = len(goldens)
+                overall_total_predictions += len(goldens)
 
-            # Calculate task accuracy
-            if use_batch:
-                for i in tqdm(
-                    range(0, len(goldens), batch_size),
-                    desc=f"Batch Processing {task.value} (batch_size={batch_size})",
-                ):
-                    goldens_batch = goldens[i : i + batch_size]
-                    batch_predictions = self.batch_predict(
-                        model, task, goldens_batch
-                    )
-                    for golden, prediction_dict in zip(
-                        goldens_batch, batch_predictions
+                # Calculate task accuracy
+                if use_batch:
+                    for i in tqdm(
+                        range(0, len(goldens), batch_size),
+                        desc=f"Batch Processing {task.value} (batch_size={batch_size})",
                     ):
-                        prediction = prediction_dict["prediction"]
-                        score = prediction_dict["score"]
+                        goldens_batch = goldens[i : i + batch_size]
+                        batch_predictions = self.batch_predict(
+                            model, task, goldens_batch
+                        )
+                        for golden, prediction_dict in zip(
+                            goldens_batch, batch_predictions
+                        ):
+                            prediction = prediction_dict["prediction"]
+                            score = prediction_dict["score"]
+                            if score:
+                                task_correct_predictions += 1
+                                overall_correct_predictions += 1
+                            predictions_row.append(
+                                (task.value, golden.input, prediction, score)
+                            )
+                else:
+                    for golden in tqdm(goldens, desc=f"Processing {task.value}"):
+                        prediction, score = self.predict(
+                            model, task, golden
+                        ).values()
                         if score:
                             task_correct_predictions += 1
                             overall_correct_predictions += 1
                         predictions_row.append(
                             (task.value, golden.input, prediction, score)
                         )
-            else:
-                for golden in tqdm(goldens, desc=f"Processing {task.value}"):
-                    prediction, score = self.predict(
-                        model, task, golden
-                    ).values()
-                    if score:
-                        task_correct_predictions += 1
-                        overall_correct_predictions += 1
-                    predictions_row.append(
-                        (task.value, golden.input, prediction, score)
-                    )
 
-            task_accuracy = task_correct_predictions / task_total_predictions
-            print(f"MMLU Task Accuracy (task={task.value}): {task_accuracy}")
-            scores_row.append((task.value, task_accuracy))
+                task_accuracy = task_correct_predictions / task_total_predictions
+                print(f"MMLU Task Accuracy (task={task.value}): {task_accuracy}")
+                scores_row.append((task.value, task_accuracy))
 
-        # Calculate overall accuracy
-        overall_accuracy = (
-            overall_correct_predictions / overall_total_predictions
-        )
-        print(f"Overall MMLU Accuracy: {overall_accuracy}")
+            # Calculate overall accuracy
+            overall_accuracy = (
+                overall_correct_predictions / overall_total_predictions
+            )
+            print(f"Overall MMLU Accuracy: {overall_accuracy}")
 
-        # Create a DataFrame from task_results_data
-        # Columns: 'Task', 'Input', 'Prediction', 'Score'
-        self.predictions = pd.DataFrame(
-            predictions_row, columns=["Task", "Input", "Prediction", "Correct"]
-        )
-        self.task_scores = pd.DataFrame(scores_row, columns=["Task", "Score"])
-        self.overall_score = overall_accuracy
+            # Create a DataFrame from task_results_data
+            # Columns: 'Task', 'Input', 'Prediction', 'Score'
+            self.predictions = pd.DataFrame(
+                predictions_row, columns=["Task", "Input", "Prediction", "Correct"]
+            )
+            self.task_scores = pd.DataFrame(scores_row, columns=["Task", "Score"])
+            self.overall_score = overall_accuracy
 
-        return overall_accuracy
+            return overall_accuracy
 
     def predict(
         self, model: DeepEvalBaseLLM, task: MMLUTask, golden: Golden
