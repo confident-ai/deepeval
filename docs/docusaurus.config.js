@@ -66,6 +66,13 @@ module.exports = async function createConfigAsync() {
         },
       ],
     ],
+    scripts:[          
+      {
+        src: 'https://plausible.io/js/script.tagged-events.js',
+        defer: true,
+        'data-domain': 'confident-ai.com',
+      }
+    ],
     stylesheets: [
       {
         href: 'https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css',
@@ -86,7 +93,7 @@ module.exports = async function createConfigAsync() {
         navbar: {
           logo: {
             alt: 'DeepEval Logo',
-            src: 'icons/DeepEval..svg',
+            src: 'icons/DeepEval.svg',
           },
           items: [
             {
@@ -103,6 +110,11 @@ module.exports = async function createConfigAsync() {
               href: "https://confident-ai.com/blog",
               position: 'left',
               label: 'Blog',
+            },
+            {
+              href: 'https://confident-ai.com',
+              className: 'header-confident-link',
+              position: 'right',
             },
             {
               href: 'https://discord.gg/a3K9c8GRGt',
@@ -187,15 +199,7 @@ module.exports = async function createConfigAsync() {
               block: {start: 'highlight-info-start', end: 'highlight-info-end'},
             },
           ],
-        },      
-        scripts: [
-          {
-            src: 'https://cdn.getkoala.com/v1/pk_c2f9444e23cd5fd7c2b34105b24d241bfdad/sdk.js',
-            async: true,
-            'data-cfasync': 'false',
-            defer: true,
-          },
-        ],
+        },
       }),
   };  
 };

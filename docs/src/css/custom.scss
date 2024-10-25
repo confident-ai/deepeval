@@ -116,6 +116,19 @@ html[data-theme="dark"] .header-github-link:before {
   margin: 40px auto 10px auto;
 }
 
+.header-confident-link:hover {
+  opacity: 0.6;
+}
+
+.header-confident-link:before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  display: flex;
+  background: url("/icons/logo.svg");
+  background-size: cover;
+}
+
 .header-discord-link:hover {
   opacity: 0.6;
 }
