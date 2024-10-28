@@ -187,6 +187,10 @@ class EvaluationDataset:
         context_col_delimiter: str = ";",
         retrieval_context_col_name: Optional[str] = None,
         retrieval_context_col_delimiter: str = ";",
+        tools_called_col_name: Optional[str] = None,
+        tools_called_col_delimiter: str = ";",
+        expected_tools_col_name: Optional[str] = None,
+        expected_tools_col_delimiter: str = ";",
         additional_metadata_col_name: Optional[str] = None,
     ):
         """
@@ -251,6 +255,26 @@ class EvaluationDataset:
                 df, retrieval_context_col_name, default=""
             )
         ]
+        tools_called = [
+            (
+                tool_called.split(tools_called_col_delimiter)
+                if tool_called
+                else []
+            )
+            for tool_called in get_column_data(
+                df, tools_called_col_name, default=""
+            )
+        ]
+        expected_tools = [
+            (
+                expected_tool.split(expected_tools_col_delimiter)
+                if expected_tool
+                else []
+            )
+            for expected_tool in get_column_data(
+                df, expected_tools_col_name, default=""
+            )
+        ]
         additional_metadatas = [
             ast.literal_eval(metadata) if metadata else None
             for metadata in get_column_data(
@@ -264,6 +288,8 @@ class EvaluationDataset:
             expected_output,
             context,
             retrieval_context,
+            tools_called,
+            expected_tools,
             additional_metadata,
         ) in zip(
             inputs,
@@ -271,6 +297,8 @@ class EvaluationDataset:
             expected_outputs,
             contexts,
             retrieval_contexts,
+            tools_called,
+            expected_tools,
             additional_metadatas,
         ):
             self.add_test_case(
@@ -280,6 +308,8 @@ class EvaluationDataset:
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
+                    tools_called=tools_called,
+                    expected_tools=expected_tools,
                     additional_metadata=additional_metadata,
                 )
             )
@@ -292,6 +322,8 @@ class EvaluationDataset:
         expected_output_key_name: Optional[str] = None,
         context_key_name: Optional[str] = None,
         retrieval_context_key_name: Optional[str] = None,
+        tools_called_key_name: Optional[str] = None,
+        expected_tools_key_name: Optional[str] = None,
     ):
         """
         Load test cases from a JSON file.
@@ -339,6 +371,8 @@ class EvaluationDataset:
             expected_output = json_obj.get(expected_output_key_name)
             context = json_obj.get(context_key_name)
             retrieval_context = json_obj.get(retrieval_context_key_name)
+            tools_called = json_obj.get(tools_called_key_name)
+            expected_tools = json_obj.get(expected_tools_key_name)
 
             self.add_test_case(
                 LLMTestCase(
@@ -347,6 +381,8 @@ class EvaluationDataset:
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
+                    tools_called=tools_called,
+                    expected_tools=expected_tools,
                 )
             )
 
