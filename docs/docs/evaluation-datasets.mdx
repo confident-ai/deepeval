@@ -12,6 +12,12 @@ In `deepeval`, an evaluation dataset, or just dataset, is a collection of `LLMTe
 2. using `evaluate`
 3. using `confident_evaluate` (evaluates on Confident AI instead of locally)
 
+:::note
+
+Evaluating a dataset means exactly the same as evaluating your LLM system, because by definition a dataset contains all the information produced by your LLM needed for evaluation.
+
+:::
+
 ## Create An Evaluation Dataset
 
 An `EvaluationDataset` in `deepeval` is simply a collection of `LLMTestCase`s and/or `Golden`s.
@@ -54,12 +60,11 @@ from deepeval.dataset import EvaluationDataset, Golden
 first_golden = Golden(input="...")
 second_golden = Golden(input="...")
 
-goldens = [first_golden, second_golden]
-
 dataset = EvaluationDataset(goldens=goldens)
+print(dataset.goldens)
 ```
 
-:::note
+:::tip
 A `Golden` and `LLMTestCase` contains almost an identical class signature, so technically you can also supply other parameters such as the `actual_output` when creating a `Golden`.
 :::
 
@@ -99,7 +104,7 @@ dataset.generate_goldens_from_docs(
 
 ## Load an Existing Dataset
 
-`deepeval` offers support for loading datasetes stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as test cases.
+`deepeval` offers support for loading datasetes stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
 
 ### From Confident AI
 
@@ -120,12 +125,14 @@ For more information, visit the [Confident AI datasets section.](confident-ai-ma
 
 ### From JSON
 
-You can add test cases into your `EvaluationDataset` by supplying a `file_path` to your `.json` file. Your `.json` file should contain an array of objects (or list of dictionaries).
+You can loading an existing `EvaluationDataset` you might have generated elsewhere by supplying a `file_path` to your `.json` file as **either test cases or goldens**. Your `.json` file should contain an array of objects (or list of dictionaries).
 
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
+
+# Add as test cases
 dataset.add_test_cases_from_json_file(
     # file_path is the absolute path to you .json file
     file_path="example.json",
@@ -135,16 +142,31 @@ dataset.add_test_cases_from_json_file(
     context_key_name="context",
     retrieval_context_key_name="retrieval_context",
 )
+
+# Or, add as goldens
+dataset.add_goldens_from_json_file(
+    # file_path is the absolute path to you .json file
+    file_path="example.json",
+    input_key_name="query"
+)
 ```
+
+:::info
+Loading datasets as goldens are especially helpful if you're looking to generate LLM `actual_output`s at evaluation time. You might find yourself in this situation if you are generating data for testing or using historical data from production.
+:::
 
 ### From CSV
 
-You can add test cases into your `EvaluationDataset` by supplying a `file_path` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `LLMTestCase`s through their column names. Remember, `context` should be a list of strings and in the context of CSV files, it means you have to supply a `context_col_delimiter` argument to tell `deepeval` how to split your context cells into a list of strings.
+You can add test cases or goldens into your `EvaluationDataset` by supplying a `file_path` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `LLMTestCase`s through their column names.
+
+Remember, parameters such as `context` should be a list of strings and in the context of CSV files, it means you have to supply a `context_col_delimiter` argument to tell `deepeval` how to split your context cells into a list of strings.
 
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
+
+# Add as test cases
 dataset.add_test_cases_from_csv_file(
     # file_path is the absolute path to you .csv file
     file_path="example.csv",
@@ -156,10 +178,17 @@ dataset.add_test_cases_from_csv_file(
     retrieval_context_col_name="retrieval_context",
     retrieval_context_col_delimiter= ";"
 )
+
+# Or, add as goldens
+dataset.add_goldens_from_csv_file(
+    # file_path is the absolute path to you .csv file
+    file_path="example.csv",
+    input_col_name="query"
+)
 ```
 
 :::note
-Since `expected_output`, `context`, and `retrieval_context` are optional parameters for an `LLMTestCase`, these fields are similarily **optional** parameters when adding test cases from an existing dataset.
+Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `expected_tools` are optional parameters for an `LLMTestCase`, these fields are similarily **optional** parameters when adding test cases from an existing dataset.
 :::
 
 ## Evaluate Your Dataset Using `deepeval`

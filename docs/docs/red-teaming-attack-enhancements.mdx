@@ -1,15 +1,32 @@
 ---
 id: red-teaming-attack-enhancements
-title: Attack Enhancement Strategies
+title: Attack Enhancements
 sidebar_label: Attack Enhancements
 ---
 
 ## Quick Summary
 
-DeepEval's `RedTeamer` generates attacks by first synthesizing simple baseline prompts, before **progressively enhancing them to create more sophisticated versions** capable of eliciting harmful responses from your LLM application. You can specify these enhancements in `attack_enhancements` within the scan function.
-:::info
-DeepEval's `RedTeamer` offers **10 types of attack enhancements**, which are randomly sampled from the specified distribution each time an attack is enhanced.
-:::
+`deepeval`'s `RedTeamer` generates adversarial attacks by first synthesizing simple baseline prompts, before **progressively enhancing them to create more sophisticated versions** capable of eliciting harmful responses from your LLM application.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/red_teaming_synthesis.svg"
+    alt="LangChain"
+    style={{
+      margin: "40px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+You can specify these enhancements in `attack_enhancements` within the method function.
 
 ```python
 from deepeval.red_teaming import AttackEnhancement
@@ -27,7 +44,11 @@ results = red_teamer.scan(
 )
 ```
 
-Here are the `AttackEnhancement`s deepeval offers:
+:::tip DID YOU KNOW?
+`deepeval` offers **10 types of attack enhancements**, which are randomly sampled from the specified distribution each time an attack is enhanced.
+:::
+
+Here are the `AttackEnhancement`s `deepeval` offers:
 
 | Attack Enhancement                      | Description                                                                                                                                                        |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -44,7 +65,7 @@ Here are the `AttackEnhancement`s deepeval offers:
 
 ## Attack Enhancement Types
 
-DeepEval's `AttackEnhancement`s are categorized into three types: **encoding-based, one-shot, and dialogue-based enhancements**.
+`deepeval`'s `AttackEnhancement`s are categorized into three types: **encoding-based, one-shot, and dialogue-based enhancements**.
 
 <div
   style={{
@@ -69,7 +90,7 @@ Encoding-based attack enhancements apply simple encoding techniques, such as cha
 
 ## Encoding-based Enhancements
 
-DeepEval supports multiple encoding-based attack enhancements that work by transforming the baseline attack using different encoding or encryption techniques. These enhancements are designed to obscure the content of the attack, making it more difficult for content filters to detect harmful intent. Encoding-based attacks leverage techniques like text rotation, character substitution, or encoding schemes to alter the visible content while retaining its malicious meaning.
+`deepeval` supports multiple encoding-based attack enhancements that work by transforming the baseline attack using different encoding or encryption techniques. These enhancements are designed to obscure the content of the attack, making it more difficult for content filters to detect harmful intent. Encoding-based attacks leverage techniques like text rotation, character substitution, or encoding schemes to alter the visible content while retaining its malicious meaning.
 
 <div
   style={{
