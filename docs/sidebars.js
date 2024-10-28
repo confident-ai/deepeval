@@ -91,7 +91,7 @@ module.exports = {
             "confident-ai-testing-n-evaluation-experiments",
             "confident-ai-testing-n-evaluation-test-run",
           ],
-          collapsed: false,
+          collapsed: true,
         },
         {
           type: "category",
@@ -100,7 +100,7 @@ module.exports = {
             "confident-ai-evaluation-dataset-management",
             "confident-ai-evaluation-dataset-evaluation",
           ],
-          collapsed: false,
+          collapsed: true,
         },
         {
           type: "category",
@@ -111,7 +111,7 @@ module.exports = {
             "confident-ai-llm-monitoring-evaluations",
             "confident-ai-llm-monitoring-dataset",
           ],
-          collapsed: false,
+          collapsed: true,
         },
         {
           type: "category",
@@ -121,7 +121,7 @@ module.exports = {
             "confident-ai-human-feedback-adding",
             "confident-ai-human-feedback-platform",
           ],
-          collapsed: false,
+          collapsed: true,
         },
         {
           type: "category",
@@ -131,7 +131,7 @@ module.exports = {
             "confident-ai-tracing-llama-index",
             "confident-ai-tracing-langchain",
           ],
-          collapsed: false,
+          collapsed: true,
         },
       ],
       collapsed: false,
