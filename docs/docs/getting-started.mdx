@@ -132,7 +132,7 @@ correctness_metric = GEval(
     name="Correctness",
     criteria="Correctness - determine if the actual output is correct according to the expected output.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
-    strict=True
+    strict_mode=True
 )
 
 correctness_metric.measure(test_case)
