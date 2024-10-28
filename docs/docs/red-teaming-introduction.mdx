@@ -6,7 +6,7 @@ sidebar_label: Introduction
 
 ## Quick Summary
 
-`deepeval` offers a powerful `RedTeamer` that can **scan LLM applications for safety risks and vulnerabilities** in just a few lines of code.
+`deepeval` offers a powerful `RedTeamer` that can **scan LLM applications for safety risks and vulnerabilities** in just a few lines of code, and is a fast and scalable way to test for LLM safety.
 
 ```python
 from deepeval.red_teaming import RedTeamer
@@ -15,12 +15,12 @@ red_teamer = RedTeamer(...)
 red_teamer.scan(...)
 ```
 
-It works by first generating adversarial attacks aimed at provoking harmful responses from your LLM and evaluates how effectively your application handles these attacks, and is a fast and scalable way to test for LLM safety.
+It works by first generating adversarial attacks aimed at provoking harmful responses from your LLM and evaluates how effectively your application handles these attacks.
 
 :::tip DID YOUR KNOW?
 Red teaming, unlike regular LLM evaluation you've seen in other parts of this documentation, are purposed to mimic how a malicious user/bad actor would try to hack your systems through your LLM application.
 
-For those interested, You can read more about how it is done in the later sections [here.](#how-does-it-work)
+For those interested, you can read more about how it is done in the later sections [here.](#how-does-it-work)
 :::
 
 ## Red Team Your LLM Application
