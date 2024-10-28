@@ -64,7 +64,7 @@ from deepeval.red_teaming import AttackEnhancement, Vulnerability
 results = red_teamer.scan(
     target_model=TargetLLM(),
     attacks_per_vulnerability=5,
-    vulnerabilities=[v for v in Vulnerability]
+    vulnerabilities=[v for v in Vulnerability],
     attack_enhancements={
         AttackEnhancement.BASE64: 0.25,
         AttackEnhancement.GRAY_BOX_ATTACK: 0.25,
