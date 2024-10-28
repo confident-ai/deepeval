@@ -386,6 +386,164 @@ class EvaluationDataset:
                 )
             )
 
+    def add_goldens_from_csv_file(
+        self,
+        file_path: str,
+        input_col_name: str,
+        actual_output_col_name: str,
+        expected_output_col_name: Optional[str] = None,
+        context_col_name: Optional[str] = None,
+        context_col_delimiter: str = ";",
+        retrieval_context_col_name: Optional[str] = None,
+        retrieval_context_col_delimiter: str = ";",
+        tools_called_col_name: Optional[str] = None,
+        tools_called_col_delimiter: str = ";",
+        expected_tools_col_name: Optional[str] = None,
+        expected_tools_col_delimiter: str = ";",
+        additional_metadata_col_name: Optional[str] = None,
+    ):
+        try:
+            import pandas as pd
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install pandas to use this method. 'pip install pandas'"
+            )
+
+        def get_column_data(df: pd.DataFrame, col_name: str, default=None):
+            return (
+                df[col_name].values
+                if col_name in df.columns
+                else [default] * len(df)
+            )
+
+        df = pd.read_csv(file_path)
+
+        inputs = get_column_data(df, input_col_name)
+        actual_outputs = get_column_data(df, actual_output_col_name)
+        expected_outputs = get_column_data(
+            df, expected_output_col_name, default=None
+        )
+        contexts = [
+            context.split(context_col_delimiter) if context else []
+            for context in get_column_data(df, context_col_name, default="")
+        ]
+        retrieval_contexts = [
+            (
+                retrieval_context.split(retrieval_context_col_delimiter)
+                if retrieval_context
+                else []
+            )
+            for retrieval_context in get_column_data(
+                df, retrieval_context_col_name, default=""
+            )
+        ]
+        tools_called = [
+            (
+                tool_called.split(tools_called_col_delimiter)
+                if tool_called
+                else []
+            )
+            for tool_called in get_column_data(
+                df, tools_called_col_name, default=""
+            )
+        ]
+        expected_tools = [
+            (
+                expected_tool.split(expected_tools_col_delimiter)
+                if expected_tool
+                else []
+            )
+            for expected_tool in get_column_data(
+                df, expected_tools_col_name, default=""
+            )
+        ]
+        additional_metadatas = [
+            ast.literal_eval(metadata) if metadata else None
+            for metadata in get_column_data(
+                df, additional_metadata_col_name, default=""
+            )
+        ]
+
+        for (
+            input,
+            actual_output,
+            expected_output,
+            context,
+            retrieval_context,
+            tools_called,
+            expected_tools,
+            additional_metadata,
+        ) in zip(
+            inputs,
+            actual_outputs,
+            expected_outputs,
+            contexts,
+            retrieval_contexts,
+            tools_called,
+            expected_tools,
+            additional_metadatas,
+        ):
+            self.goldens.append(
+                Golden(
+                    input=input,
+                    actual_output=actual_output,
+                    expected_output=expected_output,
+                    context=context,
+                    retrieval_context=retrieval_context,
+                    tools_called=tools_called,
+                    expected_tools=expected_tools,
+                    additional_metadata=additional_metadata,
+                    source_file=file_path,
+                )
+            )
+
+    def add_goldens_from_json_file(
+        self,
+        file_path: str,
+        input_key_name: str,
+        actual_output_key_name: str,
+        expected_output_key_name: Optional[str] = None,
+        context_key_name: Optional[str] = None,
+        retrieval_context_key_name: Optional[str] = None,
+        tools_called_key_name: Optional[str] = None,
+        expected_tools_key_name: Optional[str] = None,
+    ):
+        try:
+            with open(file_path, "r") as file:
+                json_list = json.load(file)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"The file {file_path} was not found.")
+        except json.JSONDecodeError:
+            raise ValueError(f"The file {file_path} is not a valid JSON file.")
+
+        # Process each JSON object
+        for json_obj in json_list:
+            if input_key_name not in json_obj:
+                raise ValueError(
+                    "Required fields are missing in one or more JSON objects"
+                )
+
+            input = json_obj[input_key_name]
+            actual_output = json_obj.get(actual_output_key_name)
+            expected_output = json_obj.get(expected_output_key_name)
+            context = json_obj.get(context_key_name)
+            retrieval_context = json_obj.get(retrieval_context_key_name)
+            tools_called = json_obj.get(tools_called_key_name)
+            expected_tools = json_obj.get(expected_tools_key_name)
+
+            self.goldens.append(
+                Golden(
+                    input=input,
+                    actual_output=actual_output,
+                    expected_output=expected_output,
+                    context=context,
+                    retrieval_context=retrieval_context,
+                    tools_called=tools_called,
+                    expected_tools=expected_tools,
+                    source_file=file_path,
+                )
+            )
+
     def push(self, alias: str, overwrite: Optional[bool] = None):
         if len(self.test_cases) == 0 and len(self.goldens) == 0:
             raise ValueError(
