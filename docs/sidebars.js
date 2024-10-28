@@ -54,7 +54,7 @@ module.exports = {
             },
             {
               type: "category",
-              label: "Image Metrics",
+              label: "Multimodal Metrics",
               items: ["metrics-text-to-image", "metrics-image-editing"],
               collapsed: true,
             },
