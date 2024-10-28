@@ -154,14 +154,18 @@ class ContextualRelevancyMetric(BaseMetric):
             return None
 
         irrelevancies = []
+        relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
                 if verdict.verdict.lower() == "no":
                     irrelevancies.append(verdict.reason)
+                else:
+                    relevant_statements.append(verdict.statement)
 
         prompt: dict = ContextualRelevancyTemplate.generate_reason(
             input=input,
             irrelevancies=irrelevancies,
+            relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
