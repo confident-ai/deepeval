@@ -168,4 +168,56 @@ module.exports = {
       collapsed: false,
     },
   ],
+  tutorial: [   
+    'tutorial-introduction', 
+    {
+      type: 'category',
+      label: 'Before We Begin',
+      items: [
+        'tutorial-setup',
+        'tutorial-llm-application-example',
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: 'Choosing Your Metrics',
+      items: [
+        "tutorial-placeholder"
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: 'Preparing Your Evaluation Dataset',
+      items: [
+        "tutorial-placeholder"
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: 'Advanced LLM Safety Testing',
+      items: [
+        "tutorial-placeholder"
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: 'Integration with Existing Workflows',
+      items: [
+        "tutorial-placeholder"
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: 'Continous Evaluation in Production',
+      items: [
+        "tutorial-placeholder"
+      ],
+      collapsed: false,
+    },
+  ]
 };

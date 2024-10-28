@@ -102,7 +102,7 @@ module.exports = async function createConfigAsync() {
               label: 'Docs',
             },
             // {
-            //   to: "docs/tutorial",
+            //   to: "docs/tutorial-introduction",
             //   position: 'left',
             //   label: 'Tutorials',
             // },
