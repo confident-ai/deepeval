@@ -1253,7 +1253,7 @@ class Synthesizer:
             os.makedirs(directory)
         full_file_path = os.path.join(directory, new_filename)
         if file_type == "json":
-            with open(full_file_path, "w") as file:
+            with open(full_file_path, "w", encoding="utf-8") as file:
                 json_data = [
                     {
                         "input": golden.input,
@@ -1264,9 +1264,11 @@ class Synthesizer:
                     }
                     for golden in self.synthetic_goldens
                 ]
-                json.dump(json_data, file, indent=4)
+                json.dump(json_data, file, indent=4, ensure_ascii=False)
         elif file_type == "csv":
-            with open(full_file_path, "w", newline="") as file:
+            with open(
+                full_file_path, "w", newline="", encoding="utf-8"
+            ) as file:
                 writer = csv.writer(file)
                 writer.writerow(
                     [
