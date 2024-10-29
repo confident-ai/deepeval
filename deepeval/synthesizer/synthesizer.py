@@ -1266,7 +1266,9 @@ class Synthesizer:
                 ]
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
         elif file_type == "csv":
-            with open(full_file_path, "w", newline="", encoding="utf-8") as file:
+            with open(
+                full_file_path, "w", newline="", encoding="utf-8"
+            ) as file:
                 writer = csv.writer(file)
                 writer.writerow(
                     [
