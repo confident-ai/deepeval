@@ -33,7 +33,6 @@ JSON:
 
     @staticmethod
     def generate_truths(text, extraction_limit: Optional[int] = None):
-        print(extraction_limit)
         if extraction_limit is None:
             limit = " FACTUAL, undisputed truths"
         elif extraction_limit == 1:

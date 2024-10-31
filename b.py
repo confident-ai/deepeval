@@ -72,8 +72,7 @@ evaluate(
         FaithfulnessMetric(verbose_mode=True, truths_extraction_limit=3),
     ],
     # throttle_value=10,
-    max_concurrent=1,
-    run_async=False,
+    # max_concurrent=1,
 )
 
 # confident_evaluate(experiment_name="Convo", test_cases=[test_case])
