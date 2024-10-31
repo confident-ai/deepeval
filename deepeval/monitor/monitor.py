@@ -28,9 +28,9 @@ def monitor(
     hyperparameters: Optional[Dict[str, str]] = {},
     fail_silently: Optional[bool] = False,
     raise_expection: Optional[bool] = True,
-    run_async: Optional[bool] = True,
     trace_stack: Optional[Dict[str, Any]] = None,
     trace_provider: Optional[str] = None,
+    _debug: Optional[bool] = False,
 ) -> str:
     try:
         custom_properties = None
@@ -89,7 +89,10 @@ def monitor(
         except AttributeError:
             # Pydantic version below 2.0
             body = api_event.dict(by_alias=True, exclude_none=True)
-        print(body)
+        
+        if _debug:
+            print(body)
+
         result = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.EVENT_ENDPOINT,
