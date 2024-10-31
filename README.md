@@ -56,7 +56,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - RAGAS
   - Hallucination
   - etc.
-- [Red team/safety test your LLM application](https://docs.confident-ai.com/docs/red-teaming-introduction) for 40+ vulnerabilities in a few lines of code, including:
+- [Red team your LLM application](https://docs.confident-ai.com/docs/red-teaming-introduction) for 40+ safety vulnerabilities in a few lines of code, including:
   - Toxicity
   - Bias
   - SQL Injection
