@@ -55,9 +55,12 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - Contextual Precision
   - RAGAS
   - Hallucination
+  - etc.
+- [Red team/safety test your LLM application](https://docs.confident-ai.com/docs/red-teaming-introduction) for 40+ vulnerabilities in a few lines of code, including:
   - Toxicity
   - Bias
-  - etc. 
+  - SQL Injection
+  - etc., using advanced 10+ attack enhancement strategies such as prompt injections.
 - Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**. Do this via the CLI in a Pytest-like manner, or through our `evaluate()` function.
 - Create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
 - Integrates seamlessly with **ANY** CI/CD environment.
