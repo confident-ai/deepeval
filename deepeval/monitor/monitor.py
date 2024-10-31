@@ -89,7 +89,7 @@ def monitor(
         except AttributeError:
             # Pydantic version below 2.0
             body = api_event.dict(by_alias=True, exclude_none=True)
-
+        print(body)
         result = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.EVENT_ENDPOINT,
