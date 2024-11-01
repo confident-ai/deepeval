@@ -1,0 +1,61 @@
+---
+id: synthesizer-generate-from-datasets
+title: Generating Synthetic Data from Datasets
+sidebar_label: Generating within Datasets
+---
+
+An `EvaluationDataset` also has the `generate_goldens_from_docs` and `generate_goldens` methods, which under the hood is powered by the `Synthesizer`'s implementation.
+
+:::info
+Except for an additional option to accept a custom `Synthesizer` as argument, the `generate_goldens_from_docs` and `generate_goldens` methods in an `EvaluationDataset` accepts the exact same arguments as those on a `Synthesizer`.
+:::
+
+## Using Synthesizer Within An Evaluation Dataset
+
+To begin, optionally create a custom `Synthesizer`:
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer(model="gpt-3.5-turbo")
+```
+
+Then, provide it as an argument to `generate_goldens_from_docs`:
+
+```python
+from deepeval.dataset import EvaluationDataset
+...
+
+dataset = EvaluationDataset()
+dataset.generate_goldens_from_docs(
+    synthesizer=synthesizer,
+    document_paths=['example.pdf'],
+)
+```
+
+Or, to `generate_goldens`:
+
+```python
+...
+
+dataset.generate_goldens(
+    synthesizer=synthesizer,
+    contexts=[
+        ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
+        ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
+    ]
+)
+```
+
+Lastly, don't forget to call `save_as()` to preserve any generated synthetic `Golden`:
+
+```python
+saved_path = dataset.save_as(
+    file_type='json',  # or 'csv'
+    directory="./synthetic_data"
+)
+```
+
+:::tip
+The `save_as()` method returns a string to the path the dataset was saved to, just in case you need to use it in code later on.
+:::

@@ -13,7 +13,17 @@ module.exports = {
         "evaluation-introduction",
         "evaluation-test-cases",
         "evaluation-datasets",
-        "evaluation-datasets-synthetic-data",
+        {
+          type: "category",
+          label: "Synthesizer",
+          items: [
+            "synthesizer-introduction",
+            "synthesizer-generate-from-docs",
+            "synthesizer-generate-from-contexts",
+            "synthesizer-generate-from-scratch",
+            "synthesizer-generate-from-datasets",
+          ],
+        },
         {
           type: "category",
           label: "Red-Teaming",
@@ -145,6 +155,7 @@ module.exports = {
         "guides-using-synthesizer",
         "guides-optimizing-hyperparameters",
         "guides-regression-testing-in-cicd",
+        "guides-llm-observability",
         "guides-building-custom-metrics",
         "guides-answer-correctness-metric",
         "guides-rag-triad",
@@ -168,56 +179,43 @@ module.exports = {
       collapsed: false,
     },
   ],
-  tutorial: [   
-    'tutorial-introduction', 
+  tutorial: [
+    "tutorial-introduction",
     {
-      type: 'category',
-      label: 'Before We Begin',
-      items: [
-        'tutorial-setup',
-        'tutorial-llm-application-example',
-      ],
+      type: "category",
+      label: "Before We Begin",
+      items: ["tutorial-setup", "tutorial-llm-application-example"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Choosing Your Metrics',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Choosing Your Metrics",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Preparing Your Evaluation Dataset',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Preparing Your Evaluation Dataset",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Advanced LLM Safety Testing',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Advanced LLM Safety Testing",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Integration with Existing Workflows',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Integration with Existing Workflows",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Continous Evaluation in Production',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Continous Evaluation in Production",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
-  ]
+  ],
 };
