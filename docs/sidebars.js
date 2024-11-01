@@ -156,6 +156,7 @@ module.exports = {
         "guides-optimizing-hyperparameters",
         "guides-regression-testing-in-cicd",
         "guides-building-custom-metrics",
+        "guides-llm-observability",
         "guides-answer-correctness-metric",
         "guides-rag-triad",
       ],

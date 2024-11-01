@@ -1,0 +1,59 @@
+---
+# id: guides-llm-observability
+title: What is LLM Observability and Monitoring?
+sidebar_label: LLM Observability & Monitoring
+---
+
+**LLM observability** is the practice of tracking and analyzing model performance in real-world use. It helps teams ensure models stay accurate, aligned with goals, and responsive to users.
+
+:::tip
+LLM Observability tools help you **monitor behavior in real-time, catch performance changes early, and address these issues** before they impact users—allowing fast troubleshooting, reliable models, and scalable AI initiatives. Here is a [great article](https://www.confident-ai.com/blog/what-is-llm-observability-the-ultimate-llm-monitoring-guide) if you wish to learn more about LLM observability in-depth.
+:::
+
+## Why LLM Observability is Neccessary
+
+1. **LLM Systems are Complex**: LLM applications are complex, comprising numerous components such as retrievers, APIs, embedders, and models, which make debugging a daunting task. This complexity can lead to performance bottlenecks, errors, and redundancies. Effective observability is crucial to identify the root causes of these issues, ensuring your application remains efficient and accurate.
+
+2. **LLMs Hallucinate**: LLMs occasionally hallucinate, providing incorrect or misleading responses when faced with complex queries. In high-stakes use cases, this can lead to compounding issues with serious repercussions. Observability tools are essential for detecting such inaccuracies and preventing the spread of false information.
+
+3. **LLMs are Unpredictable**: LLMs are unpredictable and undergo constant evolution as engineers try to improve them. This can lead to unforeseen shifts in performance and behavior. Continuous monitoring is vital in tracking these changes and maintaining control over the model's reliability and output consistency.
+
+4. **Users are Unpredictable**: LLMs are unpredictable, but so are users. Despite rigorous pre-production testing, even the best LLM applications still fail to address specific user queries. Observability tools play a vital role in detecting and addressing these events, facilitating prompt updates and improvements.
+
+5. **LLM applications Needs Experimenting**: Even after deployment, it's essential to continuously experiment with different model configurations, prompt designs, and contextual databases to identify areas for improvement and better tailor your application to your users. In this case, a robust observability tool is crucial, as it enables seamless scenario replays and analysis.
+
+:::info
+LLM observability can greatly reduce these risks by **automatically detecting issues** and giving you **full visibility** into issue-causing components of your application.
+:::
+
+## 5 Key Components of LLM Observability
+
+1. **Response Monitoring**: Response monitoring involves real-time tracking of user queries, LLM responses, and key metrics such as cost and latency. It offers immediate insights into the operational aspects of your system, enabling quick adjustments to enhance both user experience and system efficiency.
+
+2. **Automated Evaluations**: Automatic evaluation of monitored LLM responses rapidly identifies specific issues, reducing the need for manual intervention. It serves as the initial layer of defense, paving the way for further analysis by human evaluators, domain experts, and engineers. These evaluations utilize both RAG metrics and custom metrics designed for your specific use case.
+
+3. **Advanced Filtering**: Advanced filtering allows stakeholders and engineers to efficiently sift through monitored responses, flagging those that fail or do not meet the desired standards for further inspection. This focused approach helps prioritize critical issues, streamlining the troubleshooting process and improving the quality of responses.
+
+4. **Application Tracing**: Tracing the connections between different components of your LLM application can help you quickly identify bugs and performance bottlenecks. This visibility is crucial for debugging and optimizing your LLM application, ensuring smooth and reliable operations, and is instrumental in maintaining system integrity.
+
+5. **Human-in-the-Loop**: Incorporating human feedback and expected responses for flagged outputs serves as the final layer of response verification, bridging the gap between automated evaluations and nuanced human judgment. This feature ensures that complex or ambiguous cases receive the expert attention they require, and are added to evaluation datasets for further model development, whether that involves prompt engineering or fine-tuning.
+
+## LLM Observability with Confident AI
+
+:::tip
+Confident AI makes **LLM observability** easy, offering a comprehensive platform designed to help teams monitor, analyze, and enhance LLM operations with efficiency.
+:::
+
+Our platform encompasses a **robust suite of features** that covers all aspects of model operations, from decision-making processes to data management. This comprehensive tracking fosters a deeper understanding of user behaviors and provides valuable insights that can be used to optimize your applications.
+
+Starting with Confident AI is straightforward, with each integration requiring just a few lines of code, allowing you to quickly benefit from advanced observability features.
+
+Confident AI supports all core observability needs, including:
+
+- [**Response Monitoring**](confident-ai-llm-monitoring)
+- [**Automated Evaluations**](confident-ai-llm-monitoring-evaluations)
+- [**Advanced Filtering**](confident-ai-llm-monitoring#filtering-for-responses)
+- [**Application Tracing**](confident-ai-tracing)
+- [**Human-in-the-Loop Integration**](confident-ai-human-feedback)
+
+We are continuously evolving our platform to include better features. By integrating with Confident AI, you can significantly improve the observability and operational efficiency of your LLM systems, ensuring they remain aligned with your business objectives and user expectations. [Get started now](https://www.confident-ai.com/).
