@@ -1,0 +1,194 @@
+---
+id: synthesizer-introduction
+title: Generating Synthetic Data
+sidebar_label: Introduction
+---
+
+## Quick Summary
+
+DeepEval's `Synthesizer` offers a **fast and easy to automatically get started with testing** your LLM by generating high-quality evaluation datasets (inputs, expected outputs, and contexts) in just a few lines of code.
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer(...)
+goldens = synthesizer.generate_from_docs(...)
+```
+
+The `Synthesizer` uses an LLM to first generate a series of inputs, before evolving them to become more complex and realistic. These evolved inputs are then used to create a list of synthetic `Golden`s, which makes up your synthetic `EvaluationDataset`.
+
+:::info
+DeepEval's `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244)
+
+For those interested, here is a [great article on how DeepEval's synthesizer was built.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
+:::
+
+## Synthesizing your Evaluation Dataset
+
+### Create a Synthesizer
+
+DeepEval's synthesizer can be used as a standalone or [within an `EvaluationDataset`](synthesizer-generate-from-datasets). To start generating Goldens using the synthesizer as a standalone, begin by creating a `Synthesizer` object:
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+```
+
+There are nine optional parameters when creating a `Synthesizer`:
+
+- [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use for quality filtering, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `embedder`: a string specifying which of OpenAI's embedding models to use, **OR** [any custom embedding model](#using-a-custom-embedding-model) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
+- [Optional] `context_quality_threshold`: a float representing the minimum quality threshold for context selection. If the context quality is lower than this threshold, the context will be rejected. Defaulted to `0.5`.
+- [Optional] `context_similarity_threshold`: a float representing the minimum similarity score required for context matching (via cosine similarity). Contexts with similarity scores lower than this threshold will not be used. Defaulted to `0.5`.
+- [Optional] `context_max_retries`: an integer that specifies the number of times to retry context generation if it does not meet the required quality or similarity threshold. Defaulted to `3`.
+- [Optional] `synthetic_input_quality_threshold`: a float representing the minimum quality threshold for synthetic input generation. Inputs with lower quality will be rejected. Defaulted to `0.5`.
+- [Optional] `synthetic_input_max_retries`: an integer that specifies the number of times to retry synthetic input generation if it does not meet the required quality. Defaulted to `3`.
+
+:::tip
+As you'll discover later, an **embedding model** is only necessary when using the `generate_goldens_from_docs()` method. Therefore, you shouldn't be too concerned about the embedder parameter unless you plan to use your own embedding model. Similarly, context thresholds and max retries only become relevant when generating from documents.
+:::
+
+### Generate Your First Synthetic Golden Dataset
+
+Once you've created a `Synthesizer` object with the desired filtering parameters and models, you can begin generating Goldens. To generate synthetic `Golden`s from documents, simply provide a list of document paths:
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+synthesizer.generate_goldens_from_docs(
+    document_paths=['example.txt', 'example.docx', 'example.pdf'],
+    evolutions={
+        Evolution.REASONING: 1/4,
+        Evolution.MULTICONTEXT: 1/4,
+        Evolution.CONCRETIZING: 1/4,
+        Evolution.CONSTRAINED: 1/4
+    }
+)
+```
+
+There are 3 approaches DeepEval's `Synthesizer` can use to generate synthetic `Golden`s:
+
+1. Generating synthetic `Golden`s using [context extracted from documents](synthesizer-generate-from-docs).
+2. Generating synthetic `Golden`s from a [list of provided contexts](synthesizer-generate-from-contexts).
+3. Generating synthetic `Golden`s from [Scratch](synthesizer-generate-from-scratch).
+
+:::note
+The first method is ideal if you have a **knowledge base** but lack specific contexts. The second is useful when you have a **prepared list of contexts** for synthetic data generation. The third is helpful if you’re not building a RAG or are **testing specific criteria** for your LLM chatbot without relying on a knowledge base.
+:::
+
+## Accessing your Synthetic Dataset
+
+### Convert to DataFrame
+
+To convert your synthetically generated goldens into a DataFrame, simply call the `to_pandas` method on the synthesizer object:
+
+```python
+dataframe = synthesizer.to_pandas()
+print(dataframe)
+```
+
+Here’s an example of what the resulting DataFrame might look like:
+
+| <div style={{width: "200px"}}>input</div>      | actual_output | expected_output | <div style={{width: "280px"}}>input</div>                             | retrieval_context | n_chunks_per_context | context_length | context_quality | synthetic_input_quality | evolutions | source_file |
+| ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | -------------------- | -------------- | --------------- | ----------------------- | ---------- | ----------- |
+| Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                    | 60             | 0.5             | 0.6                     | None       | file1.txt   |
+| What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                    | 55             | 0.4             | 0.9                     | None       | file2.txt   |
+| ...                                            | ...           | ...             | ...                                                                   | ...               | ...                  | ...            | ...             | ...                     | ...        | ...         |
+
+### Saving Generated Goldens
+
+To avoid losing any generated synthetic `Goldens`, you can use the `save_as()` method:
+
+```python
+synthesizer.save_as(
+    file_type='json', # or 'csv'
+    directory="./synthetic_data"
+)
+```
+
+## How Does it Work?
+
+The synthetic data generation process consists of two main steps:
+
+1. **Golden Generation**: Generate synthetic Goldens from contexts or from scratch.
+2. **Evolution**: Evolve the synthetic Goldens to increase complexity and capture edge cases.
+
+### Golden Generation
+
+When generating from documents, some preprocessing is needed:
+
+- **Document Loading**: Load and process knowledge base documents to prepare for chunking.
+- **Document Chunking**: Split documents into smaller, manageable chunks.
+- **Context Generation**: Group similar chunks (using cosine similarity) to create meaningful contexts.
+
+Once contexts are created, synthetic inputs are generated from them. When generating from contexts directly or from scratch, however, no preprocessing is necessary. In all cases, a synthesizer LLM model is used to generate the Goldens.
+
+Additionally, each `Golden` is scored and undergoes a **synthetic input filtering process** to ensure high quality. If the score does not meet required thresholds after the maximum allowed retries, the most recent generation is used. As a result, some generated Goldens in your final evaluation dataset may not meet the minimum input quality scores.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "start",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/filtering_input.svg"
+    alt="LangChain"
+    style={{
+      marginTop: "50px",
+      marginBottom: "50px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+
+</div>
+
+### Evolutions
+
+`Evolution` is an `ENUM` that specifies the different data evolution techniques you wish to employ to make synthetic `Golden`s more realistic. DeepEval's synthesizer supports 7 types of evolutions, which are randomly sampled based on a defined distribution. You can apply multiple evolutions to each Golden, and later access the evolution sequence through the Golden's additional metadata field.
+
+```python
+from deepeval.synthesizer import Evolution
+
+available_evolutions = {
+    Evolution.REASONING: 1/7,
+    Evolution.MULTICONTEXT: 1/7,
+    Evolution.CONCRETIZING: 1/7,
+    Evolution.CONSTRAINED: 1/7,
+    Evolution.COMPARATIVE: 1/7,
+    Evolution.HYPOTHETICAL: 1/7,
+    Evolution.IN_BREADTH: 1/7,
+}
+```
+
+For example, a Golden might take the following evolution route when `num_evolutions` is set to 2 and `evolutions` is a dictionary containing `Evolution.IN_BREADTH`, `Evolution.COMPARATIVE`, and `Evolution.REASONING`, with sampling probabilities of 0.4, 0.2, and 0.4, respectively:
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/evolutions.svg"
+    alt="LangChain"
+    style={{
+      marginTop: "20px",
+      marginBottom: "50px",
+      height: "auto",
+      maxHeight: "400px",
+    }}
+  />
+
+</div>
+
+:::info
+For those interested in what these evolutions mean, you can [read this article here.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
+:::

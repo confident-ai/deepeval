@@ -1,0 +1,67 @@
+---
+id: synthesizer-generate-from-contexts
+title: Generating Synthetic Data From Contexts
+sidebar_label: Generate from Contexts
+---
+
+If you already have prepared contexts, you can skip document processing. Simply provide these contexts to the Synthesizer, and it will generate the Goldens directly without processing documents.
+
+:::tip
+This is especially helpful if you **already have an embedded knowledge base**. For example, if you have documents parsed and stored in a vector database, you may handle retrieving text chunks yourself.
+:::
+
+## Generating From Provided Contexts
+
+To generate synthetic `Golden`s from documents, simply provide a list of contexts:
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+synthesizer.generate_goldens(
+    # Provide a list of context for synthetic data generation
+    contexts=[
+        ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
+        ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
+    ]
+)
+```
+
+There are one mandatory and seven optional parameters when using the `generate_goldens` method:
+
+- `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area.
+- [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `False`.
+- [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the complexity and diversity of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
+- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal probability.
+- [Optional] `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM.
+- [Optional] `task`: a string, representing task or purpose of the target LLM.
+- [Optional] `input_format`: a string, representing the ideal structure and format of the inputs to be generated.
+- [Optional] `expected_output_format`: a string, representing the ideal structure and format of the expected outputs to be generated.
+
+## How Does it Work?
+
+When generating contexts from user-provided data, all document processing steps are skipped. Instead, the Synthesizer directly utilizes the provided contexts to generate synthetic Goldens immediately, streamlining the generation process.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/generate_from_contexts.svg"
+    alt="LangChain"
+    style={{
+      marginTop: "20px",
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+:::info
+Similar to generating from documents, you can also **customize your prompt**. For more details, refer to [this section on prompt customization](synthesizer-generate-from-docs#prompt-customization) if you're interested.
+:::
