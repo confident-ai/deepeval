@@ -146,6 +146,7 @@ module.exports = {
         "guides-optimizing-hyperparameters",
         "guides-regression-testing-in-cicd",
         "guides-building-custom-metrics",
+        "guides-llm-observability",
         "guides-answer-correctness-metric",
         "guides-rag-triad",
       ],
@@ -168,56 +169,43 @@ module.exports = {
       collapsed: false,
     },
   ],
-  tutorial: [   
-    'tutorial-introduction', 
+  tutorial: [
+    "tutorial-introduction",
     {
-      type: 'category',
-      label: 'Before We Begin',
-      items: [
-        'tutorial-setup',
-        'tutorial-llm-application-example',
-      ],
+      type: "category",
+      label: "Before We Begin",
+      items: ["tutorial-setup", "tutorial-llm-application-example"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Choosing Your Metrics',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Choosing Your Metrics",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Preparing Your Evaluation Dataset',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Preparing Your Evaluation Dataset",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Advanced LLM Safety Testing',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Advanced LLM Safety Testing",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Integration with Existing Workflows',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Integration with Existing Workflows",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
     {
-      type: 'category',
-      label: 'Continous Evaluation in Production',
-      items: [
-        "tutorial-placeholder"
-      ],
+      type: "category",
+      label: "Continous Evaluation in Production",
+      items: ["tutorial-placeholder"],
       collapsed: false,
     },
-  ]
+  ],
 };
