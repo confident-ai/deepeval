@@ -34,7 +34,7 @@ from deepeval.synthesizer import Synthesizer
 synthesizer = Synthesizer()
 ```
 
-There are three optional parameters when creating a `Synthesizer`:
+There are five optional parameters when creating a `Synthesizer`:
 
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
@@ -132,7 +132,7 @@ synthesizer.save_as(
 
 ## Customize Your Generations
 
-`deepeval`'s `Synthesizer` generation pipeline is made up of several components, which you can easily customize to determine the quality and style of the resulting generated goldens.
+`deepeval`'s `Synthesizer`'s generation pipeline is made up of several components, which you can easily customize to determine the quality and style of the resulting generated goldens.
 
 :::tip
 You might find it useful to first [learn about all the different components and steps that make up the `Synthesizer` generation pipeline](#how-does-it-work).
