@@ -172,12 +172,14 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             indicies = OutOfCharacterResponseIndicies(**data).indicies
         else:
             try:
-                res: OutOfCharacterResponseIndicies = await self.model.generate(
-                    prompt, schema=OutOfCharacterResponseIndicies
+                res: OutOfCharacterResponseIndicies = (
+                    await self.model.a_generate(
+                        prompt, schema=OutOfCharacterResponseIndicies
+                    )
                 )
                 indicies = res.indicies
             except TypeError:
-                res = await self.model.generate(prompt)
+                res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 indicies = OutOfCharacterResponseIndicies(**data).indicies
 
