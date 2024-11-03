@@ -1,33 +1,32 @@
 ---
 id: synthesizer-introduction
-title: Generating Synthetic Data
+title: Introduction
 sidebar_label: Introduction
 ---
 
 ## Quick Summary
 
-DeepEval's `Synthesizer` offers a **fast and easy to automatically get started with testing** your LLM by generating high-quality evaluation datasets (inputs, expected outputs, and contexts) in just a few lines of code.
+`deepeval`'s `Synthesizer` offers a fast and easy way to generate high-quality goldens (inputs, expected outputs, and contexts) for your evaluation datasets in just a few lines of code. This is especially helpful if you don't have an evaluation dataset to start with.
 
 ```python
 from deepeval.synthesizer import Synthesizer
 
-synthesizer = Synthesizer(...)
-goldens = synthesizer.generate_from_docs(...)
+synthesizer = Synthesizer()
+synthesizer.generate_goldens_from_docs(...)
+print(synthesizer.synthetic_goldens)
 ```
 
 The `Synthesizer` uses an LLM to first generate a series of inputs, before evolving them to become more complex and realistic. These evolved inputs are then used to create a list of synthetic `Golden`s, which makes up your synthetic `EvaluationDataset`.
 
 :::info
-DeepEval's `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244)
+`deepeval`'s `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244)
 
-For those interested, here is a [great article on how DeepEval's synthesizer was built.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
+For those interested, here is a [great article on how `deepeval`'s synthesizer was built.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
 :::
 
-## Synthesizing your Evaluation Dataset
+## Create Your First Synthesizer
 
-### Create a Synthesizer
-
-DeepEval's synthesizer can be used as a standalone or [within an `EvaluationDataset`](synthesizer-generate-from-datasets). To start generating Goldens using the synthesizer as a standalone, begin by creating a `Synthesizer` object:
+To start generating goldens for your `EvaluationDataset`, begin by creating a `Synthesizer` object:
 
 ```python
 from deepeval.synthesizer import Synthesizer
@@ -35,56 +34,46 @@ from deepeval.synthesizer import Synthesizer
 synthesizer = Synthesizer()
 ```
 
-There are nine optional parameters when creating a `Synthesizer`:
+There are three optional parameters when creating a `Synthesizer`:
 
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
-- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use for quality filtering, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
-- [Optional] `embedder`: a string specifying which of OpenAI's embedding models to use, **OR** [any custom embedding model](#using-a-custom-embedding-model) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
-- [Optional] `context_quality_threshold`: a float representing the minimum quality threshold for context selection. If the context quality is lower than this threshold, the context will be rejected. Defaulted to `0.5`.
-- [Optional] `context_similarity_threshold`: a float representing the minimum similarity score required for context matching (via cosine similarity). Contexts with similarity scores lower than this threshold will not be used. Defaulted to `0.5`.
-- [Optional] `context_max_retries`: an integer that specifies the number of times to retry context generation if it does not meet the required quality or similarity threshold. Defaulted to `3`.
-- [Optional] `synthetic_input_quality_threshold`: a float representing the minimum quality threshold for synthetic input generation. Inputs with lower quality will be rejected. Defaulted to `0.5`.
-- [Optional] `synthetic_input_max_retries`: an integer that specifies the number of times to retry synthetic input generation if it does not meet the required quality. Defaulted to `3`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `filtration_config`: an instance of type `FiltrationConfig` that allows you to [customize the degree of which goldens are filtered](#filtration-degree) during generation. Defaulted to the default `FiltrationConfig` values.
+- [Optional] `evolution_config`: an instance of type `EvolutionConfig` that allows you to [customize the complexity of evolutions applied](#evolution-complexity) during generation. Defaulted to the default `EvolutionConfig` values.
+- [Optional] `styling_config`: an instance of type `StylingConfig` that allows you to [customize the styles and formats](#styling-options) of generations. Defaulted to the default `StylingConfig` values.
 
-:::tip
-As you'll discover later, an **embedding model** is only necessary when using the `generate_goldens_from_docs()` method. Therefore, you shouldn't be too concerned about the embedder parameter unless you plan to use your own embedding model. Similarly, context thresholds and max retries only become relevant when generating from documents.
+:::note
+The `filteration_config`, `evolution_config`, and `styling_config` parameter allows you to customize the goldens being generated by your `Synthesizer`.
 :::
 
-### Generate Your First Synthetic Golden Dataset
+## Generate Your First Golden
 
-Once you've created a `Synthesizer` object with the desired filtering parameters and models, you can begin generating Goldens. To generate synthetic `Golden`s from documents, simply provide a list of document paths:
+Once you've created a `Synthesizer` object with the desired filtering parameters and models, you can begin generating goldens.
 
 ```python
 from deepeval.synthesizer import Synthesizer
 
-synthesizer = Synthesizer()
+...
 synthesizer.generate_goldens_from_docs(
     document_paths=['example.txt', 'example.docx', 'example.pdf'],
-    evolutions={
-        Evolution.REASONING: 1/4,
-        Evolution.MULTICONTEXT: 1/4,
-        Evolution.CONCRETIZING: 1/4,
-        Evolution.CONSTRAINED: 1/4
-    }
+    include_expected_output=True
 )
+print(synthesizer.synthetic_goldens)
 ```
 
-There are 3 approaches DeepEval's `Synthesizer` can use to generate synthetic `Golden`s:
+In this example, we've used the `generate_goldens_from_docs` method, which one one of the three generation methods offered by `deepeval`'s `Synthesizer`. The three methods include:
 
-1. Generating synthetic `Golden`s using [context extracted from documents](synthesizer-generate-from-docs).
-2. Generating synthetic `Golden`s from a [list of provided contexts](synthesizer-generate-from-contexts).
-3. Generating synthetic `Golden`s from [Scratch](synthesizer-generate-from-scratch).
+- [`generate_goldens_from_docs()`](synthesizer-generate-from-docs): useful for generating goldens to evaluate your LLM application based on contexts extracted from your knowledge base in the form of documents.
+- [`generate_goldens_from_contexts()`](synthesizer-generate-from-contexts): useful for generating goldens to evaluate your LLM application based on a list of prepared context.
+- [`generate_goldens_from_scratch()`](synthesizer-generate-from-scratch): useful for generating goldens to evaluate your LLM application without relying on contexts from a knowledge base.
 
-:::note
-The first method is ideal if you have a **knowledge base** but lack specific contexts. The second is useful when you have a **prepared list of contexts** for synthetic data generation. The third is helpful if you’re not building a RAG or are **testing specific criteria** for your LLM chatbot without relying on a knowledge base.
+:::tip
+You might have noticed the `generate_goldens_from_docs()` is a superset of `generate_goldens_from_contexts()`, and `generate_goldens_from_contexts()` is a superset of `generate_goldens_from_scratch()`.
+
+This implies that if you want more control over context extraction, you should use `generate_goldens_from_contexts()`, but if you want `deepeval` to take care of context extraction as well, use `generate_goldens_from_docs()`.
 :::
 
-## Accessing your Synthetic Dataset
-
-### Convert to DataFrame
-
-To convert your synthetically generated goldens into a DataFrame, simply call the `to_pandas` method on the synthesizer object:
+Once generation is complete, you can also convert your synthetically generated goldens into a DataFrame:
 
 ```python
 dataframe = synthesizer.to_pandas()
@@ -99,59 +88,109 @@ Here’s an example of what the resulting DataFrame might look like:
 | What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                    | 55             | 0.4             | 0.9                     | None       | file2.txt   |
 | ...                                            | ...           | ...             | ...                                                                   | ...               | ...                  | ...            | ...             | ...                     | ...        | ...         |
 
-### Saving Generated Goldens
+And that's it! You now have access to a list of synthetic goldens generated using information from your knowledge base.
 
-To avoid losing any generated synthetic `Goldens`, you can use the `save_as()` method:
+## Save Your Synthetic Dataset
+
+### On Confident AI
+
+To avoid losing any generated synthetic `Goldens`, you can push a dataset containing the generated goldens to Confident AI:
+
+```python
+from deepeval.dataset import EvaluationDataset
+...
+
+dataset = EvaluationDataset(goldens=synthesizer.synthetic_goldens)
+dataset.push(alias="My Generated Dataset")
+```
+
+This keeps your dataset on the cloud and you'll be able to edit and version control it in one place. When you are ready to evaluate your LLM application using the generated goldens, simply pull the dataset from the cloud like how you would pull a GitHub repo:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import EvaluationDataset
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+dataset = EvaluationDataset()
+# Same alias as before
+dataset.pull(alias="My Generated Dataset")
+evaluate(dataset, metrics=[AnswerRelevancyMetric()])
+```
+
+### Locally
+
+Altneratively, you can use the `save_as()` method to save synthetic goldens locally:
 
 ```python
 synthesizer.save_as(
-    file_type='json', # or 'csv'
+    # Or 'csv'
+    file_type='json',
     directory="./synthetic_data"
 )
 ```
 
-## How Does it Work?
+## Customize Your Generations
 
-The synthetic data generation process consists of two main steps:
+`deepeval`'s `Synthesizer` generation pipeline is made up of several components, which you can easily customize to determine the quality and style of the resulting generated goldens.
 
-1. **Golden Generation**: Generate synthetic Goldens from contexts or from scratch.
-2. **Evolution**: Evolve the synthetic Goldens to increase complexity and capture edge cases.
+:::tip
+You might find it useful to first [learn about all the different components and steps that make up the `Synthesizer` generation pipeline](#how-does-it-work).
+:::
 
-### Golden Generation
+### Filteration Quality
 
-When generating from documents, some preprocessing is needed:
+You can customize the degree of which generated goldens are filtered away to ensure the quality of synthetic inputs by instantiating the `Synthesizer` with a `FiltrationConfig` instance.
 
-- **Document Loading**: Load and process knowledge base documents to prepare for chunking.
-- **Document Chunking**: Split documents into smaller, manageable chunks.
-- **Context Generation**: Group similar chunks (using cosine similarity) to create meaningful contexts.
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer.config import FiltrationConfig
 
-Once contexts are created, synthetic inputs are generated from them. When generating from contexts directly or from scratch, however, no preprocessing is necessary. In all cases, a synthesizer LLM model is used to generate the Goldens.
+filteration_config = FiltrationConfig(
+  critic_model="gpt-4o",
+  synthetic_input_quality_threshold=0.5
+)
 
-Additionally, each `Golden` is scored and undergoes a **synthetic input filtering process** to ensure high quality. If the score does not meet required thresholds after the maximum allowed retries, the most recent generation is used. As a result, some generated Goldens in your final evaluation dataset may not meet the minimum input quality scores.
+synthesizer = Synthesizer(filteration_config=filteration_config)
+```
 
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "start",
-  }}
->
-  <img
-    src="https://confident-bucket.s3.amazonaws.com/filtering_input.svg"
-    alt="LangChain"
-    style={{
-      marginTop: "50px",
-      marginBottom: "50px",
-      height: "auto",
-      maxHeight: "800px",
-    }}
-  />
+There are three optional parameters when creating a `FiltrationConfig`:
 
-</div>
+- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine input `quality_score`s, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `synthetic_input_quality_threshold`: a float representing the minimum quality threshold for synthetic input generation. Inputs with `quality_score`s lower than the `synthetic_input_quality_threshold` will be rejected. Defaulted to `0.5`.
+- [Optional] `max_quality_retries`: an integer that specifies the number of times to retry synthetic input generation if it does not meet the required quality. Defaulted to `3`.
 
-### Evolutions
+If the `quality_score` is still lower than the `synthetic_input_quality_threshold` after `max_quality_retries`, the golden with the highest `quality_score` will be used.
 
-`Evolution` is an `ENUM` that specifies the different data evolution techniques you wish to employ to make synthetic `Golden`s more realistic. DeepEval's synthesizer supports 7 types of evolutions, which are randomly sampled based on a defined distribution. You can apply multiple evolutions to each Golden, and later access the evolution sequence through the Golden's additional metadata field.
+### Evolution Complexity
+
+You can customize the evolution types and depth applied by instantiating the `Synthesizer` with an `EvolutionConfig` instance. You should customize the `EvolutionConfig` to vary the complexity of the generated goldens.
+
+```python
+from deepeval.synthesizer import synthesizer
+from deepeval.synthesizer.config import EvolutionConfig
+
+evolution_config = EvolutionConfig(
+    evolutions={
+        Evolution.REASONING: 1/4,
+        Evolution.MULTICONTEXT: 1/4,
+        Evolution.CONCRETIZING: 1/4,
+        Evolution.CONSTRAINED: 1/4
+    },
+    num_evolutions=4
+)
+
+synthesizer = Synthesizer(evolution_config=evolution_config)
+```
+
+There are two optional parameters when creating an `EvolutionConfig`:
+
+- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal probability.
+- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the complexity and diversity of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
+
+:::info
+
+`Evolution` is an `ENUM` that specifies the different data evolution techniques you wish to employ to make synthetic `Golden`s more realistic. `deepeval`'s `Synthesizer` supports 7 types of evolutions, which are randomly sampled based on a defined distribution. You can apply multiple evolutions to each `Golden`, and later access the evolution sequence through the `Golden`'s additional metadata field.
 
 ```python
 from deepeval.synthesizer import Evolution
@@ -167,7 +206,100 @@ available_evolutions = {
 }
 ```
 
-For example, a Golden might take the following evolution route when `num_evolutions` is set to 2 and `evolutions` is a dictionary containing `Evolution.IN_BREADTH`, `Evolution.COMPARATIVE`, and `Evolution.REASONING`, with sampling probabilities of 0.4, 0.2, and 0.4, respectively:
+:::
+
+### Styling Options
+
+You can customize the output style and format of any `input` and/or `expected_output` generated by instantiating the `Synthesizer` with a `StylingConfig` instance.
+
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer.config import StylingConfig
+
+styling_config = StylingConfig(
+  input_format="Questions in English that asks for data in database.",
+  expected_output_format="SQL query based on the given input",
+  task="Answering text-to-SQL-related queries by querying a database and returning the results to users"
+  scenario="Non-technical users trying to query a database using plain English.",
+)
+
+synthesizer = Synthesizer(styling_config=styling_config)
+```
+
+There are four optional parameters when creating a `StylingConfig`:
+
+- [Optional] `input_format`: a string, which specifies the desired format of the generated `input`s in the synthesized goldens. Defaulted to `None`.
+- [Optional] `expected_output_format`: a string, which specifies the desired format of the generated `expected_output`s in the synthesized goldens. Defaulted to `None`.
+- [Optional] `task`: a string, representing the purpose of the LLM application you're trying to evaluate are tasked with. Defaulted to `None`.
+- [Optional] `scenario`: a string, representing the setting of the LLM application you're trying to evaluate are placed in. Defaulted to `None`.
+
+The `scenario`, `task`, `input_format`, and/or `expected_output_format` parameters, if provided at all, are used to enforce the styles and formats of any generated goldens.
+
+## How Does it Work?
+
+`deepeval`'s `Synthesizer` generation pipeline consists of four main steps:
+
+1. **Input Generation**: Generate synthetic goldens `input`s with or without provided contexts.
+2. **Filtration**: Filter away any initial synthetic goldens that don't meet the specified generation standards.
+3. **Evolution**: Evolve the filtered synthetic goldens to increase complexity and make them more realistic.
+4. **Styling**: Style the output formats of the `input`s and `expected_output`s of the evolved synthetic goldens.
+
+This generation pipeline is the same for `generate_goldens_from_docs()`, `generate_goldens_from_contexts()`, and `generate_goldens_from_scratch()`.
+
+:::tip
+There are two steps not mentioned - the context construction step and expected output generation step.
+
+The **context construction step** [(which you can learn how it works here)](synthesizer-generate-from-docs#how-does-context-construction-work) happens before the initial generation step and the reason why the context construction step isn't mentioned is because it is only required if you're using the `generate_goldens_from_docs()` method.
+
+As for the **expected output generation step**, it's omitted because it is a trivial one-step process that simply happens right before the final styling step.
+:::
+
+### Input Generation
+
+In the initial **input generation** step, `input`s of goldens are generated with or without provided contexts using an LLM. Provided contexts, which can be in the form of a list of strings or a list of documents, allow generated goldens to be grounded in information presented in your knowledge base.
+
+### Filtration
+
+:::note
+The position of this step might be a surprise to many but, the filtration step happens so early on in the pipeline because `deepeval` assumes that goldens that pass the initial filtration step will not degrade in quality upon further evolution and styling.
+:::
+
+In the **filtration** step, `input`s of generated goldens are subject to quality filtering. These synthetic `input`s are evaluated and assigned a quality score (0-1) by an LLM based on:
+
+- **Self-containment**: The `input` is understandable and complete without needing additional external context or references.
+- **Clarity**: The `input` clearly conveys its intent, specifying the requested information or action without ambiguity.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/generation-filtration.svg"
+    alt="LangChain"
+    style={{
+      marginBottom: "10px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Any goldens that has a quality scores below the `synthetic_input_quality_threshold` will be re-generated. If the quality score still does not meet the required `synthetic_input_quality_threshold` after the allowed `max_quality_retries`, the most generation with the highest score is used. As a result, some generated `Goldens` in your final evaluation dataset may not meet the minimum input quality scores, but you will be guarenteed at least a golden regardless of its quality.
+
+[Click here](#filtration-quality) to learn how to customize the `synthetic_input_quality_threshold` and `max_quality_retries` parameters.
+
+### Evolution
+
+In the **evolution** step, the `input`s of the filtered goldens are rewritten to make more complex and realistic, often times indistinguishable from human curated goldens. Each `input` is rewritten `num_evolutions` times, where each evolution is sampled from the `evolution` distribution which adds an additional layer of complexity to the rewritten `input`.
+
+[Click here](#evolution-types-and-depth) To learn how to customize the `evolution` and `num_evolutions` parameters.
+
+:::info
+
+As an example, a golden might take the following evolutionary route when `num_evolutions` is set to 2 and `evolutions` is a dictionary containing `Evolution.IN_BREADTH`, `Evolution.COMPARATIVE`, and `Evolution.REASONING`, with sampling probabilities of 0.4, 0.2, and 0.4, respectively:
 
 <div
   style={{
@@ -189,6 +321,14 @@ For example, a Golden might take the following evolution route when `num_evoluti
 
 </div>
 
-:::info
-For those interested in what these evolutions mean, you can [read this article here.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
 :::
+
+### Styling
+
+:::tip
+This might be useful to you if for example you want to generate goldens in another languague, or have the `expected_output`s to be in SQL format for a text-sql use case.
+:::
+
+In the final **styling** step, the `input`s and `expected_outputs` of each golden are rewritten into the desired formats and styles if required. This can be configured by setting the `scenario`, `task`, `input_format`, and `expected_output_format` parameters, and `deepeval` will use what you have provided to style goldens tailored to your use case at the end of the generation pipeline to ensure all synthetic data makes sense to you.
+
+[Click here](#styling-options) to learn how to customize the format and style of the synthetic `input`s and `expected_output`s being generated.

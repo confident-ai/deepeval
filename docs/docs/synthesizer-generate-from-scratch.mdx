@@ -1,12 +1,10 @@
 ---
 id: synthesizer-generate-from-scratch
-title: Generating Synthetic Data From Scratch
+title: Generate From Scratch
 sidebar_label: Generate from Scratch
 ---
 
-You can also generate **synthetic Goldens from scratch**, without needing any documents or contexts. Simply provide the task (the goal of your application), the scenario (the environment or context in which a user interacts), and the desired input format (e.g. web search, text-to-SQL query, conversation).
-
-This way, you can customize the Goldens to reflect exactly **how you want users to interact with your system**.
+You can also generate **synthetic Goldens from scratch**, without needing any documents or contexts.
 
 :::info
 This approach is particularly useful if your LLM application **doesn’t rely on RAG** or if you want to **test your LLM on queries beyond the existing knowledge base**.
@@ -14,53 +12,32 @@ This approach is particularly useful if your LLM application **doesn’t rely on
 
 ## Generating From Scratch
 
-To generate synthetic `Golden`s from scratch, simply specify the scenario, task, and input format you wish your synthetic inputs to follow.
+Since there is no grounded context involved, you'll need to provide a `StylingConfig` when instantiating a `Synthesizer` for `deepeval`'s `Synthesizer` to know what types of goldens it should generate:
+
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer.config import StylingConfig
+
+styling_config = StylingConfig(
+  input_format="Questions in English that asks for data in database.",
+  expected_output_format="SQL query based on the given input",
+  task="Answering text-to-SQL-related queries by querying a database and returning the results to users"
+  scenario="Non-technical users trying to query a database using plain English.",
+)
+
+synthesizer = Synthesizer(styling_config=styling_config)
+```
+
+Finally, to generate synthetic goldens without provided context, simply supply the number of goldens you want generated:
 
 ```python
 from deepeval.synthesizer import Synthesizer
 
-synthesizer = Synthesizer()
-synthesizer.generate_goldens_from_scratch(
-    scenario="Security engineers generating harmful and toxic prompts, focusing on dark humor, to red-team the LLM's ability to respond safely.",
-    task="Provide safe and responsible responses as an LLM chatbot to user inputs.",
-    output_format="Two-sentence response string.",
-    num_initial_goldens=25,
-    num_evolutions=2
-)
+...
+synthesizer.generate_goldens_from_scratch(num_goldens=25)
+print(synthesizer.synthetic_goldens)
 ```
 
-There are four mandatory and three optional parameters when using the `generate_goldens_from_docs` method:
+There is one mandatory parameter when using the `generate_goldens_from_scratch` method:
 
-- `scenario`: a string, specifying the context or setting in which the inputs are fed into the target LLM.
-- `task`: a string, representing task or purpose of the target LLM.
-- `input_format`: a string, representing the ideal structure and format of the inputs to be generated.
-- `num_initial_goldens`: the number of initial goldens generated before consequent evolutions.
-- [Optional] `num_evolutions`: the number of evolution steps to apply to each generated prompt. This parameter controls the complexity and diversity of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
-- [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s (except `MULTICONTEXT`) with equal probability.
-
-## How Does it Work?
-
-When generating synthetic goldens from scratch, the scenario, task, and input format parameters are inserted into a pre-defined prompt template and will **need to be iterated** upon for optimal results.
-
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
->
-  <img
-    src="https://confident-bucket.s3.amazonaws.com/generate_from_scratch.svg"
-    alt="LangChain"
-    style={{
-      marginTop: "20px",
-      marginBottom: "20px",
-      height: "auto",
-      maxHeight: "800px",
-    }}
-  />
-</div>
-
-:::note
-Similar to generating from documents and contexts, goldens generated from scratch will undergo **rounds of evolutions**. For more details, refer to [this section on evolutions](synthesizer-generate-from-docs#evolutions) if you're interested.
-:::
+- `num_goldens`: the number of goldens to generate.

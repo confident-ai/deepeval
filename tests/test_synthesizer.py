@@ -3,7 +3,6 @@ import pytest
 import time
 from typing import Callable
 import asyncio
-from deepeval.synthesizer.utils import initialize_embedding_model
 from deepeval.synthesizer import Synthesizer, UseCase
 from deepeval.dataset import EvaluationDataset
 from deepeval.models import OpenAIEmbeddingModel
@@ -185,7 +184,7 @@ async def test_context_generator(
 
 
 def test_context_generator_generate_contexts():
-    embedder = initialize_embedding_model("text-embedding-3-large")
+    embedder = "text-embedding-3-large"
     context_generator = ContextGenerator(
         document_paths=[file_path3, file_path2, file_path1],
         embedder=embedder,
@@ -214,11 +213,11 @@ def test_context_generator_generate_contexts():
 #########################################################
 
 
-def test_generate_goldens(
+def test_generate_goldens_from_contexts(
     synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
 ):
     start_time = time.time()
-    goldens = synthesizer.generate_goldens(
+    goldens = synthesizer.generate_goldens_from_contexts(
         max_goldens_per_context=2,
         num_evolutions=2,
         evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
@@ -300,15 +299,7 @@ def test_generate_goldens_from_docs(
 def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
     start_time = time.time()
     goldens = synthesizer.generate_goldens_from_scratch(
-        scenario="red-teaming prompts",
-        task="elicit discriminatory responses from LLMs",
-        input_format="string less than 15 words",
-        evolutions={
-            Evolution.COMPARATIVE: 0.2,
-            Evolution.HYPOTHETICAL: 0.8,
-        },
-        num_initial_goldens=5,
-        num_evolutions=1,
+        num_goldens=5,
     )
     end_time = time.time()
     duration = end_time - start_time
@@ -344,7 +335,7 @@ dataset.generate_goldens_from_docs(
 print(dataset.goldens)
 
 dataset = EvaluationDataset()
-dataset.generate_goldens(
+dataset.generate_goldens_from_contexts(
     max_goldens_per_context=2,
     num_evolutions=2,
     evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},

@@ -34,7 +34,6 @@ def synthesizer_progress_context(
     evolutions: Dict,
     embedder: Optional[str] = None,
     max_generations: str = None,
-    use_case: str = "QA",
     progress_bar: Optional[tqdm.std.tqdm] = None,
     async_mode: bool = False,
 ) -> Generator[Optional[tqdm.std.tqdm], None, None]:
@@ -42,9 +41,9 @@ def synthesizer_progress_context(
         method, max_generations, num_evolutions, evolutions
     ):
         if embedder is None:
-            description = f"✨ Generating up to {max_generations} goldens using DeepEval (using {evaluation_model}, use case={use_case}, method={method})"
+            description = f"✨ Generating up to {max_generations} goldens using DeepEval (using {evaluation_model}, method={method})"
         else:
-            description = f"✨ Generating up to {max_generations} goldens using DeepEval (using {evaluation_model} and {embedder}, use case={use_case}, method={method})"
+            description = f"✨ Generating up to {max_generations} goldens using DeepEval (using {evaluation_model} and {embedder}, method={method})"
         # Direct output to stderr, using TQDM progress bar for visual feedback
         if not progress_bar:
             if async_mode:

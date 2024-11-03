@@ -1,19 +1,19 @@
 class PromptSynthesizerTemplate:
     @staticmethod
     def generate_synthetic_prompts(
-        scenario: str, task: str, input_format: str, num_initial_goldens: int
+        scenario: str, task: str, input_format: str, num_goldens: int
     ):
         return f"""Generate a series of input prompts from scratch based on the provided scenario, task, and output format.
         The inputs must align with the given scenario and task description, and conform to specified output format.
 
         **
         IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
-        You MUST TRY to generate {num_initial_goldens} data points.
+        You MUST TRY to generate {num_goldens} data points.
 
         Example scenario: technical SWE typing SQL queries to query from a database called FAST_FOOD_RESTAURANTS
         Example task: Text2SQL LLM Assistant
         Example input format: SQL String
-        Example num initial prompts: 2
+        Example num prompts: 2
         Example JSON:
         {{
             "data": [
@@ -27,13 +27,13 @@ class PromptSynthesizerTemplate:
         }}
 
         You MUST include at least one statement as the input. `input` MUST be of `{input_format}` format.
-        You MUST TRY to generate {num_initial_goldens} data points, unless the generated `input` is getting reptitive.
+        You MUST TRY to generate {num_goldens} data points, unless the generated `input` is getting reptitive.
         **
 
         scenario: {scenario}
         task: {task}
         input format: {input_format}
-        num initial prompts: {num_initial_goldens}
+        num prompts: {num_goldens}
         JSON:
         """
 

@@ -21,7 +21,6 @@ module.exports = {
             "synthesizer-generate-from-docs",
             "synthesizer-generate-from-contexts",
             "synthesizer-generate-from-scratch",
-            "synthesizer-generate-from-datasets",
           ],
         },
         {
@@ -159,6 +158,7 @@ module.exports = {
         "guides-llm-observability",
         "guides-answer-correctness-metric",
         "guides-rag-triad",
+        "guides-using-custom-embedding-models",
       ],
       collapsed: false,
     },
