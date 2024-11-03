@@ -12,6 +12,7 @@ from deepeval.synthesizer import (
     Evolution,
     PromptEvolution,
 )
+from deepeval.synthesizer.config import *
 
 #########################################################
 ### Context #############################################
@@ -208,22 +209,38 @@ def test_context_generator_generate_contexts():
 # assert loaded_docs_async == loaded_docs_async
 # test_context_generator_generate_contexts()
 
+
+evolution_config = EvolutionConfig(
+    num_evolutions=1,
+    evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
+)
+
+filtration_config = FiltrationConfig()
+seed = 3
+styling_config = StylingConfig(
+    scenario=scenarios[seed]["scenario"],
+    task=scenarios[seed]["task"],
+    input_format=scenarios[seed]["input_format"],
+    expected_output_format="3 word answer",
+)
+
+synthesizer = Synthesizer(
+    async_mode=False,
+    evolution_config=evolution_config,
+    styling_config=styling_config,
+)
+
+
 #########################################################
 ### Generate Goldens ####################################
 #########################################################
 
 
-def test_generate_goldens_from_contexts(
-    synthesizer: Synthesizer, usecase: UseCase = UseCase.QA
-):
+def test_generate_goldens_from_contexts(synthesizer: Synthesizer):
     start_time = time.time()
     goldens = synthesizer.generate_goldens_from_contexts(
         max_goldens_per_context=2,
-        num_evolutions=2,
-        evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
-        # contexts=contexts,
         contexts=sql_context,
-        use_case=usecase,
         _send_data=False,
     )
     end_time = time.time()
@@ -248,22 +265,13 @@ def test_generate_goldens_from_contexts(
 #########################################################
 
 
-def test_generate_goldens_from_docs(
-    synthesizer: Synthesizer, usecase: UseCase = UseCase.QA, seed: int = 0
-):
+def test_generate_goldens_from_docs(synthesizer: Synthesizer):
     start_time = time.time()
+
     goldens = synthesizer.generate_goldens_from_docs(
         max_goldens_per_context=1,
-        max_contexts_per_document=1,
-        num_evolutions=1,
-        evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
         document_paths=document_paths,
-        use_case=usecase,
-        chunk_size=65,
-        scenario=scenarios[seed]["scenario"],
-        task=scenarios[seed]["task"],
-        input_format=scenarios[seed]["input_format"],
-        expected_output_format="3 word answer",
+        context_construction_config=ContextConstructionConfig(chunk_size=100),
         _send_data=False,
     )
     end_time = time.time()
@@ -317,42 +325,39 @@ def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
 # ### Generate From Datasets ##############################
 # #########################################################
 
-seed = 0
+# seed = 0
 
-dataset = EvaluationDataset()
-dataset.generate_goldens_from_docs(
-    max_goldens_per_context=1,
-    max_contexts_per_document=1,
-    num_evolutions=1,
-    evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
-    document_paths=document_paths,
-    chunk_size=65,
-    scenario=scenarios[seed]["scenario"],
-    task=scenarios[seed]["task"],
-    input_format=scenarios[seed]["input_format"],
-    expected_output_format="3 word answer",
-)
-print(dataset.goldens)
+# evolution_config_again = EvolutionConfig(    evolutions={
+#         Evolution.COMPARATIVE: 0.2,
+#         Evolution.HYPOTHETICAL: 0.8,
+#     },
+#         num_evolutions=1,)
+# styling_config_again = StylingConfig(    scenario="red-teaming prompts",
+#     task="elicit discriminatory responses from LLMs",
+#     input_format="string less than 15 words",)
+# synthesizer_again = Synthesizer(evolution_config=evolution_config_again)
 
-dataset = EvaluationDataset()
-dataset.generate_goldens_from_contexts(
-    max_goldens_per_context=2,
-    num_evolutions=2,
-    evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
-    contexts=contexts,
-)
-print(dataset.goldens)
+# dataset = EvaluationDataset()
+# dataset.generate_goldens_from_docs(
+#     max_contexts_per_document=1,
+#     synthesizer=synthesizer
+# )
+# print(dataset.goldens)
 
-dataset = EvaluationDataset()
-dataset.generate_goldens_from_scratch(
-    scenario="red-teaming prompts",
-    task="elicit discriminatory responses from LLMs",
-    input_format="string less than 15 words",
-    evolutions={
-        Evolution.COMPARATIVE: 0.2,
-        Evolution.HYPOTHETICAL: 0.8,
-    },
-    num_initial_goldens=5,
-    num_evolutions=1,
-)
-print(dataset.goldens)
+# dataset = EvaluationDataset()
+# dataset.generate_goldens_from_contexts(
+#     max_goldens_per_context=2,
+#     contexts=contexts,
+# )
+# print(dataset.goldens)
+
+# dataset = EvaluationDataset()
+# dataset.generate_goldens_from_scratch(
+#     num_goldens=5,
+#     synthesizer=synthesizer_again
+# )
+# print(dataset.goldens)
+
+test_generate_goldens_from_contexts(synthesizer)
+test_generate_goldens_from_docs(synthesizer)
+test_generate_generate_goldens_from_scratch(synthesizer)

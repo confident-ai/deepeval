@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Union, Dict
 
 from deepeval.metrics.utils import initialize_model
@@ -21,15 +21,17 @@ class FiltrationConfig:
 @dataclass
 class EvolutionConfig:
     num_evolutions: int = 1
-    evolutions: Dict[Evolution, float] = {
-        Evolution.REASONING: 1 / 7,
-        Evolution.MULTICONTEXT: 1 / 7,
-        Evolution.CONCRETIZING: 1 / 7,
-        Evolution.CONSTRAINED: 1 / 7,
-        Evolution.COMPARATIVE: 1 / 7,
-        Evolution.HYPOTHETICAL: 1 / 7,
-        Evolution.IN_BREADTH: 1 / 7,
-    }
+    evolutions: Dict[Evolution, float] = field(
+        default_factory=lambda: {
+            Evolution.REASONING: 1 / 7,
+            Evolution.MULTICONTEXT: 1 / 7,
+            Evolution.CONCRETIZING: 1 / 7,
+            Evolution.CONSTRAINED: 1 / 7,
+            Evolution.COMPARATIVE: 1 / 7,
+            Evolution.HYPOTHETICAL: 1 / 7,
+            Evolution.IN_BREADTH: 1 / 7,
+        }
+    )
 
 
 @dataclass
