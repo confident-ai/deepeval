@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union
 from dataclasses import dataclass, field
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -25,7 +25,6 @@ from deepeval.dataset.api import (
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.utils import convert_keys_to_snake_case, is_confident
-from deepeval.synthesizer.types import *
 
 valid_file_types = ["csv", "json"]
 
