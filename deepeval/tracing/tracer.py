@@ -456,7 +456,6 @@ class Tracer:
                     additional_data=self.track_params["additional_data"],
                     hyperparameters=self.track_params["hyperparameters"],
                     fail_silently=self.track_params["fail_silently"],
-                    run_async=self.track_params["run_async"],
                     trace_stack=dict_representation,
                 )
         else:
@@ -573,7 +572,6 @@ class Tracer:
         hyperparameters: Optional[Dict[str, str]] = {},
         fail_silently: Optional[bool] = False,
         raise_exception: Optional[bool] = True,
-        run_async: Optional[bool] = True,
     ):
         self.is_monitoring = True
         self.monitor_params = {
@@ -591,5 +589,4 @@ class Tracer:
             "hyperparameters": hyperparameters,
             "fail_silently": fail_silently,
             "raise_exception": raise_exception,
-            "run_async": run_async,
         }
