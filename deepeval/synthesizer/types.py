@@ -1,11 +1,6 @@
 from enum import Enum
 
 
-class UseCase(Enum):
-    QA = "QA"
-    TEXT2SQL = "Text to SQL"
-
-
 class Evolution(Enum):
     REASONING = "Reasoning"
     MULTICONTEXT = "Multi-context"

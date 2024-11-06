@@ -3,7 +3,7 @@ import pytest
 import time
 from typing import Callable
 import asyncio
-from deepeval.synthesizer import Synthesizer, UseCase
+from deepeval.synthesizer import Synthesizer
 from deepeval.dataset import EvaluationDataset
 from deepeval.models import OpenAIEmbeddingModel
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
@@ -257,8 +257,8 @@ def test_generate_goldens_from_contexts(synthesizer: Synthesizer):
 
 # synthesizer_sync = Synthesizer(async_mode=False)
 # synthesizer_async = Synthesizer(async_mode=True)
-# test_generate_goldens(synthesizer_sync, UseCase.TEXT2SQL)
-# test_generate_goldens(synthesizer_async, UseCase.TEXT2SQL)
+# test_generate_goldens(synthesizer_sync)
+# test_generate_goldens(synthesizer_async)
 
 #########################################################
 ### Generate Goldens From Docs ##########################
