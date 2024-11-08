@@ -12,6 +12,7 @@ from deepeval.utils import login_with_confident_api_key
 from deepeval.telemetry import *
 from deepeval.integrations import trace_langchain, trace_llama_index
 from deepeval.confident import confident_evaluate
+from deepeval.guardrails import guard
 
 __all__ = [
     "login_with_confident_api_key",
