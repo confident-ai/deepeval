@@ -142,6 +142,12 @@ module.exports = {
           ],
           collapsed: true,
         },
+        {
+          type: "category",
+          label: "Guardrails",
+          items: ["confident-ai-guardrails"],
+          collapsed: true,
+        },
       ],
       collapsed: false,
     },

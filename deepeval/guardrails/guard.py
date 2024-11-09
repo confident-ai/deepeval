@@ -1,5 +1,8 @@
+from typing import Optional, List
+
+from deepeval.guardrails.api import APIGuard, GuardResponseData
 from deepeval.confident.api import Api, HttpMethods, Endpoints
-from deepeval.guardrails.api import APIGuard
+from deepeval.telemetry import capture_guardrails
 from deepeval.guardrails.types import Guard
 from deepeval.guardrails.types import (
     purpose_entities_dependent_guards,
@@ -8,10 +11,8 @@ from deepeval.guardrails.types import (
 )
 from deepeval.utils import is_confident
 
-from typing import Optional, List
 
-PROD = "https://internal.evals.confident-ai.com"
-BASE_URL = PROD
+BASE_URL = "https://internal.evals.confident-ai.com"
 
 def guard(
     input: str,
@@ -20,39 +21,54 @@ def guard(
     purpose: Optional[str] = None,
     allowed_entities: Optional[List[str]] = None,
     system_prompt: Optional[str] = None,
+    include_reason: bool = False,
 ):
-    # Check for missing parameters
-    for guard in guards:
-        if guard in purpose_dependent_guards or guard in purpose_entities_dependent_guards:
-            if purpose is None and system_prompt is None:
-                raise ValueError(f"Guard {guard.value} requires a purpose but none was provided.")
+    with capture_guardrails(
+        guards=guards, 
+        include_reason=include_reason,
+        include_system_prompt=(system_prompt!=None)
+    ):
+        # Check for missing parameters
+        for guard in guards:
+            if guard in purpose_dependent_guards or guard in purpose_entities_dependent_guards:
+                if purpose is None and system_prompt is None:
+                    raise ValueError(f"Guard {guard.value} requires a purpose but none was provided.")
 
-        if guard in entities_dependent_guards or guard in purpose_entities_dependent_guards:
-            if allowed_entities is None and system_prompt is None:
-                raise ValueError(f"Guard {guard.value} requires allowed entities but none were provided or list was empty.")
-    
-    # Prepare parameters for API request
-    guard_params = APIGuard(
-        input=input,
-        response=response,
-        guards=[g.value for g in guards],
-        purpose=purpose,
-        allowed_entities=allowed_entities,
-        system_prompt=system_prompt,
-    )
-    body = guard_params.model_dump(by_alias=True, exclude_none=True)
-
-    # API request
-    if is_confident():
-        api = Api(base_url=BASE_URL)
-        result = api.send_request(
-            method=HttpMethods.POST,
-            endpoint=Endpoints.GUARD_ENDPOINT,
-            body=body,
+            if guard in entities_dependent_guards or guard in purpose_entities_dependent_guards:
+                if allowed_entities is None and system_prompt is None:
+                    raise ValueError(f"Guard {guard.value} requires allowed entities but none were provided or list was empty.")
+        
+        # Prepare parameters for API request
+        guard_params = APIGuard(
+            input=input,
+            response=response,
+            guards=[g.value for g in guards],
+            purpose=purpose,
+            allowed_entities=allowed_entities,
+            system_prompt=system_prompt,
+            include_reason=include_reason
         )
-        return result
-    else:
-        raise Exception(
-            "To use DeepEval guardrails, run `deepeval login`"
-        )
-    
+        body = guard_params.model_dump(by_alias=True, exclude_none=True)
+        
+        # API request
+        if is_confident():
+            api = Api(base_url=BASE_URL)
+            response = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.GUARD_ENDPOINT,
+                body=body,
+            )
+            try:
+                GuardResponseData(**response)
+            except TypeError as e:
+                raise Exception("Incorrect result format:", e)
+            results = response["results"]
+            if not include_reason:
+                for result in results:
+                    del result['reason']
+            return results
+        else:
+            raise Exception(
+                "To use DeepEval guardrails, run `deepeval login`"
+            )
+        
