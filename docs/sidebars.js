@@ -124,7 +124,7 @@ module.exports = {
         },
         {
           type: "category",
-          label: "Human Feedback",
+          label: "Human-in-the-Loop",
           items: [
             "confident-ai-human-feedback",
             "confident-ai-human-feedback-adding",
@@ -142,12 +142,7 @@ module.exports = {
           ],
           collapsed: true,
         },
-        {
-          type: "category",
-          label: "Guardrails",
-          items: ["confident-ai-guardrails"],
-          collapsed: true,
-        },
+       "confident-ai-guardrails"
       ],
       collapsed: false,
     },

@@ -1,6 +1,7 @@
 from typing import Optional, List
 from pydantic import BaseModel
 
+
 class APIGuard(BaseModel):
     input: str
     response: str
@@ -10,10 +11,12 @@ class APIGuard(BaseModel):
     system_prompt: Optional[str] = None
     include_reason: bool
 
+
 class GuardResult(BaseModel):
     guard: str
     score: int
     reason: Optional[str]
+
 
 class GuardResponseData(BaseModel):
     results: List[GuardResult]

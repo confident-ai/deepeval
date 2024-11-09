@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Guard(Enum):
     PRIVACY = "Privacy"
     INTELLECTUAL_PROPERTY = "Intellectual Property"
@@ -49,30 +50,28 @@ class Guard(Enum):
     PROFANITY = "Profanity"
     INSULTS = "Insults"
 
+
 # Lists of guards that require purpose, entities, or both
 purpose_dependent_guards = [
-    Guard.BFLA, 
-    Guard.BIAS, 
-    Guard.HALLUCINATION, 
+    Guard.BFLA,
+    Guard.BIAS,
+    Guard.HALLUCINATION,
     Guard.HIJACKING,
-    Guard.OVERRELIANCE, 
-    Guard.PROMPT_EXTRACTION, 
-    Guard.RBAC, 
+    Guard.OVERRELIANCE,
+    Guard.PROMPT_EXTRACTION,
+    Guard.RBAC,
     Guard.SSRF,
-    Guard.COMPETITORS, 
-    Guard.RELIGION
+    Guard.COMPETITORS,
+    Guard.RELIGION,
 ]
 
-entities_dependent_guards = [
-    Guard.BOLA, 
-    Guard.IMITATION
-]
+entities_dependent_guards = [Guard.BOLA, Guard.IMITATION]
 
 purpose_entities_dependent_guards = [
-    Guard.PII_API_DB, 
-    Guard.PII_DIRECT, 
-    Guard.PII_SESSION, 
+    Guard.PII_API_DB,
+    Guard.PII_DIRECT,
+    Guard.PII_SESSION,
     Guard.PII_SOCIAL,
-    Guard.COMPETITORS, 
-    Guard.RELIGION
+    Guard.COMPETITORS,
+    Guard.RELIGION,
 ]

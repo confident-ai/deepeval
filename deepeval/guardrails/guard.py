@@ -6,13 +6,14 @@ from deepeval.telemetry import capture_guardrails
 from deepeval.guardrails.types import Guard
 from deepeval.guardrails.types import (
     purpose_entities_dependent_guards,
-    entities_dependent_guards, 
-    purpose_dependent_guards
+    entities_dependent_guards,
+    purpose_dependent_guards,
 )
 from deepeval.utils import is_confident
 
 
 BASE_URL = "https://internal.evals.confident-ai.com"
+
 
 def guard(
     input: str,
@@ -24,20 +25,30 @@ def guard(
     include_reason: bool = False,
 ):
     with capture_guardrails(
-        guards=guards, 
+        guards=guards,
         include_reason=include_reason,
-        include_system_prompt=(system_prompt!=None)
+        include_system_prompt=(system_prompt != None),
     ):
         # Check for missing parameters
         for guard in guards:
-            if guard in purpose_dependent_guards or guard in purpose_entities_dependent_guards:
+            if (
+                guard in purpose_dependent_guards
+                or guard in purpose_entities_dependent_guards
+            ):
                 if purpose is None and system_prompt is None:
-                    raise ValueError(f"Guard {guard.value} requires a purpose but none was provided.")
+                    raise ValueError(
+                        f"Guard {guard.value} requires a purpose but none was provided."
+                    )
 
-            if guard in entities_dependent_guards or guard in purpose_entities_dependent_guards:
+            if (
+                guard in entities_dependent_guards
+                or guard in purpose_entities_dependent_guards
+            ):
                 if allowed_entities is None and system_prompt is None:
-                    raise ValueError(f"Guard {guard.value} requires allowed entities but none were provided or list was empty.")
-        
+                    raise ValueError(
+                        f"Guard {guard.value} requires allowed entities but none were provided or list was empty."
+                    )
+
         # Prepare parameters for API request
         guard_params = APIGuard(
             input=input,
@@ -46,10 +57,10 @@ def guard(
             purpose=purpose,
             allowed_entities=allowed_entities,
             system_prompt=system_prompt,
-            include_reason=include_reason
+            include_reason=include_reason,
         )
         body = guard_params.model_dump(by_alias=True, exclude_none=True)
-        
+
         # API request
         if is_confident():
             api = Api(base_url=BASE_URL)
@@ -65,10 +76,7 @@ def guard(
             results = response["results"]
             if not include_reason:
                 for result in results:
-                    del result['reason']
+                    del result["reason"]
             return results
         else:
-            raise Exception(
-                "To use DeepEval guardrails, run `deepeval login`"
-            )
-        
+            raise Exception("To use DeepEval guardrails, run `deepeval login`")

@@ -23,7 +23,7 @@ class Endpoints(Enum):
     FEEDBACK_ENDPOINT = "/v1/feedback"
     EVALUATE_ENDPOINT = "/evaluate"
     GUARD_ENDPOINT = "/guard"
-    
+
 
 class Api:
     def __init__(
