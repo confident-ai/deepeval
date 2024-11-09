@@ -19,6 +19,8 @@ class Feature(Enum):
     REDTEAMING = "redteaming"
     SYNTHESIZER = "synthesizer"
     EVALUATION = "evaluation"
+    GUARDRAIL = "guardrail"
+    BENCHMARK = "benchmark"
     UNKNOWN = "unknown"
 
 
@@ -200,13 +202,28 @@ def capture_red_teamer_run(
 
 
 @contextmanager
+def capture_guardrails(guards: List, include_reason: bool,  include_system_prompt: bool):
+    if not telemetry_opt_out():
+        with tracer.start_as_current_span(f"Ran guardrails") as span:
+            span.set_attribute("user.unique_id", get_unique_id())
+            span.set_attribute("include_system_prompt", include_system_prompt)
+            span.set_attribute("include_reason", include_reason)
+            for guard in guards:
+                span.set_attribute(f"vulnerability.{guard.value}", 1)
+            set_last_feature(Feature.GUARDRAIL)
+            yield span
+    else:
+        yield
+
+
+@contextmanager
 def capture_benchmark_run(benchmark: str, num_tasks: int):
     if not telemetry_opt_out():
-        with tracer.start_as_current_span(f"Login") as span:
-            last_feature = get_last_feature()
+        with tracer.start_as_current_span(f"Ran benchmark") as span:
             span.set_attribute("user.unique_id", get_unique_id())
             span.set_attribute("benchmark", benchmark)
             span.set_attribute("num_tasks", num_tasks)
+            set_last_feature(Feature.BENCHMARK)
             yield span
     else:
         yield
