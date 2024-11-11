@@ -156,6 +156,7 @@ module.exports = {
         "guides-regression-testing-in-cicd",
         "guides-building-custom-metrics",
         "guides-llm-observability",
+        "guides-red-teaming",
         "guides-answer-correctness-metric",
         "guides-rag-triad",
         "guides-using-custom-embedding-models",
