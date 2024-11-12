@@ -38,7 +38,7 @@ from deepeval.tracing import (
     LangChainTraceType,
     TraceData,
 )
-from deepeval.event import track
+from deepeval.monitor import monitor
 
 
 class LangChainCallbackHandler(BaseTracer):
@@ -108,7 +108,7 @@ class LangChainCallbackHandler(BaseTracer):
                 ].chainAttributes.output
 
             if trace_manager.get_outter_provider() == TraceProvider.LANGCHAIN:
-                track(
+                monitor(
                     event_name=current_trace_stack[0].name,
                     model=self.track_params.get("model") or "NA",
                     input=self.track_params.get("input") or "NA",

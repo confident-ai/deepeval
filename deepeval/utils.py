@@ -452,3 +452,14 @@ def batcher(iterator, batch_size=4, progress=False):
             yield final_batch
     if len(batch) > 0:  # Leftovers
         yield batch
+
+
+def clean_nested_dict(data):
+    if isinstance(data, dict):
+        return {key: clean_nested_dict(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [clean_nested_dict(item) for item in data]
+    elif isinstance(data, str):
+        return data.replace('\x00', '')
+    else:
+        return data
