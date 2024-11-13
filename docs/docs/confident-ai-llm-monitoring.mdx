@@ -45,10 +45,10 @@ There are four mandatory and ten optional parameters when using the `monitor()` 
 - [Optional] `raise_exception`: type `bool`. You should set this to `False` in production if you don't want to raise expections in production. Defaulted to `True`.
 
 :::caution
-Please do **NOT** provide placeholder values for optional parameters. Leave it blank instead.
+Please do **NOT** provide placeholder values for optional parameters as this will pollute data used for filtering and searching in your project. Instead you should leave it blank.
 :::
 
-The `monitor()` function returns an `response_id` upon a successful API request to Confident's servers, which you can later use to send human feedback regarding a particular LLM response you've monitored.
+The `monitor()` method returns an `response_id` upon a successful API request to Confident's servers, which you can later use to send human feedback regarding a particular LLM response you've monitored.
 
 ```python
 import deepeval
@@ -57,6 +57,22 @@ response_id = deepeval.monitor(...)
 ```
 
 **Congratulations!** With a few lines of code, `deepeval` will now automatically log all LLM responses in production to Confident AI.
+
+:::tip
+The `monitor()` method is a method that blocks the main thread. To use the asynchronous version of `monitor()`, use the `a_monitor()` method which has the exact the function signature instead:
+
+```python
+import asyncio
+import deepeval
+
+async def monitor_concurrently():
+    # monitor multiple at once without blocking the main thread
+    await asyncio.gather(deepeval.a_monitor(...), deepeval.a_monitor(...))
+
+asyncio.run(monitor_concurrently())
+```
+
+:::
 
 ### Logging Custom Hyperparameters
 
