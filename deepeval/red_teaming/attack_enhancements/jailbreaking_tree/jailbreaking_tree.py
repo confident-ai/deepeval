@@ -141,7 +141,7 @@ class JailbreakingTree(AttackEnhancement):
                 initial_attack, enhanced_attack, target_response
             )
             res: Rating = self._generate_schema(judge_prompt, Rating)
-            score = res.number
+            score = res.rating
 
             # Prune if the score is too low
             if score <= PRUNE_THRESHOLD:
@@ -275,7 +275,7 @@ class JailbreakingTree(AttackEnhancement):
             initial_attack, enhanced_attack, target_response
         )
         res: Rating = await self._a_generate_schema(judge_prompt, Rating)
-        score = res.number
+        score = res.rating
 
         # Prune if the score is too low
         if score <= PRUNE_THRESHOLD:
