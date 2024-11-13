@@ -78,17 +78,27 @@ class Synthesizer:
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         async_mode: bool = True,
-        filtration_config: Optional[FiltrationConfig] = FiltrationConfig(),
-        evolution_config: Optional[EvolutionConfig] = EvolutionConfig(),
-        styling_config: Optional[StylingConfig] = StylingConfig(),
+        filtration_config: Optional[FiltrationConfig] = None,
+        evolution_config: Optional[EvolutionConfig] = None,
+        styling_config: Optional[StylingConfig] = None,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.async_mode = async_mode
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
-        self.filtration_config = filtration_config
-        self.evolution_config = evolution_config
-        self.styling_config = styling_config
+        self.filtration_config = (
+            filtration_config
+            if filtration_config is not None
+            else FiltrationConfig()
+        )
+        self.evolution_config = (
+            evolution_config
+            if evolution_config is not None
+            else EvolutionConfig()
+        )
+        self.styling_config = (
+            styling_config if styling_config is not None else StylingConfig()
+        )
 
     #############################################################
     # Generate Goldens from Docs
@@ -99,11 +109,12 @@ class Synthesizer:
         document_paths: List[str],
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
-        context_construction_config: Optional[
-            ContextConstructionConfig
-        ] = ContextConstructionConfig(),
+        context_construction_config: Optional[ContextConstructionConfig] = None,
         _send_data=True,
     ):
+        if context_construction_config is None:
+            context_construction_config = ContextConstructionConfig()
+
         if self.async_mode:
             loop = get_or_create_event_loop()
             goldens = loop.run_until_complete(
@@ -166,10 +177,11 @@ class Synthesizer:
         document_paths: List[str],
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
-        context_construction_config: Optional[
-            ContextConstructionConfig
-        ] = ContextConstructionConfig(),
+        context_construction_config: Optional[ContextConstructionConfig] = None,
     ):
+        if context_construction_config is None:
+            context_construction_config = ContextConstructionConfig()
+
         # Generate contexts from provided docs
         if self.context_generator is None:
             self.context_generator = ContextGenerator(
