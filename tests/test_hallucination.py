@@ -40,7 +40,10 @@ def test_hallucination_metric_3():
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="Python is a programming language.",
-        retrieval_context=["Python is a snake.", "Pythons like to lurk in the forests."],
+        retrieval_context=[
+            "Python is a snake.",
+            "Pythons like to lurk in the forests.",
+        ],
         cost=0.1,
         latency=13.0,
     )
