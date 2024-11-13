@@ -58,6 +58,7 @@ from deepeval.test_run.cache import (
 class TestResult:
     """Returned from run_test"""
 
+    name: str
     success: bool
     metrics_data: Union[List[MetricData], None]
     conversational: bool
@@ -106,8 +107,11 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
 def create_test_result(
     api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
 ) -> TestResult:
+    name = api_test_case.name
+
     if isinstance(api_test_case, ConversationalApiTestCase):
         return TestResult(
+            name=name,
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
@@ -119,6 +123,7 @@ def create_test_result(
         )
         if multimodal:
             return TestResult(
+                name=name,
                 success=api_test_case.success,
                 metrics_data=api_test_case.metrics_data,
                 input=api_test_case.multimodal_input,
@@ -128,6 +133,7 @@ def create_test_result(
             )
         else:
             return TestResult(
+                name=name,
                 success=api_test_case.success,
                 metrics_data=api_test_case.metrics_data,
                 input=api_test_case.input,

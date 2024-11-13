@@ -1,5 +1,5 @@
 import os
-import urllib.parse
+import aiohttp
 import requests
 from enum import Enum
 
@@ -22,6 +22,7 @@ class Endpoints(Enum):
     EVENT_ENDPOINT = "/v1/event"
     FEEDBACK_ENDPOINT = "/v1/feedback"
     EVALUATE_ENDPOINT = "/evaluate"
+    GUARD_ENDPOINT = "/guard"
 
 
 class Api:
@@ -98,7 +99,49 @@ class Api:
         else:
             raise Exception(res.json().get("error", res.text))
 
-    @staticmethod
-    def quote_string(text: str) -> str:
-        """Encode text to be safely included in URLs."""
-        return urllib.parse.quote(text, safe="")
+    async def a_send_request(
+        self, method: HttpMethods, endpoint: Endpoints, body=None, params=None
+    ):
+        url = f"{self.base_api_url}{endpoint.value}"
+        async with aiohttp.ClientSession() as session:
+            async with session.request(
+                method=method.value,
+                url=url,
+                headers=self._headers,
+                json=body,
+                params=params,
+                ssl=True,  # SSL verification enabled
+            ) as res:
+                if res.status == 200:
+                    try:
+                        return await res.json()
+                    except aiohttp.ContentTypeError:
+                        return await res.text()
+                elif res.status == 409 and body:
+                    message = (await res.json()).get(
+                        "message", "Conflict occurred."
+                    )
+
+                    user_input = (
+                        input(
+                            f"{message} Would you like to overwrite it? [y/N] or change the alias [c]: "
+                        )
+                        .strip()
+                        .lower()
+                    )
+
+                    if user_input == "y":
+                        body["overwrite"] = True
+                        return await self.a_send_request(method, endpoint, body)
+                    elif user_input == "c":
+                        new_alias = input("Enter a new alias: ").strip()
+                        body["alias"] = new_alias
+                        return await self.a_send_request(method, endpoint, body)
+                    else:
+                        print("Aborted.")
+                        return None
+                else:
+                    error_message = await res.json().get(
+                        "error", await res.text()
+                    )
+                    raise Exception(error_message)

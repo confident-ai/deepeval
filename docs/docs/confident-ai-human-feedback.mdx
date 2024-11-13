@@ -24,9 +24,9 @@ User provided feedback can be sent via `deepeval`, while [reviewers can provide 
 Incorporating **simple and enfortless feedback mechanisms** such as thumbs-up or thumbs-down, or star rating buttons on your user interface, may encourage feedback leaving.
 :::
 
-## Sending Human Feedback
+## Collecting User Feedback
 
-Using the `response_id` returned from `track()`, here's how you can send feedback to Confident:
+Using the `response_id` returned from `monitor()`, here's how you can send feedback to Confident:
 
 ```python
 import deepeval
@@ -48,4 +48,20 @@ There are two mandatory and four optional parameters when using the `send_feedba
 - [Optional] `explanation`: a string that serves as the explanation for the given rating.
 - [Optional] `expected_response`: a string representing what the ideal response is.
 - [Optional] `fail_silently`: a boolean which when set to `True` will neither print nor raise any exceptions on error. Defaulted to `False`.
-- [Optional] `raise_expection`: a boolean which when set to `True` will not raise any expections on error. Defaulted to `True`.
+- [Optional] `raise_exception`: a boolean which when set to `True` will not raise any expections on error. Defaulted to `True`.
+
+:::tip
+The `send_feedback()` method is a method that blocks the main thread. To use the asynchronous version of `send_feedback()`, use the `a_send_feedback()` method which has the exact the function signature instead:
+
+```python
+import asyncio
+import deepeval
+
+async def send_feedback_concurrently():
+    # send multiple feedbacks at once without blocking the main thread
+    await asyncio.gather(deepeval.send_feedback(...), deepeval.send_feedback(...))
+
+asyncio.run(send_feedback_concurrently())
+```
+
+:::

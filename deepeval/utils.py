@@ -460,6 +460,6 @@ def clean_nested_dict(data):
     elif isinstance(data, list):
         return [clean_nested_dict(item) for item in data]
     elif isinstance(data, str):
-        return data.replace('\x00', '')
+        return data.replace("\x00", "")
     else:
         return data

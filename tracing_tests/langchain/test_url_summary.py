@@ -3,7 +3,10 @@ import re
 from langchain.prompts import PromptTemplate
 from langchain.chains.summarize import load_summarize_chain
 from langchain_openai import ChatOpenAI
-from langchain_community.document_loaders import YoutubeLoader, UnstructuredURLLoader
+from langchain_community.document_loaders import (
+    YoutubeLoader,
+    UnstructuredURLLoader,
+)
 
 import deepeval
 
@@ -11,13 +14,15 @@ import deepeval
 # URL validation using regular expressions
 def validate_url(url):
     url_regex = re.compile(
-        r'^(?:http|ftp)s?://'  # http://, https://, ftp://, or ftps://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'  # domain...
-        r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain name
-        r'localhost|'  # localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or IP
-        r'(?::\d+)?'  # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        r"^(?:http|ftp)s?://"  # http://, https://, ftp://, or ftps://
+        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+"  # domain...
+        r"(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain name
+        r"localhost|"  # localhost...
+        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or IP
+        r"(?::\d+)?"  # optional port
+        r"(?:/?|[/?]\S+)$",
+        re.IGNORECASE,
+    )
     return re.match(url_regex, url) is not None
 
 
@@ -38,9 +43,15 @@ def summarize_url(api_key, url):
             loader = UnstructuredURLLoader(urls=[url], ssl_verify=False)
         data = loader.load()
         # Initialize the ChatOpenAI module, load and run the summarize chain
-        llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo", openai_api_key=api_key)
-        prompt_template = "Write a summary of the following in 250-300 words:\n\n{text}\n"
-        prompt = PromptTemplate(template=prompt_template, input_variables=["text"])
+        llm = ChatOpenAI(
+            temperature=0, model="gpt-3.5-turbo", openai_api_key=api_key
+        )
+        prompt_template = (
+            "Write a summary of the following in 250-300 words:\n\n{text}\n"
+        )
+        prompt = PromptTemplate(
+            template=prompt_template, input_variables=["text"]
+        )
         chain = load_summarize_chain(llm, chain_type="stuff", prompt=prompt)
         summary = chain.invoke(data)
         return summary

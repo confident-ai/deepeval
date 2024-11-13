@@ -124,7 +124,7 @@ module.exports = {
         },
         {
           type: "category",
-          label: "Human Feedback",
+          label: "Human-in-the-Loop",
           items: [
             "confident-ai-human-feedback",
             "confident-ai-human-feedback-adding",
@@ -142,6 +142,7 @@ module.exports = {
           ],
           collapsed: true,
         },
+       "confident-ai-guardrails"
       ],
       collapsed: false,
     },
@@ -156,6 +157,7 @@ module.exports = {
         "guides-regression-testing-in-cicd",
         "guides-building-custom-metrics",
         "guides-llm-observability",
+        "guides-red-teaming",
         "guides-answer-correctness-metric",
         "guides-rag-triad",
         "guides-using-custom-embedding-models",
