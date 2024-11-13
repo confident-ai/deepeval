@@ -226,7 +226,8 @@ def check_mllm_test_case_params(
 
 
 def trimAndLoadJson(
-    input_string: str, metric: Optional[BaseMetric] = None
+    input_string: str,
+    metric: Optional[BaseMetric] = None,
 ) -> Any:
     start = input_string.find("{")
     end = input_string.rfind("}") + 1

@@ -16,6 +16,7 @@ from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
+from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .text_to_image.text_to_image import TextToImageMetric
 from .image_editing.image_editing import ImageEditingMetric
 from .conversation_relevancy.conversation_relevancy import (
