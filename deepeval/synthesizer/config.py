@@ -44,9 +44,7 @@ class StylingConfig:
 
 @dataclass
 class ContextConstructionConfig:
-    embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = (
-        OpenAIEmbeddingModel()
-    )
+    embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None
     critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None
     max_contexts_per_document: int = 3
     chunk_size: int = 1024
@@ -57,3 +55,5 @@ class ContextConstructionConfig:
 
     def __post_init__(self):
         self.critic_model, _ = initialize_model(self.critic_model)
+        if self.embedder is None:
+            self.embedder = OpenAIEmbeddingModel()
