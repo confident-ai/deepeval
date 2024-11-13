@@ -381,7 +381,7 @@ class Tracer:
         self.status: TraceStatus
         self.error: Optional[Dict[str:Any]] = None
         self.attributes: Optional[Attributes] = None
-        self.track_params: Optional[Dict] = None
+        self.monitor_params: Optional[Dict] = None
         self.is_monitoring: bool = False
 
     def __enter__(self):
@@ -441,21 +441,22 @@ class Tracer:
 
             if self.is_monitoring:
                 monitor(
-                    event_name=self.track_params["event_name"]
+                    event_name=self.monitor_params["event_name"]
                     or self.trace_type,
-                    model=self.track_params["model"],
-                    input=self.track_params["input"],
-                    response=self.track_params["response"],
-                    retrieval_context=self.track_params["retrieval_context"],
-                    completion_time=self.track_params["completion_time"]
+                    model=self.monitor_params["model"],
+                    input=self.monitor_params["input"],
+                    response=self.monitor_params["response"],
+                    retrieval_context=self.monitor_params["retrieval_context"],
+                    completion_time=self.monitor_params["completion_time"]
                     or self.execution_time,
-                    token_usage=self.track_params["token_usage"],
-                    token_cost=self.track_params["token_cost"],
-                    distinct_id=self.track_params["distinct_id"],
-                    conversation_id=self.track_params["conversation_id"],
-                    additional_data=self.track_params["additional_data"],
-                    hyperparameters=self.track_params["hyperparameters"],
-                    fail_silently=self.track_params["fail_silently"],
+                    token_usage=self.monitor_params["token_usage"],
+                    token_cost=self.monitor_params["token_cost"],
+                    distinct_id=self.monitor_params["distinct_id"],
+                    conversation_id=self.monitor_params["conversation_id"],
+                    additional_data=self.monitor_params["additional_data"],
+                    hyperparameters=self.monitor_params["hyperparameters"],
+                    fail_silently=self.monitor_params["fail_silently"],
+                    run_async=self.monitor_params["run_async"],
                     trace_stack=dict_representation,
                 )
         else:
