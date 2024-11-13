@@ -2,6 +2,7 @@ from typing import Optional, List, Dict, Union, Any
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_run.hyperparameters import process_hyperparameters
+from deepeval.utils import clean_nested_dict
 from deepeval.monitor.api import (
     APIEvent,
     EventHttpResponse,
@@ -28,6 +29,7 @@ def monitor(
     hyperparameters: Optional[Dict[str, str]] = {},
     fail_silently: Optional[bool] = False,
     raise_expection: Optional[bool] = True,
+    run_async: Optional[bool] = True,
     trace_stack: Optional[Dict[str, Any]] = None,
     trace_provider: Optional[str] = None,
     _debug: Optional[bool] = False,
@@ -92,7 +94,7 @@ def monitor(
 
         if _debug:
             print(body)
-
+        body = clean_nested_dict(body)
         result = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.EVENT_ENDPOINT,

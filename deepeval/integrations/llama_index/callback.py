@@ -57,7 +57,7 @@ from deepeval.tracing import (
     TraceData,
 )
 from deepeval.utils import dataclass_to_dict, class_to_dict
-from deepeval.event import track
+from deepeval.monitor import monitor
 
 events_to_ignore = [
     # CBEventType.CHUNKING,
@@ -154,7 +154,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             trace_manager.clear_trace_stack()
 
             if trace_manager.get_outter_provider() == TraceProvider.LLAMA_INDEX:
-                track(
+                monitor(
                     event_name=current_trace_stack[0].name,
                     model=self.track_params.get("model") or "NA",
                     input=self.track_params.get("input") or "NA",
@@ -362,7 +362,8 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             ]
             for node in nodes:
                 total_chunk_length += len(node.content)
-                top_score = node.score if node.score > top_score else top_score
+                if node.score:
+                    top_score = node.score if node.score > top_score else top_score
             attributes.nodes = nodes
             attributes.top_k = len(nodes)
             attributes.average_chunk_size = total_chunk_length // len(nodes)
