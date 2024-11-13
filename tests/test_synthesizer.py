@@ -249,16 +249,10 @@ def test_generate_goldens_from_contexts(synthesizer: Synthesizer):
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
 
-
 # synthesizer_sync = Synthesizer(async_mode=False)
 # synthesizer_async = Synthesizer(async_mode=True)
-# test_generate_goldens(synthesizer_sync)
-# test_generate_goldens(synthesizer_async)
-
-# synthesizer_sync = Synthesizer(async_mode=False)
-# synthesizer_async = Synthesizer(async_mode=True)
-# test_generate_goldens(synthesizer_sync)
-# test_generate_goldens(synthesizer_async)
+# test_generate_goldens_from_contexts(synthesizer_sync)
+# test_generate_goldens_from_contexts(synthesizer_async)
 
 #########################################################
 ### Generate Goldens From Docs ##########################
@@ -269,7 +263,7 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
     start_time = time.time()
 
     goldens = synthesizer.generate_goldens_from_docs(
-        max_goldens_per_context=1,
+        max_goldens_per_context=3,
         document_paths=document_paths,
         context_construction_config=ContextConstructionConfig(chunk_size=100),
         _send_data=False,
@@ -281,23 +275,16 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
     print(synthesizer.to_pandas())
 
 
-# synthesizer_sync = Synthesizer(
-#     async_mode=False,
-#     model=SchematicGPTModel(),
-#     synthetic_input_quality_threshold=0.7,
-#     context_quality_threshold=0.7,
-#     context_similarity_threshold=0.5,
-# )
-# synthesizer_async = Synthesizer(
-#     async_mode=True,
-#     model=SchematicGPTModel(),
-#     synthetic_input_quality_threshold=0.7,
-#     context_quality_threshold=0.7,
-#     context_similarity_threshold=0.5,
-# )
+synthesizer_sync = Synthesizer(
+    async_mode=False,
+)
+synthesizer_async = Synthesizer(
+    async_mode=True,
+    max_concurrent=9
+)
 
 # test_generate_goldens_from_docs(synthesizer_sync)
-# test_generate_goldens_from_docs(synthesizer_async)
+test_generate_goldens_from_docs(synthesizer_async)
 
 #########################################################
 ### Generate Goldens From Scratch #######################

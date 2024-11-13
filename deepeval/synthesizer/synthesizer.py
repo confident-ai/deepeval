@@ -78,12 +78,14 @@ class Synthesizer:
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         async_mode: bool = True,
+        max_concurrent: int = 100,
         filtration_config: Optional[FiltrationConfig] = None,
         evolution_config: Optional[EvolutionConfig] = None,
         styling_config: Optional[StylingConfig] = None,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.async_mode = async_mode
+        self.max_concurrent = max_concurrent
         self.synthetic_goldens: List[Golden] = []
         self.context_generator = None
         self.filtration_config = (
@@ -359,6 +361,7 @@ class Synthesizer:
         _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
     ) -> List[Golden]:
+        semaphore = asyncio.Semaphore(self.max_concurrent)
         goldens: List[Golden] = []
         with synthesizer_progress_context(
             method="default",
@@ -371,7 +374,9 @@ class Synthesizer:
             async_mode=True,
         ) as progress_bar:
             tasks = [
-                self._a_generate_from_context(
+                self.task_wrapper(
+                    semaphore,
+                    self._a_generate_from_context,
                     context=context,
                     goldens=goldens,
                     include_expected_output=include_expected_output,
@@ -534,6 +539,7 @@ class Synthesizer:
             raise TypeError(
                 "`scenario`, `task`, and `input_format` in `styling_config` must not be None when generation goldens from scratch."
             )
+        semaphore = asyncio.Semaphore(self.max_concurrent)
 
         transformed_evolutions = self.transform_distribution(
             self.evolution_config.evolutions
@@ -561,7 +567,9 @@ class Synthesizer:
 
             # Evolve inputs
             tasks = [
-                self._a_evolve_input(
+                self.task_wrapper(
+                    semaphore,
+                    self._a_evolve_input,
                     input=data.input,
                     num_evolutions=self.evolution_config.num_evolutions,
                     evolutions=transformed_evolutions,
@@ -937,6 +945,10 @@ class Synthesizer:
     #############################################################
     # Utilities
     #############################################################
+
+    async def task_wrapper(self, sem, func, *args, **kwargs):
+            async with sem:  # Acquire semaphore
+                return await func(*args, **kwargs)
 
     def to_pandas(self):
         # Prepare data for the DataFrame
