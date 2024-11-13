@@ -57,6 +57,7 @@ from deepeval.test_run.cache import (
 @dataclass
 class TestResult:
     """Returned from run_test"""
+
     name: str
     success: bool
     metrics_data: Union[List[MetricData], None]

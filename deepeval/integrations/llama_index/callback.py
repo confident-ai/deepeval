@@ -363,7 +363,9 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             for node in nodes:
                 total_chunk_length += len(node.content)
                 if node.score:
-                    top_score = node.score if node.score > top_score else top_score
+                    top_score = (
+                        node.score if node.score > top_score else top_score
+                    )
             attributes.nodes = nodes
             attributes.top_k = len(nodes)
             attributes.average_chunk_size = total_chunk_length // len(nodes)
