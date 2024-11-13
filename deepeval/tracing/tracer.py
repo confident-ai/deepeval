@@ -456,7 +456,6 @@ class Tracer:
                     additional_data=self.monitor_params["additional_data"],
                     hyperparameters=self.monitor_params["hyperparameters"],
                     fail_silently=self.monitor_params["fail_silently"],
-                    run_async=self.monitor_params["run_async"],
                     trace_stack=dict_representation,
                 )
         else:
