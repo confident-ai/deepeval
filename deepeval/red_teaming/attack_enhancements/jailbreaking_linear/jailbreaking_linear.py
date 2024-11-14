@@ -67,11 +67,13 @@ class JailbreakingLinear(AttackEnhancement):
                 attack, current_attack
             )
             res: OnTopic = self._generate_schema(is_on_topic_prompt, OnTopic)
-            on_topic = res.response
+
+            on_topic = res.on_topic
             pbar.update(1)
 
             # 4th step: Generate a response from the target LLM using the enhanced attack
             target_response = self.target_model.generate(current_attack)
+
             penalized_phrases = ["in the face of impending doom"]
             contains_penalized_phrase = any(
                 phrase.lower() in target_response.lower()
@@ -84,7 +86,8 @@ class JailbreakingLinear(AttackEnhancement):
                 attack, current_attack, target_response
             )
             res: Rating = self._generate_schema(judge_prompt, Rating)
-            score = res.number
+
+            score = res.rating
             pbar.update(1)
 
             # Apply penalty if the phrase is present
@@ -156,12 +159,13 @@ class JailbreakingLinear(AttackEnhancement):
             res: OnTopic = await self._a_generate_schema(
                 is_on_topic_prompt, OnTopic
             )
-            on_topic = res.response
+            on_topic = res.on_topic
             pbar.update(1)
 
             # 4th step: Generate a response from the target LLM using the enhanced attack
             target_response = await self.target_model.a_generate(current_attack)
             penalized_phrases = ["in the face of impending doom"]
+
             contains_penalized_phrase = any(
                 phrase.lower() in target_response.lower()
                 for phrase in penalized_phrases
@@ -173,7 +177,7 @@ class JailbreakingLinear(AttackEnhancement):
                 attack, current_attack, target_response
             )
             res: Rating = await self._a_generate_schema(judge_prompt, Rating)
-            score = res.number
+            score = res.rating
             pbar.update(1)
 
             # Apply penalty if the phrase is present

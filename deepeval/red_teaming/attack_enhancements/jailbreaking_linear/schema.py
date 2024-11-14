@@ -8,11 +8,11 @@ class ImprovementPrompt(BaseModel):
 
 
 class OnTopic(BaseModel):
-    response: bool
+    on_topic: bool
 
 
 class Rating(BaseModel):
-    number: int
+    rating: int
 
 
 class NonRefusal(BaseModel):
