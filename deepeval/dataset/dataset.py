@@ -53,6 +53,7 @@ class EvaluationDataset:
     _conversational_test_cases: List[ConversationalTestCase] = field(
         default_factory=[], repr=None
     )
+    _confident_api_key: Optional[str] = None
 
     def __init__(
         self,
@@ -586,8 +587,8 @@ class EvaluationDataset:
             )
 
     def pull(self, alias: str, auto_convert_goldens_to_test_cases: bool = True):
-        if is_confident():
-            api = Api()
+        if is_confident() or self._confident_api_key is not None:
+            api = Api(api_key=self._confident_api_key)
             with Progress(
                 SpinnerColumn(style="rgb(106,0,255)"),
                 TextColumn("[progress.description]{task.description}"),
