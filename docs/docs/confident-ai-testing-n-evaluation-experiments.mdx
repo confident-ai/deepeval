@@ -55,84 +55,76 @@ Once an experiment has completed running on Confident AI's infrastructure, a tes
 This is particularly helpful if you wish to enable a no-code evaluation workflow for non-technical users.
 :::
 
-You can also setup a webhook endpoint that accepts a `POST` request over https to **enable users to run evaluations without having to code**, and start an evaluation through a click of a button instead. At a high level, you would still call the `confident_evaluate()` function as shown above, but with modifications to verify the webhook event is in fact from Confident AI.
+You can also setup an LLM endpoint that accepts a `POST` request over HTTPS to **enable users to run evaluations directly on the platform without having to code**, and start an evaluation through a click of a button instead. At a high level, you would have to provide Confident AI with the mappings to test case parameters such as the `actual_output`, `retrieval_contexr`, etc., and at evaluation time Confident AI will use the dataset and metrics settings you've specified for your experiment to unit test your LLM application.
 
-### Create a Webhook
+### Create an LLM Endpoint
 
-To setup a webhook on Confident AI to initiate an experiment run, follow these inital steps:
+In order for Confident AI to reach your LLM application, you'll need to expose your LLM in a RESTFUL API endpoint that is accessible over the internet. These are the hard rules you **MUST** follow when setting up your endpoint:
 
-1. Host an endpoint that accepts a `POST` request over **https**. You should test whether your endpoint is indeed reachable through the internet via https before continuing.
-2. Create a webhook on Confident AI at **Evaluation & Testing** > **Experiment** > **Webhook** by providing your endpoint url. This will generate a signing secret which you'll need later.
+1. Accepts a POST request over HTTPS.
+2. Returns a JSON response and **MUST** contain the `actual_output` value somewhere in the returned Json object. Whether or not to supply a `retrieval_context` or `tools_called` value in your returned Json is optional, and this depends on whether the metrics you have enabled for your experiment requires these parameters.
 
 :::caution
-Once you have your signing secret, which starts with the prefix `confident_`, save the signing secret securely in your environment. The signing secret will be used to verify that any request calling your endpoint is indeed from Confident AI.
-:::
+When Confident AI calls your LLM endpoint, it does a POST request with a data structure of this type:
 
-### Implement Your Endpoint
-
-Now that you have your endpoint up and running, write some code to make your endpoint functional by implementing these steps:
-
-1. Authenticate the webhook request by reading the "Confident-AI-Signature" from the request headers. The signature can then be verified using the `verify_confident_signature()` function provided by `deepeval`.
-2. Send a `200` OK status immediately after signature verification. You must send a `200` status code immediately because Confident AI will assume your endpoint isn't setup correctly and won't be waiting for test cases to be sent over otherwise.
-3. Trigger an experiment run by generating and sending over test cases using the `confident_evaluate()` function.
-
-Here's an example implementation of an endpoint setup using `FastAPI`:
-
-```python title="example.py"
-import os
-from fastapi import FastAPI, Request, BackgroundTasks, Header, HTTPException
-
-from deepeval import confident_evaluate
-from deepeval.confident import construct_confident_event
-
-app = FastAPI()
-
-confident_secret = os.environ["CONFIDENT_AI_SECRET"]
-
-@app.post("/evaluation-webhook")
-async def evaluation_webhook(
-    request: Request,
-    background_tasks: BackgroundTasks,
-    confident_ai_signature: str = Header(None)  # Read "Confident-AI-Signature" from headers
-):
-    payload = await request.body()
-
-    # Step 1: Authenticate the webhook request
-    confident_event = construct_confident_event(payload, confident_ai_signature, confident_secret)
-
-    # Step 2: Send 200 OK immediately after signature verification
-    response = {"status": "Webhook received"}
-
-    # Step 3: Trigger an experiment run in the background
-    def evaluate():
-        # Generate test cases as usual
-        test_cases = [...]
-        confident_evaluate(
-            # use your event here, you do not
-            # have to provide an experiment name
-            confident_event=confident_event,
-            test_cases=test_cases
-        )
-    background_tasks.add_task(evaluate)
-
-    return response
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+```python
+{
+    "input": "..."
+}
 ```
 
-:::info
-The example above demonstrates how to handle a webhook from Confident AI. The main idea is to authenticate the webhook request, send an immediate acknowledgment, and then process the webhook's data asynchronously. Although the example uses FastAPI, the approach can be adapted to any Python framework.
+This input will be used to unit test your LLM application, and any JSON response returned will be parsed and used to deduce what the remaining test case parameters (i.e. `actual_output`) values are.
+
+So, it is **imperative that your LLM endpoint**:
+
+1. Parses the incoming data to extract this `input` value to carry out generations.
+2. Returns the `actual_output` and any other `LLMTestCase` parameters in the JSON response with their **correct respective type**.
+
+For those that want a recap of what types each test case parameter is of, visit the [test cases section.](evaluation-test-cases)
+
 :::
 
-Here's a breakdown of what's happening:
+### Connect Your LLM Endpoint
 
-1. **Webhook Request:** When a POST request is sent to the /evaluation-webhook endpoint, the request contains the webhook payload and a signature in the Confident-AI-Signature header.
-2. **Authenticate the Request:** The `construct_confident_event()` function verifies that the signature is valid by comparing it with a computed signature based on the payload, and constructs an object for later use. If the signature doesn't match, it returns a 400 Bad Request error. This step ensures that the request is authentic.
-3. **Immediate Response:** After verifying the signature, the code sends a 200 OK response immediately.
-4. **Asynchronous Processing:** After the response is sent, an experiment is triggered in the background. In this `FastAPI` example, the `BackgroundTasks` class is used to offload the task without blocking the response. In a different framework or environment, you could use Python's `threading` or `concurrent.futures` modules to run the evaluation asynchronously instead.
+Now that you have your endpoint up and running, all that's left is to tell Confident AI how to reach it.
+
+:::tip
+You can setup your LLM connection in **Project Settings** > **LLM Connection**. There is also a button for you to **ping your LLM endpoint** to sanity check that you've setup everything correctly.
+:::
+
+You'll have to provide the:
+
+1.  HTTPS endpoint you've setup.
+2.  The json key path to the mandaatory `actual_output` parameter, and the optional `retrieval_context` , and `tools_called` parameters. The json key path is a list of strings.
+
+In order for evaluation to work, you **MUST** set the json key path for the `actual_output` parameter. Remember, the `actual_output` of your LLM application is always required for evaluation, while the `retrieval_context` and `tools_called` parameters are optional depending on the metrics you've enabled.
+
+:::note
+The json key path tells Confident AI where to look in your Json response for the respective test case parameter values.
+:::
+
+For instance, if you set the key path of the `actual_output` parameter to `["response", "actual output"]`, the correct Json response to return from your LLM endpoint is as follows:
+
+```python
+{
+    "response": {
+        "actual output": "must be a string!"
+    }
+}
+```
+
+That's not to say you can't include other things to return in your Json response, but the key path will determine the variables Confident AI will be using to populate `LLMTestCase`s at evaluation time.
+
+:::info
+If you're wondering why `expected_output`, `context`, and `expected_tools` is not required in setting up your json key path, it is because it is expected that these variables are static, just like the `input`, and should therefore come from your dataset instead.
+:::
 
 ### Start an Evaluation
 
-You can now head back to the **Experiment Details** page and press the "Evaluate" button to trigger an experiment run. You should aim to log any errors and reach out to support@confident-ai.com for any errors during setup.
+You can now head back to an individual **Experiment** page and press the "Evaluate" button to start an evaluation on Confident AI.
+
+:::tip
+
+This might be harder to debug than other steps, so you should aim to log any errors and reach out to support@confident-ai.com for any errors during setup.
+
+:::
