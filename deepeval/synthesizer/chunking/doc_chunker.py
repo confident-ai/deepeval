@@ -55,13 +55,15 @@ class DocumentChunker:
         document_name = os.path.basename(full_document_path)
         client = chromadb.PersistentClient(path=f".vector_db/{document_name}")
 
-        collection_name = f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
+        collection_name = (
+            f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
+        )
         try:
             collection = client.get_collection(name=collection_name)
         except ValueError:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
-            
+
             langchain_chunks = self.text_splitter.split_documents(self.sections)
             contents = [rc.page_content for rc in langchain_chunks]
             embeddings = await self.embedder.a_embed_texts(contents)
@@ -73,7 +75,9 @@ class DocumentChunker:
                 batch_contents = contents[i:batch_end]
                 batch_embeddings = embeddings[i:batch_end]
                 batch_ids = ids[i:batch_end]
-                batch_metadatas = [{"source_file": self.source_file} for _ in batch_contents]
+                batch_metadatas = [
+                    {"source_file": self.source_file} for _ in batch_contents
+                ]
 
                 collection.add(
                     documents=batch_contents,
@@ -104,13 +108,15 @@ class DocumentChunker:
             return collection
 
         except:
-            collection_name = f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
+            collection_name = (
+                f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
+            )
         try:
             collection = client.get_collection(name=collection_name)
         except ValueError:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
-            
+
             langchain_chunks = self.text_splitter.split_documents(self.sections)
             contents = [rc.page_content for rc in langchain_chunks]
             embeddings = self.embedder.embed_texts(contents)
@@ -122,7 +128,9 @@ class DocumentChunker:
                 batch_contents = contents[i:batch_end]
                 batch_embeddings = embeddings[i:batch_end]
                 batch_ids = ids[i:batch_end]
-                batch_metadatas = [{"source_file": self.source_file} for _ in batch_contents]
+                batch_metadatas = [
+                    {"source_file": self.source_file} for _ in batch_contents
+                ]
 
                 collection.add(
                     documents=batch_contents,
@@ -131,7 +139,7 @@ class DocumentChunker:
                     ids=batch_ids,
                 )
         return collection
-    
+
     async def a_load_doc(self, path: str) -> List[LCDocument]:
         # Find appropiate doc loader
         _, extension = os.path.splitext(path)

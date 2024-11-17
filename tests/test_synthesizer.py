@@ -249,6 +249,7 @@ def test_generate_goldens_from_contexts(synthesizer: Synthesizer):
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
 
+
 # synthesizer_sync = Synthesizer(async_mode=False)
 # synthesizer_async = Synthesizer(async_mode=True)
 # test_generate_goldens_from_contexts(synthesizer_sync)
@@ -278,10 +279,7 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
 synthesizer_sync = Synthesizer(
     async_mode=False,
 )
-synthesizer_async = Synthesizer(
-    async_mode=True,
-    max_concurrent=9
-)
+synthesizer_async = Synthesizer(async_mode=True, max_concurrent=9)
 
 # test_generate_goldens_from_docs(synthesizer_sync)
 test_generate_goldens_from_docs(synthesizer_async)

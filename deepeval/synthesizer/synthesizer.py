@@ -947,8 +947,8 @@ class Synthesizer:
     #############################################################
 
     async def task_wrapper(self, sem, func, *args, **kwargs):
-            async with sem:  # Acquire semaphore
-                return await func(*args, **kwargs)
+        async with sem:  # Acquire semaphore
+            return await func(*args, **kwargs)
 
     def to_pandas(self):
         # Prepare data for the DataFrame
