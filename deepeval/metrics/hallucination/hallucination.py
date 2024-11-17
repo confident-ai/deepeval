@@ -21,7 +21,7 @@ from deepeval.metrics.hallucination.schema import *
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.RETRIEVAL_CONTEXT,
+    LLMTestCaseParams.CONTEXT,
 ]
 
 
@@ -62,7 +62,7 @@ class HallucinationMetric(BaseMetric):
             else:
                 self.verdicts: List[HallucinationVerdict] = (
                     self._generate_verdicts(
-                        test_case.actual_output, test_case.retrieval_context
+                        test_case.actual_output, test_case.context
                     )
                 )
                 self.score = self._calculate_score()
@@ -93,7 +93,7 @@ class HallucinationMetric(BaseMetric):
         ):
             self.verdicts: List[HallucinationVerdict] = (
                 await self._a_generate_verdicts(
-                    test_case.actual_output, test_case.retrieval_context
+                    test_case.actual_output, test_case.context
                 )
             )
             self.score = self._calculate_score()
