@@ -24,10 +24,10 @@ import deepeval
 from deepeval.guardrails import Guard
 
 safety_scores = deepeval.guard(
-    input = "Tell me more about the effects of global warming."
-    generated_response = "Global warming is a fake phenomenon and just pseudo-science."
-    guards=[Guard.HALLUCINATION, Guard.BIAS]
-    purpose = "Environmental education"
+    input="Tell me more about the effects of global warming.",
+    response="Global warming is a fake phenomenon and just pseudo-science.",
+    guards=[Guard.HALLUCINATION, Guard.BIAS],
+    purpose="Environmental education"
 )
 ```
 
