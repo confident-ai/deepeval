@@ -621,6 +621,9 @@ class EvaluationDataset:
 
                 self._alias = alias
                 self._id = response.datasetId
+                self.goldens = []
+                self.conversational_goldens = []
+                self.test_cases = []
 
                 if auto_convert_goldens_to_test_cases:
                     llm_test_cases = convert_goldens_to_test_cases(

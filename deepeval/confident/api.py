@@ -1,4 +1,4 @@
-import os
+from typing import Optional
 import aiohttp
 import requests
 from enum import Enum
@@ -26,10 +26,8 @@ class Endpoints(Enum):
 
 
 class Api:
-    def __init__(
-        self, api_key: str = os.getenv("API_KEY_ENV", ""), base_url=None
-    ):
-        if api_key == "":
+    def __init__(self, api_key: Optional[str] = None, base_url=None):
+        if api_key is None:
             # get API key if none is supplied after you log in
             api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
 
