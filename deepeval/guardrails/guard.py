@@ -12,7 +12,7 @@ from deepeval.guardrails.types import (
 from deepeval.utils import is_confident
 
 
-BASE_URL = "https://internal.evals.confident-ai.com"
+BASE_URL = "https://deepeval.confident-ai.com/"
 
 
 def guard(
