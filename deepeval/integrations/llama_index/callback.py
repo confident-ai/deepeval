@@ -199,7 +199,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         elif event_type == CBEventType.AGENT_STEP:
             trace_instance = AgentTrace(
                 **trace_kwargs,
-                embeddingAttributes=AgentAttributes(
+                agentAttributes=AgentAttributes(
                     input="", output="", name="", description=""
                 ),
             )
