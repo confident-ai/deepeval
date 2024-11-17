@@ -12,7 +12,7 @@ def test_hallucination_metric():
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="A blond drinking water in public.",
-        context=[
+        retrieval_context=[
             "A man with blond-hair, and a brown shirt drinking out of a public water fountain."
         ],
         cost=0.4,
@@ -27,7 +27,7 @@ def test_hallucination_metric_2():
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="Python is a programming language.",
-        context=["Python is NOT a programming language."],
+        retrieval_context=["Python is NOT a programming language."],
         cost=1,
         latency=0.2,
     )
@@ -40,7 +40,10 @@ def test_hallucination_metric_3():
     test_case = LLMTestCase(
         input="placeholder",
         actual_output="Python is a programming language.",
-        context=["Python is a snake.", "Pythons like to lurk in the forests."],
+        retrieval_context=[
+            "Python is a snake.",
+            "Pythons like to lurk in the forests.",
+        ],
         cost=0.1,
         latency=13.0,
     )

@@ -76,7 +76,7 @@ chatbot = Chatbot()
 
 
 def test_hallucination():
-    context = [
+    retrieval_context = [
         "Be a natural-born citizen of the United States.",
         "Be at least 35 years old.",
         "Have been a resident of the United States for 14 years.",
@@ -87,6 +87,6 @@ def test_hallucination():
     test_case = LLMTestCase(
         input=input,
         actual_output=chatbot.query(user_input=input),
-        context=context,
+        retrieval_context=retrieval_context,
     )
     assert_test(test_case, [metric])
