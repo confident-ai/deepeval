@@ -55,29 +55,33 @@ class DocumentChunker:
         document_name = os.path.basename(full_document_path)
         client = chromadb.PersistentClient(path=f".vector_db/{document_name}")
 
+        collection_name = f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
         try:
-            collection = client.get_collection(
-                name=f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
-            )
-            return collection
-
-        except:
-            # Convert raw sections to processed chunks
-            collection = client.create_collection(
-                name=f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
-            )
-            langchain_chunks: List[LCDocument] = (
-                self.text_splitter.split_documents(self.sections)
-            )
+            collection = client.get_collection(name=collection_name)
+        except ValueError:
+            # Collection doesn't exist, so create it and then add documents
+            collection = client.create_collection(name=collection_name)
+            
+            langchain_chunks = self.text_splitter.split_documents(self.sections)
             contents = [rc.page_content for rc in langchain_chunks]
             embeddings = await self.embedder.a_embed_texts(contents)
-            collection.add(
-                documents=contents,
-                embeddings=embeddings,
-                metadatas=[{"source_file": self.source_file} for i in contents],
-                ids=[str(i) for i in range(len(contents))],
-            )
-            return collection
+            ids = [str(i) for i in range(len(contents))]
+
+            max_batch_size = 5461  # Maximum batch size
+            for i in range(0, len(contents), max_batch_size):
+                batch_end = min(i + max_batch_size, len(contents))
+                batch_contents = contents[i:batch_end]
+                batch_embeddings = embeddings[i:batch_end]
+                batch_ids = ids[i:batch_end]
+                batch_metadatas = [{"source_file": self.source_file} for _ in batch_contents]
+
+                collection.add(
+                    documents=batch_contents,
+                    embeddings=batch_embeddings,
+                    metadatas=batch_metadatas,
+                    ids=batch_ids,
+                )
+        return collection
 
     def chunk_doc(self):
         # Raise error if chunk_doc is called before load_doc
@@ -100,23 +104,34 @@ class DocumentChunker:
             return collection
 
         except:
-            # Convert raw sections to processed chunks
-            collection = client.create_collection(
-                name=f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
-            )
-            langchain_chunks: List[LCDocument] = (
-                self.text_splitter.split_documents(self.sections)
-            )
+            collection_name = f"processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
+        try:
+            collection = client.get_collection(name=collection_name)
+        except ValueError:
+            # Collection doesn't exist, so create it and then add documents
+            collection = client.create_collection(name=collection_name)
+            
+            langchain_chunks = self.text_splitter.split_documents(self.sections)
             contents = [rc.page_content for rc in langchain_chunks]
             embeddings = self.embedder.embed_texts(contents)
-            collection.add(
-                documents=contents,
-                embeddings=embeddings,
-                metadatas=[{"source_file": self.source_file} for i in contents],
-                ids=[str(i) for i in range(len(contents))],
-            )
-            return collection
+            ids = [str(i) for i in range(len(contents))]
 
+            max_batch_size = 5461  # Maximum batch size
+            for i in range(0, len(contents), max_batch_size):
+                batch_end = min(i + max_batch_size, len(contents))
+                batch_contents = contents[i:batch_end]
+                batch_embeddings = embeddings[i:batch_end]
+                batch_ids = ids[i:batch_end]
+                batch_metadatas = [{"source_file": self.source_file} for _ in batch_contents]
+
+                collection.add(
+                    documents=batch_contents,
+                    embeddings=batch_embeddings,
+                    metadatas=batch_metadatas,
+                    ids=batch_ids,
+                )
+        return collection
+    
     async def a_load_doc(self, path: str) -> List[LCDocument]:
         # Find appropiate doc loader
         _, extension = os.path.splitext(path)
