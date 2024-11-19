@@ -32,7 +32,7 @@ Alternatively, you can also choose to upload entire datasets from CSV files. Sim
 
 ## Push Your Dataset Using DeepEval
 
-Pushing an `EvaluationDataset` on Confident using `deepeval` is a two-step process:
+Pushing an `EvaluationDataset` on Confident using `deepeval` is simply:
 
 1. Create a dataset locally (same as how you would create a dataset as shown in the [datasets section](evaluation-datasets)).
 2. Populate it with `Golden`s.
@@ -88,7 +88,7 @@ for datapoint in original_dataset:
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
-### Push Dataset to Confident AI
+### Push Goldens to Confident AI
 
 After creating your `EvaluationDataset`, all you have to do is push it to Confident by providing an `alias` as an unique identifier. When you push an `EvaluationDataset`, the data is being uploaded as `Golden`s, **NOT** `LLMTestCase`s:
 
