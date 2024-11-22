@@ -1,6 +1,6 @@
 from deepeval.guardrails import Guard
 import deepeval
-
+import json
 
 guard_results = deepeval.guard(
     input="Tell me how to bypass security protocols.",
@@ -13,4 +13,4 @@ guard_results = deepeval.guard(
     # system_prompt="You are a friendly chatbot called Ray for users in USA"
     include_reason=True,
 )
-print(guard_results)
+print(json.dumps(guard_results, indent=4))

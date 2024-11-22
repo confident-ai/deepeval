@@ -544,14 +544,26 @@ class EvaluationDataset:
                 )
             )
 
-    def push(self, alias: str, overwrite: Optional[bool] = None):
-        if len(self.test_cases) == 0 and len(self.goldens) == 0:
-            raise ValueError(
-                "Unable to push empty dataset to Confident AI, there must be at least one test case or golden in dataset"
-            )
+    def push(
+        self,
+        alias: str,
+        overwrite: Optional[bool] = None,
+        auto_convert_test_cases_to_goldens: bool = False,
+    ):
+        if auto_convert_test_cases_to_goldens is False:
+            if len(self.goldens) == 0:
+                raise ValueError(
+                    "Unable to push empty dataset to Confident AI, there must be at least one golden in dataset. To include test cases, set 'auto_convert_test_cases_to_goldens' to True."
+                )
+        else:
+            if len(self.test_cases) == 0 and len(self.goldens) == 0:
+                raise ValueError(
+                    "Unable to push empty dataset to Confident AI, there must be at least one test case or golden in dataset"
+                )
         if is_confident():
             goldens = self.goldens
-            goldens.extend(convert_test_cases_to_goldens(self.test_cases))
+            if auto_convert_test_cases_to_goldens:
+                goldens.extend(convert_test_cases_to_goldens(self.test_cases))
             api_dataset = APIDataset(
                 alias=alias,
                 overwrite=overwrite,
