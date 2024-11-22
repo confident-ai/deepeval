@@ -68,7 +68,7 @@ class Api:
             json=body,
             params=params,
         )
-        print("@@@", res)
+
         if res.status_code == 200:
             try:
                 return res.json()
