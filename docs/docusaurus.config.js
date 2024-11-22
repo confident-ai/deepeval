@@ -101,11 +101,11 @@ module.exports = async function createConfigAsync() {
               position: 'left',
               label: 'Docs',
             },
-            {
-              to: "docs/tutorial-introduction",
-              position: 'left',
-              label: 'Tutorial',
-            },
+            // {
+            //   to: "docs/tutorial-introduction",
+            //   position: 'left',
+            //   label: 'Tutorial',
+            // },
             {
               href: "https://confident-ai.com/blog",
               position: 'left',
@@ -155,10 +155,10 @@ module.exports = async function createConfigAsync() {
                   label: 'Introduction',
                   to: '/docs/getting-started',
                 },
-                {
-                  label: 'Tutorial',
-                  to: '/docs/tutorial-introduction',
-                },
+                // {
+                //   label: 'Tutorial',
+                //   to: '/docs/tutorial-introduction',
+                // },
               ],
             },
             {

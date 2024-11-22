@@ -104,6 +104,14 @@ module.exports = {
         },
         {
           type: "category",
+          label: "Hyperparameters",
+          items: [
+            "confident-ai-hyperparameters-prompt-versioning",
+          ],
+          collapsed: true,
+        },
+        {
+          type: "category",
           label: "Datasets",
           items: [
             "confident-ai-evaluation-dataset-management",
