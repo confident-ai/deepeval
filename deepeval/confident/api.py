@@ -21,6 +21,7 @@ class Endpoints(Enum):
     TEST_RUN_ENDPOINT = "/v1/test-run"
     EVENT_ENDPOINT = "/v1/event"
     FEEDBACK_ENDPOINT = "/v1/feedback"
+    PROMPT_ENDPOINT = "/v1/prompt"
     EVALUATE_ENDPOINT = "/evaluate"
     GUARD_ENDPOINT = "/guard"
 
@@ -67,6 +68,7 @@ class Api:
             json=body,
             params=params,
         )
+        print("@@@", res)
         if res.status_code == 200:
             try:
                 return res.json()
