@@ -25,6 +25,7 @@ from llama_index.core.callbacks.base_handler import BaseCallbackHandler
 from llama_index.core.callbacks.schema import BASE_TRACE_EVENT
 from llama_index.core.llms import ChatMessage, ChatResponse
 from llama_index.core.tools import ToolMetadata
+from openai.types.chat import ChatCompletion
 
 from deepeval.tracing import (
     trace_manager,
@@ -511,13 +512,28 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             attributes.update(self._get_response_output(response))
             if hasattr(response, "raw"):
                 raw = response.raw
-                assert isinstance(
-                    raw, Mapping
-                ), f"raw must be Mapping, found {type(raw)}"
-                attributes.update(self._get_output_messages(raw))
-                if "usage" in raw:
-                    attributes.update(self._get_token_counts(raw["usage"]))
-
+                if isinstance(raw, Mapping):
+                    attributes.update(self._get_output_messages(raw))
+                    if "usage" in raw:
+                        attributes.update(self._get_token_counts(raw["usage"]))
+                elif isinstance(raw, ChatCompletion):  # Handle the ChatCompletion case
+                    if hasattr(raw, "choices") and hasattr(raw, "usage"):
+                        # Extract data from ChatCompletion object
+                        attributes.update({
+                            "id": raw.id,
+                            "created": raw.created,
+                            "model": raw.model,
+                            "usage": {
+                                "completion_tokens": raw.usage.completion_tokens,
+                                "prompt_tokens": raw.usage.prompt_tokens,
+                                "total_tokens": raw.usage.total_tokens
+                            },
+                            "response": raw.choices[0].message.content if raw.choices else None
+                        })
+                    else:
+                        print(f"Unexpected object structure in raw: {raw}")
+                else:
+                    print(f"Unexpected raw type: {type(raw)}")
             if (
                 additional_kwargs := getattr(
                     response, "additional_kwargs", None

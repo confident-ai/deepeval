@@ -197,21 +197,21 @@ module.exports = {
     {
       type: "category",
       label: "Choosing Your Metrics",
-      items: ["tutorial-placeholder"],
+      items: ["tutorial-metrics-deepeval", "tutorial-metrics-confident"],
       collapsed: false,
     },
     {
       type: "category",
       label: "Preparing Your Evaluation Dataset",
-      items: ["tutorial-placeholder"],
+      items: ["tutorial-dataset-synthesis", "tutorial-dataset-prepared"],
       collapsed: false,
     },
-    {
-      type: "category",
-      label: "Advanced LLM Safety Testing",
-      items: ["tutorial-placeholder"],
-      collapsed: false,
-    },
+    // {
+    //   type: "category",
+    //   label: "Advanced LLM Safety Testing",
+    //   items: ["tutorial-placeholder"],
+    //   collapsed: false,
+    // },
     {
       type: "category",
       label: "Integration with Existing Workflows",
@@ -221,7 +221,7 @@ module.exports = {
     {
       type: "category",
       label: "Continous Evaluation in Production",
-      items: ["tutorial-placeholder"],
+      items: ["tutorial-production-monitoring", "tutorial-production-evaluation"],
       collapsed: false,
     },
   ],
