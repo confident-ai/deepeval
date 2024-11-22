@@ -1,0 +1,113 @@
+---
+id: tutorial-metrics-evaluation-criteria
+title: Deciding on your Evaluation Criteria
+sidebar_label: Deciding on your Evaluation Criteria
+---
+
+**What metrics you choose depends on your evaluation criteria**, which in turn are shaped by your goals, user priorities, and the specific areas of your LLM that you wish to improve. Defining a clear evaluation criteria is essential, as it transforms subjective goals (what matters to you and what you wish to improve) into actionable steps (selecting the right metrics).
+
+:::tip
+When **defining your evaluation criteria**, you'll need to consider what matters most to you, what your users care about, and where your model's performance could be enhanced. If this isn't entirely clear at first, it might be helpful to inspect a few input-response pairs with your LLM application.
+:::
+
+## Example Interactions:
+
+For example, let's examine these **5 input-response pairs** between hypothetical users and our medical diagnosis chatbot that we set up in [the previous section](tutorial-llm-application-example). We’ll evaluate why each interaction aligns with our expectations or is problematic, which will help us refine and narrow down our evaluation criteria.
+
+### Input-Response Pair 1 ✅
+
+The following interaction is an **ideal example** of how our medical chatbot should respond, because it asks clarifying questions before attempting to make a diagnosis. As a medical company, making accurate diagnoses is extremely important, so it's important to be asking these kinds of question before jumping to conclusions.
+
+```python
+user_query = """
+  Hey, I've been experiencing headaches lately.
+"""
+llm_output = """
+  I can help you with that. Could you please provide more specific details about 
+  your headaches? For example, the location, intensity, duration, frequency, and 
+  any other symptoms you might be experiencing alongside the headaches.
+"""
+```
+
+### Input-Response Pair 2 ❌
+
+On the other hand, the following **interaction** is problematic. While the user is primarily seeking a diagnosis, the chatbot unnecessarily asks for the patient’s name and appointment details, before any sort of appointment is requested by the user.
+
+```python
+user_query = """
+  I'm been coughing a lot lately.
+"""
+llm_output = """
+  Could you please provide your name, the date for the appointment, and your 
+  email address?     
+"""
+```
+
+### Input-Response Pair 3 ❌
+
+For similar but opposite reasons, the following interaction is undesirable, namely because while the user is clearly trying to book an appointment, the chatbot responds tangentially by asking about the user’s symptoms, rather than addressing the appointment request.
+
+```python
+user_query = """
+  I'm feeling pretty sick, can I book an appointment tomorrow?
+"""
+llm_output = """
+  I can help you with that. Could you please provide more specific details 
+  about your symptoms? This will help us in making a more accurate diagnosis.
+"""
+```
+While some may argue that the order of gathering appointment details and making a diagnosis isn’t critical—as both tasks will likely be completed—it's essential for our medical chatbot to provide responses that are relevant and directly address the user’s query. This ensures the chatbot builds trust and encourages patients to rely on it for their diagnostic needs.
+
+### Input-Response Pair 4 ✅
+
+The following interaction is acceptable because the chatbot accurately records the user’s information, stores it in the appropriate fields, and presents it back to the user for confirmation.
+
+```python
+user_query = """
+  My name is John Doe. My email is johndoe@gmail.com, and I would like to make an
+  appointment on November 23, 2022.
+"""
+llm_output = """
+  Please confirm the following details: Name: John Doe, Email: johndoe@gmail.com, 
+  Date: November 23, 2022, Symptoms: Frequent coughing, Diagnosis: Frequent coughing 
+  may indicate chronic bronchitis, especially if accompanied by phlegm, wheezing, or 
+  shortness of breath.. Type 'confirm' to finalize or 'edit' to modify.
+"""
+```
+
+### Input-Response Pair 5 ❌
+
+The following input-response pair is unacceptable because it overdiagnoses the patient, potentially resulting in a false positive. A runny nose alone does not provide enough information for a diagnosis, making it essential for the chatbot to ask clarifying questions before offering any conclusions.
+
+```python
+user_query = """
+  I have a runny nose. What could be causing it?
+"""
+llm_output = """
+  A runny nose can be a symptom of conditions such as allergic rhinitis, where 
+  histamine interacts with receptors on blood vessels, leading to fluid buildup, 
+  swelling, and redness. If you'd like to schedule an appointment for a detailed 
+  diagnosis or treatment, feel free to let me know!
+"""
+```
+
+## Defining Our Evaluation Criteria
+
+From the five example interactions with our medical chatbot, we identified two acceptable interactions and three problematic ones. These examples highlighted what we care about, what we believe users care about, and the areas of the LLM that require improvement. Here are the **key areas we identified for enhancement**:
+
+1. The medical chatbot should address the user directly.
+2. The chatbot must not overdiagnose without sufficient details.
+3. The chatbot should provide accurate diagnoses based on the given symptoms.
+
+:::info important
+These areas of improvement are essentially **your evaluation criteria**—the standards by which each input-response pair should be assessed.
+:::
+
+### Why These Criteria Matter
+
+Let’s analyze why these areas need improvement and how they relate to what we and our users value, as revealed through the analysis of the example interactions above:
+
+- **Directly addressing the user** (Point 1) ensures that 2 critical aspects: that users should feel in control of the interaction, guiding the flow of the conversation rather than being led by the chatbot, and that users need to perceive the chatbot as a trustworthy and intelligent entity capable of addressing their concerns.
+- **Avoiding overdiagnosis and ensuring accuracy** (Points 2 and 3) is only naturally paramount. The chatbot must minimize both false positives (overdiagnosis) and false negatives (underdiagnosis), as incorrect diagnoses can undermine user trust and lead to serious consequences.
+
+With these criteria clearly defined and aligned with our needs and expectations, we can now proceed to the next section, where we will explore how to select the appropriate metrics based on the evaluation criteria we’ve established.

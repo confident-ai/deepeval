@@ -197,7 +197,11 @@ module.exports = {
     {
       type: "category",
       label: "Choosing Your Metrics",
-      items: ["tutorial-metrics-deepeval", "tutorial-metrics-confident"],
+      items: [
+        "tutorial-metrics-evaluation-criteria", 
+        // "tutorial-metrics-deepeval", 
+        // "tutorial-metrics-confident"
+      ],
       collapsed: false,
     },
     {
