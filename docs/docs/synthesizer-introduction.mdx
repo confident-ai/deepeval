@@ -34,10 +34,11 @@ from deepeval.synthesizer import Synthesizer
 synthesizer = Synthesizer()
 ```
 
-There are five optional parameters when creating a `Synthesizer`:
+There are six optional parameters when creating a `Synthesizer`:
 
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `max_concurrent`: an integer that determines the maximum number of goldens that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
 - [Optional] `filtration_config`: an instance of type `FiltrationConfig` that allows you to [customize the degree of which goldens are filtered](#filtration-degree) during generation. Defaulted to the default `FiltrationConfig` values.
 - [Optional] `evolution_config`: an instance of type `EvolutionConfig` that allows you to [customize the complexity of evolutions applied](#evolution-complexity) during generation. Defaulted to the default `EvolutionConfig` values.
 - [Optional] `styling_config`: an instance of type `StylingConfig` that allows you to [customize the styles and formats](#styling-options) of generations. Defaulted to the default `StylingConfig` values.
