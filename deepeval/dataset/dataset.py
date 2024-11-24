@@ -237,7 +237,7 @@ class EvaluationDataset:
         df = pd.read_csv(file_path)
         # Convert np.nan (default for missing values in pandas) to None for compatibility with Python and Pydantic
         df = df.astype(object).where(pd.notna(df), None)
-        
+
         inputs = get_column_data(df, input_col_name)
         actual_outputs = get_column_data(df, actual_output_col_name)
         expected_outputs = get_column_data(
@@ -326,7 +326,7 @@ class EvaluationDataset:
         retrieval_context_key_name: Optional[str] = None,
         tools_called_key_name: Optional[str] = None,
         expected_tools_key_name: Optional[str] = None,
-        encoding_type: str = "utf-8"
+        encoding_type: str = "utf-8",
     ):
         """
         Load test cases from a JSON file.
@@ -517,7 +517,7 @@ class EvaluationDataset:
         tools_called_key_name: Optional[str] = None,
         expected_tools_key_name: Optional[str] = None,
         source_file_key_name: Optional[str] = None,
-        encoding_type: str = "utf-8"
+        encoding_type: str = "utf-8",
     ):
         try:
             with open(file_path, "r", encoding=encoding_type) as file:

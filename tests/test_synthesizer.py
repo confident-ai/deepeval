@@ -348,6 +348,7 @@ def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
 ### Save to JSON/CSV ####################################
 #########################################################
 
+
 def test_save_goldens(synthesizer: Synthesizer, file_type: str):
     goldens = synthesizer.generate_goldens_from_docs(
         max_goldens_per_context=3,
@@ -359,6 +360,7 @@ def test_save_goldens(synthesizer: Synthesizer, file_type: str):
         synthesizer.save_as("csv", "./goldens")
     elif file_type == "json":
         synthesizer.save_as("json", "./goldens")
+
 
 def test_load_goldens(file_name: str):
     _, extension = os.path.splitext(file_name)
@@ -372,19 +374,20 @@ def test_load_goldens(file_name: str):
             expected_output_col_name="expected_output",
             context_col_name="context",
             context_col_delimiter="|",
-            source_file_col_name="source_file"
+            source_file_col_name="source_file",
         )
         print(dataset.goldens)
     elif extension == ".json":
         dataset.add_goldens_from_json_file(
-            file_name, 
+            file_name,
             input_key_name="input",
             actual_output_key_name="actual_output",
             expected_output_key_name="expected_output",
             context_key_name="context",
-            source_file_key_name="source_file"
+            source_file_key_name="source_file",
         )
         print(dataset.goldens)
+
 
 # synthesizer = Synthesizer(async_mode=True)
 # test_save_goldens(synthesizer, "json")
