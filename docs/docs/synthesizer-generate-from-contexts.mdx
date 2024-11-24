@@ -51,6 +51,7 @@ There are one mandatory and two optional parameters when using the `generate_gol
 - `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `True`.
 - [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
+- [Optional] `source_files`: a list of strings specifying the source of the contexts. Length of `source_files` **MUST** be the same as the length of `contexts`.
 
 :::tip DID YOU KNOW?
 The `generate_goldens_from_docs()` method calls the `generate_goldens_from_contexts()` method under the hood, and the only difference between the two is the `generate_goldens_from_contexts()` method does not contain a [context construction step](synthesizer-generate-from-docs#how-does-context-construction-work), but instead uses the provided contexts directly for generation.
