@@ -1,22 +1,24 @@
 ---
 id: tutorial-metrics-evaluation-criteria
 title: Deciding on your Evaluation Criteria
-sidebar_label: Deciding on your Evaluation Criteria
+sidebar_label: Deciding your Evaluation Criteria
 ---
 
-**What metrics you choose depends on your evaluation criteria**, which in turn are shaped by your goals, user priorities, and the specific areas of your LLM that you wish to improve. Defining a clear evaluation criteria is essential, as it transforms subjective goals (what matters to you and what you wish to improve) into actionable steps (selecting the right metrics).
+The metrics you choose to evaluate your LLM **depend on the evaluation criteria** you define. These criteria will be used to assess the specific aspects of your LLM that you wish to improve, ensuring they align with your goals and user needs.
+
+Defining a clear evaluation criteria is essential, as it transforms your subjective values (what matters to you and your users, and what you wish to improve) into actionable steps (selecting the right metrics).
 
 :::tip
-When **defining your evaluation criteria**, you'll need to consider what matters most to you, what your users care about, and where your model's performance could be enhanced. If this isn't entirely clear at first, it might be helpful to inspect a few input-response pairs with your LLM application.
+When defining your evaluation criteria, you'll need to consider **what matters most to you**, **what your users care about**, and **where your model's performance could be enhanced**. If this isn't entirely clear at first, it might be helpful to inspect a few input-response pairs with your LLM application.
 :::
 
 ## Example Interactions:
 
-For example, let's examine these **5 input-response pairs** between hypothetical users and our medical diagnosis chatbot that we set up in [the previous section](tutorial-llm-application-example). We’ll evaluate why each interaction aligns with our expectations or is problematic, which will help us refine and narrow down our evaluation criteria.
+Let's begin by examining these **5 input-response pairs** between some hypothetical users and the medical diagnosis chatbot that we set up in [the previous section](tutorial-llm-application-example). We'll assess whether each interaction meets our expectations or highlights potential issues, which will help us refine our evaluation criteria.
 
 ### Input-Response Pair 1 ✅
 
-The following interaction is an **ideal example** of how our medical chatbot should respond, because it asks clarifying questions before attempting to make a diagnosis. As a medical company, making accurate diagnoses is extremely important, so it's important to be asking these kinds of question before jumping to conclusions.
+The following interaction is an **ideal example** of how our medical chatbot should respond, because it asks clarifying questions before attempting to make a diagnosis. As a medical company, making accurate diagnoses is extremely important, so it's necessary to be asking these kinds of question before jumping to conclusions.
 
 ```python
 user_query = """
@@ -56,7 +58,7 @@ llm_output = """
   about your symptoms? This will help us in making a more accurate diagnosis.
 """
 ```
-While some may argue that the order of gathering appointment details and making a diagnosis isn’t critical—as both tasks will likely be completed—it's essential for our medical chatbot to provide responses that are relevant and directly address the user’s query. This ensures the chatbot builds trust and encourages patients to rely on it for their diagnostic needs.
+While some may argue that the order of gathering appointment details and making a diagnosis isn’t critical—since both tasks will likely be completed—it’s essential for our medical chatbot to provide responses that are relevant and directly address the user’s query. This approach ensures the chatbot appears intelligent and authentic, building trust and encouraging patients to rely on it for their diagnostic needs.  
 
 ### Input-Response Pair 4 ✅
 
@@ -91,23 +93,34 @@ llm_output = """
 """
 ```
 
+Through inspecting just five example interactions with the medical chatbot—two acceptable and three problematic—we've already discovered the following values we care about, and that we think users care about:  
+
+- **Empathy and direct engagement:** Users expect the chatbot to address them directly, guiding the flow of the conversation in a way that feels natural and responsive.  
+- **Safety and accuracy in diagnoses:** Users depend on accurate responses that neither overdiagnose nor underdiagnose based on the symptoms provided.  
+- **Trustworthiness:** Every interaction should reinforce the chatbot’s reliability, fostering confidence in its capability as a medical assistant.  
+
 ## Defining Our Evaluation Criteria
 
-From the five example interactions with our medical chatbot, we identified two acceptable interactions and three problematic ones. These examples highlighted what we care about, what we believe users care about, and the areas of the LLM that require improvement. Here are the **key areas we identified for enhancement**:
+Based on these insights, we identified three specific areas where our LLM needs improvement:  
 
-1. The medical chatbot should address the user directly.
-2. The chatbot must not overdiagnose without sufficient details.
-3. The chatbot should provide accurate diagnoses based on the given symptoms.
+1. **Directly addressing the user:** The chatbot should engage users personally and conversationally to build trust and maintain control of the interaction.  
+2. **Avoiding overdiagnosis:** It should avoid premature or unsupported conclusions, particularly without sufficient details.  
+3. **Providing accurate diagnoses:** Diagnoses must be reliable and based on the provided symptoms, minimizing risks and errors.  
 
-:::info important
-These areas of improvement are essentially **your evaluation criteria**—the standards by which each input-response pair should be assessed.
-:::
+:::info important  
+These areas of improvement represent yoru **evaluation criteria**—standards for assessing each input-response pair.  
+:::  
 
-### Why These Criteria Matter
+### Why These Criteria Matter  
 
-Let’s analyze why these areas need improvement and how they relate to what we and our users value, as revealed through the analysis of the example interactions above:
+Each criterion reflects user expectations and critical performance aspects:  
 
-- **Directly addressing the user** (Point 1) ensures that 2 critical aspects: that users should feel in control of the interaction, guiding the flow of the conversation rather than being led by the chatbot, and that users need to perceive the chatbot as a trustworthy and intelligent entity capable of addressing their concerns.
-- **Avoiding overdiagnosis and ensuring accuracy** (Points 2 and 3) is only naturally paramount. The chatbot must minimize both false positives (overdiagnosis) and false negatives (underdiagnosis), as incorrect diagnoses can undermine user trust and lead to serious consequences.
+- **Directly addressing the user** ensures two essential outcomes: users feel in control of the interaction, and the chatbot is perceived as an intelligent, trustworthy assistant.  
+- **Avoiding overdiagnosis and ensuring accuracy** safeguard against false positives (overdiagnosis) and false negatives (underdiagnosis), both of which could erode trust and lead to severe consequences.  
 
-With these criteria clearly defined and aligned with our needs and expectations, we can now proceed to the next section, where we will explore how to select the appropriate metrics based on the evaluation criteria we’ve established.
+By focusing on these criteria, we ensure our evaluation process aligns with both our values and user needs. With this foundation in place, we can now proceed to the next step: selecting metrics that effectively measure these key areas of performance.  
+
+
+
+
+

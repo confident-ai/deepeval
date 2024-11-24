@@ -199,6 +199,7 @@ module.exports = {
       label: "Choosing Your Metrics",
       items: [
         "tutorial-metrics-evaluation-criteria", 
+        "tutorial-metrics-selection", 
         // "tutorial-metrics-deepeval", 
         // "tutorial-metrics-confident"
       ],
