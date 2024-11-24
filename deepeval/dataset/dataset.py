@@ -420,9 +420,7 @@ class EvaluationDataset:
                 else [default] * len(df)
             )
 
-        df = pd.read_csv(file_path)
-        # Convert np.nan (default for missing values in pandas) to None for compatibility with Python and Pydantic
-        df = df.astype(object).where(pd.notna(df), None)
+        df = pd.read_csv(file_path).astype(object).where(pd.notna(pd.read_csv(file_path)), None)
 
         inputs = get_column_data(df, input_col_name)
         actual_outputs = get_column_data(df, actual_output_col_name)
@@ -552,7 +550,7 @@ class EvaluationDataset:
                     retrieval_context=retrieval_context,
                     tools_called=tools_called,
                     expected_tools=expected_tools,
-                    source_file=file_path,
+                    source_file=source_file,
                 )
             )
 
