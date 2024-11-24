@@ -37,12 +37,17 @@ class ContextGenerator:
     ):
         from chromadb.api.models.Collection import Collection
 
-        self.model, self.using_native_model = initialize_model(model)
-        self.embedder = embedder
+        # Chunking parameters
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        self.document_paths: List[str] = document_paths
         self.total_chunks = 0
+        self.document_paths: List[str] = document_paths
+
+        # Model parameters
+        self.model, self.using_native_model = initialize_model(model)
+        self.embedder = embedder
+
+        # Quality parameters
         self.max_retries = max_retries
         self.filter_threshold = filter_threshold
         self.similarity_threshold = similarity_threshold
@@ -106,6 +111,7 @@ class ContextGenerator:
         )
 
         # Generate contexts
+        self.total_chunks = 0
         for path, collection in self.source_files_to_collections_map.items():
             num_chunks = collection.count()
             min_num_context = min(num_context_per_document, num_chunks)
@@ -181,6 +187,7 @@ class ContextGenerator:
         )
 
         # Generate contexts
+        self.total_chunks = 0
         tasks = [
             self._a_process_document_async(
                 path,
