@@ -36,7 +36,7 @@ correctness_metric = GEval(
         "You should also heavily penalize omission of detail",
         "Vague language, or contradicting OPINIONS, are OK"
     ],
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
 )
 ```
 
