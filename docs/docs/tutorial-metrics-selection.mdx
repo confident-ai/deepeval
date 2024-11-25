@@ -11,15 +11,14 @@ DeepEval provides [14+ metrics](metrics-introduction) to help you evaluate your 
 :::
 
 ## Selecting Metrics
-In this section, we’ll be selecting the **LLM evaluation metrics** for our medical chatbot based on the evaluation criteria we've set in the previous section. Let’s quickly revisit these criteria:
+In this section, we’ll be selecting the **LLM evaluation metrics** for our medical chatbot based on the evaluation criteria we've established in the previous section. Let’s quickly revisit these criteria:
 
-1. The medical chatbot should **address the user directly**.
-2. The chatbot should **make accurate diagnoses** based on the given symptoms.
-3. The chatbot **must not overdiagnose** without sufficient details.
+1. **Directly addressing the user:** The chatbot should directly address users' requests
+2. **Providing accurate diagnoses:** Diagnoses must be reliable and based on the provided symptoms 
 
-### Criteria 1: Answer Relevancy
+### 1. Answer Relevancy
 
-Let's begin with the first and most straightforward criterion:
+Let's start with our first metric, which will evaluate our medical chatbot against our first criterion:
 ```
 Criteria 1: The medical chatbot should address the user directly.
 ```
@@ -31,9 +30,9 @@ Fortunately, DeepEval provides an out-of-the-box `AnswerRelevancy` metric, which
 The `AnswerRelevancyMetric` uses an LLM to extract all statements from the `actual_output` and then classifies each statement's relevance to the `input` using the same LLM.
 :::
 
-### Criteria 2: Contextual Relevancy 
+### 2. Contextual Relevancy 
 
-Our next criterion focuses on the accuracy of medical diagnoses. The chatbot's failure to deliver accurate diagnoses in some example interactions suggests that our **RAG tool needs improvement**.
+Our next metric addresses the inaccuracies in patient diagnoses. The chatbot's failure to deliver accurate diagnoses in some example interactions suggests that our **RAG tool needs improvement**.
 
 ```
 Criteria 2: The chatbot should provide accurate diagnoses based on the given symptoms.
@@ -48,15 +47,15 @@ DeepEval offers a total of **5 RAG metrics** to evaluate your RAG pipeline. To l
 :::
 
 
-### Criteria 3: Custom Metric
+### 3. Custom Metric - Answer Correctness
 
-Our final criterion ensures that the chatbot does not overdiagnose without sufficient symptoms.  
+Our final metric will also address criterion 2 and focus on evaluating **diagnosis accuracy**.
 
 ```
-Criteria 3. The chatbot must not overdiagnose without sufficient details.
+Criteria 2: The chatbot should provide accurate diagnoses based on the given symptoms.
 ```
 
-While improving the retrieval process (as discussed in **Criteria 2**) can certainly help address this issue, the LLM may still overdiagnose even when provided with detailed medical information. Since this criterion is highly use-case specific, we will need to create a custom metric for it using `G-Eval`. 
+While improving the retrieval process (as discussed previously) can certainly help address this issue, the LLM may still make an incorrect diagnosis even when provided with sufficient medical knowledge. Therefore, we'll be defining an `AnswerCorrectness` metric using `G-Eval` to directly evaluate our chatbot's diagnoses by comparing them against reference ground-truths.
 
 :::note
 G-Eval is a **custom metric framework** that enables users to leverage LLMs for evaluating outputs based on their own tailored evaluation criteria. 
@@ -66,7 +65,7 @@ Now that we've selected our three metrics, let's define them in code:
 
 ## Defining Metrics in DeepEval
 
-To define our **Answer Relevancy**, **Contextual Relevancy**, and custom **G-Eval** metric for overdiagnosis, you'll first need to install DeepEval. Run the following command in your CLI:
+To define our **Answer Relevancy**, **Contextual Relevancy**, and custom **G-Eval** metric for answer correctness, you'll first need to install DeepEval. Run the following command in your CLI:
 
 ```bash
 pip install deepeval
@@ -85,27 +84,23 @@ answer_relevancy_metric = AnswerRelevancyMetric()
 contextual_relevancy_metric = ContextualRelevancyMetric()
 ```
 
-### Defining Custom Metrics 
+### Defining a Custom Metric
 
-Next, we'll define our custom G-Eval metric for overdiagnosis. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're assessing the LLM's `actual_output` (diagnosis results in LLM response) based on the `input` (symptoms presented in the user query):
+Next, we'll define our custom G-Eval metric for answer correctness. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're assessing the LLM's `actual_output` (diagnosis results in LLM response) based on the `expected_output` (ground truth diagnosis results):
 
 
 ```python
 from deepeval.text_case_import import LLMTestCaseParams
 from deepeval.metrics import GEval
 
-criteria="""
-    Evaluate whether the diagnosis in the actual output is overly specific 
-    given the symptoms in the input, avoiding unnecessary precision that 
-    could lead to overdiagnosis
-"""
+criteria = "Determine whether the actual output is factually correct based on the expected output."
 
 overdiagnosis_metric = GEval(
-    name="Overdiagnosis",
+    name="Answer Correctness",
     criteria=criteria,
     evaluation_params={
-        "input": LLMTestCaseParams.INPUT,
-        "actual_output": LLMTestCaseParams.ACTUAL_OUTPUT,
+        "input": LLMTestCaseParams.ACTUAL_OUTPUT,
+        "actual_output": LLMTestCaseParams.EXPECTED_OUTPUT,
     }
 )
 ```

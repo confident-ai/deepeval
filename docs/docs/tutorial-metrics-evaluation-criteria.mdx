@@ -93,22 +93,21 @@ llm_output = """
 """
 ```
 
-Through inspecting just five example interactions with the medical chatbot—two acceptable and three problematic—we've already discovered the following values we care about, and that we think users care about:  
+Through inspecting just five example interactions with the medical chatbot—two acceptable and three problematic—we've discovered the following values we care about, and that we think users care about:  
 
-- **Empathy and direct engagement:** Users expect the chatbot to address them directly, guiding the flow of the conversation in a way that feels natural and responsive.  
-- **Safety and accuracy in diagnoses:** Users depend on accurate responses that neither overdiagnose nor underdiagnose based on the symptoms provided.  
+- **Direct engagement:** Users expect the chatbot to address them directly, guiding the flow of the conversation in a way that feels natural and responsive.  
+- **Accuracy in diagnoses:** Users depend on accurate responses that neither overdiagnose nor underdiagnose based on the symptoms provided.  
 - **Trustworthiness:** Every interaction should reinforce the chatbot’s reliability, fostering confidence in its capability as a medical assistant.  
 
 ## Defining Our Evaluation Criteria
 
-Based on these insights, we identified three specific areas where our LLM needs improvement:  
+Based on these insights, we identified 2 specific areas where our LLM needs improvement:  
 
 1. **Directly addressing the user:** The chatbot should engage users personally and conversationally to build trust and maintain control of the interaction.  
-2. **Avoiding overdiagnosis:** It should avoid premature or unsupported conclusions, particularly without sufficient details.  
-3. **Providing accurate diagnoses:** Diagnoses must be reliable and based on the provided symptoms, minimizing risks and errors.  
+2. **Providing accurate diagnoses:** Diagnoses must be reliable and based on the provided symptoms, minimizing risks and errors.  
 
 :::info important  
-These areas of improvement represent yoru **evaluation criteria**—standards for assessing each input-response pair.  
+These areas of improvement represent your **evaluation criteria**—standards for assessing each input-response pair.  
 :::  
 
 ### Why These Criteria Matter  
@@ -116,7 +115,7 @@ These areas of improvement represent yoru **evaluation criteria**—standards fo
 Each criterion reflects user expectations and critical performance aspects:  
 
 - **Directly addressing the user** ensures two essential outcomes: users feel in control of the interaction, and the chatbot is perceived as an intelligent, trustworthy assistant.  
-- **Avoiding overdiagnosis and ensuring accuracy** safeguard against false positives (overdiagnosis) and false negatives (underdiagnosis), both of which could erode trust and lead to severe consequences.  
+- **Ensuring diagnostic accuracy** safeguard against false positives and false negatives, both of which could erode trust and lead to severe consequences.  
 
 By focusing on these criteria, we ensure our evaluation process aligns with both our values and user needs. With this foundation in place, we can now proceed to the next step: selecting metrics that effectively measure these key areas of performance.  
 
