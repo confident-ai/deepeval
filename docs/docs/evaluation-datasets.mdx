@@ -70,19 +70,26 @@ A `Golden` and `LLMTestCase` contains almost an identical class signature, so te
 
 ## Generate An Evaluation Dataset
 
+:::caution
+We highly recommend you to checkout the [`Synthesizer`](synthesizer-introduction) page to see the customizations available and how data synthesization work in `deepeval`. All methods in an `EvaluationDataset` that can be used to generate goldens uses the `Synthesizer` under the hood and has exactly the same function signature as corresponding methods in the `Synthesizer`.
+:::
+
 `deepeval` offers anyone the ability to easily generate synthetic datasets from documents locally on your machine. This is especially helpful if you don't have an evaluation dataset prepared beforehand.
 
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
-dataset.generate_goldens_from_docs(
-    document_paths=['example.txt', 'example.docx', 'example.pdf'],
-    max_goldens_per_document=2
-)
+dataset.generate_goldens_from_docs(document_paths=['example.txt', 'example.docx', 'example.pdf'])
 ```
 
-Under the hood, an `EvaluationDataset` generates goldens using to `deepeval`'s `Synthesizer`. You can customize the `Synthesizer` used to generate goldens within an `EvaluationDataset`.
+In this example, we've used the `generate_goldens_from_docs` method, which one one of the three generation methods offered by `deepeval`'s `Synthesizer`. The three methods include:
+
+- [`generate_goldens_from_docs()`](synthesizer-generate-from-docs): useful for generating goldens to evaluate your LLM application based on contexts extracted from your knowledge base in the form of documents.
+- [`generate_goldens_from_contexts()`](synthesizer-generate-from-contexts): useful for generating goldens to evaluate your LLM application based on a list of prepared context.
+- [`generate_goldens_from_scratch()`](synthesizer-generate-from-scratch): useful for generating goldens to evaluate your LLM application without relying on contexts from a knowledge base.
+
+Under the hood, these 3 methods calls the corresponding methods in `deepeval`'s `Synthesizer` with the exact same parameters, with an addition of a `synthesizer` parameter for you to customize your generation pipeline.
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -99,7 +106,7 @@ dataset.generate_goldens_from_docs(
 ```
 
 :::info
-`deepeval`'s `Synthesizer` uses a series of evolution techniques to complicate and make generated goldens more realistic to human prepared data. For more information on how `deepeval`'s `Synthesizer` works, visit the [synthesizer section.](evaluation-datasets-synthetic-data)
+`deepeval`'s `Synthesizer` uses a series of evolution techniques to complicate and make generated goldens more realistic to human prepared data. For more information on how `deepeval`'s `Synthesizer` works, visit the [synthesizer section.](synthesizer-introduction#how-does-it-work)
 :::
 
 ## Load an Existing Dataset

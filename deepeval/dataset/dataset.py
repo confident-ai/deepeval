@@ -235,6 +235,8 @@ class EvaluationDataset:
             )
 
         df = pd.read_csv(file_path)
+        # Convert np.nan (default for missing values in pandas) to None for compatibility with Python and Pydantic
+        df = df.astype(object).where(pd.notna(df), None)
 
         inputs = get_column_data(df, input_col_name)
         actual_outputs = get_column_data(df, actual_output_col_name)
@@ -324,6 +326,7 @@ class EvaluationDataset:
         retrieval_context_key_name: Optional[str] = None,
         tools_called_key_name: Optional[str] = None,
         expected_tools_key_name: Optional[str] = None,
+        encoding_type: str = "utf-8",
     ):
         """
         Load test cases from a JSON file.
@@ -349,7 +352,7 @@ class EvaluationDataset:
             The JSON file should be structured as a list of objects, with each object containing the required keys. The method assumes the file format and keys are correctly defined and present.
         """
         try:
-            with open(file_path, "r") as file:
+            with open(file_path, "r", encoding=encoding_type) as file:
                 json_list = json.load(file)
         except FileNotFoundError:
             raise FileNotFoundError(f"The file {file_path} was not found.")
@@ -400,6 +403,7 @@ class EvaluationDataset:
         tools_called_col_delimiter: str = ";",
         expected_tools_col_name: Optional[str] = None,
         expected_tools_col_delimiter: str = ";",
+        source_file_col_name: Optional[str] = None,
         additional_metadata_col_name: Optional[str] = None,
     ):
         try:
@@ -416,7 +420,11 @@ class EvaluationDataset:
                 else [default] * len(df)
             )
 
-        df = pd.read_csv(file_path)
+        df = (
+            pd.read_csv(file_path)
+            .astype(object)
+            .where(pd.notna(pd.read_csv(file_path)), None)
+        )
 
         inputs = get_column_data(df, input_col_name)
         actual_outputs = get_column_data(df, actual_output_col_name)
@@ -457,6 +465,7 @@ class EvaluationDataset:
                 df, expected_tools_col_name, default=""
             )
         ]
+        source_files = get_column_data(df, source_file_col_name)
         additional_metadatas = [
             ast.literal_eval(metadata) if metadata else None
             for metadata in get_column_data(
@@ -472,6 +481,7 @@ class EvaluationDataset:
             retrieval_context,
             tools_called,
             expected_tools,
+            source_file,
             additional_metadata,
         ) in zip(
             inputs,
@@ -481,6 +491,7 @@ class EvaluationDataset:
             retrieval_contexts,
             tools_called,
             expected_tools,
+            source_files,
             additional_metadatas,
         ):
             self.goldens.append(
@@ -493,7 +504,7 @@ class EvaluationDataset:
                     tools_called=tools_called,
                     expected_tools=expected_tools,
                     additional_metadata=additional_metadata,
-                    source_file=file_path,
+                    source_file=source_file,
                 )
             )
 
@@ -507,9 +518,11 @@ class EvaluationDataset:
         retrieval_context_key_name: Optional[str] = None,
         tools_called_key_name: Optional[str] = None,
         expected_tools_key_name: Optional[str] = None,
+        source_file_key_name: Optional[str] = None,
+        encoding_type: str = "utf-8",
     ):
         try:
-            with open(file_path, "r") as file:
+            with open(file_path, "r", encoding=encoding_type) as file:
                 json_list = json.load(file)
         except FileNotFoundError:
             raise FileNotFoundError(f"The file {file_path} was not found.")
@@ -530,6 +543,7 @@ class EvaluationDataset:
             retrieval_context = json_obj.get(retrieval_context_key_name)
             tools_called = json_obj.get(tools_called_key_name)
             expected_tools = json_obj.get(expected_tools_key_name)
+            source_file = json_obj.get(source_file_key_name)
 
             self.goldens.append(
                 Golden(
@@ -540,7 +554,7 @@ class EvaluationDataset:
                     retrieval_context=retrieval_context,
                     tools_called=tools_called,
                     expected_tools=expected_tools,
-                    source_file=file_path,
+                    source_file=source_file,
                 )
             )
 

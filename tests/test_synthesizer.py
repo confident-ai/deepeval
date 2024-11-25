@@ -1,18 +1,19 @@
-import os
-import pytest
-import time
 from typing import Callable
 import asyncio
-from deepeval.synthesizer import Synthesizer
-from deepeval.dataset import EvaluationDataset
-from deepeval.models import OpenAIEmbeddingModel
-from deepeval.models.gpt_model_schematic import SchematicGPTModel
+import pytest
+import time
+import os
+
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
+from deepeval.models.gpt_model_schematic import SchematicGPTModel
+from deepeval.models import OpenAIEmbeddingModel
+from deepeval.dataset import EvaluationDataset
+from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer.config import *
 from deepeval.synthesizer import (
     Evolution,
     PromptEvolution,
 )
-from deepeval.synthesizer.config import *
 
 #########################################################
 ### Context #############################################
@@ -282,7 +283,7 @@ synthesizer_sync = Synthesizer(
 synthesizer_async = Synthesizer(async_mode=True, max_concurrent=9)
 
 # test_generate_goldens_from_docs(synthesizer_sync)
-test_generate_goldens_from_docs(synthesizer_async)
+# test_generate_goldens_from_docs(synthesizer_async)
 
 #########################################################
 ### Generate Goldens From Scratch #######################
@@ -343,6 +344,60 @@ def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
 # )
 # print(dataset.goldens)
 
-test_generate_goldens_from_contexts(synthesizer)
-test_generate_goldens_from_docs(synthesizer)
-test_generate_generate_goldens_from_scratch(synthesizer)
+#########################################################
+### Save to JSON/CSV ####################################
+#########################################################
+
+
+def test_save_goldens(synthesizer: Synthesizer, file_type: str):
+    goldens = synthesizer.generate_goldens_from_docs(
+        max_goldens_per_context=3,
+        document_paths=document_paths,
+        context_construction_config=ContextConstructionConfig(chunk_size=100),
+        _send_data=False,
+    )
+    if file_type == "csv":
+        synthesizer.save_as("csv", "./goldens")
+    elif file_type == "json":
+        synthesizer.save_as("json", "./goldens")
+
+
+def test_load_goldens(file_name: str):
+    _, extension = os.path.splitext(file_name)
+    dataset = EvaluationDataset()
+    print(extension)
+    if extension == ".csv":
+        dataset.add_goldens_from_csv_file(
+            file_name,
+            input_col_name="input",
+            actual_output_col_name="actual_output",
+            expected_output_col_name="expected_output",
+            context_col_name="context",
+            context_col_delimiter="|",
+            source_file_col_name="source_file",
+        )
+        print(dataset.goldens)
+    elif extension == ".json":
+        dataset.add_goldens_from_json_file(
+            file_name,
+            input_key_name="input",
+            actual_output_key_name="actual_output",
+            expected_output_key_name="expected_output",
+            context_key_name="context",
+            source_file_key_name="source_file",
+        )
+        print(dataset.goldens)
+
+
+# synthesizer = Synthesizer(async_mode=True)
+# test_save_goldens(synthesizer, "json")
+# test_load_goldens("./goldens/20241122_153727.csv")
+test_load_goldens("./goldens/20241122_154545.json")
+
+#########################################################
+### Test Everything #####################################
+#########################################################
+
+# test_generate_goldens_from_contexts(synthesizer)
+# test_generate_goldens_from_docs(synthesizer)
+# test_generate_generate_goldens_from_scratch(synthesizer)

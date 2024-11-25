@@ -56,24 +56,24 @@ There are one mandatory and eleven optional parameters when using the `generate_
 - [Optional] `context_construction_config`: an instance of type `ContextConstructionConfig` that allows you to [customize the quality of contexts constructed](#customize-context-construction) from your documents. Defaulted to the default `ContextConstructionConfig` values.
 
 :::info
-The final maximum number of goldens to be generated is the `max_goldens_per_context` multiplied by the `max_contexts_per_document` as specified in the `context_extraction_config`, and **NOT** simply `max_goldens_per_context`.
+The final maximum number of goldens to be generated is the `max_goldens_per_context` multiplied by the `max_contexts_per_document` as specified in the `context_construction_config`, and **NOT** simply `max_goldens_per_context`.
 :::
 
 ## Customize Context Construction
 
-You can customize the quality of contexts constructed from documents by providing a `ContextExtractionConfig` instance to the `generate_goldens_from_docs()` method at generation time.
+You can customize the quality of contexts constructed from documents by providing a `ContextConstructionConfig` instance to the `generate_goldens_from_docs()` method at generation time.
 
 ```python
-from deepeval.synthesizer.confg import ContextExtractionConfig
+from deepeval.synthesizer.config import ContextConstructionConfig
 
 ...
 synthesizer.generate_goldens_from_docs(
   document_paths=['example.txt', 'example.docx', 'example.pdf'],
-  context_extraction_config=ContextExtractionConfig()
+  context_construction_config=ContextConstructionConfig()
 )
 ```
 
-There are seven optional parameters when creating a `ContextExtractionConfig`:
+There are seven optional parameters when creating a `ContextConstructionConfig`:
 
 - [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
 - [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered during [document parsing](#synthesizer-generate-from-docs#document-parsing). Defaulted to 1024.
