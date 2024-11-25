@@ -420,7 +420,11 @@ class EvaluationDataset:
                 else [default] * len(df)
             )
 
-        df = pd.read_csv(file_path).astype(object).where(pd.notna(pd.read_csv(file_path)), None)
+        df = (
+            pd.read_csv(file_path)
+            .astype(object)
+            .where(pd.notna(pd.read_csv(file_path)), None)
+        )
 
         inputs = get_column_data(df, input_col_name)
         actual_outputs = get_column_data(df, actual_output_col_name)
