@@ -3,12 +3,13 @@ from typing import Optional, List
 from deepeval.guardrails.api import ApiGuardrails, GuardResponseData
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.telemetry import capture_guardrails
-from deepeval.guardrails.types import Guard
 from deepeval.guardrails.types import (
+    Guard,
     purpose_entities_dependent_guards,
     entities_dependent_guards,
     purpose_dependent_guards,
 )
+from deepeval.guardrails.api import GuardResult
 from deepeval.utils import is_confident
 
 
@@ -37,8 +38,8 @@ class Guardrails:
         self,
         input: str,
         response: str,
-    ):
-        if self.guard == None or len(self.guard) == 0:
+    ) -> GuardResult:
+        if self.guard == None or len(self.guards) == 0:
             raise TypeError(
                 "Guardrails cannot guard LLM responses when no guards are provided."
             )
@@ -89,12 +90,7 @@ class Guardrails:
                     endpoint=Endpoints.GUARD_ENDPOINT,
                     body=body,
                 )
-                try:
-                    GuardResponseData(**response)
-                except TypeError as e:
-                    raise Exception("Incorrect result format:", e)
-                results = response["results"]
-                return results
+                return GuardResponseData(**response).result
             else:
                 raise Exception(
                     "To use DeepEval guardrails, run `deepeval login`"

@@ -22,4 +22,4 @@ class GuardResult(BaseModel):
 
 
 class GuardResponseData(BaseModel):
-    results: List[GuardResult]
+    result: GuardResult
