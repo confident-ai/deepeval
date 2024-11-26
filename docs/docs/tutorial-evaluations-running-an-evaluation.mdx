@@ -1,0 +1,353 @@
+---
+id: tutorial-evaluations-running-an-evaluation
+title: Running an Evaluation
+sidebar_label: Running an Evaluation
+---
+
+With our metrics in place, we’re ready to finally **run our first evaluation**. Using the five input-response pairs we reviewed from the previous section, we’ll construct a dataset, evaluate it using the 3 metrics we defined, and analyze the results through Confident AI’s evaluation report. Let’s get started.
+
+## Constructing your Dataset
+
+The first step in constructing our dataset is to transform our 5 input-response pairs into `LLMTestCase`s. 
+
+:::info
+The **parameters we need to populate** in our `LLMTestCase`s depend on the metrics we’ve chosen and what parameters they require. The *union of those required parameters* is what we must define for each `LLMTestCase`.
+:::
+
+For example, since we selected **Answer Relevancy** (requires input and actual output), **Faithfulness** (requires input, actual output, and retrieval context), and a **Custom Metric** (requires actual output), we’ll need to specify the `input`, `actual_output`, and `retrieval_context` for each `LLMTestCase`.
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case_0 = LLMTestCase(
+  input="Hey, I've been experiencing headaches lately.",
+  actual_output="I can help you with that.  Could you pleas...",
+  retrieval_context=["Headaches can have various causes, in..."]
+)
+
+test_case_1 = LLMTestCase(
+  input="I'm been coughing a lot lately.",
+  actual_output="Could you please provide your name, the da...",
+  retrieval_context=[]
+)
+
+test_case_2 = LLMTestCase(
+  input="I'm feeling pretty sick, can I book an appointment...",
+  actual_output="Could you please provide more specific det...",
+  retrieval_context=[]
+)
+
+test_case_3 = LLMTestCase(
+  input="My name is John Doe. My email is johndoe@gmail.com...",
+  actual_output="Please confirm the following details: Name...",
+  retrieval_context=[]
+)
+
+test_case_4 = LLMTestCase(
+  input="My nose has been running constantly. Could it be s...",
+  actual_output="A runny nose is always caused by harmless ...",
+  retrieval_context=["A runny nose can be caused by common ..."]
+)
+```
+Next, we'll define an `EvaluationDataset`, which is simply a collection of the `LLMTestCase`s we've defined.
+
+:::caution important
+Although we've precomputed the `actual_output` and the `retrieval_context` for each of the test cases in example above, you'll need to generate these parameters from your LLM application at evaluation time.
+:::
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(test_cases=[test_case_0, test_case_1, test_case_2, test_case_3, test_case_4])
+```
+
+## Running an Evaluation
+
+With our dataset and metrics ready, we can begin **running our first evaluation**. Make sure you are logged in into Confident AI so that your evaluation results are saved on the cloud and available for analysis. Run the following command in your CLI to login:
+
+```bash
+deepeval login
+```
+
+To run evaluations with DeepEval, import the evaluation function from deepeval and provide your dataset and metrics in the appropriate fields. Optionally, you can also log hyperparameters, which will be extremely important for optimizing them in future iterations.
+
+```python
+from deepeval.metrics import AnswerRelevancy, Faithfulness, GEval
+from deepeval import evaluate
+
+# Metrics Definition
+answer_relevancy_metric = AnswerRelevancy()
+faithfulness_metric = Faithfulness()
+professionalism_metric = GEval(
+    name="Professionalism",
+    criteria=criteria,
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
+)
+
+evaluate(
+  dataset, 
+  metrics = [answer_relevancy_metric, faithfulness_metric, professionalism_metric],
+  hyperparameters={
+    "model": "gpt-3.5"
+    "prompt template": "You are a..."
+    "temperature": 1.0
+  }
+)
+```
+
+## Analyzing the Evaluation Report
+
+If you're **logged in to Confident AI**, you'll be redirected to the following page once your evaluation is complete. Here, you'll find an evaluation report for the 5 test cases that we defined and evaluated in the previous steps. Each test case displays its status (pass or fail), input, and corresponding actual output. Clicking on a test case will reveal the remaining parameters and metric scores.
+
+:::info
+A test case is only **considered passing** if it exceeds the threshold for all the metrics it was evaluated on.
+:::
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_01.png"
+    style={{
+      marginTop: "20px",
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+You can clearly see that while 2 of our test cases passed, 3 failed. In the next steps, we'll be going through each result, test case by test case, to understand **what caused them to fail**, which will help us make the relevant and necessary improvements to our LLM application in subsequent sections.
+
+### Test Case 1
+
+Here, you can see that our first test case **excels across all metrics**, achieving perfect scores in Answer Relevancy and Faithfulness, and scoring 0.93 in Professionalism. Since nothing is failing, we don't need to inspect this test case further.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_02.png"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+
+### Test Case 2
+
+On the other hand, test case 2 passes the Faithfulness and Professionalism metrics but **scores a 0 for Answer Relevancy**, which aligns with the expectations we've set for this particular test case when we [defined our evaluation criteria](tutorial-metrics-evaluation-criteria). 
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_03.png"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+To further analyze the metric scores, click on the inspect icon located at the top right-hand corner of each test case.
+
+:::tip
+Confident AI makes it easy to analyze metric scores by offering **clear reasons** for why each metric score failed or succeeded, along with **detailed verbose logs** for visibility into how each score was calculated.
+:::
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_04.png"
+    style={{
+      marginTop: "20px",
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+The reason also aligns with our expectations, since the test case is failing because the output contains irrelevant information about appointment details, which does not address the concern about coughing.
+
+### Test Case 3
+
+Similar to test case 1, test case 3 passes all the metrics with near-perfect scores, so we won't be needing to inspect this test case further.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_05.png"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+### Test Case 4
+
+The 4th test case narrowly failed Professionalism with a score of 0.61, while narrowly passing Answer Relevancy with a score of 0.71. 
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_06.png"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Test cases with borderline metric scores **require extra attention**, as they tread a fine line between acceptable and unacceptable performance. Careful consideration is needed to determine whether adjustment in the LLM is necessary, as it could potentially impact other areas of your application that you don't know about.
+
+:::tip
+Analyzing borderline test cases in a CSV or JSON file can be exhausting and tedious. Fortunately, Confident AI simplifies this process by allowing you to **filter by metric scores and score ranges**, making it easy to identify the test cases you care about.
+:::
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_065.png"
+    style={{
+      marginTop: "20px",
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Let's analyze why **Professionalism is failing**. The provided reason states that while the language is clear and uses appropriate medical terms, it lacks empathy and support in its tone, which is inconsistent with professional medical norms.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_07.png"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+### Test Case 5
+
+Finally, let's examine the 5th and final test case, which fails all 3 metrics.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_08.png"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Inspecting Answer Relevancy reveals that the response includes multiple irrelevant statements and fails to address the seriousness of a constantly runny nose, which was the primary focus of the input.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_09.png"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Analyzing Professionalism and Contextual Relevance shows that Professionalism fails because the response is overly simplistic and dismissive of potential concerns. Faithfulness fails because the output incorrectly claims that a runny nose is only caused by non-serious conditions, failing to acknowledge more serious possibilities like CSF leaks or chronic sinusitis.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_evaluation_10.png"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+## Summary
+
+Our evaluation results revealed failures in test cases 2, 4, and 5, highlighting areas that need targeted enhancements to improve the LLM’s accuracy, tone, and contextual understanding.
+
+- **Test Case 2**: Failed **Answer Relevancy** because the response included irrelevant details, such as appointment information, rather than addressing the primary concern about coughing. To improve, the LLM’s context-awareness should better prioritize user intent and exclude extraneous information.
+- **Test Case 4**: Failed **Professionalism** due to an overly simplistic and dismissive tone. It also narrowly passed **Answer Relevancy** with a borderline score. Improvements should focus on refining the tone to ensure empathetic, professional responses and enhancing content prioritization to align more effectively with queries.
+- **Test Case 5**: Failed **Answer Relevancy**, **Professionalism**, and **Faithfulness**. The response included irrelevant statements, was dismissive of serious concerns, and contained factual inaccuracies, such as failing to acknowledge serious conditions like CSF leaks. Fixes require strengthening factual accuracy, improving context parsing, and refining tone calibration.
+
+By addressing these failures and adjusting the relevant hyperparameters, our medical chatbot can deliver more accurate, empathetic, and contextually aligned responses, ensuring better performance and user satisfaction.
+
+:::info
+Confident AI offers a suite of features to make **optimizing hyperparameter** easy and effective. We'll be exploring how to use these tools in the upcoming section.
+:::
+
+

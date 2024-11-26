@@ -15,7 +15,7 @@ In this section, we’ll be selecting the **LLM evaluation metrics** for our med
 
 1. **Directly addressing the user:** The chatbot should directly address users' requests
 2. **Providing accurate diagnoses:** Diagnoses must be reliable and based on the provided symptoms 
-
+3. **Providing professional responses:** Responses should be clear and respectful
 ### 1. Answer Relevancy
 
 Let's start with our first metric, which will evaluate our medical chatbot against our first criterion:
@@ -30,7 +30,7 @@ Fortunately, DeepEval provides an out-of-the-box `AnswerRelevancy` metric, which
 The `AnswerRelevancyMetric` uses an LLM to extract all statements from the `actual_output` and then classifies each statement's relevance to the `input` using the same LLM.
 :::
 
-### 2. Contextual Relevancy 
+### 2. Faithfulness
 
 Our next metric addresses the inaccuracies in patient diagnoses. The chatbot's failure to deliver accurate diagnoses in some example interactions suggests that our **RAG tool needs improvement**.
 
@@ -38,24 +38,24 @@ Our next metric addresses the inaccuracies in patient diagnoses. The chatbot's f
 Criteria 2: The chatbot should provide accurate diagnoses based on the given symptoms.
 ```
 
-This is because the RAG engine is responsible for **retrieving relevant medical information from our knowledge base** to support patient diagnoses. To address this, we need to evaluate the retrieval process, specifically whether the retrieved information is relevant to the user query.
+This is because the RAG engine is responsible for **retrieving relevant medical information from our knowledge base** to support patient diagnoses. To address this, we need to evaluate specifically whether the information in the retrieved chunks actually align with the information in the actual output.
 
-DeepEval's `ContextualRelevancy` metric is well-suited for this task. It assesses the overall relevance of the information provided in your `retrieval_context` for a given `input`.
+DeepEval's `Faithfulness` metric is well-suited for this task. It assesses the whether the `actual_output` factually aligns with the contents of the `retrieval_context`.
 
 :::tip  
 DeepEval offers a total of **5 RAG metrics** to evaluate your RAG pipeline. To learn more about selecting the right metrics for your use case, check out this [in-depth guide on RAG evaluation](guides-rag-evaluation).
 :::
 
 
-### 3. Custom Metric - Answer Correctness
+### 3. Custom Metric - Professionalism
 
-Our final metric will also address criterion 2 and focus on evaluating **diagnosis accuracy**.
+Our final metric will address Criterion 3, focusing on evaluating our chatbot's **professionalism**.
 
 ```
-Criteria 2: The chatbot should provide accurate diagnoses based on the given symptoms.
+Criterion 3: The chatbot should provide clear, respectful, and professional responses.
 ```
 
-While improving the retrieval process (as discussed previously) can certainly help address this issue, the LLM may still make an incorrect diagnosis even when provided with sufficient medical knowledge. Therefore, we'll be defining an `AnswerCorrectness` metric using `G-Eval` to directly evaluate our chatbot's diagnoses by comparing them against reference ground-truths.
+Since DeepEval doesn't natively support this evaluation criteria, we'll need to define our own custom `Professionalism` metric using `G-Eval`. This will allow us to ensure that the chatbot maintains the professional tone typically expected in a medical setting.
 
 :::note
 G-Eval is a **custom metric framework** that enables users to leverage LLMs for evaluating outputs based on their own tailored evaluation criteria. 
@@ -65,7 +65,7 @@ Now that we've selected our three metrics, let's define them in code:
 
 ## Defining Metrics in DeepEval
 
-To define our **Answer Relevancy**, **Contextual Relevancy**, and custom **G-Eval** metric for answer correctness, you'll first need to install DeepEval. Run the following command in your CLI:
+To define our **Answer Relevancy**, **Contextual Relevancy**, and custom **G-Eval** metric for professionalism, you'll first need to install DeepEval. Run the following command in your CLI:
 
 ```bash
 pip install deepeval
@@ -86,23 +86,23 @@ contextual_relevancy_metric = ContextualRelevancyMetric()
 
 ### Defining a Custom Metric
 
-Next, we'll define our custom G-Eval metric for answer correctness. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're assessing the LLM's `actual_output` (diagnosis results in LLM response) based on the `expected_output` (ground truth diagnosis results):
-
+Next, we'll define our custom G-Eval metric for professionalism. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're only assessing the LLM's `actual_output`.
 
 ```python
-from deepeval.text_case_import import LLMTestCaseParams
+from deepeval.test_case_import import LLMTestCaseParams
 from deepeval.metrics import GEval
 
-criteria = "Determine whether the actual output is factually correct based on the expected output."
-
-overdiagnosis_metric = GEval(
-    name="Answer Correctness",
-    criteria=criteria,
-    evaluation_params={
-        "input": LLMTestCaseParams.ACTUAL_OUTPUT,
-        "actual_output": LLMTestCaseParams.EXPECTED_OUTPUT,
-    }
+# Define criteria for evaluating professionalism
+criteria = (
+    "Determine whether the actual output demonstrates professionalism by being "
+    "clear, respectful, and maintaining an empathetic tone consistent with medical interactions."
 )
+
+# Create a GEval metric for professionalism
+professionalism_metric = GEval(
+    name="Professionalism",
+    criteria=criteria,
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
 ```
 
 :::info

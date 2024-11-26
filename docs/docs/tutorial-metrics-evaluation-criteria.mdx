@@ -79,17 +79,14 @@ llm_output = """
 
 ### Input-Response Pair 5 ❌
 
-The following input-response pair is unacceptable because it overdiagnoses the patient, potentially resulting in a false positive. A runny nose alone does not provide enough information for a diagnosis, making it essential for the chatbot to ask clarifying questions before offering any conclusions.
+The following input-response pair is unacceptable due to its unprofessional tone, characterized by dismissiveness and a lack of empathy, and its failure to adequately address the user’s concern:
 
 ```python
 user_query = """
-  I have a runny nose. What could be causing it?
+  My nose has been running constantly. Could it be something serious?
 """
 llm_output = """
-  A runny nose can be a symptom of conditions such as allergic rhinitis, where 
-  histamine interacts with receptors on blood vessels, leading to fluid buildup, 
-  swelling, and redness. If you'd like to schedule an appointment for a detailed 
-  diagnosis or treatment, feel free to let me know!
+   It’s probably nothing to worry about. Most likely just allergies or a cold. Don’t overthink it.
 """
 ```
 
@@ -97,14 +94,15 @@ Through inspecting just five example interactions with the medical chatbot—two
 
 - **Direct engagement:** Users expect the chatbot to address them directly, guiding the flow of the conversation in a way that feels natural and responsive.  
 - **Accuracy in diagnoses:** Users depend on accurate responses that neither overdiagnose nor underdiagnose based on the symptoms provided.  
-- **Trustworthiness:** Every interaction should reinforce the chatbot’s reliability, fostering confidence in its capability as a medical assistant.  
+- **Trustworthiness and Professionalism:** Every interaction should reinforce the chatbot’s reliability, fostering confidence in its capability as a medical assistant.  
 
 ## Defining Our Evaluation Criteria
 
-Based on these insights, we identified 2 specific areas where our LLM needs improvement:  
+Based on these insights, we identified 3 specific areas where our LLM needs improvement:  
 
 1. **Directly addressing the user:** The chatbot should engage users personally and conversationally to build trust and maintain control of the interaction.  
 2. **Providing accurate diagnoses:** Diagnoses must be reliable and based on the provided symptoms, minimizing risks and errors.  
+3. **Providing professional responses:** Responses should be clear and respectful, adhering to the standards of professionalism expected in a medical setting.
 
 :::info important  
 These areas of improvement represent your **evaluation criteria**—standards for assessing each input-response pair.  
@@ -112,10 +110,11 @@ These areas of improvement represent your **evaluation criteria**—standards fo
 
 ### Why These Criteria Matter  
 
-Each criterion reflects user expectations and critical performance aspects:  
+Each criterion reflects user expectations and our values:  
 
 - **Directly addressing the user** ensures two essential outcomes: users feel in control of the interaction, and the chatbot is perceived as an intelligent, trustworthy assistant.  
-- **Ensuring diagnostic accuracy** safeguard against false positives and false negatives, both of which could erode trust and lead to severe consequences.  
+- **Providing accurate diagnoses** safeguard against false positives and false negatives (underdiagnosis), both of which could erode trust and lead to severe consequences.  
+- **Providing professional responses** ensures the chatbot's responses are respectful, empathetic, and aligned with the tone expected in a medical setting. This fosters user confidence and encourages reliance on the chatbot as a credible medical assistant.
 
 By focusing on these criteria, we ensure our evaluation process aligns with both our values and user needs. With this foundation in place, we can now proceed to the next step: selecting metrics that effectively measure these key areas of performance.  
 
