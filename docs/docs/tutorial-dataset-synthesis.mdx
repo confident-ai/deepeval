@@ -7,42 +7,30 @@ sidebar_label: Generating Synthetic Data
 
 ## Quick Summary
 
-[Manually generating test data is time-consuming and can be non-comprehensive](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)), so we’ll be generating **synthetic data** to test our medical chatbot. This data should mimic your user's interaction with your LLM application, from typical usage behavior to unique test cases.
+If you wish to evaluate your LLM application at scale, you can choose to curate your own dataset or synthetically generate an evaluation dataset. [Manually generating test data is time-consuming and often times not comprehensive](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms). Therefore, we’ll be generating a **synthetic evaluation dataset** to evaluate our medical chatbot at scale.
 
-DeepEval's synthesizer offers a fast and easy way to generate high-quality goldens (input, expected output, context) for your evaluation datasets in just a few lines of code. We'll be using 2 to generate our test data.
+:::tip
+Synthetic data should closely **mimic your users' interactions** with your LLM application, from typical use cases to unique edge cases.
+:::
+
+DeepEval's synthesizer offers a fast and easy way to generate high-quality goldens for your evaluation datasets in just a few lines of code. We'll be using the following 2 methods to generate our test data.
 
 - **Generating from Documents**
 - **Generating from Scratch**
 
-
 :::info
-DeepEval also allows you to [generate directly from contexts](https://docs.confident-ai.com/docs/synthesizer-generate-from-contexts), but since we don't have access to **pre-prepared contexts** and only our knowledge base, we'll be generating from documents intead.
-:::
-
-### Synthetic Data Generation Methods
-
-#### From Documents
-
-Generating synthetic data from documents invovles **extracting contexts** from your knowledge base and generating synthetic data based on these contexts. This will be especially helpful in testing our RAG engine when medical diagnoses are being performed.
-
-#### From Scratch
-
-We'll generate synthetic data from scratch to test non-RAG parts of our LLM application, like filling in user emails and information, and handling **non-diagnosis-related queries**.
-
-:::caution Reminder
-If you haven't already, log in to Confident AI with your Confident AI key by running the following command in your CLI. We'll be reviewing the dataset on the platform in this tutorial.
-
-```bash
-deepeval login
-```
-
+**Goldens** in DeepEval are similar to `LLMTestCases` but do not require an actual output and retrieval context, which are computed at evaluation time.
 :::
 
 ## Generating Synthetic Data from Documents
 
 ### 1. Defining Style Configuration
 
-DeepEval allows you to **customize the output style and format** of any `input` and/or `expected_output`. You can achieve this by creating an instance of the `Synthesizer` with specific `StylingConfig ` settings.
+Let's begin by generating synthetic data for a typical use case for our medical chatbot: **patients seeking diagnosis**. We'll first need to define the styling configurations that will allow us to mimic this user behaviour.
+
+:::tip
+You can optionally **customize the output style and format** of any `input` and/or `expected_output` in your synthetic goldens, by configuring a `StylingConfig` object, which will be passed into your `Synthesizer`.
+:::
 
 ```python
 from deepeval.synthesizer.config import StylingConfig
@@ -90,86 +78,6 @@ dataset.generate_goldens_from_docs(
   document_paths=["./synthesizer_data/encyclopedia.pdf"],
   context_construction_config=context_config
 )
-```
-
-### 4. Pushing Dataset
-
-Next, we’ll be pushing the dataset to Confident AI so you can review your dataset.
-
-```python
-dataset.pull(alias="Synthetic Test")
-```
-
-### 5. Reviewing Dataset
-
-You can easily review synthetically generated datasets on Confident AI. This is especially important for teams, particularly when non-technical team members—such as domain experts or human reviewers—are involved. To get started, simply navigate to the datasets page on the platform and select the dataset you uploaded.
-
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
->
-  <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_01.png"
-    alt="Datasets 1"
-    style={{
-      marginTop: "20px",
-      marginBottom: "20px",
-      height: "auto",
-      maxHeight: "800px",
-    }}
-  />
-</div>
-
-Confident AI enables project collaborators to edit each golden directly on the platform, including inputs, actual outputs, retrieval context, and more.
-
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
->
-  <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_02.png"
-    alt="Datasets 2"
-    style={{
-      marginTop: "20px",
-      marginBottom: "20px",
-      height: "auto",
-      maxHeight: "800px",
-    }}
-  />
-</div>
-
-You can also leave comments for other team members or push comments directly from your code. Lastly, you have the option to toggle finalization for each golden, streamlining the review process.
-
-
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
->
-  <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_03.png"
-    alt="Datasets 3"
-    style={{
-      marginTop: "20px",
-      marginBottom: "20px",
-      height: "auto",
-      maxHeight: "800px",
-    }}
-  />
-</div>
-
-Once dataset review is complete, engineers can easily pull the entire dataset within a single line of code and begin the evaluation process.
-
-```python
-dataset.pull(alias="Synthetic Test")
 ```
 
 ### 6. Exploring Additional Generation Configurations

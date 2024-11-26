@@ -205,13 +205,33 @@ module.exports = {
     {
       type: "category",
       label: "Choosing Your Metrics",
-      items: ["tutorial-metrics-deepeval", "tutorial-metrics-confident"],
+      items: [
+        "tutorial-metrics-evaluation-criteria", 
+        "tutorial-metrics-selection", 
+        // "tutorial-metrics-deepeval", 
+        // "tutorial-metrics-confident"
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
+      label: "Evaluating your LLM",
+      items: [
+        "tutorial-evaluations-running-an-evaluation",
+        "tutorial-evaluations-hyperparameters",
+        "tutorial-evaluations-compare-test-runs",
+      ],
       collapsed: false,
     },
     {
       type: "category",
       label: "Preparing Your Evaluation Dataset",
-      items: ["tutorial-dataset-synthesis", "tutorial-dataset-prepared"],
+      items: [
+        "tutorial-placeholder",
+        // "tutorial-dataset-synthesis", 
+        // "tutorial-dataset-confident"
+        // "tutorial-dataset-prepared"
+      ],
       collapsed: false,
     },
     // {
@@ -220,12 +240,6 @@ module.exports = {
     //   items: ["tutorial-placeholder"],
     //   collapsed: false,
     // },
-    {
-      type: "category",
-      label: "Integration with Existing Workflows",
-      items: ["tutorial-placeholder"],
-      collapsed: false,
-    },
     {
       type: "category",
       label: "Continous Evaluation in Production",
