@@ -2,17 +2,17 @@ from enum import Enum
 
 
 class Guard(Enum):
-    PRIVACY = "Privacy"
-    INTELLECTUAL_PROPERTY = "Intellectual Property"
-    MISINFORMATION_DISINFORMATION = "Misinformation & Disinformation"
-    SPECIALIZED_FINANCIAL_ADVICE = "Specialized Financial Advice"
-    OFFENSIVE = "Offensive"
+    # PRIVACY = "Privacy"
+    # INTELLECTUAL_PROPERTY = "Intellectual Property"
+    # MISINFORMATION_DISINFORMATION = "Misinformation & Disinformation"
+    # SPECIALIZED_FINANCIAL_ADVICE = "Specialized Financial Advice"
+    # OFFENSIVE = "Offensive"
     BIAS = "BIAS"
     PII_API_DB = "API and Database Access"
     PII_DIRECT = "Direct PII Disclosure"
     PII_SESSION = "Session PII Leak"
     PII_SOCIAL = "Social Engineering PII Disclosure"
-    DATA_LEAKAGE = "Data Leakage"
+    # DATA_LEAKAGE = "Data Leakage"
     CONTRACTS = "Contracts"
     EXCESSIVE_AGENCY = "Excessive Agency"
     HALLUCINATION = "Hallucination"
@@ -30,25 +30,25 @@ class Guard(Enum):
     COMPETITORS = "Competitors"
     HIJACKING = "Hijacking"
     RELIGION = "Religion"
-    VIOLENT_CRIME = "Violent Crimes"
-    NON_VIOLENT_CRIME = "Non Violent Crimes"
-    SEX_CRIME = "Sex Crimes"
-    CHILD_EXPLOITATION = "Child Exploitation"
-    INDISCRIMINATE_WEAPONS = "Indiscriminate Weapons"
-    HATE = "Hate"
-    SELF_HARM = "Self Harm"
-    SEXUAL_CONTENT = "Sexual Content"
-    CYBERCRIME = "Cybercrime"
-    CHEMICAL_BIOLOGICAL_WEAPONS = "Chemical & Biological Weapons"
-    ILLEGAL_DRUGS = "Illegal Drugs"
-    COPYRIGHT_VIOLATIONS = "Copyright Violations"
-    HARASSMENT_BULLYING = "Harassment & Bullying"
-    ILLEGAL_ACTIVITIES = "Illegal Activities"
-    GRAPHIC_CONTENT = "Graphic Content"
-    UNSAFE_PRACTICES = "Unsafe Practices"
-    RADICALIZATION = "Radicalization"
-    PROFANITY = "Profanity"
-    INSULTS = "Insults"
+    # VIOLENT_CRIME = "Violent Crimes"
+    # NON_VIOLENT_CRIME = "Non Violent Crimes"
+    # SEX_CRIME = "Sex Crimes"
+    # CHILD_EXPLOITATION = "Child Exploitation"
+    # INDISCRIMINATE_WEAPONS = "Indiscriminate Weapons"
+    # HATE = "Hate"
+    # SELF_HARM = "Self Harm"
+    # SEXUAL_CONTENT = "Sexual Content"
+    # CYBERCRIME = "Cybercrime"
+    # CHEMICAL_BIOLOGICAL_WEAPONS = "Chemical & Biological Weapons"
+    # ILLEGAL_DRUGS = "Illegal Drugs"
+    # COPYRIGHT_VIOLATIONS = "Copyright Violations"
+    # HARASSMENT_BULLYING = "Harassment & Bullying"
+    # ILLEGAL_ACTIVITIES = "Illegal Activities"
+    # GRAPHIC_CONTENT = "Graphic Content"
+    # UNSAFE_PRACTICES = "Unsafe Practices"
+    # RADICALIZATION = "Radicalization"
+    # PROFANITY = "Profanity"
+    # INSULTS = "Insults"
 
 
 # Lists of guards that require purpose, entities, or both
@@ -65,7 +65,10 @@ purpose_dependent_guards = [
     Guard.RELIGION,
 ]
 
-entities_dependent_guards = [Guard.BOLA, Guard.IMITATION]
+entities_dependent_guards = [
+    Guard.BOLA, 
+    Guard.IMITATION
+]
 
 purpose_entities_dependent_guards = [
     Guard.PII_API_DB,
