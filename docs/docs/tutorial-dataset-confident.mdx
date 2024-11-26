@@ -1,20 +1,30 @@
 ---
 id: tutorial-dataset-confident
-title: Pushing your Dataset
-sidebar_label: Pushing your Dataset
+title: Pushing Datasets 
+sidebar_label: Pushing Datasets to Confident AI
 ---
 
-### 4. Pushing Dataset
+In the previous section, we generated multiple synthetic datasets. The next step is to finalize these datasets for evaluation by **pushing them to Confident AI** and reviewing each test case. 
 
-Next, we’ll be pushing the dataset to Confident AI so you can review your dataset.
+:::note
+In this tutorial, we’ll walk through the process of pushing and pulling datasets from Confident AI and reviewing them directly on the platform.
+:::
+
+## Pushing Your Dataset
+
+To push your dataset to Confident AI, simply provide an alias (dataset name) and call the `push` method on the dataset. Optionally, you can use the `overwrite` parameter to replace an existing dataset with the same alias if it has already been pushed.
 
 ```python
-dataset.pull(alias="Synthetic Test")
+dataset.push(alias="Synthetic Test", overwrite=False)
 ```
 
-### 5. Reviewing Dataset
+## Reviewing your Dataset
 
-You can easily review synthetically generated datasets on Confident AI. This is especially important for teams, particularly when non-technical team members—such as domain experts or human reviewers—are involved. To get started, simply navigate to the datasets page on the platform and select the dataset you uploaded.
+You can easy review synthetically generated datasets on Confident AI. To get started, simply head to the datasets page on the platform and select the dataset you're interested in reviewing.
+
+:::tip
+Having a centralized dataset management system is particularly important for **larger teams with non-technical members** (such as domain experts or human reviewers). 
+:::
 
 <div
   style={{
@@ -35,7 +45,13 @@ You can easily review synthetically generated datasets on Confident AI. This is 
   />
 </div>
 
-Confident AI enables project collaborators to edit each golden directly on the platform, including inputs, actual outputs, retrieval context, and more.
+Confident AI allows project members to edit each golden directly on the platform. This includes all the golden fields, such as **input**, **actual output**, **expected output**, **context**, and **retrieval context**.
+
+:::info
+If you have domain experts, they will primarily focus on discussing and refining the **expected output** for specific use queries.
+:::
+
+You can also toggle whether each golden is finalized or not to notify other team members that a golden still needs reviewing. As a best practice, a dataset should only be ready for evaluation once all test cases are reviewed and marked as finalized.
 
 <div
   style={{
@@ -48,7 +64,6 @@ Confident AI enables project collaborators to edit each golden directly on the p
     src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_02.png"
     alt="Datasets 2"
     style={{
-      marginTop: "20px",
       marginBottom: "20px",
       height: "auto",
       maxHeight: "800px",
@@ -56,7 +71,7 @@ Confident AI enables project collaborators to edit each golden directly on the p
   />
 </div>
 
-You can also leave comments for other team members or push comments directly from your code. Lastly, you have the option to toggle finalization for each golden, streamlining the review process.
+To view each test case's parameters in the side panel, you can click on the inspect icon (pen icon) for any test case. Additionally, you can leave comments for other team members directly within the side panel.
 
 <div
   style={{
@@ -69,16 +84,15 @@ You can also leave comments for other team members or push comments directly fro
     src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_03.png"
     alt="Datasets 3"
     style={{
-      marginTop: "20px",
-      marginBottom: "20px",
       height: "auto",
       maxHeight: "800px",
     }}
   />
 </div>
 
-Once dataset review is complete, engineers can easily pull the entire dataset within a single line of code and begin the evaluation process.
+## Pulling Your Dataset
+
+Once the dataset review is complete and all test cases are finalized, engineers can easily pull the entire dataset with a single line of code and begin evaluating at scale.
 
 ```python
 dataset.pull(alias="Synthetic Test")
-```

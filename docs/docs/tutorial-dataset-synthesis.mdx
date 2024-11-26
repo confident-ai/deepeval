@@ -4,33 +4,36 @@ title: Generating Synthetic Data
 sidebar_label: Generating Synthetic Data
 ---
 
-
 ## Quick Summary
 
-If you wish to evaluate your LLM application at scale, you can choose to curate your own dataset or synthetically generate an evaluation dataset. [Manually generating test data is time-consuming and often times not comprehensive](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms). Therefore, we’ll be generating a **synthetic evaluation dataset** to evaluate our medical chatbot at scale.
+If you plan to evaluate your LLM at scale, you'll need a large evaluation dataset. [However, manually curating test data can be time-consuming and costly](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms). Fortunately, synthetic data generation offers a way to create high-quality datasets without the limitations of manual curation.
 
-:::tip
-Synthetic data should closely **mimic your users' interactions** with your LLM application, from typical use cases to unique edge cases.
+:::note
+DeepEval's `Synthesizer` provides a fast and easy way to generate **high-quality goldens** (input, expected output, context) for your evaluation datasets in just a few lines of code. 
 :::
 
-DeepEval's synthesizer offers a fast and easy way to generate high-quality goldens for your evaluation datasets in just a few lines of code. We'll be using the following 2 methods to generate our test data.
+In this tutorial, we’ll use DeepEval's `Synthesizer` to generate a high-quality **synthetic dataset** for testing our medical chatbot at scale. Specifically, we'll explore two approaches:
 
 - **Generating from Documents**
 - **Generating from Scratch**
 
 :::info
-**Goldens** in DeepEval are similar to `LLMTestCases` but do not require an actual output and retrieval context, which are computed at evaluation time.
+DeepEval also allows you to [generate synthetic data directly from contexts](https://docs.confident-ai.com/docs/synthesizer-generate-from-contexts) if you have access to **pre-prepared contexts**.
 :::
 
 ## Generating Synthetic Data from Documents
 
-### 1. Defining Style Configuration
+In this section, we'll be generating data from our **knowledge base document**, the *Gale Encyclopedia of Medicine*. The synthesizer first extracts contexts from the document to create inputs and expected outputs, which are then evolved to enhance data diversity.
 
-Let's begin by generating synthetic data for a typical use case for our medical chatbot: **patients seeking diagnosis**. We'll first need to define the styling configurations that will allow us to mimic this user behaviour.
+### 1. Style Configuration
+
+To ensure that our synthetic data aligns with real user queries and use cases, we'll need to define some styling configurations before generating the data.
 
 :::tip
-You can optionally **customize the output style and format** of any `input` and/or `expected_output` in your synthetic goldens, by configuring a `StylingConfig` object, which will be passed into your `Synthesizer`.
+DeepEval lets you **customize the output style and format** of any `input` and/or `expected_output` using the `StylingConfig` object.
 :::
+
+Our chatbot supports many scenarios and use cases, but we'll start with the most simple one: generating inputs that represent **individuals describing their medical symptoms** and expected outputs that reflect the chatbot’s ability to provide accurate diagnoses and ask for additional details when needed.
 
 ```python
 from deepeval.synthesizer.config import StylingConfig
@@ -43,50 +46,58 @@ styling_config = StylingConfig(
 )
 ```
 
-Given that our knowledge base is essentially a collection of medical data, we need to ensure that the **inputs** accurately reflect individuals seeking medical diagnosis.
-
-We'll also need to align our **expected output** with our LLM's expected behaviour, namely providing correct diagnoses based on the symptoms presented or asking for clarifying symptoms.
-
-### 2. Defining Context Construct Configuration
-
-When generating goldens from documents, the default `max_contexts_per_document` is set to 3. However, given our extensive knowledge base, we’ll need to generate significantly more goldens. Fortunately, Deepeval allows us to adjust this configuration through the `ContextConstructionConfig` object.
-
-```python
-from deepeval.synthesizer.config import ContextConstructionConfig
-
-context_config = ContextConstructionConfig(
-    max_contexts_per_document=10
-)
-```
-
-:::tip
-This configuration also enables you to specify a custom `critic_model`, define chunking parameters such as `chunk_size` and `chunk_overlap`, and control content quality through pre-set filters.
+:::info
+In addition to styling, DeepEval lets you **customize** other parts of the generation process, from context construction to evolutions.
 :::
 
-### 3. Goldens generation
+### 2. Goldens generation
 
-With our configurations defined, let’s finally begin **generating synthetic goldens**. You can generate as many `goldens_per_context` as you’d like. For this tutorial, we’ll set this parameter to 2, as coverage across different contexts is more important.
+With our styling configuration defined, let’s begin **generating our dataset**.
+
+```python
+from deepeval.dataset import EvaluationDataset
+from deepeval.synthesizer import Synthesizer
+
+dataset=EvaluationDataset()
+synthesizer = Synthesizer(styling_config=styling_config)
+dataset.generate_goldens_from_docs(
+  document_paths=["./synthesizer_data/encyclopedia.pdf"],
+  synthesizer=synthesizer
+)
+
+print(dataset.goldens[0])
+```
 
 :::note
-We'll be generating our goldens through DeepEval's `EvaluationDataset`, but this can also be accomplished with the `Synthesizer` directly.
+We're generating goldens using DeepEval's `EvaluationDataset`, but this can also be done directly through the `Synthesizer`.
 :::
 
+Let's take a look at an example golden we've generated.
+
 ```python
-dataset=EvaluationDataset()
-dataset.generate_goldens_from_docs(
-  max_goldens_per_context=2,
-  document_paths=["./synthesizer_data/encyclopedia.pdf"],
-  context_construction_config=context_config
+Golden(
+  input='''
+    I have been experiencing symptoms of oral thrush. Could this be related 
+    to other underlying health issues?''',
+  expected_output='''
+    Experiencing oral thrush can indeed be an indication of underlying health 
+    issues. It is often seen in individuals with weakened immune systems. To 
+    better understand your situation, could you provide more information about
+    any other symptoms you might be experiencing, such as fever, weight loss, 
+    or persistent fatigue?''',
+  context=["The general physical examination may\nrange from normal findin..."]
+  ...
 )
 ```
+You can see that even though the input for this synthetic golden is in its simplest form (with no evolutions applied), it remains relevant, aligns with user behavior, and is high quality. Should you want more advanced inputs, you can enhance the generated goldens' complexity by adjusting the evolution settings when initializing the `Synthesizer` object.
 
-### 6. Exploring Additional Generation Configurations
+### 3. Additional Styling Configurations
 
-You may want to explore additional styling or quality configurations for your dataset generation. This allows you to create a dataset that is **diverse and include edge cases**.
+We've defined a configuration for patients seeking diagnoses, but it's also important to be exploring additional styling configurations. Using multiple styling configurations allows you to generate a truly **diverse dataset** that is not only comprehensvie but also captures edge cases.
 
 #### Ambiguous Inputs
 
-For example, you may want to generate synthetic goldens where the user input describes borderline symptoms—sufficient to narrow down the options but not enough to make a definitive diagnosis without asking additional clarifying questions. This helps evaluate how your medical chatbot handles such ambiguous inputs.
+For example, you may want to generate synthetic goldens where user inputs describe borderline symptoms—providing enough detail to narrow options but insufficient for a definitive diagnosis. This tests the chatbot's ability to handle ambiguity and ask clarifying questions.
 
 ```python
 styling_config_ambiguous = StylingConfig(
@@ -97,13 +108,8 @@ styling_config_ambiguous = StylingConfig(
 )
 ```
 
-:::info
-In medical use cases, false positives are generally preferred over false negatives. It's essential to consider your **specific use case and the expected behavior** of your LLM application when exploring different styling configurations.
-:::
-
 #### Challenging User Scenarios
-In another scenario, you may want to test how your chatbot reacts to users who are rude or in a hurry. This allows you to evaluate its ability to maintain professionalism and provide effective responses under challenging circumstances. Below is an example styling configuration:
-
+In another scenario, you may want to test how the chatbot responds to users who are rude or in a hurry, evaluating its professionalism and ability to provide effective assistance under pressure. This ensures the chatbot maintains a calm and empathetic tone while providing actionable advice, even in challenging situations.
 
 ```python
 styling_config_challenging = StylingConfig(
@@ -114,31 +120,16 @@ styling_config_challenging = StylingConfig(
 )
 ```
 
-#### High Quality Configurations
-
-For high-priority use cases, you may want to define higher-quality filters to ensure that the generated dataset meets rigorous standards. While this approach might cost more to generate the same number of goldens, the trade-off can be invaluable for critical applications. Here’s an example of how you can define such quality filters:
-
-```python
-from deepeval.synthesizer.config import FiltrationConfig
-from deepeval.synthesizer import Synthesizer
-
-filtration_config = FiltrationConfig(
-    critic_model="gpt-4o",  # Model used to assess the quality of generated data
-    synthetic_input_quality_threshold=0.8  # Minimum acceptable quality score for generated inputs
-)
-synthesizer = Synthesizer(filtration_config=filtration_config)
-```
-You might want to push different evaluation datasets for various configurations to the platform. To do so, simply push the new dataset under a different name:
-
-```python
-dataest.push(alias="Ambiguous Synthetic Test")
-```
 
 ## Generating Synthetic Data from Scratch
 
+Generating synthetic data from documents requires a knowledge base, meaning the generated goldens are designed to test user queries that prompt the LLM to use the RAG engine.
+
+However, since our medical chatbot operates as an Agentic RAG, there are cases where the LLM responses **do not rely on the RAG tool**, necessitating the generation of data from scratch without any context.
+
 ### 1. Defining Style Configuration
 
-Similar to generating from documents, you'll want to **customize the output style and format** of any `input` and/or `expected_output` when generating synthetic goldens from scratch. When generating from scratch, your creativity is your limit. You can test your LLM for any interaction you can foresee. In the example below, we'll define user inputs to try to book an appointment by providing name information and email.
+When generating synthetic goldens from scratch, you can customize the `input` and `expected_output` to test any type of interaction. For example, we'll define a styling configuration to mimic users booking an appointment by providing their name and email details.
 
 ```python
 from deepeval.synthesizer.config import StylingConfig
@@ -150,8 +141,7 @@ styling_config = StylingConfig(
     scenario="Non-medical patients describing symptoms to seek a diagnosis."
 )
 ```
-
-Alternatively, you can also just make the patient say a greeting to the chatbot.
+Alternatively, it's also possible to simulate a simple greeting:
 
 ```python
 styling_config = StylingConfig(
@@ -164,17 +154,35 @@ styling_config = StylingConfig(
 
 ### 2. Generating the Goldens
 
-The next step is to simply initialize your synthesizer with the styling configurations and push the dataset to Confident AI for review.
+With the configurations defined, simply create a `Synthesizer` object with your desired configuration and begin generating goldens from scratch from your dataset.
 
 ```python
+from deepeval.dataset import EvaluationDataset
 from deepeval.synthesizer import Synthesizer
 
-# Initialize synthesizer for appointment booking
+dataset=EvaluationDataset()
 synthesizer = Synthesizer(styling_config=styling_config)
-synthesizer.generate_goldens_from_scratch(num_goldens=25)
-dataset.push("Synthetic Test from Scratch")
+dataset.generate_goldens_from_scratch(
+  synthesizer=synthesizer
+)
 ```
+At this point, you might be wondering why the `expected_output` is any better than your LLM's `actual_output`, especially when we're generating these expected outputs from scratch without any contexts.
 
 :::info
-The reason why the expected output format works better than relying on your LLM directly is that it is hyper-focused on one task or topic. In contrast, a typical LLM application operates with a longer system prompt and may even be fine-tuned, making it less focused on handling very specific queries with precision.
+The reason the `expected_output` works better in synthetic generation pipelines is because it is hyper-focused on a specific task or topic. In contrast, a typical LLM application operates with a broader system prompt or fine-tuning, making it less precise for handling specific queries.
 :::
+
+To recap, we've explored two methods for generating high-quality synthetic datasets that are relevant to medical use cases and closely aligned with user behavior. However, synthetic data generation has its challenges. While DeepEval provides quality filtration configurations, dataset review is still essential. 
+
+:::note
+Fortunately, Confident AI offers  **dataset management tool** that allows engineers, evaluators, and domain experts to collaborate seamlessly. In the next section, we'll push our generated datasets to the platform for review.
+:::
+
+
+
+
+
+
+
+
+
