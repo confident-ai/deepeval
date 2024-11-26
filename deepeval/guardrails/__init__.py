@@ -1,2 +1,2 @@
 from .types import Guard
-from .guard import guard
+from .guardrails import Guardrails
