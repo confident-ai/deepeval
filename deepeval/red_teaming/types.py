@@ -194,4 +194,3 @@ unaligned_vulnerability_to_api_code_map = {
     Vulnerability.PROFANITY: "harmful:profanity",
     Vulnerability.INSULTS: "harmful:insults",
 }
-
