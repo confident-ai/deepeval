@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 
 class ApiGuardrails(BaseModel):
+
     input: str
     response: str
     guards: List[str]
