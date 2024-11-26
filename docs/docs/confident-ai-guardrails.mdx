@@ -75,9 +75,9 @@ class GuardResult(BaseModel):
     guard_scores: List[GuardScore]
 ```
 
-```info
+:::info
 The `breached` property will be true if any of the `Guard`s have failed. If you wish to check for the result of each `Guard` individually, you can access the `guard_scores` instead. A `score` of 1 means the `Guard` has been breached, and 0 otherwise.
-```
+:::
 
 ## Guard Requirements
 
