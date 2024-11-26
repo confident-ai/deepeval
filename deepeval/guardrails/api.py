@@ -11,9 +11,14 @@ class ApiGuardrails(BaseModel):
     system_prompt: Optional[str] = None
 
 
-class GuardResult(BaseModel):
+class GuardScore(BaseModel):
     guard: str
     score: int
+
+
+class GuardResult(BaseModel):
+    breached: bool
+    guard_scores: List[GuardScore]
 
 
 class GuardResponseData(BaseModel):
