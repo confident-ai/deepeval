@@ -101,11 +101,11 @@ module.exports = async function createConfigAsync() {
               position: 'left',
               label: 'Docs',
             },
-            // {
-            //   to: "docs/tutorial-introduction",
-            //   position: 'left',
-            //   label: 'Tutorial',
-            // },
+            {
+              to: "docs/tutorial-introduction",
+              position: 'left',
+              label: 'Tutorial',
+            },
             {
               href: "https://confident-ai.com/blog",
               position: 'left',

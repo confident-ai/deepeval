@@ -1,6 +1,35 @@
 ---
 id: tutorial-introduction
-title: Introduction
-sidebar_label: Introduction
+title: Tutorial Introduction
+sidebar_label: Tutorial Introduction
 ---
 
+**DeepEval** is the open-source LLM evaluation framework and in this complete end-to-end tutorial, we'll show you exactly how you can use DeepEval to improve your LLM application one step at a time. This tutorial will walk you through how to evaluate and test your LLM application all the way from the initial development stages to post-production.
+
+For **LLM evaluation in development**, we'll cover:
+
+- How to choose your LLM evaluation metrics and use them in `deepeval`
+- How to run evaluations in `deepeval` to quantify LLM application performance
+- How to use evaluation results to identify system hyperparameters (such as LLMs and prompts) to iterate on
+- How to make your evaluation results more robust by scaling it out to cover more edge cases
+
+Once your LLM is ready for deployment, for **LLM evaluation in production**, we'll cover:
+
+- How to continously evaluate your LLM application in production (post-deployment, online evaluation)
+- How to use evaluation data in production to A/B test different system hyperparameters (such as LLMs and prompts)
+- How to use production data to improve your development evaluation workflow over time
+
+:::tip
+Just because your LLM application is in production doesn't mean you don't need LLM evaluation during development, and the same is true the other way around.
+:::
+
+## Quick Terminologies
+
+Before diving into the tutorial, let's go over the terminology used commonly used in LLM evaluation:
+
+- **Hyperparameters**: this refers to the parameters that make up your LLM system. Some examples include system prompts, user prompts, models used for generation, temperature, chunk size (for RAG), etc.
+- **Evaluation model**: this referes to the LLM used for evaluation, **NOT** the LLM to be evaluated.
+
+## Who Is This Tutorial For?
+
+If you're building applications powered by LLMs, this tutorial is for you. Why? Because LLMs are prone to errors, and this tutorial will teach you exactly how to improve your LLM systems through a systematic evaluation-guided, data-first approach.
