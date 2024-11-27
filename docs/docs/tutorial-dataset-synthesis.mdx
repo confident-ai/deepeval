@@ -1,30 +1,27 @@
 ---
 id: tutorial-dataset-synthesis
-title: Generating Synthetic Data
-sidebar_label: Generating Synthetic Data
+title: Generating Synthetic Datasets
+sidebar_label: Generating Synthetic Datasets
 ---
-
-
-## Quick Summary
 
 If you wish to evaluate your LLM application at scale, you can choose to curate your own dataset or synthetically generate an evaluation dataset. [Manually generating test data is time-consuming and often times not comprehensive](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms). Therefore, we’ll be generating a **synthetic evaluation dataset** to evaluate our medical chatbot at scale.
 
-:::tip
-Synthetic data should closely **mimic your users' interactions** with your LLM application, from typical use cases to unique edge cases.
+:::note
+DeepEval's `Synthesizer` provides a quick and easy way to generate **high-quality goldens** (input, expected output, context) for your evaluation datasets in just a few lines of code. 
 :::
 
-DeepEval's synthesizer offers a fast and easy way to generate high-quality goldens for your evaluation datasets in just a few lines of code. We'll be using the following 2 methods to generate our test data.
+In this tutorial, we’ll demonstrate how to generate **synthetic datasets** for our medical chatbot using 2 aproaches:
 
-- **Generating from Documents**
-- **Generating from Scratch**
-
-:::info
-**Goldens** in DeepEval are similar to `LLMTestCases` but do not require an actual output and retrieval context, which are computed at evaluation time.
-:::
+- [**Generating from Documents**](#generating-synthetic-data-from-documents)
+- [**Generating from Scratch**](#generating-synthetic-data-from-scratch)
 
 ## Generating Synthetic Data from Documents
 
-### 1. Defining Style Configuration
+First, we'll be generating a synthetic dataset from our **knowledge base document**, the *Gale Encyclopedia of Medicine*. Generating synthetic data from documents is especially useful if you're testing RAG applications or tools.
+
+:::info
+When generating from documents, the `Synthesizer` first **extracts contexts** from the documents, before generating the corresponding inputs and expected outputs.
+:::
 
 Let's begin by generating synthetic data for a typical use case for our medical chatbot: **patients seeking diagnosis**. We'll first need to define the styling configurations that will allow us to mimic this user behaviour.
 
@@ -43,24 +40,8 @@ styling_config = StylingConfig(
 )
 ```
 
-Given that our knowledge base is essentially a collection of medical data, we need to ensure that the **inputs** accurately reflect individuals seeking medical diagnosis.
-
-We'll also need to align our **expected output** with our LLM's expected behaviour, namely providing correct diagnoses based on the symptoms presented or asking for clarifying symptoms.
-
-### 2. Defining Context Construct Configuration
-
-When generating goldens from documents, the default `max_contexts_per_document` is set to 3. However, given our extensive knowledge base, we’ll need to generate significantly more goldens. Fortunately, Deepeval allows us to adjust this configuration through the `ContextConstructionConfig` object.
-
-```python
-from deepeval.synthesizer.config import ContextConstructionConfig
-
-context_config = ContextConstructionConfig(
-    max_contexts_per_document=10
-)
-```
-
-:::tip
-This configuration also enables you to specify a custom `critic_model`, define chunking parameters such as `chunk_size` and `chunk_overlap`, and control content quality through pre-set filters.
+:::info
+In addition to styling, DeepEval lets you **customize** other parts of the generation process, from context construction to data evolutions.
 :::
 
 ### 3. Goldens generation
@@ -76,17 +57,41 @@ dataset=EvaluationDataset()
 dataset.generate_goldens_from_docs(
   max_goldens_per_context=2,
   document_paths=["./synthesizer_data/encyclopedia.pdf"],
-  context_construction_config=context_config
+  synthesizer=synthesizer
+)
+
+print(dataset.goldens[0])
+```
+Let's take a look at an example golden we've generated.
+
+```python
+Golden(
+  input='''
+    I have been experiencing symptoms of oral thrush. Could this be related 
+    to other underlying health issues?''',
+  expected_output='''
+    Experiencing oral thrush can indeed be an indication of underlying health 
+    issues. It is often seen in individuals with weakened immune systems. To 
+    better understand your situation, could you provide more information about
+    any other symptoms you might be experiencing, such as fever, weight loss, 
+    or persistent fatigue?''',
+  context=["The general physical examination may\nrange from normal findin..."]
+  ...
 )
 ```
+You can see that even though the input for this synthetic golden is simple, it remains relevant and aligns with our expected user behavior.
 
-### 6. Exploring Additional Generation Configurations
+:::note  
+You can increase the complexity of the generated goldens by configuring the **evolution settings** when initializing the `Synthesizer` object.  
+:::
 
-You may want to explore additional styling or quality configurations for your dataset generation. This allows you to create a dataset that is **diverse and include edge cases**.
+### 3. Additional Styling Configurations
+
+It's also important to be exploring additional styling configurations when generating your datasets. Using multiple styling configurations allows you to generate a truly **diverse dataset** that is not only comprehensvie but also captures edge cases.
 
 #### Ambiguous Inputs
 
-For example, you may want to generate synthetic goldens where the user input describes borderline symptoms—sufficient to narrow down the options but not enough to make a definitive diagnosis without asking additional clarifying questions. This helps evaluate how your medical chatbot handles such ambiguous inputs.
+For example, you may want to generate synthetic goldens where users describe borderline symptoms—providing enough detail to narrow options but insufficient for a definitive diagnosis. This tests the chatbot's ability to handle ambiguity and ask clarifying questions.
 
 ```python
 styling_config_ambiguous = StylingConfig(
@@ -136,6 +141,8 @@ dataest.push(alias="Ambiguous Synthetic Test")
 
 ## Generating Synthetic Data from Scratch
 
+Generating synthetic data from documents requires a knowledge base, meaning the generated goldens are designed to test user queries that prompt the LLM to use the RAG engine. However, since our medical chatbot operates as an Agentic RAG, there are cases where the LLM **does not invoke the RAG tool**, necessitating the generation of data from scratch without any context.
+
 ### 1. Defining Style Configuration
 
 Similar to generating from documents, you'll want to **customize the output style and format** of any `input` and/or `expected_output` when generating synthetic goldens from scratch. When generating from scratch, your creativity is your limit. You can test your LLM for any interaction you can foresee. In the example below, we'll define user inputs to try to book an appointment by providing name information and email.
@@ -176,5 +183,151 @@ dataset.push("Synthetic Test from Scratch")
 ```
 
 :::info
-The reason why the expected output format works better than relying on your LLM directly is that it is hyper-focused on one task or topic. In contrast, a typical LLM application operates with a longer system prompt and may even be fine-tuned, making it less focused on handling very specific queries with precision.
+The reason the `expected_output` works better in synthetic generation pipelines is because it is hyper-focused on a specific task or topic. In contrast, a typical LLM application operates with a broader system prompt or fine-tuning, making it less precise for handling specific queries.
 :::
+
+## Dataset Review
+
+While DeepEval offers the ability to control quality filtration configurations for synthetic data generation, **manual dataset review remains crucial**, especially if you have domain experts. In this section, we’ll push our first synthetic dataset (patients seeking diagnosis) to Confident AI for review.  
+
+### Pushing your Dataset
+
+To push your dataset to Confident AI, simply provide an alias (dataset name) and call the `push` method on the dataset. Optionally, you can use the `overwrite` parameter to replace an existing dataset with the same alias if it has already been pushed.
+
+```python
+dataset.push(alias="Patients Seeking Diagnosis", overwrite=False)
+```
+
+Once your code finishes running, you'll be redirected to the following datasets page.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_01.png"
+    alt="Datasets 1"
+    style={{
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+
+### Reviewing your Dataset
+
+To inspect the goldens individually, click on the dataset you're interested in reviewing. To explore a specific golden in more detail, hover over the cell or click the pen icon on the left of the row to open the side panel for a closer look. We'll be focusing on this specific golden on the 2nd row.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_02.png"
+    alt="Datasets 1"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Examining this interaction, you’ll notice that the chatbot’s expected output isn’t ideal. Although it addresses the user, it suggests “steps” that are actually questions rather than actionable guidance, which reads a little bit odd within the context of the iteraction.
+
+:::info
+Generating a dataset and reviewing these test cases can inspire new ideas for **evaluation criteria and metrics** to include in your workflow.  
+:::
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_03.png"
+    alt="Datasets 1"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Since this golden needs revision, let’s toggle off the "Finalized" status to indicate to our human reviewers that this test case isn’t finalized. Additionally, we can leave a comment suggesting that the expected output needs revision.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_04.png"
+    alt="Datasets 1"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Once reviewers inspect the dataset, they can review goldens that aren’t finalized and make revisions based on the provided comments.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_05.png"
+    alt="Datasets 1"
+    style={{
+      marginBottom: "20px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+Finally, they’ll need to toggle the `Finalized` status to let engineers know this dataset is ready to pull.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/tutorial_datasets_06.png"
+    alt="Datasets 1"
+    style={{
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+## Summary
+
+In this section, we covered how to generate synthetic datasets for our medical chatbot and push them to Confident AI for review. In the next section, we’ll be pulling the revised dataset from Confident AI and run evaluations on the updated data.
+
+
+
+
+

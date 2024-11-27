@@ -4,7 +4,7 @@ title: Running an Evaluation
 sidebar_label: Running an Evaluation
 ---
 
-With our metrics in place, we’re ready to finally **run our first evaluation**. Using the five input-response pairs we reviewed from the previous section, we’ll construct a dataset, evaluate it using the 3 metrics we defined, and analyze the results through Confident AI’s evaluation report. Let’s get started.
+With our metrics in place, we’re ready to finally **run our first evaluation**. Using the five input-response pairs we reviewed from the previous section, we’ll construct a dataset, evaluate it using the 3 metrics we defined, and analyze the results on Confident AI.
 
 ## Constructing your Dataset
 
@@ -63,13 +63,7 @@ dataset = EvaluationDataset(test_cases=[test_case_0, test_case_1, test_case_2, t
 
 ## Running an Evaluation
 
-With our dataset and metrics ready, we can begin **running our first evaluation**. Make sure you are logged in into Confident AI so that your evaluation results are saved on the cloud and available for analysis. Run the following command in your CLI to login:
-
-```bash
-deepeval login
-```
-
-To run evaluations with DeepEval, import the evaluation function from deepeval and provide your dataset and metrics in the appropriate fields. Optionally, you can also log hyperparameters, which will be extremely important for optimizing them in future iterations.
+With our dataset and metrics ready, we can begin **running our first evaluation**. Import the `evaluation` function from DeepEval and provide your dataset and metrics in the appropriate fields. Optionally, you can also log your LLM application's hyperparameters, which will be extremely important for optimizing them in future iterations.
 
 ```python
 from deepeval.metrics import AnswerRelevancy, Faithfulness, GEval
@@ -97,7 +91,7 @@ evaluate(
 
 ## Analyzing the Evaluation Report
 
-If you're **logged in to Confident AI**, you'll be redirected to the following page once your evaluation is complete. Here, you'll find an evaluation report for the 5 test cases that we defined and evaluated in the previous steps. Each test case displays its status (pass or fail), input, and corresponding actual output. Clicking on a test case will reveal the remaining parameters and metric scores.
+You'll be redirected to the following page on Confident AI **once your evaluation is complete**. Here, you'll find an evaluation report for the 5 test cases that we defined and evaluated in the previous steps. Each test case displays its status (pass or fail), input, and corresponding actual output. Clicking on a test case will reveal the remaining parameters and metric scores.
 
 :::info
 A test case is only **considered passing** if it exceeds the threshold for all the metrics it was evaluated on.
