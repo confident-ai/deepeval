@@ -65,10 +65,7 @@ purpose_dependent_guards = [
     Guard.RELIGION,
 ]
 
-entities_dependent_guards = [
-    Guard.BOLA, 
-    Guard.IMITATION
-]
+entities_dependent_guards = [Guard.BOLA, Guard.IMITATION]
 
 purpose_entities_dependent_guards = [
     Guard.PII_API_DB,
