@@ -23,15 +23,22 @@ To use the `JsonCorrectnessMetric`, you'll have to provide the following argumen
 
 ## Example
 
+First define your schema by creating a `pydantic` `BaseModel`:
+
 ```python
 from pydantic import BaseModel
 
+class ExampleSchema(BaseModel):
+    name: str
+```
+
+Then supply it as the `expected_schema` when creating a `JsonCorrectnessMetric`:
+
+```python
 from deepeval import evaluate
 from deepeval.metrics import JsonCorrectnessMetric
 from deepeval.test_case import LLMTestCase
 
-class ExampleSchema(BaseModel):
-    name: str
 
 metric = JsonCorrectnessMetric(
     expected_schema=ExampleSchema,
