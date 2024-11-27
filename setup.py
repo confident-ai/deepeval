@@ -34,7 +34,7 @@ setup(
         "opentelemetry-api~=1.24.0",
         "opentelemetry-sdk~=1.24.0",
         "opentelemetry-exporter-otlp-proto-grpc~=1.24.0",
-        "grpcio~=1.63.0",
+        "grpcio~=1.68.0",
     ],
     extras_require={
         "dev": ["black"],
