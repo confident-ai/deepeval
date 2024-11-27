@@ -22,6 +22,8 @@ from deepeval.metrics import (
     ConversationRelevancyMetric,
     RoleAdherenceMetric,
     ConversationCompletenessMetric,
+    PromptAlignmentMetric,
+    JsonCorrectnessMetric,
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
