@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './index.module.css';
 import katex from 'katex';
 
 function Equation(props) {

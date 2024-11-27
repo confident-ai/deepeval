@@ -1,0 +1,77 @@
+---
+id: metrics-json-correctness
+title: Json Correctness
+sidebar_label: Json Correctness
+---
+
+import Equation from "@site/src/components/equation";
+
+The json correctness metric measures whether your LLM application is able to generate `actual_output`s with the correct **json schema**.
+
+:::note
+
+The `JsonCorrectnessMetric` like the `ToolCorrectnessMetric` is not an LLM-eval, and you'll have to supply your expected Json schema when creating a `JsonCorrectnessMetric`.
+
+:::
+
+## Required Arguments
+
+To use the `JsonCorrectnessMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
+
+- `input`
+- `actual_output`
+
+## Example
+
+```python
+from pydantic import BaseModel
+
+from deepeval import evaluate
+from deepeval.metrics import JsonCorrectnessMetric
+from deepeval.test_case import LLMTestCase
+
+class ExampleSchema(BaseModel):
+    name: str
+
+metric = JsonCorrectnessMetric(
+    expected_schema=ExampleSchema,
+    model="gpt-4",
+    include_reason=True
+)
+test_case = LLMTestCase(
+    input="Output me a random Json with the 'name' key",
+    # Replace this with the actual output from your LLM application
+    actual_output="{'name': null}"
+)
+
+metric.measure(test_case)
+print(metric.score)
+print(metric.reason)
+```
+
+There are one mandatory and six optional parameters when creating an `PromptAlignmentMetric`:
+
+- `expected_schema`: a `pydantic` `BaseModel` specifying the schema of the Json that is expected from your LLM.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use to generate reasons, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+:::info
+Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the `actual_output` has the wrong schema, **AND** if `include_reason` is set to `True`.
+:::
+
+## How Is It Calculated?
+
+The `PromptAlignmentMetric` score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Json Corectness} = \begin{cases} 
+1 & \text{If the actual output fits the expected schema}, \\
+0 & \text{Otherwise}
+\end{cases}"
+/>
+
+The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses the provided `expected_schema` to determine whether the `actual_output` can be loaded into the schema.
