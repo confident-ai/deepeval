@@ -471,11 +471,11 @@ class Synthesizer:
                 additional_metadata={
                     "evolutions": evolutions_used,
                     "synthetic_input_quality": scores[i],
-                    "context_quality": (
-                        context_scores[i]
-                        if context_scores is not None
-                        else None
-                    ),
+                    # "context_quality": (
+                    #     context_scores[i]
+                    #     if context_scores is not None
+                    #     else None
+                    # ),
                 },
             )
             goldens.append(golden)

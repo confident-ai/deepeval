@@ -6,21 +6,21 @@ sidebar_label: Building an LLM Application
 
 ## Quick Summary
 
-In this tutorial, we will be developing an **Agentic RAG** (Retrieval-Augmented Generation) medical chatbot that records symptoms, diagnoses patients, and schedules medical appointments. We'll be building our RAG engine from a medical encyclopedia for diagnosis, along side function-calling tools to help with information recording. For the full code, please skip to [this section](#full-code-example).
+In this section, we will be developing an **Agentic RAG** medical chatbot to record symptoms, diagnose patients, and schedule appointments.
 
-:::information
-You may use whatever medical **knowledge base** you have to build your RAG Engine, but for the purposes of this tutorial, we'll be using [The Gale Encyclopedia of Alternative Medicine](https://staibabussalamsula.ac.id/wp-content/uploads/2024/06/The-Gale-Encyclopedia-of-Medicine-3rd-Edition-staibabussalamsula.ac_.id_.pdf).
+:::info
+You may use whatever **knowledge base** you have to power your RAG Engine, but for the purposes of this tutorial, we'll be using [The Gale Encyclopedia of Alternative Medicine](https://staibabussalamsula.ac.id/wp-content/uploads/2024/06/The-Gale-Encyclopedia-of-Medicine-3rd-Edition-staibabussalamsula.ac_.id_.pdf).
 :::
 
-## 1. Setting Update
+## 1. Setting Up
 
-Begin by installing the necessary packages. We'll use `llama-index` as our framework and `chromadb` to store our knowledge base:
+Begin by installing the necessary packages. We'll use `llama-index` as our RAG framework and `chromadb` for vector indexing.
 
 ```bash
 pip install llama-index llama-index-vector-stores-chroma doc2text chromadb
 ```
 
-Since our chatbot will be recording a lot of information, we’ll need a structured way to store this data. We'll define a `pydantic` model with the relevant fields (symptoms, diagnoses, and personal information), ensuring our agent can **accurately store data in the appropriate format**.
+Since our chatbot will be recording patient information, we’ll need a structured way to store it. We'll define a `pydantic` model with the relevant fields (symptoms, diagnoses, and personal information) to ensure that our agent can **accurately store data in the correct format**.
 
 ```python
 from pydantic import BaseModel
@@ -33,18 +33,20 @@ class MedicalAppointment(BaseModel):
     symptoms: Optional[str] = None
     diagnosis: Optional[str] = None
 ```
+## 2. Defining the Chatbot
 
-Finally, we'll need to define a class, `MedicalAppointmentSystem`, to represent our agent. We'll be storing all of our `MedicalAppointment`s inside the `appointments` dictionary, where each key represents a unique user. Throughout this tutorial, we'll keep adding to this class until it becomes a fully functional medical chatbot agent.
+Next, we'll create a `MedicalAppointmentSystem` class to represent our agent. This class will store all `MedicalAppointment` instances in an `appointments` dictionary, with each key representing a unique user.
 
 ```python
 class MedicalAppointmentSystem:
     def __init__(self):
         self.appointments = {}
 ```
+As we progress through this tutorial, we'll gradually enhance this class until it evolves into a fully functional medical chatbot agent.
 
-## 2. Loading your Knowledge Base
+## 3. Indexing the Knowledge Base
 
-With everything setup, let's start by building our **RAG engine**, which will be responsible for facilitating all our patient diagnoses. The first step is to load the relevant medical information chunks from our knowledge base into the system. We'll use the `SimpleDirectoryReader` from `llama-index` to accomplish this.
+Let's start by building our **RAG engine**, which will handle all patient diagnoses. The first step is to load the relevant medical information chunks from our knowledge base into the system. We'll use the `SimpleDirectoryReader` from `llama-index` to accomplish this.
 
 ```python
 from llama_index.core import SimpleDirectoryReader
@@ -59,9 +61,11 @@ class MedicalAppointmentSystem:
         self.documents = SimpleDirectoryReader(data_directory).load_data()
 ```
 
-## 3. Embeding and Storage
+Then, we'll use LlamaIndex's `VectorStoreIndex` to embed our chunks and store them in a `chromadb` database. This step is crucial, as our encyclopedia contains over 4,000 pages of dense medical information. 
 
-Next, we'll use LlamaIndex's `VectorStoreIndex` to embed our chunks and store them in a `chromadb` database. This step is absolutely crucial because our encyclopedia spans over 4,000 pages of dense medical information. By embedding the data and storing it in a vector database, we can ensure fast and accurate retrieval, even with such a vast knowledge base.
+:::tip
+Embedding the data in a **vector database** ensures fast and accurate retrieval, even with such a large knowledge base.
+:::
 
 ```python
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext
@@ -85,9 +89,13 @@ class MedicalAppointmentSystem:
         self.index = VectorStoreIndex.from_documents(self.documents, storage_context=storage_context)
 ```
 
-## 4. Assembling your RAG Engine
+## 4. Building the Tools
 
-With our knowledge base chunked, embedded, and stored, we can now assemble our RAG engine. In `llama-index`, a RAG engine can be abstracted as a `QueryEngineTool`. This is especially useful for building agentic applications like this one, where you'll also define additional tools beyond RAG.
+Finally, we'll create the tools for our chatbot, which includes our **RAG engine** and **function-calling tools** responsible for creating, updating, and managing medical appointments, ensuring the system is both dynamic and interactive.
+
+### Assembling the RAG Engine
+
+In `llama-index`, a RAG engine is abstracted as a `QueryEngineTool`, making it ideal for building agentic applications like this one. This approach also allows you to define additional tools alongside the RAG engine for enhanced functionality.
 
 ```python
 from llama_index.core.tools import QueryEngineTool
@@ -108,10 +116,9 @@ class MedicalAppointmentSystem:
             description="A RAG engine for retrieving medical information."
         )
 ```
+### Function-calling Tools
 
-## 5. Creating Function-calling Tools
-
-This section focuses on **defining the remaining tools** needed to interact with the medical appointment system. Each of these tools is a callable function that the agent can use, enabling functionalities such as creating, updating, and confirming appointments. LLamaIndex's `FunctionTool` feature allows us to build these functional tools by simply wrapping the class around the function.
+We'll also need to define the tools for interacting with the medical appointment system, enabling tasks like creating, updating, and confirming appointments. LlamaIndex's `FunctionTool` simplifies this by wrapping functions into callable tools.
 
 ```python
 from llama_index.core.tools import FunctionTool
@@ -130,7 +137,6 @@ class MedicalAppointmentSystem:
         self.update_appointment_tool = FunctionTool.from_defaults(fn=self.update_appointment)
         self.create_appointment_tool = FunctionTool.from_defaults(fn=self.create_appointment)
         self.record_diagnosis_tool = FunctionTool.from_defaults(fn=self.record_diagnosis)
-        self.confirm_appointment_tool = FunctionTool.from_defaults(fn=self.confirm_appointment, return_direct=True)
         self.medical_diagnosis_tool = QueryEngineTool.from_defaults(
             self.query_engine,
             name="medical_diagnosis",
@@ -144,67 +150,29 @@ class MedicalAppointmentSystem:
 - `update_appointment_tool`: Updates a property of an appointment.
 - `create_appointment_tool`: Creates a new appointment.
 - `record_diagnosis_tool`: Records a diagnosis for an appointment.
-- `confirm_appointment_tool`: Confirms the details of an appointment.
-
-:::info
-For the purposes of this tutorial, you won’t need to define custom logic for agentic reasoning. As you'll see later, LlamaIndex's `FunctionCallingAgent` can effectively utilize these tools.
-:::
-
-### 1. Retrieving Appointments
-
-Retrieves the current state of an appointment based on its ID.
 
 ```python
+# Retrieves the current state of an appointment based on its ID.
 def get_appointment_state(self, appointment_id: str) -> str:
     try:
         return str(self.appointments[appointment_id].dict())
     except KeyError:
         return f"Appointment ID {appointment_id} not found"
-```
 
-**Description:**
-
-- Returns the serialized details of the specified appointment.
-- If the appointment ID is invalid, it provides an error message.
-
-### 2. Updating Appointments
-
-Updates a specific property of an appointment.
-
-```python
+# Updates a specific property of an appointment.
 def update_appointment(self, appointment_id: str, property: str, value: str) -> str:
     appointment = self.appointments.get(appointment_id)
     if appointment:
         setattr(appointment, property, value)
         return f"Appointment ID {appointment_id} updated with {property} = {value}"
     return "Appointment not found"
-```
-
-**Description:**
-
-- Modifies a property (e.g., symptoms, date) of an existing appointment.
-- Returns a success or failure message.
-
-### 3. Creating Appointments
-
-Creates a new appointment with a unique ID.
-
-```python
+ 
+# Creates a new appointment with a unique ID.
 def create_appointment(self, appointment_id: str) -> str:
     self.appointments[appointment_id] = MedicalAppointment()
     return "Appointment created."
-```
 
-**Description:**
-
-- Initializes a new appointment object and stores it in the system.
-- Returns a success message.
-
-### 4. Recording Appointments
-
-Records a diagnosis for an appointment after symptoms have been noted.
-
-```python
+# Records a diagnosis for an appointment after symptoms have been noted.
 def record_diagnosis(self, appointment_id: str, diagnosis: str) -> str:
     appointment: MedicalAppointment = self.appointments.get(appointment_id)
     if appointment and appointment.symptoms:
@@ -213,41 +181,9 @@ def record_diagnosis(self, appointment_id: str, diagnosis: str) -> str:
     return "Diagnosis cannot be recorded. Please tell me more about your symptoms."
 ```
 
-**Description:**
+## 5. Assembling the Chatbot
 
-- Adds a diagnosis to an appointment if symptoms have already been recorded.
-- Prompts the user to provide symptoms if they are missing.
-
-### 5. Confirming Appointments
-
-Confirms the details of an appointment.
-
-```python
-def confirm_appointment(self, appointment_id: str):
-    appointment: MedicalAppointment = self.appointments.get(appointment_id)
-    if appointment:
-        details = f"Name: {appointment.name}, Email: {appointment.email}, Date: {appointment.date}, Symptoms: {appointment.symptoms}, Diagnosis: {appointment.diagnosis}"
-        confirmation_prompt = f"Please confirm the following details: {details}. Type 'confirm' to finalize or 'edit' to modify."
-        print(confirmation_prompt)
-        user_input = input("Enter your response: ")
-        if user_input.lower() == 'confirm':
-            return "Details confirmed and saved."
-        elif user_input.lower() == 'edit':
-            return "Please specify what you would like to edit."
-        else:
-            return "Invalid input. No changes were made."
-    return "Appointment not found."
-```
-
-**Description:**
-
-- Presents appointment details to the user for confirmation.
-- Handles user input to confirm or edit the details.
-- Ensures no changes are made if the input is invalid.
-
-## 6. Assembling the Agent
-
-Now that we have set up our tools and data systems, the next step is to finally assemble our agent. We'll utilize the `FunctionCallingAgent` from LlamaIndex to manage interactions between the user and our tools effectively. This agent will dynamically choose the appropriate tool based on the user's input and the context of the conversation. Additionally, we define the LLM (gpt-4o), system prompt, as well as the maximum number of function calls.
+Now that we have set up the tools and data systems, it's time to assemble the chatbot agent. We'll use LlamaIndex's `FunctionCallingAgent` to dynamically manage user interactions and choose the appropriate tool based on the input and context. This involves defining the LLM, system prompt, and tool integrations.
 
 ```python
 from llama_index.core.agent import FunctionCallingAgent
@@ -273,12 +209,10 @@ class MedicalAppointmentSystem:
                 ChatMessage(
                     role="system",
                     content=(
-                        "You are an expert in medical diagnosis and are now connected to the patient booking system. "
-                        "The first step is to create the appointment and record the symptoms. Ask for specific symptoms! "
-                        "Then after the symptoms have been created, make a diagnosis. Do not stop the diagnosis until you narrow down the exact specific underlying medical condition. "
-                        "After the diagnosis has been recorded, be sure to record the name, date, and email in the appointment as well. Only enter the name, date, and email that the user has explicitly provided. "
-                        "Update the symptoms and diagnosis in the appointment."
-                        "Once all information has been recorded, confirm the appointment."
+                        "You are an expert in medical diagnosis connected to a patient booking system. "
+                        "First, create the appointment and record the symptoms. Ask for specific details! "
+                        "After recording symptoms, make a precise diagnosis, updating the name, date, and email "
+                        "only with explicitly provided information. Confirm all details at the end."
                     ),
                 )
             ],
@@ -287,16 +221,16 @@ class MedicalAppointmentSystem:
         )
 ```
 
-## 7. Setting up the Interactive Session
+## 6. Setting up the Interactive Session
 
-The final step involves setting up the interaction environment where users can engage with our medical chatbot. This includes configuring the input and output settings, initiating the chat session, and managing conversation flow.
+Finally, we'll create an interactive environment where users can engage with the chatbot. This involves configuring input/output, managing conversation flow, and processing user queries.
 
 ```python
 class MedicalAppointmentSystem:
     ...
     def interactive_session(self):
         print("Welcome to the Medical Diagnosis and Booking System!")
-        print("Please enter your symptoms or ask about appointment details.")
+        print("Please enter your symptoms or ask about appointment details. Type 'exit' to quit.")
 
         while True:
             user_input = input("Your query: ")
@@ -307,190 +241,11 @@ class MedicalAppointmentSystem:
             print("Agent Response:", response.response)
 ```
 
-Run the code below to begin testing your medical chatbot:
+To test your chatbot, run the following code:
 
 ```python
 if __name__ == "__main__":
     system = MedicalAppointmentSystem(data_directory="./data", db_path="./chroma_db")
     system.interactive_session()
 ```
-
-Here's a full conversational thread between a hypothetical user and the `MedicalAppointmentSystem`:
-
-```
-User: I'm feeling a bit sick today. I've been coughing a lot lately!
-
-############
-
-System Response: I can help you with that. Let's start by creating an appointment and recording your symptoms.
-Could you please provide more specific details about your symptoms? For example, do you have a fever, sore
-throat, shortness of breath, or any other symptoms along with the cough?
-
-############
-
-User: I had a fever a few days ago. Right now, I'm just coughing non-stop. I don't have shortness of breath,
-although my throat feels dry and itchy all the time.
-
-############
-
-System Response: Based on the symptoms you've described, it seems like you might have a respiratory infection,
-such as acute bronchitis or a viral upper respiratory infection. Let's narrow it down further.
-
-- **Acute Bronchitis**: Often follows a cold or other respiratory infection and is characterized by a
-persistent cough, which may produce mucus, and a dry, itchy throat.
-- **Viral Upper Respiratory Infection**: Commonly known as the common cold, it can cause a cough, fever, and
-throat irritation.
-
-Given that you had a fever a few days ago and are now experiencing a persistent cough with a dry and itchy
-throat, it is more likely to be acute bronchitis.
-
-I'll record this diagnosis for your appointment. Could you please provide your name, date, and email for the appointment?
-
-############
-
-User: Luke, luke@gmail.com, 12 December 2025
-
-############
-
-System Response: Please confirm the following details: Name: Luke, Email: luke@gmail.com, Date: 12 December 2025,
-Symptoms: Coughing non-stop, fever a few days ago, dry and itchy throat., Diagnosis: Acute Bronchitis.
-Type 'confirm' to finalize or 'edit' to modify.
-```
-
-### Full code example
-
-Here's the full code for you to copy and use as a comprehensive starting point or for building your own advanced medical chatbot:
-
-```python
-from pydantic import BaseModel
-from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageContext
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core.tools import QueryEngineTool, FunctionTool
-from llama_index.core.agent import FunctionCallingAgent
-from llama_index.llms.openai import OpenAI
-import chromadb
-from llama_index.core.llms import ChatMessage
-
-from typing import Optional
-
-class MedicalAppointment(BaseModel):
-    name: Optional[str] = None
-    email: Optional[str] = None
-    date: Optional[str] = None
-    symptoms: Optional[str] = None
-    diagnosis: Optional[str] = None
-
-class MedicalAppointmentSystem:
-    def __init__(self, data_directory, db_path):
-        self.appointments = {}
-        self.load_data(data_directory)
-        self.store_data(db_path)
-        self.setup_tools()
-        self.setup_agent()
-
-    def load_data(self, data_directory):
-        self.documents = SimpleDirectoryReader(data_directory).load_data()
-
-    def store_data(self, db_path):
-        db = chromadb.PersistentClient(path=db_path)
-        chroma_collection = db.get_or_create_collection("medical_knowledge")
-        vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-        storage_context = StorageContext.from_defaults(vector_store=vector_store)
-        self.index = VectorStoreIndex.from_documents(self.documents, storage_context=storage_context)
-
-    def setup_tools(self):
-        query_engine = self.index.as_query_engine()
-        self.medical_diagnosis_tool = QueryEngineTool.from_defaults(
-            query_engine,
-            name="medical_diagnosis",
-            description="A RAG engine for retrieving medical information."
-        )
-        self.get_appointment_state_tool = FunctionTool.from_defaults(fn=self.get_appointment_state)
-        self.update_appointment_tool = FunctionTool.from_defaults(fn=self.update_appointment)
-        self.create_appointment_tool = FunctionTool.from_defaults(fn=self.create_appointment)
-        self.record_diagnosis_tool = FunctionTool.from_defaults(fn=self.record_diagnosis)
-        self.confirm_appointment_tool = FunctionTool.from_defaults(fn=self.confirm_appointment, return_direct=True)
-
-    def get_appointment_state(self, appointment_id: str) -> str:
-        try:
-            return str(self.appointments[appointment_id].dict())
-        except KeyError:
-            return f"Appointment ID {appointment_id} not found"
-
-    def update_appointment(self, appointment_id: str, property: str, value: str) -> str:
-        appointment = self.appointments.get(appointment_id)
-        if appointment:
-            setattr(appointment, property, value)
-            return f"Appointment ID {appointment_id} updated with {property} = {value}"
-        return "Appointment not found"
-
-    def create_appointment(self, appointment_id: str) -> str:
-        self.appointments[appointment_id] = MedicalAppointment()
-        return "Appointment created."
-
-    def record_diagnosis(self, appointment_id: str, diagnosis: str) -> str:
-        appointment = self.appointments.get(appointment_id)
-        if appointment and appointment.symptoms:
-            appointment.diagnosis = diagnosis
-            return f"Diagnosis recorded for Appointment ID {appointment_id}. Diagnosis: {diagnosis}"
-        return "Diagnosis cannot be recorded. Please tell me more about your symptoms."
-
-    def confirm_appointment(self, appointment_id: str):
-        appointment = self.appointments.get(appointment_id)
-        if appointment:
-            details = f"Name: {appointment.name}, Email: {appointment.email}, Date: {appointment.date}, Symptoms: {appointment.symptoms}, Diagnosis: {appointment.diagnosis}"
-            confirmation_prompt = f"Please confirm the following details: {details}. Type 'confirm' to finalize or 'edit' to modify."
-            print(confirmation_prompt)
-            user_input = input("Enter your response: ")
-            if user_input.lower() == 'confirm':
-                return "Details confirmed and saved."
-            elif user_input.lower() == 'edit':
-                return "Please specify what you would like to edit."
-            else:
-                return "Invalid input. No changes were made."
-        return "Appointment not found."
-
-    def setup_agent(self):
-        gpt = OpenAI(model="gpt-4o", temperature=0.1)
-        self.agent = FunctionCallingAgent.from_tools(
-            tools=[
-                self.get_appointment_state_tool,
-                self.update_appointment_tool,
-                self.create_appointment_tool,
-                self.record_diagnosis_tool,
-                self.medical_diagnosis_tool,
-                self.confirm_appointment_tool
-            ],
-            llm=gpt,
-            prefix_messages=[
-                ChatMessage(
-                    role="system",
-                    content=(
-                        "You are an expert in medical diagnosis and are now connected to the patient booking system. "
-                        "The first step is to create the appointment and record the symptoms. Ask for specific symptoms! "
-                        "Then after the symptoms have been created, make a diagnosis. Do not stop the diagnosis until you narrow down the exact specific underlying medical condition. "
-                        "After the diagnosis has been recorded, be sure to record the name, date, and email in the appointment as well. Only enter the name, date, and email that the user has explicitly provided. "
-                        "Update the symptoms and diagnosis in the appointment."
-                        "Once all information has been recorded, confirm the appointment."
-                    ),
-                )
-            ],
-            max_function_calls=10,
-            allow_parallel_tool_calls=False
-        )
-
-    def interactive_session(self):
-        print("Welcome to the Medical Diagnosis and Booking System!")
-        print("Please enter your symptoms or ask about appointment details.")
-
-        while True:
-            user_input = input("Your query: ")
-            if user_input.lower() == 'exit':
-                break
-
-            response = self.agent.chat(user_input)
-            print("Agent Response:", response.response)
-
-if __name__ == "__main__":
-    system = MedicalAppointmentSystem(data_directory="./data", db_path="./chroma_db")
-    system.interactive_session()
+Congratulations on building your Agentic RAG application! In the next sections, we’ll explore how to evaluate our medical chatbot, from selecting relevant metrics to iterating on the chatbot's hyperparameters for improved performance.

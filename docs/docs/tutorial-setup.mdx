@@ -4,7 +4,7 @@ title: Setting Up
 sidebar_label: Setting Up
 ---
 
-In this tutorial series, we’ll guide you through using **DeepEval** alongside **Confident AI** to evaluate an agentic RAG application, from start to finish. Confident AI is a comprehensive LLM evaluation platform that maximizes DeepEval’s potential, offering tools for development, evaluation, and seamless production monitoring.
+In this tutorial series, we’ll guide you through using **DeepEval** and **Confident AI** to evaluate an agentic RAG application, from start to finish. DeepEval provides the foundation for evaluation, while Confident AI enhances its capabilities with tools for development, evaluation, and production monitoring.
 
 ## Installing DeepEval
 
@@ -16,13 +16,13 @@ pip install deepeval
 
 ## Getting Your Confident AI API Key
 
-Next, set up an account on **Confident AI**. You can [sign up here](https://www.confident-ai.com) or use the following command after installing DeepEval:
+Next, set up an account on **Confident AI**. You can [sign up here](https://www.confident-ai.com) or use the following CLI command if you already have DeepEval installed:
 
 ```bash
 deepeval login
 ```
 
-Once logged in, go to your account’s settings page and copy your **Confident AI API key**. If you used the `deepeval login` command, it will guide you to the website for easy access. Simply paste your API key when prompted.
+Navigate to your Settings page and copy your **Confident AI API Key** from the Project API Key box. If you used the `deepeval login` command to log in, you'll be prompted to paste your Confident AI API Key after creating an account.
 
 <div
   style={{
@@ -33,7 +33,6 @@ Once logged in, go to your account’s settings page and copy your **Confident A
 >
   <img
     src="https://confident-bucket.s3.amazonaws.com/tutorial_setup_01.svg"
-    alt="Confident AI Setup"
     style={{
       marginTop: "20px",
       marginBottom: "20px",
@@ -43,7 +42,7 @@ Once logged in, go to your account’s settings page and copy your **Confident A
   />
 </div>
 
-Alternatively, you can log in using Python directly:
+Alternatively, if you already have an account, you can log in directly using Python:
 
 ```python
 deepeval.login_with_confident_api_key("your-confident-api-key")
@@ -55,4 +54,4 @@ Or through the CLI:
 deepeval login --confident-api-key "your-confident-api-key"
 ```
 
-You’re all set up! With DeepEval and Confident AI configured, let’s dive into the next steps of evaluating your RAG application.
+With this, you’re all set up! With DeepEval and Confident AI configured, let’s begin building and evaluating our Agentic RAG application.

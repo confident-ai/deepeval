@@ -229,9 +229,9 @@ module.exports = {
       type: "category",
       label: "Preparing Your Evaluation Dataset",
       items: [
-        "tutorial-placeholder",
-        // "tutorial-dataset-synthesis", 
-        // "tutorial-dataset-confident"
+        // "tutorial-placeholder",
+        "tutorial-dataset-synthesis", 
+        "tutorial-dataset-confident"
         // "tutorial-dataset-prepared"
       ],
       collapsed: false,
