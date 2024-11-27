@@ -16,7 +16,8 @@ In this section, we’ll be selecting the **LLM evaluation metrics** for our med
 1. **Directly addressing the user:** The chatbot should directly address users' requests
 2. **Providing accurate diagnoses:** Diagnoses must be reliable and based on the provided symptoms 
 3. **Providing professional responses:** Responses should be clear and respectful
-### 1. Answer Relevancy
+
+### Answer Relevancy
 
 Let's start with our first metric, which will evaluate our medical chatbot against our first criterion:
 ```
@@ -30,7 +31,7 @@ Fortunately, DeepEval provides an out-of-the-box `AnswerRelevancy` metric, which
 The `AnswerRelevancyMetric` uses an LLM to extract all statements from the `actual_output` and then classifies each statement's relevance to the `input` using the same LLM.
 :::
 
-### 2. Faithfulness
+### Faithfulness
 
 Our next metric addresses the inaccuracies in patient diagnoses. The chatbot's failure to deliver accurate diagnoses in some example interactions suggests that our **RAG tool needs improvement**.
 
@@ -47,7 +48,7 @@ DeepEval offers a total of **5 RAG metrics** to evaluate your RAG pipeline. To l
 :::
 
 
-### 3. Custom Metric - Professionalism
+### Custom Metric - Professionalism
 
 Our final metric will address Criterion 3, focusing on evaluating our chatbot's **professionalism**.
 
