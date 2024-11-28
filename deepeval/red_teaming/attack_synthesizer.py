@@ -499,7 +499,7 @@ class AttackSynthesizer:
                 base_attack.input = enhanced_attack
         except:
             base_attack.error = "Error enhancing attack"
-            return
+            return base_attack
 
         return base_attack
 
