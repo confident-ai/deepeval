@@ -12,7 +12,7 @@ In this section, we will be developing an **Agentic RAG** medical chatbot to rec
 You may use whatever **knowledge base** you have to power your RAG Engine, but for the purposes of this tutorial, we'll be using [The Gale Encyclopedia of Alternative Medicine](https://staibabussalamsula.ac.id/wp-content/uploads/2024/06/The-Gale-Encyclopedia-of-Medicine-3rd-Edition-staibabussalamsula.ac_.id_.pdf).
 :::
 
-## 1. Setting Up
+## Setting Up
 
 Begin by installing the necessary packages. We'll use `llama-index` as our RAG framework and `chromadb` for vector indexing.
 
@@ -33,7 +33,7 @@ class MedicalAppointment(BaseModel):
     symptoms: Optional[str] = None
     diagnosis: Optional[str] = None
 ```
-## 2. Defining the Chatbot
+## Defining the Chatbot
 
 Next, we'll create a `MedicalAppointmentSystem` class to represent our agent. This class will store all `MedicalAppointment` instances in an `appointments` dictionary, with each key representing a unique user.
 
@@ -44,7 +44,7 @@ class MedicalAppointmentSystem:
 ```
 As we progress through this tutorial, we'll gradually enhance this class until it evolves into a fully functional medical chatbot agent.
 
-## 3. Indexing the Knowledge Base
+## Indexing the Knowledge Base
 
 Let's start by building our **RAG engine**, which will handle all patient diagnoses. The first step is to load the relevant medical information chunks from our knowledge base into the system. We'll use the `SimpleDirectoryReader` from `llama-index` to accomplish this.
 
@@ -89,7 +89,7 @@ class MedicalAppointmentSystem:
         self.index = VectorStoreIndex.from_documents(self.documents, storage_context=storage_context)
 ```
 
-## 4. Building the Tools
+## Building the Tools
 
 Finally, we'll create the tools for our chatbot, which includes our **RAG engine** and **function-calling tools** responsible for creating, updating, and managing medical appointments, ensuring the system is both dynamic and interactive.
 
@@ -181,7 +181,7 @@ def record_diagnosis(self, appointment_id: str, diagnosis: str) -> str:
     return "Diagnosis cannot be recorded. Please tell me more about your symptoms."
 ```
 
-## 5. Assembling the Chatbot
+## Assembling the Chatbot
 
 Now that we have set up the tools and data systems, it's time to assemble the chatbot agent. We'll use LlamaIndex's `FunctionCallingAgent` to dynamically manage user interactions and choose the appropriate tool based on the input and context. This involves defining the LLM, system prompt, and tool integrations.
 
@@ -221,7 +221,7 @@ class MedicalAppointmentSystem:
         )
 ```
 
-## 6. Setting up the Interactive Session
+## Setting up the Interactive Session
 
 Finally, we'll create an interactive environment where users can engage with the chatbot. This involves configuring input/output, managing conversation flow, and processing user queries.
 

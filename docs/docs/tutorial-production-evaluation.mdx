@@ -5,15 +5,10 @@ sidebar_label: Evaluating LLMs in Production
 ---
 ## Quick Summary
 
-In the previous section, we set up our medical chatbot for production monitoring and learned how to leverage Confident AI to view and filter responses and traces. Now, it's time to evaluate them. When it comes to **evaluating LLMs in production**, there are three key aspects to focus on:
+In the previous section, we set up our medical chatbot for production monitoring and learned how to leverage Confident AI to view and filter responses and traces. Now, it's time to evaluate them. When it comes to **evaluating LLMs in production**, there are 2 key aspects to focus on:
 
 - [Online Evaluations](confident-ai-llm-monitoring-evaluations)
 - [Human-in-the-Loop feedback](confident-ai-human-feedback)
-- [Guardrails](confident-ai-guardrails)
-
-:::info
-Unless you're planning to leverage user-feedback and set up guardrails, you've already set up **everything you need in code** for evaluations in production!
-:::
 
 Before we begin, first make sure you are logged in to Confident AI:
 
@@ -31,16 +26,9 @@ It's important to note that metrics in production are **reference-less metrics**
 ### Human-in-the-Loop Feedback
 Human feedback goes beyond domain experts or dedicated reviewers—it also includes direct input from your users. This kind of feedback is essential for refining your model's performance. We’ll discuss how to collect and leverage user feedback in greater detail in the following sections.
 
-### Guardrails
-Finally, guardrails are a quick and effective way to safeguard your LLM’s responses from producing harmful or inappropriate outputs. While they may not be as accurate as online evaluations (due to the trade-off between speed and precision), they play a critical role in preventing devastating responses that could damage your company’s reputation.
-
-:::info
-While online evaluation metrics are **lagging**—occurring after an LLM generates a response—guardrails are **leading**, as they evaluate the response before it is sent to the user.
-:::
-
 ## Setting up Online Evaluations
 
-### 1. OpenAI API key
+### OpenAI API key
 
 It's extremely simple to set up online evaluations on Confident AI. Simply navigate to the settings page and input your `OPENAI_API_KEY`. This allows Confident AI to generate evaluation scores using OpenAI models.
 
@@ -69,7 +57,7 @@ While Confident AI uses OpenAI models by default, the platform fully supports **
   />
 </div>
 
-### 2. Turn on your Metrics
+### Turn on your Metrics
 
 Next, navigate to the **Online Evaluations** page and scroll down to view the list of available referenceless metrics. Here, you can toggle metrics on or off, adjust thresholds for each metric, and optionally enable strict mode.
 
@@ -103,7 +91,7 @@ Once the metrics are enabled, all incoming responses will be evaluated automatic
 
 ## Human-in-the-Loop Evaluation
 
-### 1. Metric-based Filtering
+### Metric-based Filtering
 
 Notice that in the previous step, we toggled the following metrics: Answer Relevancy, Faithfulness, Bias, and Contextual Relevancy. Let's say we're trying to evaluate how our retriever (RAG engine tool) is performing in production. We'll need to look at all the responses that didn't pass the 0.5 threshold for **Contextual Relevancy**.
 
@@ -155,7 +143,7 @@ We'll examine this specific response, where our medical chatbot retrieved some i
   />
 </div>
 
-### 2. Inspecting Metric Scores
+### Inspecting Metric Scores
 
 Navigate to the **Metrics** tab in the side panel to view the metric scores in detail. As with any metric in DeepEval, online evaluation metrics are supported by reasoning and detailed logs, enabling anyone reviewing these responses to easily understand why a specific metric is failing and trace the steps through the score calculations.
 
@@ -207,7 +195,7 @@ Whether this contextual relevancy failure indicates a need to reduce `chunk_size
   />
 </div>
 
-### 3. Leaving Human Feedback
+### Leaving Human Feedback
 
 For each response, you'll find an option to leave feedback above the various sub-tabs. For this particular response, let's assign **a rating of 2 stars**, citing the lack of comprehensive context leading to an unclear diagnosis. However, the answer remains relevant, unbiased, and faithful.
 
@@ -259,7 +247,7 @@ You can also leave feedback on entire conversations instead of individual respon
   />
 </div>
 
-### 4. Inspecting Human Feedback
+### Inspecting Human Feedback
 
 All feedback, whether individual or conversational, can be accessed on the **Human Feedback** page. Here, you can filter feedback based on various criteria such as provider, rating, expected response, and more. To add responses to a dataset, simply check the relevant feedback, go to actions, and click add response to dataset.
 
@@ -316,7 +304,7 @@ It may be helpful to **categorize different types of failing feedback** into sep
 </div>
 
 
-### 5. User Provided Feedback
+### User Provided Feedback
 
 In addition to leaving feedback from the developer's side, you can also set up your LLM to receive user feedback with just one line of code. Here's how to set it up:
 
@@ -373,12 +361,4 @@ class MedicalAppointmentSystem():
 
 :::info
 **Balancing user satisfaction with the level of detail in feedback** is essential. For instance, while we provide a rating scale from 1 to 5, we simplify it into a binary option: whether the user was satisfied or not.
-:::
-
-## Guardrails
-
-Guardrails provide a way to safeguard your LLM against generating harmful or undesirable responses. They work by applying fast evaluation metrics to monitor and prevent the generation of unsafe or inappropriate outputs, especially in response to harmful inputs.
-
-:::info
-**Guardrails** is an enterprise feature. For more information, please contact support@confident-ai.com.
 :::

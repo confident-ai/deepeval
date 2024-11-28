@@ -44,7 +44,7 @@ styling_config = StylingConfig(
 In addition to styling, DeepEval lets you **customize** other parts of the generation process, from context construction to data evolutions.
 :::
 
-### 3. Goldens generation
+### Goldens generation
 
 With our configurations defined, let’s finally begin **generating synthetic goldens**. You can generate as many `goldens_per_context` as you’d like. For this tutorial, we’ll set this parameter to 2, as coverage across different contexts is more important.
 
@@ -85,7 +85,7 @@ You can see that even though the input for this synthetic golden is simple, it r
 You can increase the complexity of the generated goldens by configuring the **evolution settings** when initializing the `Synthesizer` object.  
 :::
 
-### 3. Additional Styling Configurations
+### Additional Styling Configurations
 
 It's also important to be exploring additional styling configurations when generating your datasets. Using multiple styling configurations allows you to generate a truly **diverse dataset** that is not only comprehensvie but also captures edge cases.
 
@@ -143,7 +143,7 @@ dataest.push(alias="Ambiguous Synthetic Test")
 
 Generating synthetic data from documents requires a knowledge base, meaning the generated goldens are designed to test user queries that prompt the LLM to use the RAG engine. However, since our medical chatbot operates as an Agentic RAG, there are cases where the LLM **does not invoke the RAG tool**, necessitating the generation of data from scratch without any context.
 
-### 1. Defining Style Configuration
+### Defining Style Configuration
 
 Similar to generating from documents, you'll want to **customize the output style and format** of any `input` and/or `expected_output` when generating synthetic goldens from scratch. When generating from scratch, your creativity is your limit. You can test your LLM for any interaction you can foresee. In the example below, we'll define user inputs to try to book an appointment by providing name information and email.
 
@@ -169,7 +169,7 @@ styling_config = StylingConfig(
 )
 ```
 
-### 2. Generating the Goldens
+### Generating the Goldens
 
 The next step is to simply initialize your synthesizer with the styling configurations and push the dataset to Confident AI for review.
 
