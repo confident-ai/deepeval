@@ -4,7 +4,7 @@ title: Guardrails for LLMs in Production
 sidebar_label: Introduction
 ---
 
-Confident AI allows you to **easily place guards on your LLM applications** to prevent them from generating unsafe responses with just a single line of code. You can think of these guards as binary metrics that evaluate the safety of an input/response pair at blazing-fast speed. Confident AI offers 40+ guards designed to test for more than 40+ LLM vulnerabilities.
+Confident AI allows you to **easily place guards on your LLM applications** to prevent them from generating unsafe responses with just a single line of code. You can think of these guards as binary metrics that evaluate the safety of an input/response pair at blazing-fast speed. Confident AI offers 20+ guards designed to test for more than 20+ LLM vulnerabilities.
 
 :::tip
 Before diving into this content, it might be helpful to read the following:
@@ -24,7 +24,7 @@ import deepeval
 from deepeval.guardrails import Guardrails, Guard
 
 guardrails = Guardrails(
-    guards=[Guard.HALLUCINATION, Guard.BIAS],
+    guards=[Guard.CONTRACTS, Guard.SQL_INJECTION],
     purpose="Environmental education"
 )
 ```
@@ -89,39 +89,14 @@ The categorization helps in **configuring** the `guard()` function according to 
 
 ### Guards Requiring Only Input and Output
 
-Most guards are designed to function effectively with just the input from the user and the output from the system. These include:
+Some guards are designed to function effectively with just the input from the user and the output from the system. These include:
 
-- `Guard.PRIVACY`
-- `Guard.INTELLECTUAL_PROPERTY`
-- `Guard.MISINFORMATION_DISINFORMATION`
-- `Guard.SPECIALIZED_FINANCIAL_ADVICE`
-- `Guard.OFFENSIVE`
-- `Guard.DATA_LEAKAGE`
 - `Guard.CONTRACTS`
 - `Guard.EXCESSIVE_AGENCY`
 - `Guard.POLITICS`
 - `Guard.DEBUG_ACCESS`
 - `Guard.SHELL_INJECTION`
 - `Guard.SQL_INJECTION`
-- `Guard.VIOLENT_CRIME`
-- `Guard.NON_VIOLENT_CRIME`
-- `Guard.SEX_CRIME`
-- `Guard.CHILD_EXPLOITATION`
-- `Guard.INDISCRIMINATE_WEAPONS`
-- `Guard.HATE`
-- `Guard.SELF_HARM`
-- `Guard.SEXUAL_CONTENT`
-- `Guard.CYBERCRIME`
-- `Guard.CHEMICAL_BIOLOGICAL_WEAPONS`
-- `Guard.ILLEGAL_DRUGS`
-- `Guard.COPYRIGHT_VIOLATIONS`
-- `Guard.HARASSMENT_BULLYING`
-- `Guard.ILLEGAL_ACTIVITIES`
-- `Guard.GRAPHIC_CONTENT`
-- `Guard.UNSAFE_PRACTICES`
-- `Guard.RADICALIZATION`
-- `Guard.PROFANITY`
-- `Guard.INSULTS`
 
 ### Guards Requiring a Purpose
 
