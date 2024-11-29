@@ -8,19 +8,21 @@ from deepeval.test_case import LLMTestCaseParams
 class DummyMetric(GEval):
     def __init__(self, **kwargs):
         self.argument = kwargs.pop('argument', None)
+        kwargs['evaluation_params'] = [
+                LLMTestCaseParams.ACTUAL_OUTPUT,
+                LLMTestCaseParams.EXPECTED_OUTPUT,
+                LLMTestCaseParams.INPUT,
+                ]
+        kwargs['criteria'] = 'All answers are good'
+        if 'name' not in kwargs.keys():
+            kwargs['name'] = 'default_config_name'
         super().__init__(**kwargs)
 
 def test_copy_metrics():
     # Different than the default, 'gpt-4o'
     metric_before = DummyMetric(
             model = 'gpt-4o-mini',
-            name = 'Dummy Metric',
-            evaluation_params = [
-                LLMTestCaseParams.ACTUAL_OUTPUT,
-                LLMTestCaseParams.EXPECTED_OUTPUT,
-                LLMTestCaseParams.INPUT,
-                ],
-            criteria = 'All answers are good',
+            argument = 'argument',
             )
     metric_after = copy_metrics([metric_before])
     vars_before = vars(metric_before)
