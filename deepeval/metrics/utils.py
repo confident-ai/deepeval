@@ -36,8 +36,15 @@ def copy_metrics(
         metric_class = type(metric)
         args = vars(metric)
 
-        signature = inspect.signature(metric_class.__init__)
-        valid_params = signature.parameters.keys()
+        superclasses = metric_class.__mro__
+
+        valid_params = []
+
+        for superclass in superclasses:
+            signature = inspect.signature(superclass.__init__)
+            superclass_params = signature.parameters.keys()
+            valid_params.extend(superclass_params)
+        valid_params = set(valid_params)
         valid_args = {key: args[key] for key in valid_params if key in args}
 
         copied_metrics.append(metric_class(**valid_args))
