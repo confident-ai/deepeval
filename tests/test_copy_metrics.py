@@ -1,4 +1,3 @@
-
 import pytest
 
 from deepeval.metrics import GEval
@@ -6,23 +5,25 @@ from deepeval.metrics.utils import copy_metrics
 from deepeval.test_case import LLMTestCaseParams
 from deepeval.models.gpt_model import GPTModel
 
+
 class DummyMetric(GEval):
     def __init__(self, **kwargs):
-        kwargs['evaluation_params'] = [
-                LLMTestCaseParams.ACTUAL_OUTPUT,
-                LLMTestCaseParams.EXPECTED_OUTPUT,
-                LLMTestCaseParams.INPUT,
-                ]
-        kwargs['criteria'] = 'All answers are good'
-        if 'name' not in kwargs.keys():
-            kwargs['name'] = 'default_config_name'
+        kwargs["evaluation_params"] = [
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+            LLMTestCaseParams.EXPECTED_OUTPUT,
+            LLMTestCaseParams.INPUT,
+        ]
+        kwargs["criteria"] = "All answers are good"
+        if "name" not in kwargs.keys():
+            kwargs["name"] = "default_config_name"
         super().__init__(**kwargs)
+
 
 def test_copy_metrics():
     # Different than the default, 'gpt-4o'
     metric_before = DummyMetric(
-            model = 'gpt-4o-mini',
-            )
+        model="gpt-4o-mini",
+    )
     metric_after = copy_metrics([metric_before])
     vars_before = vars(metric_before)
     vars_after = vars(metric_after[0])
