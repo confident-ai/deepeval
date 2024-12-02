@@ -8,7 +8,7 @@ setup(
     url="https://github.com/confident-ai/deepeval",
     author="Confident AI",
     author_email="jeffreyip@confident-ai.com",
-    description="The open-source evaluation framework for LLMs.",
+    description="The open-source LLMs evaluation framework.",
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.9, <3.13",
