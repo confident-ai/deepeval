@@ -8,12 +8,12 @@ from pydantic import BaseModel
 from typing import List, Optional, Union, Dict
 
 from deepeval.red_teaming.types import (
+    Attack,
     AttackEnhancement,
     Vulnerability,
-    UnalignedVulnerability,
-    RemoteVulnerability,
-    remote_vulnerability_to_api_code_map,
-    unaligned_vulnerability_to_api_code_map,
+    ApiGenerateBaselineAttack,
+    GenerateBaselineAttackResponseData,
+    remote_vulnerabilties,
 )
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
 from deepeval.red_teaming.template import RedTeamSynthesizerTemplate
@@ -34,15 +34,9 @@ from deepeval.red_teaming.attack_enhancements import (
     Multilingual,
     JailbreakingCrescendo,
 )
+from deepeval.confident.api import Api, HttpMethods, Endpoints
 
-
-class Attack(BaseModel):
-    vulnerability: Vulnerability
-    # When there is an error, base input can fail to generate
-    # and subsequently enhancements are redundant
-    input: Optional[str] = None
-    attack_enhancement: Optional[str] = None
-    error: Optional[str] = None
+BASE_URL = "https//localhost:8000/"
 
 
 class AttackSynthesizer:
@@ -61,12 +55,7 @@ class AttackSynthesizer:
 
         # Define list of attacks and unaligned vulnerabilities
         self.synthetic_attacks: List[Attack] = []
-        self.unaligned_vulnerabilities: List[str] = [
-            item.value for item in UnalignedVulnerability
-        ]
-        self.remote_vulnerabilities = [
-            item.value for item in RemoteVulnerability
-        ]
+        self.remote_vulnerabilities = remote_vulnerabilties
 
     ##################################################
     ### Generating Attacks ###########################
@@ -208,44 +197,13 @@ class AttackSynthesizer:
     ) -> List[Attack]:
         base_attacks: List[Attack] = []
 
-        # Unaligned vulnerabilities
-        if vulnerability.value in self.unaligned_vulnerabilities:
-            for _ in range(attacks_per_vulnerability):
-                try:
-                    vulnerability_code = (
-                        unaligned_vulnerability_to_api_code_map[vulnerability]
-                    )
-                    base_attack = Attack(
-                        input=self.generate_unaligned_attack(
-                            self.purpose, vulnerability_code
-                        ),
-                        vulnerability=vulnerability,
-                    )
-                except:
-                    base_attack = Attack(
-                        vulnerability=vulnerability,
-                        error="Unexpected error generating unaligned attack",
-                    )
-                base_attacks.append(base_attack)
-
         # Remote vulnerabilities
-        elif vulnerability.value in self.remote_vulnerabilities:
+        if vulnerability.value in self.remote_vulnerabilities:
             try:
-                vulnerability_code = remote_vulnerability_to_api_code_map[
-                    vulnerability
-                ]
                 remote_attacks = self.generate_remote_attack(
-                    vulnerability_code, attacks_per_vulnerability
+                    self.purpose, vulnerability, attacks_per_vulnerability
                 )
-                base_attacks.extend(
-                    [
-                        Attack(
-                            input=attack,
-                            vulnerability=vulnerability,
-                        )
-                        for attack in remote_attacks
-                    ]
-                )
+                base_attacks.extend(remote_attacks)
             except:
                 for _ in range(attacks_per_vulnerability):
                     base_attacks.append(
@@ -314,47 +272,13 @@ class AttackSynthesizer:
     ) -> List[Attack]:
         base_attacks: List[Attack] = []
 
-        # Unaligned vulnerabilities
-        # TODO: make this into an asyncio gather
-        if vulnerability.value in self.unaligned_vulnerabilities:
-            for _ in range(attacks_per_vulnerability):
-                try:
-                    vulnerability_code = (
-                        unaligned_vulnerability_to_api_code_map[vulnerability]
-                    )
-                    unaligned_attack_input = (
-                        await self.a_generate_unaligned_attack(
-                            self.purpose, vulnerability_code
-                        )
-                    )
-                    base_attack = Attack(
-                        input=unaligned_attack_input,
-                        vulnerability=vulnerability,
-                    )
-                except:
-                    base_attack = Attack(
-                        vulnerability=vulnerability,
-                        error="Unexpected error generating unaligned attack",
-                    )
-
-                base_attacks.append(base_attack)
-
         # Remote vulnerabilities
-        elif vulnerability.value in self.remote_vulnerabilities:
+        if vulnerability.value in self.remote_vulnerabilities:
             try:
-                vulnerability_code = remote_vulnerability_to_api_code_map[
-                    vulnerability
-                ]
-                remote_attacks = await self.a_generate_remote_attack(
-                    vulnerability_code, attacks_per_vulnerability
+                remote_attacks = self.generate_remote_attack(
+                    self.purpose, vulnerability, attacks_per_vulnerability
                 )
-                base_attacks.extend(
-                    Attack(
-                        input=attack,
-                        vulnerability=vulnerability,
-                    )
-                    for attack in remote_attacks
-                )
+                base_attacks.extend(remote_attacks)
             except:
                 for _ in range(attacks_per_vulnerability):
                     base_attacks.append(
@@ -601,102 +525,23 @@ class AttackSynthesizer:
             prompt, schema, self.using_native_model, self.synthesizer_model
         )
 
-    def generate_unaligned_attack(
+    def generate_remote_attack(
         self,
         purpose: str,
         vulernability: Vulnerability,
-    ) -> str:
-        body = {
-            "purpose": purpose,
-            "harmCategory": vulernability,
-        }
-        try:
-            response = requests.post(
-                url="https://api.promptfoo.dev/redteam/generateHarmful",
-                headers={"Content-Type": "application/json"},
-                json=body,
-            )
-            if not response.ok:
-                raise Exception(
-                    f"Promptfoo API call failed with status {response.status_code}"
-                )
-            data = response.json()
-            return data.get("output")
-        except Exception as err:
-            raise Exception(f"Error in generating attack: {str(err)}")
-
-    async def a_generate_unaligned_attack(
-        self, purpose: str, vulnerability: Vulnerability
-    ) -> str:
-        body = {"purpose": purpose, "harmCategory": vulnerability}
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(
-                    url="https://api.promptfoo.dev/redteam/generateHarmful",
-                    headers={"Content-Type": "application/json"},
-                    json=body,
-                ) as response:
-                    if response.status != 200:
-                        raise Exception(
-                            f"API call failed with status {response.status}"
-                        )
-                    data = await response.json()
-                    return data.get("output")
-            except Exception as err:
-                raise Exception(f"Error in generating attack: {str(err)}")
-
-    def generate_remote_attack(self, task: str, n: int):
-        body = json.dumps(
-            {
-                "task": task,
-                "purpose": self.purpose,
-                "injectVar": "attack",
-                "n": n,
-                "config": {},
-            }
+        num_attacks: int
+    ) -> List[Attack]:
+        # Prepare parameters for API request
+        guard_params = ApiGenerateBaselineAttack(
+            purpose=purpose,
+            vulnerability=vulernability.value,
+            num_attacks=num_attacks,
         )
-
-        try:
-            response = requests.post(
-                url="https://api.promptfoo.dev/v1/generate",
-                headers={"Content-Type": "application/json"},
-                data=body,
-            )
-            if not response.ok:
-                raise Exception(
-                    f"Promptfoo API call failed with status {response.status_code}"
-                )
-            data = response.json()
-            results = data.get("result", [])
-            attacks = [result["vars"]["attack"] for result in results]
-            return attacks
-        except Exception as err:
-            raise Exception(f"Error in generating attack: {str(err)}")
-
-    async def a_generate_remote_attack(self, task: str, n: int):
-        body = json.dumps(
-            {
-                "task": task,
-                "purpose": self.purpose,
-                "injectVar": "attack",
-                "n": n,
-                "config": {},
-            }
+        body = guard_params.model_dump(by_alias=True, exclude_none=True)
+        api = Api(base_url=BASE_URL)
+        response = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.BASELINE_ATTACKS_ENDPOINT,
+            body=body,
         )
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(
-                    url="https://api.promptfoo.dev/v1/generate",
-                    headers={"Content-Type": "application/json"},
-                    data=body,
-                ) as response:
-                    if response.status != 200:
-                        raise Exception(
-                            f"Promptfoo API call failed with status {response.status}"
-                        )
-                    data = await response.json()
-                    results = data.get("result", [])
-                    attacks = [result["vars"]["attack"] for result in results]
-                    return attacks
-            except Exception as err:
-                raise Exception(f"Error in generating attack: {str(err)}")
+        return GenerateBaselineAttackResponseData(**response).baseline_attacks

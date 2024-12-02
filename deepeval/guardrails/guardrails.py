@@ -12,9 +12,7 @@ from deepeval.guardrails.types import (
 from deepeval.guardrails.api import GuardResult
 from deepeval.utils import is_confident
 
-
 BASE_URL = "https://deepeval.confident-ai.com/"
-
 
 class Guardrails:
     guards: Optional[List[Guard]] = None

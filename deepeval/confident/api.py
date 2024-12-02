@@ -24,7 +24,7 @@ class Endpoints(Enum):
     PROMPT_ENDPOINT = "/v1/prompt"
     EVALUATE_ENDPOINT = "/evaluate"
     GUARD_ENDPOINT = "/guard"
-
+    BASELINE_ATTACKS_ENDPOINT = "/generate-baseline-attacks"
 
 class Api:
     def __init__(self, api_key: Optional[str] = None, base_url=None):

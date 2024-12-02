@@ -1,6 +1,6 @@
+from typing import Dict, Optional, List
+from pydantic import BaseModel
 from enum import Enum
-from typing import Dict
-
 
 class AttackEnhancement(Enum):
     GRAY_BOX_ATTACK = "Gray Box Attack"
@@ -14,38 +14,6 @@ class AttackEnhancement(Enum):
     LEETSPEAK = "Leetspeak Encoding"
     MATH_PROBLEM = "Math Problem"
     MULTILINGUAL = "Multilingual"
-
-
-class UnalignedVulnerability(Enum):
-    VIOLENT_CRIME = "Violent Crimes"
-    NON_VIOLENT_CRIME = "Non Violent Crimes"
-    SEX_CRIME = "Sex Crimes"
-    CHILD_EXPLOITATION = "Child Exploitation"
-    INDISCRIMINATE_WEAPONS = "Indiscriminate Weapons"
-    HATE = "Hate"
-    SELF_HARM = "Self Harm"
-    SEXUAL_CONTENT = "Sexual Content"
-    CYBERCRIME = "Cybercrime"
-    CHEMICAL_BIOLOGICAL_WEAPONS = "Chemical & Biological Weapons"
-    ILLEGAL_DRUGS = "Illegal Drugs"
-    COPYRIGHT_VIOLATIONS = "Copyright Violations"
-    HARASSMENT_BULLYING = "Harassment & Bullying"
-    ILLEGAL_ACTIVITIES = "Illegal Activities"
-    GRAPHIC_CONTENT = "Graphic Content"
-    UNSAFE_PRACTICES = "Unsafe Practices"
-    RADICALIZATION = "Radicalization"
-    PROFANITY = "Profanity"
-    INSULTS = "Insults"
-
-
-class RemoteVulnerability(Enum):
-    SSRF = "Server Side Request Forgery"
-    BOLA = "Broken Object Level Authorization"
-    BFLA = "Broken Function Level Authorization"
-    COMPETITORS = "Competitors"
-    HIJACKING = "Hijacking"
-    RELIGION = "Religion"
-
 
 class Vulnerability(Enum):
     PRIVACY = "Privacy"
@@ -71,35 +39,68 @@ class Vulnerability(Enum):
     SQL_INJECTION = "SQL Injection"
     PROMPT_EXTRACTION = "Prompt Extraction"
 
-    RELIGION = RemoteVulnerability.RELIGION.value
-    HIJACKING = RemoteVulnerability.HIJACKING.value
-    COMPETITORS = RemoteVulnerability.COMPETITORS.value
-    SSRF = RemoteVulnerability.SSRF.value
-    BFLA = RemoteVulnerability.BFLA.value
-    BOLA = RemoteVulnerability.BOLA.value
+    SSRF = "Server Side Request Forgery"
+    BOLA = "Broken Object Level Authorization"
+    BFLA = "Broken Function Level Authorization"
+    COMPETITORS = "Competitors"
+    HIJACKING = "Hijacking"
+    RELIGION = "Religion"
 
-    VIOLENT_CRIME = UnalignedVulnerability.VIOLENT_CRIME.value
-    NON_VIOLENT_CRIME = UnalignedVulnerability.NON_VIOLENT_CRIME.value
-    SEX_CRIME = UnalignedVulnerability.SEX_CRIME.value
-    CHILD_EXPLOITATION = UnalignedVulnerability.CHILD_EXPLOITATION.value
-    INDISCRIMINATE_WEAPONS = UnalignedVulnerability.INDISCRIMINATE_WEAPONS.value
-    HATE = UnalignedVulnerability.HATE.value
-    SELF_HARM = UnalignedVulnerability.SELF_HARM.value
-    SEXUAL_CONTENT = UnalignedVulnerability.SEXUAL_CONTENT.value
-    CYBERCRIME = UnalignedVulnerability.CYBERCRIME.value
-    ILLEGAL_DRUGS = UnalignedVulnerability.ILLEGAL_DRUGS.value
-    COPYRIGHT_VIOLATIONS = UnalignedVulnerability.COPYRIGHT_VIOLATIONS.value
-    HARASSMENT_BULLYING = UnalignedVulnerability.HARASSMENT_BULLYING.value
-    ILLEGAL_ACTIVITIES = UnalignedVulnerability.ILLEGAL_ACTIVITIES.value
-    GRAPHIC_CONTENT = UnalignedVulnerability.GRAPHIC_CONTENT.value
-    UNSAFE_PRACTICES = UnalignedVulnerability.UNSAFE_PRACTICES.value
-    RADICALIZATION = UnalignedVulnerability.RADICALIZATION.value
-    PROFANITY = UnalignedVulnerability.PROFANITY.value
-    INSULTS = UnalignedVulnerability.INSULTS.value
-    CHEMICAL_BIOLOGICAL_WEAPONS = (
-        UnalignedVulnerability.CHEMICAL_BIOLOGICAL_WEAPONS.value
-    )
+    VIOLENT_CRIME = "Violent Crimes"
+    NON_VIOLENT_CRIME = "Non Violent Crimes"
+    SEX_CRIME = "Sex Crimes"
+    CHILD_EXPLOITATION = "Child Exploitation"
+    SELF_HARM = "Self Harm"
+    SEXUAL_CONTENT = "Sexual Content"
+    CYBERCRIME = "Cybercrime"
+    WEAPONS = "Weapons"
+    ILLEGAL_DRUGS = "Illegal Drugs"
+    COPYRIGHT_VIOLATIONS = "Copyright Violations"
+    HARASSMENT_BULLYING = "Harassment & Bullying"
+    ILLEGAL_ACTIVITIES = "Illegal Activities"
+    GRAPHIC_CONTENT = "Graphic Content"
+    UNSAFE_PRACTICES = "Unsafe Practices"
+    PROFANITY = "Profanity"
+    INSULTS = "Insults"
 
+remote_vulnerabilties = [
+    Vulnerability.SSRF,
+    Vulnerability.BOLA,
+    Vulnerability.BFLA,
+    Vulnerability.COMPETITORS,
+    Vulnerability.HIJACKING,
+    Vulnerability.RELIGION,
+    Vulnerability.VIOLENT_CRIME,
+    Vulnerability.NON_VIOLENT_CRIME,
+    Vulnerability.SEX_CRIME,
+    Vulnerability.CHILD_EXPLOITATION,
+    Vulnerability.SELF_HARM,
+    Vulnerability.SEXUAL_CONTENT,
+    Vulnerability.CYBERCRIME,
+    Vulnerability.ILLEGAL_DRUGS,
+    Vulnerability.COPYRIGHT_VIOLATIONS,
+    Vulnerability.HARASSMENT_BULLYING,
+    Vulnerability.ILLEGAL_ACTIVITIES,
+    Vulnerability.GRAPHIC_CONTENT,
+    Vulnerability.PROFANITY,
+    Vulnerability.INSULTS,
+]
+
+class Attack(BaseModel):
+    vulnerability: Vulnerability
+    # When there is an error, base input can fail to generate
+    # and subsequently enhancements are redundant
+    input: Optional[str] = None
+    attack_enhancement: Optional[str] = None
+    error: Optional[str] = None
+
+class ApiGenerateBaselineAttack(BaseModel):
+    purpose: str
+    vulnerability: str
+    num_attacks: int
+
+class GenerateBaselineAttackResponseData(BaseModel):
+    baseline_attacks: List[Attack]
 
 class LLMRiskCategories(Enum):
     RESPONSIBLE_AI = "Responsible AI"
@@ -108,14 +109,11 @@ class LLMRiskCategories(Enum):
     DATA_PRIVACY = "Data Privacy"
     UNAUTHORIZED_ACCESS = "Unauthorized Access"
 
-
 llm_risk_categories_map: Dict[Vulnerability, LLMRiskCategories] = {
     # Responsible AI
     Vulnerability.BIAS: LLMRiskCategories.RESPONSIBLE_AI,
     Vulnerability.POLITICS: LLMRiskCategories.RESPONSIBLE_AI,
     Vulnerability.RELIGION: LLMRiskCategories.RESPONSIBLE_AI,
-    Vulnerability.HATE: LLMRiskCategories.RESPONSIBLE_AI,
-    Vulnerability.RADICALIZATION: LLMRiskCategories.RESPONSIBLE_AI,
     Vulnerability.OFFENSIVE: LLMRiskCategories.RESPONSIBLE_AI,
     Vulnerability.PROFANITY: LLMRiskCategories.RESPONSIBLE_AI,
     Vulnerability.INSULTS: LLMRiskCategories.RESPONSIBLE_AI,
@@ -132,8 +130,6 @@ llm_risk_categories_map: Dict[Vulnerability, LLMRiskCategories] = {
     Vulnerability.HARASSMENT_BULLYING: LLMRiskCategories.ILLEGAL,
     Vulnerability.SEXUAL_CONTENT: LLMRiskCategories.ILLEGAL,
     Vulnerability.GRAPHIC_CONTENT: LLMRiskCategories.ILLEGAL,
-    Vulnerability.CHEMICAL_BIOLOGICAL_WEAPONS: LLMRiskCategories.ILLEGAL,
-    Vulnerability.INDISCRIMINATE_WEAPONS: LLMRiskCategories.ILLEGAL,
     Vulnerability.COPYRIGHT_VIOLATIONS: LLMRiskCategories.ILLEGAL,
     Vulnerability.INTELLECTUAL_PROPERTY: LLMRiskCategories.ILLEGAL,
     # Brand Image
@@ -162,35 +158,4 @@ llm_risk_categories_map: Dict[Vulnerability, LLMRiskCategories] = {
     Vulnerability.BFLA: LLMRiskCategories.UNAUTHORIZED_ACCESS,
     Vulnerability.BOLA: LLMRiskCategories.UNAUTHORIZED_ACCESS,
     Vulnerability.PROMPT_EXTRACTION: LLMRiskCategories.UNAUTHORIZED_ACCESS,
-}
-
-remote_vulnerability_to_api_code_map = {
-    Vulnerability.SSRF: "ssrf",
-    Vulnerability.BOLA: "bola",
-    Vulnerability.BFLA: "bfla",
-    Vulnerability.COMPETITORS: "competitors",
-    Vulnerability.HIJACKING: "hijacking",
-    Vulnerability.RELIGION: "religion",
-}
-
-unaligned_vulnerability_to_api_code_map = {
-    Vulnerability.VIOLENT_CRIME: "harmful:violent-crime",
-    Vulnerability.NON_VIOLENT_CRIME: "harmful:non-violent-crime",
-    Vulnerability.SEX_CRIME: "harmful:sex-crime",
-    Vulnerability.CHILD_EXPLOITATION: "harmful:child-exploitation",
-    Vulnerability.INDISCRIMINATE_WEAPONS: "harmful:indiscriminate-weapons",
-    Vulnerability.HATE: "harmful:hate",
-    Vulnerability.SELF_HARM: "harmful:self-harm",
-    Vulnerability.SEXUAL_CONTENT: "harmful:sexual-content",
-    Vulnerability.CYBERCRIME: "harmful:cybercrime",
-    Vulnerability.CHEMICAL_BIOLOGICAL_WEAPONS: "harmful:chemical-biological-weapons",
-    Vulnerability.ILLEGAL_DRUGS: "harmful:illegal-drugs",
-    Vulnerability.COPYRIGHT_VIOLATIONS: "harmful:copyright-violations",
-    Vulnerability.HARASSMENT_BULLYING: "harmful:harassment-bullying",
-    Vulnerability.ILLEGAL_ACTIVITIES: "harmful:illegal-activities",
-    Vulnerability.GRAPHIC_CONTENT: "harmful:graphic-content",
-    Vulnerability.UNSAFE_PRACTICES: "harmful:unsafe-practices",
-    Vulnerability.RADICALIZATION: "harmful:radicalization",
-    Vulnerability.PROFANITY: "harmful:profanity",
-    Vulnerability.INSULTS: "harmful:insults",
 }
