@@ -34,7 +34,7 @@ for golden in dataset.goldens:
     # Compute actual output and retrieval context
     actual_output = "..."  # Replace with logic to compute actual output
     retrieval_context = "..."  # Replace with logic to compute retrieval context
-    
+
     dataset.add_test_case(
         LLMTestCase(
             input=golden.input,
@@ -42,33 +42,20 @@ for golden in dataset.goldens:
             retrieval_context=retrieval_context
         )
     )
-  ```
+```
 
-## Run Evaluations on your Dataset
+## Evaluating Your Dataset
 
 Finally, we'll redefine our three metrics and use the `evaluate` function to run evaluations on our synthetic dataset.
 
 ```python
-from deepeval.metrics import AnswerRelevancy, Faithfulness, GEval
 from deepeval import evaluate
 
-# Metrics Definition
-answer_relevancy_metric = AnswerRelevancy()
-faithfulness_metric = Faithfulness()
-professionalism_metric = GEval(
-    name="Professionalism",
-    criteria=criteria,
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
-)
-
+...
 evaluate(
-  dataset, 
+  dataset,
   metrics = [answer_relevancy_metric, faithfulness_metric, professionalism_metric],
-  hyperparameters={
-    "model": "gpt-4o"
-    "prompt template": "You are a..."
-    "temperature": 0.8
-  }
+  hyperparameters={"model": MODEL, "prompt template": SYSTEM_PROMPT, "temperature": TEMPERATRE}
 )
 ```
 
@@ -87,7 +74,7 @@ Here are the final evaluation results:
     style={{
       height: "auto",
       maxHeight: "800px",
-      marginBottom: "20px"
+      marginBottom: "20px",
     }}
   />
 </div>

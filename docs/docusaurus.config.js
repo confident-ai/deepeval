@@ -155,10 +155,10 @@ module.exports = async function createConfigAsync() {
                   label: 'Introduction',
                   to: '/docs/getting-started',
                 },
-                // {
-                //   label: 'Tutorial',
-                //   to: '/docs/tutorial-introduction',
-                // },
+                {
+                  label: 'Tutorial',
+                  to: '/docs/tutorial-introduction',
+                },
               ],
             },
             {

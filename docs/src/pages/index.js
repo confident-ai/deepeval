@@ -8,7 +8,7 @@ class HomeNav extends React.Component {
     render() {
         return <div className={styles.homeNav}>
             <div><Link to={"/docs/getting-started"}>Docs</Link></div>
-            {/* <div><Link to="/docs/tutorial-setup">Tutorial</Link></div> */}
+            <div><Link to="/docs/tutorial-introduction">Tutorial</Link></div>
             <div><a href="https://github.com/confident-ai/deepeval" target="_blank">Github</a></div>
             <div><a href="https://confident-ai.com/blog" target="_blank">Blog</a></div>
         </div>
@@ -91,14 +91,14 @@ class Index extends React.Component {
                 description="LLM evaluation metrics to unit test LLM outputs in Python"
             />
             <FeatureCard 
-                title="Hyperparameter Discovery"
+                title="Prompt and Model Discovery"
                 link="/docs/getting-started#visualize-your-results" 
-                description="Gain insights to quickly iterate towards optimal hyperparameters"
+                description="Gain insights to quickly iterate towards optimal prompts and model"
             />
             <FeatureCard 
-                title="Integrate with Popular Frameworks" 
-                link="/docs/integrations-introduction" 
-                description="Evaluate existing LLM applications built with other frameworks"
+                title="LLM Red Teaming" 
+                link="/docs/red-teaming-introduction" 
+                description="Security and safety test LLM applications for vulnerabilities"
             />
           </div>
         </div>

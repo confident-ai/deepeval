@@ -26,8 +26,8 @@ Your test cases will typically be in a single python file, and executing them wi
 deepeval test run test_example.py
 ```
 
-:::note
-We understand preparing a comprehensive evaluation dataset can be a challenging task, especially if you're doing it for the first time. **[Contact us](https://calendly.com/jeffreyip-cno/sales-call)** if you want a custom evaluation dataset prepared for you.
+:::tip
+[Click here](tutorial-introduction) for an end-to-end **tutorial on how to evaluate an LLM medical chatbot** using `deepeval`.
 :::
 
 ## Metrics
@@ -95,6 +95,24 @@ dataset.evaluate([answer_relevancy_metric])
 
 :::note
 You don't need to create an evaluation dataset to evaluate individual test cases. Visit the [test cases section](evaluation-test-cases#assert-a-test-case) to learn how to assert inidividual test cases.
+:::
+
+## Synthesizer
+
+In `deepeval`, the `Synthesizer` allows you to generate synthetic datasets. This is especially helpful if you don't have production data or you don't have a golden dataset to evaluate with.
+
+```python
+from deepeval.synthesizer import Synthesizer
+from deepeval.dataset import EvaluationDataset
+
+synthesizer = Synthesizer()
+goldens = synthesizer.generate_goldens_from_docs(document_paths=['example.txt', 'example.docx', 'example.pdf'])
+
+dataset = EvaluationDataset(goldens=goldens)
+```
+
+:::info
+`deepeval`'s `Synthesizer` is highly customizable, and you can learn more about it [here.](synthesizer-introduction)
 :::
 
 ## Evaluating With Pytest

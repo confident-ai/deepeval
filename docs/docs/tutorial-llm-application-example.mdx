@@ -1,15 +1,33 @@
 ---
 id: tutorial-llm-application-example
-title: Building an LLM Application
-sidebar_label: Building an LLM Application
+title: Building Your LLM Application
+sidebar_label: Building Your LLM Application
 ---
+
+:::caution
+
+This page is merely an example of a hypothetical LLM chatbot application you might be evaluating. You should definitely replace this example with your own LLM application. For those that want to skip this section, these are the hyperparameters we'll be iterating our LLM application on for this tutorial:
+
+```python
+MODEL = "gpt-3.5"
+TEMPERATURE = 1.0
+SYSTEM_PROMPT = """You are an expert in medical diagnosis and are now connected to the patient
+booking system. The first step is to create the appointment and record the symptoms. Ask for specific
+symptoms! Then after the symptoms have been created, make a diagnosis. Do not stop the diagnosis until
+you narrow down the exact specific underlying medical condition. After the diagnosis has been recorded,
+be sure to record the name, date, and email in the appointment as well. Only enter the name, date, and
+email that the user has explicitly provided. Update the symptoms and diagnosis in the appointment.
+Once all information has been recorded, confirm the appointment."""
+```
+
+:::
 
 ## Quick Summary
 
 In this section, we will be developing an **Agentic RAG** medical chatbot to record symptoms, diagnose patients, and schedule appointments.
 
 :::info
-You may use whatever **knowledge base** you have to power your RAG Engine, but for the purposes of this tutorial, we'll be using [The Gale Encyclopedia of Alternative Medicine](https://staibabussalamsula.ac.id/wp-content/uploads/2024/06/The-Gale-Encyclopedia-of-Medicine-3rd-Edition-staibabussalamsula.ac_.id_.pdf).
+For the purposes of this tutorial, we'll be using [The Gale Encyclopedia of Alternative Medicine](https://staibabussalamsula.ac.id/wp-content/uploads/2024/06/The-Gale-Encyclopedia-of-Medicine-3rd-Edition-staibabussalamsula.ac_.id_.pdf) as our knowledge base.
 :::
 
 ## Setting Up
@@ -33,7 +51,8 @@ class MedicalAppointment(BaseModel):
     symptoms: Optional[str] = None
     diagnosis: Optional[str] = None
 ```
-## Defining the Chatbot
+
+## Defining Your Chatbot
 
 Next, we'll create a `MedicalAppointmentSystem` class to represent our agent. This class will store all `MedicalAppointment` instances in an `appointments` dictionary, with each key representing a unique user.
 
@@ -42,9 +61,10 @@ class MedicalAppointmentSystem:
     def __init__(self):
         self.appointments = {}
 ```
+
 As we progress through this tutorial, we'll gradually enhance this class until it evolves into a fully functional medical chatbot agent.
 
-## Indexing the Knowledge Base
+## Indexing Your Knowledge Base
 
 Let's start by building our **RAG engine**, which will handle all patient diagnoses. The first step is to load the relevant medical information chunks from our knowledge base into the system. We'll use the `SimpleDirectoryReader` from `llama-index` to accomplish this.
 
@@ -61,7 +81,7 @@ class MedicalAppointmentSystem:
         self.documents = SimpleDirectoryReader(data_directory).load_data()
 ```
 
-Then, we'll use LlamaIndex's `VectorStoreIndex` to embed our chunks and store them in a `chromadb` database. This step is crucial, as our encyclopedia contains over 4,000 pages of dense medical information. 
+Then, we'll use LlamaIndex's `VectorStoreIndex` to embed our chunks and store them in a `chromadb` database. This step is crucial, as our encyclopedia contains over 4,000 pages of dense medical information.
 
 :::tip
 Embedding the data in a **vector database** ensures fast and accurate retrieval, even with such a large knowledge base.
@@ -89,7 +109,7 @@ class MedicalAppointmentSystem:
         self.index = VectorStoreIndex.from_documents(self.documents, storage_context=storage_context)
 ```
 
-## Building the Tools
+## Building Your Tools
 
 Finally, we'll create the tools for our chatbot, which includes our **RAG engine** and **function-calling tools** responsible for creating, updating, and managing medical appointments, ensuring the system is both dynamic and interactive.
 
@@ -116,6 +136,7 @@ class MedicalAppointmentSystem:
             description="A RAG engine for retrieving medical information."
         )
 ```
+
 ### Function-calling Tools
 
 We'll also need to define the tools for interacting with the medical appointment system, enabling tasks like creating, updating, and confirming appointments. LlamaIndex's `FunctionTool` simplifies this by wrapping functions into callable tools.
@@ -166,7 +187,7 @@ def update_appointment(self, appointment_id: str, property: str, value: str) -> 
         setattr(appointment, property, value)
         return f"Appointment ID {appointment_id} updated with {property} = {value}"
     return "Appointment not found"
- 
+
 # Creates a new appointment with a unique ID.
 def create_appointment(self, appointment_id: str) -> str:
     self.appointments[appointment_id] = MedicalAppointment()
@@ -181,9 +202,25 @@ def record_diagnosis(self, appointment_id: str, diagnosis: str) -> str:
     return "Diagnosis cannot be recorded. Please tell me more about your symptoms."
 ```
 
-## Assembling the Chatbot
+## Defining Your Hyperparameters
 
-Now that we have set up the tools and data systems, it's time to assemble the chatbot agent. We'll use LlamaIndex's `FunctionCallingAgent` to dynamically manage user interactions and choose the appropriate tool based on the input and context. This involves defining the LLM, system prompt, and tool integrations.
+This part's important, because the whole point of evaluation is to improve on the hyperparameters such as prompts and model used in your LLM application. Throughout this tutorial, we'll be improving on the system prompt, as well as the model used. Here are the variable values:
+
+```python
+MODEL = "gpt-3.5"
+TEMPERATURE = 1.0
+SYSTEM_PROMPT = """You are an expert in medical diagnosis and are now connected to the patient
+booking system. The first step is to create the appointment and record the symptoms. Ask for specific
+symptoms! Then after the symptoms have been created, make a diagnosis. Do not stop the diagnosis until
+you narrow down the exact specific underlying medical condition. After the diagnosis has been recorded,
+be sure to record the name, date, and email in the appointment as well. Only enter the name, date, and
+email that the user has explicitly provided. Update the symptoms and diagnosis in the appointment.
+Once all information has been recorded, confirm the appointment."""
+```
+
+## Putting It All Together
+
+Now that we have set up the tools and data systems, it's time to finalize the chatbot agent. We'll use LlamaIndex's `FunctionCallingAgent` to dynamically manage user interactions and choose the appropriate tool based on the input and context. This involves defining the LLM, system prompt, and tool integrations.
 
 ```python
 from llama_index.core.agent import FunctionCallingAgent
@@ -193,8 +230,8 @@ from llama_index.llms.openai import OpenAI
 class MedicalAppointmentSystem:
     ...
     def setup_agent(self):
-        # Initialize the GPT model and define the agent
-        gpt = OpenAI(model="gpt-4o", temperature=0.1)
+        # use MODEL and TEMPERATRE here
+        gpt = OpenAI(model=MODEL, temperature=TEMPERATRE)
         self.agent = FunctionCallingAgent.from_tools(
             tools=[
                 self.get_appointment_state_tool,
@@ -208,20 +245,14 @@ class MedicalAppointmentSystem:
             prefix_messages=[
                 ChatMessage(
                     role="system",
-                    content=(
-                        "You are an expert in medical diagnosis connected to a patient booking system. "
-                        "First, create the appointment and record the symptoms. Ask for specific details! "
-                        "After recording symptoms, make a precise diagnosis, updating the name, date, and email "
-                        "only with explicitly provided information. Confirm all details at the end."
-                    ),
+                    # use SYSTEM_PROMPT here
+                    content=SYSTEM_PROMPT,
                 )
             ],
             max_function_calls=10,
             allow_parallel_tool_calls=False
         )
 ```
-
-## Setting up the Interactive Session
 
 Finally, we'll create an interactive environment where users can engage with the chatbot. This involves configuring input/output, managing conversation flow, and processing user queries.
 
@@ -248,4 +279,5 @@ if __name__ == "__main__":
     system = MedicalAppointmentSystem(data_directory="./data", db_path="./chroma_db")
     system.interactive_session()
 ```
+
 Congratulations on building your Agentic RAG application! In the next sections, we’ll explore how to evaluate our medical chatbot, from selecting relevant metrics to iterating on the chatbot's hyperparameters for improved performance.
