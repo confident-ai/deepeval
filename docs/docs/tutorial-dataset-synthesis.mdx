@@ -1,7 +1,7 @@
 ---
 id: tutorial-dataset-synthesis
-title: Generating More Test Cases
-sidebar_label: Generating More Test Cases
+title: Generating Synthetic Data
+sidebar_label: Generating Synthetic Data
 ---
 
 If you wish to evaluate your LLM application at a higher test coverage, you can either curate your own dataset, or synthetically generate one instead. Since manually writing test data is time-consuming and often times [not as comprehensive](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms), we’ll be starting with generating a **synthetic evaluation dataset** to evaluate our medical chatbot at scale.
@@ -10,12 +10,12 @@ If you wish to evaluate your LLM application at a higher test coverage, you can 
 `deepeval`'s `Synthesizer` provides a quick and easy way to generate **high-quality goldens** (input, expected output, context) for your evaluation datasets in just a few lines of code.
 :::
 
-In this tutorial, we’ll demonstrate how to generate **synthetic datasets** for our medical chatbot using 2 aproaches:
+In this tutorial, we’ll demonstrate how to generate **synthetic datasets** for our medical chatbot using 2 approaches:
 
-- [Generating from Documents](#generating-synthetic-data-from-documents)
-- [Generating from Scratch](#generating-synthetic-data-from-scratch)
+- [Generate test data from existing documents](#generating-synthetic-data-from-documents)
+- [Generate test data without context](#generating-synthetic-data-from-scratch)
 
-## Generating Synthetic Data from Documents
+## Generating From Documents
 
 First, we'll be generating a synthetic dataset from our **knowledge base document**, the _Gale Encyclopedia of Medicine_. Generating synthetic data from documents is especially useful if you're testing RAG applications or tools.
 
@@ -44,7 +44,7 @@ styling_config = StylingConfig(
 In addition to styling, DeepEval lets you **customize** other parts of the generation process, from context construction to data evolutions.
 :::
 
-### Goldens generation
+### Goldens Generation
 
 With our configurations defined, let’s finally begin **generating synthetic goldens**. You can generate as many `goldens_per_context` as you’d like. For this tutorial, we’ll set this parameter to 2, as coverage across different contexts is more important.
 
@@ -87,7 +87,7 @@ You can see that even though the input for this synthetic golden is simple, it r
 You can increase the complexity of the generated goldens by configuring the **evolution settings** when initializing the `Synthesizer` object.  
 :::
 
-### Additional Styling Configurations
+### Additional Customizations
 
 It's also important to be exploring additional styling configurations when generating your datasets. Using multiple styling configurations allows you to generate a truly **diverse dataset** that is not only comprehensvie but also captures edge cases.
 
@@ -142,11 +142,11 @@ You might want to push different evaluation datasets for various configurations 
 dataest.push(alias="Ambiguous Synthetic Test")
 ```
 
-## Generating Synthetic Data from Scratch
+## Generating Synthetic Data Without Context
 
 Generating synthetic data from documents requires a knowledge base, meaning the generated goldens are designed to test user queries that prompt the LLM to use the RAG engine. However, since our medical chatbot operates as an Agentic RAG, there are cases where the LLM **does not invoke the RAG tool**, necessitating the generation of data from scratch without any context.
 
-### Defining Style Configuration
+### Customizing Style
 
 Similar to generating from documents, you'll want to **customize the output style and format** of any `input` and/or `expected_output` when generating synthetic goldens from scratch. When generating from scratch, your creativity is your limit. You can test your LLM for any interaction you can foresee. In the example below, we'll define user inputs to try to book an appointment by providing name information and email.
 
@@ -172,7 +172,7 @@ styling_config = StylingConfig(
 )
 ```
 
-### Generating the Goldens
+### Generating Goldens
 
 The next step is to simply initialize your synthesizer with the styling configurations and push the dataset to Confident AI for review.
 
