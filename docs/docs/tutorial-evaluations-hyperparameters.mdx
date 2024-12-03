@@ -65,7 +65,20 @@ Let's evaluate our updated medical chatbot with the new hyperparameters by re-ru
 
 ## Re-Evaluating Your LLM Application
 
-To evaluate your LLM application on the new changes, we’ll need to generate outputs for our 5 example user queries with the updated hyperparameter configuration to construct our updated test cases, and use the `evaluate` function to generate another testing report on Confident AI.
+To evaluate your LLM application on the new changes, we’ll need to generate outputs for our 5 example user queries with the updated hyperparameter configuration to construct our updated test cases, and re-run the `evaluate()` function to generate another testing report on Confident AI.
+
+```python
+from deepeval import evaluate
+
+...
+evaluate(
+  # dataset should be updated with new outputs from your new system prompt
+  dataset,
+  metrics=[answer_relevancy_metric, faithfulness_metric, professionalism_metric],
+  skip_on_missing_params=True,
+  hyperparameters={"model": MODEL, "prompt template": SYSTEM_PROMPT, "temperature": TEMPERATURE}
+)
+```
 
 :::caution
 Although we've pre-computed the actual outputs and retrieval context, you will need to populate these fields at evaluation time by running the function that calls your LLM application (e.g. `chatbot.generate(..)`).

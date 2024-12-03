@@ -70,9 +70,9 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset(test_cases=[test_case_0, test_case_1, test_case_2, test_case_3, test_case_4])
 ```
 
-## Running an Evaluation
+## Running An Evaluation
 
-With our dataset and metrics ready, we can begin **running our first evaluation**. Import the `evaluation` function from DeepEval and provide your dataset and metrics in the appropriate fields. Optionally, you can also log your LLM application's hyperparameters, which will be extremely important for optimizing them in future iterations.
+With our dataset and metrics ready, we can begin **running our first evaluation**. Import the `evaluate()` function from DeepEval and provide your dataset and metrics in the appropriate fields. Optionally, you can also log your LLM application's hyperparameters, which will be extremely important for optimizing them in future iterations.
 
 ```python
 from deepeval import evaluate
@@ -85,6 +85,8 @@ evaluate(
   hyperparameters={"model": MODEL, "prompt template": SYSTEM_PROMPT, "temperature": TEMPERATURE}
 )
 ```
+
+You can should definitely learn more about the ways in which you can customize the `evaluate()` function [here.](evaluation-introduction#evaluating-without-pytest)
 
 :::tip
 If you don't know where the metrics are coming from, you should go back and revisit [this section on defining metrics in `deepeval`](tutorial-metrics-selection#defining-metrics-in-deepeval). Similarly, if you don't know where `MODEL`, `SYSTEM_PROMPT`, and `TEMPERATRE` are coming from, revisit [this section.](tutorial-llm-application-example#defining-your-hyperparameters)
