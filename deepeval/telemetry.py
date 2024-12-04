@@ -189,8 +189,9 @@ def capture_red_teamer_run(
             span.set_attribute(
                 "attacks_per_vulnerability", attacks_per_vulnerability
             )
+            print(vulnerabilities)
             for vuln in vulnerabilities:
-                span.set_attribute(f"vulnerability.{vuln.value}", 1)
+                span.set_attribute(f"vulnerability.{vuln.get_value()}", 1)
             for enhancement, value in attack_enhancements.items():
                 span.set_attribute(
                     f"attack_enhancement.{enhancement.value}", value

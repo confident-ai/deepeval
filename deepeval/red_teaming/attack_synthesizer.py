@@ -8,15 +8,16 @@ from pydantic import BaseModel
 from typing import List, Optional, Union, Dict
 
 from deepeval.red_teaming.types import (
-    Attack,
     AttackEnhancement,
-    Vulnerability,
-    ApiGenerateBaselineAttack,
-    GenerateBaselineAttackResponseData,
-    remote_vulnerabilties,
+    DeepEvalVulnerabilityType,
 )
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
 from deepeval.red_teaming.template import RedTeamSynthesizerTemplate
+from deepeval.red_teaming.schema import (
+    Attack,
+    ApiGenerateBaselineAttack,
+    GenerateBaselineAttackResponseData,
+)
 from deepeval.metrics.utils import initialize_model
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.synthesizer.schema import *
@@ -35,9 +36,10 @@ from deepeval.red_teaming.attack_enhancements import (
     JailbreakingCrescendo,
 )
 from deepeval.confident.api import Api, HttpMethods, Endpoints
+from deepeval.vulnerability import Vulnerability
+from deepeval.utils import is_confident
 
-BASE_URL = "https//localhost:8000/"
-
+BASE_URL = "http://localhost:8000"
 
 class AttackSynthesizer:
     def __init__(
@@ -55,7 +57,6 @@ class AttackSynthesizer:
 
         # Define list of attacks and unaligned vulnerabilities
         self.synthetic_attacks: List[Attack] = []
-        self.remote_vulnerabilities = remote_vulnerabilties
 
     ##################################################
     ### Generating Attacks ###########################
@@ -196,19 +197,30 @@ class AttackSynthesizer:
         max_retries: int = 5,
     ) -> List[Attack]:
         base_attacks: List[Attack] = []
-
         # Remote vulnerabilities
-        if vulnerability.value in self.remote_vulnerabilities:
+        if not isinstance(vulnerability.get_type(), DeepEvalVulnerabilityType):
+            if not is_confident():
+                raise Exception(
+                    f"To generate attacks for '{vulnerability.get_value()}', login to Confident AI by running `deepeval login`"
+                )
             try:
                 remote_attacks = self.generate_remote_attack(
                     self.purpose, vulnerability, attacks_per_vulnerability
                 )
-                base_attacks.extend(remote_attacks)
+                base_attacks.extend(
+                    [
+                        Attack(
+                            vulnerability=vulnerability.get_type(),
+                            input=remote_attack,
+                        )
+                        for remote_attack in remote_attacks
+                    ]
+                )
             except:
                 for _ in range(attacks_per_vulnerability):
                     base_attacks.append(
                         Attack(
-                            vulnerability=vulnerability,
+                            vulnerability=vulnerability.get_type(),
                             error="Error generating aligned attacks.",
                         )
                     )
@@ -238,7 +250,7 @@ class AttackSynthesizer:
                         base_attacks.extend(
                             Attack(
                                 input=attack.input,
-                                vulnerability=vulnerability,
+                                vulnerability=vulnerability.get_type(),
                             )
                             for attack in res.data
                         )
@@ -247,7 +259,7 @@ class AttackSynthesizer:
                     if i == max_retries - 1:
                         base_attacks = [
                             Attack(
-                                vulnerability=vulnerability,
+                                vulnerability=vulnerability.get_type(),
                                 error="Error generating compliant attacks.",
                             )
                             for _ in range(attacks_per_vulnerability)
@@ -256,12 +268,11 @@ class AttackSynthesizer:
                     if i == max_retries - 1:
                         base_attacks = [
                             Attack(
-                                vulnerability=vulnerability.value,
+                                vulnerability=vulnerability.get_type(),
                                 error="Error generating aligned attacks.",
                             )
                             for _ in range(attacks_per_vulnerability)
                         ]
-
         return base_attacks
 
     async def a_generate_base_attacks(
@@ -273,17 +284,29 @@ class AttackSynthesizer:
         base_attacks: List[Attack] = []
 
         # Remote vulnerabilities
-        if vulnerability.value in self.remote_vulnerabilities:
+        if not isinstance(vulnerability.get_type(), DeepEvalVulnerabilityType):
+            if not is_confident():
+                raise Exception(
+                    f"To generate attacks for '{vulnerability.get_value()}', login to Confident AI by running `deepeval login`"
+                )
             try:
                 remote_attacks = self.generate_remote_attack(
                     self.purpose, vulnerability, attacks_per_vulnerability
                 )
-                base_attacks.extend(remote_attacks)
+                base_attacks.extend(
+                    [
+                        Attack(
+                            vulnerability=vulnerability.get_type(),
+                            input=remote_attack,
+                        )
+                        for remote_attack in remote_attacks
+                    ]
+                )
             except:
                 for _ in range(attacks_per_vulnerability):
                     base_attacks.append(
                         Attack(
-                            vulnerability=vulnerability,
+                            vulnerability=vulnerability.get_type(),
                             error="Error generating aligned attacks.",
                         )
                     )
@@ -315,7 +338,7 @@ class AttackSynthesizer:
                         base_attacks.extend(
                             Attack(
                                 input=attack.input,
-                                vulnerability=vulnerability,
+                                vulnerability=vulnerability.get_type(),
                             )
                             for attack in res.data
                         )
@@ -324,7 +347,7 @@ class AttackSynthesizer:
                     if i == max_retries - 1:
                         base_attacks = [
                             Attack(
-                                vulnerability=vulnerability,
+                                vulnerability=vulnerability.get_type(),
                                 error="Error generating compliant attacks.",
                             )
                             for _ in range(attacks_per_vulnerability)
@@ -333,12 +356,11 @@ class AttackSynthesizer:
                     if i == max_retries - 1:
                         base_attacks = [
                             Attack(
-                                vulnerability=vulnerability,
+                                vulnerability=vulnerability.get_type(),
                                 error="Error generating aligned attacks.",
                             )
                             for _ in range(attacks_per_vulnerability)
                         ]
-
         return base_attacks
 
     ##################################################
@@ -526,22 +548,22 @@ class AttackSynthesizer:
         )
 
     def generate_remote_attack(
-        self,
-        purpose: str,
-        vulernability: Vulnerability,
-        num_attacks: int
+        self, purpose: str, vulnerability : Vulnerability, num_attacks: int
     ) -> List[Attack]:
         # Prepare parameters for API request
         guard_params = ApiGenerateBaselineAttack(
             purpose=purpose,
-            vulnerability=vulernability.value,
+            vulnerability=vulnerability.get_value(),
             num_attacks=num_attacks,
         )
         body = guard_params.model_dump(by_alias=True, exclude_none=True)
         api = Api(base_url=BASE_URL)
+
+        # API request
         response = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.BASELINE_ATTACKS_ENDPOINT,
             body=body,
         )
         return GenerateBaselineAttackResponseData(**response).baseline_attacks
+            

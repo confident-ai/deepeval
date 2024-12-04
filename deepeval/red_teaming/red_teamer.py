@@ -4,11 +4,30 @@ from pydantic import Field
 from tqdm import tqdm
 from typing import Dict, List, Optional, Union
 
+from deepeval.vulnerability import Vulnerability
 from deepeval.red_teaming.types import (
     AttackEnhancement,
-    Vulnerability,
+    VulnerabilityType,
     llm_risk_categories_map,
 )
+
+from deepeval.vulnerability.intellectual_property import (
+    IntellectualPropertyType,
+)
+from deepeval.vulnerability.unauthorized_access import UnauthorizedAccessType
+from deepeval.vulnerability.illegal_activity import IllegalActivityType
+from deepeval.vulnerability.excessive_agency import ExcessiveAgencyType
+from deepeval.vulnerability.personal_safety import PersonalSafetyType
+from deepeval.vulnerability.graphic_content import GraphicContentType
+from deepeval.vulnerability.misinformation import MisinformationType
+from deepeval.vulnerability.prompt_leakage import PromptLeakageType
+from deepeval.vulnerability.competition import CompetitionType
+from deepeval.vulnerability.pii_leakage import PIILeakageType
+from deepeval.vulnerability.robustness import RobustnessType
+from deepeval.vulnerability.toxicity import ToxicityType
+from deepeval.vulnerability.bias import BiasType
+from deepeval.red_teaming.types import VulnerabilityType
+
 from deepeval.red_teaming.attack_synthesizer import AttackSynthesizer, Attack
 from deepeval.synthesizer.schema import *
 from deepeval.synthesizer.types import *
@@ -23,7 +42,7 @@ from deepeval.telemetry import capture_red_teamer_run
 
 
 class VulnerabilityResult(BaseModel):
-    vulnerability: Vulnerability
+    vulnerability: VulnerabilityType
     attack_enhancement: Optional[str] = None
     input: Optional[str] = None
     actual_output: Optional[str] = None
@@ -67,7 +86,7 @@ class RedTeamer:
         self,
         target_model: DeepEvalBaseLLM,
         attacks_per_vulnerability: int,
-        vulnerabilities: List[Vulnerability] = [v for v in Vulnerability],
+        vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float] = {
             AttackEnhancement.BASE64: 1 / 11,
             AttackEnhancement.GRAY_BOX_ATTACK: 1 / 11,
@@ -115,7 +134,7 @@ class RedTeamer:
 
                 # Create a mapping of vulnerabilities to attacks
                 vulnerability_to_attacks_map: Dict[
-                    Vulnerability, List[Attack]
+                    VulnerabilityType, List[Attack]
                 ] = {}
                 for attack in attacks:
                     if attack.vulnerability not in vulnerability_to_attacks_map:
@@ -180,7 +199,7 @@ class RedTeamer:
                             scores.append(metric.score)
                         except Exception:
                             result["Error"] = (
-                                f"Error evaluating target LLM output for the '{vulnerability.value}' vulnerability"
+                                f"Error evaluating target LLM output for the '{vulnerability.get_type().value}' vulnerability"
                             )
                             red_teaming_results_breakdown.append(result)
                             continue
@@ -193,7 +212,7 @@ class RedTeamer:
                     )
                     red_teaming_results.append(
                         {
-                            "Vulnerability": vulnerability.value,
+                            "Vulnerability": vulnerability.get_type().value,
                             "Average Score": avg_vulnerability_score,
                         }
                     )
@@ -210,7 +229,7 @@ class RedTeamer:
         self,
         target_model: DeepEvalBaseLLM,
         attacks_per_vulnerability: int,
-        vulnerabilities: List[Vulnerability] = [v for v in Vulnerability],
+        vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float] = {
             AttackEnhancement.BASE64: 1 / 11,
             AttackEnhancement.GRAY_BOX_ATTACK: 1 / 11,
@@ -244,7 +263,7 @@ class RedTeamer:
             )
 
             # Create a mapping of vulnerabilities to attacks
-            vulnerability_to_attacks_map: Dict[Vulnerability, List[Attack]] = {}
+            vulnerability_to_attacks_map: Dict[VulnerabilityType, List[Attack]] = {}
             for attack in attacks:
                 if attack.vulnerability not in vulnerability_to_attacks_map:
                     vulnerability_to_attacks_map[attack.vulnerability] = [
@@ -421,225 +440,145 @@ class RedTeamer:
 
     def get_red_teaming_metrics_map(self):
         metrics_map = {
-            Vulnerability.BIAS: lambda: BiasGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.CONTRACTS: lambda: ContractsGrader(
+            #### Bias ####
+            **{
+                bias_type: lambda: BiasGrader(
+                    model=self.evaluation_model,
+                    purpose=self.target_purpose,
+                    async_mode=self.async_mode
+                )
+                for bias_type in BiasType
+            },
+            #### Toxicity ####
+            **{
+                toxicity_type: lambda tt=toxicity_type: HarmGrader(
+                    model=self.evaluation_model,
+                    harm_category=tt.value,
+                    async_mode=self.async_mode
+                )
+                for toxicity_type in ToxicityType
+            },
+            #### Misinformation #### 
+            **{
+                misinformation_type: lambda mt=misinformation_type: HarmGrader(
+                    model=self.evaluation_model,
+                    harm_category=mt.value,
+                    async_mode=self.async_mode
+                )
+                for misinformation_type in MisinformationType
+            },
+            #### Illegal ####    
+            **{
+                illegal_activity_type: lambda iat=illegal_activity_type: HarmGrader(
+                    model=self.evaluation_model,
+                    harm_category=iat.value,
+                    async_mode=self.async_mode
+                )
+                for illegal_activity_type in IllegalActivityType
+            },
+            #### Prompt Leakage #### 
+            **{
+                prompt_leakage_type: lambda : PromptExtractionGrader(
+                    model=self.evaluation_model,
+                    purpose=self.target_purpose,
+                    async_mode=self.async_mode
+                )
+                for prompt_leakage_type in PromptLeakageType
+            },
+            #### PII Leakage #### 
+            **{
+                pii_type: lambda: PIIGrader(
+                    model=self.evaluation_model,
+                    purpose=self.target_purpose,
+                    async_mode=self.async_mode
+                )
+                for pii_type in PIILeakageType
+            },
+            #### Unauthorized Access ####
+            UnauthorizedAccessType.DEBUG_ACCESS: lambda: DebugAccessGrader(
                 model=self.evaluation_model, async_mode=self.async_mode
             ),
-            Vulnerability.DATA_LEAKAGE: lambda: PIIGrader(
+            UnauthorizedAccessType.RBAC: lambda: RBACGrader(
                 model=self.evaluation_model,
                 purpose=self.target_purpose,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.DEBUG_ACCESS: lambda: DebugAccessGrader(
+            UnauthorizedAccessType.SHELL_INJECTION: lambda: ShellInjectionGrader(
                 model=self.evaluation_model, async_mode=self.async_mode
             ),
-            Vulnerability.EXCESSIVE_AGENCY: lambda: ExcessiveAgencyGrader(
+            UnauthorizedAccessType.SQL_INJECTION: lambda: SQLInjectionGrader(
                 model=self.evaluation_model, async_mode=self.async_mode
             ),
-            Vulnerability.HALLUCINATION: lambda: HallucinationGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.CHEMICAL_BIOLOGICAL_WEAPONS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.CHEMICAL_BIOLOGICAL_WEAPONS.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.CHILD_EXPLOITATION: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.CHILD_EXPLOITATION.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.COPYRIGHT_VIOLATIONS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.COPYRIGHT_VIOLATIONS.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.CYBERCRIME: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.CYBERCRIME.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.GRAPHIC_CONTENT: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.GRAPHIC_CONTENT.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.HARASSMENT_BULLYING: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.HARASSMENT_BULLYING.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.HATE: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.HATE.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.ILLEGAL_ACTIVITIES: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.ILLEGAL_ACTIVITIES.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.ILLEGAL_DRUGS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.ILLEGAL_DRUGS.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.INDISCRIMINATE_WEAPONS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.INDISCRIMINATE_WEAPONS.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.INSULTS: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.INSULTS.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.INTELLECTUAL_PROPERTY: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.INTELLECTUAL_PROPERTY.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.MISINFORMATION_DISINFORMATION: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.MISINFORMATION_DISINFORMATION.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.NON_VIOLENT_CRIME: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.NON_VIOLENT_CRIME.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.PRIVACY: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.PRIVACY.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.PROFANITY: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.PROFANITY.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.RADICALIZATION: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.RADICALIZATION.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.SELF_HARM: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.SELF_HARM.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.SEX_CRIME: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.SEX_CRIME.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.SEXUAL_CONTENT: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.SEXUAL_CONTENT.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.SPECIALIZED_FINANCIAL_ADVICE: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.SPECIALIZED_FINANCIAL_ADVICE.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.UNSAFE_PRACTICES: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.UNSAFE_PRACTICES.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.VIOLENT_CRIME: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.VIOLENT_CRIME.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.IMITATION: lambda: ImitationGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            Vulnerability.OFFENSIVE: lambda: HarmGrader(
-                model=self.evaluation_model,
-                harm_category=Vulnerability.OFFENSIVE.value,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.PII_API_DB: lambda: PIIGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.PII_DIRECT: lambda: PIIGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.PII_SESSION: lambda: PIIGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.PII_SOCIAL: lambda: PIIGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.POLITICS: lambda: PoliticsGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            Vulnerability.RBAC: lambda: RBACGrader(
-                model=self.evaluation_model,
-                purpose=self.target_purpose,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.SHELL_INJECTION: lambda: ShellInjectionGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            Vulnerability.SQL_INJECTION: lambda: SQLInjectionGrader(
-                model=self.evaluation_model, async_mode=self.async_mode
-            ),
-            Vulnerability.BFLA: lambda: BFLAGrader(
+            UnauthorizedAccessType.BFLA: lambda: BFLAGrader(
                 purpose=self.target_purpose,
                 model=self.evaluation_model,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.BOLA: lambda: BOLAGrader(
+            UnauthorizedAccessType.BOLA: lambda: BOLAGrader(
                 model=self.evaluation_model,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.COMPETITORS: lambda: CompetitorsGrader(
+            UnauthorizedAccessType.SSRF: lambda: SSRFGrader(
                 purpose=self.target_purpose,
                 model=self.evaluation_model,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.HIJACKING: lambda: HijackingGrader(
+            #### Excessive Agency ####
+            **{
+                excessive_agency_type: lambda : ExcessiveAgencyGrader(
+                    model=self.evaluation_model,
+                    purpose=self.target_purpose,
+                    async_mode=self.async_mode
+                )
+                for excessive_agency_type in ExcessiveAgencyType
+            },
+            #### Robustness ####
+            RobustnessType.HIJACKING: lambda: HijackingGrader(
                 purpose=self.target_purpose,
                 model=self.evaluation_model,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.RELIGION: lambda: ReligionGrader(
-                model=self.evaluation_model,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.SSRF: lambda: SSRFGrader(
+            RobustnessType.INPUT_OVERRELIANCE: lambda: OverrelianceGrader(
                 purpose=self.target_purpose,
                 model=self.evaluation_model,
                 async_mode=self.async_mode,
             ),
-            Vulnerability.OVERRELIANCE: lambda: OverrelianceGrader(
-                purpose=self.target_purpose,
-                model=self.evaluation_model,
-                async_mode=self.async_mode,
-            ),
-            Vulnerability.PROMPT_EXTRACTION: lambda: PromptExtractionGrader(
-                purpose=self.target_purpose,
-                model=self.evaluation_model,
-                async_mode=self.async_mode,
-            ),
+            #### Intellectual Property ####
+            **{
+                ip_type: lambda: IntellectualPropertyGrader(
+                    model=self.evaluation_model,
+                    purpose=self.target_purpose,
+                    async_mode=self.async_mode
+                )
+                for ip_type in IntellectualPropertyType
+            },
+            #### Competition ####
+            **{
+                competiton_type: lambda: CompetitorsGrader(
+                    model=self.evaluation_model,
+                    purpose=self.target_purpose,
+                    async_mode=self.async_mode
+                )
+                for competiton_type in CompetitionType
+            },
+            #### Graphic Content ####
+            **{
+                content_type: lambda ct=content_type: HarmGrader(
+                    model=self.evaluation_model,
+                    harm_category=ct.value,
+                    async_mode=self.async_mode
+                )
+                for content_type in GraphicContentType
+            },
+            #### Personal Safety ####
+            **{
+                safety_type: lambda st=safety_type: HarmGrader(
+                    model=self.evaluation_model,
+                    harm_category=st.value,
+                    async_mode=self.async_mode
+                )
+                for safety_type in PersonalSafetyType
+            },
         }
         self.metrics_map = metrics_map
         return metrics_map

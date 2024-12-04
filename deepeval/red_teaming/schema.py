@@ -1,5 +1,35 @@
-from typing import List, Literal
+from typing import List, Literal, Optional
 from pydantic import BaseModel
+
+from .types import VulnerabilityType
+
+##########################################
+#### Models ##############################
+##########################################
+
+
+class Attack(BaseModel):
+    vulnerability: VulnerabilityType
+    # When there is an error, base input can fail to generate
+    # and subsequently enhancements are redundant
+    input: Optional[str] = None
+    attack_enhancement: Optional[str] = None
+    error: Optional[str] = None
+
+
+class ApiGenerateBaselineAttack(BaseModel):
+    purpose: str
+    vulnerability: str
+    num_attacks: int
+
+
+class GenerateBaselineAttackResponseData(BaseModel):
+    baseline_attacks: List[str]
+
+
+##########################################
+#### Models ##############################
+##########################################
 
 
 class RewrittenInput(BaseModel):

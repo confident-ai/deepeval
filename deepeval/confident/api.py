@@ -26,6 +26,7 @@ class Endpoints(Enum):
     GUARD_ENDPOINT = "/guard"
     BASELINE_ATTACKS_ENDPOINT = "/generate-baseline-attacks"
 
+
 class Api:
     def __init__(self, api_key: Optional[str] = None, base_url=None):
         if api_key is None:

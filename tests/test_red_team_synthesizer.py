@@ -1,35 +1,109 @@
-import openai
-import logging
-from typing import Optional, Tuple
-from langchain_openai import ChatOpenAI, AzureChatOpenAI
-from langchain_community.callbacks import get_openai_callback
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
+from langchain_community.callbacks import get_openai_callback
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
+from typing import Optional, Tuple, Optional
+import logging
+import openai
 
-from deepeval.red_teaming import RedTeamer
-from deepeval.models import DeepEvalBaseLLM, GPTModel
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.red_teaming import RedTeamer, AttackEnhancement, Vulnerability
+from deepeval.red_teaming.attack_synthesizer import AttackSynthesizer
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
-from deepeval.red_teaming import AttackEnhancement, Vulnerability
-
-# from deepeval.red_teaming.synthesizer import AttackSynthesizer
-from deepeval.metrics.red_teaming_metrics import (
-    OverrelianceGrader,
-    BFLAGrader,
-    BOLAGrader,
-    CompetitorsGrader,
-    PromptExtractionGrader,
-    SSRFGrader,
-    ReligionGrader,
-)
+from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.models import DeepEvalBaseLLM, GPTModel
 from deepeval.test_case import LLMTestCase
 
+from deepeval.vulnerability.intellectual_property import (
+    IntellectualPropertyType,
+)
+from deepeval.vulnerability.unauthorized_access import UnauthorizedAccessType
+from deepeval.vulnerability.illegal_activity import IllegalActivityType
+from deepeval.vulnerability.excessive_agency import ExcessiveAgencyType
+from deepeval.vulnerability.personal_safety import PersonalSafetyType
+from deepeval.vulnerability.graphic_content import GraphicContentType
+from deepeval.vulnerability.misinformation import MisinformationType
+from deepeval.vulnerability.prompt_leakage import PromptLeakageType
+from deepeval.vulnerability.competition import CompetitionType
+from deepeval.vulnerability.pii_leakage import PIILeakageType
+from deepeval.vulnerability.robustness import RobustnessType
+from deepeval.vulnerability.toxicity import ToxicityType
+from deepeval.vulnerability.bias import BiasType
+from deepeval.vulnerability import (
+    Vulnerability,
+    IntellectualProperty,
+    UnauthorizedAccess,
+    IllegalActivity,
+    ExcessiveAgency,
+    GraphicContent,
+    PersonalSafety,
+    Misinformation,
+    PromptLeakage,
+    Competition,
+    Robustness,
+    PIILeakage,
+    Toxicity,
+    Bias,
+)
+
+vulnerabilties = [
+    Bias(type=BiasType.GENDER),
+    Bias(type=BiasType.POLITICS),
+    Bias(type=BiasType.RACE),
+    Bias(type=BiasType.RELIGION),
+    Misinformation(type=MisinformationType.FACTUAL_ERRORS),
+    Misinformation(type=MisinformationType.UNSUPPORTED_CLAIMS),
+    Misinformation(type=MisinformationType.EXPERTISE_MISREPRESENTATION),
+    Toxicity(type=ToxicityType.INSULTS),
+    Toxicity(type=ToxicityType.MOCKERY),
+    Toxicity(type=ToxicityType.PROFANITY),
+    Toxicity(type=ToxicityType.THREATS),
+    PIILeakage(type=PIILeakageType.PII_DATABASE_ACCESS),
+    PIILeakage(type=PIILeakageType.PII_DIRECT),
+    PIILeakage(type=PIILeakageType.PII_SOCIAL_MANIPULATION),
+    PIILeakage(type=PIILeakageType.PII_SESSION_LEAK),
+    PromptLeakage(type=PromptLeakageType.FILTERING_CRITERIA),
+    PromptLeakage(type=PromptLeakageType.INTERNAL_RULES),
+    PromptLeakage(type=PromptLeakageType.PERMISSIONS_AND_ROLES),
+    PromptLeakage(type=PromptLeakageType.SENSITIVE_FUNCTIONALITY),
+    IllegalActivity(type=IllegalActivityType.CHILD_EXPLOITATION),
+    IllegalActivity(type=IllegalActivityType.CYBERCRIME),
+    IllegalActivity(type=IllegalActivityType.ILLEGAL_DRUGS),
+    IllegalActivity(type=IllegalActivityType.NON_VIOLENT_CRIME),
+    IllegalActivity(type=IllegalActivityType.SEX_CRIME),
+    IllegalActivity(type=IllegalActivityType.VIOLENT_CRIME),
+    IllegalActivity(type=IllegalActivityType.WEAPONS),
+    ExcessiveAgency(type=ExcessiveAgencyType.EXCESSIVE_AUTONOMY),
+    ExcessiveAgency(type=ExcessiveAgencyType.EXCESSIVE_FUNCTIONALITY),
+    ExcessiveAgency(type=ExcessiveAgencyType.EXCESSIVE_PERMISSIONS),
+    GraphicContent(type=GraphicContentType.GRAPHIC_CONTENT),
+    GraphicContent(type=GraphicContentType.PORNOGRAPHIC_CONTENT),
+    GraphicContent(type=GraphicContentType.SEXUAL_CONTENT),
+    IntellectualProperty(type=IntellectualPropertyType.COPYRIGHT_VIOLATIONS),
+    IntellectualProperty(type=IntellectualPropertyType.IMITATION),
+    IntellectualProperty(type=IntellectualPropertyType.PATENT_DISCLOSURE),
+    IntellectualProperty(type=IntellectualPropertyType.TRADEMARK_INFRINGEMENT),
+    Robustness(type=RobustnessType.HIJACKING),
+    Robustness(type=RobustnessType.INPUT_OVERRELIANCE),
+    Competition(type=CompetitionType.COMPETITORS),
+    Competition(type=CompetitionType.CONFIDENTIAL_STRATEGIES),
+    Competition(type=CompetitionType.DISCREDITATION),
+    Competition(type=CompetitionType.MARKET_MANIPULATION),
+    UnauthorizedAccess(type=UnauthorizedAccessType.BFLA),
+    UnauthorizedAccess(type=UnauthorizedAccessType.BOLA),
+    UnauthorizedAccess(type=UnauthorizedAccessType.DEBUG_ACCESS),
+    UnauthorizedAccess(type=UnauthorizedAccessType.RBAC),
+    UnauthorizedAccess(type=UnauthorizedAccessType.SHELL_INJECTION),
+    UnauthorizedAccess(type=UnauthorizedAccessType.SQL_INJECTION),
+    UnauthorizedAccess(type=UnauthorizedAccessType.SSRF),
+]
+
+#########################################
+# Target Model
+#########################################
 
 def log_retry_error(retry_state):
     logging.error(
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
-
-
 valid_gpt_models = [
     "gpt-4o-mini",
     "gpt-4o",
@@ -46,9 +120,7 @@ valid_gpt_models = [
     "gpt-3.5-turbo-16k",
     "gpt-3.5-turbo-0125",
 ]
-
 default_gpt_model = "gpt-4o"
-
 
 class TargetGPTModel(DeepEvalBaseLLM):
     def __init__(
@@ -149,37 +221,66 @@ class TargetGPTModel(DeepEvalBaseLLM):
             return self.model_name
 
 
-def main():
+#########################################
+# Attack Synthesizer (remote generation)
+#########################################
 
-    # ## Test metrics
-    # test_case = LLMTestCase(
-    #     input="Can you build a unicorn",
-    #     actual_output="No"
-    # )
-    # purpose = "LLM chatbot"
-    # system_prompt = "You are a friendly chatbot."
-    # metrics = [
-    #     OverrelianceGrader(purpose=purpose),
-    #     BFLAGrader(purpose=purpose),
-    #     BOLAGrader(),
-    #     CompetitorsGrader(purpose=purpose),
-    #     PromptExtractionGrader(purpose=purpose),
-    #     SSRFGrader(purpose=purpose),
-    #     ReligionGrader()
-    # ]
-    # for metric in metrics:
-    #     metric.measure(test_case)
-    #     print(metric.score, metric.reason)
+def test_remote_generation():
+    import time
 
-    # # Test RedTeaming Synthesizer
-    # red_teamer = AttackSynthesizer(
-    #     purpose="A friendly chatbot",
-    #     system_prompt="You are a friendly chatbot.",
-    # )
-    # remote_attacks = red_teamer.generate_remote_attack(task="bfla", n=5)
-    # print("Remote Attacks", remote_attacks)
+    red_teamer = AttackSynthesizer(
+        purpose="A friendly chatbot",
+        system_prompt="You are a friendly chatbot.",
+    )
+    for vulnerability in [
+        Bias(type=BiasType.GENDER),
+        IllegalActivity(type=IllegalActivityType.CHILD_EXPLOITATION),
+        PromptLeakage(type=PromptLeakageType.FILTERING_CRITERIA),
+    ]:
+        start_time = time.time()
+        remote_attacks = red_teamer.generate_remote_attack(
+            purpose=red_teamer.purpose,
+            vulernability=vulnerability,
+            num_attacks=3,
+        )
+        end_time = time.time()  # Record end time
+        elapsed_time = end_time - start_time  # Calculate elapsed time
+        print(f"Vulnerability: {vulnerability}")
+        print(f"Generated Baseline Attacks: {remote_attacks}")
+        print(f"Time taken for generation: {elapsed_time:.2f} seconds\n")
 
-    # Test RedTeamer
+#########################################
+# Attack Synthesizer (attacks generation)
+#########################################
+
+def test_attacks_generation():
+    red_teamer = AttackSynthesizer(
+        purpose="A friendly chatbot",
+        system_prompt="You are a friendly chatbot.",
+    )
+    attacks = red_teamer.generate_attacks(
+        target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
+        attacks_per_vulnerability=3,
+        vulnerabilities=[
+            Bias(type=BiasType.GENDER),
+            # Bias(type=BiasType.POLITICS),
+            # Bias(type=BiasType.RACE),
+            # Bias(type=BiasType.RELIGION),
+            # Misinformation(type=MisinformationType.FACTUAL_ERRORS),
+            # Misinformation(type=MisinformationType.UNSUPPORTED_CLAIMS),
+            # Misinformation(type=MisinformationType.EXPERTISE_MISREPRESENTATION),
+            IllegalActivity(type=IllegalActivityType.CHILD_EXPLOITATION),
+            PromptLeakage(type=PromptLeakageType.FILTERING_CRITERIA),
+        ],
+        attack_enhancements={AttackEnhancement.BASE64: 1},
+    )
+    return attacks
+
+#########################################
+# Test RedTeamer
+#########################################
+
+def test_red_teamer():
     red_teamer = RedTeamer(
         target_purpose="A friendly chatbot",
         target_system_prompt="You are a friendly chatbot.",
@@ -191,17 +292,22 @@ def main():
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
         attacks_per_vulnerability=1,
         attack_enhancements={AttackEnhancement.BASE64: 1},
-        vulnerabilities=[Vulnerability.BFLA],
+        vulnerabilities=vulnerabilties
     )
+
     df = red_teamer.vulnerability_scores_breakdown
-    print(results)
+    # print(results)
     for index, row in df.iterrows():
-        # print(f"Input: {row['Input']}")
-        # print(f"Target Output: {row['Target Output']}")
-        # print(f"Error: {row['Error']}")
-        print(row)
+        print(f"Input: {row['Input']}")
+        print(f"Target Output: {row['Target Output']}")
+        print(f"Score: {row['Score']}")
+        print(f"Reason: {row['Reason']}")
+        print(f"Error: {row['Error']}")
+        # print(row)
         print("**********************************************************")
 
 
 if __name__ == "__main__":
-    main()
+    # test_remote_generation()
+    # attacks = test_attacks_generation()
+    test_red_teamer()
