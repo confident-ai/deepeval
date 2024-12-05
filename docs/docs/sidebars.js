@@ -25,6 +25,29 @@ module.exports = {
         },
         {
           type: "category",
+          label: "Red-Teaming",
+          items: [
+            "red-teaming-introduction",
+            ,
+            {
+              type: "category",
+              label: "Vulnerabilties",
+              items: [
+                "red-teaming-vulnerabilities",      
+                "red-teaming-vulnerabilities-bias",
+                "red-teaming-vulnerabilities-toxicity", 
+                "red-teaming-vulnerabilities-misinformation", 
+                "red-teaming-vulnerabilities-copyright", 
+                "red-teaming-vulnerabilities-pii-leakage",    
+           
+              ],
+              collapsed: true,
+            },
+            "red-teaming-attack-enhancements",
+          ],
+        },
+        {
+          type: "category",
           label: "Metrics",
           items: [
             "metrics-introduction",
@@ -77,37 +100,6 @@ module.exports = {
             "benchmarks-gsm8k",
           ],
           collapsed: true,
-        },
-      ],
-      collapsed: false,
-    },
-    {
-      type: "category",
-      label: "Red-Teaming",
-      items: [
-        "red-teaming-introduction",
-        "red-teaming-owasp",
-        "red-teaming-attack-enhancements",
-        {
-          type: "category",
-          label: "Vulnerabilties",
-          items: [
-            "red-teaming-vulnerabilities",      
-            "red-teaming-vulnerabilities-bias",
-            "red-teaming-vulnerabilities-misinformation", 
-            "red-teaming-vulnerabilities-toxicity", 
-            "red-teaming-vulnerabilities-illegal-activities", 
-            "red-teaming-vulnerabilities-personal-safety", 
-            "red-teaming-vulnerabilities-pii-leakage",    
-            "red-teaming-vulnerabilities-prompt-leakage",    
-            "red-teaming-vulnerabilities-unauthorized-access",
-            "red-teaming-vulnerabilities-intellectual-property", 
-            "red-teaming-vulnerabilities-excessive-agency", 
-            "red-teaming-vulnerabilities-robustness", 
-            "red-teaming-vulnerabilities-graphic-content", 
-            "red-teaming-vulnerabilities-competition", 
-          ],
-          collapsed: false
         },
       ],
       collapsed: false,
