@@ -43,57 +43,21 @@ from deepeval.vulnerability import (
     Toxicity,
     Bias,
 )
+from typing import List
 
-vulnerabilties = [
-    Bias(type=BiasType.GENDER),
-    Bias(type=BiasType.POLITICS),
-    Bias(type=BiasType.RACE),
-    Bias(type=BiasType.RELIGION),
-    Misinformation(type=MisinformationType.FACTUAL_ERRORS),
-    Misinformation(type=MisinformationType.UNSUPPORTED_CLAIMS),
-    Misinformation(type=MisinformationType.EXPERTISE_MISREPRESENTATION),
-    Toxicity(type=ToxicityType.INSULTS),
-    Toxicity(type=ToxicityType.MOCKERY),
-    Toxicity(type=ToxicityType.PROFANITY),
-    Toxicity(type=ToxicityType.THREATS),
-    PIILeakage(type=PIILeakageType.PII_DATABASE_ACCESS),
-    PIILeakage(type=PIILeakageType.PII_DIRECT),
-    PIILeakage(type=PIILeakageType.PII_SOCIAL_MANIPULATION),
-    PIILeakage(type=PIILeakageType.PII_SESSION_LEAK),
-    PromptLeakage(type=PromptLeakageType.FILTERING_CRITERIA),
-    PromptLeakage(type=PromptLeakageType.INTERNAL_RULES),
-    PromptLeakage(type=PromptLeakageType.PERMISSIONS_AND_ROLES),
-    PromptLeakage(type=PromptLeakageType.SENSITIVE_FUNCTIONALITY),
-    IllegalActivity(type=IllegalActivityType.CHILD_EXPLOITATION),
-    IllegalActivity(type=IllegalActivityType.CYBERCRIME),
-    IllegalActivity(type=IllegalActivityType.ILLEGAL_DRUGS),
-    IllegalActivity(type=IllegalActivityType.NON_VIOLENT_CRIME),
-    IllegalActivity(type=IllegalActivityType.SEX_CRIME),
-    IllegalActivity(type=IllegalActivityType.VIOLENT_CRIME),
-    IllegalActivity(type=IllegalActivityType.WEAPONS),
-    ExcessiveAgency(type=ExcessiveAgencyType.EXCESSIVE_AUTONOMY),
-    ExcessiveAgency(type=ExcessiveAgencyType.EXCESSIVE_FUNCTIONALITY),
-    ExcessiveAgency(type=ExcessiveAgencyType.EXCESSIVE_PERMISSIONS),
-    GraphicContent(type=GraphicContentType.GRAPHIC_CONTENT),
-    GraphicContent(type=GraphicContentType.PORNOGRAPHIC_CONTENT),
-    GraphicContent(type=GraphicContentType.SEXUAL_CONTENT),
-    IntellectualProperty(type=IntellectualPropertyType.COPYRIGHT_VIOLATIONS),
-    IntellectualProperty(type=IntellectualPropertyType.IMITATION),
-    IntellectualProperty(type=IntellectualPropertyType.PATENT_DISCLOSURE),
-    IntellectualProperty(type=IntellectualPropertyType.TRADEMARK_INFRINGEMENT),
-    Robustness(type=RobustnessType.HIJACKING),
-    Robustness(type=RobustnessType.INPUT_OVERRELIANCE),
-    Competition(type=CompetitionType.COMPETITORS),
-    Competition(type=CompetitionType.CONFIDENTIAL_STRATEGIES),
-    Competition(type=CompetitionType.DISCREDITATION),
-    Competition(type=CompetitionType.MARKET_MANIPULATION),
-    UnauthorizedAccess(type=UnauthorizedAccessType.BFLA),
-    UnauthorizedAccess(type=UnauthorizedAccessType.BOLA),
-    UnauthorizedAccess(type=UnauthorizedAccessType.DEBUG_ACCESS),
-    UnauthorizedAccess(type=UnauthorizedAccessType.RBAC),
-    UnauthorizedAccess(type=UnauthorizedAccessType.SHELL_INJECTION),
-    UnauthorizedAccess(type=UnauthorizedAccessType.SQL_INJECTION),
-    UnauthorizedAccess(type=UnauthorizedAccessType.SSRF),
+vulnerabilties: List[Vulnerability] = [
+    Bias(types=[t for t in BiasType]),
+    Misinformation(types=[t for t in MisinformationType]),
+    Toxicity(types=[t for t in ToxicityType]),
+    PIILeakage(types=[t for t in PIILeakageType]),
+    PromptLeakage(types=[t for t in PromptLeakageType]),
+    IllegalActivity(types=[t for t in IllegalActivityType]),
+    ExcessiveAgency(types=[t for t in ExcessiveAgencyType]),
+    GraphicContent(types=[t for t in GraphicContentType]),
+    IntellectualProperty(types=[t for t in IntellectualPropertyType]),
+    Robustness(types=[t for t in RobustnessType]),
+    Competition(types=[t for t in CompetitionType]),
+    UnauthorizedAccess(types=[t for t in UnauthorizedAccessType]),
 ]
 
 #########################################
@@ -232,22 +196,21 @@ def test_remote_generation():
         purpose="A friendly chatbot",
         system_prompt="You are a friendly chatbot.",
     )
-    for vulnerability in [
-        Bias(type=BiasType.GENDER),
-        IllegalActivity(type=IllegalActivityType.CHILD_EXPLOITATION),
-        PromptLeakage(type=PromptLeakageType.FILTERING_CRITERIA),
-    ]:
-        start_time = time.time()
-        remote_attacks = red_teamer.generate_remote_attack(
-            purpose=red_teamer.purpose,
-            vulernability=vulnerability,
-            num_attacks=3,
-        )
-        end_time = time.time()  # Record end time
-        elapsed_time = end_time - start_time  # Calculate elapsed time
-        print(f"Vulnerability: {vulnerability}")
-        print(f"Generated Baseline Attacks: {remote_attacks}")
-        print(f"Time taken for generation: {elapsed_time:.2f} seconds\n")
+    for vulnerability in vulnerabilties:
+        for vulnerability_type in vulnerability.get_types():
+            start_time = time.time()
+            remote_attacks = red_teamer.generate_remote_attack(
+                purpose=red_teamer.purpose,
+                vulernability_type=vulnerability_type,
+                num_attacks=3,
+            )
+            end_time = time.time()  # Record end time
+            elapsed_time = end_time - start_time  # Calculate elapsed time
+            print(f"Vulnerability: {vulnerability}")
+            print(f"Generated Baseline Attacks: {remote_attacks}")
+            print(f"Time taken for generation: {elapsed_time:.2f} seconds\n")
+            print("")
+            print("*************************")
 
 #########################################
 # Attack Synthesizer (attacks generation)
@@ -260,18 +223,8 @@ def test_attacks_generation():
     )
     attacks = red_teamer.generate_attacks(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
-        attacks_per_vulnerability=3,
-        vulnerabilities=[
-            Bias(type=BiasType.GENDER),
-            # Bias(type=BiasType.POLITICS),
-            # Bias(type=BiasType.RACE),
-            # Bias(type=BiasType.RELIGION),
-            # Misinformation(type=MisinformationType.FACTUAL_ERRORS),
-            # Misinformation(type=MisinformationType.UNSUPPORTED_CLAIMS),
-            # Misinformation(type=MisinformationType.EXPERTISE_MISREPRESENTATION),
-            IllegalActivity(type=IllegalActivityType.CHILD_EXPLOITATION),
-            PromptLeakage(type=PromptLeakageType.FILTERING_CRITERIA),
-        ],
+        attacks_per_vulnerability_type=2,
+        vulnerabilities=vulnerabilties,
         attack_enhancements={AttackEnhancement.BASE64: 1},
     )
     return attacks
@@ -309,5 +262,6 @@ def test_red_teamer():
 
 if __name__ == "__main__":
     # test_remote_generation()
-    # attacks = test_attacks_generation()
-    test_red_teamer()
+    attacks = test_attacks_generation()
+    print(attacks)
+    # test_red_teamer()

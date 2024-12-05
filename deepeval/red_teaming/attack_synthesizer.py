@@ -9,7 +9,8 @@ from typing import List, Optional, Union, Dict
 
 from deepeval.red_teaming.types import (
     AttackEnhancement,
-    DeepEvalVulnerabilityType,
+    NonRemoteVulnerability,
+    VulnerabilityType
 )
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
 from deepeval.red_teaming.template import RedTeamSynthesizerTemplate
@@ -65,20 +66,21 @@ class AttackSynthesizer:
     def generate_attacks(
         self,
         target_model: DeepEvalBaseLLM,
-        attacks_per_vulnerability: int,
+        attacks_per_vulnerability_type: int,
         vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float],
     ) -> List[Attack]:
         # Generate unenhanced attacks for each vulnerability
         base_attacks: List[Attack] = []
+        num_vulnerability_types = sum(len(v.get_types()) for v in vulnerabilities)
         pbar = tqdm(
             vulnerabilities,
-            desc=f"💥 Generating {len(vulnerabilities) * attacks_per_vulnerability} attacks (for {len(vulnerabilities)} vulnerabilties)",
+            desc=f"💥 Generating {num_vulnerability_types * attacks_per_vulnerability_type} attacks (for {num_vulnerability_types} vulnerability types across {len(vulnerabilities)} vulnerabilities)",
         )
         for vulnerability in pbar:
             base_attacks.extend(
                 self.generate_base_attacks(
-                    attacks_per_vulnerability,
+                    attacks_per_vulnerability_type,
                     vulnerability,
                 )
             )
@@ -87,7 +89,7 @@ class AttackSynthesizer:
         enhanced_attacks: List[Attack] = []
         pbar = tqdm(
             base_attacks,
-            desc=f"✨ Enhancing {len(vulnerabilities) * attacks_per_vulnerability} attacks (using {len(attack_enhancements.keys())} enhancements)",
+            desc=f"✨ Enhancing {num_vulnerability_types * attacks_per_vulnerability_type} attacks (using {len(attack_enhancements.keys())} enhancements)",
         )
         attack_enhancement_choices = list(attack_enhancements.keys())
         enhancement_weights = list(
@@ -113,7 +115,7 @@ class AttackSynthesizer:
     async def a_generate_attacks(
         self,
         target_model: DeepEvalBaseLLM,
-        attacks_per_vulnerability: int,
+        attacks_per_vulnerability_type: int,
         vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float],
         max_concurrent_tasks: int = 10,
@@ -123,15 +125,16 @@ class AttackSynthesizer:
 
         # Generate unenhanced attacks for each vulnerability
         base_attacks: List[Attack] = []
+        num_vulnerability_types = sum(len(v.get_types()) for v in vulnerabilities)     
         pbar = tqdm(
             vulnerabilities,
-            desc=f"💥 Generating {len(vulnerabilities) * attacks_per_vulnerability} attacks (for {len(vulnerabilities)} vulnerabilities)",
+            desc=f"💥 Generating {num_vulnerability_types * attacks_per_vulnerability_type} attacks (for {num_vulnerability_types} vulnerability types across {len(vulnerabilities)} vulnerabilities)",
         )
 
         async def throttled_generate_base_attack(vulnerability):
             async with semaphore:  # Throttling applied here
                 result = await self.a_generate_base_attacks(
-                    attacks_per_vulnerability, vulnerability
+                    attacks_per_vulnerability_type, vulnerability
                 )
                 pbar.update(1)
                 return result
@@ -150,7 +153,7 @@ class AttackSynthesizer:
         enhanced_attacks: List[Attack] = []
         pbar = tqdm(
             total=len(base_attacks),
-            desc=f"✨ Enhancing {len(vulnerabilities) * attacks_per_vulnerability} attacks (using {len(attack_enhancements.keys())} enhancements)",
+            desc=f"✨ Enhancing {len(num_vulnerability_types) * attacks_per_vulnerability_type} attacks (using {len(attack_enhancements.keys())} enhancements)",
         )
 
         async def throttled_attack_enhancement(base_attack):
@@ -192,175 +195,191 @@ class AttackSynthesizer:
 
     def generate_base_attacks(
         self,
-        attacks_per_vulnerability: int,
+        attacks_per_vulnerability_type: int,
         vulnerability: Vulnerability,
         max_retries: int = 5,
     ) -> List[Attack]:
         base_attacks: List[Attack] = []
         # Remote vulnerabilities
-        if not isinstance(vulnerability.get_type(), DeepEvalVulnerabilityType):
+        if not isinstance(vulnerability, NonRemoteVulnerability):
             if not is_confident():
                 raise Exception(
-                    f"To generate attacks for '{vulnerability.get_value()}', login to Confident AI by running `deepeval login`"
+                    f"To generate attacks for '{vulnerability.get_name()}', login to Confident AI by running `deepeval login`"
                 )
-            try:
-                remote_attacks = self.generate_remote_attack(
-                    self.purpose, vulnerability, attacks_per_vulnerability
-                )
-                base_attacks.extend(
-                    [
-                        Attack(
-                            vulnerability=vulnerability.get_type(),
-                            input=remote_attack,
-                        )
-                        for remote_attack in remote_attacks
-                    ]
-                )
-            except:
-                for _ in range(attacks_per_vulnerability):
-                    base_attacks.append(
-                        Attack(
-                            vulnerability=vulnerability.get_type(),
-                            error="Error generating aligned attacks.",
-                        )
+            
+            for vulnerability_type in vulnerability.get_types():
+                try:
+                    remote_attacks = self.generate_remote_attack(
+                        self.purpose, vulnerability_type, attacks_per_vulnerability_type
                     )
+                    base_attacks.extend(
+                        [
+                            Attack(
+                                vulnerability=vulnerability.get_name(),
+                                vulnerability_type=vulnerability_type,
+                                input=remote_attack
+                            )
+                            for remote_attack in remote_attacks
+                        ]
+                    )
+                except:
+                    for _ in range(attacks_per_vulnerability_type):
+                        base_attacks.append(
+                            Attack(
+                                vulnerability=vulnerability.get_name(),
+                                vulnerability_type=vulnerability_type,
+                                error="Error generating aligned attacks."
+                            )
+                        )
 
         # Aligned vulnerabilities: LLMs can generate
         else:
-            prompt = RedTeamSynthesizerTemplate.generate_attacks(
-                attacks_per_vulnerability, vulnerability, self.purpose
-            )
+            for vulnerability_type in vulnerability.get_types():
+                prompt = RedTeamSynthesizerTemplate.generate_attacks(
+                    attacks_per_vulnerability_type, vulnerability_type, self.purpose
+                )
 
-            # Generate attacks with retries
-            for i in range(max_retries):
-                try:
-                    res: SyntheticDataList = self._generate_schema(
-                        prompt, SyntheticDataList
-                    )
-                    compliance_prompt = (
-                        RedTeamSynthesizerTemplate.non_compliant(
-                            res.model_dump()
+                # Generate attacks with retries
+                for i in range(max_retries):
+                    try:
+                        res: SyntheticDataList = self._generate_schema(
+                            prompt, SyntheticDataList
                         )
-                    )
-                    compliance_res: ComplianceData = self._generate_schema(
-                        compliance_prompt, ComplianceData
-                    )
-
-                    if not compliance_res.non_compliant:
-                        base_attacks.extend(
-                            Attack(
-                                input=attack.input,
-                                vulnerability=vulnerability.get_type(),
+                        compliance_prompt = (
+                            RedTeamSynthesizerTemplate.non_compliant(
+                                res.model_dump()
                             )
-                            for attack in res.data
                         )
-                        break
+                        compliance_res: ComplianceData = self._generate_schema(
+                            compliance_prompt, ComplianceData
+                        )
 
-                    if i == max_retries - 1:
-                        base_attacks = [
-                            Attack(
-                                vulnerability=vulnerability.get_type(),
-                                error="Error generating compliant attacks.",
+                        if not compliance_res.non_compliant:
+                            base_attacks.extend(
+                                Attack(
+                                    input=attack.input,
+                                    vulnerability=vulnerability.get_name(),
+                                    vulnerability_type=vulnerability_type
+                                )
+                                for attack in res.data
                             )
-                            for _ in range(attacks_per_vulnerability)
-                        ]
-                except:
-                    if i == max_retries - 1:
-                        base_attacks = [
-                            Attack(
-                                vulnerability=vulnerability.get_type(),
-                                error="Error generating aligned attacks.",
-                            )
-                            for _ in range(attacks_per_vulnerability)
-                        ]
+                            break
+
+                        if i == max_retries - 1:
+                            base_attacks = [
+                                Attack(
+                                    vulnerability=vulnerability.get_name(),
+                                    vulnerability_type=vulnerability_type,
+                                    error="Error generating compliant attacks."
+                                )
+                                for _ in range(attacks_per_vulnerability_type)
+                            ]
+                    except:
+                        if i == max_retries - 1:
+                            base_attacks = [
+                                Attack(
+                                    vulnerability=vulnerability.get_name(),
+                                    vulnerability_type=vulnerability_type,
+                                    error="Error generating aligned attacks."
+                                )
+                                for _ in range(attacks_per_vulnerability_type)
+                            ]
         return base_attacks
 
     async def a_generate_base_attacks(
         self,
-        attacks_per_vulnerability: int,
+        attacks_per_vulnerability_type: int,
         vulnerability: Vulnerability,
         max_retries: int = 5,
     ) -> List[Attack]:
         base_attacks: List[Attack] = []
 
         # Remote vulnerabilities
-        if not isinstance(vulnerability.get_type(), DeepEvalVulnerabilityType):
+        if not isinstance(vulnerability, NonRemoteVulnerability):
             if not is_confident():
                 raise Exception(
-                    f"To generate attacks for '{vulnerability.get_value()}', login to Confident AI by running `deepeval login`"
+                    f"To generate attacks for '{vulnerability.get_name()}', login to Confident AI by running `deepeval login`"
                 )
-            try:
-                remote_attacks = self.generate_remote_attack(
-                    self.purpose, vulnerability, attacks_per_vulnerability
-                )
-                base_attacks.extend(
-                    [
-                        Attack(
-                            vulnerability=vulnerability.get_type(),
-                            input=remote_attack,
-                        )
-                        for remote_attack in remote_attacks
-                    ]
-                )
-            except:
-                for _ in range(attacks_per_vulnerability):
-                    base_attacks.append(
-                        Attack(
-                            vulnerability=vulnerability.get_type(),
-                            error="Error generating aligned attacks.",
-                        )
+            
+            for vulnerability_type in vulnerability.get_types():
+                try:
+                    remote_attacks = self.generate_remote_attack(
+                        self.purpose, vulnerability_type, attacks_per_vulnerability_type
                     )
+                    base_attacks.extend(
+                        [
+                            Attack(
+                                vulnerability=vulnerability.get_name(),
+                                vulnerability_type=vulnerability_type,
+                                input=remote_attack
+                            )
+                            for remote_attack in remote_attacks
+                        ]
+                    )
+                except:
+                    for _ in range(attacks_per_vulnerability_type):
+                        base_attacks.append(
+                            Attack(
+                                vulnerability=vulnerability.get_name(),
+                                vulnerability_type=vulnerability_type,
+                                error="Error generating aligned attacks."
+                            )
+                        )
 
         # Aligned vulnerabilities: LLMs can generate
         else:
-            prompt = RedTeamSynthesizerTemplate.generate_attacks(
-                attacks_per_vulnerability, vulnerability, self.purpose
-            )
+            for vulnerability_type in vulnerability.get_types():
+                prompt = RedTeamSynthesizerTemplate.generate_attacks(
+                    attacks_per_vulnerability_type, vulnerability_type, self.purpose
+                )
 
-            # Generate attacks with retries
-            for i in range(max_retries):
-                try:
-                    res: SyntheticDataList = await self._a_generate_schema(
-                        prompt, SyntheticDataList
-                    )
-                    compliance_prompt = (
-                        RedTeamSynthesizerTemplate.non_compliant(
-                            res.model_dump()
+                # Generate attacks with retries
+                for i in range(max_retries):
+                    try:
+                        res: SyntheticDataList = await self._a_generate_schema(
+                            prompt, SyntheticDataList
                         )
-                    )
-                    compliance_res: ComplianceData = (
-                        await self._a_generate_schema(
-                            compliance_prompt, ComplianceData
+                        compliance_prompt = (
+                            RedTeamSynthesizerTemplate.non_compliant(
+                                res.model_dump()
+                            )
                         )
-                    )
+                        compliance_res: ComplianceData = (
+                            await self._a_generate_schema(
+                                compliance_prompt, ComplianceData
+                            )
+                        )
 
-                    if not compliance_res.non_compliant:
-                        base_attacks.extend(
-                            Attack(
-                                input=attack.input,
-                                vulnerability=vulnerability.get_type(),
+                        if not compliance_res.non_compliant:
+                            base_attacks.extend(
+                                Attack(
+                                    input=attack.input,
+                                    vulnerability=vulnerability.get_name(),
+                                    vulnerability_type=vulnerability_type
+                                )
+                                for attack in res.data
                             )
-                            for attack in res.data
-                        )
-                        break
+                            break
 
-                    if i == max_retries - 1:
-                        base_attacks = [
-                            Attack(
-                                vulnerability=vulnerability.get_type(),
-                                error="Error generating compliant attacks.",
-                            )
-                            for _ in range(attacks_per_vulnerability)
-                        ]
-                except:
-                    if i == max_retries - 1:
-                        base_attacks = [
-                            Attack(
-                                vulnerability=vulnerability.get_type(),
-                                error="Error generating aligned attacks.",
-                            )
-                            for _ in range(attacks_per_vulnerability)
-                        ]
+                        if i == max_retries - 1:
+                            base_attacks = [
+                                Attack(
+                                    vulnerability=vulnerability.get_name(),
+                                    vulnerability_type=vulnerability_type,
+                                    error="Error generating compliant attacks."
+                                )
+                                for _ in range(attacks_per_vulnerability_type)
+                            ]
+                    except:
+                        if i == max_retries - 1:
+                            base_attacks = [
+                                Attack(
+                                    vulnerability=vulnerability.get_name(),
+                                    vulnerability_type=vulnerability_type,
+                                    error="Error generating aligned attacks.",
+                                )
+                                for _ in range(attacks_per_vulnerability_type)
+                            ]
         return base_attacks
 
     ##################################################
@@ -548,12 +567,12 @@ class AttackSynthesizer:
         )
 
     def generate_remote_attack(
-        self, purpose: str, vulnerability : Vulnerability, num_attacks: int
+        self, purpose: str, vulnerability_type: VulnerabilityType, num_attacks: int
     ) -> List[Attack]:
         # Prepare parameters for API request
         guard_params = ApiGenerateBaselineAttack(
             purpose=purpose,
-            vulnerability=vulnerability.get_value(),
+            vulnerability=vulnerability_type.value,
             num_attacks=num_attacks,
         )
         body = guard_params.model_dump(by_alias=True, exclude_none=True)

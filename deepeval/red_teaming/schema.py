@@ -9,7 +9,8 @@ from .types import VulnerabilityType
 
 
 class Attack(BaseModel):
-    vulnerability: VulnerabilityType
+    vulnerability: str
+    vulnerability_type: VulnerabilityType
     # When there is an error, base input can fail to generate
     # and subsequently enhancements are redundant
     input: Optional[str] = None

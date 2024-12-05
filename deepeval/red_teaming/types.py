@@ -37,7 +37,7 @@ from deepeval.vulnerability import (
 ####  Attack Enhancements ################
 ##########################################
 
-DeepEvalVulnerabilityType = Union[BiasType, MisinformationType]
+NonRemoteVulnerability = Union[Bias, Misinformation]
 VulnerabilityType = Union[
     UnauthorizedAccessType,
     IllegalActivityType,
