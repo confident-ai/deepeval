@@ -1,5 +1,4 @@
 import asyncio
-import pandas as pd
 from pydantic import Field
 from tqdm import tqdm
 from typing import Dict, List, Optional, Union
@@ -83,6 +82,12 @@ class RedTeamer:
         },
         max_concurrent_tasks: int = 10,
     ):
+        try:
+            import pandas as pd
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install pandas to use this method. 'pip install pandas'"
+            )
         if self.async_mode:
             loop = get_or_create_event_loop()
             return loop.run_until_complete(
@@ -226,6 +231,12 @@ class RedTeamer:
         },
         max_concurrent_tasks: int = 10,  # Throttling limit, control concurrency
     ):
+        try:
+            import pandas as pd
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install pandas to use this method. 'pip install pandas'"
+            )
         with capture_red_teamer_run(
             attacks_per_vulnerability=attacks_per_vulnerability,
             vulnerabilities=vulnerabilities,

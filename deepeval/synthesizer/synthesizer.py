@@ -2,7 +2,6 @@ from typing import List, Optional, Union, Tuple, Dict
 from rich.console import Console
 from pydantic import BaseModel
 from itertools import chain
-import pandas as pd
 import webbrowser
 import datetime
 import asyncio
@@ -951,6 +950,12 @@ class Synthesizer:
             return await func(*args, **kwargs)
 
     def to_pandas(self):
+        try:
+            import pandas as pd
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Please install pandas to use this method. 'pip install pandas'"
+            )
         # Prepare data for the DataFrame
         data = []
 
