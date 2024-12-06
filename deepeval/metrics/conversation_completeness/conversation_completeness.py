@@ -61,7 +61,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.turns = format_turns(test_case.turns, required_params)
+                self.turns: List[Dict[str, str]] = format_turns(
+                    test_case.turns, required_params
+                )
                 self.user_intentions = self._extract_user_intentions()
                 self.verdicts = [
                     self._generate_verdict(user_intention)
@@ -93,7 +95,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.turns = format_turns(test_case.turns, required_params)
+            self.turns: List[Dict[str, str]] = format_turns(
+                test_case.turns, required_params
+            )
             self.user_intentions = await self._a_extract_user_intentions()
             self.verdicts = await asyncio.gather(
                 *[

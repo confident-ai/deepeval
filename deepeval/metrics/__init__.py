@@ -29,3 +29,4 @@ from .conversation_completeness.conversation_completeness import (
 from .role_adherence.role_adherence import (
     RoleAdherenceMetric,
 )
+from .conversational_g_eval.conversational_g_eval import ConversationalGEval

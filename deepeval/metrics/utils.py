@@ -53,7 +53,7 @@ def copy_metrics(
 
 def format_turns(
     llm_test_cases: List[LLMTestCase], test_case_params: List[LLMTestCaseParams]
-) -> List[Dict[str, str]]:
+) -> List[Dict[str, Union[str, List[str]]]]:
     res = []
     for llm_test_case in llm_test_cases:
         dict = {}
@@ -77,11 +77,6 @@ def process_llm_test_cases_windows(
             for param in test_case_params:
                 if getattr(llm_test_case, param.value):
                     value = getattr(llm_test_case, param.value)
-                    key = None
-                    if param is LLMTestCaseParams.INPUT:
-                        key = "Input"
-                    elif param is LLMTestCaseParams.ACTUAL_OUTPUT:
-                        key = "LLM Response"
                     dict[param.value] = value
             window.append(dict)
         res.append(window)

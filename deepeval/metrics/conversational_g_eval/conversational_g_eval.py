@@ -1,56 +1,32 @@
-"""LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
+"""A slightly modified tailored version of the LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Optional, List, Tuple, Union, Dict
-from pydantic import BaseModel
 from langchain.schema import AIMessage
 import math
 from deepeval.metrics import BaseMetric
+from deepeval.metrics.g_eval.g_eval import construct_g_eval_params_string
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
 )
-from deepeval.metrics.g_eval.template import GEvalTemplate
+from deepeval.metrics.conversational_g_eval.template import (
+    ConversationalGEvalTemplate,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
+    check_conversational_test_case_params,
     construct_verbose_logs,
+    format_turns,
     trimAndLoadJson,
-    check_llm_test_case_params,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.g_eval.schema import *
-
-G_EVAL_PARAMS = {
-    LLMTestCaseParams.INPUT: "Input",
-    LLMTestCaseParams.ACTUAL_OUTPUT: "Actual Output",
-    LLMTestCaseParams.EXPECTED_OUTPUT: "Expected Output",
-    LLMTestCaseParams.CONTEXT: "Context",
-    LLMTestCaseParams.RETRIEVAL_CONTEXT: "Retrieval Context",
-    LLMTestCaseParams.EXPECTED_TOOLS: "Expected Tools",
-    LLMTestCaseParams.TOOLS_CALLED: "Tools Called",
-}
+from deepeval.metrics.conversational_g_eval.schema import *
 
 
-def construct_g_eval_params_string(
-    llm_test_case_params: List[LLMTestCaseParams],
-):
-    g_eval_params = [G_EVAL_PARAMS[param] for param in llm_test_case_params]
-
-    if len(g_eval_params) == 1:
-        g_eval_params_str = g_eval_params[0]
-    elif len(g_eval_params) == 2:
-        g_eval_params_str = " and ".join(g_eval_params)
-    else:
-        g_eval_params_str = (
-            ", ".join(g_eval_params[:-1]) + ", and " + g_eval_params[-1]
-        )
-
-    return g_eval_params_str
-
-
-class GEval(BaseMetric):
+class ConversationalGEval(BaseMetric):
     def __init__(
         self,
         name: str,
@@ -95,12 +71,12 @@ class GEval(BaseMetric):
 
     def measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: ConversationalTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, self.evaluation_params, self)
+        check_conversational_test_case_params(
+            test_case, self.evaluation_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -134,12 +110,12 @@ class GEval(BaseMetric):
 
     async def a_measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: ConversationalTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, self.evaluation_params, self)
+        check_conversational_test_case_params(
+            test_case, self.evaluation_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -177,7 +153,7 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = GEvalTemplate.generate_evaluation_steps(
+        prompt = ConversationalGEvalTemplate.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
@@ -201,7 +177,7 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = GEvalTemplate.generate_evaluation_steps(
+        prompt = ConversationalGEvalTemplate.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
@@ -221,17 +197,14 @@ class GEval(BaseMetric):
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
-        text = """"""
-        for param in self.evaluation_params:
-            value = getattr(test_case, param.value)
-            text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
-
+        turns = format_turns(test_case.turns, self.evaluation_params)
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = GEvalTemplate.generate_evaluation_results(
+
+        prompt = ConversationalGEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
-            text=text,
+            conversation=turns,
             parameters=g_eval_params_str,
         )
 
@@ -275,19 +248,17 @@ class GEval(BaseMetric):
                     data = trimAndLoadJson(res, self)
                     return data["score"], data["reason"]
 
-    def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
-        text = """"""
-        for param in self.evaluation_params:
-            value = getattr(test_case, param.value)
-            text += f"{param.value}: {value} \n\n"
-
+    def evaluate(
+        self, test_case: ConversationalTestCase
+    ) -> Tuple[Union[int, float], str]:
+        turns = format_turns(test_case.turns, self.evaluation_params)
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
 
-        prompt = GEvalTemplate.generate_evaluation_results(
+        prompt = ConversationalGEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
-            text=text,
+            conversation=turns,
             parameters=g_eval_params_str,
         )
 
@@ -431,6 +402,6 @@ class GEval(BaseMetric):
     @property
     def __name__(self):
         if self._include_g_eval_suffix:
-            return f"{self.name} (GEval)"
+            return f"{self.name} (Conversational GEval)"
         else:
             return self.name
