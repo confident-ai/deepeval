@@ -56,6 +56,7 @@ module.exports = {
               type: "category",
               label: "Conversational Metrics",
               items: [
+                "metrics-conversational-g-eval",
                 "metrics-role-adherence",
                 "metrics-knowledge-retention",
                 "metrics-conversation-completeness",
