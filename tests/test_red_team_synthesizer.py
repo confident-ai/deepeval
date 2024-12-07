@@ -243,25 +243,26 @@ def test_red_teamer():
     )
     results = red_teamer.scan(
         target_model=TargetGPTModel("gpt-3.5-turbo-0125"),
-        attacks_per_vulnerability=1,
+        attacks_per_vulnerability_type=1,
         attack_enhancements={AttackEnhancement.BASE64: 1},
         vulnerabilities=vulnerabilties
     )
 
-    df = red_teamer.vulnerability_scores_breakdown
-    # print(results)
-    for index, row in df.iterrows():
-        print(f"Input: {row['Input']}")
-        print(f"Target Output: {row['Target Output']}")
-        print(f"Score: {row['Score']}")
-        print(f"Reason: {row['Reason']}")
-        print(f"Error: {row['Error']}")
-        # print(row)
-        print("**********************************************************")
+    red_teamer.vulnerability_scores_breakdown.to_csv("vulnerability_scores_breakdown.csv")
+    red_teamer.vulnerability_scores.to_csv("vulnerability_scores.csv")
+
+    # for index, row in df.iterrows():
+    #     print(f"Input: {row['Input']}")
+    #     print(f"Target Output: {row['Target Output']}")
+    #     print(f"Score: {row['Score']}")
+    #     print(f"Reason: {row['Reason']}")
+    #     print(f"Error: {row['Error']}")
+    #     # print(row)
+    #     print("**********************************************************")
 
 
 if __name__ == "__main__":
     # test_remote_generation()
-    attacks = test_attacks_generation()
-    print(attacks)
-    # test_red_teamer()
+    # attacks = test_attacks_generation()
+    # print(attacks)
+    test_red_teamer()

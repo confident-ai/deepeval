@@ -42,7 +42,8 @@ from deepeval.telemetry import capture_red_teamer_run
 
 
 class VulnerabilityResult(BaseModel):
-    vulnerability: VulnerabilityType
+    vulnerability: str
+    vulnerability_type: VulnerabilityType
     attack_enhancement: Optional[str] = None
     input: Optional[str] = None
     actual_output: Optional[str] = None
@@ -85,7 +86,7 @@ class RedTeamer:
     def scan(
         self,
         target_model: DeepEvalBaseLLM,
-        attacks_per_vulnerability: int,
+        attacks_per_vulnerability_type: int,
         vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float] = {
             AttackEnhancement.BASE64: 1 / 11,
@@ -107,7 +108,7 @@ class RedTeamer:
             return loop.run_until_complete(
                 self.a_scan(
                     target_model,
-                    attacks_per_vulnerability,
+                    attacks_per_vulnerability_type,
                     vulnerabilities,
                     attack_enhancements,
                     max_concurrent_tasks,
@@ -115,7 +116,7 @@ class RedTeamer:
             )
         else:
             with capture_red_teamer_run(
-                attacks_per_vulnerability=attacks_per_vulnerability,
+                attacks_per_vulnerability_type=attacks_per_vulnerability_type,
                 vulnerabilities=vulnerabilities,
                 attack_enhancements=attack_enhancements,
             ):
@@ -126,7 +127,7 @@ class RedTeamer:
                 attacks: List[Attack] = (
                     self.attack_synthesizer.generate_attacks(
                         target_model=target_model,
-                        attacks_per_vulnerability=attacks_per_vulnerability,
+                        attacks_per_vulnerability_type=attacks_per_vulnerability_type,
                         vulnerabilities=vulnerabilities,
                         attack_enhancements=attack_enhancements,
                     )
@@ -137,30 +138,32 @@ class RedTeamer:
                     VulnerabilityType, List[Attack]
                 ] = {}
                 for attack in attacks:
-                    if attack.vulnerability not in vulnerability_to_attacks_map:
-                        vulnerability_to_attacks_map[attack.vulnerability] = [
+                    if attack.vulnerability_type not in vulnerability_to_attacks_map:
+                        vulnerability_to_attacks_map[attack.vulnerability_type] = [
                             attack
                         ]
                     else:
                         vulnerability_to_attacks_map[
-                            attack.vulnerability
+                            attack.vulnerability_type
                         ].append(attack)
 
                 # Evaluate each attack by vulnerability
                 red_teaming_results = []
                 red_teaming_results_breakdown = []
 
+                num_vulnerability_types = sum(len(v.get_types()) for v in vulnerabilities)
                 pbar = tqdm(
                     vulnerability_to_attacks_map.items(),
-                    desc=f"📝 Evaluating {len(vulnerabilities)} vulnerability(s)",
+                    desc=f"📝 Evaluating {num_vulnerability_types} vulnerability types across {len(vulnerabilities)} vulnerabilities",
                 )
-                for vulnerability, attacks in pbar:
+                for vulnerability_type, attacks in pbar:
                     scores = []
                     for attack in attacks:
-                        metric: BaseMetric = metrics_map.get(vulnerability)()
-                        risk = llm_risk_categories_map.get(vulnerability)
+                        metric: BaseMetric = metrics_map.get(vulnerability_type)()
+                        risk = llm_risk_categories_map.get(vulnerability_type)
                         result = {
-                            "Vulnerability": vulnerability.value,
+                            "Vulnerability": attack.vulnerability,
+                            "Vulnerability Type": vulnerability_type.value,
                             "Attack Enhancement": attack.attack_enhancement,
                             "Risk Category": (
                                 risk.value if risk is not None else "Others"
@@ -199,7 +202,7 @@ class RedTeamer:
                             scores.append(metric.score)
                         except Exception:
                             result["Error"] = (
-                                f"Error evaluating target LLM output for the '{vulnerability.get_type().value}' vulnerability"
+                                f"Error evaluating target LLM output for the '{vulnerability_type.value}' vulnerability"
                             )
                             red_teaming_results_breakdown.append(result)
                             continue
@@ -212,7 +215,8 @@ class RedTeamer:
                     )
                     red_teaming_results.append(
                         {
-                            "Vulnerability": vulnerability.get_type().value,
+                            "Vulnerability": attack.vulnerability,
+                            "Vulnerability Type": vulnerability_type.value,
                             "Average Score": avg_vulnerability_score,
                         }
                     )
@@ -228,7 +232,7 @@ class RedTeamer:
     async def a_scan(
         self,
         target_model: DeepEvalBaseLLM,
-        attacks_per_vulnerability: int,
+        attacks_per_vulnerability_type: int,
         vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float] = {
             AttackEnhancement.BASE64: 1 / 11,
@@ -246,7 +250,7 @@ class RedTeamer:
         max_concurrent_tasks: int = 10,  # Throttling limit, control concurrency
     ):
         with capture_red_teamer_run(
-            attacks_per_vulnerability=attacks_per_vulnerability,
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type,
             vulnerabilities=vulnerabilities,
             attack_enhancements=attack_enhancements,
         ):
@@ -254,23 +258,23 @@ class RedTeamer:
             metrics_map = self.get_red_teaming_metrics_map()
 
             # Generate attacks
-            attacks = await self.attack_synthesizer.a_generate_attacks(
+            attacks: List[Attack] = await self.attack_synthesizer.a_generate_attacks(
                 target_model=target_model,
-                attacks_per_vulnerability=attacks_per_vulnerability,
+                attacks_per_vulnerability_type=attacks_per_vulnerability_type,
                 vulnerabilities=vulnerabilities,
                 attack_enhancements=attack_enhancements,
                 max_concurrent_tasks=max_concurrent_tasks,
             )
 
             # Create a mapping of vulnerabilities to attacks
-            vulnerability_to_attacks_map: Dict[VulnerabilityType, List[Attack]] = {}
+            vulnerability_type_to_attacks_map: Dict[VulnerabilityType, List[Attack]] = {}
             for attack in attacks:
-                if attack.vulnerability not in vulnerability_to_attacks_map:
-                    vulnerability_to_attacks_map[attack.vulnerability] = [
+                if attack.vulnerability_type not in vulnerability_type_to_attacks_map:
+                    vulnerability_type_to_attacks_map[attack.vulnerability_type] = [
                         attack
                     ]
                 else:
-                    vulnerability_to_attacks_map[attack.vulnerability].append(
+                    vulnerability_type_to_attacks_map[attack.vulnerability_type].append(
                         attack
                     )
 
@@ -283,23 +287,23 @@ class RedTeamer:
             # Total number of attacks across all vulnerabilities
             total_attacks = sum(
                 len(attacks)
-                for attacks in vulnerability_to_attacks_map.values()
+                for attacks in vulnerability_type_to_attacks_map.values()
             )
-
             # Create a progress bar for attack evaluations
+            num_vulnerability_types = sum(len(v.get_types()) for v in vulnerabilities)
             pbar = tqdm(
                 total=total_attacks,
-                desc=f"📝 Evaluating {len(vulnerabilities)} vulnerability(s)",
+                desc=f"📝 Evaluating {num_vulnerability_types} vulnerability types across {len(vulnerabilities)} vulnerabilities",
             )
 
-            async def throttled_evaluate_vulnerability(vulnerability, attacks):
+            async def throttled_evaluate_vulnerability_type(vulnerability_type, attacks):
                 async with (
                     semaphore
                 ):  # Ensures only `max_concurrent_tasks` run concurrently
                     vulnerability_results = (
-                        await self._a_evaluate_vulnerability(
+                        await self._a_evaluate_vulnerability_type(
                             target_model,
-                            vulnerability,
+                            vulnerability_type,
                             attacks,
                             metrics_map,
                         )
@@ -311,8 +315,8 @@ class RedTeamer:
 
             # Create a list of tasks for evaluating each vulnerability, with throttling
             tasks = [
-                throttled_evaluate_vulnerability(vulnerability, attacks)
-                for vulnerability, attacks in vulnerability_to_attacks_map.items()
+                throttled_evaluate_vulnerability_type(vulnerability_type, attacks)
+                for vulnerability_type, attacks in vulnerability_type_to_attacks_map.items()
             ]
             # Execute tasks concurrently with throttling using asyncio.gather
             vulnerability_results_list = await asyncio.gather(*tasks)
@@ -321,8 +325,8 @@ class RedTeamer:
             pbar.close()
 
             # Process results
-            for (vulnerability, _), vulnerability_results in zip(
-                vulnerability_to_attacks_map.items(), vulnerability_results_list
+            for (vulnerability_type, attacks), vulnerability_results in zip(
+                vulnerability_type_to_attacks_map.items(), vulnerability_results_list
             ):
                 valid_scores = [
                     vulnerability_result.score
@@ -336,7 +340,8 @@ class RedTeamer:
 
                 red_teaming_results.append(
                     {
-                        "Vulnerability": vulnerability.value,
+                        "Vulnerability": attacks[0].vulnerability,
+                        "Vulnerability Type": vulnerability_type,
                         "Average Score": avg_score,
                     }
                 )
@@ -348,6 +353,7 @@ class RedTeamer:
                     red_teaming_results_breakdown.append(
                         {
                             "Vulnerability": vulnerability_result.vulnerability,
+                            "Vulnerability Type": vulnerability_result.vulnerability_type,
                             "Attack Enhancement": vulnerability_result.attack_enhancement,
                             "Risk Category": (
                                 risk.value if risk is not None else "Others"
@@ -376,12 +382,14 @@ class RedTeamer:
         self,
         target_model: DeepEvalBaseLLM,
         attack: Attack,
-        vulnerability: Vulnerability,
+        vulnerability: str,
+        vulnerability_type: VulnerabilityType,
         metrics_map,
     ) -> VulnerabilityResult:
         result = VulnerabilityResult(
             input=attack.input,
             vulnerability=vulnerability,
+            vulnerability_type=vulnerability_type,
             attack_enhancement=attack.attack_enhancement,
         )
 
@@ -389,7 +397,7 @@ class RedTeamer:
             result.error = attack.error
             return result
 
-        metric: BaseMetric = metrics_map[vulnerability]()
+        metric: BaseMetric = metrics_map[vulnerability_type]()
         try:
             # Generate actual output using the 'input'
             actual_output = await target_model.a_generate(attack.input)
@@ -408,15 +416,15 @@ class RedTeamer:
             result.score = metric.score
             result.reason = metric.reason
         except:
-            result.error = f"Error evaluating target LLM output for the '{vulnerability.value}' vulnerability"
+            result.error = f"Error evaluating target LLM output for the '{vulnerability_type.value}' vulnerability type"
             return result
 
         return result
 
-    async def _a_evaluate_vulnerability(
+    async def _a_evaluate_vulnerability_type(
         self,
         target_model: DeepEvalBaseLLM,
-        vulnerability: Vulnerability,
+        vulnerability_type: VulnerabilityType,
         attacks: List[Attack],
         metrics_map,
     ) -> List[VulnerabilityResult]:
@@ -425,13 +433,13 @@ class RedTeamer:
                 self._a_attack(
                     target_model=target_model,
                     attack=attack,
-                    vulnerability=vulnerability,
+                    vulnerability=attack.vulnerability,
+                    vulnerability_type=vulnerability_type,
                     metrics_map=metrics_map,
                 )
                 for attack in attacks
             ]
         )
-
         return results
 
     ##################################################

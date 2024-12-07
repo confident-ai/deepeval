@@ -40,7 +40,7 @@ from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.vulnerability import Vulnerability
 from deepeval.utils import is_confident
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "https://deepeval.confident-ai.com/"
 
 class AttackSynthesizer:
     def __init__(
@@ -153,7 +153,7 @@ class AttackSynthesizer:
         enhanced_attacks: List[Attack] = []
         pbar = tqdm(
             total=len(base_attacks),
-            desc=f"✨ Enhancing {len(num_vulnerability_types) * attacks_per_vulnerability_type} attacks (using {len(attack_enhancements.keys())} enhancements)",
+            desc=f"✨ Enhancing {num_vulnerability_types * attacks_per_vulnerability_type} attacks (using {len(attack_enhancements.keys())} enhancements)",
         )
 
         async def throttled_attack_enhancement(base_attack):
