@@ -10,7 +10,8 @@ from typing import List, Optional, Union, Dict
 from deepeval.red_teaming.types import (
     AttackEnhancement,
     NonRemoteVulnerability,
-    VulnerabilityType
+    VulnerabilityType,
+    CallbackType
 )
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
 from deepeval.red_teaming.template import RedTeamSynthesizerTemplate
@@ -65,7 +66,7 @@ class AttackSynthesizer:
 
     def generate_attacks(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         attacks_per_vulnerability_type: int,
         vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float],
@@ -103,7 +104,7 @@ class AttackSynthesizer:
             )[0]
 
             enhanced_attack = self.enhance_attack(
-                target_model=target_model,
+                target_model_callback=target_model_callback,
                 base_attack=base_attack,
                 attack_enhancement=sampled_enhancement,
             )
@@ -114,7 +115,7 @@ class AttackSynthesizer:
 
     async def a_generate_attacks(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         attacks_per_vulnerability_type: int,
         vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float],
@@ -165,7 +166,7 @@ class AttackSynthesizer:
                     attack_enhancement_choices, weights=enhancement_weights, k=1
                 )[0]
                 result = await self.a_enhance_attack(
-                    target_model=target_model,
+                    target_model_callback=target_model_callback,
                     base_attack=base_attack,
                     attack_enhancement=sampled_enhancement,
                 )
@@ -388,7 +389,7 @@ class AttackSynthesizer:
 
     def enhance_attack(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         base_attack: Attack,
         attack_enhancement: AttackEnhancement,
         jailbreaking_iterations: int = 5,
@@ -429,7 +430,7 @@ class AttackSynthesizer:
 
             elif attack_enhancement == AttackEnhancement.JAILBREAK_LINEAR:
                 enhanced_attack = JailbreakingLinear(
-                    target_model=target_model,
+                    target_model_callback=target_model_callback,
                     synthesizer_model=self.synthesizer_model,
                     using_native_model=self.using_native_model,
                 ).enhance(attack_input, jailbreaking_iterations)
@@ -437,7 +438,7 @@ class AttackSynthesizer:
 
             elif attack_enhancement == AttackEnhancement.JAILBREAK_TREE:
                 enhanced_attack = JailbreakingTree(
-                    target_model=target_model,
+                    target_model_callback=target_model_callback,
                     synthesizer_model=self.synthesizer_model,
                     using_native_model=self.using_native_model,
                 ).enhance(attack_input)
@@ -457,7 +458,7 @@ class AttackSynthesizer:
 
             elif attack_enhancement == AttackEnhancement.JAILBREAK_CRESCENDO:
                 enhanced_attack = JailbreakingCrescendo(
-                    target_model=target_model,
+                    target_model_callback=target_model_callback,
                     synthesizer_model=self.synthesizer_model,
                     using_native_model=self.using_native_model,
                 ).enhance(attack_input)
@@ -470,7 +471,7 @@ class AttackSynthesizer:
 
     async def a_enhance_attack(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         base_attack: Attack,
         attack_enhancement: AttackEnhancement,
         jailbreaking_iterations: int = 5,
@@ -513,7 +514,7 @@ class AttackSynthesizer:
 
             elif attack_enhancement == AttackEnhancement.JAILBREAK_LINEAR:
                 enhanced_attack = await JailbreakingLinear(
-                    target_model=target_model,
+                    target_model_callback=target_model_callback,
                     synthesizer_model=self.synthesizer_model,
                     using_native_model=self.using_native_model,
                 ).a_enhance(attack_input, jailbreaking_iterations)
@@ -521,7 +522,7 @@ class AttackSynthesizer:
 
             elif attack_enhancement == AttackEnhancement.JAILBREAK_TREE:
                 enhanced_attack = await JailbreakingTree(
-                    target_model=target_model,
+                    target_model_callback=target_model_callback,
                     synthesizer_model=self.synthesizer_model,
                     using_native_model=self.using_native_model,
                 ).a_enhance(attack_input)
@@ -541,7 +542,7 @@ class AttackSynthesizer:
 
             elif attack_enhancement == AttackEnhancement.JAILBREAK_CRESCENDO:
                 enhanced_attack = await JailbreakingCrescendo(
-                    target_model=target_model,
+                    target_model_callback=target_model_callback,
                     synthesizer_model=self.synthesizer_model,
                     using_native_model=self.using_native_model,
                 ).a_enhance(attack_input)

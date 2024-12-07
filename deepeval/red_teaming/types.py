@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Dict, Union, Callable
 from enum import Enum
 
 from deepeval.vulnerability.intellectual_property import (
@@ -109,3 +109,9 @@ llm_risk_categories_map: Dict[Vulnerability, LLMRiskCategories] = {
     #### Unauthorized Access ####
     UnauthorizedAccess: LLMRiskCategories.UNAUTHORIZED_ACCESS,
 }
+
+##########################################
+#### LLM Model ###########################
+##########################################
+
+CallbackType = Callable[[str], str]

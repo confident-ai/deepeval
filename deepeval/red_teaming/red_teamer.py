@@ -8,6 +8,7 @@ from deepeval.vulnerability import Vulnerability
 from deepeval.red_teaming.types import (
     AttackEnhancement,
     VulnerabilityType,
+    CallbackType,
     llm_risk_categories_map,
 )
 
@@ -39,6 +40,7 @@ from deepeval.dataset.golden import Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.utils import get_or_create_event_loop
 from deepeval.telemetry import capture_red_teamer_run
+import inspect
 
 
 class VulnerabilityResult(BaseModel):
@@ -85,7 +87,7 @@ class RedTeamer:
 
     def scan(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         attacks_per_vulnerability_type: int,
         vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float] = {
@@ -104,10 +106,11 @@ class RedTeamer:
         max_concurrent_tasks: int = 10,
     ):
         if self.async_mode:
+            assert inspect.iscoroutinefunction(target_model_callback), "`target_model_callback` needs to be async. `async_mode` has been set to True."
             loop = get_or_create_event_loop()
             return loop.run_until_complete(
                 self.a_scan(
-                    target_model,
+                    target_model_callback,
                     attacks_per_vulnerability_type,
                     vulnerabilities,
                     attack_enhancements,
@@ -126,7 +129,7 @@ class RedTeamer:
                 # Generate attacks
                 attacks: List[Attack] = (
                     self.attack_synthesizer.generate_attacks(
-                        target_model=target_model,
+                        target_model_callback=target_model_callback,
                         attacks_per_vulnerability_type=attacks_per_vulnerability_type,
                         vulnerabilities=vulnerabilities,
                         attack_enhancements=attack_enhancements,
@@ -181,7 +184,7 @@ class RedTeamer:
                             continue
 
                         try:
-                            target_output = target_model.generate(attack.input)
+                            target_output = target_model_callback(attack.input)
                             result["Target Output"] = target_output
                         except Exception:
                             result["Error"] = (
@@ -231,7 +234,7 @@ class RedTeamer:
 
     async def a_scan(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         attacks_per_vulnerability_type: int,
         vulnerabilities: List[Vulnerability],
         attack_enhancements: Dict[AttackEnhancement, float] = {
@@ -259,7 +262,7 @@ class RedTeamer:
 
             # Generate attacks
             attacks: List[Attack] = await self.attack_synthesizer.a_generate_attacks(
-                target_model=target_model,
+                target_model_callback=target_model_callback,
                 attacks_per_vulnerability_type=attacks_per_vulnerability_type,
                 vulnerabilities=vulnerabilities,
                 attack_enhancements=attack_enhancements,
@@ -302,7 +305,7 @@ class RedTeamer:
                 ):  # Ensures only `max_concurrent_tasks` run concurrently
                     vulnerability_results = (
                         await self._a_evaluate_vulnerability_type(
-                            target_model,
+                            target_model_callback,
                             vulnerability_type,
                             attacks,
                             metrics_map,
@@ -380,7 +383,7 @@ class RedTeamer:
 
     async def _a_attack(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         attack: Attack,
         vulnerability: str,
         vulnerability_type: VulnerabilityType,
@@ -400,9 +403,9 @@ class RedTeamer:
         metric: BaseMetric = metrics_map[vulnerability_type]()
         try:
             # Generate actual output using the 'input'
-            actual_output = await target_model.a_generate(attack.input)
-            result.actual_output = await target_model.a_generate(attack.input)
-        except:
+            actual_output = await target_model_callback(attack.input)
+            result.actual_output = actual_output
+        except Exception as e:
             result.error = "Error generating output from target LLM"
             return result
 
@@ -423,7 +426,7 @@ class RedTeamer:
 
     async def _a_evaluate_vulnerability_type(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         vulnerability_type: VulnerabilityType,
         attacks: List[Attack],
         metrics_map,
@@ -431,7 +434,7 @@ class RedTeamer:
         results = await asyncio.gather(
             *[
                 self._a_attack(
-                    target_model=target_model,
+                    target_model_callback=target_model_callback,
                     attack=attack,
                     vulnerability=attack.vulnerability,
                     vulnerability_type=vulnerability_type,
