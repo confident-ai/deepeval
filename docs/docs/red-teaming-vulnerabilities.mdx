@@ -54,18 +54,3 @@ LLM vulnerabilities can be categorized into 5 major LLM risk categories. Think o
 | Brand Image Risks         | `ExcessiveAgency`, `Robustness`, `Competition`, `IntellectualProperty`                                                                                              | Brand Image Risks involve vulnerabilities that can harm the perception of an organization or brand by spreading incorrect, misleading information, or competition-related content. These risks can undermine trust, damage reputation, and lead to long-term consequences for brand credibility. |
 | Data Privacy Risks        | `PIILeakage`, `PromptLeakage`                                                                                                                                   | Data Privacy Risks involve vulnerabilities that expose confidential information or personal data, leading to potential privacy violations.                    |
 | Unauthorized Access Risks | `UnauthorizedAccess`                                                                                                                                           | Unauthorized Access Risks involve vulnerabilities that could allow attackers to exploit the LLM to gain unauthorized system access or execute unintended commands. |
-
-When scanning your target model, instead of defining a list of vulnerabilities individually, you can optionally supply a list of `LLMRisk`, which will automatically scan for all the vulnerability types within that risk category.
-
-
-```python
-from deepeval.vulnerability import LLMRisk
-
-...
-
-results = red_teamer.scan(
-    target_model=target_model,
-    attacks_per_vulnerability=5,
-    vulnerabilities=[LLMRisk.RESPONSIBLE_AI]
-)```
-
