@@ -1,0 +1,1 @@
+from .types import IntellectualPropertyType

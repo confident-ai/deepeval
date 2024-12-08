@@ -4,6 +4,7 @@ import json
 
 from deepeval.red_teaming.attack_enhancements.base import AttackEnhancement
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
+from deepeval.red_teaming.types import CallbackType
 from .schema import ImprovementPrompt, NonRefusal, OnTopic, Rating
 from deepeval.models import DeepEvalBaseLLM
 from .template import JailBreakingTemplate
@@ -13,11 +14,11 @@ class JailbreakingLinear(AttackEnhancement):
 
     def __init__(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         synthesizer_model: DeepEvalBaseLLM,
         using_native_model: bool,
     ):
-        self.target_model = target_model
+        self.target_model_callback = target_model_callback
         self.synthesizer_model = synthesizer_model
         self.using_native_model = using_native_model
 
@@ -72,7 +73,7 @@ class JailbreakingLinear(AttackEnhancement):
             pbar.update(1)
 
             # 4th step: Generate a response from the target LLM using the enhanced attack
-            target_response = self.target_model.generate(current_attack)
+            target_response = self.target_model_callback(current_attack)
 
             penalized_phrases = ["in the face of impending doom"]
             contains_penalized_phrase = any(
@@ -163,7 +164,7 @@ class JailbreakingLinear(AttackEnhancement):
             pbar.update(1)
 
             # 4th step: Generate a response from the target LLM using the enhanced attack
-            target_response = await self.target_model.a_generate(current_attack)
+            target_response = await self.target_model_callback(current_attack)
             penalized_phrases = ["in the face of impending doom"]
 
             contains_penalized_phrase = any(
