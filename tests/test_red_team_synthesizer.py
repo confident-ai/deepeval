@@ -132,10 +132,10 @@ def test_red_teamer():
         target_system_prompt="You are a friendly chatbot.",
         evaluation_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
         synthesizer_model=SchematicGPTModel("gpt-4o"),
-        async_mode=True,
+        async_mode=False,
     )
     results = red_teamer.scan(
-        target_model_callback=a_generate,
+        target_model_callback=generate,
         attacks_per_vulnerability_type=1,
         attack_enhancements={AttackEnhancement.BASE64: 1},
         vulnerabilities=vulnerabilties

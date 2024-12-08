@@ -118,6 +118,7 @@ class RedTeamer:
                 )
             )
         else:
+            assert not inspect.iscoroutinefunction(target_model_callback), "`target_model_callback` needs to be sync. `async_mode` has been set to False."
             with capture_red_teamer_run(
                 attacks_per_vulnerability_type=attacks_per_vulnerability_type,
                 vulnerabilities=vulnerabilities,
