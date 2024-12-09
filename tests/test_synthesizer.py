@@ -395,6 +395,23 @@ def test_load_goldens(file_name: str):
 test_load_goldens("./goldens/20241122_154545.json")
 
 #########################################################
+### Test Costs ##########################################
+#########################################################
+
+
+def test_synthesis_costs(synthesizer: Synthesizer):
+    synthesizer.generate_goldens_from_docs(
+        max_goldens_per_context=3,
+        document_paths=document_paths,
+        context_construction_config=ContextConstructionConfig(chunk_size=100),
+        _send_data=False,
+    )
+    # Would be great to test with non-local model
+    if synthesizer.using_native_model:
+        assert "synthesis_cost" in dir(synthesizer)
+
+
+#########################################################
 ### Test Everything #####################################
 #########################################################
 
