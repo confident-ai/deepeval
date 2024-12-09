@@ -97,6 +97,7 @@ class GPTModel(DeepEvalBaseLLM):
             model_name = default_gpt_model
 
         self._openai_api_key = _openai_api_key
+        self.base_url = base_url
         # args and kwargs will be passed to the underlying model, in load_model function
         self.args = args
         self.kwargs = kwargs
@@ -156,6 +157,7 @@ class GPTModel(DeepEvalBaseLLM):
             return ChatOpenAI(
                 model_name=self.model_name,
                 openai_api_key=self._openai_api_key,
+                base_url=self.base_url,
                 *self.args,
                 **self.kwargs,
             )
