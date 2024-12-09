@@ -179,7 +179,7 @@ def capture_synthesizer_run(
 
 @contextmanager
 def capture_red_teamer_run(
-    attacks_per_vulnerability: int,
+    attacks_per_vulnerability_type: int,
     vulnerabilities: List,
     attack_enhancements: Dict,
 ):
@@ -187,10 +187,11 @@ def capture_red_teamer_run(
         with tracer.start_as_current_span(f"Invokved redteamer") as span:
             span.set_attribute("user.unique_id", get_unique_id())
             span.set_attribute(
-                "attacks_per_vulnerability", attacks_per_vulnerability
+                "attacks_per_vulnerability", attacks_per_vulnerability_type
             )
             for vuln in vulnerabilities:
-                span.set_attribute(f"vulnerability.{vuln.value}", 1)
+                for types in vuln.get_types():
+                    span.set_attribute(f"vulnerability.{types.value}", 1)
             for enhancement, value in attack_enhancements.items():
                 span.set_attribute(
                     f"attack_enhancement.{enhancement.value}", value

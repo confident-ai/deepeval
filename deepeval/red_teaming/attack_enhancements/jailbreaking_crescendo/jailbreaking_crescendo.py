@@ -6,6 +6,7 @@ import json
 
 from deepeval.red_teaming.attack_enhancements.base import AttackEnhancement
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
+from deepeval.red_teaming.types import CallbackType
 from deepeval.models import DeepEvalBaseLLM
 from .template import JailBreakingCrescendoTemplate
 from .schema import AttackData, RefusalData, EvalData
@@ -37,11 +38,11 @@ class JailbreakingCrescendo(AttackEnhancement):
 
     def __init__(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         synthesizer_model: DeepEvalBaseLLM,
         using_native_model: bool,
     ):
-        self.target_model = target_model
+        self.target_model_callback = target_model_callback
         self.synthesizer_model = synthesizer_model
         self.using_native_model = using_native_model
 
@@ -250,7 +251,7 @@ class JailbreakingCrescendo(AttackEnhancement):
             self.target_conversation_id,
             {"role": "user", "content": attack_prompt},
         )
-        response = self.target_model.generate(attack_prompt)
+        response = self.target_model_callback(attack_prompt)
         self.memory.add_message(
             self.target_conversation_id,
             {"role": "assistant", "content": response},
@@ -333,7 +334,7 @@ class JailbreakingCrescendo(AttackEnhancement):
             self.target_conversation_id,
             {"role": "user", "content": attack_prompt},
         )
-        response = await self.target_model.a_generate(attack_prompt)
+        response = await self.target_model_callback(attack_prompt)
         self.memory.add_message(
             self.target_conversation_id,
             {"role": "assistant", "content": response},

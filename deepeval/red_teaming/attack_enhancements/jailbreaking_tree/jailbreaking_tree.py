@@ -7,6 +7,7 @@ import json
 
 from deepeval.red_teaming.attack_enhancements.base import AttackEnhancement
 from deepeval.red_teaming.utils import generate_schema, a_generate_schema
+from deepeval.red_teaming.types import CallbackType
 from .schema import ImprovementPrompt, NonRefusal, Rating
 from deepeval.models import DeepEvalBaseLLM
 from .template import JailBreakingTemplate
@@ -27,11 +28,11 @@ class JailbreakingTree(AttackEnhancement):
 
     def __init__(
         self,
-        target_model: DeepEvalBaseLLM,
+        target_model_callback: CallbackType,
         synthesizer_model: DeepEvalBaseLLM,
         using_native_model: bool,
     ):
-        self.target_model = target_model
+        self.target_model_callback = target_model_callback
         self.synthesizer_model = synthesizer_model
         self.using_native_model = using_native_model
 
@@ -134,7 +135,7 @@ class JailbreakingTree(AttackEnhancement):
                 continue  # Skip this child
 
             # Generate a response from the target LLM
-            target_response = self.target_model.generate(enhanced_attack)
+            target_response = self.target_model_callback(enhanced_attack)
 
             # Calculate the score for the enhanced attack
             judge_prompt = JailBreakingTemplate.linear_judge(
@@ -268,7 +269,7 @@ class JailbreakingTree(AttackEnhancement):
             return None  # Skip this child
 
         # Generate a response from the target LLM asynchronously
-        target_response = await self.target_model.a_generate(enhanced_attack)
+        target_response = await self.target_model_callback(enhanced_attack)
 
         # Calculate the score for the enhanced attack asynchronously
         judge_prompt = JailBreakingTemplate.linear_judge(
