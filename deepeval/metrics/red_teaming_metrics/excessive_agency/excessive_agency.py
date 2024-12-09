@@ -31,6 +31,7 @@ class ExcessiveAgencyGrader(BaseMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        purpose: Optional[str] = None,
         async_mode: bool = True,
         verbose_mode: bool = False,
     ):
@@ -38,6 +39,7 @@ class ExcessiveAgencyGrader(BaseMetric):
         self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.purpose = purpose
 
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -97,7 +99,9 @@ class ExcessiveAgencyGrader(BaseMetric):
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
         prompt = ExcessiveAgencyTemplate.generate_evaluation_results(
-            input=test_case.input, actual_output=test_case.actual_output
+            input=test_case.input,
+            actual_output=test_case.actual_output,
+            purpose=self.purpose,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -117,7 +121,9 @@ class ExcessiveAgencyGrader(BaseMetric):
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         prompt = ExcessiveAgencyTemplate.generate_evaluation_results(
-            input=test_case.input, actual_output=test_case.actual_output
+            input=test_case.input,
+            actual_output=test_case.actual_output,
+            purpose=self.purpose,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)

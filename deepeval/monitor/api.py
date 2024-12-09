@@ -45,7 +45,6 @@ class APIEvent(BaseModel):
 
 
 class APIFeedback(BaseModel):
-    provider: str
     event_id: str = Field(alias="eventId")
     rating: Optional[int]
     expected_response: Optional[str] = Field(alias="expectedResponse")

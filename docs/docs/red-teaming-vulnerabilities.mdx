@@ -1,101 +1,56 @@
 ---
 id: red-teaming-vulnerabilities
 title: LLM Risks & Vulnerabilities
-sidebar_label: Risks & Vulnerabilities
+sidebar_label: Introduction
 ---
 
 ## Vulnerabilities
 
-`deepeval` allows you to scan for **40+ types of vulnerabilities**, ensuring comprehensive coverage of potential risks within your LLM application. These vulnerabilities fall into five key LLM risk categories:
+Vulnerabilities enable you to **specify which aspect of your LLM you wish to red-team**. In `deepeval`, defining a vulnerability requires creating a vulnerability object and specifying its type. 
 
-- Responsible AI Risks
-- Illegal Activities Risks
-- Brand Image Risks
-- Data Privacy Risks
-- Unauthorized Access Risks
+```python
+from deepeval.vulnerability import Bias
+from deepeval.vulnerability.bias import BiasType
 
-:::tip
-While all of these LLM risk categories should be addressed, **focusing on your most critical concerns** can be a more effective use of resources. Prioritizing areas that pose the highest risks to your organization, such as data privacy or brand image, helps ensure targeted mitigation while maintaining overall security and compliance.
+bias_religion_vulnerability = Bias(type=BiasType.RELIGION)
+```
+
+:::info
+Each vulnerability accepts an `ENUM` specific to that vulnerability. For example, `Bias` accepts `BiasType`, which includes categories such as gender, religion, racial, and political biases.
 :::
 
-## Responsible AI Risks
+`deepeval` lets you scan for **13 different vulnerabilties** (which amounts to a combined 50+ vulnerability types), ensuring comprehensive coverage of potential risks within your LLM application. These vulnerabilities include:
 
-Responsible AI vulnerabilities focus on ensuring that the model behaves ethically and responsibly without generating biased, or offensive content.
+- [Bias](red-teaming-vulnerabilities-bias)
+- [Misinformation](red-teaming-vulnerabilities-misinformation)
+- [Toxicity](red-teaming-vulnerabilities-toxicity)
+- [PII Leakage](red-teaming-vulnerabilities-pii-leakage)
+- [Prompt Leakage](red-teaming-vulnerabilities-prompt-leakage)
+- [Unauthorized Access](red-teaming-vulnerabilities-unauthorized-access)
+- [Illegal Activities](red-teaming-vulnerabilities-illegal-activities)
+- [ExcessiveAgency](red-teaming-vulnerabilities-excessive-agency)
+- [Robustnesss](red-teaming-vulnerabilities-overreliance)
+- [Competition](red-teaming-vulnerabilities-personal-safety)
+- [Intellectual Property](red-teaming-vulnerabilities-personal-safety)
+- [Graphic Content](red-teaming-vulnerabilities-personal-safety)
+- [Personal Safety](red-teaming-vulnerabilities-personal-safety)
 
-| Vulnerability                  | Description                                                                                                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Vulnerability.BIAS`           | Encourages the LLM to produce biased or discriminatory responses, violating fairness and equity principles.                                                   |
-| `Vulnerability.POLITICS`       | Prompts the LLM to express political opinions or engage in biased political discussions, potentially leading to misleading or contentious content.            |
-| `Vulnerability.RELIGION`       | Encourages the LLM to generate content involving religious beliefs, which could be misinterpreted or offensive to certain groups.                             |
-| `Vulnerability.HATE`           | Drives the LLM to generate content promoting hate or hostility towards individuals or groups based on characteristics such as race, religion, or nationality. |
-| `Vulnerability.RADICALIZATION` | Prompts the LLM to create content that advocates for radical or extreme ideologies, potentially encouraging dangerous behavior.                               |
-| `Vulnerability.OFFENSIVE`      | Induces the model to use offensive or derogatory language, violating standards of respectful communication.                                                   |
-| `Vulnerability.PROFANITY`      | Encourages the LLM to use explicit or vulgar language.                                                                                                        |
-| `Vulnerability.INSULTS`        | Induces the LLM to generate personal attacks or derogatory statements directed towards individuals or groups.                                                 |
+:::note
+DeepEval allows you to locally generate attacks for Bias and Misinformation. To scan your LLM for the remaining vulnerabilities, you'll need to **log in to Confident AI**. Use the following command to log in:
 
-## Illegal Activities Risks
+```bash
+deepeval login
+:::
 
-Illegal Activities Risks involve vulnerabilities that encourage the model to generate content that breaks the law or promotes criminal behavior.
+## LLM Risks
 
-| Vulnerability                               | Description                                                                                                                   |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `Vulnerability.VIOLENT_CRIME`               | Prompts the LLM to generate content that provides instructions or incites violent criminal acts.                              |
-| `Vulnerability.NON_VIOLENT_CRIME`           | Encourages the model to produce content about non-violent illegal activities, such as fraud or theft.                         |
-| `Vulnerability.SEX_CRIME`                   | Induces the LLM to generate content involving sexual crimes or illegal conduct of a sexual nature.                            |
-| `Vulnerability.CYBERCRIME`                  | Encourages the LLM to provide information on unauthorized hacking, malware use, or other cybercrimes.                         |
-| `Vulnerability.CHILD_EXPLOITATION`          | Prompts the model to produce content that could facilitate or promote child exploitation, which is illegal and harmful.       |
-| `Vulnerability.ILLEGAL_DRUGS`               | Drives the LLM to provide information on manufacturing, distributing, or using illegal drugs.                                 |
-| `Vulnerability.ILLEGAL_ACTIVITIES`          | Induces the model to generate content promoting illegal activities such as scams or fraud.                                    |
-| `Vulnerability.UNSAFE_PRACTICES`            | Encourages the LLM to provide instructions on unsafe behavior that could lead to harm.                                        |
-| `Vulnerability.SELF_HARM`                   | Prompts the LLM to provide guidance on how to harm oneself.                                                                   |
-| `Vulnerability.HARASSMENT_BULLYING`         | Induces the LLM to generate content that supports harassment or bullying behavior.                                            |
-| `Vulnerability.SEXUAL_CONTENT`              | Encourages the generation of explicit or inappropriate sexual material.                                                       |
-| `Vulnerability.GRAPHIC_CONTENT`             | Prompts the model to produce disturbing or explicit content not suitable for general audiences.                               |
-| `Vulnerability.CHEMICAL_BIOLOGICAL_WEAPONS` | Drives the LLM to generate content related to chemical or biological weaponry.                                                |
-| `Vulnerability.INDISCRIMINATE_WEAPONS`      | Encourages the LLM to provide information on weapons that could be used indiscriminately, without targeting specific victims. |
-| `Vulnerability.COPYRIGHT_VIOLATIONS`        | Leads the LLM to generate or disclose copyrighted material without authorization.                                             |
-| `Vulnerability.INTELLECTUAL_PROPERTY`       | Prompts the model to generate content that violates intellectual property rights.                                             |
+LLM vulnerabilities can be categorized into 5 major LLM risk categories. Think of these categories simply as collections of vulnerabilities.
 
-## Brand Image Risks
 
-Brand Image Risks involve vulnerabilities that can **harm the perception of an organization** or brand by spreading incorrect, misleading information, or competition-related content. These risks can undermine trust, damage reputation, and lead to long-term consequences for brand credibility.
-
-| Vulnerability                                 | Description                                                                                                                   |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `Vulnerability.COMPETITORS`                   | Prompts the LLM to refer to competitors in an inappropriate way, potentially leading to legal issues or reputational damage.  |
-| `Vulnerability.IMITATION`                     | Induces the LLM to replicate or imitate others' work, impacting the originality and authenticity of generated content.        |
-| `Vulnerability.MISINFORMATION_DISINFORMATION` | Encourages the LLM to generate false information, which could lead to user mistrust or legal consequences.                    |
-| `Vulnerability.HALLUCINATION`                 | Prompts the model to produce confident but factually incorrect content, which could mislead users.                            |
-| `Vulnerability.OVERRELIANCE`                  | Encourages excessive trust in AI-generated content, potentially leading to over-dependence and poor decision-making.          |
-| `Vulnerability.SPECIALIZED_FINANCIAL_ADVICE`  | Induces the LLM to generate financial advice without necessary expertise, potentially causing harm to users.                  |
-| `Vulnerability.CONTRACTS`                     | Leads the LLM to misrepresent contract details, which could cause legal misunderstandings or conflicts.                       |
-| `Vulnerability.EXCESSIVE_AGENCY`              | Prompts the LLM to provide recommendations or take actions that go beyond its intended scope, which could be risky for users. |
-| `Vulnerability.HIJACKING`                     | Attempts to lead the LLM conversation in a harmful direction, potentially leading to brand damage.                            |
-
-## Data Privacy Risks
-
-Data Privacy Risks involve vulnerabilities that expose confidential information or personal data, leading to potential privacy violations.
-
-| Vulnerability                | Description                                                                                        |
-| ---------------------------- | -------------------------------------------------------------------------------------------------- |
-| `Vulnerability.PII_API_DB`   | Encourages the LLM to reveal sensitive API or database-related information, risking data breaches. |
-| `Vulnerability.PII_DIRECT`   | Prompts the LLM to directly expose personally identifiable information (PII).                      |
-| `Vulnerability.PII_SESSION`  | Encourages the model to disclose personal information during session-based interactions.           |
-| `Vulnerability.PII_SOCIAL`   | Uses social engineering tactics to induce the model to reveal sensitive information.               |
-| `Vulnerability.DATA_LEAKAGE` | Drives the LLM to unintentionally provide confidential or sensitive data.                          |
-| `Vulnerability.PRIVACY`      | Prompts the model to disclose information that could violate privacy norms and regulations.        |
-
-## Unauthorized Access Risks
-
-Unauthorized Access Risks involve vulnerabilities that could allow attackers to exploit the LLM to gain unauthorized system access or execute unintended commands.
-
-| Vulnerability                     | Description                                                                                                     |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `Vulnerability.DEBUG_ACCESS`      | Induces the LLM to reveal debugging information, which could be used to identify system weaknesses.             |
-| `Vulnerability.RBAC`              | Attempts to exploit role-based access controls through generated responses.                                     |
-| `Vulnerability.SHELL_INJECTION`   | Encourages the LLM to generate shell commands that could be used for malicious purposes.                        |
-| `Vulnerability.SQL_INJECTION`     | Drives the model to create SQL commands that could compromise databases.                                        |
-| `Vulnerability.SSRF`              | Prompts the LLM to generate content that enables server-side request forgery attacks.                           |
-| `Vulnerability.BFLA`              | Attempts to exploit business function-level authorization weaknesses through LLM output.                        |
-| `Vulnerability.BOLA`              | Encourages the model to generate content that could exploit broken object-level authorization.                  |
-| `Vulnerability.PROMPT_EXTRACTION` | Attempts to extract sensitive system-level prompts or metadata from the LLM, potentially compromising security. |
+| LLM Risk                  | Vulnerabilities                                                                                                                                               | Description                                                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Responsible AI Risks      | `Bias`, `Toxicity`                                                                                                                                                | Responsible AI vulnerabilities focus on ensuring that the model behaves ethically and responsibly without generating biased or offensive content.             |
+| Illegal Activities Risks  | `IllegalActivity`, `GraphicContent`, `PersonalSafety`                                                                                                          | Illegal Activities Risks involve vulnerabilities that encourage the model to generate content that breaks the law or promotes criminal behavior.              |
+| Brand Image Risks         | `ExcessiveAgency`, `Robustness`, `Competition`, `IntellectualProperty`                                                                                              | Brand Image Risks involve vulnerabilities that can harm the perception of an organization or brand by spreading incorrect, misleading information, or competition-related content. These risks can undermine trust, damage reputation, and lead to long-term consequences for brand credibility. |
+| Data Privacy Risks        | `PIILeakage`, `PromptLeakage`                                                                                                                                   | Data Privacy Risks involve vulnerabilities that expose confidential information or personal data, leading to potential privacy violations.                    |
+| Unauthorized Access Risks | `UnauthorizedAccess`                                                                                                                                           | Unauthorized Access Risks involve vulnerabilities that could allow attackers to exploit the LLM to gain unauthorized system access or execute unintended commands. |

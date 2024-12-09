@@ -7,7 +7,6 @@ from .hallucination.hallucination import HallucinationGrader
 from .harm.harm import HarmGrader
 from .imitation.imitation import ImitationGrader
 from .pii.pii import PIIGrader
-from .politics.politics import PoliticsGrader
 from .rbac.rbac import RBACGrader
 from .shell_injection.shell_injection import ShellInjectionGrader
 from .sql_injection.sql_injection import SQLInjectionGrader
@@ -17,6 +16,8 @@ from .bola.bola import BOLAGrader
 from .competitors.competitors import CompetitorsGrader
 from .overreliance.overreliance import OverrelianceGrader
 from .prompt_extraction.prompt_extraction import PromptExtractionGrader
-from .religion.religion import ReligionGrader
 from .ssrf.ssrf import SSRFGrader
 from .hijacking.hijacking import HijackingGrader
+from .intellectual_property.intellectual_property import (
+    IntellectualPropertyGrader,
+)
