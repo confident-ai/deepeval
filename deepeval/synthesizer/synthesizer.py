@@ -113,6 +113,7 @@ class Synthesizer:
         context_construction_config: Optional[ContextConstructionConfig] = None,
         _send_data=True,
     ):
+        self.synthesis_cost = 0 if self.using_native_model else None
         if context_construction_config is None:
             context_construction_config = ContextConstructionConfig()
 
@@ -182,6 +183,7 @@ class Synthesizer:
     ):
         if context_construction_config is None:
             context_construction_config = ContextConstructionConfig()
+        self.synthesis_cost = 0 if self.using_native_model else None
 
         # Generate contexts from provided docs
         if self.context_generator is None:
@@ -240,6 +242,7 @@ class Synthesizer:
         _progress_bar: Optional[tqdm.std.tqdm] = None,
         _send_data: bool = True,
     ) -> List[Golden]:
+        self.synthesis_cost = 0 if self.using_native_model else None
         # Intialize Goldens as an empty list
         goldens: List[Golden] = []
 
@@ -360,6 +363,7 @@ class Synthesizer:
         _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
     ) -> List[Golden]:
+        self.synthesis_cost = 0 if self.using_native_model else None
         semaphore = asyncio.Semaphore(self.max_concurrent)
         goldens: List[Golden] = []
         with synthesizer_progress_context(
@@ -538,6 +542,7 @@ class Synthesizer:
             raise TypeError(
                 "`scenario`, `task`, and `input_format` in `styling_config` must not be None when generation goldens from scratch."
             )
+        self.synthesis_cost = 0 if self.using_native_model else None
         semaphore = asyncio.Semaphore(self.max_concurrent)
 
         transformed_evolutions = self.transform_distribution(
@@ -601,6 +606,7 @@ class Synthesizer:
             raise TypeError(
                 "`scenario`, `task`, and `input_format` in `styling_config` must not be None when generation goldens from scratch."
             )
+        self.synthesis_cost = 0 if self.using_native_model else None
 
         transformed_evolutions = self.transform_distribution(
             self.evolution_config.evolutions
@@ -868,7 +874,8 @@ class Synthesizer:
         model: DeepEvalBaseLLM,
     ) -> BaseModel:
         if isinstance(model, GPTModel):
-            res, _ = model.generate(prompt)
+            res, cost = model.generate(prompt)
+            self.synthesis_cost += cost
             data = trimAndLoadJson(res, self)
             if schema == SyntheticDataList:
                 data_list = [SyntheticData(**item) for item in data["data"]]
@@ -895,7 +902,8 @@ class Synthesizer:
         model: DeepEvalBaseLLM,
     ) -> BaseModel:
         if isinstance(model, GPTModel):
-            res, _ = await model.a_generate(prompt)
+            res, cost = await model.a_generate(prompt)
+            self.synthesis_cost += cost
             data = trimAndLoadJson(res, self)
             if schema == SyntheticDataList:
                 data_list = [SyntheticData(**item) for item in data["data"]]
@@ -917,7 +925,8 @@ class Synthesizer:
 
     def _generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, _ = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt)
+            self.synthesis_cost += cost
             return res
         else:
             try:
@@ -929,7 +938,8 @@ class Synthesizer:
 
     async def _a_generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, _ = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt)
+            self.synthesis_cost += cost
             return res
         else:
             try:
