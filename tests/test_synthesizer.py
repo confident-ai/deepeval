@@ -408,7 +408,7 @@ def test_synthesis_costs(synthesizer: Synthesizer):
     )
     # Would be great to test with non-local model
     if synthesizer.using_native_model:
-        assert 'synthesis_cost' in dir(synthesizer)
+        assert "synthesis_cost" in dir(synthesizer)
 
 
 #########################################################
