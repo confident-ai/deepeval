@@ -93,7 +93,7 @@ convo_test_case_3 = ConversationalTestCase(
     ],
 )
 
-from deepeval import evaluate
+from deepeval import evaluate, confident_evaluate
 
 funny_metric = ConversationalGEval(
     name="Funny",
@@ -114,3 +114,12 @@ evaluate(
     ],
     hyperparameters={"model": "claude", "prompt template": role},
 )
+
+
+# confident_evaluate(experiment_name="Convo", test_cases=[convo_test_case, convo_test_case_2, convo_test_case_3], disable_browser_opening=True)
+
+
+# from deepeval.dataset import EvaluationDataset
+
+# dataset = EvaluationDataset()
+# dataset.pull(alias="Convo")

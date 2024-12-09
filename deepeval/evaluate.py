@@ -161,13 +161,18 @@ def create_api_test_case(
                 PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
             )
 
+        order = (
+            test_case._dataset_rank
+            if test_case._dataset_rank is not None
+            else index
+        )
         api_test_case = ConversationalApiTestCase(
             name=name,
             success=True,
             metricsData=[],
             runDuration=0,
             evaluationCost=None,
-            order=test_case._dataset_rank,
+            order=order,
             testCases=[],
         )
         api_test_case.instance_id = id(api_test_case)
