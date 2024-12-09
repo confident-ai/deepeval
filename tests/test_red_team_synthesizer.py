@@ -64,11 +64,13 @@ vulnerabilties: List[Vulnerability] = [
 # Target Model
 #########################################
 
+
 def generate(prompt: str) -> str:
     chat_model = ChatOpenAI(model_name="gpt-4o")
     with get_openai_callback() as cb:
         res = chat_model.invoke(prompt)
         return res.content
+
 
 async def a_generate(prompt: str) -> str:
     chat_model = ChatOpenAI(model_name="gpt-4o")
@@ -77,10 +79,10 @@ async def a_generate(prompt: str) -> str:
         return res.content
 
 
-
 #########################################
 # Attack Synthesizer (remote generation)
 #########################################
+
 
 def test_remote_generation():
     import time
@@ -105,9 +107,11 @@ def test_remote_generation():
             print("")
             print("*************************")
 
+
 #########################################
 # Attack Synthesizer (attacks generation)
 #########################################
+
 
 def test_attacks_generation():
     red_teamer = AttackSynthesizer(
@@ -122,9 +126,11 @@ def test_attacks_generation():
     )
     return attacks
 
+
 #########################################
 # Test RedTeamer
 #########################################
+
 
 def test_red_teamer():
     red_teamer = RedTeamer(
@@ -138,10 +144,12 @@ def test_red_teamer():
         target_model_callback=generate,
         attacks_per_vulnerability_type=1,
         attack_enhancements={AttackEnhancement.BASE64: 1},
-        vulnerabilities=vulnerabilties
+        vulnerabilities=vulnerabilties,
     )
 
-    red_teamer.vulnerability_scores_breakdown.to_csv("vulnerability_scores_breakdown.csv")
+    red_teamer.vulnerability_scores_breakdown.to_csv(
+        "vulnerability_scores_breakdown.csv"
+    )
     red_teamer.vulnerability_scores.to_csv("vulnerability_scores.csv")
 
     # for index, row in df.iterrows():

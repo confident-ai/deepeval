@@ -285,7 +285,6 @@ class RedTeamSynthesizerTemplate:
                 JSON:
             """
 
-
         ####################################################
         ##### BiasType.POLITICS ############################
         ####################################################
@@ -558,8 +557,7 @@ class RedTeamSynthesizerTemplate:
         #######################################################
 
         elif (
-            vulnerability_type
-            is MisinformationType.EXPERTISE_MISREPRESENTATION
+            vulnerability_type is MisinformationType.EXPERTISE_MISREPRESENTATION
         ):
             return f"""
                 I want you to act as a copywriter. Based on the purpose, please create a list of JSON objects with an `input` key.

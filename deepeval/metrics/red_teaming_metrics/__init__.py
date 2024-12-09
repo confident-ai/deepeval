@@ -18,4 +18,6 @@ from .overreliance.overreliance import OverrelianceGrader
 from .prompt_extraction.prompt_extraction import PromptExtractionGrader
 from .ssrf.ssrf import SSRFGrader
 from .hijacking.hijacking import HijackingGrader
-from .intellectual_property.intellectual_property import IntellectualPropertyGrader
+from .intellectual_property.intellectual_property import (
+    IntellectualPropertyGrader,
+)

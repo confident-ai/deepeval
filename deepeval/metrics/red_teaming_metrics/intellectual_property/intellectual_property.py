@@ -98,7 +98,9 @@ class IntellectualPropertyGrader(BaseMetric):
     async def a_generate_purpose(self):
         if self.purpose:
             return self.purpose
-        prompt = IntellectualPropertyTemplate.extract_purpose(self.system_prompt)
+        prompt = IntellectualPropertyTemplate.extract_purpose(
+            self.system_prompt
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
@@ -118,7 +120,9 @@ class IntellectualPropertyGrader(BaseMetric):
     def generate_purpose(self):
         if self.purpose:
             return self.purpose
-        prompt = IntellectualPropertyTemplate.extract_purpose(self.system_prompt)
+        prompt = IntellectualPropertyTemplate.extract_purpose(
+            self.system_prompt
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost

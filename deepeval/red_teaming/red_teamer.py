@@ -111,7 +111,9 @@ class RedTeamer:
                 "Please install pandas to use this method. 'pip install pandas'"
             )
         if self.async_mode:
-            assert inspect.iscoroutinefunction(target_model_callback), "`target_model_callback` needs to be async. `async_mode` has been set to True."
+            assert inspect.iscoroutinefunction(
+                target_model_callback
+            ), "`target_model_callback` needs to be async. `async_mode` has been set to True."
             loop = get_or_create_event_loop()
             return loop.run_until_complete(
                 self.a_scan(
@@ -123,7 +125,9 @@ class RedTeamer:
                 )
             )
         else:
-            assert not inspect.iscoroutinefunction(target_model_callback), "`target_model_callback` needs to be sync. `async_mode` has been set to False."
+            assert not inspect.iscoroutinefunction(
+                target_model_callback
+            ), "`target_model_callback` needs to be sync. `async_mode` has been set to False."
             with capture_red_teamer_run(
                 attacks_per_vulnerability_type=attacks_per_vulnerability_type,
                 vulnerabilities=vulnerabilities,
@@ -147,10 +151,13 @@ class RedTeamer:
                     VulnerabilityType, List[Attack]
                 ] = {}
                 for attack in attacks:
-                    if attack.vulnerability_type not in vulnerability_to_attacks_map:
-                        vulnerability_to_attacks_map[attack.vulnerability_type] = [
-                            attack
-                        ]
+                    if (
+                        attack.vulnerability_type
+                        not in vulnerability_to_attacks_map
+                    ):
+                        vulnerability_to_attacks_map[
+                            attack.vulnerability_type
+                        ] = [attack]
                     else:
                         vulnerability_to_attacks_map[
                             attack.vulnerability_type
@@ -160,7 +167,9 @@ class RedTeamer:
                 red_teaming_results = []
                 red_teaming_results_breakdown = []
 
-                num_vulnerability_types = sum(len(v.get_types()) for v in vulnerabilities)
+                num_vulnerability_types = sum(
+                    len(v.get_types()) for v in vulnerabilities
+                )
                 pbar = tqdm(
                     vulnerability_to_attacks_map.items(),
                     desc=f"📝 Evaluating {num_vulnerability_types} vulnerability types across {len(vulnerabilities)} vulnerabilities",
@@ -168,7 +177,9 @@ class RedTeamer:
                 for vulnerability_type, attacks in pbar:
                     scores = []
                     for attack in attacks:
-                        metric: BaseMetric = metrics_map.get(vulnerability_type)()
+                        metric: BaseMetric = metrics_map.get(
+                            vulnerability_type
+                        )()
                         risk = llm_risk_categories_map.get(vulnerability_type)
                         result = {
                             "Vulnerability": attack.vulnerability,
@@ -273,25 +284,32 @@ class RedTeamer:
             metrics_map = self.get_red_teaming_metrics_map()
 
             # Generate attacks
-            attacks: List[Attack] = await self.attack_synthesizer.a_generate_attacks(
-                target_model_callback=target_model_callback,
-                attacks_per_vulnerability_type=attacks_per_vulnerability_type,
-                vulnerabilities=vulnerabilities,
-                attack_enhancements=attack_enhancements,
-                max_concurrent_tasks=max_concurrent_tasks,
+            attacks: List[Attack] = (
+                await self.attack_synthesizer.a_generate_attacks(
+                    target_model_callback=target_model_callback,
+                    attacks_per_vulnerability_type=attacks_per_vulnerability_type,
+                    vulnerabilities=vulnerabilities,
+                    attack_enhancements=attack_enhancements,
+                    max_concurrent_tasks=max_concurrent_tasks,
+                )
             )
 
             # Create a mapping of vulnerabilities to attacks
-            vulnerability_type_to_attacks_map: Dict[VulnerabilityType, List[Attack]] = {}
+            vulnerability_type_to_attacks_map: Dict[
+                VulnerabilityType, List[Attack]
+            ] = {}
             for attack in attacks:
-                if attack.vulnerability_type not in vulnerability_type_to_attacks_map:
-                    vulnerability_type_to_attacks_map[attack.vulnerability_type] = [
-                        attack
-                    ]
+                if (
+                    attack.vulnerability_type
+                    not in vulnerability_type_to_attacks_map
+                ):
+                    vulnerability_type_to_attacks_map[
+                        attack.vulnerability_type
+                    ] = [attack]
                 else:
-                    vulnerability_type_to_attacks_map[attack.vulnerability_type].append(
-                        attack
-                    )
+                    vulnerability_type_to_attacks_map[
+                        attack.vulnerability_type
+                    ].append(attack)
 
             red_teaming_results = []
             red_teaming_results_breakdown = []
@@ -305,13 +323,17 @@ class RedTeamer:
                 for attacks in vulnerability_type_to_attacks_map.values()
             )
             # Create a progress bar for attack evaluations
-            num_vulnerability_types = sum(len(v.get_types()) for v in vulnerabilities)
+            num_vulnerability_types = sum(
+                len(v.get_types()) for v in vulnerabilities
+            )
             pbar = tqdm(
                 total=total_attacks,
                 desc=f"📝 Evaluating {num_vulnerability_types} vulnerability types across {len(vulnerabilities)} vulnerabilities",
             )
 
-            async def throttled_evaluate_vulnerability_type(vulnerability_type, attacks):
+            async def throttled_evaluate_vulnerability_type(
+                vulnerability_type, attacks
+            ):
                 async with (
                     semaphore
                 ):  # Ensures only `max_concurrent_tasks` run concurrently
@@ -330,7 +352,9 @@ class RedTeamer:
 
             # Create a list of tasks for evaluating each vulnerability, with throttling
             tasks = [
-                throttled_evaluate_vulnerability_type(vulnerability_type, attacks)
+                throttled_evaluate_vulnerability_type(
+                    vulnerability_type, attacks
+                )
                 for vulnerability_type, attacks in vulnerability_type_to_attacks_map.items()
             ]
             # Execute tasks concurrently with throttling using asyncio.gather
@@ -341,7 +365,8 @@ class RedTeamer:
 
             # Process results
             for (vulnerability_type, attacks), vulnerability_results in zip(
-                vulnerability_type_to_attacks_map.items(), vulnerability_results_list
+                vulnerability_type_to_attacks_map.items(),
+                vulnerability_results_list,
             ):
                 valid_scores = [
                     vulnerability_result.score
@@ -468,7 +493,7 @@ class RedTeamer:
                 bias_type: lambda: BiasGrader(
                     model=self.evaluation_model,
                     purpose=self.target_purpose,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for bias_type in BiasType
             },
@@ -477,43 +502,43 @@ class RedTeamer:
                 toxicity_type: lambda tt=toxicity_type: HarmGrader(
                     model=self.evaluation_model,
                     harm_category=tt.value,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for toxicity_type in ToxicityType
             },
-            #### Misinformation #### 
+            #### Misinformation ####
             **{
                 misinformation_type: lambda mt=misinformation_type: HarmGrader(
                     model=self.evaluation_model,
                     harm_category=mt.value,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for misinformation_type in MisinformationType
             },
-            #### Illegal ####    
+            #### Illegal ####
             **{
                 illegal_activity_type: lambda iat=illegal_activity_type: HarmGrader(
                     model=self.evaluation_model,
                     harm_category=iat.value,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for illegal_activity_type in IllegalActivityType
             },
-            #### Prompt Leakage #### 
+            #### Prompt Leakage ####
             **{
-                prompt_leakage_type: lambda : PromptExtractionGrader(
+                prompt_leakage_type: lambda: PromptExtractionGrader(
                     model=self.evaluation_model,
                     purpose=self.target_purpose,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for prompt_leakage_type in PromptLeakageType
             },
-            #### PII Leakage #### 
+            #### PII Leakage ####
             **{
                 pii_type: lambda: PIIGrader(
                     model=self.evaluation_model,
                     purpose=self.target_purpose,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for pii_type in PIILeakageType
             },
@@ -548,10 +573,10 @@ class RedTeamer:
             ),
             #### Excessive Agency ####
             **{
-                excessive_agency_type: lambda : ExcessiveAgencyGrader(
+                excessive_agency_type: lambda: ExcessiveAgencyGrader(
                     model=self.evaluation_model,
                     purpose=self.target_purpose,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for excessive_agency_type in ExcessiveAgencyType
             },
@@ -571,7 +596,7 @@ class RedTeamer:
                 ip_type: lambda: IntellectualPropertyGrader(
                     model=self.evaluation_model,
                     purpose=self.target_purpose,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for ip_type in IntellectualPropertyType
             },
@@ -580,7 +605,7 @@ class RedTeamer:
                 competiton_type: lambda: CompetitorsGrader(
                     model=self.evaluation_model,
                     purpose=self.target_purpose,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for competiton_type in CompetitionType
             },
@@ -589,7 +614,7 @@ class RedTeamer:
                 content_type: lambda ct=content_type: HarmGrader(
                     model=self.evaluation_model,
                     harm_category=ct.value,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for content_type in GraphicContentType
             },
@@ -598,7 +623,7 @@ class RedTeamer:
                 safety_type: lambda st=safety_type: HarmGrader(
                     model=self.evaluation_model,
                     harm_category=st.value,
-                    async_mode=self.async_mode
+                    async_mode=self.async_mode,
                 )
                 for safety_type in PersonalSafetyType
             },
