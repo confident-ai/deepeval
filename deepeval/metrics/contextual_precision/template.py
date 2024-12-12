@@ -1,6 +1,9 @@
 class ContextualPrecisionTemplate:
     @staticmethod
-    def generate_verdicts(input, expected_output, retrieval_context):
+    def generate_verdicts(input, expected_output, retrieval_context: str | list):
+        document_count_str = ""
+        if isinstance(retrieval_context, list):
+            document_count_str = f" ({len(retrieval_context)} document{'s' if len(retrieval_context) > 1 else ''})"
         return f"""Given the input, expected output, and retrieval context, please generate a list of JSON objects to determine whether each node in the retrieval context was remotely useful in arriving at the expected output.
 
 **
@@ -35,7 +38,7 @@ Input:
 Expected output:
 {expected_output}
 
-Retrieval Context:
+Retrieval Context{document_count_str}:
 {retrieval_context}
 
 JSON:
