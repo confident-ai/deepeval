@@ -1,0 +1,17 @@
+name: Type check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - uses: snok/install-poetry@v1
+      - run: poetry install --no-interaction --no-root
+      - run: poetry run mypy .
