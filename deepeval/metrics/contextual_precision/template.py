@@ -1,6 +1,8 @@
 class ContextualPrecisionTemplate:
     @staticmethod
-    def generate_verdicts(input, expected_output, retrieval_context: str | list):
+    def generate_verdicts(
+        input, expected_output, retrieval_context: str | list
+    ):
         document_count_str = ""
         if isinstance(retrieval_context, list):
             document_count_str = f" ({len(retrieval_context)} document{'s' if len(retrieval_context) > 1 else ''})"
