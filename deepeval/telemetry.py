@@ -7,12 +7,6 @@ import uuid
 import sentry_sdk
 from enum import Enum
 from typing import List, Dict
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-    OTLPSpanExporter,
-)
 
 
 class Feature(Enum):
@@ -88,6 +82,13 @@ def blocked_by_firewall():
 
 
 if not telemetry_opt_out():
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+        OTLPSpanExporter,
+    )
+
     sentry_sdk.init(
         dsn="https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
         profiles_sample_rate=1.0,
