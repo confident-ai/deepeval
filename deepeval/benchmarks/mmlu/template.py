@@ -30,6 +30,7 @@ class MMLUTemplate:
             prompt += " {}\n\n".format(data["target"])
         return prompt
 
+    @staticmethod
     def format_subject(subject: str):
         l = subject.split("_")
         s = ""
