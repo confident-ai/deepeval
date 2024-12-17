@@ -73,6 +73,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
                     if self.strict_mode and self.score < self.threshold
                     else self.score
                 )
+                self.reason = "\n".join(f"Reason for image {i}: {reason}" for i, reason in enumerate(self.reasons))
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -136,6 +137,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
                 if self.strict_mode and self.score < self.threshold
                 else self.score
             )
+            self.reason = "\n".join(f"Reason for image {i}: {reason}" for i, reason in enumerate(self.reasons))
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[

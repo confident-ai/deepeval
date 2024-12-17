@@ -58,7 +58,13 @@ module.exports = {
             {
               type: "category",
               label: "Multimodal Metrics",
-              items: ["metrics-text-to-image", "metrics-image-editing"],
+              items: [
+                "metrics-image-coherence",
+                "metrics-image-helpfulness",
+                "metrics-image-reference",
+                "metrics-text-to-image",
+                "metrics-image-editing",
+              ],
               collapsed: true,
             },
           ],
@@ -93,22 +99,22 @@ module.exports = {
           type: "category",
           label: "Vulnerabilties",
           items: [
-            "red-teaming-vulnerabilities",      
+            "red-teaming-vulnerabilities",
             "red-teaming-vulnerabilities-bias",
-            "red-teaming-vulnerabilities-misinformation", 
-            "red-teaming-vulnerabilities-toxicity", 
-            "red-teaming-vulnerabilities-illegal-activities", 
-            "red-teaming-vulnerabilities-personal-safety", 
-            "red-teaming-vulnerabilities-pii-leakage",    
-            "red-teaming-vulnerabilities-prompt-leakage",    
+            "red-teaming-vulnerabilities-misinformation",
+            "red-teaming-vulnerabilities-toxicity",
+            "red-teaming-vulnerabilities-illegal-activities",
+            "red-teaming-vulnerabilities-personal-safety",
+            "red-teaming-vulnerabilities-pii-leakage",
+            "red-teaming-vulnerabilities-prompt-leakage",
             "red-teaming-vulnerabilities-unauthorized-access",
-            "red-teaming-vulnerabilities-intellectual-property", 
-            "red-teaming-vulnerabilities-excessive-agency", 
-            "red-teaming-vulnerabilities-robustness", 
-            "red-teaming-vulnerabilities-graphic-content", 
-            "red-teaming-vulnerabilities-competition", 
+            "red-teaming-vulnerabilities-intellectual-property",
+            "red-teaming-vulnerabilities-excessive-agency",
+            "red-teaming-vulnerabilities-robustness",
+            "red-teaming-vulnerabilities-graphic-content",
+            "red-teaming-vulnerabilities-competition",
           ],
-          collapsed: false
+          collapsed: false,
         },
       ],
       collapsed: false,
@@ -130,9 +136,7 @@ module.exports = {
         {
           type: "category",
           label: "Hyperparameters",
-          items: [
-            "confident-ai-hyperparameters-prompt-versioning",
-          ],
+          items: ["confident-ai-hyperparameters-prompt-versioning"],
           collapsed: true,
         },
         {
@@ -231,9 +235,9 @@ module.exports = {
       type: "category",
       label: "Choosing Your Metrics",
       items: [
-        "tutorial-metrics-defining-an-evaluation-criteria", 
-        "tutorial-metrics-selection", 
-        // "tutorial-metrics-deepeval", 
+        "tutorial-metrics-defining-an-evaluation-criteria",
+        "tutorial-metrics-selection",
+        // "tutorial-metrics-deepeval",
         // "tutorial-metrics-confident"
       ],
       collapsed: false,
@@ -253,8 +257,8 @@ module.exports = {
       label: "Improving Your Evaluation Dataset",
       items: [
         // "tutorial-placeholder",
-        "tutorial-dataset-synthesis", 
-        "tutorial-dataset-confident"
+        "tutorial-dataset-synthesis",
+        "tutorial-dataset-confident",
         // "tutorial-dataset-prepared"
       ],
       collapsed: false,
@@ -268,7 +272,10 @@ module.exports = {
     {
       type: "category",
       label: "Continous Evaluation in Production",
-      items: ["tutorial-production-monitoring", "tutorial-production-evaluation"],
+      items: [
+        "tutorial-production-monitoring",
+        "tutorial-production-evaluation",
+      ],
       collapsed: false,
     },
   ],
