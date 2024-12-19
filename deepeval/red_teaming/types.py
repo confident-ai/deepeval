@@ -91,23 +91,23 @@ class LLMRiskCategories(Enum):
 
 llm_risk_categories_map: Dict[Vulnerability, LLMRiskCategories] = {
     #### Responsible AI ####
-    Bias: LLMRiskCategories.RESPONSIBLE_AI,
-    Toxicity: LLMRiskCategories.RESPONSIBLE_AI,
+    BiasType: LLMRiskCategories.RESPONSIBLE_AI,
+    ToxicityType: LLMRiskCategories.RESPONSIBLE_AI,
     #### Illegal ####
-    IllegalActivity: LLMRiskCategories.ILLEGAL,
-    GraphicContent: LLMRiskCategories.ILLEGAL,
-    PersonalSafety: LLMRiskCategories.ILLEGAL,
+    IllegalActivityType: LLMRiskCategories.ILLEGAL,
+    GraphicContentType: LLMRiskCategories.ILLEGAL,
+    PersonalSafetyType: LLMRiskCategories.ILLEGAL,
     #### Brand Image ####
-    Misinformation: LLMRiskCategories.BRAND_IMAGE,
-    ExcessiveAgency: LLMRiskCategories.BRAND_IMAGE,
-    Robustness: LLMRiskCategories.BRAND_IMAGE,
-    IntellectualProperty: LLMRiskCategories.BRAND_IMAGE,
-    Competition: LLMRiskCategories.BRAND_IMAGE,
+    MisinformationType: LLMRiskCategories.BRAND_IMAGE,
+    ExcessiveAgencyType: LLMRiskCategories.BRAND_IMAGE,
+    RobustnessType: LLMRiskCategories.BRAND_IMAGE,
+    IntellectualPropertyType: LLMRiskCategories.BRAND_IMAGE,
+    CompetitionType: LLMRiskCategories.BRAND_IMAGE,
     #### Data Privacy ####
-    PromptLeakage: LLMRiskCategories.DATA_PRIVACY,
-    PIILeakage: LLMRiskCategories.DATA_PRIVACY,
+    PromptLeakageType: LLMRiskCategories.DATA_PRIVACY,
+    PIILeakageType: LLMRiskCategories.DATA_PRIVACY,
     #### Unauthorized Access ####
-    UnauthorizedAccess: LLMRiskCategories.UNAUTHORIZED_ACCESS,
+    UnauthorizedAccessType: LLMRiskCategories.UNAUTHORIZED_ACCESS,
 }
 
 ##########################################
