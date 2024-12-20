@@ -194,7 +194,7 @@ def check_mllm_test_case_params(
         if count != input_image_count:
             error_str = f"Can only evaluate test cases with '{input_image_count}' input images using the '{metric.__name__}' metric. `{count}` found."
             raise ValueError(error_str)
-    
+
     if actual_output_image_count:
         count = 0
         for ele in test_case.actual_output:

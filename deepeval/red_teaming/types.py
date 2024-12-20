@@ -1,6 +1,7 @@
 from typing import Dict, Union, Callable
 from enum import Enum
 
+from deepeval.vulnerability import BaseVulnerability
 from deepeval.vulnerability.intellectual_property import (
     IntellectualPropertyType,
 )
@@ -17,7 +18,6 @@ from deepeval.vulnerability.robustness import RobustnessType
 from deepeval.vulnerability.toxicity import ToxicityType
 from deepeval.vulnerability.bias import BiasType
 from deepeval.vulnerability import (
-    Vulnerability,
     IntellectualProperty,
     UnauthorizedAccess,
     IllegalActivity,
@@ -89,7 +89,7 @@ class LLMRiskCategories(Enum):
     UNAUTHORIZED_ACCESS = "Unauthorized Access"
 
 
-llm_risk_categories_map: Dict[Vulnerability, LLMRiskCategories] = {
+llm_risk_categories_map: Dict[BaseVulnerability, LLMRiskCategories] = {
     #### Responsible AI ####
     BiasType: LLMRiskCategories.RESPONSIBLE_AI,
     ToxicityType: LLMRiskCategories.RESPONSIBLE_AI,

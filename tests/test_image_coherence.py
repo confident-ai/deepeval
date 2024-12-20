@@ -1,4 +1,8 @@
-from deepeval.metrics import ImageCoherenceMetric, ImageHelpfulnessMetric, ImageReferenceMetric
+from deepeval.metrics import (
+    ImageCoherenceMetric,
+    ImageHelpfulnessMetric,
+    ImageReferenceMetric,
+)
 from deepeval.test_case import MLLMImage, MLLMTestCase
 import textwrap
 
@@ -24,12 +28,17 @@ mllm_test_case = MLLMTestCase(
         MLLMImage(
             url="https://cdn.prod.website-files.com/64bd90bdba579d6cce245aec/6725d767c80255656d1f142c_1*VQIEl1L8JgolDQsqca-w4w.png"
         ),
-        textwrap.dedent('''LLM Safety, a specialized area within AI Safety, focuses on safeguarding Large Language Models, ensuring they function responsibly and securely. This includes addressing vulnerabilities like data protection, content moderation, and reducing harmful or biased outputs in real-world applications.
+        textwrap.dedent(
+            """LLM Safety, a specialized area within AI Safety, focuses on safeguarding Large Language Models, ensuring they function responsibly and securely. This includes addressing vulnerabilities like data protection, content moderation, and reducing harmful or biased outputs in real-world applications.
             Government AI Regulations
             Just a few months ago, the European Union’s Artificial Intelligence Act (AI Act) came into force, marking the first-ever legal framework for AI. By setting common rules and regulations, the Act ensures that AI applications across the EU are safe, transparent, non-discriminatory, and environmentally sustainable.
-        '''),
-        MLLMImage(url="https://cdn.prod.website-files.com/64bd90bdba579d6cce245aec/6725d768a1a3be620ec4455c_1*IHcRH-dIpRpTp0edyq_9nA.png"),
-        textwrap.dedent('''Alongside the EU’s AI Act, other countries are also advancing their efforts to improve safety standards and establish regulatory frameworks for AI and LLMs. These initiatives include:
+        """
+        ),
+        MLLMImage(
+            url="https://cdn.prod.website-files.com/64bd90bdba579d6cce245aec/6725d768a1a3be620ec4455c_1*IHcRH-dIpRpTp0edyq_9nA.png"
+        ),
+        textwrap.dedent(
+            """Alongside the EU’s AI Act, other countries are also advancing their efforts to improve safety standards and establish regulatory frameworks for AI and LLMs. These initiatives include:
             United States: AI Risk Management Framework by NIST (National Institute of Standards and Technology) and Executive Order 14110
             United Kingdom: Pro-Innovation AI Regulation by DSIT (Department for Science, Innovation and Technology)
             China: Generative AI Measures by CAC (Cyberspace Administration of China)
@@ -37,8 +46,10 @@ mllm_test_case = MLLMTestCase(
             Japan: Draft AI Act by METI (Japan’s Ministry of Economy, Trade, and Industry)
             EU Artificial Intelligence Act (EU)
             The EU AI Act, which took effect in August 2024, provides a structured framework to ensure AI systems are used safely and responsibly across critical areas such as healthcare, public safety, education, and consumer protection.
-        ''')
-    ] * 2,
+        """
+        ),
+    ]
+    * 2,
 )
 
 
@@ -60,20 +71,30 @@ mllm_test_case = MLLMTestCase(
 import time
 
 # Initialize metrics
-async_image_coherence_metric = ImageCoherenceMetric(async_mode=True, verbose_mode=True)
-sync_image_coherence_metric = ImageCoherenceMetric(async_mode=False, verbose_mode=True)
+async_image_coherence_metric = ImageCoherenceMetric(
+    async_mode=True, verbose_mode=True
+)
+sync_image_coherence_metric = ImageCoherenceMetric(
+    async_mode=False, verbose_mode=True
+)
 
 # Measure time and evaluate async metric
 start_time_async = time.time()
 evaluation_1 = async_image_coherence_metric.measure(test_case=mllm_test_case)
 end_time_async = time.time()
-print(f"Async Image Coherence Metric Evaluation Time: {end_time_async - start_time_async:.4f} seconds")
+print(
+    f"Async Image Coherence Metric Evaluation Time: {end_time_async - start_time_async:.4f} seconds"
+)
 
 # Measure time and evaluate sync metric
 start_time_sync = time.time()
-evaluation_2 = sync_image_coherence_metric.measure(test_case=mllm_test_case)  # Fixed typo here
+evaluation_2 = sync_image_coherence_metric.measure(
+    test_case=mllm_test_case
+)  # Fixed typo here
 end_time_sync = time.time()
-print(f"Sync Image Coherence Metric Evaluation Time: {end_time_sync - start_time_sync:.4f} seconds")
+print(
+    f"Sync Image Coherence Metric Evaluation Time: {end_time_sync - start_time_sync:.4f} seconds"
+)
 
 # Print evaluations
 print("Async Evaluation Result:", evaluation_1)

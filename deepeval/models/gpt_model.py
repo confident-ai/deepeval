@@ -349,22 +349,19 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
             elif isinstance(ele, MLLMImage):
                 if ele.local == True:
                     import PIL.Image
+
                     image = PIL.Image.open(ele.url)
                     visual_dict = {
                         "type": "image_url",
                         "image_url": {
                             "url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"
-                        }
+                        },
                     }
                 else:
-                    visual_dict = (
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": ele.url
-                            }
-                        }
-                    )
+                    visual_dict = {
+                        "type": "image_url",
+                        "image_url": {"url": ele.url},
+                    }
                 prompt.append(visual_dict)
         return prompt
 

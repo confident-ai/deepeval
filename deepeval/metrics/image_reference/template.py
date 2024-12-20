@@ -1,7 +1,8 @@
 import textwrap
 
-class ImageReferenceTemplate:   
-    
+
+class ImageReferenceTemplate:
+
     @staticmethod
     def evaluate_image_reference(context_above, context_below):
         return textwrap.dedent(

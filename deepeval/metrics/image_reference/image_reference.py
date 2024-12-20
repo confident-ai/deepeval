@@ -22,6 +22,7 @@ required_params: List[MLLMTestCaseParams] = [
     MLLMTestCaseParams.ACTUAL_OUTPUT,
 ]
 
+
 class ImageReferenceMetric(BaseMultimodalMetric):
     def __init__(
         self,
@@ -30,7 +31,7 @@ class ImageReferenceMetric(BaseMultimodalMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        max_context_size: Optional[int] = None
+        max_context_size: Optional[int] = None,
     ):
         self.model, self.using_native_model = initialize_multimodal_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -43,7 +44,9 @@ class ImageReferenceMetric(BaseMultimodalMetric):
     def measure(
         self, test_case: MLLMTestCase, _show_indicator: bool = True
     ) -> float:
-        check_mllm_test_case_params(test_case, required_params, None, None, self)
+        check_mllm_test_case_params(
+            test_case, required_params, None, None, self
+        )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
             if self.async_mode:
@@ -58,49 +61,83 @@ class ImageReferenceMetric(BaseMultimodalMetric):
                 self.scores = []
                 self.reasons = []
                 for image_index in self.get_image_indices(actual_output):
-                    context_above, context_below = self.get_image_context(image_index, actual_output)
+                    context_above, context_below = self.get_image_context(
+                        image_index, actual_output
+                    )
                     image = actual_output[image_index]
-                    score, reason = self.evaluate_image_reference(image, context_above, context_below)
+                    score, reason = self.evaluate_image_reference(
+                        image, context_above, context_below
+                    )
                     score = score / 10
                     self.contexts_above.append(context_above)
                     self.contexts_below.append(context_below)
                     self.scores.append(score)
                     self.reasons.append(reason)
-                    
+
                 self.score = self.calculate_score(self.scores)
                 self.score = (
                     0
                     if self.strict_mode and self.score < self.threshold
                     else self.score
                 )
-                self.reason = "\n".join(f"Reason for image {i}: {reason}" for i, reason in enumerate(self.reasons))
+                self.reason = "\n".join(
+                    f"Reason for image {i}: {reason}"
+                    for i, reason in enumerate(self.reasons)
+                )
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
                         (
-                            (f"Context Above Image: {self.contexts_above[0][:20]}...\n" if self.contexts_above and self.contexts_above[0] else "") +
-                            (f"Context Below Image: {self.contexts_below[0][:20]}...\n" if self.contexts_below and self.contexts_below[0] else "") +
-                            f"Score: {self.scores[0]}\nReason: {self.reasons[0]}\n"
-                        ) if len(self.scores) == 1 else
-                        (
-                            (f"Context Above Image {i + 1}: {self.contexts_above[i][:20]}...\n" if self.contexts_above and self.contexts_above[i] else "") +
-                            (f"Context Below Image {i + 1}: {self.contexts_below[i][:20]}...\n" if self.contexts_below and self.contexts_below[i] else "") +
-                            f"Image {i + 1} Score: {self.scores[i]}\nImage {i + 1} Reason: {self.reasons[i]}\n"
+                            (
+                                (
+                                    f"Context Above Image: {self.contexts_above[0][:20]}...\n"
+                                    if self.contexts_above
+                                    and self.contexts_above[0]
+                                    else ""
+                                )
+                                + (
+                                    f"Context Below Image: {self.contexts_below[0][:20]}...\n"
+                                    if self.contexts_below
+                                    and self.contexts_below[0]
+                                    else ""
+                                )
+                                + f"Score: {self.scores[0]}\nReason: {self.reasons[0]}\n"
+                            )
+                            if len(self.scores) == 1
+                            else (
+                                (
+                                    f"Context Above Image {i + 1}: {self.contexts_above[i][:20]}...\n"
+                                    if self.contexts_above
+                                    and self.contexts_above[i]
+                                    else ""
+                                )
+                                + (
+                                    f"Context Below Image {i + 1}: {self.contexts_below[i][:20]}...\n"
+                                    if self.contexts_below
+                                    and self.contexts_below[i]
+                                    else ""
+                                )
+                                + f"Image {i + 1} Score: {self.scores[i]}\nImage {i + 1} Reason: {self.reasons[i]}\n"
+                            )
                         )
                         for i in range(len(self.scores))
-                    ] + (
-                        [f"Score (Average): {self.score}"] if len(self.scores) > 1 else []
-                    )
+                    ]
+                    + (
+                        [f"Score (Average): {self.score}"]
+                        if len(self.scores) > 1
+                        else []
+                    ),
                 )
                 return self.score
-            
 
     async def a_measure(
         self,
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        check_mllm_test_case_params(test_case, required_params, None, None, self)
+        check_mllm_test_case_params(
+            test_case, required_params, None, None, self
+        )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
@@ -112,14 +149,18 @@ class ImageReferenceMetric(BaseMultimodalMetric):
             self.contexts_below = []
             self.scores = []
             self.reasons = []
-            
+
             tasks = []
             image_indices = self.get_image_indices(actual_output)
             for image_index in image_indices:
-                context_above, context_below = self.get_image_context(image_index, actual_output)
+                context_above, context_below = self.get_image_context(
+                    image_index, actual_output
+                )
                 image = actual_output[image_index]
                 tasks.append(
-                    self.a_evaluate_image_reference(image, context_above, context_below)
+                    self.a_evaluate_image_reference(
+                        image, context_above, context_below
+                    )
                 )
                 # Append contexts immediately
                 self.contexts_above.append(context_above)
@@ -137,31 +178,59 @@ class ImageReferenceMetric(BaseMultimodalMetric):
                 if self.strict_mode and self.score < self.threshold
                 else self.score
             )
-            self.reason = "\n".join(f"Reason for image {i}: {reason}" for i, reason in enumerate(self.reasons))
+            self.reason = "\n".join(
+                f"Reason for image {i}: {reason}"
+                for i, reason in enumerate(self.reasons)
+            )
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
                     (
-                        (f"Context Above Image: {self.contexts_above[0][:20]}...\n" if self.contexts_above and self.contexts_above[0] else "") +
-                        (f"Context Below Image: {self.contexts_below[0][:20]}...\n" if self.contexts_below and self.contexts_below[0] else "") +
-                        f"Score: {self.scores[0]}\nReason: {self.reasons[0]}\n"
-                    ) if len(self.scores) == 1 else
-                    (
-                        (f"Context Above Image {i + 1}: {self.contexts_above[i][:20]}...\n" if self.contexts_above and self.contexts_above[i] else "") +
-                        (f"Context Below Image {i + 1}: {self.contexts_below[i][:20]}...\n" if self.contexts_below and self.contexts_below[i] else "") +
-                        f"Image {i + 1} Score: {self.scores[i]}\nImage {i + 1} Reason: {self.reasons[i]}\n"
+                        (
+                            (
+                                f"Context Above Image: {self.contexts_above[0][:20]}...\n"
+                                if self.contexts_above
+                                and self.contexts_above[0]
+                                else ""
+                            )
+                            + (
+                                f"Context Below Image: {self.contexts_below[0][:20]}...\n"
+                                if self.contexts_below
+                                and self.contexts_below[0]
+                                else ""
+                            )
+                            + f"Score: {self.scores[0]}\nReason: {self.reasons[0]}\n"
+                        )
+                        if len(self.scores) == 1
+                        else (
+                            (
+                                f"Context Above Image {i + 1}: {self.contexts_above[i][:20]}...\n"
+                                if self.contexts_above
+                                and self.contexts_above[i]
+                                else ""
+                            )
+                            + (
+                                f"Context Below Image {i + 1}: {self.contexts_below[i][:20]}...\n"
+                                if self.contexts_below
+                                and self.contexts_below[i]
+                                else ""
+                            )
+                            + f"Image {i + 1} Score: {self.scores[i]}\nImage {i + 1} Reason: {self.reasons[i]}\n"
+                        )
                     )
                     for i in range(len(self.scores))
-                ] + (
-                    [f"Score (Average): {self.score}"] if len(self.scores) > 1 else []
-                )
+                ]
+                + (
+                    [f"Score (Average): {self.score}"]
+                    if len(self.scores) > 1
+                    else []
+                ),
             )
             return self.score
 
-
     def evaluate_image_reference(
         self,
-        image: MLLMImage, 
+        image: MLLMImage,
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
@@ -184,11 +253,10 @@ class ImageReferenceMetric(BaseMultimodalMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
-            
-    
+
     async def a_evaluate_image_reference(
         self,
-        image: MLLMImage, 
+        image: MLLMImage,
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
@@ -211,12 +279,9 @@ class ImageReferenceMetric(BaseMultimodalMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
-            
 
     def get_image_context(
-        self,
-        image_index: int,
-        actual_output: List[Union[str, MLLMImage]]
+        self, image_index: int, actual_output: List[Union[str, MLLMImage]]
     ) -> Tuple[str, str]:
         context_above = None
         context_below = None
@@ -226,7 +291,7 @@ class ImageReferenceMetric(BaseMultimodalMetric):
             if isinstance(actual_output[i], str):
                 context_above = actual_output[i]
                 if self.max_context_size:
-                    context_above = context_above[-self.max_context_size:]
+                    context_above = context_above[-self.max_context_size :]
                 break
 
         # Find context_below (first characters until max_context_size)
@@ -234,25 +299,22 @@ class ImageReferenceMetric(BaseMultimodalMetric):
             if isinstance(actual_output[i], str):
                 context_below = actual_output[i]
                 if self.max_context_size:
-                    context_below = context_below[:self.max_context_size]
+                    context_below = context_below[: self.max_context_size]
                 break
 
         return context_above, context_below
-    
 
     def get_image_indices(
-        self,
-        actual_output: List[Union[str, MLLMImage]]
+        self, actual_output: List[Union[str, MLLMImage]]
     ) -> List[int]:
-        return [index for index, element in enumerate(actual_output) if isinstance(element, MLLMImage)]
+        return [
+            index
+            for index, element in enumerate(actual_output)
+            if isinstance(element, MLLMImage)
+        ]
 
-
-    def calculate_score(
-        self,
-        scores: List[float]
-    ):
-        return sum(scores)/len(scores)
-        
+    def calculate_score(self, scores: List[float]):
+        return sum(scores) / len(scores)
 
     @property
     def __name__(self):

@@ -3,7 +3,7 @@ from pydantic import Field
 from tqdm import tqdm
 from typing import Dict, List, Optional, Union
 
-from deepeval.vulnerability import Vulnerability
+from deepeval.vulnerability import BaseVulnerability
 from deepeval.red_teaming.types import (
     AttackEnhancement,
     VulnerabilityType,
@@ -88,7 +88,7 @@ class RedTeamer:
         self,
         target_model_callback: CallbackType,
         attacks_per_vulnerability_type: int,
-        vulnerabilities: List[Vulnerability],
+        vulnerabilities: List[BaseVulnerability],
         attack_enhancements: Dict[AttackEnhancement, float] = {
             AttackEnhancement.BASE64: 1 / 11,
             AttackEnhancement.GRAY_BOX_ATTACK: 1 / 11,
@@ -253,7 +253,7 @@ class RedTeamer:
         self,
         target_model_callback: CallbackType,
         attacks_per_vulnerability_type: int,
-        vulnerabilities: List[Vulnerability],
+        vulnerabilities: List[BaseVulnerability],
         attack_enhancements: Dict[AttackEnhancement, float] = {
             AttackEnhancement.BASE64: 1 / 11,
             AttackEnhancement.GRAY_BOX_ATTACK: 1 / 11,

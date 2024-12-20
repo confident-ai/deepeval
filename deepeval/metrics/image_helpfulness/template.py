@@ -1,7 +1,8 @@
 import textwrap
 
-class ImageHelpfulnessTemplate:   
-    
+
+class ImageHelpfulnessTemplate:
+
     @staticmethod
     def evaluate_image_helpfulness(context_above, context_below):
         return textwrap.dedent(

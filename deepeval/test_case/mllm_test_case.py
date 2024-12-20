@@ -30,7 +30,6 @@ class MLLMImage:
 class MLLMTestCaseParams(Enum):
     INPUT = "input"
     ACTUAL_OUTPUT = "actual_output"
-    
 
 
 @dataclass

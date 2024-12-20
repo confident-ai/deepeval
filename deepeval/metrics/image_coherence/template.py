@@ -1,7 +1,8 @@
 import textwrap
 
-class ImageCoherenceTemplate:   
-    
+
+class ImageCoherenceTemplate:
+
     @staticmethod
     def evaluate_image_coherence(context_above, context_below):
         return textwrap.dedent(

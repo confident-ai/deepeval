@@ -5,13 +5,14 @@ from typing import Optional, Tuple, Optional
 import logging
 import openai
 
-from deepeval.red_teaming import RedTeamer, AttackEnhancement, Vulnerability
+from deepeval.red_teaming import RedTeamer, AttackEnhancement
 from deepeval.red_teaming.attack_synthesizer import AttackSynthesizer
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM, GPTModel
 from deepeval.test_case import LLMTestCase
 
+from deepeval.vulnerability import BaseVulnerability
 from deepeval.vulnerability.intellectual_property import (
     IntellectualPropertyType,
 )
@@ -28,7 +29,7 @@ from deepeval.vulnerability.robustness import RobustnessType
 from deepeval.vulnerability.toxicity import ToxicityType
 from deepeval.vulnerability.bias import BiasType
 from deepeval.vulnerability import (
-    Vulnerability,
+    BaseVulnerability,
     IntellectualProperty,
     UnauthorizedAccess,
     IllegalActivity,
@@ -45,7 +46,7 @@ from deepeval.vulnerability import (
 )
 from typing import List
 
-vulnerabilties: List[Vulnerability] = [
+vulnerabilties: List[BaseVulnerability] = [
     Bias(types=[t for t in BiasType]),
     Misinformation(types=[t for t in MisinformationType]),
     Toxicity(types=[t for t in ToxicityType]),
