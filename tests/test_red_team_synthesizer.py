@@ -48,17 +48,17 @@ from typing import List
 
 vulnerabilties: List[BaseVulnerability] = [
     Bias(types=[t for t in BiasType]),
-    Misinformation(types=[t for t in MisinformationType]),
-    Toxicity(types=[t for t in ToxicityType]),
-    PIILeakage(types=[t for t in PIILeakageType]),
-    PromptLeakage(types=[t for t in PromptLeakageType]),
-    IllegalActivity(types=[t for t in IllegalActivityType]),
-    ExcessiveAgency(types=[t for t in ExcessiveAgencyType]),
-    GraphicContent(types=[t for t in GraphicContentType]),
-    IntellectualProperty(types=[t for t in IntellectualPropertyType]),
-    Robustness(types=[t for t in RobustnessType]),
-    Competition(types=[t for t in CompetitionType]),
-    UnauthorizedAccess(types=[t for t in UnauthorizedAccessType]),
+    # Misinformation(types=[t for t in MisinformationType]),
+    # Toxicity(types=[t for t in ToxicityType]),
+    # PIILeakage(types=[t for t in PIILeakageType]),
+    # PromptLeakage(types=[t for t in PromptLeakageType]),
+    # IllegalActivity(types=[t for t in IllegalActivityType]),
+    # ExcessiveAgency(types=[t for t in ExcessiveAgencyType]),
+    # GraphicContent(types=[t for t in GraphicContentType]),
+    # IntellectualProperty(types=[t for t in IntellectualPropertyType]),
+    # Robustness(types=[t for t in RobustnessType]),
+    # Competition(types=[t for t in CompetitionType]),
+    # UnauthorizedAccess(types=[t for t in UnauthorizedAccessType]),
 ]
 
 #########################################
@@ -147,11 +147,12 @@ def test_red_teamer():
         attack_enhancements={AttackEnhancement.BASE64: 1},
         vulnerabilities=vulnerabilties,
     )
+    print(results)
 
-    red_teamer.vulnerability_scores_breakdown.to_csv(
-        "vulnerability_scores_breakdown.csv"
-    )
-    red_teamer.vulnerability_scores.to_csv("vulnerability_scores.csv")
+    # red_teamer.vulnerability_scores_breakdown.to_csv(
+    #     "vulnerability_scores_breakdown.csv"
+    # )
+    # red_teamer.vulnerability_scores.to_csv("vulnerability_scores.csv")
 
     # for index, row in df.iterrows():
     #     print(f"Input: {row['Input']}")

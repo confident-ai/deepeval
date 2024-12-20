@@ -38,7 +38,7 @@ from deepeval.red_teaming.attack_enhancements import (
     JailbreakingCrescendo,
 )
 from deepeval.confident.api import Api, HttpMethods, Endpoints
-from deepeval.vulnerability import Vulnerability
+from deepeval.vulnerability import BaseVulnerability
 from deepeval.utils import is_confident
 
 BASE_URL = "https://deepeval.confident-ai.com/"
@@ -69,7 +69,7 @@ class AttackSynthesizer:
         self,
         target_model_callback: CallbackType,
         attacks_per_vulnerability_type: int,
-        vulnerabilities: List[Vulnerability],
+        vulnerabilities: List[BaseVulnerability],
         attack_enhancements: Dict[AttackEnhancement, float],
     ) -> List[Attack]:
         # Generate unenhanced attacks for each vulnerability
@@ -120,7 +120,7 @@ class AttackSynthesizer:
         self,
         target_model_callback: CallbackType,
         attacks_per_vulnerability_type: int,
-        vulnerabilities: List[Vulnerability],
+        vulnerabilities: List[BaseVulnerability],
         attack_enhancements: Dict[AttackEnhancement, float],
         max_concurrent_tasks: int = 10,
     ) -> List[Attack]:
@@ -202,12 +202,12 @@ class AttackSynthesizer:
     def generate_base_attacks(
         self,
         attacks_per_vulnerability_type: int,
-        vulnerability: Vulnerability,
+        vulnerability: BaseVulnerability,
         max_retries: int = 5,
     ) -> List[Attack]:
         base_attacks: List[Attack] = []
         # Remote vulnerabilities
-        if not isinstance(vulnerability, NonRemoteVulnerability):
+        if not isinstance(BaseVulnerability, NonRemoteVulnerability):
             if not is_confident():
                 raise Exception(
                     f"To generate attacks for '{vulnerability.get_name()}', login to Confident AI by running `deepeval login`"
@@ -299,7 +299,7 @@ class AttackSynthesizer:
     async def a_generate_base_attacks(
         self,
         attacks_per_vulnerability_type: int,
-        vulnerability: Vulnerability,
+        vulnerability: BaseVulnerability,
         max_retries: int = 5,
     ) -> List[Attack]:
         base_attacks: List[Attack] = []

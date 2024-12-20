@@ -18,18 +18,7 @@ from deepeval.vulnerability.robustness import RobustnessType
 from deepeval.vulnerability.toxicity import ToxicityType
 from deepeval.vulnerability.bias import BiasType
 from deepeval.vulnerability import (
-    IntellectualProperty,
-    UnauthorizedAccess,
-    IllegalActivity,
-    ExcessiveAgency,
-    GraphicContent,
-    PersonalSafety,
     Misinformation,
-    PromptLeakage,
-    Competition,
-    Robustness,
-    PIILeakage,
-    Toxicity,
     Bias,
 )
 
