@@ -9,24 +9,33 @@ sidebar_label: Introduction
 In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, a test case represents the thing you're trying to measure. `deepeval` offers a range of default metrics for you to quickly get started with, such as:
 
 - G-Eval
-- Summarization
+- Prompt Alignment
 - Faithfulness
 - Answer Relevancy
 - Contextual Relevancy
 - Contextual Precision
 - Contextual Recall
+- Tool Correctness
+- Json Correctness
 - Ragas
 - Hallucination
 - Toxicity
 - Bias
+- Summarization
 
 `deepeval` also offers conversational metrics, which are metrics used to evaluate conversations instead of individual, granular LLM interactions. These include:
 
+- Conversational G-Eval
+- Knowledge Retention
+- Role Adherence
 - Conversation Completeness
 - Conversation Relevancy
-- Knowledge Retention
 
 You can also easily develop your own custom evaluation metrics in `deepeval`. All metrics are measured on a test case. Visit the [test cases section](evaluation-test-cases) to learn how to apply any metric on test cases for evaluation.
+
+:::info
+[Click here for a full end-to-end tutorial](tutorial-metrics-defining-an-evaluation-criteria) on `deepeval`, which includes an entire walkthrough of how to pick the right LLM evaluation metrics for yourself.
+:::
 
 ## Types of Metrics
 
