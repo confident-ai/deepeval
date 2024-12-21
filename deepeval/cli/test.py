@@ -52,6 +52,12 @@ def run(
     show_warnings: Annotated[
         bool, typer.Option("--show-warnings", "-w/-W")
     ] = False,
+    identifier: Optional[str] = typer.Option(
+        None,
+        "--identifier",
+        "-id",
+        help="Identify this test run with pytest",
+    ),
     num_processes: Optional[int] = typer.Option(
         None,
         "--num-processes",
@@ -137,6 +143,8 @@ def run(
 
     if mark:
         pytest_args.extend(["-m", mark])
+    if identifier:
+        pytest_args.extend(["--identifier", identifier])
 
     # Add the deepeval plugin file to pytest arguments
     pytest_args.extend(["-p", "plugins"])

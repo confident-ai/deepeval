@@ -1,6 +1,11 @@
 from setuptools import find_packages, setup
-
+from pathlib import Path
 from deepeval._version import __version__
+
+# Read the README file
+long_description = (Path(__file__).parent / "README.md").read_text(
+    encoding="utf-8"
+)
 
 setup(
     name="deepeval",
@@ -8,9 +13,11 @@ setup(
     url="https://github.com/confident-ai/deepeval",
     author="Confident AI",
     author_email="jeffreyip@confident-ai.com",
-    description="The open-source LLMs evaluation framework.",
+    description="The Open-Source LLM Evaluation Framework.",
     packages=find_packages(),
     include_package_data=True,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     python_requires=">=3.9, <3.13",
     install_requires=[
         "requests",

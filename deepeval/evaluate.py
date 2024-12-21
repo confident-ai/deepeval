@@ -257,6 +257,7 @@ def execute_test_cases(
     show_indicator: bool,
     save_to_disk: bool = False,
     verbose_mode: Optional[bool] = None,
+    identifier: Optional[str] = None,
     test_run_manager: Optional[TestRunManager] = None,
     _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
@@ -266,7 +267,7 @@ def execute_test_cases(
         test_run_manager = global_test_run_manager
 
     test_run_manager.save_to_disk = save_to_disk
-    test_run = test_run_manager.get_test_run()
+    test_run = test_run_manager.get_test_run(identifier=identifier)
 
     if verbose_mode is not None:
         for metric in metrics:
@@ -560,6 +561,7 @@ async def a_execute_test_cases(
     max_concurrent: int,
     save_to_disk: bool = False,
     verbose_mode: Optional[bool] = None,
+    identifier: Optional[str] = None,
     test_run_manager: Optional[TestRunManager] = None,
     _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
@@ -574,7 +576,7 @@ async def a_execute_test_cases(
         test_run_manager = global_test_run_manager
 
     test_run_manager.save_to_disk = save_to_disk
-    test_run = test_run_manager.get_test_run()
+    test_run = test_run_manager.get_test_run(identifier=identifier)
 
     if verbose_mode is not None:
         for metric in metrics:
@@ -1014,6 +1016,7 @@ def evaluate(
     ignore_errors: bool = False,
     skip_on_missing_params: bool = False,
     verbose_mode: Optional[bool] = None,
+    identifier: Optional[str] = None,
     throttle_value: int = 0,
     max_concurrent: int = 100,
 ) -> EvaluationResult:
@@ -1053,6 +1056,7 @@ def evaluate(
                     show_indicator=show_indicator,
                     skip_on_missing_params=skip_on_missing_params,
                     throttle_value=throttle_value,
+                    identifier=identifier,
                     max_concurrent=max_concurrent,
                 )
             )
@@ -1065,6 +1069,7 @@ def evaluate(
                 verbose_mode=verbose_mode,
                 save_to_disk=write_cache,
                 skip_on_missing_params=skip_on_missing_params,
+                identifier=identifier,
                 show_indicator=show_indicator,
             )
 
