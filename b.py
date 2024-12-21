@@ -52,31 +52,32 @@ from deepeval.metrics import GEval
 #     ],
 # )
 
-# evaluate(
-#     test_cases=[
-#         LLMTestCase(
-#             input="Message input number 1!",
-#             actual_output="Message actual output number 1...",
-#             retrieval_context=["I love dogs"],
-#         ),
-#         LLMTestCase(
-#             input="Message input 2, this is just a test",
-#             actual_output="Message actual output 2, this is just a test",
-#             retrieval_context=["I love dogs"],
-#         ),
-#     ],
-#     metrics=[
-#         # correctness_metric,
-#         # AnswerRelevancyMetric(),
-#         # BiasMetric(),
-#         SummarizationMetric(verbose_mode=True, truths_extraction_limit=3),
-#         FaithfulnessMetric(verbose_mode=True, truths_extraction_limit=3),
-#     ],
-#     # throttle_value=10,
-#     # max_concurrent=1,
-# )
+evaluate(
+    test_cases=[
+        LLMTestCase(
+            input="Message input number 1!",
+            actual_output="Message actual output number 1...",
+            retrieval_context=["I love dogs"],
+        ),
+        LLMTestCase(
+            input="Message input 2, this is just a test",
+            actual_output="Message actual output 2, this is just a test",
+            retrieval_context=["I love dogs"],
+        ),
+    ],
+    metrics=[
+        # correctness_metric,
+        # AnswerRelevancyMetric(),
+        # BiasMetric(),
+        # SummarizationMetric(verbose_mode=True, truths_extraction_limit=3),
+        FaithfulnessMetric(verbose_mode=True, truths_extraction_limit=3),
+    ],
+    # throttle_value=10,
+    # max_concurrent=1,
+    run_async=False,
+)
 
-confident_evaluate(experiment_name="Convo", test_cases=[test_case])
+# confident_evaluate(experiment_name="Convo", test_cases=[test_case])
 
 
 # evaluate(

@@ -91,6 +91,7 @@ class TestRun(BaseModel):
     metrics_scores: List[MetricScores] = Field(
         default_factory=lambda: [], alias="metricsScores"
     )
+    identifier: Optional[str] = None
     hyperparameters: Optional[Dict[Any, Any]] = Field(None)
     test_passed: Optional[int] = Field(None, alias="testPassed")
     test_failed: Optional[int] = Field(None, alias="testFailed")
@@ -295,11 +296,13 @@ class TestRunManager:
 
     def create_test_run(
         self,
+        identifier: Optional[str] = None,
         file_name: Optional[str] = None,
         disable_request: Optional[bool] = False,
     ):
         self.disable_request = disable_request
         test_run = TestRun(
+            identifier=identifier,
             testFile=file_name,
             testCases=[],
             metricsScores=[],
@@ -312,9 +315,9 @@ class TestRunManager:
         if self.save_to_disk:
             self.save_test_run()
 
-    def get_test_run(self):
+    def get_test_run(self, identifier: Optional[str] = None):
         if self.test_run is None:
-            self.create_test_run()
+            self.create_test_run(identifier=identifier)
 
         if self.save_to_disk:
             try:
