@@ -5,7 +5,6 @@ from typing import List, Literal
 class MultipleChoiceSchema(BaseModel):
     answer: Literal["A", "B", "C", "D"]
 
-
 class ListOfNumbersSchema(BaseModel):
     answer: List[int]
 
@@ -21,6 +20,20 @@ class NumberSchema(BaseModel):
 class StringSchema(BaseModel):
     answer: str
 
+# Winogrande Models #############################
+
+class BinaryChoiceSchema(BaseModel):
+    answer: Literal["A", "B"]
+
+# BBQ Models #############################
+
+class TrinaryChoiceSchema(BaseModel):
+    answer: Literal["A", "B", "C"]
+
+# MathQA Models #############################
+
+class MultipleChoiceSchemaLower(BaseModel):
+    answer: Literal["a", "b", "c", "d"]
 
 # DROP Models #############################
 
