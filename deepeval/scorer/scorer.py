@@ -7,7 +7,6 @@ from deepeval.utils import normalize_text
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.schema import NumberSchema
 
-
 # TODO: More scores are to be added
 class Scorer:
     """This class calculates various Natural Language Processing (NLP) evaluation score.

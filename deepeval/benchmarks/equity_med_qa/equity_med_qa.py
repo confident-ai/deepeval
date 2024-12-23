@@ -3,13 +3,15 @@ from typing import List, Optional, Dict, Union
 from tqdm import tqdm
 import pandas as pd
 
+
 from deepeval.dataset import Golden
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BiasMetric
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.benchmarks.squad.task import SQuADTask
-from deepeval.benchmarks.squad.template import SQuADTemplate
+from deepeval.benchmarks.equity_med_qa.task import EquityMedQATask
+from deepeval.benchmarks.equity_med_qa.template import EquityMedQATemplate
 from deepeval.scorer import Scorer
-from deepeval.benchmarks.schema import MultipleChoiceSchemaLower
 from deepeval.telemetry import capture_benchmark_run
 from deepeval.metrics.utils import initialize_model
 
@@ -17,18 +19,15 @@ from deepeval.metrics.utils import initialize_model
 class EquityMedQA(DeepEvalBaseBenchmark):
     def __init__(
         self,
-        tasks: List[SQuADTask] = None,
-        n_shots: int = 5,
+        tasks: List[EquityMedQATask] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         **kwargs,
     ):
-        assert n_shots <= 5, "SQuAD only supports n_shots <= 5"
         super().__init__(**kwargs)
-        self.tasks: List[SQuADTask] = (
-            list(SQuADTask) if tasks is None else tasks
+        self.tasks: List[EquityMedQATask] = (
+            list(EquityMedQATask) if tasks is None else tasks
         )
         self.scorer = Scorer()
-        self.n_shots: int = n_shots
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
@@ -36,10 +35,8 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             initialize_model(model)
         )
 
-    def evaluate(
-        self, model: DeepEvalBaseLLM
-    ) -> Dict:
-        with capture_benchmark_run("SQuAD", len(self.tasks)):
+    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+        with capture_benchmark_run("EquityMedQA", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0
             predictions_row = []
@@ -50,9 +47,9 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
-               
+
                 for golden in tqdm(
-                    goldens, desc=f"Processing {task.value}"
+                    goldens[:10], desc=f"Processing {task.value}"
                 ):
                     prediction, score = self.predict(model, golden).values()
                     if score:
@@ -63,7 +60,6 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                             task.value,
                             golden.input,
                             prediction,
-                            golden.expected_output,
                             score,
                         )
                     )
@@ -72,7 +68,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                     task_correct_predictions / task_total_predictions
                 )
                 print(
-                    f"SQuAD Task Accuracy (task={task.value}): {task_accuracy}"
+                    f"EquityMedQA Task Accuracy (task={task.value}): {task_accuracy}"
                 )
                 scores_row.append((task.value, task_accuracy))
 
@@ -80,7 +76,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             overall_accuracy = (
                 overall_correct_predictions / overall_total_predictions
             )
-            print(f"Overall SQuAD Accuracy: {overall_accuracy}")
+            print(f"Overall EquityMedQA Accuracy: {overall_accuracy}")
 
             # Create a DataFrame from task_results_data
             # Columns: 'Task', 'Input', 'Prediction', 'Score'
@@ -90,7 +86,6 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                     "Task",
                     "Input",
                     "Prediction",
-                    "Expected Output",
                     "Correct",
                 ],
             )
@@ -102,49 +97,54 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             return overall_accuracy
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
-        # Define prompt template
-        prompt: dict = SQuADTemplate.generate_output(
-            input=golden.input,
-            n_shots=self.n_shots,
-        )
-
-        # Enforced model generation
-        try:
-            res: MultipleChoiceSchemaLower = model.generate(
-                prompt=prompt, schema=MultipleChoiceSchemaLower
-            )
-            prediction = res.answer
-        except TypeError:
-            prompt += "\n\nOutput the answer, which should a text segment taken from the context."
-            prediction = model.generate(prompt)
+        prediction = model.generate(golden.input)
 
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]
 
         # Define Metric
-        score = self.scorer.squad_score(
-            golden.input,
-            prediction,
-            golden.expected_output,
-            self.evaluation_model,
-            self.using_native_evaluation_model,
+        metric = BiasMetric(
+            model=self.evaluation_model,
+            strict_mode=True,
         )
-        return {"prediction": prediction, "score": score}
+        score = metric.measure(LLMTestCase(golden.input, prediction), _show_indicator=False)
+        flipped_score = 1 - metric.score if metric.score in [0, 1] else metric.score
+        return {"prediction": prediction, "score": int(flipped_score)}
 
-
-    def load_benchmark_dataset(self, task: SQuADTask) -> List[Golden]:
-        dataset = load_dataset("rajpurkar/squad", trust_remote_code=True)
-        self.dataset = dataset
+    def load_benchmark_dataset(self, task: EquityMedQATask) -> List[Golden]:
+        # Load full dataset
+        dataset_mapping = {
+            EquityMedQATask.EHAI: EquityMedQATask.EHAI.value + "_dataset",
+            EquityMedQATask.FBRT_LLM: EquityMedQATask.FBRT_LLM.value
+            + "_dataset",
+            EquityMedQATask.FBRT_LLM_661_SAMPLED: EquityMedQATask.FBRT_LLM_661_SAMPLED.value
+            + "_dataset",
+            EquityMedQATask.FBRT_MANUAL: EquityMedQATask.FBRT_MANUAL.value
+            + "_dataset",
+            EquityMedQATask.MIXED_MMQA_OMAQ: EquityMedQATask.MIXED_MMQA_OMAQ.value
+            + "_dataset",
+            EquityMedQATask.MULTIMEDQA: EquityMedQATask.MULTIMEDQA.value
+            + "_dataset",
+            EquityMedQATask.OMAQ: EquityMedQATask.OMAQ.value + "_dataset",
+            EquityMedQATask.OMIYE_ET_AL: EquityMedQATask.OMIYE_ET_AL.value
+            + "_dataset",
+            EquityMedQATask.TRINDS: EquityMedQATask.TRINDS.value + "_dataset",
+        }
+        dataset_attr = dataset_mapping.get(task)
+        if dataset_attr:
+            if not hasattr(self, dataset_attr):
+                dataset = load_dataset(
+                    "katielink/EquityMedQA", task.value, trust_remote_code=True
+                )
+                setattr(self, dataset_attr, dataset)
+            else:
+                dataset = getattr(self, dataset_attr)
 
         # Construct test set
-        test_set = dataset["validation"].filter(
-            lambda data: data["title"] == task.value
-        )
         goldens: List[Golden] = []
-        for data in test_set:
-            input = SQuADTemplate.format_question(data, include_answer=False)
-            expected_output = SQuADTemplate.format_output(data)
-            golden = Golden(input=input, expected_output=expected_output)
+        for data in dataset["train"]:
+            input = EquityMedQATemplate.format_question(data)
+            golden = Golden(input=input)
             goldens.append(golden)
         return goldens
