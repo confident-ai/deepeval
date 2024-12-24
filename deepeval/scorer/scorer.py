@@ -1,7 +1,11 @@
 from typing import Union, List, Optional, Any
 import numpy as np
-from deepeval.utils import normalize_text
+import textwrap
 
+from deepeval.metrics.utils import trimAndLoadJson
+from deepeval.utils import normalize_text
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.benchmarks.schema import NumberSchema
 
 # TODO: More scores are to be added
 class Scorer:
@@ -425,3 +429,41 @@ class Scorer:
         if n - c < k:
             return 1.0
         return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))
+    
+    def squad_score(
+        self, 
+        input: str, 
+        prediction: str, 
+        expected_output: str, 
+        evaluation_model: DeepEvalBaseLLM,
+        using_native_evaluation_model: bool
+    ):
+        prompt = textwrap.dedent(f"""
+            Given the question and context, evaluate if the prediction is correct based on the expected output.
+            Ensure to account for cases where the prediction and expected output might differ in form, such as '2' versus 'two'.
+
+            {input} 
+            Prediction: {prediction}
+            Expected Output: {expected_output}
+
+            IMPORTANT:
+            1. Make sure to output 1 if the prediction is correct and 0 if it's not.
+            2. Respond in JSON format with the following structure:
+            {{
+                "answer": <number>
+            }}
+        """)
+
+        # Generate the score using the model
+        if using_native_evaluation_model:
+            res, _ = evaluation_model.generate(prompt)
+            data = trimAndLoadJson(res)
+            return int(data["answer"])
+        else:
+            try:
+                res: NumberSchema = evaluation_model.generate(prompt, schema=NumberSchema)
+                return res.answer
+            except TypeError:
+                res = evaluation_model.generate(prompt)
+                data = trimAndLoadJson(res)
+                return int(data["answer"])
