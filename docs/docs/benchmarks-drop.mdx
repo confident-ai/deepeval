@@ -15,7 +15,7 @@ sidebar_label: DROP
 There are two optional arguments when using the `DROP` benchmark:
 
 - [Optional] `tasks`: a list of tasks (`DROPTask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `DROPTask` enums can be found [here](#drop-tasks).
-- [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.
+- [Optional] `n_shots`: the number of examples for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.
 
 :::note
 Notice unlike `BIGBenchHard`, there is no CoT prompting for the `DROP` benchmark.
@@ -23,7 +23,7 @@ Notice unlike `BIGBenchHard`, there is no CoT prompting for the `DROP` benchmark
 
 ## Example
 
-The code below assesses a custom mistral_7b model (click here to learn how to use ANY custom LLM) on HISTORY_1002 and NFL_649 in DROP using 3-shot prompting.
+The code below assesses a custom mistral_7b model ([click here](guides-using-custom-llms) to learn how to use ANY custom LLM) on `HISTORY_1002` and `NFL_649` in DROP using 3-shot prompting.
 
 ```python
 from deepeval.benchmarks import DROP
