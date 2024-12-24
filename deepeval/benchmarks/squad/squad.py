@@ -19,7 +19,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         self,
         tasks: List[SQuADTask] = None,
         n_shots: int = 5,
-        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         **kwargs,
     ):
         assert n_shots <= 5, "SQuAD only supports n_shots <= 5"
@@ -33,7 +33,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
         self.evaluation_model, self.using_native_evaluation_model = (
-            initialize_model(model)
+            initialize_model(evaluation_model)
         )
 
     def evaluate(

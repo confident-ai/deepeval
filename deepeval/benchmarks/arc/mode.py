@@ -2,5 +2,5 @@ from enum import Enum
 
 
 class ARCMode(Enum):
-    ARC_CHALLENGE = "ARC-Challenge"
-    ARC_EASY = "ARC-Easy"
+    CHALLENGE = "ARC-Challenge"
+    EASY = "ARC-Easy"
