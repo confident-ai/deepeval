@@ -10,6 +10,7 @@ from deepeval.metrics import (
     MultimodalContextualRecallMetric,
     MultimodalContextualRelevancyMetric,
     MultimodalContextualPrecisionMetric,
+    MultimodalAnswerRelevancyMetric,
 )
 
 image_path = "./data/image.webp"
@@ -46,7 +47,16 @@ llm_test_case = LLMTestCase(
 
 contextual_recall_test_case = image_editing_test_case = MLLMTestCase(
     input=["Tell me about some landmarks in France"],
-    actual_output=[""],
+    actual_output=[
+        "The Eiffel Tower is located in Paris, France.",
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
+        ),
+        "The Statue of Liberty was a gift from France to the United States.",
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Front_view_of_Statue_of_Liberty_with_pedestal_and_base_2024.jpg/375px-Front_view_of_Statue_of_Liberty_with_pedestal_and_base_2024.jpg"
+        ),
+    ],
     expected_output=[
         "The Eiffel Tower is located in Paris, France.",
         MLLMImage(
@@ -86,7 +96,7 @@ contextual_recall_test_case = image_editing_test_case = MLLMTestCase(
 # Evaluate
 #############################################################
 
-metric = MultimodalContextualPrecisionMetric(verbose_mode=True)
+metric = MultimodalAnswerRelevancyMetric(verbose_mode=True)
 score = metric.measure(contextual_recall_test_case)
 
 # dataset = EvaluationDataset(

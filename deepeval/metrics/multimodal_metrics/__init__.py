@@ -10,5 +10,8 @@ from .multimodal_contextual_relevancy.multimodal_contextual_relevancy import (
     MultimodalContextualRelevancyMetric,
 )
 from .multimodal_contextual_precision.multimodal_contextual_precision import (
-     MultimodalContextualPrecisionMetric,
+    MultimodalContextualPrecisionMetric,
+)
+from .multimodal_answer_relevancy.multimodal_answer_relevancy import (
+    MultimodalAnswerRelevancyMetric,
 )
