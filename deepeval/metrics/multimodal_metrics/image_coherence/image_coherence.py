@@ -5,7 +5,9 @@ import textwrap
 
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
-from deepeval.metrics.image_helpfulness.template import ImageHelpfulnessTemplate
+from deepeval.metrics.multimodal_metrics.image_coherence.template import (
+    ImageCoherenceTemplate,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -13,7 +15,9 @@ from deepeval.metrics.utils import (
     initialize_multimodal_model,
 )
 from deepeval.models import DeepEvalBaseMLLM
-from deepeval.metrics.image_helpfulness.schema import ReasonScore
+from deepeval.metrics.multimodal_metrics.image_coherence.schema import (
+    ReasonScore,
+)
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.utils import get_or_create_event_loop, prettify_list
 
@@ -23,7 +27,7 @@ required_params: List[MLLMTestCaseParams] = [
 ]
 
 
-class ImageHelpfulnessMetric(BaseMultimodalMetric):
+class ImageCoherenceMetric(BaseMultimodalMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
@@ -65,7 +69,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
                         image_index, actual_output
                     )
                     image = actual_output[image_index]
-                    score, reason = self.evaluate_image_helpfulness(
+                    score, reason = self.evaluate_image_coherence(
                         image, context_above, context_below
                     )
                     score = score / 10
@@ -158,7 +162,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
                 )
                 image = actual_output[image_index]
                 tasks.append(
-                    self.a_evaluate_image_helpfulness(
+                    self.a_evaluate_image_coherence(
                         image, context_above, context_below
                     )
                 )
@@ -228,13 +232,13 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             )
             return self.score
 
-    def evaluate_image_helpfulness(
+    def evaluate_image_coherence(
         self,
         image: MLLMImage,
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
+        instructions = ImageCoherenceTemplate.evaluate_image_coherence(
             context_above, context_below
         )
         prompt = [instructions] + [image]
@@ -254,13 +258,13 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
-    async def a_evaluate_image_helpfulness(
+    async def a_evaluate_image_coherence(
         self,
         image: MLLMImage,
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
+        instructions = ImageCoherenceTemplate.evaluate_image_coherence(
             context_above, context_below
         )
         prompt = [instructions] + [image]
@@ -318,4 +322,4 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
     @property
     def __name__(self):
-        return "Image Helpfulness"
+        return "Image Coherence"

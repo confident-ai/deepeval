@@ -5,7 +5,9 @@ import textwrap
 
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
-from deepeval.metrics.image_coherence.template import ImageCoherenceTemplate
+from deepeval.metrics.multimodal_metrics.image_reference.template import (
+    ImageReferenceTemplate,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -13,7 +15,9 @@ from deepeval.metrics.utils import (
     initialize_multimodal_model,
 )
 from deepeval.models import DeepEvalBaseMLLM
-from deepeval.metrics.image_coherence.schema import ReasonScore
+from deepeval.metrics.multimodal_metrics.image_reference.schema import (
+    ReasonScore,
+)
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.utils import get_or_create_event_loop, prettify_list
 
@@ -23,7 +27,7 @@ required_params: List[MLLMTestCaseParams] = [
 ]
 
 
-class ImageCoherenceMetric(BaseMultimodalMetric):
+class ImageReferenceMetric(BaseMultimodalMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
@@ -65,7 +69,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
                         image_index, actual_output
                     )
                     image = actual_output[image_index]
-                    score, reason = self.evaluate_image_coherence(
+                    score, reason = self.evaluate_image_reference(
                         image, context_above, context_below
                     )
                     score = score / 10
@@ -158,7 +162,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
                 )
                 image = actual_output[image_index]
                 tasks.append(
-                    self.a_evaluate_image_coherence(
+                    self.a_evaluate_image_reference(
                         image, context_above, context_below
                     )
                 )
@@ -228,13 +232,13 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
             )
             return self.score
 
-    def evaluate_image_coherence(
+    def evaluate_image_reference(
         self,
         image: MLLMImage,
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = ImageCoherenceTemplate.evaluate_image_coherence(
+        instructions = ImageReferenceTemplate.evaluate_image_reference(
             context_above, context_below
         )
         prompt = [instructions] + [image]
@@ -254,13 +258,13 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
-    async def a_evaluate_image_coherence(
+    async def a_evaluate_image_reference(
         self,
         image: MLLMImage,
         context_above: Optional[str] = None,
         context_below: Optional[str] = None,
     ) -> Tuple[float, str]:
-        instructions = ImageCoherenceTemplate.evaluate_image_coherence(
+        instructions = ImageReferenceTemplate.evaluate_image_reference(
             context_above, context_below
         )
         prompt = [instructions] + [image]
@@ -318,4 +322,4 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
 
     @property
     def __name__(self):
-        return "Image Coherence"
+        return "Image Reference"

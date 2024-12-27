@@ -5,7 +5,9 @@ import textwrap
 
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
-from deepeval.metrics.image_editing.template import ImageEditingTemplate
+from deepeval.metrics.multimodal_metrics.image_editing.template import (
+    ImageEditingTemplate,
+)
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -14,7 +16,7 @@ from deepeval.metrics.utils import (
     initialize_multimodal_model,
 )
 from deepeval.models import DeepEvalBaseMLLM
-from deepeval.metrics.image_editing.schema import ReasonScore
+from deepeval.metrics.multimodal_metrics.image_editing.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 
 required_params: List[MLLMTestCaseParams] = [
