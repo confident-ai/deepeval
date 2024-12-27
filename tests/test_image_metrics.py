@@ -46,7 +46,7 @@ llm_test_case = LLMTestCase(
     tools_called=["mixer", "creamer", "mixer"],
 )
 
-contextual_recall_test_case = image_editing_test_case = MLLMTestCase(
+rag_test_case = image_editing_test_case = MLLMTestCase(
     input=["Tell me about some landmarks in France"],
     actual_output=[
         "The Eiffel Tower is located in Paris, France.",
@@ -97,8 +97,6 @@ contextual_recall_test_case = image_editing_test_case = MLLMTestCase(
 # Evaluate
 #############################################################
 
-metric = MultimodalFaithfulnessMetric(verbose_mode=True)
-score = metric.measure(contextual_recall_test_case)
 
 # dataset = EvaluationDataset(
 #     test_cases=[
@@ -115,15 +113,15 @@ score = metric.measure(contextual_recall_test_case)
 #     ]
 # )
 
-# evaluate(
-#     test_cases=[
-#         text_to_image_test_case,
-#         # image_editing_test_case,
-#         llm_test_case,
-#     ],
-#     metrics=[
-#         TextToImageMetric(),
-#         # ImageEditingMetric(),
-#         AnswerRelevancyMetric(),
-#     ],
-# )
+evaluate(
+    test_cases=[
+        rag_test_case
+    ],
+    metrics=[
+        MultimodalContextualRecallMetric(),
+        MultimodalContextualRelevancyMetric(),
+        MultimodalContextualPrecisionMetric(),
+        MultimodalAnswerRelevancyMetric(),
+        MultimodalFaithfulnessMetric()
+    ], verbose_mode=True
+)
