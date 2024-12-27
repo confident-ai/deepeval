@@ -15,3 +15,6 @@ from .multimodal_contextual_precision.multimodal_contextual_precision import (
 from .multimodal_answer_relevancy.multimodal_answer_relevancy import (
     MultimodalAnswerRelevancyMetric,
 )
+from .multimodal_faithfulness.multimodal_faithfulness import (
+    MultimodalFaithfulnessMetric,
+)

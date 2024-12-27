@@ -11,6 +11,7 @@ from deepeval.metrics import (
     MultimodalContextualRelevancyMetric,
     MultimodalContextualPrecisionMetric,
     MultimodalAnswerRelevancyMetric,
+    MultimodalFaithfulnessMetric
 )
 
 image_path = "./data/image.webp"
@@ -96,7 +97,7 @@ contextual_recall_test_case = image_editing_test_case = MLLMTestCase(
 # Evaluate
 #############################################################
 
-metric = MultimodalAnswerRelevancyMetric(verbose_mode=True)
+metric = MultimodalFaithfulnessMetric(verbose_mode=True)
 score = metric.measure(contextual_recall_test_case)
 
 # dataset = EvaluationDataset(
