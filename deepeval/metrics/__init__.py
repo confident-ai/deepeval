@@ -36,4 +36,5 @@ from .multimodal_metrics import (
     ImageReferenceMetric,
     MultimodalContextualRecallMetric,
     MultimodalContextualRelevancyMetric,
+    MultimodalContextualPrecisionMetric
 )

@@ -9,3 +9,6 @@ from .multimodal_contextual_recall.multimodal_contextual_recall import (
 from .multimodal_contextual_relevancy.multimodal_contextual_relevancy import (
     MultimodalContextualRelevancyMetric,
 )
+from .multimodal_contextual_precision.multimodal_contextual_precision import (
+     MultimodalContextualPrecisionMetric,
+)
