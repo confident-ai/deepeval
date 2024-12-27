@@ -1,9 +1,10 @@
 from typing import Optional, List, Union
+import asyncio
 
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
-from deepeval.metrics.multimodal_metrics.multimodal_contextual_recall.template import (
-    MultimodalContextualRecallTemplate,
+from deepeval.metrics.multimodal_metrics.multimodal_contextual_relevancy.template import (
+    MultimodalContextualRelevancyTemplate,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -12,19 +13,19 @@ from deepeval.metrics.utils import (
     check_mllm_test_case_params,
     initialize_multimodal_model,
 )
+
 from deepeval.models import DeepEvalBaseMLLM
-from deepeval.metrics.multimodal_metrics.multimodal_contextual_recall.schema import *
+from deepeval.metrics.multimodal_metrics.multimodal_contextual_relevancy.schema import *
 from deepeval.metrics.indicator import metric_progress_indicator
 
 required_params: List[MLLMTestCaseParams] = [
     MLLMTestCaseParams.INPUT,
     MLLMTestCaseParams.ACTUAL_OUTPUT,
-    MLLMTestCaseParams.RETRIEVAL_CONTEXT,
-    MLLMTestCaseParams.EXPECTED_OUTPUT,
+    MLLMTestCaseParams.CONTEXT,
 ]
 
 
-class MultimodalContextualRecallMetric(BaseMultimodalMetric):
+class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
     def __init__(
         self,
         threshold: float = 0.5,
@@ -59,18 +60,17 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.verdicts: List[ContextualRecallVerdict] = (
-                    self._generate_verdicts(
-                        test_case.expected_output, test_case.retrieval_context
-                    )
-                )
+                self.verdicts_list: List[ContextualRelevancyVerdicts] = [
+                    (self._generate_verdicts(test_case.input, context))
+                    for context in test_case.retrieval_context
+                ]
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason(test_case.expected_output)
+                self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        f"Verdicts:\n{prettify_list(self.verdicts_list)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
@@ -92,47 +92,46 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            self.verdicts: List[ContextualRecallVerdict] = (
-                await self._a_generate_verdicts(
-                    test_case.expected_output, test_case.retrieval_context
+            self.verdicts_list: List[ContextualRelevancyVerdicts] = (
+                await asyncio.gather(
+                    *[
+                        self._a_generate_verdicts(test_case.input, context)
+                        for context in test_case.retrieval_context
+                    ]
                 )
             )
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(
-                test_case.expected_output
-            )
+            self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Verdicts:\n{prettify_list(self.verdicts)}",
+                    f"Verdicts:\n{prettify_list(self.verdicts_list)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
 
             return self.score
 
-    async def _a_generate_reason(
-        self, expected_output: List[Union[str, MLLMImage]]
-    ):
+    async def _a_generate_reason(self, input: List[Union[str, MLLMImage]]):
         if self.include_reason is False:
             return None
 
-        supportive_reasons = []
-        unsupportive_reasons = []
-        for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
-                supportive_reasons.append(verdict.reason)
-            else:
-                unsupportive_reasons.append(verdict.reason)
+        irrelevancies = []
+        relevant_statements = []
+        for verdicts in self.verdicts_list:
+            for verdict in verdicts.verdicts:
+                if verdict.verdict.lower() == "no":
+                    irrelevancies.append(verdict.reason)
+                else:
+                    relevant_statements.append(verdict.statement)
 
-        prompt = MultimodalContextualRecallTemplate.generate_reason(
-            expected_output=expected_output,
-            supportive_reasons=supportive_reasons,
-            unsupportive_reasons=unsupportive_reasons,
+        prompt: dict = MultimodalContextualRelevancyTemplate.generate_reason(
+            input=input,
+            irrelevancies=irrelevancies,
+            relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
         )
-
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
@@ -147,25 +146,25 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    def _generate_reason(self, expected_output: List[Union[str, MLLMImage]]):
+    def _generate_reason(self, input: List[Union[str, MLLMImage]]):
         if self.include_reason is False:
             return None
 
-        supportive_reasons = []
-        unsupportive_reasons = []
-        for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
-                supportive_reasons.append(verdict.reason)
-            else:
-                unsupportive_reasons.append(verdict.reason)
+        irrelevancies = []
+        relevant_statements = []
+        for verdicts in self.verdicts_list:
+            for verdict in verdicts.verdicts:
+                if verdict.verdict.lower() == "no":
+                    irrelevancies.append(verdict.reason)
+                else:
+                    relevant_statements.append(verdict.statement)
 
-        prompt = MultimodalContextualRecallTemplate.generate_reason(
-            expected_output=expected_output,
-            supportive_reasons=supportive_reasons,
-            unsupportive_reasons=unsupportive_reasons,
+        prompt: dict = MultimodalContextualRelevancyTemplate.generate_reason(
+            input=input,
+            irrelevancies=irrelevancies,
+            relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
         )
-
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
@@ -181,77 +180,67 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
                 return data["reason"]
 
     def _calculate_score(self):
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
+        total_verdicts = 0
+        relevant_statements = 0
+        for verdicts in self.verdicts_list:
+            for verdict in verdicts.verdicts:
+                total_verdicts += 1
+                if verdict.verdict.lower() == "yes":
+                    relevant_statements += 1
+
+        if total_verdicts == 0:
             return 0
 
-        justified_sentences = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
-                justified_sentences += 1
-
-        score = justified_sentences / number_of_verdicts
+        score = relevant_statements / total_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_verdicts(
         self,
-        expected_output: List[Union[str, MLLMImage]],
-        retrieval_context: List[Union[str, MLLMImage]],
-    ) -> List[ContextualRecallVerdict]:
-        prompt = MultimodalContextualRecallTemplate.generate_verdicts(
-            expected_output=expected_output, retrieval_context=retrieval_context
+        input: List[Union[str, MLLMImage]],
+        context: List[Union[str, MLLMImage]],
+    ) -> ContextualRelevancyVerdicts:
+        prompt = MultimodalContextualRelevancyTemplate.generate_verdicts(
+            input=input, context=context
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            verdicts = [
-                ContextualRecallVerdict(**item) for item in data["verdicts"]
-            ]
-            return verdicts
+            return ContextualRelevancyVerdicts(**data)
         else:
             try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
+                res = await self.model.a_generate(
+                    prompt, schema=ContextualRelevancyVerdicts
                 )
-                verdicts: Verdicts = [item for item in res.verdicts]
-                return verdicts
+                return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [
-                    ContextualRecallVerdict(**item) for item in data["verdicts"]
-                ]
-                return verdicts
+                return ContextualRelevancyVerdicts(**data)
 
     def _generate_verdicts(
         self,
-        expected_output: List[Union[str, MLLMImage]],
-        retrieval_context: List[Union[str, MLLMImage]],
-    ) -> List[ContextualRecallVerdict]:
-        prompt = MultimodalContextualRecallTemplate.generate_verdicts(
-            expected_output=expected_output, retrieval_context=retrieval_context
+        input: List[Union[str, MLLMImage]],
+        context: List[Union[str, MLLMImage]],
+    ) -> ContextualRelevancyVerdicts:
+        prompt = MultimodalContextualRelevancyTemplate.generate_verdicts(
+            input=input, context=context
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
             data = trimAndLoadJson(res, self)
-            verdicts = [
-                ContextualRecallVerdict(**item) for item in data["verdicts"]
-            ]
-            return verdicts
+            return ContextualRelevancyVerdicts(**data)
         else:
             try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                verdicts: Verdicts = [item for item in res.verdicts]
-                return verdicts
+                res = self.model.generate(
+                    prompt, schema=ContextualRelevancyVerdicts
+                )
+                return res
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [
-                    ContextualRecallVerdict(**item) for item in data["verdicts"]
-                ]
-                return verdicts
+                return ContextualRelevancyVerdicts(**data)
 
     def is_successful(self) -> bool:
         if self.error is not None:
@@ -265,4 +254,4 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
 
     @property
     def __name__(self):
-        return "Multimodal Contextual Recall"
+        return "Multimodal Contextual Relevancy"

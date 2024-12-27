@@ -50,7 +50,13 @@ class BBQ(DeepEvalBaseBenchmark):
                         task_correct_predictions += 1
                         overall_correct_predictions += 1
                     predictions_row.append(
-                        (task.value, golden.input, prediction, golden.expected_output, score)
+                        (
+                            task.value,
+                            golden.input,
+                            prediction,
+                            golden.expected_output,
+                            score,
+                        )
                     )
 
                 task_accuracy = (
@@ -69,7 +75,13 @@ class BBQ(DeepEvalBaseBenchmark):
             # Columns: 'Task', 'Input', 'Prediction', 'Expected Output', 'Score'
             self.predictions = pd.DataFrame(
                 predictions_row,
-                columns=["Task", "Input", "Prediction", "Expected Output", "Correct"],
+                columns=[
+                    "Task",
+                    "Input",
+                    "Prediction",
+                    "Expected Output",
+                    "Correct",
+                ],
             )
             self.task_scores = pd.DataFrame(
                 scores_row, columns=["Task", "Score"]

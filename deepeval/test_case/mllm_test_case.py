@@ -48,26 +48,33 @@ class MLLMTestCase:
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
-    
+
     def __post_init__(self):
         # Ensure `expected_output` is None or a list of strings or MLLMImage instances
         if self.expected_output is not None:
             if not isinstance(self.expected_output, list) or not all(
-                isinstance(item, (str, MLLMImage)) for item in self.expected_output
+                isinstance(item, (str, MLLMImage))
+                for item in self.expected_output
             ):
-                raise TypeError("'expected_output' must be None or a list of strings or MLLMImage instances")
+                raise TypeError(
+                    "'expected_output' must be None or a list of strings or MLLMImage instances"
+                )
 
         # Ensure `context` is None or a list of strings or MLLMImage instances
         if self.context is not None:
             if not isinstance(self.context, list) or not all(
                 isinstance(item, (str, MLLMImage)) for item in self.context
             ):
-                raise TypeError("'context' must be None or a list of strings or MLLMImage instances")
+                raise TypeError(
+                    "'context' must be None or a list of strings or MLLMImage instances"
+                )
 
         # Ensure `retrieval_context` is None or a list of strings or MLLMImage instances
         if self.retrieval_context is not None:
             if not isinstance(self.retrieval_context, list) or not all(
-                isinstance(item, (str, MLLMImage)) for item in self.retrieval_context
+                isinstance(item, (str, MLLMImage))
+                for item in self.retrieval_context
             ):
-                raise TypeError("'retrieval_context' must be None or a list of strings or MLLMImage instances")
-
+                raise TypeError(
+                    "'retrieval_context' must be None or a list of strings or MLLMImage instances"
+                )

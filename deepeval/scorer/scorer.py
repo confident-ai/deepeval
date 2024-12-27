@@ -7,6 +7,7 @@ from deepeval.utils import normalize_text
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.schema import NumberSchema
 
+
 # TODO: More scores are to be added
 class Scorer:
     """This class calculates various Natural Language Processing (NLP) evaluation score.
@@ -429,16 +430,17 @@ class Scorer:
         if n - c < k:
             return 1.0
         return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))
-    
+
     def squad_score(
-        self, 
-        input: str, 
-        prediction: str, 
-        expected_output: str, 
+        self,
+        input: str,
+        prediction: str,
+        expected_output: str,
         evaluation_model: DeepEvalBaseLLM,
-        using_native_evaluation_model: bool
+        using_native_evaluation_model: bool,
     ):
-        prompt = textwrap.dedent(f"""
+        prompt = textwrap.dedent(
+            f"""
             Given the question and context, evaluate if the prediction is correct based on the expected output.
             Ensure to account for cases where the prediction and expected output might differ in form, such as '2' versus 'two'.
 
@@ -452,7 +454,8 @@ class Scorer:
             {{
                 "answer": <number>
             }}
-        """)
+        """
+        )
 
         # Generate the score using the model
         if using_native_evaluation_model:
@@ -461,7 +464,9 @@ class Scorer:
             return int(data["answer"])
         else:
             try:
-                res: NumberSchema = evaluation_model.generate(prompt, schema=NumberSchema)
+                res: NumberSchema = evaluation_model.generate(
+                    prompt, schema=NumberSchema
+                )
                 return res.answer
             except TypeError:
                 res = evaluation_model.generate(prompt)

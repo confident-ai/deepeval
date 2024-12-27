@@ -18,14 +18,6 @@ from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
-from .multimodal_metrics import (
-    TextToImageMetric,
-    ImageEditingMetric,
-    ImageCoherenceMetric,
-    ImageHelpfulnessMetric,
-    ImageReferenceMetric,
-    MultimodalContextualRecallMetric
-)
 from .conversation_relevancy.conversation_relevancy import (
     ConversationRelevancyMetric,
 )
@@ -36,3 +28,12 @@ from .role_adherence.role_adherence import (
     RoleAdherenceMetric,
 )
 from .conversational_g_eval.conversational_g_eval import ConversationalGEval
+from .multimodal_metrics import (
+    TextToImageMetric,
+    ImageEditingMetric,
+    ImageCoherenceMetric,
+    ImageHelpfulnessMetric,
+    ImageReferenceMetric,
+    MultimodalContextualRecallMetric,
+    MultimodalContextualRelevancyMetric,
+)

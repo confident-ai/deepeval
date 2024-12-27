@@ -9,9 +9,7 @@ class BoolQTemplate:
     ]
 
     @staticmethod
-    def generate_output(
-        input: str, n_shots: int
-    ):
+    def generate_output(input: str, n_shots: int):
         prompt = ""
         for i in range(n_shots):
             prompt += BoolQTemplate.n_shot_examples[i] + "\n"

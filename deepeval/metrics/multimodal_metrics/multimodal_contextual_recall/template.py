@@ -88,7 +88,9 @@ class MultimodalContextualRecallTemplate:
                     """
                 )
             ]
-            + MultimodalContextualRecallTemplate.id_retrieval_context(retrieval_context)
+            + MultimodalContextualRecallTemplate.id_retrieval_context(
+                retrieval_context
+            )
             + [
                 textwrap.dedent(
                     """
@@ -97,17 +99,14 @@ class MultimodalContextualRecallTemplate:
                 )
             ]
         )
-    
+
     @staticmethod
-    def id_retrieval_context(
-        retrieval_context
-    ) -> List[Union[str, MLLMImage]]:
+    def id_retrieval_context(retrieval_context) -> List[Union[str, MLLMImage]]:
         annotated_retrieval_context = []
         for i, context in enumerate(retrieval_context):
             if isinstance(context, str):
-                annotated_retrieval_context.append(f"Node {i}: {context}")
+                annotated_retrieval_context.append(f"Node {i + 1}: {context}")
             elif isinstance(context, MLLMImage):
-                annotated_retrieval_context.append(f"Node {i}:")
+                annotated_retrieval_context.append(f"Node {i + 1}:")
                 annotated_retrieval_context.append(context)
         return annotated_retrieval_context
-
