@@ -1,7 +1,7 @@
 ---
 id: multimodal-metrics-faithfulness
 title: Multimodal Faithfulness
-sidebar_label: Faithfulness
+sidebar_label: Multimodal Faithfulness
 ---
 
 import Equation from "@site/src/components/equation";
@@ -14,7 +14,7 @@ The **Multimodal Faithfulness** is the multimodal adaptation of DeepEval's [fait
 
 ## Required Arguments
 
-To use the `MultimodalFaithfulnessMetric`, you'll have to provide the following arguments when creating an `MLLMTestCase`:
+To use the `MultimodalFaithfulnessMetric`, you'll have to provide the following arguments when creating a `MLLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -25,7 +25,7 @@ To use the `MultimodalFaithfulnessMetric`, you'll have to provide the following 
 ```python
 from deepeval import evaluate
 from deepeval.metrics import MultimodalFaithfulnessMetric
-from deepeval.test_case import MLLMTestCase
+from deepeval.test_case import MLLMTestCase, MLLMImage
 
 metric = MultimodalFaithfulnessMetric()
 test_case = MLLMTestCase(

@@ -1,7 +1,7 @@
 ---
 id: multimodal-metrics-contextual-relevancy
 title: Multimodal Contextual Relevancy
-sidebar_label: Contextual Relevancy
+sidebar_label: Multimodal Contextual Relevancy
 ---
 
 import Equation from "@site/src/components/equation";
@@ -14,7 +14,7 @@ The **Multimodal Contextual Relevancy** is the multimodal adaptation of DeepEval
 
 ## Required Arguments
 
-To use the `MultimodalContextualRelevancyMetric`, you'll have to provide the following arguments when creating an `LLMTestCase`:
+To use the `MultimodalContextualRelevancyMetric`, you'll have to provide the following arguments when creating a `MLLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -29,7 +29,7 @@ Similar to `MultimodalContextualPrecisionMetric`, the `MultimodalContextualRelev
 ```python
 from deepeval import evaluate
 from deepeval.metrics import MultimodalContextualRelevancyMetric
-from deepeval.test_case import MLLMTestCase
+from deepeval.test_case import MLLMTestCase, MLLMImage
 
 metric = MultimodalContextualRelevancyMetric()
 test_case = MLLMTestCase(

@@ -1,7 +1,7 @@
 ---
 id: multimodal-metrics-contextual-precision
 title: Multimodal Contextual Precision
-sidebar_label: Contextual Precision
+sidebar_label: Multimodal Contextual Precision
 ---
 
 import Equation from "@site/src/components/equation";
@@ -14,7 +14,7 @@ The **Multimodal Contextual Precision** is the multimodal adaptation of DeepEval
 
 ## Required Arguments
 
-To use the `MultimodalContextualPrecisionMetric`, you'll have to provide the following arguments when creating an `MLLMTestCase`:
+To use the `MultimodalContextualPrecisionMetric`, you'll have to provide the following arguments when creating a `MLLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -26,7 +26,7 @@ To use the `MultimodalContextualPrecisionMetric`, you'll have to provide the fol
 ```python
 from deepeval import evaluate
 from deepeval.metrics import MultimodalContextualPrecisionMetric
-from deepeval.test_case import MLLMTestCase
+from deepeval.test_case import MLLMTestCase, MLLMImage
 
 metric = MultimodalContextualPrecisionMetric()
 test_case = MLLMTestCase(

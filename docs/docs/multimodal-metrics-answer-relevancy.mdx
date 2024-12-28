@@ -1,7 +1,7 @@
 ---
 id: multimodal-metrics-answer-relevancy
 title: Multimodal Answer Relevancy
-sidebar_label: Answer Relevancy
+sidebar_label: Multimodal Answer Relevancy
 ---
 
 import Equation from "@site/src/components/equation";
@@ -14,7 +14,7 @@ The **Multimodal Answer Relevancy** is the multimodal adaptation of DeepEval's [
 
 ## Required Arguments
 
-To use the `MultimodalAnswerRelevancyMetric`, you'll have to provide the following arguments when creating an `MLLMTestCase`:
+To use the `MultimodalAnswerRelevancyMetric`, you'll have to provide the following arguments when creating a `MLLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -24,7 +24,7 @@ To use the `MultimodalAnswerRelevancyMetric`, you'll have to provide the followi
 ```python
 from deepeval import evaluate
 from deepeval.metrics import MultimodalAnswerRelevancyMetric
-from deepeval.test_case import MLLMTestCase
+from deepeval.test_case import MLLMTestCase, MLLMImage
 
 metric = AnswerRelevancyMetric()
 test_case = MLLMTestCase(

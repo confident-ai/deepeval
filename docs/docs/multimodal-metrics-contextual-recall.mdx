@@ -1,7 +1,7 @@
 ---
 id: multimodal-metrics-contextual-recall
 title: Multimodal Contextual Recall
-sidebar_label: Contextual Recall
+sidebar_label: Multimodal Contextual Recall
 ---
 
 import Equation from "@site/src/components/equation";
@@ -14,7 +14,7 @@ The **Multimodal Contextual Recall** is the multimodal adaptation of DeepEval's 
 
 ## Required Arguments
 
-To use the `MultimodalContextualRecallMetric`, you'll have to provide the following arguments when creating an `MLLMTestCase`:
+To use the `MultimodalContextualRecallMetric`, you'll have to provide the following arguments when creating a `MLLMTestCase`:
 
 - `input`
 - `actual_output`
@@ -26,7 +26,7 @@ To use the `MultimodalContextualRecallMetric`, you'll have to provide the follow
 ```python
 from deepeval import evaluate
 from deepeval.metrics import MultimodalContextualRecallMetric
-from deepeval.test_case import MLLMTestCase
+from deepeval.test_case import MLLMTestCase, MLLMImage
 
 metric = MultimodalContextualRecallMetric()
 test_case = MLLMTestCase(
