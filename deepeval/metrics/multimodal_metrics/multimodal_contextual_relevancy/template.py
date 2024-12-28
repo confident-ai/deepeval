@@ -56,9 +56,10 @@ class MultimodalContextualRelevancyTemplate:
     def generate_verdicts(
         input: List[Union[str, MLLMImage]], context: List[Union[str, MLLMImage]]
     ) -> List[Union[str, MLLMImage]]:
-        return [
+        return (
+            [
                 textwrap.dedent(
-                f"""Based on the input and context (image or string), please generate a JSON object to indicate whether the context is relevant to the provided input. The JSON will be a list of 'verdicts', with 2 mandatory fields: 'verdict' and 'statement', and 1 optional field: 'reason'.
+                    f"""Based on the input and context (image or string), please generate a JSON object to indicate whether the context is relevant to the provided input. The JSON will be a list of 'verdicts', with 2 mandatory fields: 'verdict' and 'statement', and 1 optional field: 'reason'.
                 If the context is textual, you should first extract the statements found in the context if the context, which are high level information found in the context, before deciding on a verdict and optionally a reason for each statement.
                 If the context is an image, `statement` should be a description of the image. Do not assume any information not visibly available.
                 The 'verdict' key should STRICTLY be either 'yes' or 'no', and states whether the statement or image is relevant to the input.
@@ -87,11 +88,15 @@ class MultimodalContextualRelevancyTemplate:
 
                 Input:
                 """
-            )
-        ] + input + [
-            textwrap.dedent(
-                """
+                )
+            ]
+            + input
+            + [
+                textwrap.dedent(
+                    """
                 Context:
                 """
-            )
-        ] + [context]
+                )
+            ]
+            + [context]
+        )

@@ -3,6 +3,7 @@ import textwrap
 
 from deepeval.test_case import MLLMImage
 
+
 class MultimodalAnswerRelevancyTemplate:
     @staticmethod
     def generate_statements(actual_output: List[str]):
@@ -70,15 +71,15 @@ class MultimodalAnswerRelevancyTemplate:
                     Input:
                     """
                 )
-            ] 
-            + input 
+            ]
+            + input
             + [
                 textwrap.dedent(
                     """
                     Statements:
                     """
                 )
-            ] 
+            ]
             + actual_output
             + [
                 textwrap.dedent(
@@ -86,7 +87,8 @@ class MultimodalAnswerRelevancyTemplate:
                     JSON:
                     """
                 )
-            ])
+            ]
+        )
 
     @staticmethod
     def generate_reason(irrelevant_statements, input, score):

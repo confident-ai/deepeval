@@ -38,5 +38,5 @@ from .multimodal_metrics import (
     MultimodalContextualRelevancyMetric,
     MultimodalContextualPrecisionMetric,
     MultimodalAnswerRelevancyMetric,
-    MultimodalFaithfulnessMetric
+    MultimodalFaithfulnessMetric,
 )

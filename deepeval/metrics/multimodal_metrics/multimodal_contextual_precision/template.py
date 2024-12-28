@@ -7,13 +7,13 @@ from deepeval.test_case import MLLMImage
 class MultiModalContextualPrecisionTemplate:
     @staticmethod
     def generate_verdicts(
-        input: List[Union[str, MLLMImage]], 
-        expected_output: List[Union[str, MLLMImage]], 
-        retrieval_context: List[Union[str, MLLMImage]]
+        input: List[Union[str, MLLMImage]],
+        expected_output: List[Union[str, MLLMImage]],
+        retrieval_context: List[Union[str, MLLMImage]],
     ) -> List[Union[str, MLLMImage]]:
         document_count_str = f" ({len(retrieval_context)} document{'s' if len(retrieval_context) > 1 else ''})"
         return (
-            [   
+            [
                 textwrap.dedent(
                     f"""Given the input, expected output, and retrieval context, please generate a list of JSON objects to determine whether each node in the retrieval context was remotely useful in arriving at the expected output.
 
@@ -54,14 +54,18 @@ class MultiModalContextualPrecisionTemplate:
                     Expected output:
                     """
                 )
-            ] + expected_output
+            ]
+            + expected_output
             + [
                 textwrap.dedent(
                     f"""
                     Retrieval Context{document_count_str}:
                     """
                 )
-            ] + MultiModalContextualPrecisionTemplate.id_retrieval_context(retrieval_context)
+            ]
+            + MultiModalContextualPrecisionTemplate.id_retrieval_context(
+                retrieval_context
+            )
             + [
                 textwrap.dedent(
                     """
@@ -72,11 +76,7 @@ class MultiModalContextualPrecisionTemplate:
         )
 
     @staticmethod
-    def generate_reason(
-        input, 
-        verdicts, 
-        score
-    ) -> List[Union[str, MLLMImage]]:
+    def generate_reason(input, verdicts, score) -> List[Union[str, MLLMImage]]:
         # given the input and retrieval context for this input, where the verdict is whether ... and the node is the ..., give a reason for the score
         return (
             [
@@ -106,7 +106,8 @@ class MultiModalContextualPrecisionTemplate:
                     Input:
                     """
                 )
-            ] + input
+            ]
+            + input
             + [
                 textwrap.dedent(
                     f"""
@@ -118,7 +119,7 @@ class MultiModalContextualPrecisionTemplate:
                 )
             ]
         )
-    
+
     @staticmethod
     def id_retrieval_context(retrieval_context) -> List[Union[str, MLLMImage]]:
         annotated_retrieval_context = []

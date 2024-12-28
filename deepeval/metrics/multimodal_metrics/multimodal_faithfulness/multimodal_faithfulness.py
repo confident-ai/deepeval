@@ -4,7 +4,7 @@ import asyncio
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.multimodal_faithfulness.template import (
-    MultimodalFaithfulnessTemplate
+    MultimodalFaithfulnessTemplate,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -231,7 +231,9 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
                 ]
                 return verdicts
 
-    async def _a_generate_truths(self, retrieval_context: List[Union[str, MLLMImage]]) -> List[str]:
+    async def _a_generate_truths(
+        self, retrieval_context: List[Union[str, MLLMImage]]
+    ) -> List[str]:
         prompt = MultimodalFaithfulnessTemplate.generate_truths(
             excerpt=retrieval_context,
             extraction_limit=self.truths_extraction_limit,
@@ -250,7 +252,9 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    def _generate_truths(self, retrieval_context: List[Union[str, MLLMImage]]) -> List[str]:
+    def _generate_truths(
+        self, retrieval_context: List[Union[str, MLLMImage]]
+    ) -> List[str]:
         prompt = MultimodalFaithfulnessTemplate.generate_truths(
             excerpt=retrieval_context,
             extraction_limit=self.truths_extraction_limit,
@@ -269,8 +273,12 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    async def _a_generate_claims(self, actual_output: List[Union[str, MLLMImage]]) -> List[str]:
-        prompt = MultimodalFaithfulnessTemplate.generate_claims(excerpt=actual_output)
+    async def _a_generate_claims(
+        self, actual_output: List[Union[str, MLLMImage]]
+    ) -> List[str]:
+        prompt = MultimodalFaithfulnessTemplate.generate_claims(
+            excerpt=actual_output
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
             self.evaluation_cost += cost
@@ -285,8 +293,12 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
 
-    def _generate_claims(self, actual_output: List[Union[str, MLLMImage]]) -> List[str]:
-        prompt = MultimodalFaithfulnessTemplate.generate_claims(excerpt=actual_output)
+    def _generate_claims(
+        self, actual_output: List[Union[str, MLLMImage]]
+    ) -> List[str]:
+        prompt = MultimodalFaithfulnessTemplate.generate_claims(
+            excerpt=actual_output
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost

@@ -7,7 +7,7 @@ from deepeval.test_case import MLLMImage
 class MultimodalFaithfulnessTemplate:
     @staticmethod
     def generate_claims(excerpt):
-        return  (
+        return (
             [
                 textwrap.dedent(
                     f"""Based on the given excerpt, which contains text and possibly images, please generate a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text and images.
@@ -79,7 +79,8 @@ class MultimodalFaithfulnessTemplate:
                     Excerpt:
                     """
                 )
-            ] + excerpt
+            ]
+            + excerpt
             + [
                 textwrap.dedent(
                     f"""

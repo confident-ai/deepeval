@@ -11,7 +11,7 @@ from deepeval.metrics import (
     MultimodalContextualRelevancyMetric,
     MultimodalContextualPrecisionMetric,
     MultimodalAnswerRelevancyMetric,
-    MultimodalFaithfulnessMetric
+    MultimodalFaithfulnessMetric,
 )
 
 image_path = "./data/image.webp"
@@ -114,14 +114,13 @@ rag_test_case = image_editing_test_case = MLLMTestCase(
 # )
 
 evaluate(
-    test_cases=[
-        rag_test_case
-    ],
+    test_cases=[rag_test_case],
     metrics=[
         MultimodalContextualRecallMetric(),
         MultimodalContextualRelevancyMetric(),
         MultimodalContextualPrecisionMetric(),
         MultimodalAnswerRelevancyMetric(),
-        MultimodalFaithfulnessMetric()
-    ], verbose_mode=True
+        MultimodalFaithfulnessMetric(),
+    ],
+    verbose_mode=True,
 )
