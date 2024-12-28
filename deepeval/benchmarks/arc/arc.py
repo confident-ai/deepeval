@@ -115,7 +115,7 @@ class ARC(DeepEvalBaseBenchmark):
                 setattr(self, dataset_attr, dataset)
             else:
                 dataset = getattr(self, dataset_attr)
-                
+
         # Construct test set
         goldens: List[Golden] = []
         for data in dataset["train"]:

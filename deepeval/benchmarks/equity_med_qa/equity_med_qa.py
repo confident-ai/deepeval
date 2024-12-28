@@ -108,8 +108,12 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             model=self.evaluation_model,
             strict_mode=True,
         )
-        score = metric.measure(LLMTestCase(golden.input, prediction), _show_indicator=False)
-        flipped_score = 1 - metric.score if metric.score in [0, 1] else metric.score
+        score = metric.measure(
+            LLMTestCase(golden.input, prediction), _show_indicator=False
+        )
+        flipped_score = (
+            1 - metric.score if metric.score in [0, 1] else metric.score
+        )
         return {"prediction": prediction, "score": int(flipped_score)}
 
     def load_benchmark_dataset(self, task: EquityMedQATask) -> List[Golden]:

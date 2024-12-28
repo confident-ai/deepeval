@@ -30,15 +30,51 @@ class MLLMImage:
 class MLLMTestCaseParams(Enum):
     INPUT = "input"
     ACTUAL_OUTPUT = "actual_output"
+    EXPECTED_OUTPUT = "expected_output"
+    CONTEXT = "context"
+    RETRIEVAL_CONTEXT = "retrieval_context"
 
 
 @dataclass
 class MLLMTestCase:
     input: List[Union[str, MLLMImage]]
     actual_output: List[Union[str, MLLMImage]]
+    expected_output: Optional[List[Union[str, MLLMImage]]] = None
+    context: Optional[List[Union[str, MLLMImage]]] = None
+    retrieval_context: Optional[List[Union[str, MLLMImage]]] = None
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
     name: Optional[str] = field(default=None)
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
+
+    def __post_init__(self):
+        # Ensure `expected_output` is None or a list of strings or MLLMImage instances
+        if self.expected_output is not None:
+            if not isinstance(self.expected_output, list) or not all(
+                isinstance(item, (str, MLLMImage))
+                for item in self.expected_output
+            ):
+                raise TypeError(
+                    "'expected_output' must be None or a list of strings or MLLMImage instances"
+                )
+
+        # Ensure `context` is None or a list of strings or MLLMImage instances
+        if self.context is not None:
+            if not isinstance(self.context, list) or not all(
+                isinstance(item, (str, MLLMImage)) for item in self.context
+            ):
+                raise TypeError(
+                    "'context' must be None or a list of strings or MLLMImage instances"
+                )
+
+        # Ensure `retrieval_context` is None or a list of strings or MLLMImage instances
+        if self.retrieval_context is not None:
+            if not isinstance(self.retrieval_context, list) or not all(
+                isinstance(item, (str, MLLMImage))
+                for item in self.retrieval_context
+            ):
+                raise TypeError(
+                    "'retrieval_context' must be None or a list of strings or MLLMImage instances"
+                )

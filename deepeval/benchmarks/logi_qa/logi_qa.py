@@ -73,9 +73,7 @@ class LogiQA(DeepEvalBaseBenchmark):
                     for golden in tqdm(
                         goldens, desc=f"Processing {task.value}"
                     ):
-                        prediction, score = self.predict(
-                            model, golden
-                        ).values()
+                        prediction, score = self.predict(model, golden).values()
                         if score:
                             task_correct_predictions += 1
                             overall_correct_predictions += 1
@@ -110,13 +108,11 @@ class LogiQA(DeepEvalBaseBenchmark):
 
             return overall_accuracy
 
-    def predict(
-        self, model: DeepEvalBaseLLM, golden: Golden
-    ) -> Dict:
+    def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
         prompt: dict = LogiQATemplate.generate_output(
-           input=golden.input,
-           n_shots=self.n_shots,
+            input=golden.input,
+            n_shots=self.n_shots,
         )
 
         # Enforced model generation

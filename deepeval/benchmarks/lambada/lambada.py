@@ -45,7 +45,9 @@ class LAMBADA(DeepEvalBaseBenchmark):
                 prediction, score = self.predict(model, golden).values()
                 if score:
                     overall_correct_predictions += 1
-                predictions_row.append((golden.input, prediction, golden.expected_output, score))
+                predictions_row.append(
+                    (golden.input, prediction, golden.expected_output, score)
+                )
 
             # Calculate overall accuracy
             overall_accuracy = (
@@ -54,7 +56,8 @@ class LAMBADA(DeepEvalBaseBenchmark):
             print(f"Overall LAMBADA Accuracy: {overall_accuracy}")
 
             self.predictions = pd.DataFrame(
-                predictions_row, columns=["Input", "Prediction", "Expected Output", "Correct"]
+                predictions_row,
+                columns=["Input", "Prediction", "Expected Output", "Correct"],
             )
             self.overall_score = overall_accuracy
 
@@ -92,7 +95,9 @@ class LAMBADA(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("EleutherAI/lambada_openai", "default", trust_remote_code=True)
+            dataset = load_dataset(
+                "EleutherAI/lambada_openai", "default", trust_remote_code=True
+            )
             self.dataset = dataset
 
         # Construct test set

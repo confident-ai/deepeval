@@ -70,9 +70,7 @@ class MathQA(DeepEvalBaseBenchmark):
                     for golden in tqdm(
                         goldens, desc=f"Processing {task.value}"
                     ):
-                        prediction, score = self.predict(
-                            model, golden
-                        ).values()
+                        prediction, score = self.predict(model, golden).values()
                         if score:
                             task_correct_predictions += 1
                             overall_correct_predictions += 1
@@ -107,13 +105,11 @@ class MathQA(DeepEvalBaseBenchmark):
 
             return overall_accuracy
 
-    def predict(
-        self, model: DeepEvalBaseLLM, golden: Golden
-    ) -> Dict:
+    def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
         prompt: dict = MathQATemplate.generate_output(
-           input=golden.input,
-           n_shots=self.n_shots,
+            input=golden.input,
+            n_shots=self.n_shots,
         )
 
         # Enforced model generation
@@ -153,7 +149,8 @@ class MathQA(DeepEvalBaseBenchmark):
         # Enforced model generation
         try:
             responses: List[MultipleChoiceSchemaLower] = model.batch_generate(
-                prompts=prompts, schemas=[MultipleChoiceSchemaLower for _ in prompts]
+                prompts=prompts,
+                schemas=[MultipleChoiceSchemaLower for _ in prompts],
             )
             predictions = [res.answer for res in responses]
         except TypeError:
@@ -182,9 +179,7 @@ class MathQA(DeepEvalBaseBenchmark):
         return res
 
     def load_benchmark_dataset(self, task: MathQATask) -> List[Golden]:
-        dataset = load_dataset(
-            "allenai/math_qa", trust_remote_code=True
-        )
+        dataset = load_dataset("allenai/math_qa", trust_remote_code=True)
         self.dataset = dataset
 
         # Construct test set

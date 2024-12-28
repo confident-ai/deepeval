@@ -36,9 +36,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             initialize_model(evaluation_model)
         )
 
-    def evaluate(
-        self, model: DeepEvalBaseLLM
-    ) -> Dict:
+    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
         with capture_benchmark_run("SQuAD", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0
@@ -50,10 +48,8 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
-               
-                for golden in tqdm(
-                    goldens, desc=f"Processing {task.value}"
-                ):
+
+                for golden in tqdm(goldens, desc=f"Processing {task.value}"):
                     prediction, score = self.predict(model, golden).values()
                     if score:
                         task_correct_predictions += 1
@@ -131,7 +127,6 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             self.using_native_evaluation_model,
         )
         return {"prediction": prediction, "score": score}
-
 
     def load_benchmark_dataset(self, task: SQuADTask) -> List[Golden]:
         dataset = load_dataset("rajpurkar/squad", trust_remote_code=True)
