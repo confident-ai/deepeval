@@ -21,12 +21,15 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         self,
         tasks: List[TruthfulQATask] = None,
         mode: TruthfulQAMode = TruthfulQAMode.MC1,
+        n_problems_per_task: Optional[int] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.tasks: List[TruthfulQATask] = (
             list(TruthfulQATask) if tasks is None else tasks
         )
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
+
         self.mode: TruthfulQAMode = mode
         self.scorer = Scorer()
         self.mc_dataset: Dataset = self.dataset
@@ -47,6 +50,11 @@ class TruthfulQA(DeepEvalBaseBenchmark):
 
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task, self.mode)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)

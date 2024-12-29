@@ -16,13 +16,19 @@ from deepeval.telemetry import capture_benchmark_run
 
 class MathQA(DeepEvalBaseBenchmark):
     def __init__(
-        self, tasks: List[MathQATask] = None, n_shots: int = 5, **kwargs
+        self,
+        tasks: List[MathQATask] = None,
+        n_shots: int = 5,
+        n_problems_per_task: Optional[int] = None,
+        **kwargs,
     ):
         assert n_shots <= 5, "MathQA only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[MathQATask] = (
             list(MathQATask) if tasks is None else tasks
         )
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
+
         self.scorer = Scorer()
         self.n_shots: int = n_shots
         self.predictions: Optional[pd.DataFrame] = None
@@ -40,7 +46,12 @@ class MathQA(DeepEvalBaseBenchmark):
             use_batch = should_use_batch(model, batch_size)
 
             for task in self.tasks:
-                goldens = self.load_benchmark_dataset(task)[:10]
+                goldens = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)

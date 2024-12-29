@@ -18,11 +18,14 @@ class BBQ(DeepEvalBaseBenchmark):
         self,
         n_shots: int = 5,
         tasks: List[BBQTask] = None,
+        n_problems_per_task: Optional[int] = None,
         **kwargs,
     ):
         assert n_shots <= 5, "BBQ only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[BBQTask] = list(BBQTask) if tasks is None else tasks
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
+
         self.n_shots = n_shots
         self.scorer = Scorer()
         self.predictions: Optional[pd.DataFrame] = None
@@ -37,14 +40,17 @@ class BBQ(DeepEvalBaseBenchmark):
 
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
 
                 # Calculate task accuracy
-                for golden in tqdm(
-                    goldens[:20], desc=f"Processing {task.value}"
-                ):
+                for golden in tqdm(goldens, desc=f"Processing {task.value}"):
                     prediction, score = self.predict(model, golden).values()
                     if score:
                         task_correct_predictions += 1

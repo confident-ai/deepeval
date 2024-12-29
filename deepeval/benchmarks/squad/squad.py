@@ -19,6 +19,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         self,
         tasks: List[SQuADTask] = None,
         n_shots: int = 5,
+        n_problems_per_task: Optional[int] = None,
         evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         **kwargs,
     ):
@@ -27,6 +28,8 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         self.tasks: List[SQuADTask] = (
             list(SQuADTask) if tasks is None else tasks
         )
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
+
         self.scorer = Scorer()
         self.n_shots: int = n_shots
         self.predictions: Optional[pd.DataFrame] = None
@@ -45,6 +48,11 @@ class EquityMedQA(DeepEvalBaseBenchmark):
 
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)

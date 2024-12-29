@@ -59,7 +59,8 @@ from deepeval.models.gpt_model import GPTModel
 gpt_model = GPTModel(model="gpt-4o")
 
 benchmark_mmlu = MMLU(
-    tasks=[MMLUTask.ABSTRACT_ALGEBRA, MMLUTask.MORAL_SCENARIOS]
+    tasks=[MMLUTask.ABSTRACT_ALGEBRA, MMLUTask.MORAL_SCENARIOS],
+    n_problems_per_task=10,
 )
 benchmark_hellaswag = HellaSwag(tasks=[HellaSwagTask.APPLYING_SUNSCREEN])
 benchmark_drop = DROP(tasks=[DROPTask.HISTORY_1450, DROPTask.NFL_899])
@@ -105,7 +106,7 @@ benchmark_bbh = BigBenchHard(
 )
 
 benchmarks = [
-    # benchmark_mmlu,
+    benchmark_mmlu,
     benchmark_hellaswag,
     benchmark_drop,
     benchmark_truthfulQA,

@@ -16,13 +16,19 @@ from deepeval.telemetry import capture_benchmark_run
 
 class HellaSwag(DeepEvalBaseBenchmark):
     def __init__(
-        self, tasks: List[HellaSwagTask] = None, n_shots: int = 10, **kwargs
+        self,
+        tasks: List[HellaSwagTask] = None,
+        n_shots: int = 10,
+        n_problems_per_task: Optional[int] = None,
+        **kwargs,
     ):
         assert n_shots <= 15, "HellaSwag only supports n_shots <= 15."
         super().__init__(**kwargs)
         self.tasks: List[HellaSwagTask] = (
             list(HellaSwagTask) if tasks is None else tasks
         )
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
+
         self.scorer = Scorer()
         self.shots_dataset: List[Dict] = None
         self.n_shots = n_shots
@@ -41,6 +47,11 @@ class HellaSwag(DeepEvalBaseBenchmark):
             use_batch = should_use_batch(model, batch_size)
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)

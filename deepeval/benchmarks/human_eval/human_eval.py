@@ -13,13 +13,18 @@ from deepeval.telemetry import capture_benchmark_run
 
 class HumanEval(DeepEvalBaseBenchmark):
     def __init__(
-        self, tasks: List[HumanEvalTask] = None, n: int = 200, **kwargs
+        self,
+        tasks: List[HumanEvalTask] = None,
+        n: int = 200,
+        n_problems_per_task: Optional[int] = None,
+        **kwargs,
     ):
 
         super().__init__(**kwargs)
         self.tasks: List[HumanEvalTask] = (
             list(HumanEvalTask) if tasks is None else tasks
         )
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
         self.scorer = Scorer()
 
         self.temperature = 0.8
@@ -41,6 +46,11 @@ class HumanEval(DeepEvalBaseBenchmark):
 
             for task in self.tasks:
                 golden = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct = 0
                 overall_total_predictions += 1
                 # Calculate task accuracy

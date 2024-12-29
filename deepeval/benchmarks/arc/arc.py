@@ -18,7 +18,7 @@ class ARC(DeepEvalBaseBenchmark):
         self,
         n_shots: int = 5,
         n_problems: Optional[int] = None,
-        mode: ARCMode = ARCMode.ARC_EASY,
+        mode: ARCMode = ARCMode.EASY,
         **kwargs,
     ):
         assert n_shots <= 5, "ARC only supports n_shots <= 5"
@@ -27,7 +27,7 @@ class ARC(DeepEvalBaseBenchmark):
         self.scorer = Scorer()
 
         self.n_shots: int = n_shots
-        if mode == ARCMode.ARC_EASY:
+        if mode == ARCMode.EASY:
             self.n_problems: int = 2376 if n_problems is None else n_problems
             assert (
                 self.n_problems <= 2376
@@ -103,8 +103,8 @@ class ARC(DeepEvalBaseBenchmark):
     def load_benchmark_dataset(self, mode: ARCMode) -> List[Golden]:
         # Load full dataset
         dataset_mapping = {
-            ARCMode.ARC_CHALLENGE: "challenge_dataset",
-            ARCMode.ARC_EASY: "easy_dataset",
+            ARCMode.CHALLENGE: "challenge_dataset",
+            ARCMode.EASY: "easy_dataset",
         }
         dataset_attr = dataset_mapping.get(mode)
         if dataset_attr:

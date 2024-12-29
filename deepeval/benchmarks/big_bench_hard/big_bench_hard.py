@@ -20,6 +20,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         tasks: List[BigBenchHardTask] = None,
         n_shots: int = 3,
         enable_cot: bool = True,
+        n_problems_per_task: Optional[int] = None,
         **kwargs,
     ):
         assert n_shots <= 3, "BBH only supports n_shots <= 3"
@@ -27,6 +28,8 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         self.tasks: List[BigBenchHardTask] = (
             list(BigBenchHardTask) if tasks is None else tasks
         )
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
+
         self.scorer = Scorer()
         self.n_shots: int = n_shots
         self.enable_cot: bool = enable_cot
@@ -46,6 +49,11 @@ class BigBenchHard(DeepEvalBaseBenchmark):
 
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
