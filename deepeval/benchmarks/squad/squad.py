@@ -14,13 +14,15 @@ from deepeval.telemetry import capture_benchmark_run
 from deepeval.metrics.utils import initialize_model
 
 
-class EquityMedQA(DeepEvalBaseBenchmark):
+class SQuAD(DeepEvalBaseBenchmark):
     def __init__(
         self,
         tasks: List[SQuADTask] = None,
         n_shots: int = 5,
         n_problems_per_task: Optional[int] = None,
         evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        verbose_mode: bool = False,
+        confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
         assert n_shots <= 5, "SQuAD only supports n_shots <= 5"
@@ -29,7 +31,6 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             list(SQuADTask) if tasks is None else tasks
         )
         self.n_problems_per_task: Optional[int] = n_problems_per_task
-
         self.scorer = Scorer()
         self.n_shots: int = n_shots
         self.predictions: Optional[pd.DataFrame] = None
@@ -38,6 +39,12 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         self.evaluation_model, self.using_native_evaluation_model = (
             initialize_model(evaluation_model)
         )
+        self.verbose_mode: bool = verbose_mode
+        if not confinement_instructions:
+            self.confinement_instructions = "Output the answer, which should a text segment taken from the context."
+        else:
+            self.confinement_instructions = confinement_instructions
+
 
     def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
         with capture_benchmark_run("SQuAD", len(self.tasks)):
@@ -57,7 +64,9 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
 
-                for golden in tqdm(goldens, desc=f"Processing {task.value}"):
+                for idx, golden in enumerate(tqdm(
+                        goldens, desc=f"Processing {task.value}"
+                    )):
                     prediction, score = self.predict(model, golden).values()
                     if score:
                         task_correct_predictions += 1
@@ -71,6 +80,8 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                             score,
                         )
                     )
+                    if self.verbose_mode:
+                        self.print_verbose_logs(idx, task.value, golden.input, golden.expected_output, prediction, score)
 
                 task_accuracy = (
                     task_correct_predictions / task_total_predictions
@@ -119,12 +130,13 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             )
             prediction = res.answer
         except TypeError:
-            prompt += "\n\nOutput the answer, which should a text segment taken from the context."
+            prompt += f"\n\n{self.confinement_instructions}"
             prediction = model.generate(prompt)
 
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]
+        prediction = str(prediction)
 
         # Define Metric
         score = self.scorer.squad_score(
@@ -151,3 +163,36 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             golden = Golden(input=input, expected_output=expected_output)
             goldens.append(golden)
         return goldens
+    
+    def print_verbose_logs(
+        self,
+        idx: int,
+        task_value: str, 
+        input: str, 
+        expected_output: str,
+        prediction: str, 
+        score: int
+    ) -> str:
+        steps = [
+            f"Input:\n{input}",
+            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}"
+        ]
+        verbose_logs = ""
+        for i in range(len(steps) - 1):
+            verbose_logs += steps[i]
+
+            # don't add new line for penultimate step
+            if i < len(steps) - 2:
+                verbose_logs += " \n \n"
+
+        if self.verbose_mode:
+            print("*" * 50)
+            print(f"Problem {idx + 1} (Task = {task_value})")
+            print("*" * 50)
+            print("")
+            print(verbose_logs + f"\n \n{steps[-1]}")
+            print("")
+            print("=" * 70)
+            
+        return verbose_logs
+
