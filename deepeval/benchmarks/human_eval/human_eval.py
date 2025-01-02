@@ -13,23 +13,25 @@ from deepeval.telemetry import capture_benchmark_run
 
 class HumanEval(DeepEvalBaseBenchmark):
     def __init__(
-        self, tasks: List[HumanEvalTask] = None, n: int = 200, **kwargs
+        self,
+        tasks: List[HumanEvalTask] = None,
+        n: int = 200,
+        verbose_mode: bool = False,
+        **kwargs,
     ):
-
         super().__init__(**kwargs)
         self.tasks: List[HumanEvalTask] = (
             list(HumanEvalTask) if tasks is None else tasks
         )
         self.scorer = Scorer()
-
         self.temperature = 0.8
         self.n = n
         self.c = {}
         self.functions = {}
-
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
+        self.verbose_mode: bool = False,
 
     def evaluate(self, model: DeepEvalBaseLLM, k: int) -> Dict:
         with capture_benchmark_run("HumanEval", len(self.tasks)):
@@ -40,9 +42,10 @@ class HumanEval(DeepEvalBaseBenchmark):
             scores_row = []
 
             for task in self.tasks:
-                golden = self.load_benchmark_dataset(task)
+                golden: Golden = self.load_benchmark_dataset(task)
                 task_correct = 0
                 overall_total_predictions += 1
+
                 # Calculate task accuracy
                 prediction, score = self.predict(
                     model, task, golden, k
@@ -50,9 +53,11 @@ class HumanEval(DeepEvalBaseBenchmark):
                 if score:
                     task_correct = 1
                     overall_correct_predictions += 1
-                    predictions_row.append(
-                        (task.value, golden.input, prediction, score)
-                    )
+                predictions_row.append(
+                    (task.value, golden.input, prediction, score)
+                )
+                if self.verbose_mode:
+                    self.print_verbose_logs(task.value, golden.input, prediction, score)
                 print(
                     f"HumanEval Task Accuracy (task={task.value}): {task_correct}"
                 )
@@ -119,6 +124,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         else:
             dataset = load_dataset("openai_humaneval", trust_remote_code=True)
             self.dataset = dataset
+            
         # Filter tasks
         test_set = dataset["test"].filter(
             lambda data: data["entry_point"] == task.value
@@ -128,9 +134,33 @@ class HumanEval(DeepEvalBaseBenchmark):
             input=test_set["prompt"], expected_output=test_set["test"]
         )
         return golden
+    
+    def print_verbose_logs(
+        self,
+        task_value: str, 
+        input: str, 
+        prediction: str, 
+        score: int
+    ) -> str:
+        steps = [
+            f"Input:\n{input}",
+            f"Score: {score}\nPrediction: {prediction}"
+        ]
+        verbose_logs = ""
+        for i in range(len(steps) - 1):
+            verbose_logs += steps[i]
 
+            # don't add new line for penultimate step
+            if i < len(steps) - 2:
+                verbose_logs += " \n \n"
 
-benchmark = HumanEval()
-tasks = list(HumanEvalTask)
-for task in tasks:
-    benchmark.load_benchmark_dataset(task)
+        if self.verbose_mode:
+            print("*" * 50)
+            print(f"Task = {task_value}")
+            print("*" * 50)
+            print("")
+            print(verbose_logs + f"\n \n{steps[-1]}")
+            print("")
+            print("=" * 70)
+            
+        return verbose_logs

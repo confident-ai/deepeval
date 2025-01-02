@@ -23,17 +23,25 @@ DELIMITER = ","
 
 class DROP(DeepEvalBaseBenchmark):
     def __init__(
-        self, tasks: List[DROPTask] = None, n_shots: int = 5, **kwargs
+        self,
+        tasks: List[DROPTask] = None,
+        n_shots: int = 5,
+        n_problems_per_task: Optional[int] = None,
+        verbose_mode: bool = False,
+        **kwargs,
     ):
         assert n_shots <= 5, "DROP only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[DROPTask] = list(DROPTask) if tasks is None else tasks
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
+
         self.scorer = Scorer()
         self.shots_dataset: List[Dict] = None
         self.n_shots: int = n_shots
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
+        self.verbose_mode: bool = verbose_mode
 
     def evaluate(
         self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
@@ -47,6 +55,11 @@ class DROP(DeepEvalBaseBenchmark):
 
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
@@ -73,16 +86,18 @@ class DROP(DeepEvalBaseBenchmark):
                                 (task.value, golden.input, prediction, score)
                             )
                 else:
-                    for golden in tqdm(
+                    for idx, golden in enumerate(tqdm(
                         goldens, desc=f"Processing {task.value}"
-                    ):
+                    )):
                         prediction, score = self.predict(model, golden).values()
                         if score:
                             task_correct_predictions += 1
                             overall_correct_predictions += 1
                         predictions_row.append(
-                            (task.value, golden.input, prediction, score)
+                            (task.value, golden.input, prediction, golden.expected_output, score)
                         )
+                        if self.verbose_mode:
+                            self.print_verbose_logs(idx, task.value, golden.input, golden.expected_output, prediction, score)
 
                 task_accuracy = (
                     task_correct_predictions / task_total_predictions
@@ -102,7 +117,7 @@ class DROP(DeepEvalBaseBenchmark):
             # Columns: 'Task', 'Input', 'Prediction', 'Score'
             self.predictions = pd.DataFrame(
                 predictions_row,
-                columns=["Task", "Input", "Prediction", "Correct"],
+                columns=["Task", "Input", "Prediction", "Expected Output", "Correct"],
             )
             self.task_scores = pd.DataFrame(
                 scores_row, columns=["Task", "Score"]
@@ -136,14 +151,13 @@ class DROP(DeepEvalBaseBenchmark):
             )
             prediction = str(res.answer)
         except TypeError:
-            prompt += "Output should be of type {type}. No explanation needed.".format(
-                type=type
-            )
-            prediction = str(model.generate(prompt))
+            prompt += f"Output should be a {type_info}. No explanation needed."
+            prediction = model.generate(prompt)
 
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]
+        prediction = str(prediction)
 
         # Define Metric
         expected_output = DROPTemplate.parse_str_to_list(
@@ -249,3 +263,36 @@ class DROP(DeepEvalBaseBenchmark):
             goldens.append(golden)
 
         return goldens
+    
+    def print_verbose_logs(
+        self,
+        idx: int,
+        task_value: str, 
+        input: str, 
+        expected_output: str,
+        prediction: str, 
+        score: int
+    ) -> str:
+        steps = [
+            f"Input:\n{input}",
+            f"Score: {score}\nPrediction: {prediction}\nAccepted Expected Output: {expected_output}"
+        ]
+        verbose_logs = ""
+        for i in range(len(steps) - 1):
+            verbose_logs += steps[i]
+
+            # don't add new line for penultimate step
+            if i < len(steps) - 2:
+                verbose_logs += " \n \n"
+
+        if self.verbose_mode:
+            print("*" * 50)
+            print(f"Problem {idx + 1} (Task = {task_value})")
+            print("*" * 50)
+            print("")
+            print(verbose_logs + f"\n \n{steps[-1]}")
+            print("")
+            print("=" * 70)
+            
+        return verbose_logs
+

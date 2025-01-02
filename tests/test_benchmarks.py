@@ -49,70 +49,111 @@
 #     ), f"Expected to see chain-of-thought in the prompt {cot_prompt_zero_shot}"
 
 ########################################
-from deepeval.benchmarks import *
-from deepeval.benchmarks.tasks import *
-from deepeval.benchmarks.modes import *
+## Import ##############################
+########################################
+
+from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.models.gpt_model import GPTModel
+from deepeval.benchmarks.tasks import *
+from deepeval.benchmarks.modes import *
+from deepeval.benchmarks import *
+from typing import List
 
-# gpt_model = SchematicGPTModel(model="gpt-4o")
 gpt_model = GPTModel(model="gpt-4o")
+n_problems = 2
+verbose_mode = True
+
+########################################
+## Benchmark ###########################
+########################################
 
 benchmark_mmlu = MMLU(
-    tasks=[MMLUTask.ABSTRACT_ALGEBRA, MMLUTask.MORAL_SCENARIOS]
+    tasks=[MMLUTask.ABSTRACT_ALGEBRA, MMLUTask.MORAL_SCENARIOS],
+    n_problems_per_task=n_problems,
+    verbose_mode=verbose_mode,
 )
-benchmark_hellaswag = HellaSwag(tasks=[HellaSwagTask.APPLYING_SUNSCREEN])
-benchmark_drop = DROP(tasks=[DROPTask.HISTORY_1450, DROPTask.NFL_899])
-benchmark_truthfulQA = TruthfulQA(
-    tasks=[TruthfulQATask.PSYCHOLOGY, TruthfulQATask.SUBJECTIVE]
+benchmark_hellaswag = HellaSwag(
+    tasks=[HellaSwagTask.APPLYING_SUNSCREEN, HellaSwagTask.ARCHERY],
+    n_problems_per_task=n_problems,
+    verbose_mode=verbose_mode,
 )
-benchmark_truthfulQA_MC2 = TruthfulQA(
-    tasks=[TruthfulQATask.PSYCHOLOGY, TruthfulQATask.SUBJECTIVE],
-    mode=TruthfulQAMode.MC2,
-)
-
-benchmark_gsm8k = GSM8K(n_problems=25)
 benchmark_bbh = BigBenchHard(
     tasks=[
-        BigBenchHardTask.BOOLEAN_EXPRESSIONS,
         BigBenchHardTask.CAUSAL_JUDGEMENT,
-        BigBenchHardTask.DATE_UNDERSTANDING,
-        BigBenchHardTask.DISAMBIGUATION_QA,
-        BigBenchHardTask.DYCK_LANGUAGES,
         BigBenchHardTask.FORMAL_FALLACIES,
-        BigBenchHardTask.GEOMETRIC_SHAPES,
-        BigBenchHardTask.HYPERBATON,
-        BigBenchHardTask.LOGICAL_DEDUCTION_FIVE_OBJECTS,
-        BigBenchHardTask.LOGICAL_DEDUCTION_SEVEN_OBJECTS,
-        BigBenchHardTask.LOGICAL_DEDUCTION_THREE_OBJECTS,
-        BigBenchHardTask.MOVIE_RECOMMENDATION,
-        BigBenchHardTask.MULTISTEP_ARITHMETIC_TWO,
-        BigBenchHardTask.NAVIGATE,
-        BigBenchHardTask.OBJECT_COUNTING,
-        BigBenchHardTask.PENGUINS_IN_A_TABLE,
-        BigBenchHardTask.REASONING_ABOUT_COLORED_OBJECTS,
-        BigBenchHardTask.RUIN_NAMES,
-        BigBenchHardTask.SALIENT_TRANSLATION_ERROR_DETECTION,
-        BigBenchHardTask.SNARKS,
-        BigBenchHardTask.SPORTS_UNDERSTANDING,
-        BigBenchHardTask.TEMPORAL_SEQUENCES,
-        BigBenchHardTask.TRACKING_SHUFFLED_OBJECTS_FIVE_OBJECTS,
-        BigBenchHardTask.TRACKING_SHUFFLED_OBJECTS_SEVEN_OBJECTS,
-        BigBenchHardTask.TRACKING_SHUFFLED_OBJECTS_THREE_OBJECTS,
-        BigBenchHardTask.WEB_OF_LIES,
-        BigBenchHardTask.WORD_SORTING,
-    ]
+    ],
+    n_problems_per_task=n_problems,
+    verbose_mode=verbose_mode,
 )
+benchmark_drop = DROP(
+    tasks=[DROPTask.HISTORY_1450, DROPTask.NFL_899],
+    n_problems_per_task=n_problems,
+    verbose_mode=verbose_mode,
+)
+benchmark_truthful_qa = TruthfulQA(
+    tasks=[TruthfulQATask.PSYCHOLOGY, TruthfulQATask.SUBJECTIVE],
+    n_problems_per_task=n_problems,
+    verbose_mode=verbose_mode,
+)
+benchmark_human_eval = HumanEval(
+    tasks=[HumanEvalTask.ADD_ELEMENTS, HumanEvalTask.CONCATENATE],
+    n=3,
+    verbose_mode=verbose_mode,
+)
+benchmark_squad = SQuAD(
+    tasks=[SQuADTask.AMAZON_RAINFOREST, SQuADTask.APOLLO_PROGRAM],
+    n_problems_per_task=n_problems,
+    verbose_mode=verbose_mode,
+)
+benchmark_gsm8k = GSM8K(n_problems=25, verbose_mode=verbose_mode)
+benchmark_mathqa = MathQA(
+    tasks=[MathQATask.GENERAL, MathQATask.GEOMETRY],
+    n_problems_per_task=n_problems,
+    verbose_mode=verbose_mode,
+)
+benchmark_logiqa = LogiQA(
+    tasks=[LogiQATask.CATEGORICAL_REASONING, LogiQATask.CONJUNCTIVE_REASONING],
+    n_problems_per_task=n_problems,
+    verbose_mode=verbose_mode,
+)
+benchmark_boolq = BoolQ(n_problems=n_problems, verbose_mode=verbose_mode)
+benchmark_arc = ARC(
+    n_problems=n_problems, mode=ARCMode.CHALLENGE, verbose_mode=verbose_mode
+)
+benchmark_bbq = BBQ(
+    tasks=[BBQTask.DISABILITY_STATUS, BBQTask.NATIONALITY],
+    n_problems_per_task=n_problems,
+    verbose_mode=verbose_mode,
+)
+benchmark_lambada = LAMBADA(n_problems=n_problems, verbose_mode=verbose_mode)
+benchmark_winogrande = Winogrande(n_problems=n_problems, verbose_mode=verbose_mode)
 
-benchmarks = [
-    # benchmark_mmlu,
+########################################
+## Evaluate ############################
+########################################
+
+benchmarks: List[DeepEvalBaseBenchmark] = [
+    benchmark_mmlu,
     benchmark_hellaswag,
+    benchmark_bbh,
     benchmark_drop,
-    benchmark_truthfulQA,
-    benchmark_truthfulQA_MC2,
+    benchmark_truthful_qa,
+    benchmark_human_eval,
+    benchmark_squad,
     benchmark_gsm8k,
-    benchmark_bbh,  # Need to test every task (different schemas for all tasks)
+    benchmark_mathqa,
+    benchmark_logiqa,
+    benchmark_boolq,
+    benchmark_arc,
+    benchmark_bbq,
+    benchmark_lambada,
+    benchmark_winogrande,
 ]
 
 for benchmark in benchmarks:
-    benchmark.evaluate(model=gpt_model)
+    try:
+        benchmark.evaluate(model=gpt_model, k=2)
+    except TypeError:
+        benchmark.evaluate(model=gpt_model)
+    print(benchmark.predictions)

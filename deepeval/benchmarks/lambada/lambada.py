@@ -17,19 +17,24 @@ class LAMBADA(DeepEvalBaseBenchmark):
         self,
         n_shots: int = 5,
         n_problems: int = 5153,
+        verbose_mode: bool = False,
+        confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
         assert n_shots <= 5, "LAMBADA only supports n_shots <= 5"
         assert n_problems <= 5153, "LAMBADA only supports n_problems <= 5153"
-
         super().__init__(**kwargs)
         self.scorer = Scorer()
-
         self.n_shots: int = n_shots
         self.n_problems: int = n_problems
-
         self.predictions: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
+        self.verbose_mode = verbose_mode
+        if not confinement_instructions:
+            self.confinement_instructions = "Output the target word! Do not include punctuations."
+        else:
+            self.confinement_instructions = confinement_instructions
+
 
     def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
         with capture_benchmark_run("LAMBADA", self.n_problems):
@@ -39,15 +44,17 @@ class LAMBADA(DeepEvalBaseBenchmark):
 
             # Solving each problem
             goldens = self.load_benchmark_dataset()[: self.n_problems]
-            for golden in tqdm(
+            for idx, golden in enumerate(tqdm(
                 goldens, desc=f"Processing {self.n_problems} problems"
-            ):
+            )):
                 prediction, score = self.predict(model, golden).values()
                 if score:
                     overall_correct_predictions += 1
                 predictions_row.append(
                     (golden.input, prediction, golden.expected_output, score)
                 )
+                if self.verbose_mode:
+                    self.print_verbose_logs(idx, golden.input, golden.expected_output, prediction, score)
 
             # Calculate overall accuracy
             overall_accuracy = (
@@ -71,7 +78,7 @@ class LAMBADA(DeepEvalBaseBenchmark):
         )
 
         # Enforced model generation
-        prompt += "Output the target word! Do not include punctuations."
+        prompt += f"\n\n{self.confinement_instructions}"
         try:
             res: StringSchema = model.generate(
                 prompt=prompt, schema=StringSchema
@@ -109,3 +116,35 @@ class LAMBADA(DeepEvalBaseBenchmark):
             goldens.append(golden)
 
         return goldens
+    
+    def print_verbose_logs(
+        self,
+        idx: int,
+        input: str, 
+        expected_output: str,
+        prediction: str, 
+        score: int
+    ) -> str:
+        steps = [
+            f"Input:\n{input}",
+            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}"
+        ]
+        verbose_logs = ""
+        for i in range(len(steps) - 1):
+            verbose_logs += steps[i]
+
+            # don't add new line for penultimate step
+            if i < len(steps) - 2:
+                verbose_logs += " \n \n"
+
+        if self.verbose_mode:
+            print("*" * 50)
+            print(f"Problem {idx + 1}")
+            print("*" * 50)
+            print("")
+            print(verbose_logs + f"\n \n{steps[-1]}")
+            print("")
+            print("=" * 70)
+            
+        return verbose_logs
+

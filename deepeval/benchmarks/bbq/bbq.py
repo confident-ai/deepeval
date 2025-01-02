@@ -18,15 +18,24 @@ class BBQ(DeepEvalBaseBenchmark):
         self,
         n_shots: int = 5,
         tasks: List[BBQTask] = None,
+        n_problems_per_task: Optional[int] = None,
+        verbose_mode: bool = False,
+        confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
         assert n_shots <= 5, "BBQ only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[BBQTask] = list(BBQTask) if tasks is None else tasks
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
         self.n_shots = n_shots
         self.scorer = Scorer()
         self.predictions: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
+        self.verbose_mode: bool = verbose_mode
+        if not confinement_instructions:
+            self.confinement_instructions = "Output only 'A', 'B', or 'C. Full answer not needed."
+        else:
+            self.confinement_instructions = confinement_instructions
 
     def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
         with capture_benchmark_run("BBQ", len(self.tasks)):
@@ -37,14 +46,19 @@ class BBQ(DeepEvalBaseBenchmark):
 
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
 
                 # Calculate task accuracy
-                for golden in tqdm(
-                    goldens[:20], desc=f"Processing {task.value}"
-                ):
+                for idx, golden in enumerate(tqdm(
+                    goldens, desc=f"Processing {task.value}"
+                )):
                     prediction, score = self.predict(model, golden).values()
                     if score:
                         task_correct_predictions += 1
@@ -58,6 +72,8 @@ class BBQ(DeepEvalBaseBenchmark):
                             score,
                         )
                     )
+                    if self.verbose_mode:
+                        self.print_verbose_logs(idx, task.value, golden.input, golden.expected_output, prediction, score)
 
                 task_accuracy = (
                     task_correct_predictions / task_total_predictions
@@ -104,7 +120,7 @@ class BBQ(DeepEvalBaseBenchmark):
             )
             prediction = str(res.answer)
         except TypeError:
-            prompt += "\n\nOutput only 'A', 'B', or 'C. Full answer not needed."
+            prompt += f"\n\n{self.confinement_instructions}"
             prediction = model.generate(prompt)
 
         # For native models, shouldn't happen but just in case
@@ -150,3 +166,35 @@ class BBQ(DeepEvalBaseBenchmark):
             golden = Golden(input=input, expected_output=expected_output)
             goldens.append(golden)
         return goldens
+    
+    def print_verbose_logs(
+        self,
+        idx: int,
+        task_value: str, 
+        input: str, 
+        expected_output: str,
+        prediction: str, 
+        score: int
+    ) -> str:
+        steps = [
+            f"Input:\n{input}",
+            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}"
+        ]
+        verbose_logs = ""
+        for i in range(len(steps) - 1):
+            verbose_logs += steps[i]
+
+            # don't add new line for penultimate step
+            if i < len(steps) - 2:
+                verbose_logs += " \n \n"
+
+        if self.verbose_mode:
+            print("*" * 50)
+            print(f"Problem {idx + 1} (Task = {task_value})")
+            print("*" * 50)
+            print("")
+            print(verbose_logs + f"\n \n{steps[-1]}")
+            print("")
+            print("=" * 70)
+            
+        return verbose_logs

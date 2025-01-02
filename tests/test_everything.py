@@ -182,7 +182,7 @@ def test_everything():
     )
 
 
-@pytest.mark.skip(reason="openadi is expensive")
+# @pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -213,7 +213,7 @@ def test_everything_2():
         input="What is this again?",
         actual_output="this is a latte",
         expected_output="this is a mocha",
-        # retrieval_context=["I love coffee"],
+        retrieval_context=["I love coffee"],
         context=["I love coffee"],
         expected_tools=["mixer", "creamer", "dripper"],
         tools_called=["mixer", "creamer", "mixer"],
@@ -225,9 +225,9 @@ def test_everything_2():
         test_case,
         [
             metric1,
-            # metric2,
-            # metric3,
-            # metric4,
+            metric2,
+            metric3,
+            metric4,
             # metric5,
             # metric6,
             # metric7,

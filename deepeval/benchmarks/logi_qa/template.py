@@ -32,7 +32,7 @@ class LogiQATemplate:
             + question
             + "\nOptions: "
             + options
-            + "\nAnswer: \n"
+            + "Answer: "
         )
 
     @staticmethod
