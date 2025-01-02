@@ -86,18 +86,31 @@ class DROP(DeepEvalBaseBenchmark):
                                 (task.value, golden.input, prediction, score)
                             )
                 else:
-                    for idx, golden in enumerate(tqdm(
-                        goldens, desc=f"Processing {task.value}"
-                    )):
+                    for idx, golden in enumerate(
+                        tqdm(goldens, desc=f"Processing {task.value}")
+                    ):
                         prediction, score = self.predict(model, golden).values()
                         if score:
                             task_correct_predictions += 1
                             overall_correct_predictions += 1
                         predictions_row.append(
-                            (task.value, golden.input, prediction, golden.expected_output, score)
+                            (
+                                task.value,
+                                golden.input,
+                                prediction,
+                                golden.expected_output,
+                                score,
+                            )
                         )
                         if self.verbose_mode:
-                            self.print_verbose_logs(idx, task.value, golden.input, golden.expected_output, prediction, score)
+                            self.print_verbose_logs(
+                                idx,
+                                task.value,
+                                golden.input,
+                                golden.expected_output,
+                                prediction,
+                                score,
+                            )
 
                 task_accuracy = (
                     task_correct_predictions / task_total_predictions
@@ -117,7 +130,13 @@ class DROP(DeepEvalBaseBenchmark):
             # Columns: 'Task', 'Input', 'Prediction', 'Score'
             self.predictions = pd.DataFrame(
                 predictions_row,
-                columns=["Task", "Input", "Prediction", "Expected Output", "Correct"],
+                columns=[
+                    "Task",
+                    "Input",
+                    "Prediction",
+                    "Expected Output",
+                    "Correct",
+                ],
             )
             self.task_scores = pd.DataFrame(
                 scores_row, columns=["Task", "Score"]
@@ -263,19 +282,19 @@ class DROP(DeepEvalBaseBenchmark):
             goldens.append(golden)
 
         return goldens
-    
+
     def print_verbose_logs(
         self,
         idx: int,
-        task_value: str, 
-        input: str, 
+        task_value: str,
+        input: str,
         expected_output: str,
-        prediction: str, 
-        score: int
+        prediction: str,
+        score: int,
     ) -> str:
         steps = [
             f"Input:\n{input}",
-            f"Score: {score}\nPrediction: {prediction}\nAccepted Expected Output: {expected_output}"
+            f"Score: {score}\nPrediction: {prediction}\nAccepted Expected Output: {expected_output}",
         ]
         verbose_logs = ""
         for i in range(len(steps) - 1):
@@ -293,6 +312,5 @@ class DROP(DeepEvalBaseBenchmark):
             print(verbose_logs + f"\n \n{steps[-1]}")
             print("")
             print("=" * 70)
-            
-        return verbose_logs
 
+        return verbose_logs

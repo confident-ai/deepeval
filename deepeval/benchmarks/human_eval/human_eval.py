@@ -31,7 +31,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
-        self.verbose_mode: bool = False,
+        self.verbose_mode: bool = (False,)
 
     def evaluate(self, model: DeepEvalBaseLLM, k: int) -> Dict:
         with capture_benchmark_run("HumanEval", len(self.tasks)):
@@ -57,7 +57,9 @@ class HumanEval(DeepEvalBaseBenchmark):
                     (task.value, golden.input, prediction, score)
                 )
                 if self.verbose_mode:
-                    self.print_verbose_logs(task.value, golden.input, prediction, score)
+                    self.print_verbose_logs(
+                        task.value, golden.input, prediction, score
+                    )
                 print(
                     f"HumanEval Task Accuracy (task={task.value}): {task_correct}"
                 )
@@ -124,7 +126,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         else:
             dataset = load_dataset("openai_humaneval", trust_remote_code=True)
             self.dataset = dataset
-            
+
         # Filter tasks
         test_set = dataset["test"].filter(
             lambda data: data["entry_point"] == task.value
@@ -134,17 +136,13 @@ class HumanEval(DeepEvalBaseBenchmark):
             input=test_set["prompt"], expected_output=test_set["test"]
         )
         return golden
-    
+
     def print_verbose_logs(
-        self,
-        task_value: str, 
-        input: str, 
-        prediction: str, 
-        score: int
+        self, task_value: str, input: str, prediction: str, score: int
     ) -> str:
         steps = [
             f"Input:\n{input}",
-            f"Score: {score}\nPrediction: {prediction}"
+            f"Score: {score}\nPrediction: {prediction}",
         ]
         verbose_logs = ""
         for i in range(len(steps) - 1):
@@ -162,5 +160,5 @@ class HumanEval(DeepEvalBaseBenchmark):
             print(verbose_logs + f"\n \n{steps[-1]}")
             print("")
             print("=" * 70)
-            
+
         return verbose_logs

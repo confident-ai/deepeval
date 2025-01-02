@@ -127,7 +127,9 @@ benchmark_bbq = BBQ(
     verbose_mode=verbose_mode,
 )
 benchmark_lambada = LAMBADA(n_problems=n_problems, verbose_mode=verbose_mode)
-benchmark_winogrande = Winogrande(n_problems=n_problems, verbose_mode=verbose_mode)
+benchmark_winogrande = Winogrande(
+    n_problems=n_problems, verbose_mode=verbose_mode
+)
 
 ########################################
 ## Evaluate ############################

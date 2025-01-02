@@ -17,8 +17,9 @@ from deepeval.telemetry import capture_benchmark_run
 
 truthful_qa_confinement_statements_dict = {
     TruthfulQAMode.MC1: "\n\nOutput '1', '2', '3', '4', '5' etc. (number in front of answer choice). Full answer not needed.",
-    TruthfulQAMode.MC2: "\n\nOutput the indices of all correct answers as a python list (e.g. '[1, 3, 4]'). Full answers are not needed."
+    TruthfulQAMode.MC2: "\n\nOutput the indices of all correct answers as a python list (e.g. '[1, 3, 4]'). Full answers are not needed.",
 }
+
 
 class TruthfulQA(DeepEvalBaseBenchmark):
     def __init__(
@@ -27,7 +28,9 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         mode: TruthfulQAMode = TruthfulQAMode.MC1,
         n_problems_per_task: Optional[int] = None,
         verbose_mode: bool = False,
-        confinement_instructions_dict: Optional[Dict[TruthfulQAMode, str]] = None,
+        confinement_instructions_dict: Optional[
+            Dict[TruthfulQAMode, str]
+        ] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -43,7 +46,9 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         self.overall_score: Optional[float] = None
         self.verbose_mode: bool = verbose_mode
         if not confinement_instructions_dict:
-            self.confinement_instructions_dict = truthful_qa_confinement_statements_dict
+            self.confinement_instructions_dict = (
+                truthful_qa_confinement_statements_dict
+            )
         else:
             self.confinement_instructions_dict = confinement_instructions_dict
 
@@ -90,9 +95,9 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                                 (task.value, golden.input, prediction, score)
                             )
                 else:
-                    for idx, golden in enumerate(tqdm(
-                        goldens, desc=f"Processing {task.value}"
-                    )):
+                    for idx, golden in enumerate(
+                        tqdm(goldens, desc=f"Processing {task.value}")
+                    ):
                         prediction, score = self.predict(
                             model, golden, self.mode
                         ).values()
@@ -100,10 +105,23 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                             task_correct_predictions += score
                             overall_correct_predictions += score
                         predictions_row.append(
-                            (task.value, golden.input, prediction, golden.expected_output, score)
+                            (
+                                task.value,
+                                golden.input,
+                                prediction,
+                                golden.expected_output,
+                                score,
+                            )
                         )
                         if self.verbose_mode:
-                            self.print_verbose_logs(idx, task.value, golden.input, golden.expected_output, prediction, score)
+                            self.print_verbose_logs(
+                                idx,
+                                task.value,
+                                golden.input,
+                                golden.expected_output,
+                                prediction,
+                                score,
+                            )
 
                 task_accuracy = (
                     task_correct_predictions / task_total_predictions
@@ -123,7 +141,13 @@ class TruthfulQA(DeepEvalBaseBenchmark):
             # Columns: 'Task', 'Input', 'Prediction', 'Score'
             self.predictions = pd.DataFrame(
                 predictions_row,
-                columns=["Task", "Input", "Prediction", "Expected Output", "Correct"],
+                columns=[
+                    "Task",
+                    "Input",
+                    "Prediction",
+                    "Expected Output",
+                    "Correct",
+                ],
             )
             self.task_scores = pd.DataFrame(
                 scores_row, columns=["Task", "Score"]
@@ -284,19 +308,19 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                 goldens.append(golden)
 
         return goldens
-    
+
     def print_verbose_logs(
         self,
         idx: int,
-        task_value: str, 
-        input: str, 
+        task_value: str,
+        input: str,
         expected_output: str,
-        prediction: str, 
-        score: int
+        prediction: str,
+        score: int,
     ) -> str:
         steps = [
             f"Input:\n{input}",
-            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}"
+            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}",
         ]
         verbose_logs = ""
         for i in range(len(steps) - 1):
@@ -314,6 +338,5 @@ class TruthfulQA(DeepEvalBaseBenchmark):
             print(verbose_logs + f"\n \n{steps[-1]}")
             print("")
             print("=" * 70)
-            
-        return verbose_logs
 
+        return verbose_logs

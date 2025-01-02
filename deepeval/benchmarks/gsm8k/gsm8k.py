@@ -33,7 +33,9 @@ class GSM8K(DeepEvalBaseBenchmark):
         self.overall_score: Optional[float] = None
         self.verbose_mode = verbose_mode
         if not confinement_instructions:
-            self.confinement_instructions = "Make sure to output only the numerical answer."
+            self.confinement_instructions = (
+                "Make sure to output only the numerical answer."
+            )
         else:
             self.confinement_instructions = confinement_instructions
 
@@ -45,15 +47,23 @@ class GSM8K(DeepEvalBaseBenchmark):
 
             # Solving each problem
             goldens = self.load_benchmark_dataset()[: self.n_problems]
-            for idx, golden in enumerate(tqdm(
-                goldens, desc=f"Processing {self.n_problems} problems"
-            )):
+            for idx, golden in enumerate(
+                tqdm(goldens, desc=f"Processing {self.n_problems} problems")
+            ):
                 prediction, score = self.predict(model, golden).values()
                 if score:
                     overall_correct_predictions += 1
-                predictions_row.append((golden.input, prediction, golden.expected_output, score))
+                predictions_row.append(
+                    (golden.input, prediction, golden.expected_output, score)
+                )
                 if self.verbose_mode:
-                    self.print_verbose_logs(idx, golden.input, golden.expected_output, prediction, score)
+                    self.print_verbose_logs(
+                        idx,
+                        golden.input,
+                        golden.expected_output,
+                        prediction,
+                        score,
+                    )
 
             # Calculate overall accuracy
             overall_accuracy = (
@@ -62,7 +72,8 @@ class GSM8K(DeepEvalBaseBenchmark):
             print(f"Overall GSM8K Accuracy: {overall_accuracy}")
 
             self.predictions = pd.DataFrame(
-                predictions_row, columns=["Input", "Prediction", "Expected Output", "Correct"]
+                predictions_row,
+                columns=["Input", "Prediction", "Expected Output", "Correct"],
             )
             self.overall_score = overall_accuracy
 
@@ -89,7 +100,7 @@ class GSM8K(DeepEvalBaseBenchmark):
         except TypeError:
             prompt += f"\n\n{self.confinement_instructions}"
             prediction = model.generate(prompt)
-        
+
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
             prediction = prediction[0]
@@ -126,18 +137,18 @@ class GSM8K(DeepEvalBaseBenchmark):
             goldens.append(golden)
 
         return goldens
-    
+
     def print_verbose_logs(
         self,
         idx: int,
-        input: str, 
+        input: str,
         expected_output: str,
-        prediction: str, 
-        score: int
+        prediction: str,
+        score: int,
     ) -> str:
         steps = [
             f"Input:\n{input}",
-            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}"
+            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}",
         ]
         verbose_logs = ""
         for i in range(len(steps) - 1):
@@ -155,5 +166,5 @@ class GSM8K(DeepEvalBaseBenchmark):
             print(verbose_logs + f"\n \n{steps[-1]}")
             print("")
             print("=" * 70)
-            
+
         return verbose_logs

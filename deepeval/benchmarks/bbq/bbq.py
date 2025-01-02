@@ -33,7 +33,9 @@ class BBQ(DeepEvalBaseBenchmark):
         self.overall_score: Optional[float] = None
         self.verbose_mode: bool = verbose_mode
         if not confinement_instructions:
-            self.confinement_instructions = "Output only 'A', 'B', or 'C. Full answer not needed."
+            self.confinement_instructions = (
+                "Output only 'A', 'B', or 'C. Full answer not needed."
+            )
         else:
             self.confinement_instructions = confinement_instructions
 
@@ -56,9 +58,9 @@ class BBQ(DeepEvalBaseBenchmark):
                 overall_total_predictions += len(goldens)
 
                 # Calculate task accuracy
-                for idx, golden in enumerate(tqdm(
-                    goldens, desc=f"Processing {task.value}"
-                )):
+                for idx, golden in enumerate(
+                    tqdm(goldens, desc=f"Processing {task.value}")
+                ):
                     prediction, score = self.predict(model, golden).values()
                     if score:
                         task_correct_predictions += 1
@@ -73,7 +75,14 @@ class BBQ(DeepEvalBaseBenchmark):
                         )
                     )
                     if self.verbose_mode:
-                        self.print_verbose_logs(idx, task.value, golden.input, golden.expected_output, prediction, score)
+                        self.print_verbose_logs(
+                            idx,
+                            task.value,
+                            golden.input,
+                            golden.expected_output,
+                            prediction,
+                            score,
+                        )
 
                 task_accuracy = (
                     task_correct_predictions / task_total_predictions
@@ -166,19 +175,19 @@ class BBQ(DeepEvalBaseBenchmark):
             golden = Golden(input=input, expected_output=expected_output)
             goldens.append(golden)
         return goldens
-    
+
     def print_verbose_logs(
         self,
         idx: int,
-        task_value: str, 
-        input: str, 
+        task_value: str,
+        input: str,
         expected_output: str,
-        prediction: str, 
-        score: int
+        prediction: str,
+        score: int,
     ) -> str:
         steps = [
             f"Input:\n{input}",
-            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}"
+            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}",
         ]
         verbose_logs = ""
         for i in range(len(steps) - 1):
@@ -196,5 +205,5 @@ class BBQ(DeepEvalBaseBenchmark):
             print(verbose_logs + f"\n \n{steps[-1]}")
             print("")
             print("=" * 70)
-            
+
         return verbose_logs

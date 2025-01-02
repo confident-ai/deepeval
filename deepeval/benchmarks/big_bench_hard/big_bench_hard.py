@@ -43,6 +43,7 @@ bbh_confinement_statements_dict = {
     BigBenchHardTask.WORD_SORTING: "\n\nOutput only the sequence of words separated by white space. Full answer not needed.",
 }
 
+
 class BigBenchHard(DeepEvalBaseBenchmark):
     def __init__(
         self,
@@ -51,7 +52,9 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         enable_cot: bool = True,
         n_problems_per_task: Optional[int] = None,
         verbose_mode: bool = False,
-        confinement_instructions_dict: Optional[Dict[BigBenchHardTask, str]] = None,
+        confinement_instructions_dict: Optional[
+            Dict[BigBenchHardTask, str]
+        ] = None,
         **kwargs,
     ):
         assert n_shots <= 3, "BBH only supports n_shots <= 3"
@@ -115,9 +118,9 @@ class BigBenchHard(DeepEvalBaseBenchmark):
                             )
                 else:
                     # Calculate task accuracy
-                    for idx, golden in enumerate(tqdm(
-                        goldens, desc=f"Processing {task.value}"
-                    )):
+                    for idx, golden in enumerate(
+                        tqdm(goldens, desc=f"Processing {task.value}")
+                    ):
                         prediction, score = self.predict(
                             model, task, golden
                         ).values()
@@ -125,10 +128,23 @@ class BigBenchHard(DeepEvalBaseBenchmark):
                             task_correct_predictions += 1
                             overall_correct_predictions += 1
                         predictions_row.append(
-                            (task.value, golden.input, prediction, golden.expected_output, score)
+                            (
+                                task.value,
+                                golden.input,
+                                prediction,
+                                golden.expected_output,
+                                score,
+                            )
                         )
                         if self.verbose_mode:
-                            self.print_verbose_logs(idx, task.value, golden.input, golden.expected_output, prediction, score)
+                            self.print_verbose_logs(
+                                idx,
+                                task.value,
+                                golden.input,
+                                golden.expected_output,
+                                prediction,
+                                score,
+                            )
 
                 task_accuracy = (
                     task_correct_predictions / task_total_predictions
@@ -148,7 +164,13 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             # Columns: 'Task', 'Input', 'Prediction', 'Score'
             self.predictions = pd.DataFrame(
                 predictions_row,
-                columns=["Task", "Input", "Prediction", "Expected Output", "Correct"],
+                columns=[
+                    "Task",
+                    "Input",
+                    "Prediction",
+                    "Expected Output",
+                    "Correct",
+                ],
             )
             self.task_scores = pd.DataFrame(
                 scores_row, columns=["Task", "Score"]
@@ -237,7 +259,9 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         return res
 
     def load_benchmark_dataset(self, task: BigBenchHardTask) -> List[Golden]:
-        dataset_mapping = {task: f"{task.value}_dataset" for task in BigBenchHardTask}
+        dataset_mapping = {
+            task: f"{task.value}_dataset" for task in BigBenchHardTask
+        }
         dataset_attr = dataset_mapping.get(task)
         if dataset_attr:
             if not hasattr(self, dataset_attr):
@@ -254,19 +278,19 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             goldens.append(golden)
 
         return goldens
-    
+
     def print_verbose_logs(
         self,
         idx: int,
-        task_value: str, 
-        input: str, 
+        task_value: str,
+        input: str,
         expected_output: str,
-        prediction: str, 
-        score: int
+        prediction: str,
+        score: int,
     ) -> str:
         steps = [
             f"Input:\n{input}",
-            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}"
+            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}",
         ]
         verbose_logs = ""
         for i in range(len(steps) - 1):
@@ -284,6 +308,5 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             print(verbose_logs + f"\n \n{steps[-1]}")
             print("")
             print("=" * 70)
-            
-        return verbose_logs
 
+        return verbose_logs

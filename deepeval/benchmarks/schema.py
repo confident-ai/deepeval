@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Literal
 
+
 class MultipleChoiceSchema(BaseModel):
     answer: Literal["A", "B", "C", "D"]
 

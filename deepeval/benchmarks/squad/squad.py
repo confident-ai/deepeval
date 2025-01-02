@@ -45,7 +45,6 @@ class SQuAD(DeepEvalBaseBenchmark):
         else:
             self.confinement_instructions = confinement_instructions
 
-
     def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
         with capture_benchmark_run("SQuAD", len(self.tasks)):
             overall_correct_predictions = 0
@@ -64,9 +63,9 @@ class SQuAD(DeepEvalBaseBenchmark):
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
 
-                for idx, golden in enumerate(tqdm(
-                        goldens, desc=f"Processing {task.value}"
-                    )):
+                for idx, golden in enumerate(
+                    tqdm(goldens, desc=f"Processing {task.value}")
+                ):
                     prediction, score = self.predict(model, golden).values()
                     if score:
                         task_correct_predictions += 1
@@ -81,7 +80,14 @@ class SQuAD(DeepEvalBaseBenchmark):
                         )
                     )
                     if self.verbose_mode:
-                        self.print_verbose_logs(idx, task.value, golden.input, golden.expected_output, prediction, score)
+                        self.print_verbose_logs(
+                            idx,
+                            task.value,
+                            golden.input,
+                            golden.expected_output,
+                            prediction,
+                            score,
+                        )
 
                 task_accuracy = (
                     task_correct_predictions / task_total_predictions
@@ -163,19 +169,19 @@ class SQuAD(DeepEvalBaseBenchmark):
             golden = Golden(input=input, expected_output=expected_output)
             goldens.append(golden)
         return goldens
-    
+
     def print_verbose_logs(
         self,
         idx: int,
-        task_value: str, 
-        input: str, 
+        task_value: str,
+        input: str,
         expected_output: str,
-        prediction: str, 
-        score: int
+        prediction: str,
+        score: int,
     ) -> str:
         steps = [
             f"Input:\n{input}",
-            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}"
+            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}",
         ]
         verbose_logs = ""
         for i in range(len(steps) - 1):
@@ -193,6 +199,5 @@ class SQuAD(DeepEvalBaseBenchmark):
             print(verbose_logs + f"\n \n{steps[-1]}")
             print("")
             print("=" * 70)
-            
-        return verbose_logs
 
+        return verbose_logs
