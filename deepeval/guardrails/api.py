@@ -1,25 +1,20 @@
-from typing import Optional, List
+from typing import Optional, List, Union, Dict
 from pydantic import BaseModel
 
+BASE_URL = "http://localhost:8000"
 
 class ApiGuardrails(BaseModel):
-    input: str
-    response: str
-    guards: List[str]
-    purpose: Optional[str] = None
-    allowed_entities: Optional[List[str]] = None
-    system_prompt: Optional[str] = None
-
-
-class GuardScore(BaseModel):
     guard: str
-    score: int
-
+    guard_type: str
+    vulnerability_types: Optional[list[str]] = None
+    input: Optional[str] = None
+    response: Optional[str] = None
+    purpose: Optional[str] = None
+    allowed_topics: Optional[List[str]] = None
 
 class GuardResult(BaseModel):
     breached: bool
-    guard_scores: List[GuardScore]
-
+    result_breakdown: Union[List, Dict]
 
 class GuardResponseData(BaseModel):
     result: GuardResult
