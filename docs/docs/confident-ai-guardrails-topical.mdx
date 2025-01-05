@@ -1,0 +1,72 @@
+---
+id: confident-ai-guardrails-topical
+title: Topical Guard
+sidebar_label: Topical Guard
+---
+
+import Equation from "@site/src/components/equation";
+
+The **Topical Guard** is an input guard that ensures user inputs adhere to a predefined set of allowed topics. It analyzes the input, compares it against the specified topics, and determines whether the input is relevant or off-topic.
+
+:::info
+`TopicalGuard` is only available as an **input guard**.
+:::
+
+## Example
+
+```python
+from deepeval.guardrails import TopicalGuard
+
+allowed_topics = ["technology", "science", "health"]
+user_input = "Can you tell me about the latest advancements in quantum computing?"
+
+topical_guard = TopicalGuard(allowed_topics=allowed_topics)
+guard_result = topical_guard.guard(input=user_input)
+```
+
+There is 1 required parameter when creating a `TopicalGuard`:
+
+- `allowed_topics`: A list of topics (strings) that are permitted for discussion.
+
+The `guard` function accepts a single parameter `input`, representing the user input to your LLM application.
+
+## Interpreting Guard Result
+
+```python
+print(guard_result.breached)
+print(guard_result.score_breakdown)
+```
+
+`guard_result.breached` is a boolean that is `True` if the guard has been breached. The `score_breakdown` for `TopicalGuard` a list of dictionaries, each containing:
+
+- `topic`: The allowed topic against which the input was compared.
+- `score`: A binary value (0 or 1), where 0 indicates the input aligns with the topic, and 1 indicates it does not.
+- `reason`: An explanation of why the input does or does not align with the topic.
+
+```json
+[
+  {
+    "topic": "technology",
+    "score": 0,
+    "reason": "The input discusses advancements in quantum computing, which falls under the technology topic."
+  },
+  {
+    "topic": "science",
+    "score": 0,
+    "reason": "Quantum computing is a scientific field, aligning with the science topic."
+  },
+  {
+    "topic": "health",
+    "score": 1,
+    "reason": "The input does not pertain to health-related matters."
+  }
+]
+```
+
+## How Is it Calculated?
+
+The final guard score (which ultimately determines a breach) is calculated according to the following equation:
+
+<Equation formula="\text{Topical Guard Score} = \begin{cases} 1 & \text{if no topic matches} \\ 0 & \text{if at least one topic matches} \end{cases}" />
+
+This formula returns 1 if the input does not match any of the allowed topics, indicating a topic breach. It returns 0 if the input matches at least one allowed topic, indicating no breach.
