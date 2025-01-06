@@ -79,14 +79,14 @@ vulnerabilities = [
 You'll also need to define a **function representing the target model** you wish to red-team. This function should accept a `prompt` of type `str` and return a `str` representing the model's response, can be implemented both synchronously and asynchronously.
 
 ```python
-def target_model(prompt: str) -> str:
+def target_model_callback(prompt: str) -> str:
     # example API endpoint
     api_url = "https://example-llm-api.com/generate"
     response = httpx.post(api_url, json={"prompt": prompt})
     return response.json().get("response")
 
 # Alternatively, define your function asynchronously
-async def target_model(prompt: str):
+async def target_model_callback(prompt: str):
   ...
 ```
 
@@ -100,7 +100,7 @@ from deepeval.red_teaming import AttackEnhancement
 ...
 
 results = red_teamer.scan(
-    target_model=target_model,
+    target_model_callback=target_model_callback,
     attacks_per_vulnerability_type=5,
     vulnerabilities=vulnerabilities
     attack_enhancements={
@@ -117,7 +117,7 @@ There are 3 required parameters and 1 optional parameter when calling the scan m
 
 - `vulnerabilities`: A list of `Vulnerability` objects specifying the vulnerabilities to be tested.
 - `attacks_per_vulnerability_type`: An integer specifying the number of attacks to be generated per vulnerability type.
-- `target_model`: A callback function representing the model you wish to red-team. The function should accept a `prompt: str` and return a `str` response.
+- `target_model_callback`: A callback function representing the model you wish to red-team. The function should accept a `prompt: str` and return a `str` response.
 - [Optional] `attack_enhancements`: A dict of `AttackEnhancement` enum keys specifying the distribution of attack enhancements to be used. Defaulted to uniform distribution of all available `AttackEnhancements`.
 
 :::tip
