@@ -26,11 +26,11 @@ There are no required arguments when initializing the `JailbreakingGuard` object
 ## Interpreting Guard Result
 
 ```python
-print(guard_result.breached)
+print(guard_result.score)
 print(guard_result.score_breakdown)
 ```
 
-`guard_result.breached` is a boolean that is `True` if the guard has been breached. The `score_breakdown` for `JailbreakingGuard` is a dictionary containing:
+`guard_result.score` is an integer that is `1` if the guard has been breached. The `score_breakdown` for `JailbreakingGuard` is a dictionary containing:
 
 - `score`: A binary value (1 of 0), where 1 indicates that a jailbreaking attempt was detected.
 - `reason`: A detailed explanation of why the input was classified as a jailbreaking attempt or not.

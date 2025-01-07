@@ -23,6 +23,7 @@ class PrivacyGuard(BaseInputGuard):
                 endpoint=Endpoints.GUARD_ENDPOINT,
                 body=body,
             )
+            print(response)
             return GuardResponseData(**response).result
         else:
             raise Exception("To use DeepEval guardrails, run `deepeval login`")

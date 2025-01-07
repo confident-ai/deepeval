@@ -33,11 +33,11 @@ The `guard` function accepts a single parameter `input`, representing the user i
 ## Interpreting Guard Result
 
 ```python
-print(guard_result.breached)
+print(guard_result.score)
 print(guard_result.score_breakdown)
 ```
 
-`guard_result.breached` is a boolean that is `True` if the guard has been breached. The `score_breakdown` for `TopicalGuard` a list of dictionaries, each containing:
+`guard_result.score` is an integer that is `1` if the guard has been breached. The `score_breakdown` for `TopicalGuard` a list of dictionaries, each containing:
 
 - `topic`: The allowed topic against which the input was compared.
 - `score`: A binary value (0 or 1), where 0 indicates the input aligns with the topic, and 1 indicates it does not.

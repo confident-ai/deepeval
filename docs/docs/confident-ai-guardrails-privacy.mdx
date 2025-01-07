@@ -26,11 +26,11 @@ There are no required arguments when initializing the `PrivacyGuard` object. The
 ## Interpreting Guard Result
 
 ```python
-print(guard_result.breached)
+print(guard_result.score)
 print(guard_result.score_breakdown)
 ```
 
-`guard_result.breached` is a boolean that is `True` if the guard has been breached. The `score_breakdown` for `PrivacyGuard` is a dictionary containing:
+`guard_result.score` is an integer that is `1` if the guard has been breached. The `score_breakdown` for `PrivacyGuard` is a dictionary containing:
 
 - `score`: A binary value (1 or 0), where 1 indicates that private or sensitive data was detected.
 - `reason`: A detailed explanation of the detected private data, specifying the type and exact content identified.
