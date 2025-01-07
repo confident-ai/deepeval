@@ -12,21 +12,19 @@ from deepeval.utils import is_confident
 class CyberSecurityGuard(BaseGuard):
 
     def __init__(
-        self, 
+        self,
         purpose: str,
         guard_type: GuardType = GuardType.INPUT,
-        cyberattack_types: List[CyberattackType] = [
+        vulnerabilities: List[CyberattackType] = [
             attack for attack in CyberattackType
-        ]
+        ],
     ):
         self.purpose = purpose
         self.guard_type = guard_type
-        self.cyberattack_types =cyberattack_types
+        self.vulnerabilities = vulnerabilities
 
     def guard(
-        self, 
-        input: Optional[str] = None, 
-        response: Optional[str] = None
+        self, input: Optional[str] = None, response: Optional[str] = None
     ) -> int:
         guard_params = ApiGuardrails(
             guard=self.get_guard_name(),
@@ -34,7 +32,9 @@ class CyberSecurityGuard(BaseGuard):
             input=input,
             response=response,
             purpose=self.purpose,
-            vulnerability_types=[attack.value for attack in self.cyberattack_types]
+            vulnerability_types=[
+                attack.value for attack in self.vulnerabilities
+            ],
         )
         body = guard_params.model_dump(by_alias=True, exclude_none=True)
 
@@ -48,10 +48,8 @@ class CyberSecurityGuard(BaseGuard):
             )
             return GuardResponseData(**response).result
         else:
-            raise Exception(
-                "To use DeepEval guardrails, run `deepeval login`"
-            )
-        
+            raise Exception("To use DeepEval guardrails, run `deepeval login`")
+
     async def a_guard(
         self,
         input: Optional[str] = None,
@@ -63,7 +61,9 @@ class CyberSecurityGuard(BaseGuard):
             input=input,
             response=response,
             purpose=self.purpose,
-            vulnerability_types=[attack.value for attack in self.cyberattack_types],
+            vulnerability_types=[
+                attack.value for attack in self.vulnerabilities
+            ],
         )
         body = guard_params.model_dump(by_alias=True, exclude_none=True)
 
@@ -77,10 +77,14 @@ class CyberSecurityGuard(BaseGuard):
             )
             return GuardResponseData(**response).result
         else:
-            raise Exception(
-                "To use DeepEval guardrails, run `deepeval login`"
-            )
+            raise Exception("To use DeepEval guardrails, run `deepeval login`")
         
+    def get_guard_type(self) -> str:
+        if self.guard_type == GuardType.INPUT:
+            return "InputGuard"
+        elif self.guard_type == GuardType.OUTPUT:
+            return "OutputGuard"
+
     def get_guard_name(self) -> str:
         if self.guard_type == GuardType.INPUT:
             return "Cybersecurity Input Guard"

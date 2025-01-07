@@ -204,13 +204,12 @@ def capture_red_teamer_run(
 
 
 @contextmanager
-def capture_guardrails(guards: List, include_system_prompt: bool):
+def capture_guardrails(guards: List):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Ran guardrails") as span:
             span.set_attribute("user.unique_id", get_unique_id())
-            span.set_attribute("include_system_prompt", include_system_prompt)
             for guard in guards:
-                span.set_attribute(f"vulnerability.{guard.value}", 1)
+                span.set_attribute(f"vulnerability.{guard.get_guard_name()}", 1)
             set_last_feature(Feature.GUARDRAIL)
             yield span
     else:

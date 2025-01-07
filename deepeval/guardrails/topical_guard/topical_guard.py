@@ -6,6 +6,7 @@ from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.guardrails.api import BASE_URL
 from deepeval.utils import is_confident
 
+
 class TopicalGuard(BaseInputGuard):
 
     def __init__(self, allowed_topics: List[str]):
@@ -30,10 +31,8 @@ class TopicalGuard(BaseInputGuard):
             )
             return GuardResponseData(**response).result
         else:
-            raise Exception(
-                "To use DeepEval guardrails, run `deepeval login`"
-            )
-        
+            raise Exception("To use DeepEval guardrails, run `deepeval login`")
+
     async def a_guard(self, input: str) -> int:
         guard_params = ApiGuardrails(
             guard=self.get_guard_name(),
@@ -53,9 +52,7 @@ class TopicalGuard(BaseInputGuard):
             )
             return GuardResponseData(**response).result
         else:
-            raise Exception(
-                "To use DeepEval guardrails, run `deepeval login`"
-            )
+            raise Exception("To use DeepEval guardrails, run `deepeval login`")
 
     def get_guard_name(self) -> str:
         return "Topical Guard"

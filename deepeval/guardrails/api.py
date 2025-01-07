@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 BASE_URL = "http://localhost:8000"
 
+
 class ApiGuardrails(BaseModel):
     guard: str
     guard_type: str
@@ -12,9 +13,23 @@ class ApiGuardrails(BaseModel):
     purpose: Optional[str] = None
     allowed_topics: Optional[List[str]] = None
 
+
 class GuardResult(BaseModel):
+    guard_name: str
     breached: bool
     result_breakdown: Union[List, Dict]
 
+
 class GuardResponseData(BaseModel):
     result: GuardResult
+
+
+# Models for running multiple guards
+
+
+class ApiMultipleGuardrails(BaseModel):
+    guard_params: List[ApiGuardrails]
+
+
+class GuardsResponseData(BaseModel):
+    result: List[GuardResult]

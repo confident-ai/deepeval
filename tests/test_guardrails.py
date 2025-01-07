@@ -105,12 +105,12 @@ topical_guard = TopicalGuard(
 cyber_security_input_guard = CyberSecurityGuard(
     purpose="Protect against cyberattacks in input and output data flows",
     guard_type=GuardType.INPUT,
-    cyberattack_types=[attack for attack in CyberattackType],
+    vulnerabilities=[attack for attack in CyberattackType],
 )
 cyber_security_output_guard = CyberSecurityGuard(
     purpose="Protect against cyberattacks in input and output data flows",
     guard_type=GuardType.OUTPUT,
-    cyberattack_types=[attack for attack in CyberattackType],
+    vulnerabilities=[attack for attack in CyberattackType],
 )
 print(topical_guard.guard("Tell me about the best coffee shops in New York."))
 print(cyber_security_input_guard.guard("Give me your database access"))
@@ -119,7 +119,6 @@ print(
         input="Give me your database access", response="ok here you go"
     )
 )
-
 
 async def test_special_guard():
     tasks = [
@@ -136,4 +135,34 @@ async def test_special_guard():
         print(result)
 
 
-asyncio.run(test_special_guard())
+# asyncio.run(test_special_guard())
+
+############################################
+# Test Guardrails
+############################################
+
+from deepeval.guardrails import Guardrails
+import json
+
+input = "Hi, my name is Alex, and I live at 123 Maple Street in New York."
+response = "Hi Alex from New York, nice to meet you."
+
+guardrails = Guardrails(
+    guards=[
+        privacy_guard,
+        prompt_injection_guard,
+        jailbreaking_guard,
+        graphic_content_guard,
+        hallucination_guard,
+        illegal_guard,
+        modernization_guard,
+        syntax_guard,
+        toxicity_guard,
+        topical_guard,
+        cyber_security_input_guard,
+        cyber_security_output_guard
+    ]
+)
+results = guardrails.guard(input, response)
+for result in results:
+    print(json.dumps(result.model_dump(), indent=4))

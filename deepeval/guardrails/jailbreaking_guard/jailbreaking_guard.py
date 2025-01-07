@@ -4,6 +4,7 @@ from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.guardrails.api import BASE_URL
 from deepeval.utils import is_confident
 
+
 class JailbreakingGuard(BaseInputGuard):
 
     def guard(self, input: str) -> int:
@@ -24,10 +25,8 @@ class JailbreakingGuard(BaseInputGuard):
             )
             return GuardResponseData(**response).result
         else:
-            raise Exception(
-                "To use DeepEval guardrails, run `deepeval login`"
-            )
-        
+            raise Exception("To use DeepEval guardrails, run `deepeval login`")
+
     async def a_guard(self, input: str) -> int:
         guard_params = ApiGuardrails(
             guard=self.get_guard_name(),
@@ -46,9 +45,7 @@ class JailbreakingGuard(BaseInputGuard):
             )
             return GuardResponseData(**response).result
         else:
-            raise Exception(
-                "To use DeepEval guardrails, run `deepeval login`"
-            )
-        
+            raise Exception("To use DeepEval guardrails, run `deepeval login`")
+
     def get_guard_name(self) -> str:
         return "Jailbreaking Guard"

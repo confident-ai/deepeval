@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class CyberattackType(Enum):
     BFLA = "BFLA"
     BOLA = "BOLA"
@@ -8,6 +9,7 @@ class CyberattackType(Enum):
     SHELL_INJECTION = "Shell Injection"
     SQL_INJECTION = "SQL Injection"
     SSRF = "SSRF"
+
 
 class GuardType(Enum):
     INPUT = "InputGuard"

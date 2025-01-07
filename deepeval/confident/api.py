@@ -24,6 +24,7 @@ class Endpoints(Enum):
     PROMPT_ENDPOINT = "/v1/prompt"
     EVALUATE_ENDPOINT = "/evaluate"
     GUARD_ENDPOINT = "/guard"
+    MULTIPLE_GUARD_ENDPOINT = "/guard-multiple"
     BASELINE_ATTACKS_ENDPOINT = "/generate-baseline-attacks"
 
 

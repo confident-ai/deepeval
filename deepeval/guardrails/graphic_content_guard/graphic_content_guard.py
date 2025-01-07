@@ -4,6 +4,7 @@ from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.guardrails.api import BASE_URL
 from deepeval.utils import is_confident
 
+
 class GraphicContentGuard(BaseOutputGuard):
 
     async def a_guard(self, response: str) -> int:
@@ -24,9 +25,7 @@ class GraphicContentGuard(BaseOutputGuard):
             )
             return GuardResponseData(**response).result
         else:
-            raise Exception(
-                "To use DeepEval guardrails, run `deepeval login`"
-            )
+            raise Exception("To use DeepEval guardrails, run `deepeval login`")
 
     def guard(self, response: str) -> int:
         guard_params = ApiGuardrails(
@@ -46,9 +45,7 @@ class GraphicContentGuard(BaseOutputGuard):
             )
             return GuardResponseData(**response).result
         else:
-            raise Exception(
-                "To use DeepEval guardrails, run `deepeval login`"
-            )
-        
+            raise Exception("To use DeepEval guardrails, run `deepeval login`")
+
     def get_guard_name(self) -> str:
         return "Graphic Content Guard"

@@ -1,7 +1,7 @@
 from .types import GuardType
 from .graphic_content_guard.graphic_content_guard import GraphicContentGuard
 from .hallucination_guard.hallucination_guard import HallucinationGuard
-from.illegal_guard.illegal_guard import IllegalGuard
+from .illegal_guard.illegal_guard import IllegalGuard
 from .modernization_guard.modernization_guard import ModernizationGuard
 from .syntax_guard.syntax_guard import SyntaxGuard
 from .toxicity_guard.toxicity_guard import ToxicityGuard
@@ -10,3 +10,4 @@ from .prompt_injection_guard.prompt_injection_guard import PromptInjectionGuard
 from .jailbreaking_guard.jailbreaking_guard import JailbreakingGuard
 from .topical_guard.topical_guard import TopicalGuard
 from .cybersecurity_guard.cybersecurity_guard import CyberSecurityGuard
+from .guardrails import Guardrails
