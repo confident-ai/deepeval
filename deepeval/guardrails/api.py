@@ -1,8 +1,7 @@
 from typing import Optional, List, Union, Dict
 from pydantic import BaseModel
 
-BASE_URL = "http://localhost:8000"
-
+BASE_URL = "https://deepeval.confident-ai.com/"
 
 class ApiGuardrails(BaseModel):
     guard: str
