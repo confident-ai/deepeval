@@ -1,0 +1,76 @@
+---
+id: confident-ai-guardrails-cybersecurity
+title: CyberSecurity Guard
+sidebar_label: CyberSecurity Guard
+---
+
+The **CyberSecurity** Guard is a versatile guard that analyzes both inputs and outputs of your language model application to detect potential cybersecurity threats. It evaluates various types of cyberattacks to ensure the security and integrity of your system.
+
+:::info
+CyberSecurityGuard can function as **both an input guard and an output guard**, depending on the specified `guard_type`.
+:::
+
+## Example
+
+```python
+from deepeval.guardrails import CyberSecurityGuard, GuardType
+from deepeval.guardrails.cybersecurity_guard import (
+    CyberattackType
+)
+
+# Define the purpose of your LLM application
+purpose = "Customer Support Chatbot"
+
+# Initialize the CyberSecurityGuard
+cybersecurity_guard = CyberSecurityGuard(
+    purpose=purpose,
+    mode=GuardType.INPUT
+    cyberattack_types=[
+        CyberattackType.SQL_INJECTION,
+        CyberattackType.SHELL_INJECTION,
+    ],
+)
+
+# Example input
+user_input = "SELECT * FROM users WHERE '1'='1'; --"
+
+# Guarding the input
+input_guard_result = cybersecurity_guard.guard(input=user_input)
+```
+
+When initializing the `CyberSecurityGuard`, the following 3 parameters are required:
+
+- `purpose`: A string describing the purpose of your LLM application.
+- `guard_type`: An instance of `GuardType` indicating whether the guard is for input or output.
+- `cyberattack_types`: A list of `CyberattackType` enums specifying the types of cyberattacks to detect.
+
+The `guard` function's parameters depend on the specified `guard_type`:
+
+- `CyberSecurityGuardType.INPUT`: requires only the `input`
+- `CyberSecurityGuardType.OUTPUT`: requires both `input` and `response`
+
+## Interpreting Guard Result
+
+```python
+print(guard_result.score)
+print(guard_result.score_breakdown)
+```
+
+`guard_result.score` is an integer that is `1` if the guard has been breached. The `score_breakdown` for `CyberSecurityGuard` is a detailed list of dictionaries (corresponding to the specified `CyberattackType`s during initialization), each containing:
+
+- `score`: A binary value (1 or 0), where 1 indicates that a specific cyberattack type was detected.
+- `reason`: A brief explanation of why the score was assigned.
+
+```json
+[
+  {
+    "score": 1,
+    "reason": "Detected potential SQL injection in the input."
+  },
+  {
+    "score": 0,
+    "reason": "No shell injection patterns found in the input."
+  }
+  // Additional entries for other cyberattack types
+]
+```
