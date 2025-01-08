@@ -54,7 +54,7 @@ class TextToImageMetric(BaseMultimodalMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                input_texts, input_images = self.separate_images_from_text(
+                input_texts, _ = self.separate_images_from_text(
                     test_case.input
                 )
                 _, output_images = self.separate_images_from_text(
@@ -64,7 +64,7 @@ class TextToImageMetric(BaseMultimodalMetric):
                 self.SC_scores, self.SC_reasoning = (
                     self._evaluate_semantic_consistency(
                         "\n".join(input_texts),
-                        None if len(input_images) == 0 else input_images[0],
+                        output_images[0],
                     )
                 )
                 self.PQ_scores, self.PQ_reasoning = (
@@ -103,7 +103,7 @@ class TextToImageMetric(BaseMultimodalMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            input_texts, input_images = self.separate_images_from_text(
+            input_texts, _ = self.separate_images_from_text(
                 test_case.input
             )
             _, output_images = self.separate_images_from_text(
@@ -115,7 +115,7 @@ class TextToImageMetric(BaseMultimodalMetric):
             ) = await asyncio.gather(
                 self._a_evaluate_semantic_consistency(
                     "\n".join(input_texts),
-                    None if len(input_images) == 0 else input_images[0],
+                    output_images[0],
                 ),
                 self._a_evaluate_perceptual_quality(output_images[0]),
             )
@@ -154,10 +154,10 @@ class TextToImageMetric(BaseMultimodalMetric):
     async def _a_evaluate_semantic_consistency(
         self,
         text_prompt: str,
-        image_input: MLLMImage,
+        actual_image_output: MLLMImage,
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
-        images.append(image_input)
+        images.append(actual_image_output)
         prompt = [
             TextToImageTemplate.generate_semantic_consistency_evaluation_results(
                 text_prompt=text_prompt
@@ -184,10 +184,10 @@ class TextToImageMetric(BaseMultimodalMetric):
     def _evaluate_semantic_consistency(
         self,
         text_prompt: str,
-        image_input: MLLMImage,
+        actual_image_output: MLLMImage,
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
-        images.append(image_input)
+        images.append(actual_image_output)
         prompt = [
             TextToImageTemplate.generate_semantic_consistency_evaluation_results(
                 text_prompt=text_prompt
