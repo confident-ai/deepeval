@@ -13,7 +13,6 @@ from deepeval.guardrails.api import BASE_URL
 
 
 class Guardrails:
-
     def __init__(self, guards: List[BaseGuard]):
         self.guards: List[BaseGuard] = guards
 
@@ -47,7 +46,7 @@ class Guardrails:
                 api = Api(base_url=BASE_URL)
                 response = api.send_request(
                     method=HttpMethods.POST,
-                    endpoint=Endpoints.MULTIPLE_GUARD_ENDPOINT,
+                    endpoint=Endpoints.GUARDRAILS_ENDPOINT,
                     body=body,
                 )
                 return GuardsResponseData(**response).result
