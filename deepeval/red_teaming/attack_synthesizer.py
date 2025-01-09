@@ -43,8 +43,8 @@ from deepeval.utils import is_confident
 import os
 
 BASE_URL = "https://deepeval.confident-ai.com/"
-IS_INTERNAL_PLATFORM = os.getenv("IS_INTERNAL_PLATFORM", "false").lower() == "true"
-if IS_INTERNAL_PLATFORM:
+IS_CONFIDENT = os.getenv("IS_INTERNAL_PLATFORM", "no").lower() == "yes"
+if IS_CONFIDENT:
     BASE_URL = f"http://localhost:{os.getenv('PORT')}"
 
 class AttackSynthesizer:
