@@ -9,8 +9,6 @@ BASE_URL = "https://deepeval.confident-ai.com/"
 class ApiGuard(BaseModel):
     guard: str
     vulnerability_types: Optional[list[str]] = None
-    input: str = None
-    response: Optional[str] = None
     purpose: Optional[str] = None
     allowed_topics: Optional[List[str]] = None
 
@@ -23,6 +21,8 @@ class GuardData(BaseModel):
 
 
 class ApiGuardrails(BaseModel):
+    input: str = None
+    response: Optional[str] = None
     guards: List[ApiGuard]
     type: GuardType
 
