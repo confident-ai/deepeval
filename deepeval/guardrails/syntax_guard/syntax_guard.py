@@ -1,5 +1,5 @@
 from deepeval.guardrails.base_guard import BaseOutputGuard
-from deepeval.guardrails.api import ApiGuardrails, GuardResponseData
+from deepeval.guardrails.api import ApiGuard, GuardResponseData
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.guardrails.api import BASE_URL
 from deepeval.utils import is_confident
@@ -8,7 +8,7 @@ from deepeval.utils import is_confident
 class SyntaxGuard(BaseOutputGuard):
 
     def guard(self, response: str) -> int:
-        guard_params = ApiGuardrails(
+        guard_params = ApiGuard(
             guard=self.get_guard_name(),
             guard_type=self.get_guard_type(),
             response=response,
@@ -28,7 +28,7 @@ class SyntaxGuard(BaseOutputGuard):
             raise Exception("To use DeepEval guardrails, run `deepeval login`")
 
     async def a_guard(self, response: str) -> int:
-        guard_params = ApiGuardrails(
+        guard_params = ApiGuard(
             guard=self.get_guard_name(),
             guard_type=self.get_guard_type(),
             response=response,

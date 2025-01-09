@@ -1,8 +1,8 @@
 from typing import List
 
 from deepeval.guardrails.api import (
+    ApiGuard,
     ApiGuardrails,
-    ApiMultipleGuardrails,
     GuardsResponseData,
 )
 from deepeval.guardrails.base_guard import BaseGuard
@@ -10,6 +10,7 @@ from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.telemetry import capture_guardrails
 from deepeval.utils import is_confident
 from deepeval.guardrails.api import BASE_URL
+
 
 class Guardrails:
 
@@ -25,9 +26,9 @@ class Guardrails:
         with capture_guardrails(guards=self.guards):
 
             # Prepare parameters for API request
-            guard_params = []
+            api_guards = []
             for guard in self.guards:
-                guard_param = ApiGuardrails(
+                api_guard = ApiGuard(
                     guard=guard.get_guard_name(),
                     guard_type=guard.get_guard_type(),
                     input=input,
@@ -36,14 +37,10 @@ class Guardrails:
                     purpose=getattr(guard, "purpose", None),
                     allowed_topics=getattr(guard, "allowed_topics", None),
                 )
-                guard_params.append(guard_param)
+                api_guards.append(api_guard)
 
-            api_multiple_guardrails = ApiMultipleGuardrails(
-                guard_params=guard_params
-            )
-            body = api_multiple_guardrails.model_dump(
-                by_alias=True, exclude_none=True
-            )
+            api_guardrails = ApiGuardrails(guards=api_guards)
+            body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
 
             # API request
             if is_confident():
@@ -56,5 +53,5 @@ class Guardrails:
                 return GuardsResponseData(**response).result
             else:
                 raise Exception(
-                    "To use DeepEval guardrails, run `deepeval login`"
+                    "Access denied: You need Enterprise access on Confident AI to use deepeval's guardrails."
                 )

@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from deepeval.guardrails.cybersecurity_guard.types import CyberattackType
-from deepeval.guardrails.api import ApiGuardrails, GuardResponseData
+from deepeval.guardrails.api import ApiGuard, GuardResponseData
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.guardrails.base_guard import BaseGuard
 from deepeval.guardrails.types import GuardType
@@ -9,7 +9,7 @@ from deepeval.guardrails.api import BASE_URL
 from deepeval.utils import is_confident
 
 
-class CyberSecurityGuard(BaseGuard):
+class CybersecurityGuard(BaseGuard):
 
     def __init__(
         self,
@@ -26,7 +26,7 @@ class CyberSecurityGuard(BaseGuard):
     def guard(
         self, input: Optional[str] = None, response: Optional[str] = None
     ) -> int:
-        guard_params = ApiGuardrails(
+        guard_params = ApiGuard(
             guard=self.get_guard_name(),
             guard_type=self.guard_type.value,
             input=input,
@@ -55,7 +55,7 @@ class CyberSecurityGuard(BaseGuard):
         input: Optional[str] = None,
         response: Optional[str] = None,
     ) -> int:
-        guard_params = ApiGuardrails(
+        guard_params = ApiGuard(
             guard=self.get_guard_name(),
             guard_type=self.guard_type.value,
             input=input,

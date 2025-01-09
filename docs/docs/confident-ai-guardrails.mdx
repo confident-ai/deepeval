@@ -41,7 +41,7 @@ While most guards are strictly for input or output guarding, some guards such as
 ```python
 from deepeval.guardrails import CybersecurityGuard, GuardType
 
-guard = CyberSecurityGuard(
+guard = CybersecurityGuard(
     guard_type=GuardType.INPUT # or GuardType.OUTPUT
     ...
 )
@@ -57,7 +57,7 @@ Confident AI offers a robust selection of input and output guards for comprehens
 
 | Input Guard            | Description                                                                                                                         |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `CyberSecurityGuard`   | Detects cybersecurity attacks such as SQL injection, shell command injection, or role-based access control (RBAC) violations.       |
+| `CybersecurityGuard`   | Detects cybersecurity attacks such as SQL injection, shell command injection, or role-based access control (RBAC) violations.       |
 | `PromptInjectionGuard` | Detects prompt injection attacks where secondary commands are embedded within user inputs to manipulate the system's behavior.      |
 | `JailbreakingGuard`    | Detects jailbreaking attacks disguised as safe inputs, which attempt to bypass system restrictions or ethical guidelines.           |
 | `PrivacyGuard`         | Detects inputs that leak private information such as personally identifiable information (PII), API keys, or sensitive credentials. |
@@ -73,7 +73,7 @@ Confident AI offers a robust selection of input and output guards for comprehens
 | `ModernizationGuard`  | Detects outputs containing outdated information that do not reflect modern standards or current knowledge.                       |
 | `SyntaxGuard`         | Detects outputs that are syntactically incorrect or do not adhere to proper grammatical standards, ensuring clear communication. |
 | `ToxicityGuard`       | Detects harmful, offensive, or toxic outputs to maintain respectful and safe interactions.                                       |
-| `CyberSecurityGuard`  | Detects outputs that may have been breached or manipulated as a result of a cyberattack.                                         |
+| `CybersecurityGuard`  | Detects outputs that may have been breached or manipulated as a result of a cyberattack.                                         |
 
 ## Guarding your LLM Application
 

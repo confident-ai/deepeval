@@ -10,7 +10,7 @@ from deepeval.guardrails import (
     SyntaxGuard,
     TopicalGuard,
     ToxicityGuard,
-    CyberSecurityGuard,
+    CybersecurityGuard,
     GuardType,
 )
 import asyncio
@@ -102,12 +102,12 @@ asyncio.run(test_async_output_guards())
 topical_guard = TopicalGuard(
     allowed_topics=["healthcare", "education", "finance"]
 )
-cyber_security_input_guard = CyberSecurityGuard(
+cyber_security_input_guard = CybersecurityGuard(
     purpose="Protect against cyberattacks in input and output data flows",
     guard_type=GuardType.INPUT,
     vulnerabilities=[attack for attack in CyberattackType],
 )
-cyber_security_output_guard = CyberSecurityGuard(
+cyber_security_output_guard = CybersecurityGuard(
     purpose="Protect against cyberattacks in input and output data flows",
     guard_type=GuardType.OUTPUT,
     vulnerabilities=[attack for attack in CyberattackType],

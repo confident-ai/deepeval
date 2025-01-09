@@ -4,7 +4,7 @@ from pydantic import BaseModel
 BASE_URL = "https://deepeval.confident-ai.com/"
 
 
-class ApiGuardrails(BaseModel):
+class ApiGuard(BaseModel):
     guard: str
     guard_type: str
     vulnerability_types: Optional[list[str]] = None
@@ -27,8 +27,8 @@ class GuardResponseData(BaseModel):
 # Models for running multiple guards
 
 
-class ApiMultipleGuardrails(BaseModel):
-    guard_params: List[ApiGuardrails]
+class ApiGuardrails(BaseModel):
+    guards: List[ApiGuard]
 
 
 class GuardResult(BaseModel):
