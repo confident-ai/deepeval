@@ -17,8 +17,45 @@ class Guardrails:
     def __init__(self, guards: List[BaseGuard]):
         self.guards: List[BaseGuard] = guards
 
-    def guard(self, input: str, response: str):
-        print(self.guards)
+    def guard_input(self, input: str):
+        if len(self.guards) == 0:
+            raise TypeError(
+                "Guardrails cannot guard LLM responses when no guards are provided."
+            )
+
+        with capture_guardrails(guards=self.guards):
+            # Prepare parameters for API request
+            api_guards = []
+            for guard in self.guards:
+                api_guard = ApiGuard(
+                    guard=guard.__name__,
+                    guard_type=guard.guard_type,
+                    input=input,
+                    vulnerability_types=getattr(guard, "vulnerabilities", None),
+                    purpose=getattr(guard, "purpose", None),
+                    allowed_topics=getattr(guard, "allowed_topics", None),
+                )
+                api_guards.append(api_guard)
+
+            api_guardrails = ApiGuardrails(guards=api_guards, type=GuardType.INPUT)
+            body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
+
+            # API request
+            if is_confident():
+                api = Api(base_url=BASE_URL)
+                response = api.send_request(
+                    method=HttpMethods.POST,
+                    endpoint=Endpoints.GUARDRAILS_ENDPOINT,
+                    body=body,
+                )
+                return GuardsResponseData(**response).result
+            else:
+                raise Exception(
+                    "Access denied: You need Enterprise access on Confident AI to use deepeval's guardrails."
+                )
+
+
+    def guard_response(self, input: str, response: str):
         if len(self.guards) == 0:
             raise TypeError(
                 "Guardrails cannot guard LLM responses when no guards are provided."
@@ -39,7 +76,7 @@ class Guardrails:
                 )
                 api_guards.append(api_guard)
 
-            api_guardrails = ApiGuardrails(guards=api_guards, type=GuardType)
+            api_guardrails = ApiGuardrails(guards=api_guards, type=GuardType.OUTPUT)
             body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
 
             # API request
