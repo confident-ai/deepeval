@@ -9,9 +9,7 @@ from deepeval.guardrails.base_guard import BaseGuard
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.telemetry import capture_guardrails
 from deepeval.utils import is_confident
-
-BASE_URL = "http://localhost:8000"
-
+from deepeval.guardrails.api import BASE_URL
 
 class Guardrails:
 
