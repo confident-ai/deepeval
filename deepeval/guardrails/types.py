@@ -2,5 +2,5 @@ from enum import Enum
 
 
 class GuardType(Enum):
-    INPUT = "InputGuard"
-    OUTPUT = "OutputGuard"
+    INPUT = "Input Guard"
+    OUTPUT = "Output Guard"

@@ -6,6 +6,7 @@ from deepeval.guardrails.api import (
     GuardsResponseData,
 )
 from deepeval.guardrails.base_guard import BaseGuard
+from deepeval.guardrails.types import GuardType
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.telemetry import capture_guardrails
 from deepeval.utils import is_confident
@@ -28,8 +29,8 @@ class Guardrails:
             api_guards = []
             for guard in self.guards:
                 api_guard = ApiGuard(
-                    guard=guard.get_guard_name(),
-                    guard_type=guard.get_guard_type(),
+                    guard=guard.__name__,
+                    guard_type=guard.guard_type,
                     input=input,
                     response=response,
                     vulnerability_types=getattr(guard, "vulnerabilities", None),
@@ -38,7 +39,7 @@ class Guardrails:
                 )
                 api_guards.append(api_guard)
 
-            api_guardrails = ApiGuardrails(guards=api_guards)
+            api_guardrails = ApiGuardrails(guards=api_guards, type=GuardType)
             body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
 
             # API request
