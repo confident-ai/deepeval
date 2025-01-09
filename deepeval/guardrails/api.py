@@ -14,14 +14,11 @@ class ApiGuard(BaseModel):
     allowed_topics: Optional[List[str]] = None
 
 
-class GuardScore(BaseModel):
+class GuardData(BaseModel):
     guard: str
     score: int
+    reason: str
     score_breakdown: Union[List, Dict]
-
-
-class GuardResponseData(BaseModel):
-    result: GuardScore
 
 
 # Models for running multiple guards
@@ -33,7 +30,7 @@ class ApiGuardrails(BaseModel):
 
 class GuardResult(BaseModel):
     breached: bool
-    guard_scores: List[GuardScore]
+    guard_data: List[GuardData]
 
 
 class GuardsResponseData(BaseModel):

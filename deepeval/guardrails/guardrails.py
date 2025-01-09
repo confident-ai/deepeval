@@ -17,13 +17,13 @@ class Guardrails:
         self.guards: List[BaseGuard] = guards
 
     def guard(self, input: str, response: str):
+        print(self.guards)
         if len(self.guards) == 0:
             raise TypeError(
                 "Guardrails cannot guard LLM responses when no guards are provided."
             )
 
         with capture_guardrails(guards=self.guards):
-
             # Prepare parameters for API request
             api_guards = []
             for guard in self.guards:

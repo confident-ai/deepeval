@@ -150,17 +150,17 @@ The `Guardrails.guard` method returns a `GuardResult` object, which can be used 
 ```python
 class GuardResult(BaseModel):
   breached: bool
-  guard_scores: List[GuardScore]
+  guard_data: List[GuardData]
 ```
 
 :::info
 The `breached` property is `true` if a guard has failed. Detailed scores and breakdowns for each guard are available in the `guard_scores` list. A `score` of 1 indicates the guard was breached, while 0 means it passed.
 :::
 
-If using individual guards, the `guard` function will directly return a `GuardScore`.
+If using individual guards, the `guard` function will directly return a `GuardData`.
 
 ```python
-class GuardScore(BaseModel):
+class GuardData(BaseModel):
     guard: str
     score: int
     score_breakdown: Union[List, Dict]
