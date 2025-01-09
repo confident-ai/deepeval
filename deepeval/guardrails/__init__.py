@@ -11,3 +11,4 @@ from .jailbreaking_guard.jailbreaking_guard import JailbreakingGuard
 from .topical_guard.topical_guard import TopicalGuard
 from .cybersecurity_guard.cybersecurity_guard import CybersecurityGuard
 from .guardrails import Guardrails
+from .base_guard import BaseGuard
