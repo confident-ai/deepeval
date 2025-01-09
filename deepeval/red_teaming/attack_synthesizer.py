@@ -47,6 +47,7 @@ IS_CONFIDENT = os.getenv("IS_CONFIDENT", "no").lower() == "yes"
 if IS_CONFIDENT:
     BASE_URL = f"http://localhost:{os.getenv('PORT')}"
 
+
 class AttackSynthesizer:
     def __init__(
         self,
