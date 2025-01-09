@@ -43,7 +43,7 @@ from deepeval.utils import is_confident
 import os
 
 BASE_URL = "https://deepeval.confident-ai.com/"
-IS_CONFIDENT = os.getenv("IS_INTERNAL_PLATFORM", "no").lower() == "yes"
+IS_CONFIDENT = os.getenv("IS_CONFIDENT", "no").lower() == "yes"
 if IS_CONFIDENT:
     BASE_URL = f"http://localhost:{os.getenv('PORT')}"
 
