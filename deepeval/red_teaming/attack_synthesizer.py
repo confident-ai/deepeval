@@ -40,9 +40,12 @@ from deepeval.red_teaming.attack_enhancements import (
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.vulnerability import BaseVulnerability
 from deepeval.utils import is_confident
+import os
 
 BASE_URL = "https://deepeval.confident-ai.com/"
-
+IS_INTERNAL_PLATFORM = os.getenv("IS_INTERNAL_PLATFORM", "false").lower() == "true"
+if IS_INTERNAL_PLATFORM:
+    BASE_URL = f"http://localhost:{os.getenv('PORT')}"
 
 class AttackSynthesizer:
     def __init__(
