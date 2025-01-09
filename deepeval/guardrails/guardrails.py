@@ -37,7 +37,9 @@ class Guardrails:
                 )
                 api_guards.append(api_guard)
 
-            api_guardrails = ApiGuardrails(guards=api_guards, type=GuardType.INPUT)
+            api_guardrails = ApiGuardrails(
+                guards=api_guards, type=GuardType.INPUT
+            )
             body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
 
             # API request
@@ -53,7 +55,6 @@ class Guardrails:
                 raise Exception(
                     "Access denied: You need Enterprise access on Confident AI to use deepeval's guardrails."
                 )
-
 
     def guard_response(self, input: str, response: str):
         if len(self.guards) == 0:
@@ -76,7 +77,9 @@ class Guardrails:
                 )
                 api_guards.append(api_guard)
 
-            api_guardrails = ApiGuardrails(guards=api_guards, type=GuardType.OUTPUT)
+            api_guardrails = ApiGuardrails(
+                guards=api_guards, type=GuardType.OUTPUT
+            )
             body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
 
             # API request
