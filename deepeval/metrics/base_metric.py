@@ -16,7 +16,7 @@ class BaseMetric:
     verbose_mode: bool = True
     include_reason: bool = False
     error: Optional[str] = None
-    evaluation_cost: Optional[float] = None
+    evaluation_cost: Optional[float] = 0
     verbose_logs: Optional[str] = None
     skipped = False
 
