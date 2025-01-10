@@ -23,7 +23,9 @@ class Guardrails:
                 "Guardrails cannot guard LLM responses when no guards are provided."
             )
 
-        with capture_guardrails(guards=self.guards):
+        with capture_guardrails(
+            guards=[guard.__name__ for guard in self.guards]
+        ):
             # Prepare parameters for API request
             api_guards = []
             for guard in self.guards:
@@ -38,9 +40,14 @@ class Guardrails:
                 api_guards.append(api_guard)
 
             api_guardrails = ApiGuardrails(
-                guards=api_guards, type=GuardType.INPUT
+                input=input,
+                output=input,
+                guards=api_guards,
+                type=GuardType.INPUT,
             )
             body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
+
+            print(body)
 
             # API request
             if is_confident():
@@ -62,7 +69,9 @@ class Guardrails:
                 "Guardrails cannot guard LLM responses when no guards are provided."
             )
 
-        with capture_guardrails(guards=self.guards):
+        with capture_guardrails(
+            guards=[guard.__name__ for guard in self.guards]
+        ):
             # Prepare parameters for API request
             api_guards = []
             for guard in self.guards:
@@ -85,11 +94,13 @@ class Guardrails:
             # API request
             if is_confident():
                 api = Api(base_url=BASE_URL)
+                print("!!!!!")
                 response = api.send_request(
                     method=HttpMethods.POST,
                     endpoint=Endpoints.GUARDRAILS_ENDPOINT,
                     body=body,
                 )
+                print(response)
                 return GuardsResponseData(**response).result
             else:
                 raise Exception(

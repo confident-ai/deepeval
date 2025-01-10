@@ -25,5 +25,5 @@ guardrails = Guardrails(guards=[PrivacyGuard(), cybersecurity_guard])
 user_input = "Hi my name is alex and I live on Maple Street 123"
 output = "I'm sorry but I can't answer this"
 
-guard_results = guardrails.guard(user_input, output)
+guard_results = guardrails.guard_input(user_input)
 print(guard_results)

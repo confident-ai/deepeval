@@ -20,7 +20,4 @@ class CybersecurityGuard(BaseDecorativeGuard):
 
     @property
     def __name__(self):
-        if self.guard_type == GuardType.INPUT:
-            return "Cybersecurity Input Guard"
-        elif self.guard_type == GuardType.OUTPUT:
-            return "Cybersecurity Output Guard"
+        "Cybersecurity Guard"

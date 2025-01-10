@@ -26,6 +26,9 @@ class ApiGuardrails(BaseModel):
     guards: List[ApiGuard]
     type: GuardType
 
+    class Config:
+        use_enum_values = True
+
 
 class GuardResult(BaseModel):
     breached: bool
