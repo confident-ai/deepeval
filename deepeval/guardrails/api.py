@@ -22,7 +22,7 @@ class GuardData(BaseModel):
 
 class ApiGuardrails(BaseModel):
     input: str = None
-    response: Optional[str] = None
+    output: Optional[str] = None
     guards: List[ApiGuard]
     type: GuardType
 
