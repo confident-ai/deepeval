@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Dict
-from guardrails.types import GuardType
+from deepeval.guardrails.types import GuardType
 
 
 class BaseDecorativeGuard(ABC):
