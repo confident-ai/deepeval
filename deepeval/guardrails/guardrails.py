@@ -56,7 +56,7 @@ class Guardrails:
                     "Access denied: You need Enterprise access on Confident AI to use deepeval's guardrails."
                 )
 
-    def guard_response(self, input: str, response: str):
+    def guard_output(self, input: str, response: str):
         if len(self.guards) == 0:
             raise TypeError(
                 "Guardrails cannot guard LLM responses when no guards are provided."

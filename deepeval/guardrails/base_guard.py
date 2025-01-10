@@ -10,6 +10,7 @@ class BaseDecorativeGuard(ABC):
     success: Optional[bool] = None
     evaluation_model: Optional[str] = None
     error: Optional[str] = None
+    latency: Optional[float] = None
     guard_type: GuardType
 
     @property
