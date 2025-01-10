@@ -19,21 +19,15 @@ class BaseDecorativeGuard(ABC):
 
 class BaseGuard(BaseDecorativeGuard):
     @abstractmethod
-    def guard_input(self, input: str, *args, **kwargs) -> float:
-        raise NotImplementedError
-
-    @abstractmethod
     async def a_guard_input(self, input: str, *args, **kwargs) -> float:
         raise NotImplementedError(
             f"Async execution for {self.__class__.__name__} not supported yet."
         )
 
     @abstractmethod
-    def guard_response(self, input: str, *args, **kwargs) -> float:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def a_guard_response(self, input: str, *args, **kwargs) -> float:
+    async def a_guard_output(
+        self, input: str, output: str, *args, **kwargs
+    ) -> float:
         raise NotImplementedError(
             f"Async execution for {self.__class__.__name__} not supported yet."
         )
