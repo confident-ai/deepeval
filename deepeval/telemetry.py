@@ -7,6 +7,7 @@ import uuid
 import sentry_sdk
 from enum import Enum
 from typing import List, Dict
+import requests
 
 
 class Feature(Enum):
@@ -80,6 +81,15 @@ def blocked_by_firewall():
     except OSError:
         return True
 
+def get_anonymous_public_ip():
+    try:
+        response = requests.get("https://api.ipify.org", timeout=5)
+        if response.status_code == 200:
+            return response.text
+    except requests.RequestException:
+        pass
+    return None
+anonymous_public_ip = None
 
 if not telemetry_opt_out():
     from opentelemetry import trace
@@ -89,6 +99,7 @@ if not telemetry_opt_out():
         OTLPSpanExporter,
     )
 
+    anonymous_public_ip = get_anonymous_public_ip()
     sentry_sdk.init(
         dsn="https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
         profiles_sample_rate=1.0,
@@ -138,12 +149,15 @@ if (
 ### Context Managers ####################################
 #########################################################
 
+print(anonymous_public_ip)
 
 @contextmanager
 def capture_evaluation_run(type: str):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Ran {type}") as span:
             span.set_attribute("user.unique_id", get_unique_id())
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
             set_last_feature(Feature.EVALUATION)
             yield span
     else:
@@ -155,6 +169,8 @@ def capture_metric_type(metric_name: str, _track: bool = True):
     if not telemetry_opt_out() and _track:
         with tracer.start_as_current_span(metric_name) as span:
             span.set_attribute("user.unique_id", get_unique_id())
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
             yield span
     else:
         yield
@@ -166,6 +182,8 @@ def capture_synthesizer_run(
 ):
     if not telemetry_opt_out() and max_generations is not None:
         with tracer.start_as_current_span(f"Invoked synthesizer") as span:
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("user.unique_id", get_unique_id())
             span.set_attribute("method", method)
             span.set_attribute("max_generations", max_generations)
@@ -186,6 +204,8 @@ def capture_red_teamer_run(
 ):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Invokved redteamer") as span:
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("user.unique_id", get_unique_id())
             span.set_attribute(
                 "attacks_per_vulnerability", attacks_per_vulnerability_type
@@ -207,6 +227,8 @@ def capture_red_teamer_run(
 def capture_guardrails(guards: List[str]):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Ran guardrails") as span:
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("user.unique_id", get_unique_id())
             for guard in guards:
                 span.set_attribute(f"vulnerability.{guard}", 1)
@@ -220,6 +242,8 @@ def capture_guardrails(guards: List[str]):
 def capture_benchmark_run(benchmark: str, num_tasks: int):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Ran benchmark") as span:
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("user.unique_id", get_unique_id())
             span.set_attribute("benchmark", benchmark)
             span.set_attribute("num_tasks", num_tasks)
@@ -234,6 +258,8 @@ def capture_login_event():
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Login") as span:
             last_feature = get_last_feature()
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("user.unique_id", get_unique_id())
             span.set_attribute("last_feature", last_feature.value)
             span.set_attribute("completed", True)
