@@ -1,10 +1,12 @@
 ---
 id: confident-ai-guardrails
-title: Guardrails for LLMs in Production
+title: LLM Guardrails
 sidebar_label: Introduction
 ---
 
-Confident AI enables you to **effortlessly safeguard your LLM applications** against malicious inputs and unsafe outputs with just one line of code. Our comprehensive suite of guardrails acts as binary metrics to evaluate user inputs and/or LLM responses for malicious intent and unsafe behavior.
+Confident AI enables you to safeguard your LLM applications against malicious inputs and outputs with just one line of code. Our comprehensive suite of guardrails acts as binary metrics to evaluate user inputs and/or LLM responses for malicious intent and unsafe behavior.
+
+Confident AI's guardrails is different because it is blazing fast and incredibly accurate.
 
 :::tip
 Confident AI offers **10+ guards** designed to detect 20+ LLM vulnerabilities.
@@ -77,17 +79,13 @@ Confident AI offers a robust selection of input and output guards for comprehens
 
 ## Guarding your LLM Application
 
-### Guardrails Object
+### Creating Your Guardrail
 
-To begin guarding your LLM application, simply import and initialize the guards you desire from `deepeval.guardrails` and pass them to the `Guardrails` object. Then, call the `guard` method with the user input and LLM response.
+To begin guarding your LLM application, simply import and initialize the guards you desire from `deepeval.guardrails` and pass them to an instantiated `Guardrails` object. Then, call the `guard_output` method with the user input and LLM response.
 
 ```python
 from deepeval.guardrails import Guardrails
 from deepeval.guardrails import HallucinationGuard, TopicalGuard
-
-# Example LLM response to evaluate
-input = "Is the earth flat"
-llm_response = "The earth is flat"
 
 # Initialize your guards
 guardrails = Guardrails(
@@ -96,51 +94,51 @@ guardrails = Guardrails(
     TopicalGuard(allowed_topics=["health and technology"])
   ]
 )
-
-# Call the guard method
-guard_result = guardrails.guard(input, llm_response)
 ```
 
-:::caution
-When using `Guardrails.guard`, you must provide both `input` and `llm_response`, even if you have selected only one type of guard.
+### Guarding Inputs
+
+It is not uncommon to want to guard against malicious user inputs, as it is the best way to not waste tokens generating text that you shouldn't even be generating in the first place. To guard against inputs, simply call the `guard_input()` method and supply the `input`.
+
+```python
+...
+
+# Example input to guard against
+input = "Is the earth flat"
+
+guard_result = guardrails.guard_input(input=input)
+# Reject if true
+print(guard_result.breached)
+```
+
+### Guarding Outputs
+
+To ensure that an unsatisfactory output never reaches an end user, you'll want to guard against generated outputs and re-generate them until satisfactory.
+
+```python
+...
+
+# Example input to guard against
+input = "Is the earth flat"
+output = "I bet it is"
+
+guard_result = guardrails.guard_input(input=input, output=output)
+# Re-generate if true
+print(guard_result.breached)
+```
+
+:::note
+When using the `guard_output()` method, you must provide both the `input` and the LLM `output`.
 :::
 
-### Using Individual Guards
+## Running Guardrails Async
 
-Alternatively, you can also call the `guard` method on individual guards.
-
-```python
-from deepeval.guardrails import HallucinationGuard
-
-llm_response = "The earth is flat"
-
-hallucination_guard = HallucinationGuard()
-guard_result = hallucination_guard.guard(response=llm_response)
-```
-
-### Async Mode
-
-Confident AI also supports asynchronous guard calls (for individual guards) through the `a_guard` function.
+Your `Guardrails` also support asynchronous through the `a_guard_input()` and `a_guard_output()` methods.
 
 ```python
-from deepeval.guardrails import HallucinationGuard, ToxicityGuard
-import asyncio
+...
 
-# Example LLM response to evaluate
-llm_response = "The earth is flat"
-
-# Initialize multiple guards
-hallucination_guard = HallucinationGuard()
-toxicity_guard = ToxicityGuard()
-
-# Create asynchronous guard tasks
-guard_tasks = [
-    hallucination_guard.a_guard(response=llm_response),  # Check for hallucinations
-    toxicity_guard.a_guard(response=llm_response)       # Check for toxicity
-]
-
-# Run all guard tasks concurrently and gather results
-results = await asyncio.gather(*guard_tasks)
+guard_result = await guardrails.a_guard_output(input, output)
 ```
 
 ## Interpreting Guard Results
@@ -156,12 +154,3 @@ class GuardResult(BaseModel):
 :::info
 The `breached` property is `true` if a guard has failed. Detailed scores and breakdowns for each guard are available in the `guard_scores` list. A `score` of 1 indicates the guard was breached, while 0 means it passed.
 :::
-
-If using individual guards, the `guard` function will directly return a `GuardData`.
-
-```python
-class GuardData(BaseModel):
-    guard: str
-    score: int
-    score_breakdown: Union[List, Dict]
-```

@@ -81,6 +81,7 @@ def blocked_by_firewall():
     except OSError:
         return True
 
+
 def get_anonymous_public_ip():
     try:
         response = requests.get("https://api.ipify.org", timeout=5)
@@ -89,6 +90,8 @@ def get_anonymous_public_ip():
     except requests.RequestException:
         pass
     return None
+
+
 anonymous_public_ip = None
 
 if not telemetry_opt_out():
@@ -149,7 +152,6 @@ if (
 ### Context Managers ####################################
 #########################################################
 
-print(anonymous_public_ip)
 
 @contextmanager
 def capture_evaluation_run(type: str):

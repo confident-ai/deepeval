@@ -98,6 +98,11 @@ module.exports = {
             label: "Docs",
           },
           {
+            to: "docs/confident-ai-introduction",
+            position: "left",
+            label: "Confident AI",
+          },
+          {
             to: "docs/tutorial-introduction",
             position: "left",
             label: "Tutorial",
@@ -152,6 +157,7 @@ module.exports = {
                 label: "Introduction",
                 to: "/docs/getting-started",
               },
+              {label: "Confident AI", to: "docs/confident-ai-introduction"},
               {
                 label: "Tutorial",
                 to: "/docs/tutorial-introduction",
