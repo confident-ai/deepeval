@@ -249,13 +249,13 @@ def hyperparameters():
 
 
 test_case = LLMTestCase(
-        input="What is this again?",
-        actual_output="this is a latte",
-        expected_output="this is a mocha",
-        retrieval_context=["I love coffee"],
-        context=["I love coffee"],
-        expected_tools=["mixer", "creamer", "dripper"],
-        tools_called=["mixer", "creamer", "mixer"],
-    )
+    input="What is this again?",
+    actual_output="this is a latte",
+    expected_output="this is a mocha",
+    retrieval_context=["I love coffee"],
+    context=["I love coffee"],
+    expected_tools=["mixer", "creamer", "dripper"],
+    tools_called=["mixer", "creamer", "mixer"],
+)
 metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
 metric7.measure(test_case)
