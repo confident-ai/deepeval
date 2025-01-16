@@ -13,6 +13,7 @@ def log_retry_error(retry_state):
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
 
+
 # TODO: how do we keep this list updated? Maybe a CI to detect?
 valid_gpt_models = [
     "gpt-3.5-turbo",
