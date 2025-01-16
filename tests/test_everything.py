@@ -182,7 +182,7 @@ def test_everything():
     )
 
 
-# @pytest.mark.skip(reason="openadi is expensive")
+@pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -246,3 +246,16 @@ def test_everything_2():
 )
 def hyperparameters():
     return {"chunk_size": 600, "temperature": 1}
+
+
+test_case = LLMTestCase(
+        input="What is this again?",
+        actual_output="this is a latte",
+        expected_output="this is a mocha",
+        retrieval_context=["I love coffee"],
+        context=["I love coffee"],
+        expected_tools=["mixer", "creamer", "dripper"],
+        tools_called=["mixer", "creamer", "mixer"],
+    )
+metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
+metric7.measure(test_case)
