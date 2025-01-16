@@ -1,3 +1,4 @@
+import os
 import warnings
 import re
 
@@ -65,4 +66,9 @@ def check_for_update():
         pass
 
 
-check_for_update()
+def update_warning_opt_out():
+    return os.getenv("DEEPEVAL_UPDATE_WARNING_OPT_OUT") == "YES"
+
+
+if not update_warning_opt_out():
+    check_for_update()
