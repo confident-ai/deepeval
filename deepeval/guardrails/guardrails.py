@@ -47,8 +47,6 @@ class Guardrails:
             )
             body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
 
-            print(body)
-
             # API request
             if is_confident():
                 api = Api(base_url=BASE_URL)
@@ -60,7 +58,7 @@ class Guardrails:
                 return GuardsResponseData(**response).result
             else:
                 raise Exception(
-                    "Access denied: You need Enterprise access on Confident AI to use deepeval's guardrails."
+                    "Access denied: You need Premium access on Confident AI to use deepeval's guardrails."
                 )
 
     def guard_output(self, input: str, response: str):
@@ -94,7 +92,6 @@ class Guardrails:
             # API request
             if is_confident():
                 api = Api(base_url=BASE_URL)
-                print("!!!!!")
                 response = api.send_request(
                     method=HttpMethods.POST,
                     endpoint=Endpoints.GUARDRAILS_ENDPOINT,
@@ -104,5 +101,5 @@ class Guardrails:
                 return GuardsResponseData(**response).result
             else:
                 raise Exception(
-                    "Access denied: You need Enterprise access on Confident AI to use deepeval's guardrails."
+                    "Access denied: You need Premium access on Confident AI to use deepeval's guardrails."
                 )
