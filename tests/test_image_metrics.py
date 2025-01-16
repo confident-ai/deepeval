@@ -23,9 +23,13 @@ edited_image_path = "./data/edited_image.webp"
 
 text_to_image_test_case = MLLMTestCase(
     input=[
-        "gesnerate a castle school in fantasy land with the words LLM evaluation on it"
+        "generate an image of the eiffel tower",
     ],
-    actual_output=[MLLMImage(image_path, local=True)],
+    actual_output=[
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
+        ),
+    ],
 )
 
 image_editing_test_case = MLLMTestCase(
@@ -98,20 +102,20 @@ rag_test_case = image_editing_test_case = MLLMTestCase(
 #############################################################
 
 
-# dataset = EvaluationDataset(
-#     test_cases=[
-#         # text_to_image_test_case,
-#         image_editing_test_case,
-#         llm_test_case
-#     ]
-# )
-# dataset.evaluate(
-#     [
-#         # TextToImageMetric(),
-#         ImageEditingMetric(),
-#         AnswerRelevancyMetric(),
-#     ]
-# )
+dataset = EvaluationDataset(
+    test_cases=[
+        text_to_image_test_case,
+        # image_editing_test_case,
+        # llm_test_case
+    ]
+)
+dataset.evaluate(
+    [
+        TextToImageMetric(),
+        # ImageEditingMetric(),
+        # AnswerRelevancyMetric(),
+    ]
+)
 
 evaluate(
     test_cases=[rag_test_case],

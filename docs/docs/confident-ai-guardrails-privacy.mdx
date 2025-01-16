@@ -1,0 +1,43 @@
+---
+id: confident-ai-guardrails-privacy
+title: Privacy Guard
+sidebar_label: Privacy Guard
+---
+
+The **Privacy Guard** is an input guard that analyzes user-provided inputs to detect any form of private, sensitive, or restricted information, including but not limited to Personally Identifiable Information (PII), organizational confidential data, system-related information, medical or health data, and legal or contractual information.
+
+:::info
+`PrivacyGuard` is only available as an **input guard**.
+:::
+
+## Example
+
+```python
+from deepeval.guardrails import PrivacyGuard
+
+user_input = "Hi my name is alex and I live on Maple Street 123"
+
+privacy_guard = PrivacyGuard()
+guard_result = privacy_guard.guard(input=user_input)
+```
+
+There are no required arguments when initializing the `PrivacyGuard` object. The `guard` function accepts a single parameter `input` which is the user input to your LLM application.
+
+## Interpreting Guard Result
+
+```python
+print(guard_result.score)
+print(guard_result.score_breakdown)
+```
+
+`guard_result.score` is an integer that is `1` if the guard has been breached. The `score_breakdown` for `PrivacyGuard` is a dictionary containing:
+
+- `score`: A binary value (1 or 0), where 1 indicates that private or sensitive data was detected.
+- `reason`: A detailed explanation of the detected private data, specifying the type and exact content identified.
+
+```json
+{
+  "score": 1,
+  "reason": "The input contains PII, specifically a name ('Alex') and an address ('Maple Street 123')."
+}
+```

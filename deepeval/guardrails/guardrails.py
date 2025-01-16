@@ -1,96 +1,108 @@
-from typing import Optional, List
+from typing import List
 
-from deepeval.guardrails.api import ApiGuardrails, GuardResponseData
+from deepeval.guardrails.api import (
+    ApiGuard,
+    ApiGuardrails,
+    GuardsResponseData,
+)
+from deepeval.guardrails.base_guard import BaseGuard
+from deepeval.guardrails.types import GuardType
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.telemetry import capture_guardrails
-from deepeval.guardrails.types import (
-    Guard,
-    purpose_entities_dependent_guards,
-    entities_dependent_guards,
-    purpose_dependent_guards,
-)
-from deepeval.guardrails.api import GuardResult
 from deepeval.utils import is_confident
-
-BASE_URL = "https://deepeval.confident-ai.com/"
+from deepeval.guardrails.api import BASE_URL
 
 
 class Guardrails:
-    guards: Optional[List[Guard]] = None
-    purpose: Optional[str] = None
-    allowed_entities: Optional[List[str]] = None
-    system_prompt: Optional[str] = None
+    def __init__(self, guards: List[BaseGuard]):
+        self.guards: List[BaseGuard] = guards
 
-    def __init__(
-        self,
-        guards: List[Guard],
-        purpose: Optional[str] = None,
-        allowed_entities: Optional[List[str]] = None,
-        system_prompt: Optional[str] = None,
-    ):
-        self.guards = guards
-        self.purpose = purpose
-        self.allowed_entities = allowed_entities
-        self.system_prompt = system_prompt
-
-    def guard(
-        self,
-        input: str,
-        response: str,
-    ) -> GuardResult:
-        if self.guard == None or len(self.guards) == 0:
+    def guard_input(self, input: str):
+        if len(self.guards) == 0:
             raise TypeError(
                 "Guardrails cannot guard LLM responses when no guards are provided."
             )
 
         with capture_guardrails(
-            guards=self.guards,
-            include_system_prompt=(self.system_prompt != None),
+            guards=[guard.__name__ for guard in self.guards]
         ):
-            # Check for missing parameters
-            for guard in self.guards:
-                if (
-                    guard in purpose_dependent_guards
-                    or guard in purpose_entities_dependent_guards
-                ):
-                    if self.purpose is None and self.system_prompt is None:
-                        raise ValueError(
-                            f"Guard {guard.value} requires a purpose but none was provided."
-                        )
-
-                if (
-                    guard in entities_dependent_guards
-                    or guard in purpose_entities_dependent_guards
-                ):
-                    if (
-                        self.allowed_entities is None
-                        and self.system_prompt is None
-                    ):
-                        raise ValueError(
-                            f"Guard '{guard.value}' requires allowed entities but none were provided or list was empty."
-                        )
-
             # Prepare parameters for API request
-            guard_params = ApiGuardrails(
+            api_guards = []
+            for guard in self.guards:
+                api_guard = ApiGuard(
+                    guard=guard.__name__,
+                    guard_type=guard.guard_type,
+                    input=input,
+                    vulnerability_types=getattr(guard, "vulnerabilities", None),
+                    purpose=getattr(guard, "purpose", None),
+                    allowed_topics=getattr(guard, "allowed_topics", None),
+                )
+                api_guards.append(api_guard)
+
+            api_guardrails = ApiGuardrails(
                 input=input,
-                response=response,
-                guards=[g.value for g in self.guards],
-                purpose=self.purpose,
-                allowed_entities=self.allowed_entities,
-                system_prompt=self.system_prompt,
+                output=input,
+                guards=api_guards,
+                type=GuardType.INPUT,
             )
-            body = guard_params.model_dump(by_alias=True, exclude_none=True)
+            body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
+
+            print(body)
 
             # API request
             if is_confident():
                 api = Api(base_url=BASE_URL)
                 response = api.send_request(
                     method=HttpMethods.POST,
-                    endpoint=Endpoints.GUARD_ENDPOINT,
+                    endpoint=Endpoints.GUARDRAILS_ENDPOINT,
                     body=body,
                 )
-                return GuardResponseData(**response).result
+                return GuardsResponseData(**response).result
             else:
                 raise Exception(
-                    "To use DeepEval guardrails, run `deepeval login`"
+                    "Access denied: You need Enterprise access on Confident AI to use deepeval's guardrails."
+                )
+
+    def guard_output(self, input: str, response: str):
+        if len(self.guards) == 0:
+            raise TypeError(
+                "Guardrails cannot guard LLM responses when no guards are provided."
+            )
+
+        with capture_guardrails(
+            guards=[guard.__name__ for guard in self.guards]
+        ):
+            # Prepare parameters for API request
+            api_guards = []
+            for guard in self.guards:
+                api_guard = ApiGuard(
+                    guard=guard.__name__,
+                    guard_type=guard.guard_type,
+                    input=input,
+                    response=response,
+                    vulnerability_types=getattr(guard, "vulnerabilities", None),
+                    purpose=getattr(guard, "purpose", None),
+                    allowed_topics=getattr(guard, "allowed_topics", None),
+                )
+                api_guards.append(api_guard)
+
+            api_guardrails = ApiGuardrails(
+                guards=api_guards, type=GuardType.OUTPUT
+            )
+            body = api_guardrails.model_dump(by_alias=True, exclude_none=True)
+
+            # API request
+            if is_confident():
+                api = Api(base_url=BASE_URL)
+                print("!!!!!")
+                response = api.send_request(
+                    method=HttpMethods.POST,
+                    endpoint=Endpoints.GUARDRAILS_ENDPOINT,
+                    body=body,
+                )
+                print(response)
+                return GuardsResponseData(**response).result
+            else:
+                raise Exception(
+                    "Access denied: You need Enterprise access on Confident AI to use deepeval's guardrails."
                 )

@@ -7,8 +7,6 @@ from deepeval.utils import clean_nested_dict
 from deepeval.monitor.api import (
     APIEvent,
     EventHttpResponse,
-    CustomPropertyType,
-    CustomProperty,
     Link,
 )
 

@@ -875,7 +875,8 @@ class Synthesizer:
     ) -> BaseModel:
         if isinstance(model, GPTModel):
             res, cost = model.generate(prompt)
-            self.synthesis_cost += cost
+            if self.synthesis_cost is not None:
+                self.synthesis_cost += cost
             data = trimAndLoadJson(res, self)
             if schema == SyntheticDataList:
                 data_list = [SyntheticData(**item) for item in data["data"]]
@@ -903,7 +904,8 @@ class Synthesizer:
     ) -> BaseModel:
         if isinstance(model, GPTModel):
             res, cost = await model.a_generate(prompt)
-            self.synthesis_cost += cost
+            if self.synthesis_cost is not None:
+                self.synthesis_cost += cost
             data = trimAndLoadJson(res, self)
             if schema == SyntheticDataList:
                 data_list = [SyntheticData(**item) for item in data["data"]]

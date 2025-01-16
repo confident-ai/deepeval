@@ -1,131 +1,156 @@
 ---
 id: confident-ai-guardrails
-title: Guardrails for LLMs in Production
+title: LLM Guardrails
 sidebar_label: Introduction
 ---
 
-Confident AI allows you to **easily place guards on your LLM applications** to prevent them from generating unsafe responses with just a single line of code. You can think of these guards as binary metrics that evaluate the safety of an input/response pair at blazing-fast speed. Confident AI offers 20+ guards designed to test for more than 20+ LLM vulnerabilities.
+Confident AI enables you to safeguard your LLM applications against malicious inputs and outputs with just one line of code. Our comprehensive suite of guardrails acts as binary metrics to evaluate user inputs and/or LLM responses for malicious intent and unsafe behavior.
+
+Confident AI's guardrails is different because it is blazing fast and incredibly accurate.
 
 :::tip
-Before diving into this content, it might be helpful to read the following:
-
-- [LLM Monitoring in Production](confident-ai-llm-monitoring)
-- [LLM Safety](https://www.confident-ai.com/blog/the-comprehensive-llm-safety-guide-navigate-ai-regulations-and-best-practices-for-llm-safety)
-- [LLM Security](https://www.confident-ai.com/blog/the-comprehensive-guide-to-llm-security)
-
+Confident AI offers **10+ guards** designed to detect 20+ LLM vulnerabilities.
 :::
 
-## Guarding LLM Responses
+## Types of Guardrails
 
-To begin guarding LLM responses, first create an instance of `deepeval`'s `Guardrails`:
+There are two types of guardrails: **input guards**, which protect against malicious inputs before they reach your LLM, and **output guards**, which evaluate the LLM's responses before they reach your users.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/guardrails.svg"
+    alt="Datasets 1"
+    style={{
+      height: "auto",
+      maxHeight: "800px",
+      marginTop: "20px",
+      marginBottom: "40px",
+    }}
+  />
+</div>
+
+The number of guards you choose to set up and whether you decide to utilize both types of guards depends on your priorities regarding **latency, cost, and LLM safety**.
+
+:::note
+While most guards are strictly for input or output guarding, some guards such as cybersecurity offer **both input and output guarding capabilities**. For these guards, you can specify the `guard_type` during initialization.
 
 ```python
-import deepeval
-from deepeval.guardrails import Guardrails, Guard
+from deepeval.guardrails import CybersecurityGuard, GuardType
 
-guardrails = Guardrails(
-    guards=[Guard.CONTRACTS, Guard.SQL_INJECTION],
-    purpose="Environmental education"
+guard = CybersecurityGuard(
+    guard_type=GuardType.INPUT # or GuardType.OUTPUT
+    ...
 )
 ```
 
-There are one mandatory and three optional parameters when creating a `Guardrails` instance:
-
-- `guards`: A list of `Guard` enums specifying the guards to be used.
-- [Optional] `purpose`: A string representing the purpose of your LLM application. Defaulted to `None`.
-- [Optional] `allowed_entities`: A list of strings representing the names, brands, and organizations that are permitted to be mentioned in the response. Defaults to `None`.
-- [Optional] `system_prompt`: A string representing your system prompt. Defaults to `None`.
-
-Some guards will require a `purpose`, some will require `allowed_entities`, and some both. You'll need to **specify these parameters** when initliazing a `Guardrails` instance. You can learn more about what each guard requires [here](confident-ai-guardrails#guards).
-
-:::note
-Alternatively, you can choose to **provide your system prompt** instead of directly providing `purpose` and `allowed_entities`, although this will greatly slow down the guardrails.
 :::
 
-Finally, use `deepeval`'s `Guardrails`s to guard against undesirable LLM responses:
+## List of Guards
+
+Confident AI offers a robust selection of input and output guards for comprehensive protection:
+
+### Input Guards
+
+| Input Guard            | Description                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `CybersecurityGuard`   | Detects cybersecurity attacks such as SQL injection, shell command injection, or role-based access control (RBAC) violations.       |
+| `PromptInjectionGuard` | Detects prompt injection attacks where secondary commands are embedded within user inputs to manipulate the system's behavior.      |
+| `JailbreakingGuard`    | Detects jailbreaking attacks disguised as safe inputs, which attempt to bypass system restrictions or ethical guidelines.           |
+| `PrivacyGuard`         | Detects inputs that leak private information such as personally identifiable information (PII), API keys, or sensitive credentials. |
+| `TopicalGuard`         | Detects inputs that are irrelevant to the context or violate the defined topics or usage boundaries.                                |
+
+### Output Guards
+
+| Output Guard          | Description                                                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `GraphicContentGuard` | Detects outputs containing explicit, violent, or graphic content to ensure safe and appropriate responses.                       |
+| `HallucinationGuard`  | Identifies outputs that include factually inaccurate or fabricated information generated by the model.                           |
+| `IllegalGuard`        | Detects outputs that promote, support, or facilitate illegal activities or behavior.                                             |
+| `ModernizationGuard`  | Detects outputs containing outdated information that do not reflect modern standards or current knowledge.                       |
+| `SyntaxGuard`         | Detects outputs that are syntactically incorrect or do not adhere to proper grammatical standards, ensuring clear communication. |
+| `ToxicityGuard`       | Detects harmful, offensive, or toxic outputs to maintain respectful and safe interactions.                                       |
+| `CybersecurityGuard`  | Detects outputs that may have been breached or manipulated as a result of a cyberattack.                                         |
+
+## Guarding your LLM Application
+
+### Creating Your Guardrail
+
+To begin guarding your LLM application, simply import and initialize the guards you desire from `deepeval.guardrails` and pass them to an instantiated `Guardrails` object. Then, call the `guard_output` method with the user input and LLM response.
+
+```python
+from deepeval.guardrails import Guardrails
+from deepeval.guardrails import HallucinationGuard, TopicalGuard
+
+# Initialize your guards
+guardrails = Guardrails(
+  guards = [
+    HallucinationGuard(),
+    TopicalGuard(allowed_topics=["health and technology"])
+  ]
+)
+```
+
+### Guarding Inputs
+
+It is not uncommon to want to guard against malicious user inputs, as it is the best way to not waste tokens generating text that you shouldn't even be generating in the first place. To guard against inputs, simply call the `guard_input()` method and supply the `input`.
 
 ```python
 ...
 
-guard_result = guardrails.guard(
-    input="Tell me more about the effects of global warming.",
-    response="Global warming is a fake phenomenon and just pseudo-science.",
-)
+# Example input to guard against
+input = "Is the earth flat"
 
-# True if any of the Guard has been breached
+guard_result = guardrails.guard_input(input=input)
+# Reject if true
 print(guard_result.breached)
-# Breakdown of individual guard scores
-print(guard_result.guard_scores)
 ```
 
-There are two mandatory optional parameters when using the `guard()` method:
+### Guarding Outputs
 
-- `input`: A string that represents the user query to your LLM application.
-- `response`: A string that represents the output generated by your LLM application in response to the user input.
-
-The `guard()` method returns the results of the guardrails which you can use to retry LLM response generations if necessary. Here's the data structure returned:
+To ensure that an unsatisfactory output never reaches an end user, you'll want to guard against generated outputs and re-generate them until satisfactory.
 
 ```python
-class GuardScore(BaseModel):
-    guard: str
-    score: int
+...
 
+# Example input to guard against
+input = "Is the earth flat"
+output = "I bet it is"
+
+guard_result = guardrails.guard_input(input=input, output=output)
+# Re-generate if true
+print(guard_result.breached)
+```
+
+:::note
+When using the `guard_output()` method, you must provide both the `input` and the LLM `output`.
+:::
+
+## Running Guardrails Async
+
+Your `Guardrails` also support asynchronous through the `a_guard_input()` and `a_guard_output()` methods.
+
+```python
+...
+
+guard_result = await guardrails.a_guard_output(input, output)
+```
+
+## Interpreting Guard Results
+
+The `Guardrails.guard` method returns a `GuardResult` object, which can be used to retry LLM response generations when necessary.
+
+```python
 class GuardResult(BaseModel):
-    breached: bool
-    guard_scores: List[GuardScore]
+  breached: bool
+  guard_data: List[GuardData]
 ```
 
 :::info
-The `breached` property will be true if any of the `Guard`s have failed. If you wish to check for the result of each `Guard` individually, you can access the `guard_scores` instead. A `score` of 1 means the `Guard` has been breached, and 0 otherwise.
+The `breached` property is `true` if a guard has failed. Detailed scores and breakdowns for each guard are available in the `guard_scores` list. A `score` of 1 indicates the guard was breached, while 0 means it passed.
 :::
-
-## Guard Requirements
-
-The following section provides an overview of guardrails that require only `input` and `response` pairs for evaluation, as well as those that need additional context like a `purpose`, `allowed_entities`, or both.
-
-:::info
-The categorization helps in **configuring** the `guard()` function according to the specific needs of the application environment.
-:::
-
-### Guards Requiring Only Input and Output
-
-Some guards are designed to function effectively with just the input from the user and the output from the system. These include:
-
-- `Guard.CONTRACTS`
-- `Guard.EXCESSIVE_AGENCY`
-- `Guard.POLITICS`
-- `Guard.DEBUG_ACCESS`
-- `Guard.SHELL_INJECTION`
-- `Guard.SQL_INJECTION`
-
-### Guards Requiring a Purpose
-
-Some guards require a defined purpose to effectively assess the content within the specific context of that purpose. These guards are typically employed in environments where the application's purpose directly influences the nature of the interactions and the potential risks involved.
-These include:
-
-- `Guard.BFLA`
-- `Guard.BIAS`
-- `Guard.HALLUCINATION`
-- `Guard.HIJACKING`
-- `Guard.OVERRELIANCE`
-- `Guard.PROMPT_EXTRACTION`
-- `Guard.RBAC`
-- `Guard.SSRF`
-- `Guard.COMPETITORS`
-- `Guard.RELIGION`
-
-### Guards Requiring Allowed Entities
-
-Certain guards assess the appropriateness of mentioning specific entities within responses, necessitating a list of allowed entities. These are important in scenarios where specific names, brands, or organizations are critical to the context but need to be managed carefully to avoid misuse:
-
-- `Guard.BOLA`
-- `Guard.IMITATION`
-
-### Guards Requiring Both Purpose and Entities
-
-- `Guard.PII_API_DB`
-- `Guard.PII_DIRECT`
-- `Guard.PII_SESSION`
-- `Guard.PII_SOCIAL`
-- `Guard.COMPETITORS`
-- `Guard.RELIGION`
