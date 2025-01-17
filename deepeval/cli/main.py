@@ -5,9 +5,20 @@ from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.cli.test import app as test_app
 from deepeval.telemetry import capture_login_event
 import webbrowser
+import random
+import string
+import http.server
+import json
+import socketserver
+import threading
 
+PROD = "https://app.confident-ai.com"
 app = typer.Typer(name="deepeval")
 app.add_typer(test_app, name="test")
+
+def generate_pairing_code():
+    """Generate a random pairing code."""
+    return "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 
 @app.command()
@@ -42,30 +53,57 @@ def login(
             if confident_api_key:
                 api_key = confident_api_key
             else:
-                """Login to the DeepEval platform."""
                 print("Welcome to [bold]DeepEval[/bold]!")
-                print(
-                    "Login and grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
-                )
-                webbrowser.open(
-                    "https://app.confident-ai.com/auth/signup?utm_source=deepeval"
-                )
-                if api_key == "":
-                    while True:
-                        api_key = input("Paste your API Key: ").strip()
-                        if api_key:
-                            break
-                        else:
-                            print(
-                                "API Key cannot be empty. Please try again.\n"
-                            )
+                pairing_code = generate_pairing_code()
+                api_key = None
+                
+                def start_server():
+                    class PairingHandler(http.server.SimpleHTTPRequestHandler):
 
-            KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
-            print("Congratulations! Login successful :raising_hands: ")
-            print(
-                "If you are new to DeepEval, follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/docs/getting-started]https://docs.confident-ai.com/docs/getting-started[/link][/bold]"
-            )
-        except:
+                        def log_message(self, format, *args):
+                            pass
+
+                        def do_POST(self):
+                            nonlocal api_key
+                            if self.path == "/pair":
+                                content_length = int(self.headers["Content-Length"])
+                                body = self.rfile.read(content_length)
+                                data = json.loads(body)
+                                if data.get("pairing_code") == pairing_code:
+                                    api_key = data.get("api_key")
+                                    if api_key:
+                                        self.send_response(200)
+                                        self.end_headers()
+                                        self.wfile.write(b"Pairing successful")
+                                        threading.Thread(target=httpd.shutdown, daemon=True).start()
+                                        return
+
+                                self.send_response(400)
+                                self.end_headers()
+                                self.wfile.write(b"Invalid pairing code or data")
+
+                    with socketserver.TCPServer(("localhost", 0), PairingHandler) as httpd:
+                        port = httpd.server_address[1]
+                        login_url = f"{PROD}/pair?code={pairing_code}&port={port}"
+                        webbrowser.open(login_url)
+                        httpd.serve_forever()
+
+                server_thread = threading.Thread(target=start_server, daemon=True)
+                server_thread.start()
+                print("Waiting for [bold cyan]pairing confirmation[/bold cyan]... If you already have an API key, use -c [API_KEY] to login instead.")
+                server_thread.join()
+
+            if api_key:
+                KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
+                print("Congratulations! Login successful :raising_hands:")
+                print(
+                    "If you are new to DeepEval, follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/docs/getting-started]https://docs.confident-ai.com/docs/getting-started[/link][/bold]"
+                )
+            else:
+                raise ValueError("Failed to retrieve API key.")
+
+        except Exception as e:
+            print(f"Error during login: {e}")
             span.set_attribute("completed", False)
 
 
