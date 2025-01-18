@@ -63,6 +63,13 @@ def login(
                         def log_message(self, format, *args):
                             pass
 
+                        def do_OPTIONS(self):
+                            self.send_response(200)
+                            self.send_header("Access-Control-Allow-Origin", PROD)
+                            self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+                            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+                            self.end_headers()
+
                         def do_POST(self):
                             nonlocal api_key
                             if self.path == "/pair":
@@ -73,12 +80,14 @@ def login(
                                     api_key = data.get("api_key")
                                     if api_key:
                                         self.send_response(200)
+                                        self.send_header("Access-Control-Allow-Origin", PROD)
                                         self.end_headers()
                                         self.wfile.write(b"Pairing successful")
                                         threading.Thread(target=httpd.shutdown, daemon=True).start()
                                         return
 
                                 self.send_response(400)
+                                self.send_header("Access-Control-Allow-Origin", PROD)
                                 self.end_headers()
                                 self.wfile.write(b"Invalid pairing code or data")
 
