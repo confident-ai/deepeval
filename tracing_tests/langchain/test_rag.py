@@ -35,8 +35,12 @@ vectorstore = Chroma.from_documents(
 )
 retriever = vectorstore.as_retriever()
 prompt = hub.pull("rlm/rag-prompt")
+
+
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
+
+
 rag_chain = (
     {"context": retriever | format_docs, "question": RunnablePassthrough()}
     | prompt

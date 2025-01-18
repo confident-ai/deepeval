@@ -120,6 +120,7 @@ print(
     )
 )
 
+
 async def test_special_guard():
     tasks = [
         topical_guard.a_guard(
@@ -160,7 +161,7 @@ guardrails = Guardrails(
         toxicity_guard,
         topical_guard,
         cyber_security_input_guard,
-        cyber_security_output_guard
+        cyber_security_output_guard,
     ]
 )
 results = guardrails.guard(input, response)

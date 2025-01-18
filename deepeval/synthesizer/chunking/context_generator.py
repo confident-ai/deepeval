@@ -39,6 +39,7 @@ class ContextGenerator:
         _nodes: Optional[List[Union[TextNode, Document]]] = None,
     ):
         from chromadb.api.models.Collection import Collection
+
         # Ensure either document_paths or _nodes is provided
         if not document_paths and not _nodes:
             raise ValueError("`document_path` is empty or missing.")
@@ -105,7 +106,9 @@ class ContextGenerator:
             for key, chunker in tqdm_bar(
                 self.doc_to_chunker_map.items(), "✨ 📚 ✨ Chunking Documents"
             ):
-                self.source_files_to_collections_map[key] = chunker.chunk_doc(self.chunk_size, self.chunk_overlap)
+                self.source_files_to_collections_map[key] = chunker.chunk_doc(
+                    self.chunk_size, self.chunk_overlap
+                )
 
         # Progress Bar
         p_bar = tqdm_bar(
@@ -235,15 +238,13 @@ class ContextGenerator:
             )
         )
         return path, contexts_per_doc, scores_per_doc, num_chunks
-    
+
     #########################################################
     ### Generate Contexts from Nodes ########################
     #########################################################
 
     def generate_contexts_from_nodes(
-        self, 
-        num_context: int,
-        max_chunks_per_context: int = 3
+        self, num_context: int, max_chunks_per_context: int = 3
     ):
         scores = []
         contexts = []
@@ -256,7 +257,7 @@ class ContextGenerator:
 
         # Progress Bar
         p_bar = tqdm_bar(
-            total= max_chunks_per_context * num_context,
+            total=max_chunks_per_context * num_context,
             desc="✨ 🧩 ✨ Generating Contexts",
         )
 
@@ -277,7 +278,7 @@ class ContextGenerator:
             for _ in contexts_per_doc:
                 source_files.append(path)
             self.total_chunks += num_chunks
-        
+
         return contexts, source_files, scores
 
     #########################################################
@@ -584,9 +585,7 @@ class ContextGenerator:
             except:
                 if self.doc_to_chunker_map == None:
                     self.doc_to_chunker_map = {}
-                doc_chunker = DocumentChunker(
-                    self.embedder
-                )
+                doc_chunker = DocumentChunker(self.embedder)
                 doc_chunker.load_doc(path)
                 if path not in self.doc_to_chunker_map:
                     self.doc_to_chunker_map[path] = doc_chunker
@@ -613,9 +612,7 @@ class ContextGenerator:
             except:
                 if self.doc_to_chunker_map is None:
                     self.doc_to_chunker_map = {}
-                doc_chunker = DocumentChunker(
-                    self.embedder
-                )
+                doc_chunker = DocumentChunker(self.embedder)
                 await doc_chunker.a_load_doc(path)
                 if path not in self.doc_to_chunker_map:
                     self.doc_to_chunker_map[path] = doc_chunker
@@ -630,6 +627,7 @@ class ContextGenerator:
 
     def _load_nodes(self):
         import chromadb
+        from chromadb.errors import InvalidCollectionException
 
         for _ in tqdm_bar(range(1), "✨ 🚀 ✨ Loading Nodes"):
             try:
@@ -637,16 +635,12 @@ class ContextGenerator:
                 client = chromadb.PersistentClient(
                     path=f".vector_db/{self._nodes[0].id_}"
                 )
-                collection = client.get_collection(
-                    name=f"processed_chunks"
-                )
+                collection = client.get_collection(name=f"processed_chunks")
                 self.source_files_to_collections_map = {}
                 self.source_files_to_collections_map["nodes"] = collection
 
-            except:
-                doc_chunker = DocumentChunker(
-                    self.embedder
-                )
+            except InvalidCollectionException:
+                doc_chunker = DocumentChunker(self.embedder)
                 collection = doc_chunker.from_nodes(self._nodes)
                 self.source_files_to_collections_map = {}
                 self.source_files_to_collections_map["nodes"] = collection
@@ -660,9 +654,7 @@ class ContextGenerator:
                 client = chromadb.PersistentClient(
                     path=f".vector_db/{self._nodes[0].id_}"
                 )
-                collection = client.get_collection(
-                    name=f"processed_chunks"
-                )
+                collection = client.get_collection(name=f"processed_chunks")
                 # Needs to strictly be after getting collection so map is assigned to None if exception is raised
                 if self.source_files_to_collections_map == None:
                     self.source_files_to_collections_map = {}
@@ -671,9 +663,7 @@ class ContextGenerator:
             except:
                 if self.doc_to_chunker_map == None:
                     self.doc_to_chunker_map = {}
-                doc_chunker = DocumentChunker(
-                    self.embedder
-                )
+                doc_chunker = DocumentChunker(self.embedder)
                 collection = await doc_chunker.a_from_nodes(self._nodes)
                 self.source_files_to_collections_map["nodes"] = collection
 

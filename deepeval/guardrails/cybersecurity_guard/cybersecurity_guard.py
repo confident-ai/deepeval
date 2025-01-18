@@ -78,7 +78,7 @@ class CyberSecurityGuard(BaseGuard):
             return GuardResponseData(**response).result
         else:
             raise Exception("To use DeepEval guardrails, run `deepeval login`")
-        
+
     def get_guard_type(self) -> str:
         if self.guard_type == GuardType.INPUT:
             return "InputGuard"

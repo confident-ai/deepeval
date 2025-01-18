@@ -555,7 +555,9 @@ class Tracer:
     # change to attributes and custom attributes
     def set_attributes(self, attributes: Attributes):
         if self.trace_provider == TraceProvider.CUSTOM:
-            assert isinstance(attributes, GenericAttributes), f"Attributes must be of type GenericAttributes for CUSTOM Traces"
+            assert isinstance(
+                attributes, GenericAttributes
+            ), f"Attributes must be of type GenericAttributes for CUSTOM Traces"
 
         # append trace instance to stack
         self.attributes = attributes

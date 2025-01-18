@@ -81,10 +81,14 @@ events_to_ignore = [
 
 class LlamaIndexCallbackHandler(BaseCallbackHandler):
     def __init__(self, auto_eval: bool = False) -> None:
-        self.track_params = ContextVar('track_params', default={})
-        self.event_map = ContextVar('event_map', default={})
-        self._templating_parent_id = ContextVar('_templating_parent_id', default={})
-        self._templating_payloads = ContextVar('_templating_payloads', default={})
+        self.track_params = ContextVar("track_params", default={})
+        self.event_map = ContextVar("event_map", default={})
+        self._templating_parent_id = ContextVar(
+            "_templating_parent_id", default={}
+        )
+        self._templating_payloads = ContextVar(
+            "_templating_payloads", default={}
+        )
         self.auto_eval = auto_eval
         super().__init__(
             event_starts_to_ignore=events_to_ignore,
@@ -164,9 +168,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
                         model=track_params.get("model") or "NA",
                         input=track_params.get("input") or "NA",
                         response=track_params.get("response") or "NA",
-                        retrieval_context=track_params.get(
-                            "retrieval_context"
-                        ),
+                        retrieval_context=track_params.get("retrieval_context"),
                         completion_time=current_trace_stack[0].executionTime,
                         token_usage=track_params.get("token_usage"),
                         trace_stack=dict_representation,
@@ -246,7 +248,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             track_params = self.track_params.get()
             track_params["model"] = processed_payload["llm_model_name"]
             self.track_params.set(track_params)
-            
+
         elif event_type == CBEventType.RERANKING:
             trace_instance = RerankingTrace(
                 **trace_kwargs,
@@ -381,9 +383,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             attributes.average_chunk_size = total_chunk_length // len(nodes)
             attributes.top_score = top_score
             track_params = self.track_params.get()
-            track_params["retrieval_context"] = [
-                node.content for node in nodes
-            ]
+            track_params["retrieval_context"] = [node.content for node in nodes]
             self.track_params.set(track_params)
 
         elif event_type == CBEventType.QUERY and isinstance(
@@ -635,14 +635,20 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
 
             if event_type is CBEventType.LLM:
                 templating_payloads = self._templating_payloads.get()
-                for templating_payload in templating_payloads.pop(parent_id, ()):
-                    attributes.update(self._template_attributes(templating_payload))
+                for templating_payload in templating_payloads.pop(
+                    parent_id, ()
+                ):
+                    attributes.update(
+                        self._template_attributes(templating_payload)
+                    )
                 self._templating_payloads.set(templating_payloads)
         else:
             if event_type is CBEventType.TEMPLATING:
                 templating_parent_id = self._templating_parent_id.get()
                 templating_payloads = self._templating_payloads.get()
-                if (parent_id := templating_parent_id.pop(event_id, None)) and payload:
+                if (
+                    parent_id := templating_parent_id.pop(event_id, None)
+                ) and payload:
                     if parent_id in templating_payloads:
                         templating_payloads[parent_id].append(payload)
                     else:

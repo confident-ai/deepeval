@@ -39,7 +39,9 @@ class DocumentChunker:
     ### Chunking Docs #######################################
     #########################################################
 
-    async def a_chunk_doc(self, chunk_size: int = 1024, chunk_overlap: int = 0) -> List[LCDocument]:
+    async def a_chunk_doc(
+        self, chunk_size: int = 1024, chunk_overlap: int = 0
+    ) -> List[LCDocument]:
         text_splitter: TextSplitter = TokenTextSplitter(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
@@ -50,18 +52,17 @@ class DocumentChunker:
             )
 
         import chromadb
+        from chromadb.errors import InvalidCollectionException
 
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
         document_name = os.path.basename(full_document_path)
         client = chromadb.PersistentClient(path=f".vector_db/{document_name}")
 
-        collection_name = (
-            f"processed_chunks_{chunk_size}_{chunk_overlap}"
-        )
+        collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
-        except ValueError:
+        except InvalidCollectionException:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -99,6 +100,7 @@ class DocumentChunker:
             )
 
         import chromadb
+        from chromadb.errors import InvalidCollectionException
 
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
@@ -111,13 +113,11 @@ class DocumentChunker:
             )
             return collection
 
-        except:
-            collection_name = (
-                f"processed_chunks_{chunk_size}_{chunk_overlap}"
-            )
+        except InvalidCollectionException:
+            collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
-        except ValueError:
+        except InvalidCollectionException:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -143,7 +143,7 @@ class DocumentChunker:
                     ids=batch_ids,
                 )
         return collection
-    
+
     #########################################################
     ### Create collection from node #########################
     #########################################################
@@ -151,11 +151,13 @@ class DocumentChunker:
     async def a_from_nodes(self, nodes: List[Union[TextNode, LCDocument]]):
         # Create ChromaDB client
         import chromadb
+        from chromadb.errors import InvalidCollectionException
+
         client = chromadb.PersistentClient(path=f".vector_db/{nodes[0].id_}")
         collection_name = "processed_chunks"
         try:
             collection = client.get_collection(name=collection_name)
-        except ValueError:
+        except InvalidCollectionException:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -164,7 +166,9 @@ class DocumentChunker:
             for node in nodes:
                 if isinstance(node, TextNode):
                     contents.append(node.text)
-                    source_files.append({"source_file": node.metadata.get("", "None")})
+                    source_files.append(
+                        {"source_file": node.metadata.get("", "None")}
+                    )
                 elif isinstance(node, LCDocument):
                     contents.append(node.page_content)
                     source_files.append({"source_file": "None"})
@@ -179,7 +183,7 @@ class DocumentChunker:
                 batch_medata = source_files[i:batch_end]
                 batch_embeddings = embeddings[i:batch_end]
                 batch_ids = ids[i:batch_end]
-         
+
                 collection.add(
                     documents=batch_contents,
                     embeddings=batch_embeddings,
@@ -187,19 +191,23 @@ class DocumentChunker:
                     ids=batch_ids,
                 )
         return collection
-    
+
     def from_nodes(self, nodes: List[Union[TextNode, LCDocument]]):
         # Create ChromaDB client
         import chromadb
+        from chromadb.errors import InvalidCollectionException
+
         client = chromadb.PersistentClient(path=f".vector_db/{nodes[0].id_}")
         collection_name = "processed_chunks"
         try:
             collection = client.get_collection(name=collection_name)
-        except ValueError:
+        except InvalidCollectionException:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
             contents = [node.text for node in nodes]
-            source_files = [{"source_file": node.metadata.get("", "None")} for node in nodes]
+            source_files = [
+                {"source_file": node.metadata.get("", "None")} for node in nodes
+            ]
             embeddings = self.embedder.embed_texts(contents)
             ids = [str(i) for i in range(len(contents))]
 
@@ -210,7 +218,7 @@ class DocumentChunker:
                 batch_medata = source_files[i:batch_end]
                 batch_embeddings = embeddings[i:batch_end]
                 batch_ids = ids[i:batch_end]
-         
+
                 collection.add(
                     documents=batch_contents,
                     embeddings=batch_embeddings,
@@ -218,7 +226,7 @@ class DocumentChunker:
                     ids=batch_ids,
                 )
         return collection
-    
+
     #########################################################
     ### Loading Docs ########################################
     #########################################################

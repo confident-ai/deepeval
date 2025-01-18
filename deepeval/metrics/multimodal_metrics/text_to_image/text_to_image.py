@@ -54,9 +54,7 @@ class TextToImageMetric(BaseMultimodalMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                input_texts, _ = self.separate_images_from_text(
-                    test_case.input
-                )
+                input_texts, _ = self.separate_images_from_text(test_case.input)
                 _, output_images = self.separate_images_from_text(
                     test_case.actual_output
                 )
@@ -103,9 +101,7 @@ class TextToImageMetric(BaseMultimodalMetric):
             async_mode=True,
             _show_indicator=_show_indicator,
         ):
-            input_texts, _ = self.separate_images_from_text(
-                test_case.input
-            )
+            input_texts, _ = self.separate_images_from_text(test_case.input)
             _, output_images = self.separate_images_from_text(
                 test_case.actual_output
             )

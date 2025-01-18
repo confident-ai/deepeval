@@ -27,10 +27,13 @@ nodes = node_parser.get_nodes_from_documents(documents, show_progress=True)
 
 # Define embedding model
 index = VectorStoreIndex(nodes)
+
+
 async def chatbot(input):
     query_engine = index.as_query_engine(similarity_top_k=5)
     res = await query_engine.aquery(input)
     return res.response
+
 
 #############################################################
 ### test chatbot event tracking
@@ -45,13 +48,16 @@ user_inputs = [
     "what are your services",
 ]
 
+
 async def query_and_print(query: str):
     res = await chatbot(query)
     print("end of " + str(query))
 
+
 async def main():
     tasks = [query_and_print(query) for query in user_inputs]
     await asyncio.gather(*tasks)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
