@@ -42,7 +42,7 @@ from deepeval.vulnerability import BaseVulnerability
 from deepeval.utils import is_confident
 import os
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "https://deepeval.confident-ai.com"
 
 class AttackSynthesizer:
     def __init__(
