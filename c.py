@@ -19,11 +19,11 @@ cybersecurity_guard = CybersecurityGuard(
 )
 
 
-guardrails = Guardrails(guards=[PrivacyGuard(), cybersecurity_guard])
+guardrails = Guardrails(guards=[PrivacyGuard()])
 
 
-user_input = "Hi my name is alex and I live on Maple Street 123"
-output = "I'm sorry but I can't answer this"
+user_input = "Hi I'm here to return an order."
+output = "Sure! What do you want returned?"
 
 guard_results = guardrails.guard_input(user_input)
 print(guard_results)

@@ -29,6 +29,7 @@ class Guardrails:
             # Prepare parameters for API request
             api_guards = []
             for guard in self.guards:
+                print(guard.__name__, "@")
                 api_guard = ApiGuard(
                     guard=guard.__name__,
                     guard_type=guard.guard_type,
