@@ -266,6 +266,7 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
 
     goldens = synthesizer.generate_goldens_from_docs(
         max_goldens_per_context=1,
+        max_context_length=5,
         document_paths=document_paths,
         context_construction_config=ContextConstructionConfig(chunk_size=100),
         _send_data=False,
@@ -275,6 +276,7 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
     print("Generated goldens from docs:", goldens)
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
+    synthesizer.push("Test Dataset 3")
 
 
 synthesizer_sync = Synthesizer(
@@ -282,8 +284,8 @@ synthesizer_sync = Synthesizer(
 )
 synthesizer_async = Synthesizer(async_mode=True, max_concurrent=3)
 
-# test_generate_goldens_from_docs(synthesizer_sync)
-test_generate_goldens_from_docs(synthesizer_async)
+test_generate_goldens_from_docs(synthesizer_sync)
+# test_generate_goldens_from_docs(synthesizer_async)
 
 #########################################################
 ### Generate Goldens From Scratch #######################
@@ -416,5 +418,5 @@ def test_synthesis_costs(synthesizer: Synthesizer):
 #########################################################
 
 # test_generate_goldens_from_contexts(synthesizer)
-test_generate_goldens_from_docs(synthesizer)
+# test_generate_goldens_from_docs(synthesizer)
 # test_generate_generate_goldens_from_scratch(synthesizer)

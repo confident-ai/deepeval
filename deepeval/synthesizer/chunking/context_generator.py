@@ -73,21 +73,21 @@ class ContextGenerator:
 
         # Check if chunk_size is valid for document lengths
         if self.doc_to_chunker_map is not None:
-            min_doc_token_count = min(
+            smallest_document_token_count = min(
                 chunker.text_token_count
                 for chunker in self.doc_to_chunker_map.values()
             )
-            max_num_contexts_possible = 1 + math.floor(
-                (min_doc_token_count - self.chunk_size)
+            smallest_document_num_chunks = 1 + math.floor(
+                (smallest_document_token_count - self.chunk_size)
                 / (self.chunk_size - self.chunk_overlap)
             )
-            if max_num_contexts_possible < num_context_per_document:
+            if smallest_document_num_chunks < num_context_per_document:
                 suggested_chunk_size = (
-                    min_doc_token_count
+                    smallest_document_token_count
                     + (self.chunk_overlap * (num_context_per_document - 1))
                 ) // num_context_per_document
                 raise ValueError(
-                    f"Your smallest document is only sized {min_doc_token_count}. "
+                    f"Your smallest document is only sized {smallest_document_token_count} tokens."
                     f"Please adjust the chunk_size to no more than {suggested_chunk_size}."
                 )
 
@@ -141,21 +141,21 @@ class ContextGenerator:
 
         # Check if chunk_size is valid for document lengths
         if self.doc_to_chunker_map is not None:
-            min_doc_token_count = min(
+            smallest_document_token_count = min(
                 chunker.text_token_count
                 for chunker in self.doc_to_chunker_map.values()
             )
-            num_contexts_limit = 1 + math.floor(
-                (min_doc_token_count - self.chunk_size)
+            smallest_document_num_chunks = 1 + math.floor(
+                (smallest_document_token_count - self.chunk_size)
                 / (self.chunk_size - self.chunk_overlap)
             )
-            if num_contexts_limit < num_context_per_document:
+            if smallest_document_num_chunks < num_context_per_document:
                 suggested_chunk_size = (
-                    min_doc_token_count
+                    smallest_document_token_count
                     + (self.chunk_overlap * (num_context_per_document - 1))
                 ) // num_context_per_document
                 raise ValueError(
-                    f"Your smallest document is only sized {min_doc_token_count}."
+                    f"Your smallest document is only sized {smallest_document_token_count} tokens."
                     f"Please adjust the chunk_size to no more than {suggested_chunk_size}."
                 )
 
@@ -257,7 +257,7 @@ class ContextGenerator:
             path=path, n_chunks=n_contexts_per_doc, p_bar=p_bar
         )
         collection = self.source_files_to_collections_map[path]
-
+        
         # Find similar chunks for sampled random chunks
         for i in range(len(random_chunks)):
             random_chunk = random_chunks[i]
@@ -280,7 +280,7 @@ class ContextGenerator:
                     1 - similar_chunks["distances"][num_query_docs][j]
                 )
                 if (
-                    similar_chunk_text not in similar_chunk_texts
+                    similar_chunk_text not in context
                     and similar_chunk_similarity > similarity_threshold
                 ):
                     context.append(similar_chunk_text)
@@ -335,9 +335,9 @@ class ContextGenerator:
                     1 - similar_chunks["distances"][num_query_docs][j]
                 )
                 if (
-                    similar_chunk_text not in similar_chunk_texts
+                    similar_chunk_text not in context
                     and similar_chunk_similarity > similarity_threshold
-                ):
+                ): 
                     context.append(similar_chunk_text)
             contexts.append(context)
 
