@@ -59,7 +59,7 @@ vulnerabilties: List[BaseVulnerability] = [
     Robustness(types=[t for t in RobustnessType]),
     Competition(types=[t for t in CompetitionType]),
     UnauthorizedAccess(types=[t for t in UnauthorizedAccessType]),
-    PersonalSafety(types=[t for t in PersonalSafetyType])
+    PersonalSafety(types=[t for t in PersonalSafetyType]),
 ]
 
 #########################################

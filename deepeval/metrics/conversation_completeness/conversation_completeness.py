@@ -175,7 +175,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             messages=self.turns, intention=intention
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ConversationCompletenessVerdict)
+            res, cost = await self.model.a_generate(
+                prompt, schema=ConversationCompletenessVerdict
+            )
             self.evaluation_cost += cost
             return res
         else:
@@ -198,7 +200,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             messages=self.turns, intention=intention
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ConversationCompletenessVerdict)
+            res, cost = self.model.generate(
+                prompt, schema=ConversationCompletenessVerdict
+            )
             self.evaluation_cost += cost
             return res
         else:
@@ -217,7 +221,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             messages=self.turns
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=UserIntentions)
+            res, cost = await self.model.a_generate(
+                prompt, schema=UserIntentions
+            )
             self.evaluation_cost += cost
             return res.intentions
         else:

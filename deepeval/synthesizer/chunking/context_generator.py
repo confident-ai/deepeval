@@ -257,7 +257,7 @@ class ContextGenerator:
             path=path, n_chunks=n_contexts_per_doc, p_bar=p_bar
         )
         collection = self.source_files_to_collections_map[path]
-        
+
         # Find similar chunks for sampled random chunks
         for i in range(len(random_chunks)):
             random_chunk = random_chunks[i]
@@ -337,7 +337,7 @@ class ContextGenerator:
                 if (
                     similar_chunk_text not in context
                     and similar_chunk_similarity > similarity_threshold
-                ): 
+                ):
                     context.append(similar_chunk_text)
             contexts.append(context)
 
@@ -448,9 +448,7 @@ class ContextGenerator:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
             res, _ = self.model.generate(prompt, schema=ContextScore)
-            return (
-                    res.clarity + res.depth + res.structure + res.relevance
-                ) / 4
+            return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
             try:
                 res: ContextScore = self.model.generate(
@@ -474,9 +472,7 @@ class ContextGenerator:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
             res, _ = await self.model.a_generate(prompt, schema=ContextScore)
-            return (
-                    res.clarity + res.depth + res.structure + res.relevance
-                ) / 4
+            return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
 
             try:

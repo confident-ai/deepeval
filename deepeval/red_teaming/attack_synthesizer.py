@@ -44,6 +44,7 @@ import os
 
 BASE_URL = "https://deepeval.confident-ai.com"
 
+
 class AttackSynthesizer:
     def __init__(
         self,
@@ -586,7 +587,7 @@ class AttackSynthesizer:
         vulnerability_type: VulnerabilityType,
         num_attacks: int,
     ) -> List[Attack]:
-    
+
         # Prepare parameters for API request
         guard_params = ApiGenerateBaselineAttack(
             purpose=purpose,

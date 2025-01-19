@@ -496,7 +496,7 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
-            return res.claims 
+            return res.claims
         else:
             try:
                 res: Claims = await self.model.a_generate(prompt, schema=Claims)
@@ -512,7 +512,7 @@ class SummarizationMetric(BaseMetric):
             text=text, extraction_limit=self.truths_extraction_limit
         )
         if self.using_native_model:
-            res, cost =  self.model.generate(prompt, schema=Truths)
+            res, cost = self.model.generate(prompt, schema=Truths)
             self.evaluation_cost += cost
             return res.truths
         else:
@@ -530,7 +530,7 @@ class SummarizationMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost
-            return res.claims 
+            return res.claims
         else:
             try:
                 res: Claims = self.model.generate(prompt, schema=Claims)

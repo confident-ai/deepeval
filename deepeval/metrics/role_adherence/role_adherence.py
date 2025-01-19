@@ -168,7 +168,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             )
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=OutOfCharacterResponseIndicies)
+            res, cost = await self.model.a_generate(
+                prompt, schema=OutOfCharacterResponseIndicies
+            )
             self.evaluation_cost += cost
             indicies = res.indicies
         else:
@@ -204,7 +206,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             )
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=OutOfCharacterResponseIndicies)
+            res, cost = self.model.generate(
+                prompt, schema=OutOfCharacterResponseIndicies
+            )
             self.evaluation_cost += cost
             indicies = res.indicies
         else:

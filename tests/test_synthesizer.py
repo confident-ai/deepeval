@@ -267,7 +267,9 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
     goldens = synthesizer.generate_goldens_from_docs(
         max_goldens_per_context=1,
         document_paths=document_paths,
-        context_construction_config=ContextConstructionConfig(chunk_size=100,max_context_length=10),
+        context_construction_config=ContextConstructionConfig(
+            chunk_size=100, max_context_length=10
+        ),
         _send_data=False,
     )
     end_time = time.time()

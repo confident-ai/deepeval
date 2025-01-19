@@ -144,7 +144,7 @@ class Synthesizer:
             contexts, source_files, context_scores = (
                 self.context_generator.generate_contexts(
                     num_context_per_document=context_construction_config.max_contexts_per_document,
-                    max_context_size=context_construction_config.max_context_length                
+                    max_context_size=context_construction_config.max_context_length,
                 )
             )
             print(
@@ -203,7 +203,7 @@ class Synthesizer:
         contexts, source_files, context_scores = (
             await self.context_generator.a_generate_contexts(
                 num_context_per_document=context_construction_config.max_contexts_per_document,
-                max_context_size=context_construction_config.max_context_length
+                max_context_size=context_construction_config.max_context_length,
             )
         )
         print(
@@ -1030,10 +1030,9 @@ class Synthesizer:
         )
 
         return df
-                
 
     def push(
-        self, 
+        self,
         alias: str,
     ):
         console = Console()

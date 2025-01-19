@@ -184,7 +184,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             sliding_window=message_sliding_window
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ConversationRelevancyVerdict)
+            res, cost = await self.model.a_generate(
+                prompt, schema=ConversationRelevancyVerdict
+            )
             self.evaluation_cost += cost
             return res
         else:
@@ -205,7 +207,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             sliding_window=message_sliding_window
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ConversationRelevancyVerdict)
+            res, cost = self.model.generate(
+                prompt, schema=ConversationRelevancyVerdict
+            )
             self.evaluation_cost += cost
             return res
         else:

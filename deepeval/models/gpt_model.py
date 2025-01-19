@@ -206,11 +206,12 @@ class GPTModel(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     def generate(
-        self, 
-        prompt: str, 
-        schema: Optional[BaseModel] = None
+        self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        using_openai_model = not self.should_use_azure_openai() and not self.should_use_local_model()
+        using_openai_model = (
+            not self.should_use_azure_openai()
+            and not self.should_use_local_model()
+        )
         if schema and using_openai_model:
             client = OpenAI()
             if self.model_name in structured_outputs_models:
@@ -221,10 +222,12 @@ class GPTModel(DeepEvalBaseLLM):
                     ],
                     response_format=schema,
                 )
-                structured_output: BaseModel = completion.choices[0].message.parsed
+                structured_output: BaseModel = completion.choices[
+                    0
+                ].message.parsed
                 cost = self.calculate_cost(
-                    completion.usage.prompt_tokens, 
-                    completion.usage.completion_tokens
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
                 )
                 return structured_output, cost
             if self.model_name in json_mode_models:
@@ -233,12 +236,14 @@ class GPTModel(DeepEvalBaseLLM):
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
-                    response_format={ "type": "json_object" },
+                    response_format={"type": "json_object"},
                 )
-                json_output = self.trim_and_load_json(completion.choices[0].message.content)
+                json_output = self.trim_and_load_json(
+                    completion.choices[0].message.content
+                )
                 cost = self.calculate_cost(
-                    completion.usage.prompt_tokens, 
-                    completion.usage.completion_tokens
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
         else:
@@ -253,11 +258,12 @@ class GPTModel(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     async def a_generate(
-        self, 
-        prompt: str, 
-        schema: Optional[BaseModel] = None
+        self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
-        using_openai_model = not self.should_use_azure_openai() and not self.should_use_local_model()
+        using_openai_model = (
+            not self.should_use_azure_openai()
+            and not self.should_use_local_model()
+        )
         if schema and using_openai_model:
             client = AsyncOpenAI()
             if self.model_name in structured_outputs_models:
@@ -268,10 +274,12 @@ class GPTModel(DeepEvalBaseLLM):
                     ],
                     response_format=schema,
                 )
-                structured_output: BaseModel = completion.choices[0].message.parsed
+                structured_output: BaseModel = completion.choices[
+                    0
+                ].message.parsed
                 cost = self.calculate_cost(
-                    completion.usage.prompt_tokens, 
-                    completion.usage.completion_tokens
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
                 )
                 return structured_output, cost
             if self.model_name in json_mode_models:
@@ -280,12 +288,14 @@ class GPTModel(DeepEvalBaseLLM):
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
-                    response_format={ "type": "json_object" },
+                    response_format={"type": "json_object"},
                 )
-                json_output = self.trim_and_load_json(completion.choices[0].message.content)
+                json_output = self.trim_and_load_json(
+                    completion.choices[0].message.content
+                )
                 cost = self.calculate_cost(
-                    completion.usage.prompt_tokens, 
-                    completion.usage.completion_tokens
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
         else:
@@ -293,7 +303,7 @@ class GPTModel(DeepEvalBaseLLM):
             with get_openai_callback() as cb:
                 res = await chat_model.ainvoke(prompt)
                 return res.content, cb.total_cost
-    
+
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
@@ -362,16 +372,12 @@ class GPTModel(DeepEvalBaseLLM):
         elif self.model_name:
             return self.model_name
 
-    def calculate_cost(
-        self, input_tokens: int, output_tokens: int
-    ) -> float:
-        pricing = model_pricing.get(
-            self.model_name, model_pricing["gpt-4o"]
-        ) 
+    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        pricing = model_pricing.get(self.model_name, model_pricing["gpt-4o"])
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
-    
+
     def trim_and_load_json(
         self,
         input_string: str,

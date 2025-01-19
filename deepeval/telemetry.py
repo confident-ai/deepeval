@@ -103,16 +103,21 @@ if (
 
     sys.excepthook = handle_exception
 
+
 def is_running_in_jupyter_notebook():
     try:
         from IPython import get_ipython
+
         if "IPKernelApp" in get_ipython().config:
             return True
     except Exception:
         pass
     return False
-    
-IS_RUNNING_IN_JUPYTER = "jupyter" if is_running_in_jupyter_notebook() else "other"
+
+
+IS_RUNNING_IN_JUPYTER = (
+    "jupyter" if is_running_in_jupyter_notebook() else "other"
+)
 
 #########################################################
 ### Context Managers ####################################
@@ -311,4 +316,3 @@ def set_last_feature(feature: Feature):
     data = read_telemetry_file()
     data["DEEPEVAL_LAST_FEATURE"] = feature.value
     write_telemetry_file(data)
-

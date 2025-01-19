@@ -231,7 +231,9 @@ class ConversationalGEval(BaseMetric):
             AttributeError
         ):  # This catches the case where a_generate_raw_response doesn't exist.
             if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
+                res, cost = await self.model.a_generate(
+                    prompt, schema=ReasonScore
+                )
                 self.evaluation_cost += cost
                 return res.score, res.reason
             else:

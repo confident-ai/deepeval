@@ -13,6 +13,7 @@ def log_retry_error(retry_state):
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
 
+
 valid_gpt_models = [
     "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125",
@@ -65,6 +66,7 @@ json_mode_models = [
 ]
 
 default_gpt_model = "gpt-4o"
+
 
 class SchematicGPTModel(DeepEvalBaseLLM):
     def __init__(
