@@ -76,6 +76,7 @@ synthesizer.generate_goldens_from_docs(
 There are seven optional parameters when creating a `ContextConstructionConfig`:
 
 - [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
+- [Optional] `max_context_length`: specifies the number of of text chunks to be generated per context (context length). Defaulted to 3.
 - [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered during [document parsing](#synthesizer-generate-from-docs#document-parsing). Defaulted to 1024.
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during [document parsing](#synthesizer-generate-from-docs#document-parsing). Defaulted to 0.
 - [Optional] `context_quality_threshold`: a float representing the minimum quality threshold for [context selection](synthesizer-generate-from-docs#context-selection). If the context quality is below threshold, the context will be rejected. Defaulted to `0.5`.
@@ -135,7 +136,7 @@ The `critic_model` in the context construction pipeline can be different from th
 
 ### Context Grouping
 
-In the final **context grouping** step, each previously selected nodes are grouped with other nodes with a cosine similarity score higher than the `context_similarity_threshold`. This ensure that each context is coherent for subsequent generation to happen smoothly.
+In the final **context grouping** step, each previously selected nodes are grouped with `max_context_length` other nodes with a cosine similarity score higher than the `context_similarity_threshold`. This ensure that each context is coherent for subsequent generation to happen smoothly.
 
 Similar to the context selection step, if the cosine similarity is still lower than the `context_similarity_threshold` after `max_retries`, the context with the highest similarity score will be used. Although this means that you might find context that have failed the filtering process being used, but you will be guarenteed to have context groups to be used for generation.
 

@@ -110,7 +110,6 @@ class Synthesizer:
         document_paths: List[str],
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
-        max_context_length: int = 3,
         context_construction_config: Optional[ContextConstructionConfig] = None,
         _send_data=True,
     ):
@@ -125,7 +124,6 @@ class Synthesizer:
                     document_paths=document_paths,
                     include_expected_output=include_expected_output,
                     max_goldens_per_context=max_goldens_per_context,
-                    max_context_length=max_context_length,
                     context_construction_config=context_construction_config,
                 )
             )
@@ -146,7 +144,7 @@ class Synthesizer:
             contexts, source_files, context_scores = (
                 self.context_generator.generate_contexts(
                     num_context_per_document=context_construction_config.max_contexts_per_document,
-                    max_context_size=max_context_length                
+                    max_context_size=context_construction_config.max_context_length                
                 )
             )
             print(
@@ -182,7 +180,6 @@ class Synthesizer:
         document_paths: List[str],
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
-        max_context_length: int = 3,
         context_construction_config: Optional[ContextConstructionConfig] = None,
     ):
         if context_construction_config is None:
@@ -206,7 +203,7 @@ class Synthesizer:
         contexts, source_files, context_scores = (
             await self.context_generator.a_generate_contexts(
                 num_context_per_document=context_construction_config.max_contexts_per_document,
-                max_context_size=max_context_length
+                max_context_size=context_construction_config.max_context_length
             )
         )
         print(

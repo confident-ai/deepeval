@@ -47,6 +47,7 @@ class ContextConstructionConfig:
     embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None
     critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None
     max_contexts_per_document: int = 3
+    max_context_length: int = 3
     chunk_size: int = 1024
     chunk_overlap: int = 0
     context_quality_threshold: int = 0.5
