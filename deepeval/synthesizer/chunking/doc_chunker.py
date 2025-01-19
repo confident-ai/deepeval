@@ -113,7 +113,7 @@ class DocumentChunker:
             )
         try:
             collection = client.get_collection(name=collection_name)
-        except ValueError:
+        except:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 

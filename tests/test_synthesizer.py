@@ -265,7 +265,7 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
     start_time = time.time()
 
     goldens = synthesizer.generate_goldens_from_docs(
-        max_goldens_per_context=3,
+        max_goldens_per_context=1,
         document_paths=document_paths,
         context_construction_config=ContextConstructionConfig(chunk_size=100),
         _send_data=False,
@@ -280,10 +280,10 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
 synthesizer_sync = Synthesizer(
     async_mode=False,
 )
-synthesizer_async = Synthesizer(async_mode=True, max_concurrent=9)
+synthesizer_async = Synthesizer(async_mode=True, max_concurrent=3)
 
 # test_generate_goldens_from_docs(synthesizer_sync)
-# test_generate_goldens_from_docs(synthesizer_async)
+test_generate_goldens_from_docs(synthesizer_async)
 
 #########################################################
 ### Generate Goldens From Scratch #######################
@@ -389,10 +389,10 @@ def test_load_goldens(file_name: str):
         print(dataset.goldens)
 
 
-# synthesizer = Synthesizer(async_mode=True)
+synthesizer = Synthesizer(async_mode=True)
 # test_save_goldens(synthesizer, "json")
 # test_load_goldens("./goldens/20241122_153727.csv")
-test_load_goldens("./goldens/20241122_154545.json")
+# test_load_goldens("./goldens/20241122_154545.json")
 
 #########################################################
 ### Test Costs ##########################################
@@ -416,5 +416,5 @@ def test_synthesis_costs(synthesizer: Synthesizer):
 #########################################################
 
 # test_generate_goldens_from_contexts(synthesizer)
-# test_generate_goldens_from_docs(synthesizer)
+test_generate_goldens_from_docs(synthesizer)
 # test_generate_generate_goldens_from_scratch(synthesizer)

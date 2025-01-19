@@ -163,7 +163,10 @@ module.exports = {
     {
       type: "category",
       label: "Others",
-      items: ["data-privacy"],
+      items: [
+        "data-privacy",
+        "miscellaneous",
+      ],
       collapsed: false,
     },
   ],

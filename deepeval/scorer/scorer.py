@@ -459,9 +459,8 @@ class Scorer:
 
         # Generate the score using the model
         if using_native_evaluation_model:
-            res, _ = evaluation_model.generate(prompt)
-            data = trimAndLoadJson(res)
-            return int(data["answer"])
+            res, _ = evaluation_model.generate(prompt, schema=NumberSchema)
+            return res.answer
         else:
             try:
                 res: NumberSchema = evaluation_model.generate(

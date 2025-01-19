@@ -13,8 +13,6 @@ def log_retry_error(retry_state):
         f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
     )
 
-
-# TODO: how do we keep this list updated? Maybe a CI to detect?
 valid_gpt_models = [
     "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125",
@@ -37,8 +35,27 @@ valid_gpt_models = [
     "gpt-4o-mini-2024-07-18",
 ]
 
-default_gpt_model = "gpt-4o"
+structured_outputs_models = [
+    "gpt-4o",
+    "gpt-4o-mini"
+]
 
+json_mode_models = [
+    "gpt-4-turbo",
+    "gpt-4-turbo-preview",
+    "gpt-4-0125-preview",
+    "gpt-4-1106-preview",
+    "gpt-4",
+    "gpt-4-32k",
+    "gpt-4-0613",
+    "gpt-4-32k-0613",
+    "gpt-3.5-turbo-1106",
+    "gpt-3.5-turbo",
+    "gpt-3.5-turbo-16k",
+    "gpt-3.5-turbo-0125",
+]
+
+default_gpt_model = "gpt-4o"
 
 class SchematicGPTModel(DeepEvalBaseLLM):
     def __init__(
@@ -55,6 +72,8 @@ class SchematicGPTModel(DeepEvalBaseLLM):
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
+            if model_name in structured_outputs_models:
+                self.structured_output = True
         elif model is None:
             model_name = default_gpt_model
 

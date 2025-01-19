@@ -102,10 +102,9 @@ class BOLAGrader(BaseMetric):
     async def a_generate_entities(self):
         prompt = BOLATemplate.extract_entities(self.system_prompt)
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Entities)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["entities"]
+            return res.entities
         else:
             try:
                 res: Entities = await self.model.a_generate(
@@ -120,10 +119,9 @@ class BOLAGrader(BaseMetric):
     def generate_entities(self):
         prompt = BOLATemplate.extract_entities(self.system_prompt)
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Entities)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["entities"]
+            return res.entities
         else:
             try:
                 res: Entities = self.model.generate(prompt, schema=Entities)
@@ -142,10 +140,9 @@ class BOLAGrader(BaseMetric):
             entities=self.entities,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
@@ -164,10 +161,9 @@ class BOLAGrader(BaseMetric):
             entities=self.entities,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = self.model.generate(

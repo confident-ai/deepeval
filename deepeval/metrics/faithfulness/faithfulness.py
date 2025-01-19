@@ -138,10 +138,9 @@ class FaithfulnessMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(prompt, schema=Reason)
@@ -166,10 +165,9 @@ class FaithfulnessMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt, schema=Reason)
@@ -188,12 +186,9 @@ class FaithfulnessMetric(BaseMetric):
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                FaithfulnessVerdict(**item) for item in data["verdicts"]
-            ]
+            verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
@@ -219,12 +214,9 @@ class FaithfulnessMetric(BaseMetric):
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                FaithfulnessVerdict(**item) for item in data["verdicts"]
-            ]
+            verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
@@ -245,10 +237,9 @@ class FaithfulnessMetric(BaseMetric):
             extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Truths)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["truths"]
+            return res.truths
         else:
             try:
                 res: Truths = await self.model.a_generate(prompt, schema=Truths)
@@ -264,10 +255,9 @@ class FaithfulnessMetric(BaseMetric):
             extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Truths)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["truths"]
+            return res.truths
         else:
             try:
                 res: Truths = self.model.generate(prompt, schema=Truths)
@@ -280,10 +270,9 @@ class FaithfulnessMetric(BaseMetric):
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["claims"]
+            return res.claims
         else:
             try:
                 res: Claims = await self.model.a_generate(prompt, schema=Claims)
@@ -296,10 +285,9 @@ class FaithfulnessMetric(BaseMetric):
     def _generate_claims(self, actual_output: str) -> List[str]:
         prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["claims"]
+            return res.claims
         else:
             try:
                 res: Claims = self.model.generate(prompt, schema=Claims)

@@ -24,6 +24,7 @@ from deepeval.metrics import (
     ConversationCompletenessMetric,
     PromptAlignmentMetric,
     JsonCorrectnessMetric,
+    KnowledgeRetentionMetric
 )
 from deepeval.metrics.ragas import RagasMetric
 from deepeval import assert_test
@@ -86,38 +87,44 @@ being composed mostly of rock and metal.
 strict_mode = False
 verbose_mode = True
 
+from pydantic import BaseModel
 
-@pytest.mark.skip(reason="openai is expensive")
+class TestClass(BaseModel):
+    response: str
+
+eval_model = "gpt-4o"
+
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
         strict_mode=strict_mode,
         async_mode=False,
-        verbose_mode=verbose_mode,
+        verbose_mode=verbose_mode, model=eval_model
     )
     metric2 = FaithfulnessMetric(
-        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode, model=eval_model
     )
     metric3 = ContextualPrecisionMetric(
-        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode, model=eval_model
     )
     metric4 = ContextualRecallMetric(
-        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode, model=eval_model
     )
     metric5 = ContextualRelevancyMetric(
-        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode, model=eval_model
     )
     metric6 = BiasMetric(
-        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode, model=eval_model
     )
     metric7 = ToxicityMetric(
-        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode, model=eval_model
     )
     metric8 = HallucinationMetric(
-        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode, model=eval_model
     )
     metric9 = SummarizationMetric(
-        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode
+        threshold=0.5, strict_mode=strict_mode, verbose_mode=verbose_mode, model=eval_model
     )
     metric10 = GEval(
         name="Coherence",
@@ -128,10 +135,9 @@ def test_everything():
             LLMTestCaseParams.RETRIEVAL_CONTEXT,
         ],
         strict_mode=strict_mode,
-        model="gpt-4-0125-preview",
+        model=eval_model,
         verbose_mode=verbose_mode,
     )
-
     metric11 = GEval(
         name="Relevancy",
         criteria="Relevancy - determine if the actual output is relevant with the input.",
@@ -140,25 +146,27 @@ def test_everything():
             LLMTestCaseParams.ACTUAL_OUTPUT,
         ],
         strict_mode=strict_mode,
-        model="gpt-4-0125-preview",
+        model=eval_model,
         verbose_mode=verbose_mode,
     )
-
-    metric12 = ConversationRelevancyMetric()
+    metric12 = ConversationRelevancyMetric(model=eval_model)
     metric13 = ToolCorrectnessMetric()
-    metric14 = ConversationCompletenessMetric()
-    metric15 = RoleAdherenceMetric()
+    metric14 = ConversationCompletenessMetric(model=eval_model)
+    metric15 = RoleAdherenceMetric(model=eval_model)
+    metric16 = PromptAlignmentMetric(prompt_instructions=["Output a string"], model=eval_model)
+    metric17 = JsonCorrectnessMetric(TestClass, model=eval_model)
+    metric18 = KnowledgeRetentionMetric()
 
     test_case = LLMTestCase(
         input="What is this",
         actual_output="this is a latte",
         expected_output="this is a mocha",
-        # retrieval_context=["I love coffee"],
+        retrieval_context=["I love coffee"],
         context=["I love coffee"],
         tools_called=["ok"],
         expected_tools=["ok", "ok"],
     )
-    c_test_case = ConversationalTestCase(turns=[test_case, test_case])
+    c_test_case = ConversationalTestCase(turns=[test_case, test_case], chatbot_role="have a conversation")
     assert_test(
         test_case,
         [
@@ -167,16 +175,19 @@ def test_everything():
             metric3,
             metric4,
             metric5,
-            # metric6,
-            # metric7,
-            # metric8,
-            # metric9,
-            # metric10,
-            # metric11,
-            # metric12,
-            # metric13,
+            metric6,
+            metric7,
+            metric8,
+            metric9,
+            metric10,
+            metric11,
+            metric12,
+            metric13,
             metric14,
             metric15,
+            metric16,
+            metric17,
+            metric18
         ],
         run_async=True,
     )

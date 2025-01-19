@@ -927,9 +927,9 @@ class Synthesizer:
 
     def _generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Response)
             self.synthesis_cost += cost
-            return res
+            return res.response
         else:
             try:
                 res: Response = self.model.generate(prompt, schema=Response)
@@ -940,9 +940,9 @@ class Synthesizer:
 
     async def _a_generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Response)
             self.synthesis_cost += cost
-            return res
+            return res.response
         else:
             try:
                 res: Response = await self.model.a_generate(

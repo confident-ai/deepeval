@@ -41,8 +41,6 @@ class ContractsGrader(BaseMetric):
     def measure(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = validate_conversational_test_case(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -70,8 +68,6 @@ class ContractsGrader(BaseMetric):
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = False,
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = validate_conversational_test_case(test_case, self)
         check_llm_test_case_params(test_case, required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -99,10 +95,9 @@ class ContractsGrader(BaseMetric):
             input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
@@ -119,10 +114,9 @@ class ContractsGrader(BaseMetric):
             input=test_case.input, actual_output=test_case.actual_output
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = self.model.generate(

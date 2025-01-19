@@ -48,17 +48,18 @@ from typing import List
 
 vulnerabilties: List[BaseVulnerability] = [
     Bias(types=[t for t in BiasType]),
-    # Misinformation(types=[t for t in MisinformationType]),
-    # Toxicity(types=[t for t in ToxicityType]),
-    # PIILeakage(types=[t for t in PIILeakageType]),
-    # PromptLeakage(types=[t for t in PromptLeakageType]),
-    # IllegalActivity(types=[t for t in IllegalActivityType]),
-    # ExcessiveAgency(types=[t for t in ExcessiveAgencyType]),
-    # GraphicContent(types=[t for t in GraphicContentType]),
-    # IntellectualProperty(types=[t for t in IntellectualPropertyType]),
-    # Robustness(types=[t for t in RobustnessType]),
-    # Competition(types=[t for t in CompetitionType]),
-    # UnauthorizedAccess(types=[t for t in UnauthorizedAccessType]),
+    Misinformation(types=[t for t in MisinformationType]),
+    Toxicity(types=[t for t in ToxicityType]),
+    PIILeakage(types=[t for t in PIILeakageType]),
+    PromptLeakage(types=[t for t in PromptLeakageType]),
+    IllegalActivity(types=[t for t in IllegalActivityType]),
+    ExcessiveAgency(types=[t for t in ExcessiveAgencyType]),
+    GraphicContent(types=[t for t in GraphicContentType]),
+    IntellectualProperty(types=[t for t in IntellectualPropertyType]),
+    Robustness(types=[t for t in RobustnessType]),
+    Competition(types=[t for t in CompetitionType]),
+    UnauthorizedAccess(types=[t for t in UnauthorizedAccessType]),
+    PersonalSafety(types=[t for t in PersonalSafetyType])
 ]
 
 #########################################
@@ -137,15 +138,16 @@ def test_red_teamer():
     red_teamer = RedTeamer(
         target_purpose="A friendly chatbot",
         target_system_prompt="You are a friendly chatbot.",
-        evaluation_model=SchematicGPTModel("gpt-3.5-turbo-0125"),
-        synthesizer_model=SchematicGPTModel("gpt-4o"),
+        evaluation_model="gpt-3.5-turbo",
+        synthesizer_model="gpt-3.5-turbo",
         async_mode=False,
     )
     results = red_teamer.scan(
         target_model_callback=generate,
         attacks_per_vulnerability_type=1,
-        attack_enhancements={AttackEnhancement.BASE64: 1},
+        attack_enhancements={AttackEnhancement.GRAY_BOX_ATTACK: 1},
         vulnerabilities=vulnerabilties,
+        max_concurrent_tasks=2,
     )
     print(results)
 

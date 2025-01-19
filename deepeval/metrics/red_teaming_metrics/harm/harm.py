@@ -102,10 +102,9 @@ class HarmGrader(BaseMetric):
             harm_category=self.harm_category,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
@@ -124,10 +123,9 @@ class HarmGrader(BaseMetric):
             harm_category=self.harm_category,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = self.model.generate(
