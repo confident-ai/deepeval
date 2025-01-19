@@ -42,11 +42,7 @@ from deepeval.vulnerability import BaseVulnerability
 from deepeval.utils import is_confident
 import os
 
-BASE_URL = "https://deepeval.confident-ai.com/"
-IS_CONFIDENT = os.getenv("IS_CONFIDENT", "no").lower() == "yes"
-if IS_CONFIDENT:
-    BASE_URL = f"http://localhost:{os.getenv('PORT')}"
-
+BASE_URL = "http://localhost:8000"
 
 class AttackSynthesizer:
     def __init__(
@@ -590,6 +586,7 @@ class AttackSynthesizer:
         vulnerability_type: VulnerabilityType,
         num_attacks: int,
     ) -> List[Attack]:
+    
         # Prepare parameters for API request
         guard_params = ApiGenerateBaselineAttack(
             purpose=purpose,
@@ -597,12 +594,17 @@ class AttackSynthesizer:
             num_attacks=num_attacks,
         )
         body = guard_params.model_dump(by_alias=True, exclude_none=True)
+
         api = Api(base_url=BASE_URL)
 
-        # API request
-        response = api.send_request(
-            method=HttpMethods.POST,
-            endpoint=Endpoints.BASELINE_ATTACKS_ENDPOINT,
-            body=body,
-        )
+        try:
+            # API request
+            response = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.BASELINE_ATTACKS_ENDPOINT,
+                body=body,
+            )
+        except Exception as e:
+            print(e)
+
         return GenerateBaselineAttackResponseData(**response).baseline_attacks

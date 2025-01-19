@@ -128,10 +128,9 @@ class HallucinationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(prompt, schema=Reason)
@@ -160,10 +159,9 @@ class HallucinationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt, schema=Reason)
@@ -181,12 +179,9 @@ class HallucinationMetric(BaseMetric):
             actual_output=actual_output, contexts=contexts
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                HallucinationVerdict(**item) for item in data["verdicts"]
-            ]
+            verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
@@ -211,12 +206,9 @@ class HallucinationMetric(BaseMetric):
             actual_output=actual_output, contexts=contexts
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                HallucinationVerdict(**item) for item in data["verdicts"]
-            ]
+            verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
