@@ -131,10 +131,9 @@ class PromptAlignmentMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(
@@ -162,10 +161,9 @@ class PromptAlignmentMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt=prompt, schema=Reason)
@@ -184,10 +182,9 @@ class PromptAlignmentMetric(BaseMetric):
             actual_output=actual_output,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return [PromptAlignmentVerdict(**item) for item in data["verdicts"]]
+            return [item for item in res.verdicts]
         else:
             try:
                 res: Verdicts = await self.model.a_generate(
@@ -208,10 +205,9 @@ class PromptAlignmentMetric(BaseMetric):
             actual_output=actual_output,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return [PromptAlignmentVerdict(**item) for item in data["verdicts"]]
+            return [item for item in res.verdicts]
         else:
             try:
                 res: Verdicts = self.model.generate(prompt, schema=Verdicts)

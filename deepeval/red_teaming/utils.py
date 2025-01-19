@@ -12,13 +12,8 @@ def generate_schema(
     model: DeepEvalBaseLLM,
 ) -> BaseModel:
     if using_native_model:
-        res, _ = model.generate(prompt)
-        data = trimAndLoadJson(res)
-        if schema == SyntheticDataList:
-            data_list = [SyntheticData(**item) for item in data["data"]]
-            return SyntheticDataList(data=data_list)
-        else:
-            return schema(**data)
+        res, _ = model.generate(prompt, schema=schema)
+        return res
     else:
         try:
             res: schema = model.generate(prompt, schema=schema)
@@ -40,13 +35,8 @@ async def a_generate_schema(
     model: DeepEvalBaseLLM,
 ) -> BaseModel:
     if using_native_model:
-        res, _ = await model.a_generate(prompt)
-        data = trimAndLoadJson(res)
-        if schema == SyntheticDataList:
-            data_list = [SyntheticData(**item) for item in data["data"]]
-            return SyntheticDataList(data=data_list)
-        else:
-            return schema(**data)
+        res, _ = await model.a_generate(prompt, schema=schema)
+        return res
     else:
         try:
             res: schema = await model.a_generate(prompt, schema=schema)
