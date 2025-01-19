@@ -143,7 +143,8 @@ class Synthesizer:
             self.context_generator._load_docs()
             contexts, source_files, context_scores = (
                 self.context_generator.generate_contexts(
-                    num_context_per_document=context_construction_config.max_contexts_per_document
+                    num_context_per_document=context_construction_config.max_contexts_per_document,
+                    max_context_size=context_construction_config.max_context_length                
                 )
             )
             print(
@@ -171,7 +172,7 @@ class Synthesizer:
 
         # Wrap-up Synthesis
         if _send_data == True:
-            self._wrap_up_synthesis()
+            pass
         return goldens
 
     async def a_generate_goldens_from_docs(
@@ -201,7 +202,8 @@ class Synthesizer:
 
         contexts, source_files, context_scores = (
             await self.context_generator.a_generate_contexts(
-                num_context_per_document=context_construction_config.max_contexts_per_document
+                num_context_per_document=context_construction_config.max_contexts_per_document,
+                max_context_size=context_construction_config.max_context_length
             )
         )
         print(
@@ -351,7 +353,7 @@ class Synthesizer:
         # Wrap-up Synthesis
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
-            self._wrap_up_synthesis()
+            pass
         return goldens
 
     async def a_generate_goldens_from_contexts(
@@ -661,7 +663,7 @@ class Synthesizer:
         # Wrap up Synthesis
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
-            self._wrap_up_synthesis()
+            pass
         return goldens
 
     def transform_distribution(
@@ -1028,12 +1030,16 @@ class Synthesizer:
         )
 
         return df
+                
 
-    def _wrap_up_synthesis(self):
+    def push(
+        self, 
+        alias: str,
+    ):
         console = Console()
         if is_confident():
-            return
-            alias = input("Enter the dataset alias: ").strip()
+            if not alias:
+                alias = input("Enter the dataset alias: ").strip()
             if len(self.synthetic_goldens) == 0:
                 raise ValueError(
                     "Unable to push empty dataset to Confident AI. There must be at least one dataset or golden data entry."
