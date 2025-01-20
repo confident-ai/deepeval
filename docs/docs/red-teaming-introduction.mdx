@@ -45,12 +45,12 @@ There are 2 required and 3 optional parameters when creating a `RedTeamer`:
 
 - `target_purpose`: a string specifying the purpose of the target LLM.
 - `target_system_prompt`: a string specifying your target LLM's system prompt template.
-- [Optional] `synthesizer_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` for generating attacks for bias and misinformation. Defaulted to `"gpt-3.5-turbo-0125"`.
-- [Optional] `evaluation_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](guides-using-custom-llms) of type `DeepEvalBaseLLM` for evaluation. Defaulted to `"gpt-4o"`.
+- [Optional] `synthesizer_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM` for generating attacks for bias and misinformation. Defaulted to `"gpt-3.5-turbo-0125"`.
+- [Optional] `evaluation_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM` for evaluation. Defaulted to `"gpt-4o"`.
 - [Optional] `async_mode`: a boolean specifying whether to enable async mode. Defaulted to `True`.
 
 :::caution
-It is **strongly recommended** you define both the `synthesizer_model` and `evaluation_model` with a schema argument to avoid invalid JSON errors during large-scale scanning ([learn more here](guides-using-custom-llms)).
+It is **strongly recommended** you define both the `synthesizer_model` and `evaluation_model` with a schema argument to avoid invalid JSON errors during large-scale scanning ([learn more here](/guides/guides-using-custom-llms)).
 :::
 
 ### Defining Your Vulnerabilties
@@ -121,7 +121,7 @@ There are 3 required parameters and 1 optional parameter when calling the scan m
 - [Optional] `attack_enhancements`: A dict of `AttackEnhancement` enum keys specifying the distribution of attack enhancements to be used. Defaulted to uniform distribution of all available `AttackEnhancements`.
 
 :::tip
-You can check out the full list of [**10+ attack enhancements** here](red-teaming-attack-enhancements).
+You can check out the full list of [**10+ attack enhancements** here](/docs/red-teaming-attack-enhancements).
 :::
 
 ## Interpreting Red Teaming Results
@@ -174,7 +174,7 @@ Attacks generation can be broken down into 2 key stages:
 1. **Generating** baseline attacks
 2. **Enhancing** baseline attacks to increase complexity and effectiveness
 
-During this step, baseline attacks are synthetically generated based on [**user-specified vulnerabilities**](red-teaming-vulnerabilities) such as bias or toxicity, before they are enhanced using various [**attack enhancements**](red-teaming-attack-enhancements) methods such as prompt injection and jailbreaking. The enhancement process increases the attacks' effectiveness, complexity, and elusiveness.
+During this step, baseline attacks are synthetically generated based on [**user-specified vulnerabilities**](red-teaming-vulnerabilities) such as bias or toxicity, before they are enhanced using various [**attack enhancements**](/docs/red-teaming-attack-enhancements) methods such as prompt injection and jailbreaking. The enhancement process increases the attacks' effectiveness, complexity, and elusiveness.
 
 <div
   style={{

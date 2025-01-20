@@ -18,7 +18,7 @@ The `RAGASMetric` uses the `ragas` library under the hood and are available on `
 
 - `deepeval`'s RAG metrics generates a reason that corresponds to the score equation. Although both `ragas` and `deepeval` has equations attached to their default metrics, `deepeval` incorperates an LLM judges' reasoning along the way.
 - `deepeval`'s RAG metrics are debuggable - meaning you can inspect the LLM judges' judgements along the way to see why the score is a certain way.
-- `deepeval`'s RAG metrics are JSON confineable. You'll often meet `NaN` scores in `ragas` because of invalid JSONs generated - but `deepeval` offers a way for you to use literally any custom LLM for evaluation and [JSON confine them in a few lines of code.](guides-using-custom-llms)
+- `deepeval`'s RAG metrics are JSON confineable. You'll often meet `NaN` scores in `ragas` because of invalid JSONs generated - but `deepeval` offers a way for you to use literally any custom LLM for evaluation and [JSON confine them in a few lines of code.](/guides/guides-using-custom-llms)
 - `deepeval`'s RAG metrics integrates **fully** with `deepeval`'s ecosystem. This means you'll get access to metrics caching, native support for `pytest` integrations, first-class error handling, available on Confident AI, and so much more.
 
 Due to these reasons, we highly recommend that you use `deepeval`'s RAG metrics instead. They're proven to work, and if not better according to [examples shown in some studies.](https://arxiv.org/pdf/2409.06595)
@@ -27,7 +27,7 @@ Due to these reasons, we highly recommend that you use `deepeval`'s RAG metrics 
 
 ## Required Arguments
 
-To use the `RagasMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](evaluation-test-cases#llm-test-case):
+To use the `RagasMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
 - `actual_output`

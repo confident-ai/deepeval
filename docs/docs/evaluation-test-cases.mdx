@@ -129,7 +129,7 @@ You may also choose to evaluate with precomputed `actual_output`s, instead of ge
 
 The `expected_output` is literally what you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
 
-The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](metrics-introduction)
+The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](/docs/metrics-introduction)
 
 ```python
 # A hypothetical LLM application example
@@ -244,7 +244,7 @@ test_case = LLMTestCase(
 ```
 
 :::info
-`tools_called` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
+`tools_called` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](/docs/metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
 :::
 
 ### Expected Tools
@@ -448,7 +448,7 @@ There are two mandatory and one optional parameter when calling the `assert_test
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 
 :::info
-The `run_async` parameter overrides the `async_mode` property of all metrics being evaluated. The `async_mode` property, as you'll learn later in the [metrics section](metrics-introduction), determines whether each metric can execute asynchronously.
+The `run_async` parameter overrides the `async_mode` property of all metrics being evaluated. The `async_mode` property, as you'll learn later in the [metrics section](/docs/metrics-introduction), determines whether each metric can execute asynchronously.
 :::
 
 To execute the test cases, run `deepeval test run` via the CLI, which uses `deepeval`'s Pytest integration under the hood to execute these tests. You can also include an optional `-n` flag follow by a number (that determines the number of processes that will be used) to run tests in parallel.
@@ -489,7 +489,7 @@ There are two mandatory and twelve optional arguments when calling the `evaluate
 - [Optional] `max_concurrent`: an integer that determines the maximum number of test cases that can be ran in parallel at any point in time. You can decrease this value if your evaluation model is running into rate limit errors. Defaulted to 100.
 - [Optional] `skip_on_missing_params`: a boolean which when set to `True`, skips all metric executions for test cases with missing parameters. Defaulted to `False`.
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for each test case. Defaulted to `False`.
-- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `None`.
+- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
@@ -513,7 +513,7 @@ evaluate(
 )
 ```
 
-For more examples of `evaluate`, visit the [datasets section](evaluation-datasets).
+For more examples of `evaluate`, visit the [datasets section](/docs/evaluation-datasets).
 :::
 
 ## Labeling Test Cases for Confident AI

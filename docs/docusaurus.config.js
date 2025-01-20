@@ -15,6 +15,45 @@ module.exports = {
       },
     ],
     "docusaurus-plugin-sass",
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "tutorials",
+        path: "tutorials",
+        routeBasePath: "tutorials", 
+        sidebarPath: require.resolve("./sidebarTutorials.js"), 
+        editUrl:
+          "https://github.com/confident-ai/deepeval/edit/main/docs/tutorials/",
+        showLastUpdateAuthor: true,
+        showLastUpdateTime: true,
+      },
+    ],
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "confident-ai", 
+        path: "confident-ai",
+        routeBasePath: "confident-ai",
+        sidebarPath: require.resolve("./sidebarConfidentAI.js"), 
+        editUrl:
+          "https://github.com/confident-ai/deepeval/edit/main/docs/confident-ai/",
+        showLastUpdateAuthor: true,
+        showLastUpdateTime: true,
+      },
+    ],
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "guides", 
+        path: "guides",
+        routeBasePath: "guides",
+        sidebarPath: require.resolve("./sidebarGuides.js"), 
+        editUrl:
+          "https://github.com/confident-ai/deepeval/edit/main/docs/guides/",
+        showLastUpdateAuthor: true,
+        showLastUpdateTime: true,
+      },
+    ],
   ],
 
   title: "DeepEval - The Open-Source LLM Evaluation Framework",
@@ -96,21 +135,30 @@ module.exports = {
             to: "docs/getting-started",
             position: "left",
             label: "Docs",
+            activeBasePath: 'docs',
           },
           {
-            to: "docs/confident-ai-introduction",
+            to: "confident-ai/confident-ai-introduction",
             position: "left",
             label: "Confident AI",
+            activeBasePath: 'confident-ai',
           },
           {
-            to: "docs/tutorial-introduction",
+            to: "tutorials/tutorial-introduction",
             position: "left",
-            label: "Tutorial",
+            label: "Tutorials",
+            activeBasePath: 'tutorials',
+          },
+          {
+            to: "guides/guides-rag-evaluation",
+            position: "left",
+            label: "Guides",
+            activeBasePath: 'guides',
           },
           {
             href: "https://confident-ai.com/blog",
             position: "left",
-            label: "Blog",
+            label: "Blogs",
           },
           {
             href: "https://confident-ai.com",
@@ -157,10 +205,14 @@ module.exports = {
                 label: "Introduction",
                 to: "/docs/getting-started",
               },
-              {label: "Confident AI", to: "docs/confident-ai-introduction"},
+              {label: "Confident AI", to: "/confident-ai/confident-ai-introduction"},
               {
-                label: "Tutorial",
-                to: "/docs/tutorial-introduction",
+                label: "Tutorials",
+                to: "/tutorials/tutorial-introduction",
+              },
+              {
+                label: "Guides",
+                to: "/guides/guides-rag-evaluation",
               },
             ],
           },

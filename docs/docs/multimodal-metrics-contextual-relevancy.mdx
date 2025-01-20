@@ -9,12 +9,12 @@ import Equation from "@site/src/components/equation";
 The multimodal contextual relevancy metric measures the quality of your multimodal RAG pipeline's retriever by evaluating the overall relevance of the information presented in your `retrieval_context` for a given `input`. `deepeval`'s multimodal contextual relevancy metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 
 :::info
-The **Multimodal Contextual Relevancy** is the multimodal adaptation of DeepEval's [contextual relevancy metric](metrics-contextual-relevancy). It accepts images in addition to text for the `input`, `actual_output`, and `retrieval_context`.
+The **Multimodal Contextual Relevancy** is the multimodal adaptation of DeepEval's [contextual relevancy metric](/docs/metrics-contextual-relevancy). It accepts images in addition to text for the `input`, `actual_output`, and `retrieval_context`.
 :::
 
 ## Required Arguments
 
-To use the `MultimodalContextualRelevancyMetric`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](evaluation-test-cases#mllm-test-case):
+To use the `MultimodalContextualRelevancyMetric`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](/docs/evaluation-test-cases#mllm-test-case):
 
 - `input`
 - `actual_output`
@@ -59,7 +59,7 @@ There are six optional parameters when creating a `MultimodalContextualRelevancy
 - [Optional] `model`: a string specifying which of OpenAI's Multimodal GPT models to use, **OR** any custom MLLM model of type `DeepEvalBaseMLLM`. Defaulted to 'gpt-4o'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
 ## How Is It Calculated?

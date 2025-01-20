@@ -8,8 +8,9 @@ class HomeNav extends React.Component {
     render() {
         return <div className={styles.homeNav}>
             <div><Link to={"/docs/getting-started"}>Docs</Link></div>
-            <div><Link to="/docs/confident-ai-introduction">Confident AI</Link></div>
-            <div><Link to="/docs/tutorial-introduction">Tutorial</Link></div>
+            <div><Link to="/confident-ai/confident-ai-introduction">Confident AI</Link></div>
+            <div><Link to="/tutorials/tutorial-introduction">Tutorial</Link></div>
+            <div><Link to="/guides/guides-rag-evaluation">Guides</Link></div>
             <div><a href="https://github.com/confident-ai/deepeval" target="_blank">Github</a></div>
             <div><a href="https://confident-ai.com/blog" target="_blank">Blog</a></div>
         </div>
