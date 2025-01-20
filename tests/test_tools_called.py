@@ -58,4 +58,16 @@ print(tool_correctness_metric.reason)
 # Dataset ######################################
 ################################################
 
-evaluate([tool_test_case], metrics=[tool_correctness_metric, tool_correctness_geval_metric])
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(test_cases=[tool_test_case])
+dataset.push("test", auto_convert_test_cases_to_goldens=True)
+# dataset.pull('test')
+
+print(dataset)
+
+################################################
+# Evalutae #####################################
+################################################
+
+# evaluate([tool_test_case], metrics=[tool_correctness_metric, tool_correctness_geval_metric])

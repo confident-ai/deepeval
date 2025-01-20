@@ -65,28 +65,6 @@ def convert_convo_goldens_to_convo_test_cases(
         conv_test_cases.append(conv_test_case)
     return conv_test_cases
 
-def trimAndLoadJson(
-    input_string: str,
-) -> Any:
-    start = input_string.find("{")
-    end = input_string.rfind("}") + 1
-
-    if end == 0 and start != -1:
-        input_string = input_string + "}"
-        end = len(input_string)
-
-    jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
-    # Remove trailing comma if one is present
-    jsonStr = re.sub(r",\s*([\]}])", r"\1", jsonStr)
-
-    try:
-        return json.loads(jsonStr)
-    except json.JSONDecodeError:
-        error_str = "Invalid JSON."
-        raise ValueError(error_str)
-    except Exception as e:
-        raise Exception(f"An unexpected error occurred: {str(e)}")
-
 def trimAndLoadJson(input_string: str) -> Any:
     try:
         cleaned_string = re.sub(r",\s*([\]}])", r"\1", input_string.strip())
