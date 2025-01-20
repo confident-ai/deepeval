@@ -58,3 +58,4 @@ print(tool_correctness_metric.reason)
 # Dataset ######################################
 ################################################
 
+evaluate([tool_test_case], metrics=[tool_correctness_metric, tool_correctness_geval_metric])

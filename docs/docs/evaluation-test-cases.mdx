@@ -197,34 +197,17 @@ Remember, `context` is the ideal retrieval results for a given input and typical
 
 The `tools_called` parameter is an **optional** parameter that represents the tools your LLM agent actually invoked during execution. By providing `tools_called`, you can evaluate how effectively your LLM agent utilized the tools available to it.
 
-```python
-# A hypothetical LLM application example
-import chatbot
-
-test_case = LLMTestCase(
-    input="Why did the chicken cross the road?",
-    actual_output=chatbot.run(input),
-    # Replace this with the tools that were actually used
-    tools_called=[ToolCall(name="Calculator Tool"), ToolCall(name="WebSearch Tool")]
-)
-```
-
 :::note
-`tools_called` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
+The `tools_called` parameter accepts a list of `ToolCall` objects.
 :::
 
-As you've seen, the `tools_called` parameter accepts a list of `ToolCall` objects:
-
 ```python
-calculator_tool = ToolCall(
-    name="calculator tool",
-    description="A tool that calculates mathematical equations or expressions.",
-    reasoning="User asked for a solution to a math equation; invoking the calculator tool for computation.",
-    output=5,
-    input_parameters={
-        "user_string": "what is 2+3?"
-    }
-)
+class ToolCall(BaseModel):
+    name: str
+    description: Optional[str] = None
+    reasoning: Optional[str] = None
+    output: Optional[Any] = None
+    input_parameters: Optional[Dict[str, Any]] = None
 ```
 
 A `ToolCall` object accepts 1 mandatory and 4 optional parameters:
@@ -234,6 +217,35 @@ A `ToolCall` object accepts 1 mandatory and 4 optional parameters:
 - [Optional] `reasoning`: A string explaining the **agent's reasoning** to use the tool.
 - [Optional] `output`: The tool's **output**, which can be of any data type.
 - [Optional] `input_parameters`: A dictionary with string keys representing the **input parameters** (and respective values) passed into the tool function.
+
+```python
+# A hypothetical LLM application example
+import chatbot
+
+test_case = LLMTestCase(
+    input="Why did the chicken cross the road?",
+    actual_output=chatbot.run(input),
+    # Replace this with the tools that were actually used
+    tools_called=[
+        ToolCall(
+            name="Calculator Tool"
+            description="A tool that calculates mathematical equations or expressions.",
+            input={"user_input": "2+3"}
+            output=5
+        ),
+        ToolCall(
+            name="WebSearch Tool"
+            reasoning="Knowledge base does not detail why the chicken crossed the road."
+            input={"search_query": "Why did the chicken crossed the road?"}
+            output="Because it wanted to, duh."
+        )
+    ]
+)
+```
+
+:::info
+`tools_called` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
+:::
 
 ### Expected Tools
 
@@ -249,8 +261,28 @@ test_case = LLMTestCase(
     input=input,
     actual_output=chatbot.run(input),
     # Replace this with the tools that were actually used
-    tools_called=[ToolCall(name="Calculator Tool"), ToolCall(name="WebSearch Tool")],
-    expected_tools=[ToolCall(name="Calculator Tool")]
+    tools_called=[
+        ToolCall(
+            name="Calculator Tool"
+            description="A tool that calculates mathematical equations or expressions.",
+            input={"user_input": "2+3"}
+            output=5
+        ),
+        ToolCall(
+            name="WebSearch Tool"
+            reasoning="Knowledge base does not detail why the chicken crossed the road."
+            input={"search_query": "Why did the chicken crossed the road?"}
+            output="Because it wanted to, duh."
+        )
+    ]
+    expected_tools=[
+        ToolCall(
+            name="WebSearch Tool"
+            reasoning="Knowledge base does not detail why the chicken crossed the road."
+            input={"search_query": "Why did the chicken crossed the road?"}
+            output="Because it needed to escape from the hungry humans."
+        )
+    ]
 )
 ```
 
