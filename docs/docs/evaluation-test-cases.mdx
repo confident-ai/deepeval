@@ -249,7 +249,7 @@ test_case = LLMTestCase(
     input=input,
     actual_output=chatbot.run(input),
     # Replace this with the tools that were actually used
-    tools_called=[ToolCall(name="Calculator Tool"), ToolCall(name="WebSearch Tool")]
+    tools_called=[ToolCall(name="Calculator Tool"), ToolCall(name="WebSearch Tool")],
     expected_tools=[ToolCall(name="Calculator Tool")]
 )
 ```
