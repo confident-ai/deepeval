@@ -2,7 +2,6 @@ import React from 'react';
 import styles from './index.module.css';
 
 function Envelope(props) {
-
   return (
     <div className={styles.letterContainer} onClick={() => {window.open('https://confident-ai.com', '_blank');}}>
         <div className={styles.letterImage}>
@@ -11,8 +10,11 @@ function Envelope(props) {
             <div className={styles.letter}>
                 <div className={styles.letterBorder}></div>
                 <div className={styles.letterTitle}>Delivered by</div>
-                <div className={styles.letterContext}>
+                <div className={styles.letterContentContainer}>
+                    <img src="/icons/logo.svg" style={{width: "30px", height: "30px"}}/>
+                    <div className={styles.letterContext}>
                     <span class="lexend-deca" style={{fontSize: "16px"}}>Confident AI</span>
+                    </div>
                 </div>
                 <div className={styles.letterStamp}>
                 <div className={styles.letterStampInner}></div>

@@ -1,7 +1,7 @@
 from typing import List
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.utils import check_llm_test_case_params
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, ToolCall
 from deepeval import confident_evaluate, evaluate
 from deepeval.metrics import (
     AnswerRelevancyMetric,
@@ -58,12 +58,13 @@ evaluate(
             input="Message input number 1!",
             actual_output="Message actual output number 1...",
             retrieval_context=["I love dogs"],
+            tools_called=[ToolCall(name="ok")],
         ),
-        LLMTestCase(
-            input="Message input 2, this is just a test",
-            actual_output="Message actual output 2, this is just a test",
-            retrieval_context=["I love dogs"],
-        ),
+        # LLMTestCase(
+        #     input="Message input 2, this is just a test",
+        #     actual_output="Message actual output 2, this is just a test",
+        #     retrieval_context=["I love dogs"],
+        # ),
     ],
     metrics=[
         # correctness_metric,
