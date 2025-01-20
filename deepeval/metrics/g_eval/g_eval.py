@@ -228,7 +228,7 @@ class GEval(BaseMetric):
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
             if isinstance(value, ToolCall):
-                value = value.json(indent=4)
+                value = repr(value)
             text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
 
         g_eval_params_str = construct_g_eval_params_string(
@@ -285,7 +285,7 @@ class GEval(BaseMetric):
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
             if isinstance(value, ToolCall):
-                value = value.json(indent=4)
+                value = repr(value)
             text += f"{param.value}: {value} \n\n"
 
         g_eval_params_str = construct_g_eval_params_string(

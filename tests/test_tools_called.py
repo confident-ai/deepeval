@@ -42,17 +42,15 @@ from deepeval.metrics import ToolCorrectnessMetric, GEval
 from deepeval.test_case import LLMTestCaseParams
 from deepeval import evaluate
 
-tool_correctness_metric = ToolCorrectnessMetric()
+tool_correctness_metric = ToolCorrectnessMetric(verbose_mode=True)
 tool_correctness_geval_metric = GEval(
     name="Tool Correctness",
     criteria="Is the expected tools same as tools called",
-    evaluation_params=[LLMTestCaseParams.TOOLS_CALLED, LLMTestCaseParams.EXPECTED_TOOLS]
+    evaluation_params=[LLMTestCaseParams.TOOLS_CALLED, LLMTestCaseParams.EXPECTED_TOOLS],
+    verbose_mode=True
 )
 tool_correctness_geval_metric.measure(tool_test_case)
-print(tool_correctness_geval_metric.score)
-print(tool_correctness_geval_metric.reason)
 tool_correctness_metric.measure(tool_test_case)
-print(tool_correctness_metric.reason)
 
 ################################################
 # Dataset ######################################
@@ -61,10 +59,10 @@ print(tool_correctness_metric.reason)
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(test_cases=[tool_test_case])
-dataset.push("test", auto_convert_test_cases_to_goldens=True)
+# dataset.push("test", auto_convert_test_cases_to_goldens=True)
 # dataset.pull('test')
 
-print(dataset)
+# print(dataset)
 
 ################################################
 # Evalutae #####################################

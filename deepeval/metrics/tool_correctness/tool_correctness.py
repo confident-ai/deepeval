@@ -12,6 +12,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
+import json
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
@@ -49,15 +50,21 @@ class ToolCorrectnessMetric(BaseMetric):
 
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
             self.tools_called: List[str] = [tool_call.name for tool_call in test_case.tools_called]
-            self.expected_tools: List[str] = [tool_call.name for tool_call in test_case.tools_called]
+            self.expected_tools: List[str] = [tool_call.name for tool_call in test_case.expected_tools]
             self.score = self._calculate_score()
             self.reason = self._generate_reason()
-            self.success = self.score >= self.threshold
+            self.success = self.score >= self.threshold            
+            expected_tools_formatted = "Expected Tools:\n[\n" + ",\n".join(
+                self.indent_multiline_string(repr(tool_call), indent_level=4) for tool_call in test_case.expected_tools
+            ) + "\n]"
+            tools_called_formatted = "Tools Called:\n[\n" + ",\n".join(
+                self.indent_multiline_string(repr(tool_call), indent_level=4) for tool_call in test_case.tools_called
+            ) + "\n]"
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Expected Tools:\n{prettify_list(self.expected_tools)}",
-                    f"Tools Called:\n{prettify_list(self.tools_called)}",
+                    f"\n{expected_tools_formatted}",
+                    f"\n{tools_called_formatted}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
@@ -126,3 +133,7 @@ class ToolCorrectnessMetric(BaseMetric):
     @property
     def __name__(self):
         return "Tool Correctness"
+    
+    def indent_multiline_string(self, s, indent_level=4):
+        indent = " " * indent_level
+        return "\n".join(f"{indent}{line}" for line in s.splitlines())
