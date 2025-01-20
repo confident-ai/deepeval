@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, List
 from deepeval.test_case import ToolCall
 
+
 class Golden(BaseModel):
     input: str
     actual_output: Optional[str] = Field(

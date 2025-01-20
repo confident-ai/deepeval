@@ -4,6 +4,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 import json
 import re
 
+
 def convert_test_cases_to_goldens(
     test_cases: List[LLMTestCase],
 ) -> List[Golden]:
@@ -64,6 +65,7 @@ def convert_convo_goldens_to_convo_test_cases(
         )
         conv_test_cases.append(conv_test_case)
     return conv_test_cases
+
 
 def trimAndLoadJson(input_string: str) -> Any:
     try:

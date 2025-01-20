@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any
 from enum import Enum
 import json
 
+
 class LLMTestCaseParams(Enum):
     INPUT = "input"
     ACTUAL_OUTPUT = "actual_output"
@@ -14,12 +15,15 @@ class LLMTestCaseParams(Enum):
     EXPECTED_TOOLS = "expected_tools"
     REASONING = "reasoning"
 
+
 class ToolCall(BaseModel):
     name: str
     description: Optional[str] = None
     reasoning: Optional[str] = None
     output: Optional[Any] = None
-    input_parameters: Optional[Dict[str, Any]] = Field(None, serialization_alias="inputParameters")
+    input_parameters: Optional[Dict[str, Any]] = Field(
+        None, serialization_alias="inputParameters"
+    )
 
     def __repr__(self):
         fields = []
@@ -35,16 +39,20 @@ class ToolCall(BaseModel):
         # Handle nested fields like input_parameters
         if self.input_parameters:
             formatted_input = json.dumps(self.input_parameters, indent=4)
-            formatted_input = self._indent_nested_field("input_parameters", formatted_input)
+            formatted_input = self._indent_nested_field(
+                "input_parameters", formatted_input
+            )
             fields.append(formatted_input)
 
         # Handle nested fields like output
         if isinstance(self.output, dict):
             formatted_output = json.dumps(self.output, indent=4)
-            formatted_output = self._indent_nested_field("output", formatted_output)
+            formatted_output = self._indent_nested_field(
+                "output", formatted_output
+            )
             fields.append(formatted_output)
         elif self.output is not None:
-            fields.append(f'output={repr(self.output)}')
+            fields.append(f"output={repr(self.output)}")
 
         # Combine fields with proper formatting
         fields_str = ",\n    ".join(fields)
@@ -54,7 +62,10 @@ class ToolCall(BaseModel):
     def _indent_nested_field(field_name: str, formatted_field: str) -> str:
         """Helper method to indent multi-line fields for better readability."""
         lines = formatted_field.splitlines()
-        return f"{field_name}={lines[0]}\n" + "\n".join(f"    {line}" for line in lines[1:])
+        return f"{field_name}={lines[0]}\n" + "\n".join(
+            f"    {line}" for line in lines[1:]
+        )
+
 
 @dataclass
 class LLMTestCase:

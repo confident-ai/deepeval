@@ -16,7 +16,7 @@ from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
     convert_convo_goldens_to_convo_test_cases,
-    trimAndLoadJson
+    trimAndLoadJson,
 )
 from deepeval.dataset.api import (
     APIDataset,
@@ -24,7 +24,12 @@ from deepeval.dataset.api import (
     DatasetHttpResponse,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase, ToolCall
+from deepeval.test_case import (
+    LLMTestCase,
+    ConversationalTestCase,
+    MLLMTestCase,
+    ToolCall,
+)
 from deepeval.utils import convert_keys_to_snake_case, is_confident
 
 valid_file_types = ["csv", "json"]
@@ -259,10 +264,15 @@ class EvaluationDataset:
             )
         ]
         tools_called = []
-        for tools_called_json in get_column_data(df, tools_called_col_name, default="[]"):
+        for tools_called_json in get_column_data(
+            df, tools_called_col_name, default="[]"
+        ):
             if tools_called_json:
                 try:
-                    parsed_tools = [ToolCall(**tool) for tool in trimAndLoadJson(tools_called_json)]
+                    parsed_tools = [
+                        ToolCall(**tool)
+                        for tool in trimAndLoadJson(tools_called_json)
+                    ]
                     tools_called.append(parsed_tools)
                 except ValueError as e:
                     raise ValueError(f"Error processing tools_called: {e}")
@@ -270,10 +280,15 @@ class EvaluationDataset:
                 tools_called.append([])
 
         expected_tools = []
-        for expected_tools_json in get_column_data(df, expected_tools_col_name, default="[]"):
+        for expected_tools_json in get_column_data(
+            df, expected_tools_col_name, default="[]"
+        ):
             if expected_tools_json:
                 try:
-                    parsed_tools = [ToolCall(**tool) for tool in trimAndLoadJson(expected_tools_json)]
+                    parsed_tools = [
+                        ToolCall(**tool)
+                        for tool in trimAndLoadJson(expected_tools_json)
+                    ]
                     expected_tools.append(parsed_tools)
                 except ValueError as e:
                     raise ValueError(f"Error processing expected_tools: {e}")
