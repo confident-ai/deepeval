@@ -122,7 +122,7 @@ To ensure that an unsatisfactory output never reaches an end user, you'll want t
 input = "Is the earth flat"
 output = "I bet it is"
 
-guard_result = guardrails.guard_input(input=input, output=output)
+guard_result = guardrails.guard_output(input=input, output=output)
 # Re-generate if true
 print(guard_result.breached)
 ```

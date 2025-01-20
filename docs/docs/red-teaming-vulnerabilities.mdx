@@ -6,7 +6,7 @@ sidebar_label: Introduction
 
 ## Vulnerabilities
 
-Vulnerabilities enable you to **specify which aspect of your LLM you wish to red-team**. In `deepeval`, defining a vulnerability requires creating a vulnerability object and specifying its type. 
+Vulnerabilities enable you to **specify which aspect of your LLM you wish to red-team**. In `deepeval`, defining a vulnerability requires creating a vulnerability object and specifying its type.
 
 ```python
 from deepeval.vulnerability import Bias
@@ -29,7 +29,7 @@ Each vulnerability accepts an `ENUM` specific to that vulnerability. For example
 - [Unauthorized Access](red-teaming-vulnerabilities-unauthorized-access)
 - [Illegal Activities](red-teaming-vulnerabilities-illegal-activities)
 - [ExcessiveAgency](red-teaming-vulnerabilities-excessive-agency)
-- [Robustnesss](red-teaming-vulnerabilities-overreliance)
+- [Robustnesss](red-teaming-vulnerabilities-robustness)
 - [Competition](red-teaming-vulnerabilities-personal-safety)
 - [Intellectual Property](red-teaming-vulnerabilities-personal-safety)
 - [Graphic Content](red-teaming-vulnerabilities-personal-safety)
@@ -54,3 +54,4 @@ LLM vulnerabilities can be categorized into 5 major LLM risk categories. Think o
 | Brand Image Risks         | `ExcessiveAgency`, `Robustness`, `Competition`, `IntellectualProperty`                                                                                              | Brand Image Risks involve vulnerabilities that can harm the perception of an organization or brand by spreading incorrect, misleading information, or competition-related content. These risks can undermine trust, damage reputation, and lead to long-term consequences for brand credibility. |
 | Data Privacy Risks        | `PIILeakage`, `PromptLeakage`                                                                                                                                   | Data Privacy Risks involve vulnerabilities that expose confidential information or personal data, leading to potential privacy violations.                    |
 | Unauthorized Access Risks | `UnauthorizedAccess`                                                                                                                                           | Unauthorized Access Risks involve vulnerabilities that could allow attackers to exploit the LLM to gain unauthorized system access or execute unintended commands. |
+```
