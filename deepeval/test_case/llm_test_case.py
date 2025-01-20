@@ -19,7 +19,7 @@ class ToolCall(BaseModel):
     description: Optional[str] = None
     reasoning: Optional[str] = None
     output: Optional[Any] = None
-    input_parameters: Optional[Dict] = Field(None, alias="evaluationModel")
+    input_parameters: Optional[Dict[str, Any]] = Field(None, alias="inputParameters")
 
 @dataclass
 class LLMTestCase:
