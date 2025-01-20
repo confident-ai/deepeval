@@ -48,8 +48,8 @@ class ToolCorrectnessMetric(BaseMetric):
         check_llm_test_case_params(test_case, required_params, self)
 
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
-            self.tools_called: List[str] = test_case.tools_called
-            self.expected_tools: List[str] = test_case.expected_tools
+            self.tools_called: List[str] = [tool_call.name for tool_call in test_case.tools_called]
+            self.expected_tools: List[str] = [tool_call.name for tool_call in test_case.tools_called]
             self.score = self._calculate_score()
             self.reason = self._generate_reason()
             self.success = self.score >= self.threshold

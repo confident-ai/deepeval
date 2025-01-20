@@ -9,6 +9,7 @@ from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
+    ToolCall
 )
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -226,6 +227,8 @@ class GEval(BaseMetric):
         text = """"""
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
+            if isinstance(value, ToolCall):
+                value = value.json(indent=4)
             text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
 
         g_eval_params_str = construct_g_eval_params_string(
@@ -281,6 +284,8 @@ class GEval(BaseMetric):
         text = """"""
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
+            if isinstance(value, ToolCall):
+                value = value.json(indent=4)
             text += f"{param.value}: {value} \n\n"
 
         g_eval_params_str = construct_g_eval_params_string(
