@@ -23,7 +23,7 @@ module.exports = {
         routeBasePath: "tutorials", 
         sidebarPath: require.resolve("./sidebarTutorials.js"), 
         editUrl:
-          "https://github.com/confident-ai/deepeval/edit/main/docs/tutorials/",
+          "https://github.com/confident-ai/deepeval/edit/main/docs/",
         showLastUpdateAuthor: true,
         showLastUpdateTime: true,
       },
@@ -36,7 +36,7 @@ module.exports = {
         routeBasePath: "confident-ai",
         sidebarPath: require.resolve("./sidebarConfidentAI.js"), 
         editUrl:
-          "https://github.com/confident-ai/deepeval/edit/main/docs/confident-ai/",
+          "https://github.com/confident-ai/deepeval/edit/main/docs/",
         showLastUpdateAuthor: true,
         showLastUpdateTime: true,
       },
@@ -49,7 +49,7 @@ module.exports = {
         routeBasePath: "guides",
         sidebarPath: require.resolve("./sidebarGuides.js"), 
         editUrl:
-          "https://github.com/confident-ai/deepeval/edit/main/docs/guides/",
+          "https://github.com/confident-ai/deepeval/edit/main/docs/",
         showLastUpdateAuthor: true,
         showLastUpdateTime: true,
       },
@@ -84,7 +84,7 @@ module.exports = {
         docs: {
           path: "docs",
           editUrl:
-            "https://github.com/confident-ai/deepeval/edit/main/docs/docs/",
+            "https://github.com/confident-ai/deepeval/edit/main/docs/",
           showLastUpdateAuthor: true,
           showLastUpdateTime: true,
           sidebarPath: require.resolve("./sidebars.js"),
