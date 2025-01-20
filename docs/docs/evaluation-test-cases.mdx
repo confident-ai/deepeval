@@ -201,18 +201,39 @@ The `tools_called` parameter is an **optional** parameter that represents the to
 # A hypothetical LLM application example
 import chatbot
 
-
 test_case = LLMTestCase(
     input="Why did the chicken cross the road?",
     actual_output=chatbot.run(input),
     # Replace this with the tools that were actually used
-    tools_called=["WebSearch", "DatabaseQuery"]
+    tools_called=[ToolCall(name="Calculator Tool"), ToolCall(name="WebSearch Tool")]
 )
 ```
 
 :::note
 `tools_called` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
 :::
+
+As you've seen, the `tools_called` parameter accepts a list of `ToolCall` objects:
+
+```python
+calculator_tool = ToolCall(
+    name="calculator tool",
+    description="A tool that calculates mathematical equations or expressions.",
+    reasoning="User asked for a solution to a math equation; invoking the calculator tool for computation.",
+    output=5,
+    input_parameters={
+        "user_string": "what is 2+3?"
+    }
+)
+```
+
+A `ToolCall` object accepts 1 mandatory and 4 optional parameters:
+
+- `name`: a string representing the **name** of the tool.
+- [Optional] `description`: a string describing the **tool's purpose**.
+- [Optional] `reasoning`: A string explaining the **agent's reasoning** to use the tool.
+- [Optional] `output`: The tool's **output**, which can be of any data type.
+- [Optional] `input_parameters`: A dictionary with string keys representing the **input parameters** (and respective values) passed into the tool function.
 
 ### Expected Tools
 
@@ -228,8 +249,8 @@ test_case = LLMTestCase(
     input=input,
     actual_output=chatbot.run(input),
     # Replace this with the tools that were actually used
-    tools_called=["WebSearch", "DatabaseQuery"],
-    expected_tools=["DatabaseQuery"]
+    tools_called=[ToolCall(name="Calculator Tool"), ToolCall(name="WebSearch Tool")]
+    expected_tools=[ToolCall(name="Calculator Tool")]
 )
 ```
 
