@@ -56,7 +56,7 @@ print(answer_relevancy_metric.reason)
 ```
 
 :::info
-You can also extract all necessary outputs and retrieval contexts for each given input to your LlamaIndex application to [create an `EvaluationDataset` to evaluate test cases in bulk.](evaluation-datasets)
+You can also extract all necessary outputs and retrieval contexts for each given input to your LlamaIndex application to [create an `EvaluationDataset` to evaluate test cases in bulk.](/docs/evaluation-datasets)
 :::
 
 ## Unit Testing LlamaIndex
@@ -243,7 +243,7 @@ So while both metrics and evaluators can be used for a one-off, standalone evalu
 - can leverage `deepeval`'s native Pytest integration to unit test LlamaIndex applications in CI/CD pipelines
 - can be used with any framework, meaning you are not vendor locked-in into LlamaIndex
 - covers a wider range of evaluation criteria/use cases
-- automatically integrates with [Confident AI](confident-ai-introduction), which offers evaluation analysis, evaluation debugging, dataset management, and real-time evaluations in production
+- automatically integrates with [Confident AI](/confident-ai/confident-ai-introduction), which offers evaluation analysis, evaluation debugging, dataset management, and real-time evaluations in production
 
 :::note
 The only upside of using `deepeval`'s LlamaIndex evaluators instead of metrics, is an evaluator automatically extracts the `retrieval_context` from a LlamaIndex response. However, as shown in previous examples, manually extracting the `retrieval_context` from a LlamaIndex response is extremely straightforward:

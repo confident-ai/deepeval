@@ -4,7 +4,7 @@ title: OWASP Top 10 for LLMs
 sidebar_label: OWASP Top 10 for LLMs
 ---
 
-The **OWASP Top 10 for Large Language Models (LLMs)** is a comprehensive list of the most critical security risks associated with LLM applications. This resource is designed to help developers, security professionals, and organizations identify, understand, and mitigate vulnerabilities in these systems, ensuring safer and more robust deployments in real-world applications. 
+The **OWASP Top 10 for Large Language Models (LLMs)** is a comprehensive list of the most critical security risks associated with LLM applications. This resource is designed to help developers, security professionals, and organizations identify, understand, and mitigate vulnerabilities in these systems, ensuring safer and more robust deployments in real-world applications.
 
 :::tip
 You can **detect OWASP risks** by utilizing DeepEval's 50+ `vulnerability_type` options and 10+ `attack_enhancement` strategies when scanning your LLM application.
@@ -12,15 +12,15 @@ You can **detect OWASP risks** by utilizing DeepEval's 50+ `vulnerability_type` 
 
 This top 10 risks in 2025 are:
 
-1. [Prompt Injection](#prompt-injection)  
-2. [Sensitive Information Disclosure](#sensitive-information-disclosure)  
-3. [Supply Chain](#supply-chain)  
-4. [Data and Model Poisoning](#data-and-model-poisoning)  
-5. [Improper Output Handling](#improper-output-handling)  
-6. [Excessive Agency](#excessive-agency)  
-7. [System Prompt Leakage](#system-prompt-leakage)  
-8. [Vector and Embedding Weaknesses](#vector-and-embedding-weaknesses)  
-9. [Misinformation](#misinformation)  
+1. [Prompt Injection](#prompt-injection)
+2. [Sensitive Information Disclosure](#sensitive-information-disclosure)
+3. [Supply Chain](#supply-chain)
+4. [Data and Model Poisoning](#data-and-model-poisoning)
+5. [Improper Output Handling](#improper-output-handling)
+6. [Excessive Agency](#excessive-agency)
+7. [System Prompt Leakage](#system-prompt-leakage)
+8. [Vector and Embedding Weaknesses](#vector-and-embedding-weaknesses)
+9. [Misinformation](#misinformation)
 10. [Unbounded Consumption](#unbounded-consumption)
 
 ## Prompt Injection
@@ -28,7 +28,6 @@ This top 10 risks in 2025 are:
 Sensitive Information Disclosure involves crafting inputs that trick a model into revealing private, confidential, or sensitive data it has been exposed to during training or through operational settings. This may include passwords, API keys, or personal user data, violating privacy and security standards.
 
 In DeepEval, you can apply prompt injection to any baseline attack for any vulnerability by including `AttackEnhancement.PROMPT_INJECTION` in your attack enhancements. Here’s how:
-
 
 ```python
 from deepeval.red_teaming import AttackEnhancement
@@ -44,7 +43,7 @@ print("Red Teaming Results: ", results)
 ```
 
 :::info
-If you're curious about how baseline attacks are generated in DeepEval before they are enhanced, [read this section](red-teaming-introduction#how-does-it-work).
+If you're curious about how baseline attacks are generated in DeepEval before they are enhanced, [read this section](/docs/red-teaming-introduction#how-does-it-work).
 :::
 
 ## Sensitive Information Disclosure
@@ -142,7 +141,7 @@ from deepeval.vulnerability.excessive_agency import ExcessiveAgencyType
 
 # Excessive agency vulnerabilities available in DeepEval
 excessive_agency_vulnerabilities = [
-    ExcessiveAgency(types=[ 
+    ExcessiveAgency(types=[
         ExcessiveAgencyType.FUNCTIONALITY,
         ExcessiveAgencyType.PERMISSIONS,
         ExcessiveAgencyType.AUTONOMY
@@ -171,7 +170,7 @@ from deepeval.vulnerability.PromptLeakage import PromptLeakageType
 
 # System prompt leakage vulnerabilities available in DeepEval
 system_prompt_leakage_vulnerabilities = [
-    PromptLeakage(types=[ 
+    PromptLeakage(types=[
         PromptLeakageType.SECRETS_AND_CREDENTIALS,
         PromptLeakageType.INSTRUCTIONS,
         PromptLeakageType.GUARDS,
@@ -206,7 +205,7 @@ from deepeval.vulnerability.competition import CompetitionType
 
 # Misinformation vulnerabilities available in DeepEval
 misinformation_vulnerabilities = [
-    Misinformation(types=[ 
+    Misinformation(types=[
         MisinformationType.FACTUAL_ERRORS,
         MisinformationType.UNSUPPORTED_CLAIMS,
         MisinformationType.EXPERTISE_MISREPRESENTATION

@@ -16,7 +16,7 @@ There are three optional arguments when using the `SQuAD` benchmark:
 
 - [Optional] `tasks`: a list of tasks (`SQuADTask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `SQuADTask` enums can be found [here](#squad-tasks).
 - [Optional] `n_shots`: the number of examples for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.
-- [Optional] `evaluation_model`: a string specifying which of OpenAI's GPT models to use for scoring, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `evaluation_model`: a string specifying which of OpenAI's GPT models to use for scoring, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 
 :::note
 Unlike most benchmarks, `DeepEval`'s SQuAD implementation requires an `evaluation_model`, using an **LLM-as-a-judge** to generate a binary score determining if the prediction and expected output align given the context.
@@ -24,7 +24,7 @@ Unlike most benchmarks, `DeepEval`'s SQuAD implementation requires an `evaluatio
 
 ## Example
 
-The code below assesses a custom `mistral_7b` model ([click here](guides-using-custom-llms) to learn how to use ANY custom LLM) on passages about pharmacy and Normans in `SQuAD` using 3-shot prompting.
+The code below assesses a custom `mistral_7b` model ([click here](/guides/guides-using-custom-llms) to learn how to use ANY custom LLM) on passages about pharmacy and Normans in `SQuAD` using 3-shot prompting.
 
 ```python
 from deepeval.benchmarks import SQuAD
