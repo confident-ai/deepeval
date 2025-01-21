@@ -15,6 +15,10 @@ class LLMTestCaseParams(Enum):
     EXPECTED_TOOLS = "expected_tools"
     REASONING = "reasoning"
 
+class ToolCallParams(Enum):
+    TOOL="tool"
+    INPUT_PARAMETERS="input_parameters"
+    OUTPUT="output"
 
 class ToolCall(BaseModel):
     name: str
