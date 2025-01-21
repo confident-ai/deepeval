@@ -86,10 +86,10 @@ There are **SIX** rules to follow when creating a custom LLM evaluation model:
 6. Implement the `a_generate()` method, with the same function signature as `generate()`. **Note that this is an async method**. In this example, we called `self.generate(prompt)`, which simply reuses the synchronous `generate()` method. However, although optional, you should implement an asynchronous version (if possible) to speed up evaluation.
 
 :::caution
-In later sections, you'll an exception to rules 4. and 5., as the `generate()` and `a_generate()` method can actually be rewritten to optimize custom LLM outputs that are essential for evaluation.
+In later sections, you'll find an exception to rules 4. and 5., as the `generate()` and `a_generate()` method can actually be rewritten to optimize custom LLM outputs that are essential for evaluation.
 :::
 
-Then, instatiate the `CustomLlama3_8B` class and test the `generate()` (or `a_generate()`) method out:
+Then, instantiate the `CustomLlama3_8B` class and test the `generate()` (or `a_generate()`) method out:
 
 ```python
 ...
