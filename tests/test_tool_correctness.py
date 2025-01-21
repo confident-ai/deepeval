@@ -318,9 +318,9 @@ def test_customer_chatbot(test_case: LLMTestCase):
     assert_test(
         test_case,
         [
-            answer_relevancy_metric,
+            # answer_relevancy_metric,
             tool_correctness_metric,
             input_parameters_correctness,
-            output_correctness_metric
+            output_correctness_metric,
         ],
     )

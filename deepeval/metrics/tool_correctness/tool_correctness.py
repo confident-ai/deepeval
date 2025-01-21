@@ -321,7 +321,12 @@ class ToolCorrectnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Tool Correctness"
+        if self.tool_call_param==ToolCallParam.INPUT_PARAMETERS:
+            return "Tool Correctness (Input Parameter)"
+        elif self.tool_call_param==ToolCallParam.OUTPUT:
+            return "Tool Correctness (Output)"
+        else:
+            return "Tool Correctness"
 
     def indent_multiline_string(self, s, indent_level=4):
         indent = " " * indent_level
