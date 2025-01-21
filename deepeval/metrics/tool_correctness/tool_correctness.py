@@ -25,8 +25,8 @@ required_params: List[LLMTestCaseParams] = [
 class ToolCorrectnessMetric(BaseMetric):
     def __init__(
         self,
-        tool_call_param: ToolCallParams = ToolCallParams.TOOL, 
         threshold: float = 0.5,
+        tool_call_param: ToolCallParams = ToolCallParams.TOOL, 
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
