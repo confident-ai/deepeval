@@ -25,9 +25,8 @@ To use the `ToolCorrectnessMetric`, you'll have to provide the following argumen
 
 ```python
 from deepeval.metrics import ToolCorrectnessMetric
-from deepeval.test_case import LLMTestCase, ToolCallParams
+from deepeval.test_case import LLMTestCase, ToolCallParams, ToolCall
 
-metric = ToolCorrectnessMetric(tool_call_param=ToolCallParams.TOOL)
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     actual_output="We offer a 30-day full refund at no extra cost.",
@@ -36,6 +35,7 @@ test_case = LLMTestCase(
     expected_tools=[ToolCall(name="WebSearch")]
 )
 
+metric = ToolCorrectnessMetric(evaluation_param=ToolCallParams.TOOL)
 metric.measure(test_case)
 print(metric.score)
 print(metric.reason)
@@ -44,7 +44,7 @@ print(metric.reason)
 There are seven optional parameters when creating a `ToolCorrectnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
-- [Optional] `tool_call_param`: a `ToolCallParams` indicating what aspect of tool correctness (tool, input parameters, output) to evaluate.
+- [Optional] `evaluation_param`: a `ToolCallParams` indicating what aspect of tool correctness (tool, input parameters, output) to base evaluations on.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.

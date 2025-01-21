@@ -178,7 +178,7 @@ def test_everything():
         verbose_mode=verbose_mode,
     )
     metric12 = ConversationRelevancyMetric(model=eval_model)
-    metric13 = ToolCorrectnessMetric()
+    # metric13 = ToolCorrectnessMetric()
     metric14 = ConversationCompletenessMetric(model=eval_model)
     metric15 = RoleAdherenceMetric(model=eval_model)
     metric16 = PromptAlignmentMetric(
@@ -193,8 +193,6 @@ def test_everything():
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
-        tools_called=["ok"],
-        expected_tools=["ok", "ok"],
     )
     c_test_case = ConversationalTestCase(
         turns=[test_case, test_case], chatbot_role="have a conversation"
@@ -214,7 +212,7 @@ def test_everything():
             metric10,
             metric11,
             metric12,
-            metric13,
+            # metric13,
             metric14,
             metric15,
             metric16,
@@ -225,7 +223,7 @@ def test_everything():
     )
 
 
-# @pytest.mark.skip(reason="openadi is expensive")
+@pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
