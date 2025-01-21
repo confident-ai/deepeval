@@ -1,4 +1,4 @@
-from deepeval.test_case import LLMTestCase, ToolCall, ToolCallParam
+from deepeval.test_case import LLMTestCase, ToolCall, ToolCallParams
 from deepeval.metrics import ToolCorrectnessMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
 from deepeval import evaluate, assert_test
@@ -6,17 +6,17 @@ import pytest
 
 input_parameters_correctness = ToolCorrectnessMetric(
     threshold=0.5,
-    tool_call_param=ToolCallParam.INPUT_PARAMETERS,
+    tool_call_param=ToolCallParams.INPUT_PARAMETERS,
     should_exact_match=False,
 )
 tool_correctness_metric = ToolCorrectnessMetric(
     threshold=0.5,
-    tool_call_param=ToolCallParam.TOOL,
+    tool_call_param=ToolCallParams.TOOL,
     should_exact_match=True,
     should_consider_ordering=True,
 )
 output_correctness_metric = ToolCorrectnessMetric(
-    tool_call_param=ToolCallParam.OUTPUT,
+    tool_call_param=ToolCallParams.OUTPUT,
 )
 answer_relevancy_metric = AnswerRelevancyMetric()
 

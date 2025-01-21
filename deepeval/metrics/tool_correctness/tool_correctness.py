@@ -10,7 +10,7 @@ from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
-    ToolCallParam
+    ToolCallParams
 )
 from deepeval.metrics import BaseMetric
 import json
@@ -25,11 +25,11 @@ required_params: List[LLMTestCaseParams] = [
 class ToolCorrectnessMetric(BaseMetric):
     def __init__(
         self,
+        tool_call_param: ToolCallParams = ToolCallParams.TOOL, 
         threshold: float = 0.5,
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        tool_call_param: ToolCallParam = ToolCallParam.TOOL, 
         should_exact_match: bool = False,
         should_consider_ordering: bool = False,
     ):
@@ -37,7 +37,7 @@ class ToolCorrectnessMetric(BaseMetric):
         self.include_reason = include_reason
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.tool_call_param: ToolCallParam = tool_call_param
+        self.tool_call_param: ToolCallParams = tool_call_param
         self.should_exact_match = should_exact_match
         self.should_consider_ordering = should_consider_ordering
 
@@ -75,7 +75,7 @@ class ToolCorrectnessMetric(BaseMetric):
                 f"{expected_tools_formatted}",
                 f"{tools_called_formatted}",
             ]
-            if self.tool_call_param == ToolCallParam.TOOL:
+            if self.tool_call_param == ToolCallParams.TOOL:
                 self.tools_called: List[str] = [
                     tool_call.name for tool_call in test_case.tools_called
                 ]
@@ -84,7 +84,7 @@ class ToolCorrectnessMetric(BaseMetric):
                 ]
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-            if self.tool_call_param == ToolCallParam.INPUT_PARAMETERS:
+            if self.tool_call_param == ToolCallParams.INPUT_PARAMETERS:
                 self.input_parameters_called_list: List[str] = [
                     tool_call.input_parameters for tool_call in test_case.tools_called
                 ]
@@ -93,7 +93,7 @@ class ToolCorrectnessMetric(BaseMetric):
                 ]
                 self.score = self._calculate_input_parameter_correctness_score()
                 self.reason = self._generate_input_parameter_correctness_reason()
-            if self.tool_call_param == ToolCallParam.OUTPUT:
+            if self.tool_call_param == ToolCallParams.OUTPUT:
                 self.outputs: List[str] = [
                     tool_call.output for tool_call in test_case.tools_called
                 ]
@@ -321,9 +321,9 @@ class ToolCorrectnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        if self.tool_call_param==ToolCallParam.INPUT_PARAMETERS:
+        if self.tool_call_param==ToolCallParams.INPUT_PARAMETERS:
             return "Tool Correctness (Input Parameter)"
-        elif self.tool_call_param==ToolCallParam.OUTPUT:
+        elif self.tool_call_param==ToolCallParams.OUTPUT:
             return "Tool Correctness (Output)"
         else:
             return "Tool Correctness"

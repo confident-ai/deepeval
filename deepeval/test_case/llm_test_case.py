@@ -15,7 +15,7 @@ class LLMTestCaseParams(Enum):
     EXPECTED_TOOLS = "expected_tools"
     REASONING = "reasoning"
 
-class ToolCallParam(Enum):
+class ToolCallParams(Enum):
     TOOL="tool"
     INPUT_PARAMETERS="input_parameters"
     OUTPUT="output"
