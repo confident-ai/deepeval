@@ -140,12 +140,14 @@ def test_red_teamer():
         target_system_prompt="You are a friendly chatbot.",
         evaluation_model="gpt-3.5-turbo",
         synthesizer_model="gpt-3.5-turbo",
-        async_mode=False,
+        async_mode=True,
     )
     results = red_teamer.scan(
-        target_model_callback=generate,
+        target_model_callback=a_generate,
         attacks_per_vulnerability_type=1,
-        attack_enhancements={AttackEnhancement.GRAY_BOX_ATTACK: 1},
+        attack_enhancements={
+            enhancement: 1 for enhancement in AttackEnhancement
+        },
         vulnerabilities=vulnerabilties,
         max_concurrent_tasks=2,
     )
