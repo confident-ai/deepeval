@@ -29,7 +29,7 @@ from deepeval.utils import (
 from deepeval.test_run.cache import global_test_run_cache_manager
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
-LOGIN_PROMPT = "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI for test reports, benchmark analysis, compare models/prompts, and catch regressions for your LLM system."
+LOGIN_PROMPT = "\n‼️ Looking for a place for your LLM test data to live 🏡? Use Confident AI for test reports, benchmark analysis, compare models/prompts, and catch regressions for your LLM system."
 
 
 class TestRunResultDisplay(Enum):
