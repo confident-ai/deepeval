@@ -213,7 +213,7 @@ class GPTModel(DeepEvalBaseLLM):
             and not self.should_use_local_model()
         )
         if schema and using_openai_model:
-            client = OpenAI()
+            client = OpenAI(api_key=self._openai_api_key)
             if self.model_name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.model_name,
@@ -265,7 +265,7 @@ class GPTModel(DeepEvalBaseLLM):
             and not self.should_use_local_model()
         )
         if schema and using_openai_model:
-            client = AsyncOpenAI()
+            client = AsyncOpenAI(api_key=self._openai_api_key)
             if self.model_name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.model_name,
@@ -523,7 +523,7 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
     def generate(
         self, multimodal_input: List[Union[str, MLLMImage]]
     ) -> Tuple[str, float]:
-        client = OpenAI()
+        client = OpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
         response = client.chat.completions.create(
             model=self.model_name,
@@ -545,7 +545,7 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
     async def a_generate(
         self, multimodal_input: List[Union[str, MLLMImage]]
     ) -> Tuple[str, float]:
-        client = AsyncOpenAI()
+        client = AsyncOpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
         response = await client.chat.completions.create(
             model=self.model_name,

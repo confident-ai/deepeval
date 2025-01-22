@@ -361,19 +361,37 @@ evaluate(dataset, [answer_relevancy_metric])
 
 :::
 
-Additionally, you can avoid re-evaluating test cases by reading from `deepeval`'s local cache using the optional `-c` flag:
-
-```
-deepeval test run test_dataset.py -c
-```
-
-Or run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
+Additionally you can run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 
 ```
 deepeval test run test_dataset.py -n 2
 ```
 
 Visit the [evaluation introduction section](/docs/evaluation-introduction#evaluating-with-pytest) to learn about the different types of flags you can use with the `deepeval test run` command.
+
+### Editing Datasets
+
+Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhre as one source of truth. Your team can annotate datasets directly on [Confident AI (signup here)](https://app.confident-ai.com):
+
+<img
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/dataset-editing-page.png"
+  alt="Confident AI"
+/>
+
+You can then pull the dataset from the cloud to evaluate locally like how you would pull a Github repo.
+
+```python
+from deepeval.dataset import EvaluationDataset
+from deepeval.metrics import AnswerRelevancyMetric
+
+dataset = EvaluationDataset()
+# supply your dataset alias
+dataset.pull(alias="QA Dataset")
+
+evaluate(dataset, metrics=[AnswerRelevancyMetric()])
+```
+
+And you're done! All results will also be available on Confident AI available for comparison and analysis.
 
 ## Generate Synthetic Datasets
 
