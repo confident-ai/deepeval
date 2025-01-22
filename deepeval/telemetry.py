@@ -9,6 +9,8 @@ from enum import Enum
 from typing import List, Dict
 import requests
 
+from deepeval.test_run.test_run import LOGIN_PROMPT
+
 
 class Feature(Enum):
     REDTEAMING = "redteaming"
@@ -270,6 +272,7 @@ def capture_login_event():
             span.set_attribute("user.unique_id", get_unique_id())
             span.set_attribute("last_feature", last_feature.value)
             span.set_attribute("completed", True)
+            span.set_attribute("login_prompt", LOGIN_PROMPT)
             yield span
     else:
         yield
