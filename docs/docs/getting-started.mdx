@@ -21,7 +21,14 @@ Additionally, DeepEval integrates natively with [Confident AI](https://app.confi
 <Envelope />
 
 :::tip DID YOU KNOW?
-**Confident AI is the `deepeval` native platform** built specifically for LLM evaluation carried out by `deepeval`. It takes no additional code to setup, is automatically integrated with all code you run using `deepeval`, and you can [click here to get started](https://confident-ai.com) immediately.
+**Confident AI is the LLM evaluation platform** built specifically for `deepeval`. It allows you to manage your entire LLM evaluation workflow (datasets, testing reports, monitoring, etc.) in one centralized place. It makes sure you do LLM evaluations the right way.
+
+<img
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/overview-page.png"
+  alt="Confident AI"
+/>
+
+**It takes no additional code to setup**, is automatically integrated with all code you run using `deepeval`, and you can [click here to sign up for free](https://app.confident-ai.com/auth/signup).
 :::
 
 ## Setup A Python Environment
@@ -47,8 +54,8 @@ pip install -U deepeval
 deepeval login
 ```
 
-:::tip
-**Confident AI is free to try**, and allows you to keep all evaluation results on the cloud. No payment or credit ard upfront. Sign up [here.](https://app.confident-ai.com)
+:::info
+**Confident AI is free to try**, and allows you to keep all evaluation results on the cloud. Sign up [here.](https://app.confident-ai.com)
 :::
 
 ## Create Your First Test Case
@@ -115,8 +122,7 @@ After you've pasted in your API key, Confident AI will generate testing reports 
 :::tip Did you know?
 **You should also save your test run as a dataset on Confident AI**, which allows you to reuse the set of `input`s and any `expected_output`, `context`, etc. for subsequent evaluations.
 
-This workflow allows you to run experiments with different models, prompts, and pinpoint regressions/improvements, and allows for domain experts to collaborate on evaluation datasets that is otherwise difficult for an engineer, researcher, and data scientist to curate.
-**This is the "correct" way to do evaluations.**
+This workflow allows you to run experiments with different models, prompts, and pinpoint regressions/improvements, and allows for domain experts to collaborate on evaluation datasets that is otherwise difficult for an engineer, researcher, and data scientist to curate. This is the "correct" way to do evaluations.
 :::
 
 #### Locally
@@ -131,10 +137,63 @@ export DEEPEVAL_RESULTS_FOLDER="./data"
 set DEEPEVAL_RESULTS_FOLDER=.\data
 ```
 
+## Run Another Test Run
+
+The whole point of evaluation is to help you iterate towards a better LLM application, and you can do this by comparing the results of two test runs. Simply run another evaluation (we'll use a different `actual_output` in this example):
+
+```python title="test_example.py"
+from deepeval import assert_test
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+
+def test_answer_relevancy():
+    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
+    test_case = LLMTestCase(
+        input="What if these shoes don't fit?",
+        # Replace this with the actual output of your LLM application
+        actual_output="I agree, its a pretty nice day today",
+        retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
+    )
+    assert_test(test_case, [answer_relevancy_metric])
+```
+
+```console
+deepeval test run test_example.py
+```
+
+:::info
+In this example, we've delibrately showed a "worse" `actual_output` that is extremely irrelevant when compared to the previous test case. In reality, you'll not be hardcoding the `actual_output`s but rather be generating them at evaluation time.
+:::
+
+After running the new testrun , you should see the `AnswerRelevancyMetric()` failing, and it is because the `actual_output` is now not relevant at all to the `input`. This is actually known as a "regression", and you can catch these by including `deepeval` in CI/CD pipeliens, or just in a python script.
+
+Based on these two results, you can decide which iterate is better, and whether the latest change you've made to your LLM application is safe to deploy.
+
+### Comparing Iterations
+
+Although you can go through hundreds of test cases in your terminal, here's what catching regressions/identifying improvements by comparing test runs looks like on [Confident AI (sign up here)](https://app.confident-ai.com):
+
+<img
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/comparison-page.png"
+  alt="Confident AI"
+  style={{
+    height: "auto",
+    maxHeight: "500px",
+  }}
+/>
+
+:::note
+We didn't use the same test case data as shown above to demonstrate a more realistic example of what comparing two test runs looks like.
+:::
+
+If you look closely, you can see that for the same `LLMTestCase` (matched by [`name`](/docs/evaluation-test-cases#labeling-test-cases-for-confident-ai) or `input`), the difference in its `actual_output` led to a better `Correctness (GEval)` metric score.
+
+Green rows mean your LLM improved on this particular test case, while red means it regressed. You'll want to look at the entire test run to see if your results are better or worse!
+
 ## Create Your First Metric
 
 :::info
-You can also run all of `deepeval`'s metrics on Confident AI's infrastructure. Start by following [this](/confident-ai/confident-ai-testing-n-evaluation-experiments) guide.
+If you're having trouble deciding on which metric to use, you can follow [this tutorial](/tutorials/tutorial-metrics-defining-an-evaluation-criteria) or use [Confident AI's metrics recommendation tool](https://confidnet-ai.com).
 :::
 
 `deepeval` provides two types of LLM evaluation metrics to evaluate LLM outputs: plug-and-use **default** metrics, and **custom** metrics for any evaluation criteria.
