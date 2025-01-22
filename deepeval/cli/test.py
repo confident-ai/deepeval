@@ -9,6 +9,7 @@ from typing import Optional
 
 from deepeval.test_run import global_test_run_manager, TEMP_FILE_NAME
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
+from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.utils import (
     delete_file_if_exists,
     set_should_ignore_errors,
@@ -94,6 +95,13 @@ def run(
         "-v",
         help="Whether to turn on verbose mode for evaluation or not",
     ),
+    display: Optional[TestRunResultDisplay] = typer.Option(
+        TestRunResultDisplay.ALL.value,
+        "--display",
+        "-d",
+        help="Whether to display all test cases or just some in the end",
+        case_sensitive=False,
+    ),
     mark: Optional[str] = typer.Option(
         None,
         "--mark",
@@ -154,7 +162,7 @@ def run(
         pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
-    global_test_run_manager.wrap_up_test_run(run_duration)
+    global_test_run_manager.wrap_up_test_run(run_duration, True, display)
 
     invoke_test_run_end_hook()
 

@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 import json
 from pydantic import BaseModel, Field
@@ -28,6 +29,12 @@ from deepeval.utils import (
 from deepeval.test_run.cache import global_test_run_cache_manager
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
+
+
+class TestRunResultDisplay(Enum):
+    ALL = "all"
+    FAILING = "failing"
+    PASSING = "passing"
 
 
 class MetricScoreType(BaseModel):
@@ -392,7 +399,9 @@ class TestRunManager:
     def clear_test_run(self):
         self.test_run = None
 
-    def display_results_table(self, test_run: TestRun):
+    def display_results_table(
+        self, test_run: TestRun, display: TestRunResultDisplay
+    ):
         table = Table(title="Test Results")
         table.add_column("Test case", justify="left")
         table.add_column("Metric", justify="left")
@@ -402,6 +411,14 @@ class TestRunManager:
 
         for index, test_case in enumerate(test_run.test_cases):
             if test_case.metrics_data is None:
+                continue
+
+            if (
+                display == TestRunResultDisplay.PASSING
+                and test_case.success == False
+            ):
+                continue
+            elif display == TestRunResultDisplay.FAILING and test_case.success:
                 continue
 
             pass_count = 0
@@ -459,6 +476,17 @@ class TestRunManager:
         for index, conversational_test_case in enumerate(
             test_run.conversational_test_cases
         ):
+            if (
+                display == TestRunResultDisplay.PASSING
+                and conversational_test_case.success == False
+            ):
+                continue
+            elif (
+                display == TestRunResultDisplay.FAILING
+                and conversational_test_case.success
+            ):
+                continue
+
             pass_count = 0
             fail_count = 0
             conversational_test_case_name = conversational_test_case.name
@@ -569,6 +597,13 @@ class TestRunManager:
                     "",
                 )
 
+        table.add_row(
+            "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
+            "",
+            "",
+            "",
+            "",
+        )
         print(table)
         print(
             f"Total estimated evaluation tokens cost: {test_run.evaluation_cost} USD"
@@ -680,7 +715,7 @@ class TestRunManager:
             console.print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! View results on "
                 f"[link={link}]{link}[/link]."
-                "\n‼️  Friendly reminder 😇: You can also run evaluations with ALL of deepeval's metrics directly on Confident AI instead."
+                "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI to analyze, benchmark, compare models/prompts, and catch regressions for your LLM system."
             )
 
             if is_in_ci_env() == False:
@@ -690,7 +725,7 @@ class TestRunManager:
         else:
             console.print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run 'deepeval login' to save and analyze evaluation results on Confident AI. "
-                "\n‼️  Friendly reminder 😇: You can also run evaluations with ALL of deepeval's metrics directly on Confident AI instead."
+                "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI to analyze, benchmark, compare models/prompts, and catch regressions for your LLM system."
             )
 
     def save_test_run_locally(self):
@@ -714,7 +749,10 @@ class TestRunManager:
             os.remove(new_test_filename)
 
     def wrap_up_test_run(
-        self, runDuration: float, display_table: bool = True
+        self,
+        runDuration: float,
+        display_table: bool = True,
+        display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
     ) -> Optional[str]:
         test_run = self.get_test_run()
         if test_run is None:
@@ -750,7 +788,7 @@ class TestRunManager:
         global_test_run_cache_manager.wrap_up_cached_test_run()
 
         if display_table:
-            self.display_results_table(test_run)
+            self.display_results_table(test_run, display)
 
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
