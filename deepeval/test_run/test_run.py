@@ -29,6 +29,7 @@ from deepeval.utils import (
 from deepeval.test_run.cache import global_test_run_cache_manager
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
+LOGIN_PROMPT = "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI for test reports, benchmark analysis, compare models/prompts, and catch regressions for your LLM system."
 
 
 class TestRunResultDisplay(Enum):
@@ -714,8 +715,8 @@ class TestRunManager:
 
             console.print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! View results on "
-                f"[link={link}]{link}[/link]."
-                "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI for test reports, benchmark analysis, compare models/prompts, and catch regressions for your LLM system."
+                f"[link={link}]{link}[/link].",
+                LOGIN_PROMPT,
             )
 
             if is_in_ci_env() == False:
@@ -724,8 +725,8 @@ class TestRunManager:
             return link
         else:
             console.print(
-                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run 'deepeval login' to save and analyze evaluation results on Confident AI. "
-                "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI for test reports, benchmark analysis, compare models/prompts, and catch regressions for your LLM system."
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run 'deepeval login' to save and analyze evaluation results on Confident AI. ",
+                LOGIN_PROMPT,
             )
 
     def save_test_run_locally(self):
