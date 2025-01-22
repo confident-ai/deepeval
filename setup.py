@@ -14,7 +14,7 @@ setup(
     author="Confident AI",
     author_email="jeffreyip@confident-ai.com",
     description="The Open-Source LLM Evaluation Framework.",
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     long_description=long_description,
     long_description_content_type="text/markdown",
