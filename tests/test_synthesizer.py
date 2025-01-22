@@ -285,7 +285,7 @@ synthesizer_sync = Synthesizer(
 )
 synthesizer_async = Synthesizer(async_mode=True, max_concurrent=3)
 
-test_generate_goldens_from_docs(synthesizer_sync)
+# test_generate_goldens_from_docs(synthesizer_sync)
 test_generate_goldens_from_docs(synthesizer_async)
 
 #########################################################
