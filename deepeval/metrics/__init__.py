@@ -18,6 +18,7 @@ from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
+from .task_completion.task_completion import TaskCompletionMetric
 from .conversation_relevancy.conversation_relevancy import (
     ConversationRelevancyMetric,
 )
