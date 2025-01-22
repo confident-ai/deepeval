@@ -37,6 +37,7 @@ module.exports = {
             "metrics-contextual-relevancy",
             "metrics-json-correctness",
             "metrics-tool-correctness",
+            "metrics-task-completion",
             "metrics-summarization",
             "metrics-hallucination",
             "metrics-bias",
@@ -146,10 +147,7 @@ module.exports = {
     {
       type: "category",
       label: "Others",
-      items: [
-        "data-privacy",
-        "miscellaneous",
-      ],
+      items: ["data-privacy", "miscellaneous"],
       collapsed: false,
     },
   ],
