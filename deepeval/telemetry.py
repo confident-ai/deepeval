@@ -131,7 +131,10 @@ def capture_evaluation_run(type: str):
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
-            span.set_attribute("feature_status.evaluation", get_feature_status(Feature.EVALUATION))
+            span.set_attribute(
+                "feature_status.evaluation",
+                get_feature_status(Feature.EVALUATION),
+            )
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
             set_last_feature(Feature.EVALUATION)
@@ -165,7 +168,10 @@ def capture_synthesizer_run(
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
-            span.set_attribute("feature_status.synthesizer", get_feature_status(Feature.SYNTHESIZER))
+            span.set_attribute(
+                "feature_status.synthesizer",
+                get_feature_status(Feature.SYNTHESIZER),
+            )
             span.set_attribute("method", method)
             span.set_attribute("max_generations", max_generations)
             span.set_attribute("evolutions", num_evolutions)
@@ -190,7 +196,10 @@ def capture_red_teamer_run(
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
-            span.set_attribute("feature_status.redteaming", get_feature_status(Feature.REDTEAMING))
+            span.set_attribute(
+                "feature_status.redteaming",
+                get_feature_status(Feature.REDTEAMING),
+            )
             span.set_attribute(
                 "attacks_per_vulnerability", attacks_per_vulnerability_type
             )
@@ -216,7 +225,10 @@ def capture_guardrails(guards: List[str]):
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
-            span.set_attribute("feature_status.guardrail", get_feature_status(Feature.GUARDRAIL))
+            span.set_attribute(
+                "feature_status.guardrail",
+                get_feature_status(Feature.GUARDRAIL),
+            )
             for guard in guards:
                 span.set_attribute(f"vulnerability.{guard}", 1)
             set_last_feature(Feature.GUARDRAIL)
@@ -234,7 +246,10 @@ def capture_benchmark_run(benchmark: str, num_tasks: int):
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
-            span.set_attribute("feature_status.benchmark", get_feature_status(Feature.BENCHMARK))
+            span.set_attribute(
+                "feature_status.benchmark",
+                get_feature_status(Feature.BENCHMARK),
+            )
             span.set_attribute("benchmark", benchmark)
             span.set_attribute("num_tasks", num_tasks)
             set_last_feature(Feature.BENCHMARK)
@@ -323,6 +338,7 @@ def set_last_feature(feature: Feature):
     feature_status_key = f"DEEPEVAL_{feature.value.upper()}_STATUS"
     data[feature_status_key] = "old"
     write_telemetry_file(data)
+
 
 def get_feature_status(feature: Feature) -> str:
     """Gets the status of a feature ('new' or 'old') from the telemetry file."""
