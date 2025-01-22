@@ -8,8 +8,7 @@ import sentry_sdk
 from enum import Enum
 from typing import List, Dict
 import requests
-
-from deepeval.test_run.test_run import LOGIN_PROMPT
+from deepeval.constants import LOGIN_PROMPT
 
 
 class Feature(Enum):
