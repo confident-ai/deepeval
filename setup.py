@@ -44,6 +44,7 @@ setup(
         "opentelemetry-exporter-otlp-proto-grpc>=1.24.0,<2.0.0",
         "grpcio==1.67.1",
         "nest-asyncio",
+        "google-cloud-aiplatform>=1.78.0",
     ],
     extras_require={
         "dev": ["black"],
