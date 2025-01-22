@@ -715,7 +715,7 @@ class TestRunManager:
             console.print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! View results on "
                 f"[link={link}]{link}[/link]."
-                "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI to analyze, benchmark, compare models/prompts, and catch regressions for your LLM system."
+                "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI for test reports, benchmark analysis, compare models/prompts, and catch regressions for your LLM system."
             )
 
             if is_in_ci_env() == False:
@@ -725,7 +725,7 @@ class TestRunManager:
         else:
             console.print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run 'deepeval login' to save and analyze evaluation results on Confident AI. "
-                "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI to analyze, benchmark, compare models/prompts, and catch regressions for your LLM system."
+                "\n‼️ Looking for a place for your test data to live 🏡? Use Confident AI for test reports, benchmark analysis, compare models/prompts, and catch regressions for your LLM system."
             )
 
     def save_test_run_locally(self):
