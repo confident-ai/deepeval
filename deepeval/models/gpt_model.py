@@ -30,12 +30,7 @@ valid_gpt_models = [
     "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125",
     "gpt-3.5-turbo-1106",
-    "gpt-3.5-turbo-16k",
-    "gpt-3.5-turbo-instruct",
-    "gpt-3.5-turbo-instruct-0914",
-    "gpt-4",
     "gpt-4-0125-preview",
-    "gpt-4-0613",
     "gpt-4-1106-preview",
     "gpt-4-turbo",
     "gpt-4-turbo-2024-04-09",
@@ -48,6 +43,9 @@ valid_gpt_models = [
     "gpt-4o-mini-2024-07-18",
     "gpt-4-32k",
     "gpt-4-32k-0613",
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
 ]
 
 structured_outputs_models = [
@@ -57,18 +55,16 @@ structured_outputs_models = [
     "gpt-4o-2024-11-20",
     "gpt-4o-mini",
     "gpt-4o-mini-2024-07-18",
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
 ]
 
 json_mode_models = [
     "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125",
     "gpt-3.5-turbo-1106",
-    "gpt-3.5-turbo-16k",
-    "gpt-3.5-turbo-instruct",
-    "gpt-3.5-turbo-instruct-0914",
-    "gpt-4",
     "gpt-4-0125-preview",
-    "gpt-4-0613",
     "gpt-4-1106-preview",
     "gpt-4-turbo",
     "gpt-4-turbo-2024-04-09",
@@ -91,6 +87,9 @@ model_pricing = {
     "gpt-3.5-turbo-16k": {"input": 3.00 / 1e6, "output": 4.00 / 1e6},
     "gpt-3.5-turbo-0125": {"input": 0.50 / 1e6, "output": 1.50 / 1e6},
     "gpt-3.5-turbo-instruct": {"input": 1.50 / 1e6, "output": 2.00 / 1e6},
+    "o1": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
+    "o1-preview": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
+    "o1-2024-12-17": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
 }
 
 default_gpt_model = "gpt-4o"
