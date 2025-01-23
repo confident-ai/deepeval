@@ -226,6 +226,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         vertexai.init(project=self.project_id, location=self.location)
             
         super().__init__(model_name, *args, **kwargs)
+        self.model = self.load_model(*args, **kwargs)
 
     def load_model(self, *args, **kwargs):
         """Loads and initializes the Gemini model.
