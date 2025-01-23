@@ -245,6 +245,14 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
+        elif schema and not using_openai_model:
+            chat_model = self.load_model()
+            with get_openai_callback() as cb:
+                res = chat_model.invoke(prompt)
+                json_output = self.trim_and_load_json(
+                    res.content
+                )
+                return schema.model_validate(json_output), cb.total_cost
         else:
             chat_model = self.load_model()
             with get_openai_callback() as cb:
@@ -297,6 +305,14 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
+        elif schema and not using_openai_model:
+            chat_model = self.load_model()
+            with get_openai_callback() as cb:
+                res = await chat_model.ainvoke(prompt)
+                json_output = self.trim_and_load_json(
+                    res.content
+                )
+                return schema.model_validate(json_output), cb.total_cost
         else:
             chat_model = self.load_model()
             with get_openai_callback() as cb:
