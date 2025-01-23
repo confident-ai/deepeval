@@ -622,7 +622,7 @@ class EvaluationDataset:
                 link = response.link
                 console = Console()
                 console.print(
-                    "✅ Dataset successfully pushed to Confidnet AI! View at "
+                    "✅ Dataset successfully pushed to Confident AI! View at "
                     f"[link={link}]{link}[/link]"
                 )
                 webbrowser.open(link)
