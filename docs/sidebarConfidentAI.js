@@ -83,6 +83,15 @@ module.exports = {
         ],
         collapsed: true,
       },
+      {
+        type: "category",
+        label: "Advanced",
+        items: [
+          "confident-ai-advanced-evaluation-model",
+          "confident-ai-advanced-llm-connection"
+        ],
+        collapsed: true,
+      },
     ],
   };
   

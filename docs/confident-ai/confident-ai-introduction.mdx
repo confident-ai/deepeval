@@ -1,30 +1,105 @@
 ---
 id: confident-ai-introduction
-title: Confident AI Quickstart
-sidebar_label: Confident AI Quickstart
+title: Confident AI Introduction
+sidebar_label: Confident AI Introduction
 ---
 
-## Introduction
+import Equation from "@site/src/components/equation";
 
-Confident AI was designed for LLM teams to quality assure LLM applications from development to production. It is an all-in-one platform that unlocks `deepeval`'s full potential by allowing you to:
+:::caution
+Without best LLM evaluation practices in place, your testing results aren't really valid, and you might be iterating back and fourth between the wrong things, which means your LLM application isn't nearly as performant as they should be.
+:::
 
-- Evaluate LLM applications on Confident AI's infrastructure with proprietary models
-- Keep track of the evaluation history of your LLM application
-- Centralize and standardize evaluation datasets on the cloud
-- Trace and debug LLM applications during evaluation
-- Online evaluation of LLM applications in production
-- Generate evaluation-based summary reports for relevant stakeholders
+**Confident AI is the LLM evaluation platform for DeepEval**. It is native to DeepEval, and was designed for teams building LLM applications to maximize its performance, and to safeguard against unsatisfactory LLM outputs. Whilst DeepEval's open-source metrics are great for running evaluations, there is so much more to building a robust LLM evaluation workflow than collecting metric scores.
+
+If you're _serious_ about LLM evaluation, Confident AI is for you.
+
+<div
+  style={{
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    marginBottom: "2rem",
+  }}
+>
+  <img
+    id="light-invertable-img"
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-flywheel.svg"
+    alt="Confident AI"
+    style={{
+      marginTop: "2rem",
+      marginBottom: "2rem",
+      height: "auto",
+    }}
+  />
+  <img
+    src="/icons/logo.svg"
+    alt="Confident AI"
+    className="glowing"
+    style={{
+      width: "80px",
+      height: "80px",
+      transform: "translateY(-50%) translateX(-50%)",
+      position: "absolute",
+      left: "50%",
+      top: "50%",
+      filter: "drop-shadow(0px 0px 16px #7c3aed)",
+    }}
+  />
+</div>
+
+Apart from running the actual evaluations, you'll need a way to:
+
+- Curate a robust testing dataset
+- Perform LLM benchmark analysis
+- Tailor evaluation metrics to your opinions
+- Improve your testing dataset over time
+
+Confident AI enforces this by offering an opinionated, centralized platform to manage all the things mentioned above, which for you means "more accurate, informative, and faster insights", and allows you to "identify any performance gaps and identify how to improve my LLM system".
+
+:::tip DID YOU KNOW?
+
+<Equation formula="\textbf{Great LLM Evaluation} == \textbf{Quality of Dataset} \times \textbf{Quality of Metrics}" />
+
+:::
 
 ## Why Confident AI?
 
-As you try to evaluate and monitor LLM applications in both development and production environments, you might face several challenges:
+If your team has ever tried building its own LLM evaluation pipeline, here are the list of problems your team has likely encountered (and it's a long list):
 
-- **Evaluation and Testing Quality:** Running evaluations locally on `deepeval` is great but often times you will find flaky metric scores when using your own model of choice for evaluation. By running evaluations on Confident AI's infrastructure you get the latest metrics implementation with the best evaluation models available for each particular metric.
-- **Dataset Quality Assurance:** Keeping track of which test cases are ready for evaluation can become cumbersome, and miscommunication between expert data annotators and engineers regarding test case specifics can lead to inefficiencies.
-- **Experimentation Difficulties:** Finding an easy way to experiment with the best LLM system implementations is essential but often challenging and unintuitive.
-- **Identifying Issues at Scale:** Spotting unsatisfactory responses in production at scale can be daunting, especially for a complex LLM system architecture.
+- **Dataset Curation Is Fragmented And Annoying**
 
-Here's a diagram outlining how Confident AI works:
+  - Your team often juggle between tools like Google Sheets or Notion to curate and update datasets, leading to constant back-and-forth between engineers and domain expert annotators.
+  - There is no "source of truth" since datasets aren't in-sync with your codebase for evaluations.
+
+- **Evaluation Results Are (Still) More Vibe Checks Rather Than Experimentation**
+
+  - You basically just look at failing test cases, but they don’t provide actionable insights, and sharing it among your team is hard.
+  - It’s impossible to compare benchmarks side-by-side to understand how changes impact performance for each unit test, making it more guesswork than experimentation.
+
+- **Testing Data Are Static With No Easy Way To Keep Them Updated**
+
+  - Your LLM application needs and priorities evolves in production, but your datasets don’t.
+  - Figuring out how to query and incorporate real-world interactions into evaluation datasets is tedious and error-prone.
+
+- **Building A/B Testing Infrastructure Is Hard And Current Tools Don't Cut It**
+
+  - Setting up A/B testing for prompts/models to route traffic between versions is easy, but figuring out which version performed better and on what areas is hard.
+  - Tools like PostHog or Mixpanel give user-level analytics, while other LLM observability tools focus too much on cost and latency, none of which tell you anything about the end output quality.
+
+- **Human Feedback Doesn't Lead to Improvements**
+
+  - Teams spend time collecting feedback from end-users or internal reviewers, but there’s no clear path to integrate it back into datasets.
+  - A lot of manual effort is needed to make good use of feedback, and unfortunately it is a waste of everyone's time.
+
+- **There's No End To Manual Human Intervention**
+
+  - Teams rely on human reviewers to gatekeep LLM outputs before it reaches users in production, but the process is random, unstructured, and never ending.
+  - No automation to focus reviewers on high-risk areas or repetitive tasks.
+
+Confident AI solves all of your LLM evaluation problems so you can stop going around in circles. Here's a diagram outlining how Confident AI works:
 
 <div
   style={{
@@ -42,7 +117,7 @@ Here's a diagram outlining how Confident AI works:
 
 ## Login to Confident AI
 
-Everything in `deepeval` is already automatically integrated with Confident AI, including `deepeval`'s [custom metrics](/docs/metrics-custom). To start using Confident AI with `deepeval`, simply login in the CLI:
+Everything in `deepeval` is already automatically integrated with Confident AI, including any [custom metrics](/docs/metrics-custom) you've built on `deepeval`. To start using Confident AI with `deepeval`, simply login in the CLI:
 
 ```
 deepeval login
@@ -63,38 +138,4 @@ Or, via the CLI:
 deepeval login --confident-api-key "your-confident-api-key"
 ```
 
-:::
-
-## Setting Up Your Evaluation Model
-
-If you choose to run evaluations on Confident AI, you'll need to specify which evaluation model to use when running LLM-as-a-judge metrics. You'll need to configure an evaluation model if you're using any of these features:
-
-- [Online evaluations](/confident-ai/confident-ai-llm-monitoring-evaluations)
-- [Experiments](/confident-ai/confident-ai-testing-n-evaluation-experiments)
-
-To setup an evaluation model, you can either:
-
-1. Use OpenAI by supplying an OpenAI api key.
-2. Use a custom endpoint as your evaluation model.
-
-### Using Custom LLMs
-
-To use a custom LLM, go to **Project Settings** > **Evaluation Model**, and select the "Custom" option under the model provider dropdown. You'll have the opportunity to supply a model "Name", as well as an "Endpoint. The name is straightforward, since it is merely for identification purposes, but for the model endpoint, you'll have to ensure it follows the following rules:
-
-1. It **MUST** accept a `POST` request over HTTPS, and must be reachable over the internet.
-2. It **MUST** return a `200` status where **the response body is a simple string** (not Json, not nothing else, but string only) that represents the generated text of your evaluation model based on the given request body (which contains the `input`).
-3. It **MUST** correctly parse the request body to extract the `input` and use your evaluation model to generate a response based on this `input`.
-
-Here is what the structure of the request body looks like:
-
-```python
-{
-  "input": "Given the metric score, tell me why..."
-}
-```
-
-Please test your endpoint that it meets all the given requirements before continuing. This might be harder to debug than other steps, so you should aim to log any errors and reach out to support@confident-ai.com for any errors during setup.
-
-:::tip
-If you find a model provider that is not support, most of the time it is because no one has asked for it. Simply email support@confident-ai.com as well if that is the case.
 :::
