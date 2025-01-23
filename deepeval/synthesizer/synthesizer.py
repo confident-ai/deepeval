@@ -90,7 +90,7 @@ class Synthesizer:
         self.filtration_config = (
             filtration_config
             if filtration_config is not None
-            else FiltrationConfig()
+            else FiltrationConfig(critic_model=self.model)
         )
         self.evolution_config = (
             evolution_config
@@ -115,7 +115,7 @@ class Synthesizer:
     ):
         self.synthesis_cost = 0 if self.using_native_model else None
         if context_construction_config is None:
-            context_construction_config = ContextConstructionConfig()
+            context_construction_config = ContextConstructionConfig(critic_model=self.model)
 
         if self.async_mode:
             loop = get_or_create_event_loop()
@@ -183,7 +183,7 @@ class Synthesizer:
         context_construction_config: Optional[ContextConstructionConfig] = None,
     ):
         if context_construction_config is None:
-            context_construction_config = ContextConstructionConfig()
+            context_construction_config = ContextConstructionConfig(critic_model=self.model)
         self.synthesis_cost = 0 if self.using_native_model else None
 
         # Generate contexts from provided docs

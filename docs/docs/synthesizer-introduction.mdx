@@ -157,7 +157,7 @@ synthesizer = Synthesizer(filtration_config=filtration_config)
 
 There are three optional parameters when creating a `FiltrationConfig`:
 
-- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine input `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4o` when initialized as a standalone instance.
 - [Optional] `synthetic_input_quality_threshold`: a float representing the minimum quality threshold for synthetic input generation. Inputs with `quality_score`s lower than the `synthetic_input_quality_threshold` will be rejected. Defaulted to `0.5`.
 - [Optional] `max_quality_retries`: an integer that specifies the number of times to retry synthetic input generation if it does not meet the required quality. Defaulted to `3`.
 
