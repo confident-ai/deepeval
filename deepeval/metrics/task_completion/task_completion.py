@@ -60,7 +60,9 @@ class TaskCompletionMetric(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                user_goal, task_outcome = self._extract_goal_and_outcome(test_case)
+                user_goal, task_outcome = self._extract_goal_and_outcome(
+                    test_case
+                )
                 self.user_goal = user_goal
                 self.task_outcome = task_outcome
                 verdict, reason = self._generate_verdicts()
@@ -76,7 +78,7 @@ class TaskCompletionMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                return self.score 
+                return self.score
 
     async def a_measure(
         self,
@@ -91,7 +93,9 @@ class TaskCompletionMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            user_goal, task_outcome = await self._a_extract_goal_and_outcome(test_case)
+            user_goal, task_outcome = await self._a_extract_goal_and_outcome(
+                test_case
+            )
             self.user_goal = user_goal
             self.task_outcome = task_outcome
             verdict, reason = await self._a_generate_verdicts()
@@ -107,7 +111,7 @@ class TaskCompletionMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            return self.score 
+            return self.score
 
     async def _a_generate_verdicts(self) -> Tuple:
         prompt = TaskCompletionTemplate.generate_verdict(
@@ -115,7 +119,9 @@ class TaskCompletionMetric(BaseMetric):
             actual_outcome=self.task_outcome,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=TaskCompletionVerdict)
+            res, cost = await self.model.a_generate(
+                prompt, schema=TaskCompletionVerdict
+            )
             self.evaluation_cost += cost
             return res.verdict, res.reason
         else:
@@ -135,7 +141,9 @@ class TaskCompletionMetric(BaseMetric):
             actual_outcome=self.task_outcome,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=TaskCompletionVerdict)
+            res, cost = self.model.generate(
+                prompt, schema=TaskCompletionVerdict
+            )
             self.evaluation_cost += cost
             return res.verdict, res.reason
         else:
@@ -156,10 +164,12 @@ class TaskCompletionMetric(BaseMetric):
         prompt = TaskCompletionTemplate.extract_goal_and_outcome(
             input=test_case.input,
             actual_output=test_case.actual_output,
-            tools_called=test_case.tools_called
+            tools_called=test_case.tools_called,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=GoalAndOutcome)
+            res, cost = await self.model.a_generate(
+                prompt, schema=GoalAndOutcome
+            )
             self.evaluation_cost += cost
             return res.user_goal, res.task_outcome
         else:
@@ -180,7 +190,7 @@ class TaskCompletionMetric(BaseMetric):
         prompt = TaskCompletionTemplate.extract_goal_and_outcome(
             input=test_case.input,
             actual_output=test_case.actual_output,
-            tools_called=test_case.tools_called
+            tools_called=test_case.tools_called,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=GoalAndOutcome)
@@ -198,7 +208,11 @@ class TaskCompletionMetric(BaseMetric):
                 return data["user_goal"], data["task_outcome"]
 
     def _calculate_score(self):
-        return 0 if self.strict_mode and self.verdict < self.threshold else self.verdict
+        return (
+            0
+            if self.strict_mode and self.verdict < self.threshold
+            else self.verdict
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:

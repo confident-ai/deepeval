@@ -3,11 +3,13 @@ from typing import List
 import textwrap
 import json
 
+
 class TaskCompletionTemplate:
 
     @staticmethod
     def extract_goal_and_outcome(input, actual_output, tools_called):
-        return textwrap.dedent(f"""Given an agentic workflow comprised of a human input, AI response, and tools used by the AI, identify the user_goal (the task or objective the user wants to achieve) and the task_outcome (the final outcome or result of the workflow).
+        return textwrap.dedent(
+            f"""Given an agentic workflow comprised of a human input, AI response, and tools used by the AI, identify the user_goal (the task or objective the user wants to achieve) and the task_outcome (the final outcome or result of the workflow).
             The task outcome should be solely factual, derived strictly from the workflow (input, response, and tools called), without any reasoning involved.
 
             ``Example:
@@ -71,11 +73,13 @@ class TaskCompletionTemplate:
             response: {actual_output}
 
             JSON:
-        """)
+        """
+        )
 
     @staticmethod
     def generate_verdict(user_goal, actual_outcome):
-        return textwrap.dedent(f"""Given the user goal (desired outcome) and the actual achieved outcome, compare how well the actual outcome aligns with the user's intended goal.
+        return textwrap.dedent(
+            f"""Given the user goal (desired outcome) and the actual achieved outcome, compare how well the actual outcome aligns with the user's intended goal.
 
                 Please return a JSON with two keys: `verdict` and `reason`.
                 - The `verdict` should be a score from 0 to 1, where 1 indicates the actual outcome perfectly achieves the user's goal, and 0 indicates it does not achieve the goal at all.
@@ -100,14 +104,17 @@ class TaskCompletionTemplate:
                 {actual_outcome}
 
                 JSON:
-            """)
+            """
+        )
 
     @staticmethod
     def print_tools_called(tools_called_list: List[ToolCall]):
         string = "[\n"
         for index, tools_called in enumerate(tools_called_list):
             json_string = json.dumps(tools_called.model_dump(), indent=4)
-            indented_json_string = "\n".join("  " + line for line in json_string.splitlines())
+            indented_json_string = "\n".join(
+                "  " + line for line in json_string.splitlines()
+            )
             string += indented_json_string
             if index < len(tools_called_list) - 1:
                 string += ",\n"
