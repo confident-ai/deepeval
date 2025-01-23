@@ -267,8 +267,13 @@ def initialize_model(
     # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
-    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
-    return GPTModel(model=model), True
+    
+    # If the model is a string, we initialize a GPTModel and use as a native model
+    if isinstance(model, str):
+        return GPTModel(model=model), True
+    
+    # Otherwise (the model is a wrong type), we raise an error
+    raise TypeError(f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, or GPTModel.")
 
 
 # Please don't use this method, dirty hack
