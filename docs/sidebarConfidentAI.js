@@ -8,7 +8,7 @@ module.exports = {
           "confident-ai-evaluation-dataset-management",
           "confident-ai-evaluation-dataset-evaluation",
         ],
-        collapsed: true,
+        collapsed: false,
       },
       {
         type: "category",
