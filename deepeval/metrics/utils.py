@@ -269,7 +269,7 @@ def initialize_model(
         return model, False
 
     # If the model is a string, we initialize a GPTModel and use as a native model
-    if isinstance(model, str):
+    if isinstance(model, str) or model is None:
         return GPTModel(model=model), True
 
     # Otherwise (the model is a wrong type), we raise an error
