@@ -21,6 +21,19 @@ def mock_vertex_init():
         yield mock
 
 @pytest.fixture
+def mock_part():
+    with patch('vertexai.generative_models.Part') as mock:
+        mock.return_value = MagicMock(name="MockPart")
+        yield mock
+
+@pytest.fixture
+def mock_image():
+    with patch('vertexai.generative_models.Image') as mock:
+        mock.load_from_file.return_value = MagicMock(name="MockImageData")
+        mock.from_url.return_value = MagicMock(name="MockImageData")
+        yield mock
+
+@pytest.fixture
 def mock_generative_model():
     with patch('vertexai.generative_models.GenerativeModel') as mock:
         instance = mock.return_value
@@ -78,8 +91,15 @@ class TestGeminiModel:
     def test_generate(self, mock_vertex_init, mock_generative_model, mock_key_handler):
         """Test text generation"""
         model = GeminiModel()
-        response = model.generate("Test prompt")
+        test_prompt = "Test prompt"
+        response = model.generate(test_prompt)
+        
+        # Verify response
         assert response == TEST_RESPONSE
+        
+        # Verify mock was called correctly
+        mock_instance = mock_generative_model.return_value
+        mock_instance.generate_content.assert_called_once_with(test_prompt)
 
     @pytest.mark.asyncio
     async def test_a_generate(self, mock_vertex_init, mock_generative_model, mock_key_handler):
@@ -126,13 +146,9 @@ class TestMultimodalGeminiModel:
         with pytest.raises(ValueError, match="Invalid model"):
             MultimodalGeminiModel(model_name="invalid-model")
 
-    @patch('vertexai.generative_models.Image')
-    def test_generate_prompt_local_image(self, mock_image, mock_vertex_init, mock_generative_model, mock_key_handler):
+    def test_generate_prompt_local_image(self, mock_vertex_init, mock_generative_model, mock_key_handler, mock_image, mock_part):
         """Test prompt generation with local image"""
         model = MultimodalGeminiModel()
-        
-        # Mock the image loading
-        mock_image.load_from_file.return_value = "mock_image_data"
         
         # Create test input
         multimodal_input = [
@@ -146,52 +162,71 @@ class TestMultimodalGeminiModel:
         # Verify prompt structure
         assert len(prompt) == 2
         assert prompt[0] == "Describe this image:"
-        assert isinstance(prompt[1], Part)
+        assert isinstance(prompt[1], MagicMock)
+        mock_image.from_file.assert_called_once_with("test.jpg")
 
-    def test_generate_prompt_remote_image(self, mock_vertex_init, mock_generative_model, mock_key_handler):
+    def test_generate_prompt_remote_image(self, mock_vertex_init, mock_generative_model, mock_key_handler, mock_image, mock_part):
         """Test prompt generation with remote image"""
         model = MultimodalGeminiModel()
         
         # Create test input
+        test_url = "https://example.com/test.jpg"
         multimodal_input = [
             "Describe this image:",
-            MLLMImage(url="https://example.com/test.jpg", local=False)
+            MLLMImage(url=test_url, local=False)
         ]
         
         # Generate prompt
         prompt = model.generate_prompt(multimodal_input)
         
-        # Verify prompt structure
+        # Verify prompt structure and mock calls
         assert len(prompt) == 2
         assert prompt[0] == "Describe this image:"
-        assert isinstance(prompt[1], Part)
+        assert isinstance(prompt[1], MagicMock)
+        mock_image.from_file.assert_called_once_with("test.jpg")
 
-    def test_generate(self, mock_vertex_init, mock_generative_model, mock_key_handler):
-        """Test multimodal generation"""
+    def test_generate_prompt_remote_image(self, mock_vertex_init, mock_generative_model, mock_key_handler, mock_image, mock_part):
+        """Test prompt generation with remote image"""
         model = MultimodalGeminiModel()
         
         # Create test input
+        test_url = "https://example.com/test.jpg"
         multimodal_input = [
             "Describe this image:",
-            MLLMImage(url="https://example.com/test.jpg", local=False)
+            MLLMImage(url=test_url, local=False)
         ]
         
         response = model.generate(multimodal_input)
+        
+        # Verify response
         assert response == TEST_RESPONSE
+        
+        # Verify mock calls
+        mock_instance = mock_generative_model.return_value
+        mock_image.from_url.assert_called_once_with(test_url)
+        mock_instance.generate_content.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_a_generate(self, mock_vertex_init, mock_generative_model, mock_key_handler):
+    async def test_a_generate(self, mock_vertex_init, mock_generative_model, mock_key_handler, mock_image, mock_part):
         """Test async multimodal generation"""
         model = MultimodalGeminiModel()
         
         # Create test input
+        test_url = "https://example.com/test.jpg"
         multimodal_input = [
             "Describe this image:",
-            MLLMImage(url="https://example.com/test.jpg", local=False)
+            MLLMImage(url=test_url, local=False)
         ]
         
         response = await model.a_generate(multimodal_input)
+        
+        # Verify response
         assert response == TEST_RESPONSE
+        
+        # Verify mock calls
+        mock_instance = mock_generative_model.return_value
+        mock_image.from_url.assert_called_once_with(test_url)
+        mock_instance.generate_content_async.assert_called_once()
 
     def test_invalid_input_type(self, mock_vertex_init, mock_generative_model, mock_key_handler):
         """Test handling of invalid input types"""

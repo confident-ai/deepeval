@@ -16,7 +16,7 @@ valid_gemini_models = [
     "gemini-1.5-pro-002",
     "gemini-1.0-pro",
     "gemini-1.0-pro-001",
-    "gemini-1.0-pro-002"
+    "gemini-1.0-pro-002",
     "gemini-1.0-pro-vision",
     "gemini-1.0-pro-vision-001"
 ]
@@ -85,8 +85,10 @@ class GeminiModel(DeepEvalBaseLLM):
                 "or set them in your DeepEval configuration."
             )
             
-        super().__init__(model_name)
-        self.model = self.load_model(*args, **kwargs)
+        # Initialize Vertex AI with project and location
+        vertexai.init(project=self.project_id, location=self.location)
+            
+        super().__init__(model_name, *args, **kwargs)
 
     def load_model(self, *args, **kwargs):
         """Loads and initializes the Gemini model.
@@ -103,8 +105,6 @@ class GeminiModel(DeepEvalBaseLLM):
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE
         }
 
-        vertexai.init(project=self.project_id, location=self.location)
-        
         return GenerativeModel(
             model_name=self.model_name,
             safety_settings=safety_settings
@@ -222,8 +222,10 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 "or set them in your DeepEval configuration."
             )
             
-        super().__init__(model_name)
-        self.model = self.load_model(*args, **kwargs)
+        # Initialize Vertex AI with project and location
+        vertexai.init(project=self.project_id, location=self.location)
+            
+        super().__init__(model_name, *args, **kwargs)
 
     def load_model(self, *args, **kwargs):
         """Loads and initializes the Gemini model.
@@ -240,8 +242,6 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE
         }
 
-        vertexai.init(project=self.project_id, location=self.location)
-        
         return GenerativeModel(
             model_name=self.model_name,
             safety_settings=safety_settings
