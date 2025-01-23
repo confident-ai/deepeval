@@ -1,0 +1,85 @@
+---
+id: metrics-task-completion
+title: Task Completion
+sidebar_label: Task Completion
+---
+
+import Equation from "@site/src/components/equation";
+
+The task completion metric evaluates how effectively an LLM agent accomplishes a user-defined task, based on the agent's `actual_ouptut` and tool usage. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+
+:::info
+`TaskCompletion` is an **agentic metric**. It's useful for evaluating how well your LLM agent utilizes tools and reasoning to accomplish a user request.
+:::
+
+## Required Arguments
+
+To use the `TaskCompletion`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `tools_called`
+
+## Example
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.test_case import LLMTestCase
+
+metric = TaskCompletionMetric(
+    threshold=0.7,
+    model="gpt-4",
+    include_reason=True
+)
+test_case = LLMTestCase(
+    input="Plan a 3-day itinerary for Paris with cultural landmarks and local cuisine.",
+    actual_output=(
+        "Day 1: Eiffel Tower, dinner at Le Jules Verne. "
+        "Day 2: Louvre Museum, lunch at Angelina Paris. "
+        "Day 3: Montmartre, evening at a wine bar."
+    ),
+    tools_called=[
+        ToolCall(
+            name="Itinerary Generator",
+            description="Creates travel plans based on destination and duration.",
+            input_parameters={"destination": "Paris", "days": 3},
+            output=[
+                "Day 1: Eiffel Tower, Le Jules Verne.",
+                "Day 2: Louvre Museum, Angelina Paris.",
+                "Day 3: Montmartre, wine bar.",
+            ],
+        ),
+        ToolCall(
+            name="Restaurant Finder",
+            description="Finds top restaurants in a city.",
+            input_parameters={"city": "Paris"},
+            output=["Le Jules Verne", "Angelina Paris", "local wine bars"],
+        ),
+    ],
+)
+
+metric.measure(test_case)
+print(metric.score)
+print(metric.reason)
+
+# or evaluate test cases in bulk
+evaluate([test_case], [metric])
+```
+
+There are six optional parameters when creating an `TaskCompletionMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+## How Is It Calculated?
+
+The `TaskCompletionMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Task Completion Score} = \text{similarity}(\text{Desired Outcome}, \text{Actual Outcome})" />
+
+The `TaskCompletionMetric` first extracts the user's goal (desired outcome) from the interaction before using an LLM to evaluate how well the actual outcome aligns with the desired outcome.
