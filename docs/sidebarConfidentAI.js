@@ -3,25 +3,19 @@ module.exports = {
       "confident-ai-introduction",
       {
         type: "category",
-        label: "Evaluation & Testing",
+        label: "Datasets",
         items: [
-          "confident-ai-testing-n-evaluation-experiments",
-          "confident-ai-testing-n-evaluation-test-run",
+          "confident-ai-evaluation-dataset-management",
+          "confident-ai-evaluation-dataset-evaluation",
         ],
         collapsed: true,
       },
       {
         type: "category",
-        label: "Hyperparameters",
-        items: ["confident-ai-hyperparameters-prompt-versioning"],
-        collapsed: true,
-      },
-      {
-        type: "category",
-        label: "Datasets",
+        label: "Evaluation & Testing",
         items: [
-          "confident-ai-evaluation-dataset-management",
-          "confident-ai-evaluation-dataset-evaluation",
+          "confident-ai-testing-n-evaluation-experiments",
+          "confident-ai-testing-n-evaluation-test-run",
         ],
         collapsed: true,
       },
@@ -54,6 +48,12 @@ module.exports = {
           "confident-ai-tracing-llama-index",
           "confident-ai-tracing-langchain",
         ],
+        collapsed: true,
+      },
+      {
+        type: "category",
+        label: "Hyperparameters",
+        items: ["confident-ai-hyperparameters-prompt-versioning"],
         collapsed: true,
       },
       {

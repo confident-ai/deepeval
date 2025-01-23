@@ -144,7 +144,7 @@ deepeval login
 
 Follow the instructions displayed on the CLI (to create an account, get your Confident API key, paste it in the CLI), and you're good to go.
 
-:::tip
+:::tip DID YOU KNOW?
 You can also login directly in Python if you already have a Confident API Key:
 
 ```python
@@ -159,11 +159,35 @@ deepeval login --confident-api-key "your-confident-api-key"
 
 :::
 
+## Setup Your Evaluation Model
+
+:::info
+You can also use [**ANY** custom LLM of your choice](/guides/guides-using-custom-llms), although we **DON'T** recommend it for this quickstart guide due to some custom models being especially error-prone to outputting valid Jsons.
+:::
+
+You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running an evaluation, since the metrics we'll be using is an LLM-evaluated metric.
+
+```console
+export OPENAI_API_KEY=<your-openai-api-key>
+```
+
+Alternatively, if you're working in a notebook enviornment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
+
+```console
+ %env OPENAI_API_KEY=<your-openai-api-key>
+```
+
+Please **do not include** quotation marks when setting your `OPENAI_API_KEY` if you're working in a notebook enviornment as it is invalid syntax.
+
+:::note
+You can also run evaluations on Confident AI using our models, but that's a more advanced topic for later on in this documentation.
+:::
+
 ## Run Your First Evaluation
 
 Now that you're logged in, create a python file, for example say `experiment_llm.py`. We're going to be evaluating a medical chatbot for this quickstart guide, but it can be any other LLM systems that you are building.
 
-<details><summary>Click to see fake data</summary>
+<details><summary>Click to see fake data we'll be using</summary>
 <p>
 
 ```python
@@ -213,28 +237,48 @@ fake_data = [...]
 
 # Create a list of LLMTestCase
 test_cases = []
-for mock_test_case in mock_test_cases:
+for fake_datum in fake_data:
   test_case = LLMTestCase(
-    input=mock_test_case["input"],
-    actual_output=mock_test_case["actual_output"],
-    retrieval_context=mock_test_case["retrieval_context"]
+    input=fake_datum["input"],
+    actual_output=fake_datum["actual_output"],
+    retrieval_context=fake_datum["retrieval_context"]
   )
   test_cases.append(test_case)
 
 # Define metrics
-answer_relevancy = AnswerRelevancyMetric()
-faithfulness = FaithfulnessMetric()
+answer_relevancy = AnswerRelevancyMetric(threshold=0.5)
+faithfulness = FaithfulnessMetric(threshold=0.5)
 
 # Run evaluation
 evaluate(test_cases=test_cases, metrics=[answer_relevancy, faithfulness])
 ```
 
+:::note
+In reality, you'll want to **generate `actual_output`s and `retrieval_context`s at evaluation time**. This is because by having a static dataset of `input`s as a list of [`LLMTestCase`s](/docs/evaluation-test-cases#llm-test-case), you'll be able to experiment which two versions of your LLM application performs better.
+:::
+
+Finally, run `experiment_llm.py` to have Confident AI benchmark your LLM application for you:
+
 ```console
 python experiment_llm.py
 ```
 
-And that's it! All you have to do is run `experiment_llm.py`, and Confident AI will automatically display you the results.
+**Congratulations 🎉!** You just ran your first evaluation which created a **test run** on Confident AI. Before diving into the platform, let's breakdown what happened.
 
-:::tip
-If it's not displaying on Confident AI, it means you're not logged in. Run `deepeval login` again if that's the case.
+- We looped through the `fake_data` dataset, and created a list of `LLMTestCase`s.
+- The `LLMTestCase` variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
+- The `LLMTestCase` variable `retrieval_context` contains the retrieved context from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` and `FaithfulnessMetric(threshold=0.5)` is an default metric provided by `deepeval` for you to evaluate your LLM output's relevancy based on the provided retrieval context.
+- All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your metric have passed or not. A test case only passes if all of its metric passes.
+
+**🚨 But unfortunately, not all test cases have passed.** Can you click on **_View Test Case Details_** on the failing test case to figure out why?
+
+<img
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-quickstart-test-cases.png"
+  alt="Confident AI"
+/>
+
+:::info
+Failing test cases represents areas of improvement, and by improving your LLM application through various means, such as writing better prompts, using better tool calls, or even fine-tuning a custom model, you'll be able to make failing test cases passing.
 :::
+
+In the next section, we'll learn how to create and use a dataset on Confident AI so we can move away from `fake_data`.
