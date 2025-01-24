@@ -197,7 +197,7 @@ class RedTeamer:
                             "Error": None,
                         }
 
-                        # this will only go through it ignore_errors == True
+                        # this will only go through if ignore_errors == True
                         if attack.error:
                             result["Error"] = attack.error
                             red_teaming_results_breakdown.append(result)
