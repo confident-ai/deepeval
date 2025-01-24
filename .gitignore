@@ -163,6 +163,8 @@ node_modules
 .deepeval
 .deepeval-cache.json
 .deepeval_telemtry.txt
+.vector_db
+*/cache
 
 # deepeval tests
 secrets

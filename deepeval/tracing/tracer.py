@@ -309,6 +309,7 @@ TraceStack = List[TraceData]
 
 # Context variable to maintain an isolated stack for each async task
 trace_stack_var: ContextVar[TraceStack] = ContextVar("trace_stack", default=[])
+track_params_var: ContextVar[Dict] = ContextVar("track_params", default={})
 dict_trace_stack_var: ContextVar[Dict] = ContextVar(
     "dict_trace_stack", default={}
 )
@@ -340,6 +341,12 @@ class TraceManager:
 
     def clear_trace_stack(self):
         self.set_trace_stack([])
+
+    def set_track_params(self, track_params):
+        track_params_var.set(track_params)
+
+    def get_track_params(self):
+        return track_params_var.get()
 
     def pop_trace_stack(self):
         current_stack = self.get_trace_stack_copy()
@@ -548,10 +555,9 @@ class Tracer:
     # change to attributes and custom attributes
     def set_attributes(self, attributes: Attributes):
         if self.trace_provider == TraceProvider.CUSTOM:
-            assert (
-                isinstance(attributes, GenericAttributes),
-                f"Attributes must be of type GenericAttributes for CUSTOM Traces",
-            )
+            assert isinstance(
+                attributes, GenericAttributes
+            ), f"Attributes must be of type GenericAttributes for CUSTOM Traces"
 
         # append trace instance to stack
         self.attributes = attributes

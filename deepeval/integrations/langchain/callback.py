@@ -1,12 +1,15 @@
 from langchain_core.tracers.base import BaseTracer
-from langchain_core.tracers.schemas import Run
 from langchain_core.messages import BaseMessage
+from langchain_core.tracers.schemas import Run
+from deepeval.monitor import monitor
+from contextvars import ContextVar
 from time import perf_counter
 from itertools import chain
+from copy import deepcopy
 from enum import Enum
+import logging
 import json
 import math
-from copy import deepcopy
 from typing import (
     Any,
     Dict,
@@ -38,19 +41,23 @@ from deepeval.tracing import (
     LangChainTraceType,
     TraceData,
 )
-from deepeval.monitor import monitor
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class LangChainCallbackHandler(BaseTracer):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, auto_eval=False, *args, **kwargs) -> None:
+        self.auto_eval = auto_eval
+        self.event_map = ContextVar("event_map", default={})
+        self.track_params = ContextVar("track_params", default={})
         super().__init__(*args, **kwargs)
-        self.event_map: Dict[str, TraceData] = {}
-        self.track_params = {}
 
     def _start_trace(self, run: Run) -> None:
         # set outtermost provider
         if not trace_manager.get_outter_provider():
             trace_manager.set_outter_provider(TraceProvider.LANGCHAIN)
+
         self.run_map[str(run.id)] = run
         event_type = self.convert_event_type_to_deepeval_trace_type(
             run.run_type
@@ -58,12 +65,19 @@ class LangChainCallbackHandler(BaseTracer):
         trace_instance = self.create_trace_instance(
             event_type=event_type, name=run.name
         )
-        self.event_map[str(run.id)] = trace_instance
+
+        # Get the current event_map and update it
+        event_map = self.event_map.get()
+        event_map[str(run.id)] = trace_instance
+        self.event_map.set(event_map)
+
         trace_manager.append_to_trace_stack(trace_instance)
 
     def _end_trace(self, run: Run) -> None:
-        trace_instance = self.event_map[str(run.id)]
+        event_map = self.event_map.get()
+        trace_instance = event_map[str(run.id)]
         event_type = trace_instance.type
+
         processed_payload = dict(
             self._flatten(
                 chain(
@@ -100,26 +114,29 @@ class LangChainCallbackHandler(BaseTracer):
             trace_manager.clear_trace_stack()
 
             if current_trace_stack[0].type == LangChainTraceType.CHAIN:
-                self.track_params["input"] = current_trace_stack[
+                track_params = self.track_params.get()
+                track_params["input"] = current_trace_stack[
                     0
                 ].chainAttributes.input
-                self.track_params["response"] = current_trace_stack[
+                track_params["response"] = current_trace_stack[
                     0
                 ].chainAttributes.output
+                self.track_params.set(track_params)
 
             if trace_manager.get_outter_provider() == TraceProvider.LANGCHAIN:
-                monitor(
-                    event_name=current_trace_stack[0].name,
-                    model=self.track_params.get("model") or "NA",
-                    input=self.track_params.get("input") or "NA",
-                    response=self.track_params.get("response") or "NA",
-                    retrieval_context=self.track_params.get(
-                        "retrieval_context"
-                    ),
-                    completion_time=current_trace_stack[0].executionTime,
-                    token_usage=self.track_params.get("token_usage"),
-                    trace_stack=dict_representation,
-                )
+                track_params = self.track_params.get()
+                trace_manager.set_track_params(track_params)
+                if not self.auto_eval:
+                    monitor(
+                        event_name=current_trace_stack[0].name,
+                        model=track_params.get("model") or "NA",
+                        input="asdfasdfasdfasd",
+                        response=track_params.get("response") or "NA",
+                        retrieval_context=track_params.get("retrieval_context"),
+                        completion_time=current_trace_stack[0].executionTime,
+                        token_usage=track_params.get("token_usage"),
+                        trace_stack=dict_representation,
+                    )
         else:
             trace_manager.pop_trace_stack()
 
@@ -203,10 +220,13 @@ class LangChainCallbackHandler(BaseTracer):
                 prompt_template_variables=None,
             )
             trace_instance.llmAttributes = attributes
-            self.track_params["model"] = processed_payload.get("llm_model_name")
-            self.track_params["token_usage"] = processed_payload.get(
+            track_params = self.track_params.get()
+            track_params["model"] = processed_payload.get("llm_model_name")
+            track_params["token_usage"] = processed_payload.get(
                 "llm_token_count_total"
             )
+            self.track_params.set(track_params)
+
         elif event_type == LangChainTraceType.RETRIEVER:
             retrieval_documents: List[RetrievalNode] = []
             total_content_length = 0
@@ -237,9 +257,12 @@ class LangChainCallbackHandler(BaseTracer):
                 top_k=len("retrieval_documents"),
             )
             trace_instance.retrieverAttributes = attributes
-            self.track_params["retrieval_context"] = [
+            track_params = self.track_params.get()
+            track_params["retrieval_context"] = [
                 doc.content for doc in retrieval_documents
             ]
+            self.track_params.set(track_params)
+
         elif event_type == LangChainTraceType.TOOL:
             attributes = ToolAttributes(
                 # Required Attributes

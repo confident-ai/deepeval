@@ -1,12 +1,24 @@
+from langchain.agents.format_scratchpad.openai_tools import (
+    format_to_openai_tool_messages,
+)
+from langchain.agents.output_parsers.openai_tools import (
+    OpenAIToolsAgentOutputParser,
+)
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents import AgentExecutor
+from langchain_openai import ChatOpenAI
+from langchain.agents import tool
+import asyncio
+
 import deepeval
 
 deepeval.trace_langchain()
 
-from langchain_openai import ChatOpenAI
+#############################################################
+### Setup LLM ###############################################
+#############################################################
 
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
-
-from langchain.agents import tool
 
 
 @tool
@@ -16,11 +28,7 @@ def get_word_length(word: str) -> int:
 
 
 get_word_length.invoke("abc")
-
 tools = [get_word_length]
-
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
 prompt = ChatPromptTemplate.from_messages(
     [
         (
@@ -31,16 +39,7 @@ prompt = ChatPromptTemplate.from_messages(
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ]
 )
-
 llm_with_tools = llm.bind_tools(tools)
-
-from langchain.agents.format_scratchpad.openai_tools import (
-    format_to_openai_tool_messages,
-)
-from langchain.agents.output_parsers.openai_tools import (
-    OpenAIToolsAgentOutputParser,
-)
-
 agent = (
     {
         "input": lambda x: x["input"],
@@ -52,9 +51,44 @@ agent = (
     | llm_with_tools
     | OpenAIToolsAgentOutputParser()
 )
-
-from langchain.agents import AgentExecutor
-
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-list(agent_executor.stream({"input": "How many letters in the word eudca"}))
+
+async def chatbot(input):
+    res = await agent_executor.ainvoke(input)
+    return res
+
+
+#############################################################
+### test chatbot event tracking
+#############################################################
+
+user_inputs = [
+    {"input": "How many letters are in the word 'eudca'?"},
+    {
+        "input": "What is the length of the word 'supercalifragilisticexpialidocious'?"
+    },
+    {
+        "input": "Can you tell me the number of characters in 'antidisestablishmentarianism'?"
+    },
+    {
+        "input": "How many characters does the word 'floccinaucinihilipilification' have?"
+    },
+    {
+        "input": "What is the length of the word 'pneumonoultramicroscopicsilicovolcanoconiosis'?"
+    },
+]
+
+
+async def query_and_print(query: str):
+    await chatbot(query)
+    print("end of " + str(query))
+
+
+async def main():
+    tasks = [query_and_print(query) for query in user_inputs]
+    await asyncio.gather(*tasks)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

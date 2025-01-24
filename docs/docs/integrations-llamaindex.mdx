@@ -8,9 +8,107 @@ sidebar_label: LlamaIndex
 
 LlamaIndex is a data framework for LLMs that facilitates the ingestion of data from various sources such as APIs, databases, and PDFs, and indexes it for later retrieval in RAG-based LLM applications.
 
+:::tip
+DeepEval streamlines the process of **evaluating your RAG LlamaIndex applications with just a few lines of code**.
+:::
+
 ## Evaluating LlamaIndex
 
-RAG applications built using LlamaIndex can be easily evaluated within `deepeval`. Lets use this RAG application built using Llamaindex as an example:
+To begin evaluating your LlamaIndex application, first call `trace_llama_index` and set `auto_eval` to True. Then, define your `target_model` (LLM application you wish to evaluate), and run `auto_evaluate` on your model and list of metrics.
+
+:::caution Important
+Call `trace_llama_index` before defining your model, especially before initializing `VectorStoreIndex` or `QueryEngine`.
+:::
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.integrations import trace_llama_index
+from deepeval.auto_evaluate import auto_evaluate
+
+trace_llama_index(auto_eval=True)
+
+# define your chatbot
+def target_model(input: str):
+    ....
+
+auto_evaluate(target_model, metrics=[AnswerRelevancyMetric(), FaithfulnessMetric()])
+```
+
+There are **2 required** and 20 optional parameters when running `auto_evaluate`:
+
+**Required Parameters:**
+
+- `target_model`: the model you wish to evaluate, which can either be an asynchronous or synchronous function. The function must accept exactly 1 argument (`input: string`) and return a string as its response.
+- `metrics`: a list of metrics of type BaseMetric.
+
+:::info
+The remaining **20 optional parameters** can be broken down into evaluation, synthesizer, async, and caching parameters. These allow you to customize any part of the evaluation pipeline, from dataset generation to evaluation.
+:::
+
+**Optional Evaluation Parameters:**
+
+- [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
+- [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
+- [Optional] `skip_on_missing_params`: a boolean which when set to `True`, skips all metric executions for test cases with missing parameters. Defaulted to `False`.
+- [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for each test case. Defaulted to `False`.
+- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `None`.
+- [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
+- [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
+
+**Optional Synthesizer Parameters:**
+
+- [Optional] `synthesizer_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `filtration_config`: an instance of type `FiltrationConfig` that allows you to [customize the degree of which goldens are filtered](synthesizer-introduction#filtration-degree) during generation. Defaulted to the default `FiltrationConfig` values.
+- [Optional] `evolution_config`: an instance of type `EvolutionConfig` that allows you to [customize the complexity of evolutions applied](synthesizer-introduction#evolution-complexity) during generation. Defaulted to the default `EvolutionConfig` values.
+- [Optional] `styling_config`: an instance of type `StylingConfig` that allows you to [customize the styles and formats](synthesizer-introduction#styling-options) of generations. Defaulted to the default `StylingConfig` values.
+- [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `True`.
+- [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
+
+**Optional Async Parameters:**
+
+- [Optional] `synthesizer_async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of test cases **AND** metrics. Defaulted to `True`.
+- [Optional] `max_concurrent`: an integer that determines the maximum number of test cases that can be ran (and goldens that can be generated) in parallel at any point in time. You can decrease this value if your evaluation model is running into rate limit errors. Defaulted to 100.
+- [Optional] `throttle_value`: an integer that determines how long (in seconds) to throttle the evaluation of each test case. You can increase this value if your evaluation model is running into rate limit errors. Defaulted to 0.
+
+**Optional Cache Parameters:**
+
+- [Optional] `cache_dataset`: a boolean which when set to `True`, writes generated goldens to **DISK** and uses cached goldens for evaluation. Defaulted to `True`.
+- [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
+- [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
+
+## How it Works?
+
+`auto_evaluate` automatically scans your LlamaIndex application to extract document nodes. It then generates synthetic data tailored to your application from these nodes, creates LLM responses to these goldens, converts them into test cases, and runs evaluations using the DeepEval metrics you defined.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/autoeval_llama.svg"
+    alt="Datasets 1"
+    style={{
+      height: "auto",
+      maxHeight: "800px",
+      marginTop: "20px",
+      marginBottom: "40px",
+    }}
+  />
+</div>
+
+:::note  
+`auto_evaluate` simplifies the evaluation of your LlamaIndex application. For further customization of your evaluation pipeline, refer to the sections below.  
+:::
+
+## Customizing LlamaIndex Evaluations
+
+### Creating Test Cases
+
+Lets use this RAG application built using Llamaindex as an example:
 
 ```python
 from llama_index import VectorStoreIndex, SimpleDirectoryReader
@@ -21,7 +119,11 @@ index = VectorStoreIndex.from_documents(documents)
 rag_application = index.as_query_engine()
 ```
 
-You can then query your RAG application and evaluate each response using `deepeval`'s metrics:
+Instead of calling `trace_llama_index`, you can query your RAG application and evaluate each response using `deepeval`'s metrics, extracting all necessary outputs and retrieval contexts for each given input to your LlamaIndex application.
+
+:::info
+This is especially useful if you find that `auto_evaluate` is not accurately capturing your intended documents and correctly populating the `retrieval_context`.
+:::
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
@@ -55,11 +157,7 @@ print(answer_relevancy_metric.score)
 print(answer_relevancy_metric.reason)
 ```
 
-:::info
-You can also extract all necessary outputs and retrieval contexts for each given input to your LlamaIndex application to [create an `EvaluationDataset` to evaluate test cases in bulk.](/docs/evaluation-datasets)
-:::
-
-## Unit Testing LlamaIndex
+### Unit Testing with LlamaIndex
 
 Unit testing LlamaIndex is as simple as defining an `EvaluationDataset` and generating `actual_output`s and `retrieval_context`s at evaluation time. Building upon the previous example:
 
@@ -104,7 +202,7 @@ Here, `rag_application` is simply the query engine from Llamaindex, which you'll
 In this example, we initialized an `EvaluationDataset` with a `Golden` instead of an `LLMTestCase`. This is because we're generating `actual_output`s and `retrieval_context`s at evaluation time, meaning we cannot initialize with test cases since an `LLMTestCase` requires an `actual_output` to create. Remember, a `Golden` do not require an `actual_output`, so whilst test cases are always ready for evaluation, a golden isn't.
 :::
 
-## Using DeepEval for LlamaIndex
+## Using DeepEval from LlamaIndex
 
 In LlamaIndex, there are entities known as evaluators that evaluates the responses of LlamaIndex applications. Continuing from the previous example, here's an alternative way to make use of the `AnswerRelevancyMetric` through `deepeval`'s LlamaIndex evaluators:
 
