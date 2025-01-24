@@ -7,7 +7,7 @@ Skip these tests if you don't want to incur API costs.
 import os
 import pytest
 from deepeval.models import GeminiModel, MultimodalGeminiModel
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, MLLMTestCase, MLLMImage
 from deepeval import assert_test
 from deepeval.metrics import (
     AnswerRelevancyMetric,
@@ -21,16 +21,57 @@ from deepeval.metrics import (
 # Skip all tests if credentials are not set
 SKIP_LIVE_TESTS = not (os.getenv("GOOGLE_CLOUD_PROJECT") and os.getenv("GOOGLE_CLOUD_LOCATION"))
 
+# Create a test case for simple evaluation
+simple_test_case = LLMTestCase(
+    input="What is the capital of France?",
+    actual_output="The capital of France is Paris."
+)
+
 # Create a test case for multimodal evaluation
-multimodal_test_case = LLMTestCase(
-    input="Tell me about some landmarks in France",
-    actual_output="The Eiffel Tower is located in Paris, France. It is a wrought-iron lattice tower on the Champ de Mars. The Statue of Liberty was a gift from France to the United States.",
-    expected_output="The Eiffel Tower is located in Paris, France. It is a wrought-iron lattice tower on the Champ de Mars. The Statue of Liberty was a gift from France to the United States.",
+multimodal_test_case = MLLMTestCase(
+    input=["Tell me about some landmarks in France"],
+    actual_output=[
+        "The Eiffel Tower is located in Paris, France.",
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
+        ),
+        "The Statue of Liberty was a gift from France to the United States.",
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Front_view_of_Statue_of_Liberty_with_pedestal_and_base_2024.jpg/375px-Front_view_of_Statue_of_Liberty_with_pedestal_and_base_2024.jpg"
+        ),
+    ],
+    expected_output=[
+        "The Eiffel Tower is located in Paris, France.",
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
+        ),
+        "The Statue of Liberty was a gift from France to the United States.",
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Front_view_of_Statue_of_Liberty_with_pedestal_and_base_2024.jpg/375px-Front_view_of_Statue_of_Liberty_with_pedestal_and_base_2024.jpg"
+        ),
+    ],
     context=[
         "The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris.",
         "It is named after the engineer Gustave Eiffel.",
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
+        ),
         "The Statue of Liberty is a colossal neoclassical sculpture on Liberty Island in New York Harbor.",
-    ]
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Liberty-from-behind-2024.jpg/330px-Liberty-from-behind-2024.jpg"
+        ),
+    ],
+    retrieval_context=[
+        "The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris.",
+        "It is named after the engineer Gustave Eiffel.",
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
+        ),
+        "The Statue of Liberty is a colossal neoclassical sculpture on Liberty Island in New York Harbor.",
+        MLLMImage(
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Liberty-from-behind-2024.jpg/330px-Liberty-from-behind-2024.jpg"
+        ),
+    ],
 )
 
 @pytest.mark.skipif(SKIP_LIVE_TESTS, reason="Google Cloud credentials not set")
@@ -74,18 +115,10 @@ class TestGeminiModelLive:
             location=os.getenv("GOOGLE_CLOUD_LOCATION")
         )
         
-        # Create and run test case
-        test_input = "What is the capital of France?"
-        actual_output = "The capital of France is Paris."
-        test_case = LLMTestCase(
-            input=test_input,
-            actual_output=actual_output
-        )
-        
-        # Evaluate using metrics
-        metric = AnswerRelevancyMetric(model=model, threshold=0.7)
+        # Create relevant metric using Gemini as judge
+        metric = AnswerRelevancyMetric(model=model, threshold=0.8)
         # Assert test case passes
-        assert_test(test_case, [metric])
+        assert_test(simple_test_case, [metric])
         
 
 @pytest.mark.skipif(SKIP_LIVE_TESTS, reason="Google Cloud credentials not set")

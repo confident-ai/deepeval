@@ -122,20 +122,25 @@ class GeminiModel(DeepEvalBaseLLM):
             schema: Optional Pydantic model for structured output
             
         Returns:
-            Generated text response
+            Generated text response or structured output as Pydantic model
         """
         if schema is not None:
+            # Convert Pydantic model to schema dictionary
+            schema_dict = schema.model_json_schema()
+            
             response = self.model.generate_content(
                 prompt,
                 generation_config=GenerationConfig(
                     response_mime_type="application/json",
-                    response_schema=schema
+                    response_schema=schema_dict
                 )
             )
+            
+            # Parse response back into Pydantic model
+            return schema.model_validate_json(response.text)
         else:
             response = self.model.generate_content(prompt)
-            
-        return response.text
+            return response.text
 
     async def a_generate(
         self,
@@ -149,20 +154,25 @@ class GeminiModel(DeepEvalBaseLLM):
             schema: Optional Pydantic model for structured output
             
         Returns:
-            Generated text response
+            Generated text response or structured output as Pydantic model
         """
         if schema is not None:
+            # Convert Pydantic model to schema dictionary
+            schema_dict = schema.model_json_schema()
+            
             response = await self.model.generate_content_async(
                 prompt,
                 generation_config=GenerationConfig(
                     response_mime_type="application/json",
-                    response_schema=schema
+                    response_schema=schema_dict
                 )
             )
+            
+            # Parse response back into Pydantic model
+            return schema.model_validate_json(response.text)
         else:
             response = await self.model.generate_content_async(prompt)
-            
-        return response.text
+            return response.text
 
     def get_model_name(self) -> str:
         """Returns the name of the Gemini model being used."""
@@ -294,16 +304,19 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         prompt = self.generate_prompt(multimodal_input)
         
         if schema is not None:
+            # Convert Pydantic model to schema dictionary
+            schema_dict = schema.model_json_schema()
+            
             response = self.model.generate_content(
                 prompt,
                 generation_config=GenerationConfig(
                     response_mime_type="application/json",
-                    response_schema=schema
+                    response_schema=schema_dict
                 )
-            )
+            ) 
         else:
             response = self.model.generate_content(prompt)
-            
+        
         return response.text
 
     async def a_generate(
@@ -323,16 +336,19 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         prompt = self.generate_prompt(multimodal_input)
         
         if schema is not None:
+            # Convert Pydantic model to schema dictionary
+            schema_dict = schema.model_json_schema()
+            
             response = await self.model.generate_content_async(
                 prompt,
                 generation_config=GenerationConfig(
                     response_mime_type="application/json",
-                    response_schema=schema
+                    response_schema=schema_dict
                 )
-            )
+            )         
         else:
             response = await self.model.generate_content_async(prompt)
-            
+        
         return response.text
 
     def get_model_name(self) -> str:
