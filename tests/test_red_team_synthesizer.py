@@ -147,7 +147,7 @@ def test_red_teamer():
         attacks_per_vulnerability_type=1,
         attack_enhancements={AttackEnhancement.JAILBREAK_CRESCENDO: 1},
         vulnerabilities=vulnerabilties[0:2],
-        max_concurrent_tasks=2,
+        max_concurrent=2,
         ignore_errors=True,
     )
     print(results)

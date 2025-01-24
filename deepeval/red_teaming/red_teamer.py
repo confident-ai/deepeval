@@ -102,7 +102,7 @@ class RedTeamer:
             AttackEnhancement.MATH_PROBLEM: 1 / 11,
             AttackEnhancement.MULTILINGUAL: 1 / 11,
         },
-        max_concurrent_tasks: int = 10,
+        max_concurrent: int = 10,
         ignore_errors: bool = False,
     ):
         try:
@@ -122,7 +122,7 @@ class RedTeamer:
                     attacks_per_vulnerability_type,
                     vulnerabilities,
                     attack_enhancements,
-                    max_concurrent_tasks,
+                    max_concurrent,
                     ignore_errors=ignore_errors,
                 )
             )
@@ -277,7 +277,7 @@ class RedTeamer:
             AttackEnhancement.MATH_PROBLEM: 1 / 11,
             AttackEnhancement.MULTILINGUAL: 1 / 11,
         },
-        max_concurrent_tasks: int = 10,  # Throttling limit, control concurrency
+        max_concurrent: int = 10,  # Throttling limit, control concurrency
         ignore_errors: bool = False,
     ):
         try:
@@ -302,7 +302,7 @@ class RedTeamer:
                     vulnerabilities=vulnerabilities,
                     attack_enhancements=attack_enhancements,
                     ignore_errors=ignore_errors,
-                    max_concurrent_tasks=max_concurrent_tasks,
+                    max_concurrent=max_concurrent,
                 )
             )
 
@@ -327,7 +327,7 @@ class RedTeamer:
             red_teaming_results_breakdown = []
 
             # Create a semaphore for throttling concurrent tasks
-            semaphore = asyncio.Semaphore(max_concurrent_tasks)
+            semaphore = asyncio.Semaphore(max_concurrent)
 
             # Total number of attacks across all vulnerabilities
             total_attacks = sum(
@@ -348,7 +348,7 @@ class RedTeamer:
             ):
                 async with (
                     semaphore
-                ):  # Ensures only `max_concurrent_tasks` run concurrently
+                ):  # Ensures only `max_concurrent` run concurrently
                     vulnerability_results = (
                         await self._a_evaluate_vulnerability_type(
                             target_model_callback,

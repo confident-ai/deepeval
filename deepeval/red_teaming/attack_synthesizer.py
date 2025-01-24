@@ -126,10 +126,10 @@ class AttackSynthesizer:
         vulnerabilities: List[BaseVulnerability],
         attack_enhancements: Dict[AttackEnhancement, float],
         ignore_errors: bool,
-        max_concurrent_tasks: int = 10,
+        max_concurrent: int = 10,
     ) -> List[Attack]:
         # Create a semaphore to control the number of concurrent tasks
-        semaphore = asyncio.Semaphore(max_concurrent_tasks)
+        semaphore = asyncio.Semaphore(max_concurrent)
 
         # Generate unenhanced attacks for each vulnerability
         base_attacks: List[Attack] = []
@@ -453,7 +453,6 @@ class AttackSynthesizer:
                 ).a_enhance(attack_input)
                 base_attack.input = enhanced_attack
         except:
-            print("!!!!", ignore_errors)
             if ignore_errors:
                 base_attack.error = "Error enhancing attack"
                 return base_attack
