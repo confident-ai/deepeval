@@ -490,7 +490,7 @@ class AttackSynthesizer:
         )
         body = guard_params.model_dump(by_alias=True, exclude_none=True)
 
-        api = Api(base_url=BASE_URL)
+        api = Api(base_url=BASE_URL, api_key="NA")
 
         try:
             # API request

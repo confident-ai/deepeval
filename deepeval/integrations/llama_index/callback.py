@@ -340,20 +340,18 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
         ):
             attributes = trace_instance.llmAttributes
             attributes.output_str = processed_payload["output_value"]
-            attributes.total_token_count = processed_payload[
+            attributes.total_token_count = processed_payload.get(
                 "llm_token_count_total"
-            ]
-            attributes.prompt_token_count = processed_payload[
+            )
+            attributes.prompt_token_count = processed_payload.get(
                 "llm_token_prompt_count"
-            ]
-            attributes.completion_token_count = processed_payload[
+            )
+            attributes.completion_token_count = processed_payload.get(
                 "llm_token_count_completion"
-            ]
-            track_params = self.track_params.get()
-            track_params["token_usage"] = processed_payload[
+            )
+            self.track_params["token_usage"] = processed_payload.get(
                 "llm_token_count_total"
-            ]
-            self.track_params.set(track_params)
+            )
 
         elif event_type == CBEventType.EMBEDDING and isinstance(
             trace_instance, EmbeddingTrace

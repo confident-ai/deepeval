@@ -324,6 +324,13 @@ class JailbreakingCrescendo(AttackEnhancement):
         red_teaming_history = self.memory.get_conversation(
             self.red_teaming_chat_conversation_id
         )
+        red_teaming_history.append(
+            {
+                "role": "system",
+                "content": JailBreakingCrescendoTemplate.attack_json_confinement(),
+            }
+        )
+
         res: AttackData = await self._a_generate_schema(
             json.dumps(red_teaming_history), AttackData
         )
