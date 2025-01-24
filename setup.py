@@ -28,6 +28,7 @@ setup(
         "rich",
         "protobuf",
         "pydantic",  # loosen pydantic requirements as we support multiple
+        "pydantic-openapi-schema>=1.5.1",  # For OpenAPI schema conversion
         "sentry-sdk",
         "pytest-repeat",
         "pytest-xdist",

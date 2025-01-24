@@ -2,6 +2,7 @@ from typing import Optional, List, Dict, Tuple, Union
 from pydantic import BaseModel
 import vertexai
 from vertexai.generative_models import GenerativeModel, GenerationConfig, Part, Image, HarmCategory, HarmBlockThreshold
+from pydantic_openapi_schema.v3.v3_1_0 import Schema
 
 from deepeval.models.base_model import DeepEvalBaseLLM, DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
@@ -125,8 +126,8 @@ class GeminiModel(DeepEvalBaseLLM):
             Generated text response or structured output as Pydantic model
         """
         if schema is not None:
-            # Convert Pydantic model to schema dictionary
-            schema_dict = schema.model_json_schema()
+            # Convert Pydantic model to OpenAPI schema
+            schema_dict = Schema.from_pydantic(schema).model_dump()
             
             response = self.model.generate_content(
                 prompt,
@@ -157,8 +158,8 @@ class GeminiModel(DeepEvalBaseLLM):
             Generated text response or structured output as Pydantic model
         """
         if schema is not None:
-            # Convert Pydantic model to schema dictionary
-            schema_dict = schema.model_json_schema()
+            # Convert Pydantic model to OpenAPI schema
+            schema_dict = Schema.from_pydantic(schema).model_dump()
             
             response = await self.model.generate_content_async(
                 prompt,
@@ -304,8 +305,8 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         prompt = self.generate_prompt(multimodal_input)
         
         if schema is not None:
-            # Convert Pydantic model to schema dictionary
-            schema_dict = schema.model_json_schema()
+            # Convert Pydantic model to OpenAPI schema
+            schema_dict = Schema.from_pydantic(schema).model_dump()
             
             response = self.model.generate_content(
                 prompt,
@@ -336,8 +337,8 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         prompt = self.generate_prompt(multimodal_input)
         
         if schema is not None:
-            # Convert Pydantic model to schema dictionary
-            schema_dict = schema.model_json_schema()
+            # Convert Pydantic model to OpenAPI schema
+            schema_dict = Schema.from_pydantic(schema).model_dump()
             
             response = await self.model.generate_content_async(
                 prompt,
