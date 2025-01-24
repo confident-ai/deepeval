@@ -1,39 +1,37 @@
 from typing import Optional, List, Union, Dict
 from pydantic import BaseModel
 
+from deepeval.guardrails.types import GuardType
+
 BASE_URL = "https://deepeval.confident-ai.com/"
 
 
-class ApiGuardrails(BaseModel):
+class ApiGuard(BaseModel):
     guard: str
-    guard_type: str
     vulnerability_types: Optional[list[str]] = None
-    input: Optional[str] = None
-    response: Optional[str] = None
     purpose: Optional[str] = None
     allowed_topics: Optional[List[str]] = None
 
 
-class GuardScore(BaseModel):
+class GuardData(BaseModel):
     guard: str
     score: int
+    reason: str
     score_breakdown: Union[List, Dict]
 
 
-class GuardResponseData(BaseModel):
-    result: GuardScore
+class ApiGuardrails(BaseModel):
+    input: str = None
+    output: Optional[str] = None
+    guards: List[ApiGuard]
+    type: GuardType
 
-
-# Models for running multiple guards
-
-
-class ApiMultipleGuardrails(BaseModel):
-    guard_params: List[ApiGuardrails]
-
+    class Config:
+        use_enum_values = True
 
 class GuardResult(BaseModel):
     breached: bool
-    guard_scores: List[GuardScore]
+    guard_data: List[GuardData]
 
 
 class GuardsResponseData(BaseModel):

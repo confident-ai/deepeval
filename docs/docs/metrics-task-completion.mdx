@@ -1,0 +1,116 @@
+---
+id: metrics-task-completion
+title: Task Completion
+sidebar_label: Task Completion
+---
+
+import Equation from "@site/src/components/equation";
+
+The task completion metric evaluates how effectively an **LLM agent accomplishes a task** as outlined in the `input`, based on `tools_called` and the `actual_output` of the agent. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+
+:::info
+`TaskCompletion` is an **agentic metric**, and is specifically for evaluating _tool-calling_ LLM agents. To see why each test case parameter is necessary in calculating the `TaskCompletion` score, see [how is it calculated](/docs/metrics-task-completion#how-is-it-calculated).
+:::
+
+## Required Arguments
+
+To use the `TaskCompletion`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `tools_called`
+
+## Example
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.test_case import LLMTestCase
+
+metric = TaskCompletionMetric(
+    threshold=0.7,
+    model="gpt-4",
+    include_reason=True
+)
+test_case = LLMTestCase(
+    input="Plan a 3-day itinerary for Paris with cultural landmarks and local cuisine.",
+    actual_output=(
+        "Day 1: Eiffel Tower, dinner at Le Jules Verne. "
+        "Day 2: Louvre Museum, lunch at Angelina Paris. "
+        "Day 3: Montmartre, evening at a wine bar."
+    ),
+    tools_called=[
+        ToolCall(
+            name="Itinerary Generator",
+            description="Creates travel plans based on destination and duration.",
+            input_parameters={"destination": "Paris", "days": 3},
+            output=[
+                "Day 1: Eiffel Tower, Le Jules Verne.",
+                "Day 2: Louvre Museum, Angelina Paris.",
+                "Day 3: Montmartre, wine bar.",
+            ],
+        ),
+        ToolCall(
+            name="Restaurant Finder",
+            description="Finds top restaurants in a city.",
+            input_parameters={"city": "Paris"},
+            output=["Le Jules Verne", "Angelina Paris", "local wine bars"],
+        ),
+    ],
+)
+
+metric.measure(test_case)
+print(metric.score)
+print(metric.reason)
+
+# or evaluate test cases in bulk
+evaluate([test_case], [metric])
+```
+
+There are six optional parameters when creating an `TaskCompletionMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+## How Is It Calculated?
+
+The `TaskCompletionMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Task Completion Score} = \text{AlignmentScore}(\text{Task}, \text{Outcome})" />
+
+- **Task** and **Outcome** are extracted from the `input`, `actual_output`, and `tools_called` using an LLM.
+- The **Alignment Score** measures how well the outcome aligns with the task (or user-defined task), as judged by an LLM.
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <img
+    src="https://confident-bucket.s3.amazonaws.com/task-completion.png"
+    alt="LangChain"
+    style={{
+      margin: "40px",
+      height: "auto",
+      maxHeight: "800px",
+    }}
+  />
+</div>
+
+:::note  
+While the task is primarily derived from the `input` and the outcome from the `actual_output`, these parameters alone are insufficient to calculate the **Task Completion Score**. See below for details.  
+:::
+
+#### What Is Task?
+
+The **task** represents the user’s goal or the action they want the agent to perform. The `input` alone often lacks the specificity needed to determine the full intent. For example, the input "Can you help me recover?" is unclear—it could mean recovering an account, a file, or something else. However, if the agent calls a recovery API, this action provides the necessary context to identify the task as assisting with account recovery, which is why the task is extracted from the entire `LLMTestCase`.
+
+#### What Is Outcome?
+
+The **outcome** refers to the agent’s actions in response to the user’s request. Like the task, the outcome cannot be derived from the `actual_output` alone. For example, if a restaurant reservation agent replies with "Booked for tonight," it’s impossible to confirm if the user’s goal was met without additional information such as the restaurant name, time, and tools used. These test case details (especiallly `tools_called`) are crucial to verify that the outcome aligns with the user’s intended task.

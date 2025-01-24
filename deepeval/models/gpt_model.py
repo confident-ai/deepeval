@@ -1,19 +1,22 @@
+from typing import Optional, Tuple, List, Union, Dict
+from openai import OpenAI, AsyncOpenAI
+from pydantic import BaseModel
+from io import BytesIO
 import logging
 import openai
 import base64
-from io import BytesIO
-from openai import OpenAI, AsyncOpenAI
-from typing import Optional, Tuple, List, Union
+import json
+import re
 
-from langchain_openai import ChatOpenAI, AzureChatOpenAI
-from langchain_community.callbacks import get_openai_callback
-from langchain.schema import HumanMessage
-from langchain_core.messages import AIMessage, BaseMessage
-from langchain_core.outputs import ChatResult
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
+from langchain_community.callbacks import get_openai_callback
+from langchain_core.messages import AIMessage, BaseMessage
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
+from langchain_core.outputs import ChatResult
+from langchain.schema import HumanMessage
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseMLLM
+from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.test_case import MLLMImage
 
 
@@ -24,25 +27,55 @@ def log_retry_error(retry_state):
 
 
 valid_gpt_models = [
-    "gpt-4o-mini",
-    "gpt-4o",
-    "gpt-4-turbo",
-    "gpt-4-turbo-preview",
+    "gpt-3.5-turbo",
+    "gpt-3.5-turbo-0125",
+    "gpt-3.5-turbo-1106",
     "gpt-4-0125-preview",
     "gpt-4-1106-preview",
-    "gpt-4",
+    "gpt-4-turbo",
+    "gpt-4-turbo-2024-04-09",
+    "gpt-4-turbo-preview",
+    "gpt-4o",
+    "gpt-4o-2024-05-13",
+    "gpt-4o-2024-08-06",
+    "gpt-4o-2024-11-20",
+    "gpt-4o-mini",
+    "gpt-4o-mini-2024-07-18",
     "gpt-4-32k",
-    "gpt-4-0613",
     "gpt-4-32k-0613",
-    "gpt-3.5-turbo-1106",
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+]
+
+structured_outputs_models = [
+    "gpt-4o",
+    "gpt-4o-2024-05-13",
+    "gpt-4o-2024-08-06",
+    "gpt-4o-2024-11-20",
+    "gpt-4o-mini",
+    "gpt-4o-mini-2024-07-18",
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+]
+
+json_mode_models = [
     "gpt-3.5-turbo",
-    "gpt-3.5-turbo-16k",
     "gpt-3.5-turbo-0125",
+    "gpt-3.5-turbo-1106",
+    "gpt-4-0125-preview",
+    "gpt-4-1106-preview",
+    "gpt-4-turbo",
+    "gpt-4-turbo-2024-04-09",
+    "gpt-4-turbo-preview",
+    "gpt-4-32k",
+    "gpt-4-32k-0613",
 ]
 
 model_pricing = {
     "gpt-4o-mini": {"input": 0.150 / 1e6, "output": 0.600 / 1e6},
-    "gpt-4o": {"input": 5.00 / 1e6, "output": 15.00 / 1e6},
+    "gpt-4o": {"input": 2.50 / 1e6, "output": 10.00 / 1e6},
     "gpt-4-turbo": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
     "gpt-4-turbo-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
     "gpt-4-0125-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
@@ -50,9 +83,13 @@ model_pricing = {
     "gpt-4": {"input": 30.00 / 1e6, "output": 60.00 / 1e6},
     "gpt-4-32k": {"input": 60.00 / 1e6, "output": 120.00 / 1e6},
     "gpt-3.5-turbo-1106": {"input": 1.00 / 1e6, "output": 2.00 / 1e6},
-    "gpt-3.5-turbo": {"input": 1.50 / 1e6, "output": 2.00 / 1e6},
+    "gpt-3.5-turbo": {"input": 0.50 / 1e6, "output": 1.50 / 1e6},
     "gpt-3.5-turbo-16k": {"input": 3.00 / 1e6, "output": 4.00 / 1e6},
     "gpt-3.5-turbo-0125": {"input": 0.50 / 1e6, "output": 1.50 / 1e6},
+    "gpt-3.5-turbo-instruct": {"input": 1.50 / 1e6, "output": 2.00 / 1e6},
+    "o1": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
+    "o1-preview": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
+    "o1-2024-12-17": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
 }
 
 default_gpt_model = "gpt-4o"
@@ -167,22 +204,116 @@ class GPTModel(DeepEvalBaseLLM):
         retry=retry_if_exception_type(openai.RateLimitError),
         after=log_retry_error,
     )
-    def generate(self, prompt: str) -> Tuple[str, float]:
-        chat_model = self.load_model()
-        with get_openai_callback() as cb:
-            res = chat_model.invoke(prompt)
-            return res.content, cb.total_cost
+    def generate(
+        self, prompt: str, schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        using_openai_model = (
+            not self.should_use_azure_openai()
+            and not self.should_use_local_model()
+        )
+        if schema and using_openai_model:
+            client = OpenAI(api_key=self._openai_api_key)
+            if self.model_name in structured_outputs_models:
+                completion = client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "user", "content": prompt},
+                    ],
+                    response_format=schema,
+                )
+                structured_output: BaseModel = completion.choices[
+                    0
+                ].message.parsed
+                cost = self.calculate_cost(
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
+                )
+                return structured_output, cost
+            if self.model_name in json_mode_models:
+                completion = client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "user", "content": prompt},
+                    ],
+                    response_format={"type": "json_object"},
+                )
+                json_output = self.trim_and_load_json(
+                    completion.choices[0].message.content
+                )
+                cost = self.calculate_cost(
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
+                )
+                return schema.model_validate(json_output), cost
+        elif schema and not using_openai_model:
+            chat_model = self.load_model()
+            with get_openai_callback() as cb:
+                res = chat_model.invoke(prompt)
+                json_output = self.trim_and_load_json(res.content)
+                return schema.model_validate(json_output), cb.total_cost
+        else:
+            chat_model = self.load_model()
+            with get_openai_callback() as cb:
+                res = chat_model.invoke(prompt)
+                return res.content, cb.total_cost
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
         after=log_retry_error,
     )
-    async def a_generate(self, prompt: str) -> Tuple[str, float]:
-        chat_model = self.load_model()
-        with get_openai_callback() as cb:
-            res = await chat_model.ainvoke(prompt)
-            return res.content, cb.total_cost
+    async def a_generate(
+        self, prompt: str, schema: Optional[BaseModel] = None
+    ) -> Tuple[str, float]:
+        using_openai_model = (
+            not self.should_use_azure_openai()
+            and not self.should_use_local_model()
+        )
+        if schema and using_openai_model:
+            client = AsyncOpenAI(api_key=self._openai_api_key)
+            if self.model_name in structured_outputs_models:
+                completion = await client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "user", "content": prompt},
+                    ],
+                    response_format=schema,
+                )
+                structured_output: BaseModel = completion.choices[
+                    0
+                ].message.parsed
+                cost = self.calculate_cost(
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
+                )
+                return structured_output, cost
+            if self.model_name in json_mode_models:
+                completion = await client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "user", "content": prompt},
+                    ],
+                    response_format={"type": "json_object"},
+                )
+                json_output = self.trim_and_load_json(
+                    completion.choices[0].message.content
+                )
+                cost = self.calculate_cost(
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
+                )
+                return schema.model_validate(json_output), cost
+        elif schema and not using_openai_model:
+            chat_model = self.load_model()
+            with get_openai_callback() as cb:
+                res = await chat_model.ainvoke(prompt)
+                json_output = self.trim_and_load_json(res.content)
+                return schema.model_validate(json_output), cb.total_cost
+        else:
+            chat_model = self.load_model()
+            with get_openai_callback() as cb:
+                res = await chat_model.ainvoke(prompt)
+                return res.content, cb.total_cost
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
@@ -252,6 +383,31 @@ class GPTModel(DeepEvalBaseLLM):
         elif self.model_name:
             return self.model_name
 
+    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        pricing = model_pricing.get(self.model_name, model_pricing["gpt-4o"])
+        input_cost = input_tokens * pricing["input"]
+        output_cost = output_tokens * pricing["output"]
+        return input_cost + output_cost
+
+    def trim_and_load_json(
+        self,
+        input_string: str,
+    ) -> Dict:
+        start = input_string.find("{")
+        end = input_string.rfind("}") + 1
+        if end == 0 and start != -1:
+            input_string = input_string + "}"
+            end = len(input_string)
+        jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
+        jsonStr = re.sub(r",\s*([\]}])", r"\1", jsonStr)
+        try:
+            return json.loads(jsonStr)
+        except json.JSONDecodeError:
+            error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+            raise ValueError(error_str)
+        except Exception as e:
+            raise Exception(f"An unexpected error occurred: {str(e)}")
+
 
 ###############################################
 # Multimodal Model
@@ -259,15 +415,20 @@ class GPTModel(DeepEvalBaseLLM):
 
 
 valid_multimodal_gpt_models = [
-    "gpt-4o-mini",
     "gpt-4o",
-    "gpt-4-turbo",
-    "gpt-4-turbo-preview",
-    "gpt-4-0125-preview",
-    "gpt-4-1106-preview",
+    "gpt-4o-2024-05-13",
+    "gpt-4o-2024-08-06",
+    "gpt-4o-2024-11-20",
+    "gpt-4o-mini",
+    "gpt-4o-mini-2024-07-18",
     "gpt-4",
-    "gpt-4-32k",
+    "gpt-4-0125-preview",
     "gpt-4-0613",
+    "gpt-4-1106-preview",
+    "gpt-4-turbo",
+    "gpt-4-turbo-2024-04-09",
+    "gpt-4-turbo-preview",
+    "gpt-4-32k",
     "gpt-4-32k-0613",
 ]
 
@@ -373,7 +534,7 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
     def generate(
         self, multimodal_input: List[Union[str, MLLMImage]]
     ) -> Tuple[str, float]:
-        client = OpenAI()
+        client = OpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
         response = client.chat.completions.create(
             model=self.model_name,
@@ -395,7 +556,7 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
     async def a_generate(
         self, multimodal_input: List[Union[str, MLLMImage]]
     ) -> Tuple[str, float]:
-        client = AsyncOpenAI()
+        client = AsyncOpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
         response = await client.chat.completions.create(
             model=self.model_name,

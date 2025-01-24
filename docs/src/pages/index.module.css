@@ -3,10 +3,42 @@
     width: 100%;
 }
 
+.canHide {
+    display: flex;
+}
+
+.ctaContainer {
+    display: flex;
+    align-items: center;
+    column-gap: 3rem;
+}
+
+.confidentLink {
+    color: #9ca3af;
+    font-size: 18px;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    column-gap: 0.5rem;
+}
+
+.newTabIcon {
+    width: 16px;
+    height: 16px;
+    transform: skewX(-15deg);
+}
+
 .mainRapper {
     width: 100%;
     height: 100%;
     background-color: #13171e;
+}
+
+.letterContentContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
 }
 
 .rapper {
@@ -14,6 +46,15 @@
     width: 90rem;
     flex-grow: 1;
     margin: auto;
+}
+
+@keyframes oscillateHeight {
+    0%, 100% {
+        height: 160px;
+    }
+    50% {
+        height: 180px;
+    }
 }
 
 @media (max-width: 1435px) {
@@ -30,6 +71,12 @@
 }
 
 @media (max-width: 1018px) { 
+    .ctaContainer {
+        flex-direction: column;
+        row-gap: 1.5rem;
+    }
+    
+
     .featuresContainer {
         display: flex;
         flex-direction: column;
@@ -90,6 +137,10 @@
         font-size: 18px!important;
     }
 
+    .canHide {
+        display: none;       
+    }
+
     .letterImage .animatedMail {
         transform: translateY(50px);
         -webkit-transform: translateY(50px);
@@ -104,8 +155,10 @@
         -moz-transform: rotateX(180deg);
         z-index: 0;
     }
+
     .letterImage .animatedMail .letter {
-        height: 180px;
+        height: 160px;
+        animation: oscillateHeight 2s infinite ease-in-out;
     }
     .letterImage .shadow {
         width: 250px;
@@ -113,6 +166,10 @@
 }
 
 @media (max-width: 500px) {
+    .confidentLink {
+        font-size: 16px;
+    }
+
     .contentContainer .button {
         width: 100%;
         padding: 12px 30px!important;
@@ -129,7 +186,7 @@
 
     .homeNav div {
         margin-right: 30px!important;
-        font-size: 16px!important;
+        font-size: 14px!important;
     }
 
     .featureCard .title {
@@ -157,6 +214,8 @@
     margin-right: 50px;
     font-size: 20px;
 }
+
+
 
 .homeNav div a {
     color: #9ca3af;
@@ -241,6 +300,7 @@
     border-radius: 34px;
     font-weight: 600;
     color: white;
+    box-shadow: 0 0 18px #6d28d9;
 }
 
 .contentContainer .button:hover {
@@ -345,6 +405,7 @@
     -webkit-transition: 0.4s 0.2s;
     -moz-transition: 0.4s 0.2s;
     transition: 0.4s 0.2s;
+    animation: oscillateHeight 2s infinite ease-in-out;
 }
 .animatedMail .letter .letterBorder {
     height: 10px;
@@ -359,7 +420,7 @@
     font-weight: 600;
 }
 .animatedMail .letter .letterContext {
-    margin-top: 17px;
+    margin-top: 6px;
     margin-left: 7px;
     display: flex;
     align-items: center;
@@ -417,7 +478,7 @@
     z-index: 0;
 }
 .letterImage .animatedMail .letter {
-    height: 180px;
+    height: 200px;
 }
 .letterImage .shadow {
     width: 250px;

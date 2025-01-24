@@ -71,7 +71,7 @@ A `Golden` and `LLMTestCase` contains almost an identical class signature, so te
 ## Generate An Evaluation Dataset
 
 :::caution
-We highly recommend you to checkout the [`Synthesizer`](synthesizer-introduction) page to see the customizations available and how data synthesization work in `deepeval`. All methods in an `EvaluationDataset` that can be used to generate goldens uses the `Synthesizer` under the hood and has exactly the same function signature as corresponding methods in the `Synthesizer`.
+We highly recommend you to checkout the [`Synthesizer`](/docs/synthesizer-introduction) page to see the customizations available and how data synthesization work in `deepeval`. All methods in an `EvaluationDataset` that can be used to generate goldens uses the `Synthesizer` under the hood and has exactly the same function signature as corresponding methods in the `Synthesizer`.
 :::
 
 `deepeval` offers anyone the ability to easily generate synthetic datasets from documents locally on your machine. This is especially helpful if you don't have an evaluation dataset prepared beforehand.
@@ -106,7 +106,7 @@ dataset.generate_goldens_from_docs(
 ```
 
 :::info
-`deepeval`'s `Synthesizer` uses a series of evolution techniques to complicate and make generated goldens more realistic to human prepared data. For more information on how `deepeval`'s `Synthesizer` works, visit the [synthesizer section.](synthesizer-introduction#how-does-it-work)
+`deepeval`'s `Synthesizer` uses a series of evolution techniques to complicate and make generated goldens more realistic to human prepared data. For more information on how `deepeval`'s `Synthesizer` works, visit the [synthesizer section.](/docs/synthesizer-introduction#how-does-it-work)
 :::
 
 ## Load an Existing Dataset
@@ -127,7 +127,7 @@ dataset.pull(alias="My Evals Dataset")
 :::tip Did Your Know?
 You can **create, annotate, and comment** on datasets on Confident AI? You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
 
-For more information, visit the [Confident AI datasets section.](confident-ai-manage-datasets)
+For more information, visit the [Confident AI datasets section.](/confident-ai/confident-ai-manage-datasets)
 :::
 
 ### From JSON
@@ -268,18 +268,18 @@ evaluate(dataset, [hallucination_metric, answer_relevancy_metric])
 ```
 
 :::info
-Visit the [test cases section](evaluation-test-cases) to learn what argument the `evaluate()` function accepts.
+Visit the [test cases section](/docs/evaluation-test-cases) to learn what argument the `evaluate()` function accepts.
 :::
 
 ## Evaluate Your Dataset on Confident AI
 
-Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](confident-ai-introduction#login-to-confident-ai):
+Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](/confident-ai/confident-ai-introduction#login-to-confident-ai):
 
 ```console
 deepeval login
 ```
 
-Then, define metrics by [creating an experiment](confident-ai-testing-n-evaluation-experiments#creating-an-experiment) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
+Then, define metrics by [creating an experiment](/confident-ai/confident-ai-testing-n-evaluation-experiments#creating-an-experiment) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
 
 ```python
 from deepeval import confident_evaluate
@@ -291,5 +291,5 @@ confident_evaluate(experiment_name="My First Experiment", dataset)
 ```
 
 :::tip
-You can find the full tutorial on running evaluations on Confident AI [here.](confident-ai-testing-n-evaluation-experiments)
+You can find the full tutorial on running evaluations on Confident AI [here.](/confident-ai/confident-ai-testing-n-evaluation-experiments)
 :::

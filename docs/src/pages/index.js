@@ -8,9 +8,13 @@ class HomeNav extends React.Component {
     render() {
         return <div className={styles.homeNav}>
             <div><Link to={"/docs/getting-started"}>Docs</Link></div>
-            <div><Link to="/docs/tutorial-introduction">Tutorial</Link></div>
-            <div><a href="https://github.com/confident-ai/deepeval" target="_blank">Github</a></div>
-            <div><a href="https://confident-ai.com/blog" target="_blank">Blog</a></div>
+            <div><Link to="/confident-ai/confident-ai-introduction">Confident AI</Link></div>
+            <div><Link to="/tutorials/tutorial-introduction">Tutorial</Link></div>
+            <div><Link to="/guides/guides-rag-evaluation">Guides</Link></div>
+            <div className={styles.canHide}>
+              <div><a href="https://github.com/confident-ai/deepeval" target="_blank">Github</a></div>
+              <div><a href="https://confident-ai.com/blog" target="_blank">Blog</a></div>
+            </div>
         </div>
     }
 }
@@ -28,8 +32,11 @@ class ConfidentEnvelope extends React.Component {
         <div className={styles.letter}>
           <div className={styles.letterBorder}></div>
           <div className={styles.letterTitle}>Delivered by</div>
-          <div className={styles.letterContext}>
-            <span class="lexend-deca" style={{fontSize: "16px"}}>Confident AI</span>
+          <div className={styles.letterContentContainer}>
+            <img src="icons/logo.svg" style={{width: "30px", height: "30px"}}/>
+            <div className={styles.letterContext}>
+              <span class="lexend-deca" style={{fontSize: "16px"}}>Confident AI</span>
+            </div>
           </div>
           <div className={styles.letterStamp}>
             <div className={styles.letterStampInner}></div>
@@ -68,10 +75,6 @@ class Index extends React.Component {
   }
 
     render() {
-      const {config: siteConfig, language = ''} = this.props;
-      const {baseUrl} = siteConfig;
-
-  
       return (
         <div className={styles.mainMainContainer}>
           <div className={styles.mainContainer}>
@@ -79,7 +82,13 @@ class Index extends React.Component {
               <img src="icons/DeepEval.svg" />
               <div className={styles.contentContainer}>
                 <h1>$ the open-source LLM evaluation framework</h1>
-                <Link to={"/docs/getting-started"} className={styles.button}>Get Started</Link>
+                <div className={styles.ctaContainer}>
+                  <Link to={"/docs/getting-started"} className={styles.button}>Get Started</Link>
+                  <a href={"https://confident-ai.com"} className={styles.confidentLink}>
+                    <span>Try the DeepEval Platform</span>
+                    <img className={styles.newTabIcon} src="icons/new-tab.svg"/>
+                  </a>
+                </div>
               </div>
             </div>
             <ConfidentEnvelope />

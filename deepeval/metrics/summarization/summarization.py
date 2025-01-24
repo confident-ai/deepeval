@@ -195,10 +195,9 @@ class SummarizationMetric(BaseMetric):
 """
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(prompt, schema=Reason)
@@ -245,10 +244,9 @@ class SummarizationMetric(BaseMetric):
 """
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt, schema=Reason)
@@ -295,10 +293,9 @@ class SummarizationMetric(BaseMetric):
             questions=self.assessment_questions, text=text
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Answers)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["answers"]
+            return res.answers
         else:
             try:
                 res: Answers = await self.model.a_generate(
@@ -315,10 +312,9 @@ class SummarizationMetric(BaseMetric):
             questions=self.assessment_questions, text=text
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Answers)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["answers"]
+            return res.answers
         else:
             try:
                 res: Answers = self.model.generate(prompt, schema=Answers)
@@ -331,10 +327,9 @@ class SummarizationMetric(BaseMetric):
     async def _a_generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Questions)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["questions"]
+            return res.questions
         else:
             try:
                 res: Questions = await self.model.a_generate(
@@ -349,10 +344,9 @@ class SummarizationMetric(BaseMetric):
     def _generate_assessment_questions(self, text: str):
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Questions)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["questions"]
+            return res.questions
         else:
             try:
                 res: Questions = self.model.generate(prompt, schema=Questions)
@@ -429,13 +423,9 @@ class SummarizationMetric(BaseMetric):
             summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                SummarizationAlignmentVerdict(**item)
-                for item in data["verdicts"]
-            ]
+            verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
@@ -464,13 +454,9 @@ class SummarizationMetric(BaseMetric):
             summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                SummarizationAlignmentVerdict(**item)
-                for item in data["verdicts"]
-            ]
+            verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
@@ -492,10 +478,9 @@ class SummarizationMetric(BaseMetric):
             text=text, extraction_limit=self.truths_extraction_limit
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Truths)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["truths"]
+            return res.truths
         else:
             try:
                 res: Truths = await self.model.a_generate(prompt, schema=Truths)
@@ -509,10 +494,9 @@ class SummarizationMetric(BaseMetric):
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["claims"]
+            return res.claims
         else:
             try:
                 res: Claims = await self.model.a_generate(prompt, schema=Claims)
@@ -528,10 +512,9 @@ class SummarizationMetric(BaseMetric):
             text=text, extraction_limit=self.truths_extraction_limit
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Truths)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["truths"]
+            return res.truths
         else:
             try:
                 res: Truths = self.model.generate(prompt, schema=Truths)
@@ -545,10 +528,9 @@ class SummarizationMetric(BaseMetric):
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(text=text)
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["claims"]
+            return res.claims
         else:
             try:
                 res: Claims = self.model.generate(prompt, schema=Claims)

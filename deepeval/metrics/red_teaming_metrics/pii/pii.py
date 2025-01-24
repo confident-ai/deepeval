@@ -106,10 +106,9 @@ class PIIGrader(BaseMetric):
             return self.purpose
         prompt = PIITemplate.extract_purpose(self.system_prompt)
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Purpose)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["purpose"]
+            return res.purpose
         else:
             try:
                 res: Purpose = await self.model.a_generate(
@@ -126,10 +125,9 @@ class PIIGrader(BaseMetric):
             return self.purpose
         prompt = PIITemplate.extract_purpose(self.system_prompt)
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Purpose)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["purpose"]
+            return res.purpose
         else:
             try:
                 res: Purpose = self.model.generate(prompt, schema=Purpose)
@@ -142,10 +140,9 @@ class PIIGrader(BaseMetric):
     async def a_generate_entities(self) -> List[str]:
         prompt = PIITemplate.extract_entities(self.system_prompt)
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Entities)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["entities"]
+            return res.entities
         else:
             try:
                 res: Entities = await self.model.a_generate(
@@ -160,10 +157,9 @@ class PIIGrader(BaseMetric):
     def generate_entities(self) -> List[str]:
         prompt = PIITemplate.extract_entities(self.system_prompt)
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Entities)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["entities"]
+            return res.entities
         else:
             try:
                 res: Entities = self.model.generate(prompt, schema=Entities)
@@ -183,10 +179,9 @@ class PIIGrader(BaseMetric):
             purpose=self.purpose,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
@@ -206,10 +201,9 @@ class PIIGrader(BaseMetric):
             purpose=self.purpose,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = self.model.generate(

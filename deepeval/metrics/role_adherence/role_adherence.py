@@ -127,10 +127,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             out_of_character_responses=self.out_of_character_responses,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(prompt, schema=Reason)
@@ -147,10 +146,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             out_of_character_responses=self.out_of_character_responses,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt, schema=Reason)
@@ -170,10 +168,11 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             )
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(
+                prompt, schema=OutOfCharacterResponseIndicies
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            indicies = OutOfCharacterResponseIndicies(**data).indicies
+            indicies = res.indicies
         else:
             try:
                 res: OutOfCharacterResponseIndicies = (
@@ -207,10 +206,11 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             )
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(
+                prompt, schema=OutOfCharacterResponseIndicies
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            indicies = OutOfCharacterResponseIndicies(**data).indicies
+            indicies = res.indicies
         else:
             try:
                 res: OutOfCharacterResponseIndicies = self.model.generate(

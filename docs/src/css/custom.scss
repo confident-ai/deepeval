@@ -19,8 +19,8 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
   .alert--success {
-    --ifm-alert-background-color: #def8ec !important;
-    --ifm-alert-border-color: #34d399 !important;
+    --ifm-alert-background-color: #def8f2 !important;
+    --ifm-alert-border-color: #30d2b9 !important;
   }
 
   .alert--secondary {
@@ -150,6 +150,10 @@ html[data-theme="light"] #invertable-img {
   filter: invert(100%);
 }
 
+html[data-theme="dark"] #light-invertable-img {
+  filter: invert(100%);
+}
+
 #confident-workflow {
   width: 70%;
 }
@@ -195,4 +199,20 @@ html[data-theme="dark"] #rag-evaluation {
 
 img, video {
   border-radius: 6px;
+}
+
+.glowing {
+  animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+  0% {
+    filter: drop-shadow(0 0 5px #c4b5fd);
+  }
+  30% {
+    filter: drop-shadow(0 0 15px #7c3aed);
+  }
+  100% {
+    filter: drop-shadow(0 0 25px #6d28d9);
+  }
 }

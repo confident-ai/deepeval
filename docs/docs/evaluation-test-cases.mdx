@@ -129,7 +129,7 @@ You may also choose to evaluate with precomputed `actual_output`s, instead of ge
 
 The `expected_output` is literally what you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
 
-The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](metrics-introduction)
+The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](/docs/metrics-introduction)
 
 ```python
 # A hypothetical LLM application example
@@ -197,21 +197,54 @@ Remember, `context` is the ideal retrieval results for a given input and typical
 
 The `tools_called` parameter is an **optional** parameter that represents the tools your LLM agent actually invoked during execution. By providing `tools_called`, you can evaluate how effectively your LLM agent utilized the tools available to it.
 
+:::note
+The `tools_called` parameter accepts a list of `ToolCall` objects.
+:::
+
+```python
+class ToolCall(BaseModel):
+    name: str
+    description: Optional[str] = None
+    reasoning: Optional[str] = None
+    output: Optional[Any] = None
+    input_parameters: Optional[Dict[str, Any]] = None
+```
+
+A `ToolCall` object accepts 1 mandatory and 4 optional parameters:
+
+- `name`: a string representing the **name** of the tool.
+- [Optional] `description`: a string describing the **tool's purpose**.
+- [Optional] `reasoning`: A string explaining the **agent's reasoning** to use the tool.
+- [Optional] `output`: The tool's **output**, which can be of any data type.
+- [Optional] `input_parameters`: A dictionary with string keys representing the **input parameters** (and respective values) passed into the tool function.
+
 ```python
 # A hypothetical LLM application example
 import chatbot
-
 
 test_case = LLMTestCase(
     input="Why did the chicken cross the road?",
     actual_output=chatbot.run(input),
     # Replace this with the tools that were actually used
-    tools_called=["WebSearch", "DatabaseQuery"]
+    tools_called=[
+        ToolCall(
+            name="Calculator Tool"
+            description="A tool that calculates mathematical equations or expressions.",
+            input={"user_input": "2+3"}
+            output=5
+        ),
+        ToolCall(
+            name="WebSearch Tool"
+            reasoning="Knowledge base does not detail why the chicken crossed the road."
+            input={"search_query": "Why did the chicken crossed the road?"}
+            output="Because it wanted to, duh."
+        )
+    ]
 )
 ```
 
-:::note
-`tools_called` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
+:::info
+`tools_called` and `expected_tools` are LLM test case parameters that are utilized only in **agentic evaluation metrics**. These parameters allow you to assess the [tool usage correctness](/docs/metrics-tool-correctness) of your LLM application and ensure that it meets the expected tool usage standards.
 :::
 
 ### Expected Tools
@@ -228,8 +261,28 @@ test_case = LLMTestCase(
     input=input,
     actual_output=chatbot.run(input),
     # Replace this with the tools that were actually used
-    tools_called=["WebSearch", "DatabaseQuery"],
-    expected_tools=["DatabaseQuery"]
+    tools_called=[
+        ToolCall(
+            name="Calculator Tool"
+            description="A tool that calculates mathematical equations or expressions.",
+            input={"user_input": "2+3"}
+            output=5
+        ),
+        ToolCall(
+            name="WebSearch Tool"
+            reasoning="Knowledge base does not detail why the chicken crossed the road."
+            input={"search_query": "Why did the chicken crossed the road?"}
+            output="Because it wanted to, duh."
+        )
+    ]
+    expected_tools=[
+        ToolCall(
+            name="WebSearch Tool"
+            reasoning="Knowledge base does not detail why the chicken crossed the road."
+            input={"search_query": "Why did the chicken crossed the road?"}
+            output="Because it needed to escape from the hungry humans."
+        )
+    ]
 )
 ```
 
@@ -395,7 +448,7 @@ There are two mandatory and one optional parameter when calling the `assert_test
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 
 :::info
-The `run_async` parameter overrides the `async_mode` property of all metrics being evaluated. The `async_mode` property, as you'll learn later in the [metrics section](metrics-introduction), determines whether each metric can execute asynchronously.
+The `run_async` parameter overrides the `async_mode` property of all metrics being evaluated. The `async_mode` property, as you'll learn later in the [metrics section](/docs/metrics-introduction), determines whether each metric can execute asynchronously.
 :::
 
 To execute the test cases, run `deepeval test run` via the CLI, which uses `deepeval`'s Pytest integration under the hood to execute these tests. You can also include an optional `-n` flag follow by a number (that determines the number of processes that will be used) to run tests in parallel.
@@ -425,7 +478,7 @@ metric = HallucinationMetric(threshold=0.7)
 evaluate([test_case], [metric])
 ```
 
-There are two mandatory and twelve optional arguments when calling the `evaluate()` function:
+There are two mandatory and thirteen optional arguments when calling the `evaluate()` function:
 
 - `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
 - `metrics`: a list of metrics of type `BaseMetric`.
@@ -436,8 +489,9 @@ There are two mandatory and twelve optional arguments when calling the `evaluate
 - [Optional] `max_concurrent`: an integer that determines the maximum number of test cases that can be ran in parallel at any point in time. You can decrease this value if your evaluation model is running into rate limit errors. Defaulted to 100.
 - [Optional] `skip_on_missing_params`: a boolean which when set to `True`, skips all metric executions for test cases with missing parameters. Defaulted to `False`.
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for each test case. Defaulted to `False`.
-- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `None`.
+- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
+- [Optional] `display`: a str of either `"all"`, `"failing"` or `"passing"`, which allows you to selectively decide which type of test cases to display as the final result. Defaulted to `"all"`.
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
@@ -460,7 +514,7 @@ evaluate(
 )
 ```
 
-For more examples of `evaluate`, visit the [datasets section](evaluation-datasets).
+For more examples of `evaluate`, visit the [datasets section](/docs/evaluation-datasets).
 :::
 
 ## Labeling Test Cases for Confident AI

@@ -90,7 +90,7 @@ class Synthesizer:
         self.filtration_config = (
             filtration_config
             if filtration_config is not None
-            else FiltrationConfig()
+            else FiltrationConfig(critic_model=self.model)
         )
         self.evolution_config = (
             evolution_config
@@ -115,7 +115,9 @@ class Synthesizer:
     ):
         self.synthesis_cost = 0 if self.using_native_model else None
         if context_construction_config is None:
-            context_construction_config = ContextConstructionConfig()
+            context_construction_config = ContextConstructionConfig(
+                critic_model=self.model
+            )
 
         if self.async_mode:
             loop = get_or_create_event_loop()
@@ -143,7 +145,8 @@ class Synthesizer:
             self.context_generator._load_docs()
             contexts, source_files, context_scores = (
                 self.context_generator.generate_contexts(
-                    num_context_per_document=context_construction_config.max_contexts_per_document
+                    num_context_per_document=context_construction_config.max_contexts_per_document,
+                    max_context_size=context_construction_config.max_context_length,
                 )
             )
             print(
@@ -171,7 +174,7 @@ class Synthesizer:
 
         # Wrap-up Synthesis
         if _send_data == True:
-            self._wrap_up_synthesis()
+            pass
         return goldens
 
     async def a_generate_goldens_from_docs(
@@ -182,7 +185,9 @@ class Synthesizer:
         context_construction_config: Optional[ContextConstructionConfig] = None,
     ):
         if context_construction_config is None:
-            context_construction_config = ContextConstructionConfig()
+            context_construction_config = ContextConstructionConfig(
+                critic_model=self.model
+            )
         self.synthesis_cost = 0 if self.using_native_model else None
 
         # Generate contexts from provided docs
@@ -201,7 +206,8 @@ class Synthesizer:
 
         contexts, source_files, context_scores = (
             await self.context_generator.a_generate_contexts(
-                num_context_per_document=context_construction_config.max_contexts_per_document
+                num_context_per_document=context_construction_config.max_contexts_per_document,
+                max_context_size=context_construction_config.max_context_length,
             )
         )
         print(
@@ -351,7 +357,7 @@ class Synthesizer:
         # Wrap-up Synthesis
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
-            self._wrap_up_synthesis()
+            pass
         return goldens
 
     async def a_generate_goldens_from_contexts(
@@ -661,7 +667,7 @@ class Synthesizer:
         # Wrap up Synthesis
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
-            self._wrap_up_synthesis()
+            pass
         return goldens
 
     def transform_distribution(
@@ -875,7 +881,8 @@ class Synthesizer:
     ) -> BaseModel:
         if isinstance(model, GPTModel):
             res, cost = model.generate(prompt)
-            self.synthesis_cost += cost
+            if self.synthesis_cost is not None:
+                self.synthesis_cost += cost
             data = trimAndLoadJson(res, self)
             if schema == SyntheticDataList:
                 data_list = [SyntheticData(**item) for item in data["data"]]
@@ -903,7 +910,8 @@ class Synthesizer:
     ) -> BaseModel:
         if isinstance(model, GPTModel):
             res, cost = await model.a_generate(prompt)
-            self.synthesis_cost += cost
+            if self.synthesis_cost is not None:
+                self.synthesis_cost += cost
             data = trimAndLoadJson(res, self)
             if schema == SyntheticDataList:
                 data_list = [SyntheticData(**item) for item in data["data"]]
@@ -925,9 +933,9 @@ class Synthesizer:
 
     def _generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Response)
             self.synthesis_cost += cost
-            return res
+            return res.response
         else:
             try:
                 res: Response = self.model.generate(prompt, schema=Response)
@@ -938,9 +946,9 @@ class Synthesizer:
 
     async def _a_generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Response)
             self.synthesis_cost += cost
-            return res
+            return res.response
         else:
             try:
                 res: Response = await self.model.a_generate(
@@ -1027,11 +1035,14 @@ class Synthesizer:
 
         return df
 
-    def _wrap_up_synthesis(self):
+    def push(
+        self,
+        alias: str,
+    ):
         console = Console()
         if is_confident():
-            return
-            alias = input("Enter the dataset alias: ").strip()
+            if not alias:
+                alias = input("Enter the dataset alias: ").strip()
             if len(self.synthetic_goldens) == 0:
                 raise ValueError(
                     "Unable to push empty dataset to Confident AI. There must be at least one dataset or golden data entry."

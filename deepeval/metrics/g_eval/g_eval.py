@@ -9,6 +9,7 @@ from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
+    ToolCall,
 )
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -59,6 +60,7 @@ class GEval(BaseMetric):
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
+        top_logprobs: int = 20,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
@@ -88,6 +90,7 @@ class GEval(BaseMetric):
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
         self.threshold = 1 if strict_mode else threshold
+        self.top_logprobs = top_logprobs
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
@@ -224,6 +227,8 @@ class GEval(BaseMetric):
         text = """"""
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
+            if isinstance(value, ToolCall):
+                value = repr(value)
             text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
 
         g_eval_params_str = construct_g_eval_params_string(
@@ -239,7 +244,7 @@ class GEval(BaseMetric):
             # Don't have to check for using native model
             # since generate raw response only exist for deepeval's native model
             res, cost = await self.model.a_generate_raw_response(
-                prompt, logprobs=True, top_logprobs=20
+                prompt, logprobs=True, top_logprobs=self.top_logprobs
             )
             self.evaluation_cost += cost
             data = trimAndLoadJson(res.content, self)
@@ -279,6 +284,8 @@ class GEval(BaseMetric):
         text = """"""
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
+            if isinstance(value, ToolCall):
+                value = repr(value)
             text += f"{param.value}: {value} \n\n"
 
         g_eval_params_str = construct_g_eval_params_string(
@@ -293,7 +300,7 @@ class GEval(BaseMetric):
 
         try:
             res, cost = self.model.generate_raw_response(
-                prompt, logprobs=True, top_logprobs=20
+                prompt, logprobs=True, top_logprobs=self.top_logprobs
             )
             self.evaluation_cost += cost
             data = trimAndLoadJson(res.content, self)

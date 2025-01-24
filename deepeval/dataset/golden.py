@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, List
+from deepeval.test_case import ToolCall
 
 
 class Golden(BaseModel):
@@ -18,10 +19,10 @@ class Golden(BaseModel):
         default=None, serialization_alias="additionalMetadata"
     )
     comments: Optional[str] = Field(default=None)
-    tools_called: Optional[List[str]] = Field(
+    tools_called: Optional[List[ToolCall]] = Field(
         default=None, serialization_alias="toolsCalled"
     )
-    expected_tools: Optional[List[str]] = Field(
+    expected_tools: Optional[List[ToolCall]] = Field(
         default=None, serialization_alias="expectedTools"
     )
     source_file: Optional[str] = Field(

@@ -102,10 +102,9 @@ class IntellectualPropertyGrader(BaseMetric):
             self.system_prompt
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Purpose)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["purpose"]
+            return res.purpose
         else:
             try:
                 res: Purpose = await self.model.a_generate(
@@ -124,10 +123,9 @@ class IntellectualPropertyGrader(BaseMetric):
             self.system_prompt
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Purpose)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["purpose"]
+            return res.purpose
         else:
             try:
                 res: Purpose = self.model.generate(prompt, schema=Purpose)
@@ -145,9 +143,9 @@ class IntellectualPropertyGrader(BaseMetric):
             purpose=self.purpose,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
+            self.evaluation_cost += cost
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
@@ -165,10 +163,9 @@ class IntellectualPropertyGrader(BaseMetric):
             purpose=self.purpose,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reason"]
+            return res.score, res.reason
         else:
             try:
                 res: ReasonScore = self.model.generate(

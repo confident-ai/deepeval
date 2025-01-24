@@ -16,6 +16,7 @@ from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
     convert_convo_goldens_to_convo_test_cases,
+    trimAndLoadJson,
 )
 from deepeval.dataset.api import (
     APIDataset,
@@ -23,7 +24,12 @@ from deepeval.dataset.api import (
     DatasetHttpResponse,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
+from deepeval.test_case import (
+    LLMTestCase,
+    ConversationalTestCase,
+    MLLMTestCase,
+    ToolCall,
+)
 from deepeval.utils import convert_keys_to_snake_case, is_confident
 
 valid_file_types = ["csv", "json"]
@@ -257,26 +263,37 @@ class EvaluationDataset:
                 df, retrieval_context_col_name, default=""
             )
         ]
-        tools_called = [
-            (
-                tool_called.split(tools_called_col_delimiter)
-                if tool_called
-                else []
-            )
-            for tool_called in get_column_data(
-                df, tools_called_col_name, default=""
-            )
-        ]
-        expected_tools = [
-            (
-                expected_tool.split(expected_tools_col_delimiter)
-                if expected_tool
-                else []
-            )
-            for expected_tool in get_column_data(
-                df, expected_tools_col_name, default=""
-            )
-        ]
+        tools_called = []
+        for tools_called_json in get_column_data(
+            df, tools_called_col_name, default="[]"
+        ):
+            if tools_called_json:
+                try:
+                    parsed_tools = [
+                        ToolCall(**tool)
+                        for tool in trimAndLoadJson(tools_called_json)
+                    ]
+                    tools_called.append(parsed_tools)
+                except ValueError as e:
+                    raise ValueError(f"Error processing tools_called: {e}")
+            else:
+                tools_called.append([])
+
+        expected_tools = []
+        for expected_tools_json in get_column_data(
+            df, expected_tools_col_name, default="[]"
+        ):
+            if expected_tools_json:
+                try:
+                    parsed_tools = [
+                        ToolCall(**tool)
+                        for tool in trimAndLoadJson(expected_tools_json)
+                    ]
+                    expected_tools.append(parsed_tools)
+                except ValueError as e:
+                    raise ValueError(f"Error processing expected_tools: {e}")
+            else:
+                expected_tools.append([])
         additional_metadatas = [
             ast.literal_eval(metadata) if metadata else None
             for metadata in get_column_data(
@@ -374,8 +391,10 @@ class EvaluationDataset:
             expected_output = json_obj.get(expected_output_key_name)
             context = json_obj.get(context_key_name)
             retrieval_context = json_obj.get(retrieval_context_key_name)
-            tools_called = json_obj.get(tools_called_key_name)
-            expected_tools = json_obj.get(expected_tools_key_name)
+            tools_called_data = json_obj.get(tools_called_key_name, [])
+            tools_called = [ToolCall(**tool) for tool in tools_called_data]
+            expected_tools_data = json_obj.get(expected_tools_key_name, [])
+            expected_tools = [ToolCall(**tool) for tool in expected_tools_data]
 
             self.add_test_case(
                 LLMTestCase(
@@ -603,7 +622,7 @@ class EvaluationDataset:
                 link = response.link
                 console = Console()
                 console.print(
-                    "✅ Dataset successfully pushed to Confidnet AI! View at "
+                    "✅ Dataset successfully pushed to Confident AI! View at "
                     f"[link={link}]{link}[/link]"
                 )
                 webbrowser.open(link)

@@ -15,20 +15,50 @@ def log_retry_error(retry_state):
 
 
 valid_gpt_models = [
-    "gpt-4o-mini",
-    "gpt-4o",
-    "gpt-4-turbo",
-    "gpt-4-turbo-preview",
+    "gpt-3.5-turbo",
+    "gpt-3.5-turbo-0125",
+    "gpt-3.5-turbo-1106",
     "gpt-4-0125-preview",
     "gpt-4-1106-preview",
-    "gpt-4",
+    "gpt-4-turbo",
+    "gpt-4-turbo-2024-04-09",
+    "gpt-4-turbo-preview",
+    "gpt-4o",
+    "gpt-4o-2024-05-13",
+    "gpt-4o-2024-08-06",
+    "gpt-4o-2024-11-20",
+    "gpt-4o-mini",
+    "gpt-4o-mini-2024-07-18",
     "gpt-4-32k",
-    "gpt-4-0613",
     "gpt-4-32k-0613",
-    "gpt-3.5-turbo-1106",
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+]
+
+structured_outputs_models = [
+    "gpt-4o",
+    "gpt-4o-2024-05-13",
+    "gpt-4o-2024-08-06",
+    "gpt-4o-2024-11-20",
+    "gpt-4o-mini",
+    "gpt-4o-mini-2024-07-18",
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+]
+
+json_mode_models = [
     "gpt-3.5-turbo",
-    "gpt-3.5-turbo-16k",
     "gpt-3.5-turbo-0125",
+    "gpt-3.5-turbo-1106",
+    "gpt-4-0125-preview",
+    "gpt-4-1106-preview",
+    "gpt-4-turbo",
+    "gpt-4-turbo-2024-04-09",
+    "gpt-4-turbo-preview",
+    "gpt-4-32k",
+    "gpt-4-32k-0613",
 ]
 
 default_gpt_model = "gpt-4o"
@@ -49,6 +79,8 @@ class SchematicGPTModel(DeepEvalBaseLLM):
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
+            if model_name in structured_outputs_models:
+                self.structured_output = True
         elif model is None:
             model_name = default_gpt_model
 

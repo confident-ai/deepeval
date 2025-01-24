@@ -14,11 +14,11 @@ setup(
     author="Confident AI",
     author_email="jeffreyip@confident-ai.com",
     description="The Open-Source LLM Evaluation Framework.",
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    python_requires=">=3.9, <3.13",
+    python_requires=">=3.9, <3.14",
     install_requires=[
         "requests",
         "tqdm",
@@ -42,7 +42,7 @@ setup(
         "opentelemetry-api>=1.24.0,<2.0.0",
         "opentelemetry-sdk>=1.24.0,<2.0.0",
         "opentelemetry-exporter-otlp-proto-grpc>=1.24.0,<2.0.0",
-        "grpcio==1.60.1",
+        "grpcio==1.67.1",
         "nest-asyncio",
     ],
     extras_require={

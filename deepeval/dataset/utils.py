@@ -1,6 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from deepeval.dataset.api import Golden, ConversationalGolden
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
+import json
+import re
 
 
 def convert_test_cases_to_goldens(
@@ -63,3 +65,13 @@ def convert_convo_goldens_to_convo_test_cases(
         )
         conv_test_cases.append(conv_test_case)
     return conv_test_cases
+
+
+def trimAndLoadJson(input_string: str) -> Any:
+    try:
+        cleaned_string = re.sub(r",\s*([\]}])", r"\1", input_string.strip())
+        return json.loads(cleaned_string)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {input_string}. Error: {str(e)}")
+    except Exception as e:
+        raise Exception(f"An unexpected error occurred: {str(e)}")

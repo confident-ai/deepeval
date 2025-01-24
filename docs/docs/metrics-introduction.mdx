@@ -31,10 +31,10 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
 - Conversation Completeness
 - Conversation Relevancy
 
-You can also easily develop your own custom evaluation metrics in `deepeval`. All metrics are measured on a test case. Visit the [test cases section](evaluation-test-cases) to learn how to apply any metric on test cases for evaluation.
+You can also easily develop your own custom evaluation metrics in `deepeval`. All metrics are measured on a test case. Visit the [test cases section](/docs/evaluation-test-cases) to learn how to apply any metric on test cases for evaluation.
 
-:::info
-[Click here for a full end-to-end tutorial](tutorial-metrics-defining-an-evaluation-criteria) on `deepeval`, which includes an entire walkthrough of how to pick the right LLM evaluation metrics for yourself.
+:::info DID YOU KNOW?
+[Click here for a full end-to-end tutorial](/tutorials/tutorial-metrics-defining-an-evaluation-criteria) on `deepeval`, which includes an entire walkthrough of how to pick the right LLM evaluation metrics for yourself.
 :::
 
 ## Types of Metrics
@@ -127,9 +127,9 @@ deepeval unset-local-model
 `deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
 
 :::caution
-We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputing responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](guides-using-custom-llms).
+We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputing responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](/guides/guides-using-custom-llms).
 
-Alternatively, if you find yourself running into JSON errors and would like to ignore it, use the [`-c` and `-i` flag during `deepeval test run`](evaluation-introduction#evaluating-with-pytest):
+Alternatively, if you find yourself running into JSON errors and would like to ignore it, use the [`-c` and `-i` flag during `deepeval test run`](/docs/evaluation-introduction#evaluating-with-pytest):
 
 ```console
 deepeval test run test_example.py -i -c
@@ -409,7 +409,7 @@ metric = AnswerRelevancyMetric(model=aws_bedrock)
 
 ## Measuring A Metric
 
-All metrics in `deepeval`, including [custom metrics that you create](metrics-custom):
+All metrics in `deepeval`, including [custom metrics that you create](/docs/metrics-custom):
 
 - can be executed via the `metric.measure()` method
 - can have its score accessed via `metric.score`, which ranges from 0 - 1
@@ -457,7 +457,7 @@ print(metric.score)
 print(metric.reason)
 ```
 
-Or you can either assert a test case using [`assert_test()` via `deepeval test run`](evaluation-test-cases#assert-a-test-case):
+Or you can either assert a test case using [`assert_test()` via `deepeval test run`](/docs/evaluation-test-cases#assert-a-test-case):
 
 ```python title="test_file.py"
 from deepeval import assert_test
@@ -471,7 +471,7 @@ def test_answer_relevancy():
 deepeval test run test_file.py
 ```
 
-Or using the [`evaluate` function:](evaluation-test-cases#evaluate-test-cases-in-bulk)
+Or using the [`evaluate` function:](/docs/evaluation-test-cases#evaluate-test-cases-in-bulk)
 
 ```python
 from deepeval import evaluate
@@ -485,7 +485,7 @@ evaluate([test_case], [metric])
 When a metric's `async_mode=True` (which is the default value for all metrics), invocations of `metric.measure()` will execute its internal algorithms concurrently. However, it's important to note that while operations **INSIDE** `measure()` executes concurrently, the `metric.measure()` call itself still blocks the main thread.
 
 :::info
-Let's take the [`FaithfulnessMetric` algorithm](metrics-faithfulness#how-is-it-calculated) for example:
+Let's take the [`FaithfulnessMetric` algorithm](/docs/metrics-faithfulness#how-is-it-calculated) for example:
 
 1. **Extract all factual claims** made in the `actual_output`
 2. **Extract all factual truths** found in the `retrieval_context`

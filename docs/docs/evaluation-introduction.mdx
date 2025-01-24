@@ -27,12 +27,12 @@ deepeval test run test_example.py
 ```
 
 :::tip
-[Click here](tutorial-introduction) for an end-to-end **tutorial on how to evaluate an LLM medical chatbot** using `deepeval`.
+[Click here](/tutorials/tutorial-introduction) for an end-to-end **tutorial on how to evaluate an LLM medical chatbot** using `deepeval`.
 :::
 
 ## Metrics
 
-`deepeval` offers 14+ evaluation metrics, most of which are evaluated using LLMs (visit the [metrics section](metrics-introduction#types-of-metrics) to learn why).
+`deepeval` offers 14+ evaluation metrics, most of which are evaluated using LLMs (visit the [metrics section](/docs/metrics-introduction#types-of-metrics) to learn why).
 
 ```
 from deepeval.metrics import AnswerRelevancyMetric
@@ -94,7 +94,7 @@ dataset.evaluate([answer_relevancy_metric])
 ```
 
 :::note
-You don't need to create an evaluation dataset to evaluate individual test cases. Visit the [test cases section](evaluation-test-cases#assert-a-test-case) to learn how to assert inidividual test cases.
+You don't need to create an evaluation dataset to evaluate individual test cases. Visit the [test cases section](/docs/evaluation-test-cases#assert-a-test-case) to learn how to assert inidividual test cases.
 :::
 
 ## Synthesizer
@@ -112,7 +112,7 @@ dataset = EvaluationDataset(goldens=goldens)
 ```
 
 :::info
-`deepeval`'s `Synthesizer` is highly customizable, and you can learn more about it [here.](synthesizer-introduction)
+`deepeval`'s `Synthesizer` is highly customizable, and you can learn more about it [here.](/docs/synthesizer-introduction)
 :::
 
 ## Evaluating With Pytest
@@ -194,7 +194,7 @@ deepeval test run test_example.py -i -c -n 2
 
 ### Verbose Mode
 
-The `-v` flag (with no arguments) allows you to turn on [`verbose_mode` for all metrics](metrics-introduction#debugging-a-metric) ran using `deepeval test run`. Not supplying the `-v` flag will default each metric's `verbose_mode` to its value at instantiation.
+The `-v` flag (with no arguments) allows you to turn on [`verbose_mode` for all metrics](/docs/metrics-introduction#debugging-a-metric) ran using `deepeval test run`. Not supplying the `-v` flag will default each metric's `verbose_mode` to its value at instantiation.
 
 ```python
 deepeval test run test_example.py -v
@@ -218,6 +218,14 @@ The `-id` flag followed by a string allows you to name test runs and better iden
 
 ```
 deepeval test run test_example.py -id "My Latest Test Run"
+```
+
+### Display Mode
+
+The `-d` flag followed by a string of "all", "passing", or "failing" allows you to display only certain test cases in the terminal. For example, you can display "failing" only if you only care about the failing test cases.
+
+```
+deepeval test run test_example.py -d "failing"
 ```
 
 ### Repeats
@@ -255,7 +263,7 @@ answer_relevancy_metric = AnswerRelevancyMetric()
 evaluate(dataset, [answer_relevancy_metric])
 ```
 
-There are two mandatory and twelve optional arguments when calling the `evaluate()` function:
+There are two mandatory and thirteen optional arguments when calling the `evaluate()` function:
 
 - `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
 - `metrics`: a list of metrics of type `BaseMetric`.
@@ -266,12 +274,13 @@ There are two mandatory and twelve optional arguments when calling the `evaluate
 - [Optional] `max_concurrent`: an integer that determines the maximum number of test cases that can be ran in parallel at any point in time. You can decrease this value if your evaluation model is running into rate limit errors. Defaulted to 100.
 - [Optional] `skip_on_missing_params`: a boolean which when set to `True`, skips all metric executions for test cases with missing parameters. Defaulted to `False`.
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for each test case. Defaulted to `False`.
-- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](metrics-introduction#debugging-a-metric). Defaulted to `None`.
+- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
+- [Optional] `display`: a str of either `"all"`, `"failing"` or `"passing"`, which allows you to selectively decide which type of test cases to display as the final result. Defaulted to `"all"`.
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
 
 :::tip
-You can also replace `dataset` with a list of test cases, as shown in the [test cases section.](evaluation-test-cases#evaluate-test-cases-in-bulk)
+You can also replace `dataset` with a list of test cases, as shown in the [test cases section.](/docs/evaluation-test-cases#evaluate-test-cases-in-bulk)
 :::

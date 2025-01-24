@@ -5,6 +5,12 @@
     height: 300px;
 }
 
+.letterContentContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
 
 .letterImage {
     position: absolute;
@@ -14,6 +20,15 @@
     height: 200px;
     cursor: pointer;
     transform: translateX(-50%);
+}
+
+@keyframes oscillateHeight {
+    0%, 100% {
+        height: 160px;
+    }
+    50% {
+        height: 180px;
+    }
 }
 
 .animatedMail {
@@ -83,6 +98,7 @@
     -webkit-transition: 0.4s 0.2s;
     -moz-transition: 0.4s 0.2s;
     transition: 0.4s 0.2s;
+    animation: oscillateHeight 2s infinite ease-in-out;
 }
 .animatedMail .letter .letterBorder {
     height: 10px;
@@ -97,7 +113,7 @@
     font-weight: 600;
 }
 .animatedMail .letter .letterContext {
-    margin-top: 17px;
+    margin-top: 6px;
     margin-left: 7px;
     display: flex;
     align-items: center;

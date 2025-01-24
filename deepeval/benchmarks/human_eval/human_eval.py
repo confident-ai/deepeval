@@ -54,7 +54,13 @@ class HumanEval(DeepEvalBaseBenchmark):
                     task_correct = 1
                     overall_correct_predictions += 1
                 predictions_row.append(
-                    (task.value, golden.input, prediction, score)
+                    (
+                        task.value,
+                        golden.input,
+                        prediction,
+                        golden.expected_output,
+                        score,
+                    )
                 )
                 if self.verbose_mode:
                     self.print_verbose_logs(
@@ -75,7 +81,14 @@ class HumanEval(DeepEvalBaseBenchmark):
             # Columns: 'Task', 'Input', 'Prediction', 'Score'
             self.predictions = pd.DataFrame(
                 predictions_row,
-                columns=["Task", "Input", "Prediction", "Correct"],
+                columns=[
+                    "Task",
+                    "Input",
+                    "Prediction",
+                    "Correct",
+                    "Expected Output",
+                    "Score",
+                ],
             )
             self.task_scores = pd.DataFrame(
                 scores_row, columns=["Task", "Score"]

@@ -1,0 +1,10 @@
+{
+    "redirects": [
+      {
+        "source": "/docs/guides-rag-evaluation",
+        "destination": "/guides/guides-rag-evaluation",
+        "statusCode": 301
+      }
+    ]
+}
+  

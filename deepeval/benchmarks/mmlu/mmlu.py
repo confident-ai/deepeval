@@ -82,7 +82,13 @@ class MMLU(DeepEvalBaseBenchmark):
                                 task_correct_predictions += 1
                                 overall_correct_predictions += 1
                             predictions_row.append(
-                                (task.value, golden.input, prediction, score)
+                                (
+                                    task.value,
+                                    golden.input,
+                                    prediction,
+                                    golden.expected_output,
+                                    score,
+                                )
                             )
                 else:
                     for idx, golden in enumerate(
@@ -232,13 +238,10 @@ class MMLU(DeepEvalBaseBenchmark):
 
     def load_benchmark_dataset(self, task: MMLUTask) -> List[Golden]:
 
-        if self.dataset:
-            dataset = self.dataset
-        else:
-            dataset = load_dataset(
-                "lukaemon/mmlu", task.value, trust_remote_code=True
-            )
-            self.dataset = dataset
+        dataset = load_dataset(
+            "lukaemon/mmlu", task.value, trust_remote_code=True
+        )
+        self.dataset = dataset
 
         # If dataset has not been previously loaded, construct
         # dataset of examples and save as instance var (to save time)

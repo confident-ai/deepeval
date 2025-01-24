@@ -141,10 +141,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             score=self.score, irrelevancies=irrelevancies
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(prompt, schema=Reason)
@@ -166,10 +165,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             score=self.score, irrelevancies=irrelevancies
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt, schema=Reason)
@@ -186,10 +184,11 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             sliding_window=message_sliding_window
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(
+                prompt, schema=ConversationRelevancyVerdict
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return ConversationRelevancyVerdict(**data)
+            return res
         else:
             try:
                 res: ConversationRelevancyVerdict = await self.model.a_generate(
@@ -208,10 +207,11 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             sliding_window=message_sliding_window
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(
+                prompt, schema=ConversationRelevancyVerdict
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return ConversationRelevancyVerdict(**data)
+            return res
         else:
             try:
                 res: ConversationRelevancyVerdict = self.model.generate(

@@ -60,6 +60,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                             task.value,
                             golden.input,
                             prediction,
+                            golden.expected_output,
                             score,
                         )
                     )
@@ -86,6 +87,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                     "Task",
                     "Input",
                     "Prediction",
+                    "Expected Output",
                     "Correct",
                 ],
             )

@@ -132,10 +132,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             intentions=self.user_intentions,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(prompt, schema=Reason)
@@ -157,10 +156,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             intentions=self.user_intentions,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt, schema=Reason)
@@ -177,10 +175,11 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             messages=self.turns, intention=intention
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(
+                prompt, schema=ConversationCompletenessVerdict
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return ConversationCompletenessVerdict(**data)
+            return res
         else:
             try:
                 res: ConversationCompletenessVerdict = (
@@ -201,10 +200,11 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             messages=self.turns, intention=intention
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(
+                prompt, schema=ConversationCompletenessVerdict
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return ConversationCompletenessVerdict(**data)
+            return res
         else:
             try:
                 res: ConversationCompletenessVerdict = self.model.generate(
@@ -221,10 +221,11 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             messages=self.turns
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(
+                prompt, schema=UserIntentions
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return UserIntentions(**data).intentions
+            return res.intentions
         else:
             try:
                 res: UserIntentions = await self.model.a_generate(
@@ -241,10 +242,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             messages=self.turns
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=UserIntentions)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return UserIntentions(**data).intentions
+            return res.intentions
         else:
             try:
                 res: UserIntentions = self.model.generate(

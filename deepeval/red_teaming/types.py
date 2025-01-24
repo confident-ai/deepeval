@@ -17,16 +17,12 @@ from deepeval.vulnerability.pii_leakage import PIILeakageType
 from deepeval.vulnerability.robustness import RobustnessType
 from deepeval.vulnerability.toxicity import ToxicityType
 from deepeval.vulnerability.bias import BiasType
-from deepeval.vulnerability import (
-    Misinformation,
-    Bias,
-)
 
 ##########################################
 ####  Attack Enhancements ################
 ##########################################
 
-NonRemoteVulnerability = Union[Bias, Misinformation]
+
 VulnerabilityType = Union[
     UnauthorizedAccessType,
     IllegalActivityType,

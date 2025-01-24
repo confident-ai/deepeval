@@ -267,22 +267,15 @@ def initialize_model(
     # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
-    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
-    return GPTModel(model=model), True
 
+    # If the model is a string, we initialize a GPTModel and use as a native model
+    if isinstance(model, str) or model is None:
+        return GPTModel(model=model), True
 
-# Please don't use this method, dirty hack
-def is_native_model(
-    model: Optional[Union[str, DeepEvalBaseLLM, GPTModel]] = None,
-) -> bool:
-    # If model is a GPTModel, it should be deemed as using native model
-    if isinstance(model, GPTModel):
-        return True
-    # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
-    if isinstance(model, DeepEvalBaseLLM):
-        return False
-    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
-    return True
+    # Otherwise (the model is a wrong type), we raise an error
+    raise TypeError(
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, or GPTModel."
+    )
 
 
 def initialize_multimodal_model(

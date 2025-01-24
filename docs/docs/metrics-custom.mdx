@@ -5,7 +5,7 @@ sidebar_label: Custom Metrics
 ---
 
 :::note
-This page is identical to the guide on building custom metrics which can be found [here.](guides-building-custom-metrics)
+This page is identical to the guide on building custom metrics which can be found [here.](/guides/guides-building-custom-metrics)
 :::
 
 In `deepeval`, anyone can easily build their own custom LLM evaluation metric that is automatically integrated within `deepeval`'s ecosystem, which includes:
@@ -158,7 +158,7 @@ class CustomMetric(BaseMetric):
         return self.measure(test_case)
 ```
 
-You can also [click here to find an example of offloading LLM inference to a separate thread](metrics-introduction#mistral-7b-example) as a workaround, although it might not work for all use cases.
+You can also [click here to find an example of offloading LLM inference to a separate thread](/docs/metrics-introduction#mistral-7b-example) as a workaround, although it might not work for all use cases.
 :::
 
 ### 4. Implement the `is_successful()` method

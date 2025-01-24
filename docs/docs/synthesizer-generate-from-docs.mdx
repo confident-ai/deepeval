@@ -75,19 +75,20 @@ synthesizer.generate_goldens_from_docs(
 
 There are seven optional parameters when creating a `ContextConstructionConfig`:
 
+- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4o` when initialized as a standalone instance.
 - [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
+- [Optional] `max_context_length`: specifies the number of of text chunks to be generated per context (context length). Defaulted to 3.
 - [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered during [document parsing](#synthesizer-generate-from-docs#document-parsing). Defaulted to 1024.
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during [document parsing](#synthesizer-generate-from-docs#document-parsing). Defaulted to 0.
 - [Optional] `context_quality_threshold`: a float representing the minimum quality threshold for [context selection](synthesizer-generate-from-docs#context-selection). If the context quality is below threshold, the context will be rejected. Defaulted to `0.5`.
-- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 - [Optional] `context_similarity_threshold`: a float representing the minimum similarity score required for [context grouping](synthesizer-generate-from-docs#context-grouping). Contexts with similarity scores below this threshold will be rejected. Defaulted to `0.5`.
 - [Optional] `max_retries`: an integer that specifies the number of times to retry context selection **OR** grouping if it does not meet the required quality **OR** similarity threshold. Defaulted to `3`.
-- [Optional] `embedder`: a string specifying which of OpenAI's embedding models to during document parsing and context grouping, **OR** [any custom embedding model](guides-using-custom-embedding-models) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
+- [Optional] `embedder`: a string specifying which of OpenAI's embedding models to during document parsing and context grouping, **OR** [any custom embedding model](/guides/guides-using-custom-embedding-models) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
 
 :::caution
 **Unlike other customizations where configurations to your `Synthesizer` generation pipeline is defined at point of instantiating a `Synthesizer`**, customizing context construction happens at the generation level because context construction is unique to the `generate_goldens_from_docs()` method.
 
-To learn how to customize all other aspects of your generation pipeline, such as output formats, evolution complexity, [click here.](synthesizer-introduction#customize-your-generations)
+To learn how to customize all other aspects of your generation pipeline, such as output formats, evolution complexity, [click here.](/docs/synthesizer-introduction#customize-your-generations)
 :::
 
 ## How Does Context Construction Work?
@@ -130,12 +131,12 @@ Each chunk is quality scored (0-1) by an LLM (the `critic_model`) based based on
 If the quality score is still lower than the `context_quality_threshold` after `max_retries`, the context with the highest quality score will be used. Although this means that you might find context that have failed the filtering process being used, but you will be guarenteed to have context to be used for grouping.
 
 :::note
-The `critic_model` in the context construction pipeline can be different from the one used in the [`FiltrationConfig` of the generation pipeline](synthesizer-introduction#filteration-quality).
+The `critic_model` in the context construction pipeline can be different from the one used in the [`FiltrationConfig` of the generation pipeline](/docs/synthesizer-introduction#filteration-quality).
 :::
 
 ### Context Grouping
 
-In the final **context grouping** step, each previously selected nodes are grouped with other nodes with a cosine similarity score higher than the `context_similarity_threshold`. This ensure that each context is coherent for subsequent generation to happen smoothly.
+In the final **context grouping** step, each previously selected nodes are grouped with `max_context_length` other nodes with a cosine similarity score higher than the `context_similarity_threshold`. This ensure that each context is coherent for subsequent generation to happen smoothly.
 
 Similar to the context selection step, if the cosine similarity is still lower than the `context_similarity_threshold` after `max_retries`, the context with the highest similarity score will be used. Although this means that you might find context that have failed the filtering process being used, but you will be guarenteed to have context groups to be used for generation.
 

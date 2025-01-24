@@ -83,7 +83,13 @@ class DROP(DeepEvalBaseBenchmark):
                                 task_correct_predictions += 1
                                 overall_correct_predictions += 1
                             predictions_row.append(
-                                (task.value, golden.input, prediction, score)
+                                (
+                                    task.value,
+                                    golden.input,
+                                    prediction,
+                                    golden.expected_output,
+                                    score,
+                                )
                             )
                 else:
                     for idx, golden in enumerate(
