@@ -19,12 +19,12 @@ class AttackData(BaseModel):
 
 class RefusalData(BaseModel):
     value: bool
-    description: str
     rationale: str
     metadata: int
 
 
 class EvalData(BaseModel):
     value: bool
+    description: str
     rationale: str
     metadata: int
