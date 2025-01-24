@@ -123,6 +123,7 @@ class RedTeamer:
                     vulnerabilities,
                     attack_enhancements,
                     max_concurrent_tasks,
+                    ignore_errors=ignore_errors,
                 )
             )
         else:

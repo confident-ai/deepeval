@@ -16,7 +16,7 @@ def generate_schema(
         return res
     else:
         try:
-            res: schema = model.generate(prompt, schema=schema)
+            res = model.generate(prompt, schema=schema)
             return res
         except TypeError:
             res = model.generate(prompt)
@@ -39,7 +39,7 @@ async def a_generate_schema(
         return res
     else:
         try:
-            res: schema = await model.a_generate(prompt, schema=schema)
+            res = await model.a_generate(prompt, schema=schema)
             return res
         except TypeError:
             res = await model.a_generate(prompt)

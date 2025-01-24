@@ -453,6 +453,7 @@ class AttackSynthesizer:
                 ).a_enhance(attack_input)
                 base_attack.input = enhanced_attack
         except:
+            print("!!!!", ignore_errors)
             if ignore_errors:
                 base_attack.error = "Error enhancing attack"
                 return base_attack
