@@ -28,7 +28,6 @@ from deepeval.models import DeepEvalBaseLLM
 def auto_evaluate(
     target_model: Callable,
     metrics: List[BaseMetric],
-
     # Evaluate parameters
     hyperparameters: Optional[Dict[str, Union[str, int, float]]] = None,
     show_indicator: bool = True,
@@ -37,7 +36,6 @@ def auto_evaluate(
     skip_on_missing_params: bool = False,
     verbose_mode: Optional[bool] = None,
     identifier: Optional[str] = None,
-
     # Synthesizer parameters:
     synthesizer_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
     filtration_config: Optional[FiltrationConfig] = None,
@@ -45,12 +43,10 @@ def auto_evaluate(
     styling_config: Optional[StylingConfig] = None,
     include_expected_output: bool = True,
     max_goldens_per_context: int = 2,
-
     # Caching Parameters
     write_cache: bool = True,
     use_cache: bool = False,
     cache_dataset: bool = True,
-
     # Async parameters:
     synthesizer_async_mode: bool = True,
     evaluation_run_async: bool = True,
@@ -98,7 +94,7 @@ def auto_evaluate(
         synthesizer_model=synthesizer_model,
         filtration_config=filtration_config,
         evolution_config=evolution_config,
-        styling_config=styling_config
+        styling_config=styling_config,
     )
 
     # Populate goldens by generating responses and extracting retrieval context
