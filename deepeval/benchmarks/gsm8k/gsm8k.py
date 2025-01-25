@@ -7,7 +7,6 @@ from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.gsm8k.template import GSM8KTemplate
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import NumberSchema
 from deepeval.telemetry import capture_benchmark_run
 
@@ -22,6 +21,8 @@ class GSM8K(DeepEvalBaseBenchmark):
         confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
+
         assert n_shots <= 15, "GSM8K only supports n_shots <= 15"
         super().__init__(**kwargs)
         self.scorer = Scorer()

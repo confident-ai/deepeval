@@ -8,7 +8,6 @@ from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.squad.task import SQuADTask
 from deepeval.benchmarks.squad.template import SQuADTemplate
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import MultipleChoiceSchemaLower
 from deepeval.telemetry import capture_benchmark_run
 from deepeval.metrics.utils import initialize_model
@@ -25,6 +24,8 @@ class SQuAD(DeepEvalBaseBenchmark):
         confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "SQuAD only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[SQuADTask] = (

@@ -7,7 +7,6 @@ from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.winogrande.template import WinograndeTemplate
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import BinaryChoiceSchema
 from deepeval.telemetry import capture_benchmark_run
 
@@ -21,6 +20,8 @@ class Winogrande(DeepEvalBaseBenchmark):
         confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "Winogrande only supports n_shots <= 5"
         assert n_problems <= 1267, "Winogrande only supports n_problems <= 1267"
         super().__init__(**kwargs)

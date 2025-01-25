@@ -50,6 +50,7 @@ opentelemetry-exporter-otlp-proto-grpc = "^1.24.0"
 grpcio = "1.67.1"
 instructor = "*"
 twine="5.1.1"
+datasets="*"
 
 [tool.black]
 line-length = 80

@@ -10,7 +10,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.drop.task import DROPTask
 from deepeval.benchmarks.drop.template import DROPTemplate
 from deepeval.benchmarks.utils import should_use_batch
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import (
     DROPDateSchema,
     DROPNumberSchema,
@@ -30,6 +29,8 @@ class DROP(DeepEvalBaseBenchmark):
         verbose_mode: bool = False,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "DROP only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[DROPTask] = list(DROPTask) if tasks is None else tasks
