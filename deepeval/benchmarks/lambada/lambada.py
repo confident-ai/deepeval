@@ -7,7 +7,6 @@ from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.lambada.template import LAMBADATemplate
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import StringSchema
 from deepeval.telemetry import capture_benchmark_run
 
@@ -21,6 +20,7 @@ class LAMBADA(DeepEvalBaseBenchmark):
         confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
         assert n_shots <= 5, "LAMBADA only supports n_shots <= 5"
         assert n_problems <= 5153, "LAMBADA only supports n_problems <= 5153"
         super().__init__(**kwargs)

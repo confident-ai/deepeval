@@ -12,7 +12,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.logi_qa.task import LogiQATask
 from deepeval.benchmarks.logi_qa.template import LogiQATemplate
 from deepeval.benchmarks.utils import should_use_batch
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import MultipleChoiceSchema
 from deepeval.telemetry import capture_benchmark_run
 
@@ -27,6 +26,7 @@ class LogiQA(DeepEvalBaseBenchmark):
         confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
         assert n_shots <= 5, "LogiQA only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[LogiQATask] = (

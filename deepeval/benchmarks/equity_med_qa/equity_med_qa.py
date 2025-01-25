@@ -11,7 +11,6 @@ from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.equity_med_qa.task import EquityMedQATask
 from deepeval.benchmarks.equity_med_qa.template import EquityMedQATemplate
-from deepeval.scorer import Scorer
 from deepeval.telemetry import capture_benchmark_run
 from deepeval.metrics.utils import initialize_model
 
@@ -23,6 +22,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
         super().__init__(**kwargs)
         self.tasks: List[EquityMedQATask] = (
             list(EquityMedQATask) if tasks is None else tasks
