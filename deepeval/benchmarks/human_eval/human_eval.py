@@ -19,6 +19,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         super().__init__(**kwargs)
         self.tasks: List[HumanEvalTask] = (
             list(HumanEvalTask) if tasks is None else tasks

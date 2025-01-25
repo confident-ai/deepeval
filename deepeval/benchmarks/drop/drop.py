@@ -30,6 +30,7 @@ class DROP(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "DROP only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[DROPTask] = list(DROPTask) if tasks is None else tasks

@@ -21,6 +21,7 @@ class BoolQ(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "BoolQ only supports n_shots <= 5"
         assert n_problems <= 3270, "BoolQ only supports n_problems <= 3270"
         super().__init__(**kwargs)

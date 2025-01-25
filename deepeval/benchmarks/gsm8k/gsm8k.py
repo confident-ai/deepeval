@@ -22,6 +22,7 @@ class GSM8K(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 15, "GSM8K only supports n_shots <= 15"
         super().__init__(**kwargs)
         self.scorer = Scorer()

@@ -23,6 +23,7 @@ class ARC(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "ARC only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.mode: ARCMode = mode

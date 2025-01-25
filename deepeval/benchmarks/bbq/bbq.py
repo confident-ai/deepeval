@@ -23,6 +23,7 @@ class BBQ(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "BBQ only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[BBQTask] = list(BBQTask) if tasks is None else tasks

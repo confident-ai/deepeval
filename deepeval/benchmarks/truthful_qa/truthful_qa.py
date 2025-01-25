@@ -33,6 +33,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         super().__init__(**kwargs)
         self.tasks: List[TruthfulQATask] = (
             list(TruthfulQATask) if tasks is None else tasks

@@ -23,6 +23,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         super().__init__(**kwargs)
         self.tasks: List[EquityMedQATask] = (
             list(EquityMedQATask) if tasks is None else tasks

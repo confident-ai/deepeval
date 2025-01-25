@@ -24,6 +24,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 15, "HellaSwag only supports n_shots <= 15."
         super().__init__(**kwargs)
         self.tasks: List[HellaSwagTask] = (

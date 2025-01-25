@@ -24,6 +24,7 @@ class MathQA(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "MathQA only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[MathQATask] = (

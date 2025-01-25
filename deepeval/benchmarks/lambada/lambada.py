@@ -21,6 +21,7 @@ class LAMBADA(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "LAMBADA only supports n_shots <= 5"
         assert n_problems <= 5153, "LAMBADA only supports n_problems <= 5153"
         super().__init__(**kwargs)

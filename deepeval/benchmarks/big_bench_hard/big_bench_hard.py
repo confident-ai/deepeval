@@ -57,6 +57,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 3, "BBH only supports n_shots <= 3"
         super().__init__(**kwargs)
         self.tasks: List[BigBenchHardTask] = (

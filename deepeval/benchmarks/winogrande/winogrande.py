@@ -21,6 +21,7 @@ class Winogrande(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "Winogrande only supports n_shots <= 5"
         assert n_problems <= 1267, "Winogrande only supports n_problems <= 1267"
         super().__init__(**kwargs)

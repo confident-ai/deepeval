@@ -27,6 +27,7 @@ class LogiQA(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "LogiQA only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.tasks: List[LogiQATask] = (
