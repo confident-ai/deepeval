@@ -22,7 +22,6 @@ from deepeval.metrics.contextual_precision.schema import *
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
     LLMTestCaseParams.RETRIEVAL_CONTEXT,
     LLMTestCaseParams.EXPECTED_OUTPUT,
 ]
