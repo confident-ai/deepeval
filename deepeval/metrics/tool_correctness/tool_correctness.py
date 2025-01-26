@@ -26,13 +26,14 @@ class ToolCorrectnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        evaluation_params: List[ToolCallParams] = [],
+        evaluation_params: List[ToolCallParams] = [ToolCallParams.TOOL],
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         should_exact_match: bool = False,
         should_consider_ordering: bool = False,
     ):
+        assert ToolCallParams.TOOL in evaluation_params, "evaluation_params must include ToolCallParams.TOOL"
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
         self.strict_mode = strict_mode
