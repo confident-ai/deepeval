@@ -31,6 +31,18 @@ class ToolCall(BaseModel):
         None, serialization_alias="inputParameters"
     )
 
+    def __eq__(self, other):
+        if not isinstance(other, ToolCall):
+            return False
+        return (
+            self.name == other.name and
+            self.input_parameters == other.input_parameters and
+            self.output == other.output
+        )
+
+    def __hash__(self):
+        return hash((self.name, frozenset(self.input_parameters.items()), self.output))
+
     def __repr__(self):
         fields = []
 

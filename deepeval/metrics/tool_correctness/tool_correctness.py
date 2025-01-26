@@ -116,6 +116,10 @@ class ToolCorrectnessMetric(BaseMetric):
                     issues.append(f"out-of-order tools {list(out_of_order)}")
                 return f"Incorrect tool usage: {' and '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
         else:
+            used_expected = set(self.tools_called).intersection(
+                set(self.expected_tools)
+            )
+            missing = set(self.expected_tools) - used_expected
             if self._calculate_non_exact_match_score() == 1:
                 return f"All expected tools {expected_tools_names} were called (order not considered)."
             else:
