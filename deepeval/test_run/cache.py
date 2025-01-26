@@ -2,11 +2,11 @@ import portalocker
 import sys
 import json
 import os
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 
-from deepeval.test_case import LLMTestCaseParams, LLMTestCase
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase, ToolCallParams
 from deepeval.types import Languages
 from deepeval.test_run.api import MetricData
 from deepeval.utils import (
@@ -33,7 +33,7 @@ class MetricConfiguration(BaseModel):
     assessment_questions: Optional[List[str]] = None
     language: Optional[Languages] = None
     embeddings: Optional[str] = None
-    evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    evaluation_params: Optional[Union[List[LLMTestCaseParams], List[ToolCallParams]]] = None
 
     class Config:
         arbitrary_types_allowed = True
