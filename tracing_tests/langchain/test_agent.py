@@ -55,7 +55,7 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 
 async def chatbot(input):
-    res = await agent_executor.ainvoke(input)
+    res = agent_executor.invoke(input)
     return res
 
 

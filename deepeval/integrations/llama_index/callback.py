@@ -192,6 +192,8 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             "traces": [],
             "inputPayload": None,
             "outputPayload": None,
+            "parentId": None,
+            "rootParentId": None
         }
 
         if "exception" in processed_payload:
@@ -349,9 +351,11 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             attributes.completion_token_count = processed_payload.get(
                 "llm_token_count_completion"
             )
-            self.track_params["token_usage"] = processed_payload.get(
+            track_params = self.track_params.get()
+            track_params["token_usage"] = processed_payload.get(
                 "llm_token_count_total"
             )
+            self.track_params.set(track_params)
 
         elif event_type == CBEventType.EMBEDDING and isinstance(
             trace_instance, EmbeddingTrace
