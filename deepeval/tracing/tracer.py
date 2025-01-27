@@ -207,6 +207,9 @@ class BaseTrace:
     traces: List["TraceData"]
     inputPayload: Optional[Dict]
     outputPayload: Optional[Dict]
+    # Parent IDs
+    parentId: Optional[str]
+    rootParentId: Optional[str]
 
 
 @dataclass
@@ -483,6 +486,8 @@ class Tracer:
             "traces": [],
             "inputPayload": None,
             "outputPayload": None,
+            "parentId": None,
+            "rootParentId": None
         }
         if trace_provider == TraceProvider.DEFAULT:
             if trace_type == TraceType.AGENT:
