@@ -10,7 +10,7 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ConversationalTestCase,
     ToolCallParams,
-    ToolCall
+    ToolCall,
 )
 from deepeval.metrics import BaseMetric
 import json
@@ -21,6 +21,7 @@ required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.TOOLS_CALLED,
     LLMTestCaseParams.EXPECTED_TOOLS,
 ]
+
 
 class ToolCorrectnessMetric(BaseMetric):
     def __init__(
@@ -33,7 +34,9 @@ class ToolCorrectnessMetric(BaseMetric):
         should_exact_match: bool = False,
         should_consider_ordering: bool = False,
     ):
-        assert ToolCallParams.TOOL in evaluation_params, "evaluation_params must include ToolCallParams.TOOL"
+        assert (
+            ToolCallParams.TOOL in evaluation_params
+        ), "evaluation_params must include ToolCallParams.TOOL"
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
         self.strict_mode = strict_mode
@@ -95,17 +98,23 @@ class ToolCorrectnessMetric(BaseMetric):
     ##################################################
 
     def _generate_reason(self):
-        tools_called_names = [tool_called.name for tool_called in self.tools_called]
-        expected_tools_names = [expected_tool.name for expected_tool in self.expected_tools]
+        tools_called_names = [
+            tool_called.name for tool_called in self.tools_called
+        ]
+        expected_tools_names = [
+            expected_tool.name for expected_tool in self.expected_tools
+        ]
 
         if self.should_exact_match:
             return f"{'Exact match' if self._calculate_exact_match_score() else 'Not an exact match'}: expected {tools_called_names}, called {expected_tools_names}. See details above."
 
         elif self.should_consider_ordering:
             lcs, weighted_length = self._compute_weighted_lcs()
-            score = weighted_length/len(expected_tools_names)
+            score = weighted_length / len(expected_tools_names)
             missing = set(expected_tools_names) - set(tools_called_names)
-            out_of_order = set(expected_tools_names) - set([tool.name for tool in lcs])
+            out_of_order = set(expected_tools_names) - set(
+                [tool.name for tool in lcs]
+            )
             if score == 1:
                 return f"Correct ordering: all expected tools {expected_tools_names} were called in the correct order."
             else:
@@ -125,7 +134,6 @@ class ToolCorrectnessMetric(BaseMetric):
             else:
                 return f"Incomplete tool usage: missing tools {list(missing)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
 
-
     ##################################################
     ### Score Helper Functions #######################
     ##################################################
@@ -136,7 +144,7 @@ class ToolCorrectnessMetric(BaseMetric):
             score = self._calculate_exact_match_score()
         elif self.should_consider_ordering:
             _, weighted_length = self._compute_weighted_lcs()
-            score = weighted_length/len(self.expected_tools)
+            score = weighted_length / len(self.expected_tools)
         else:
             score = self._calculate_non_exact_match_score()
         return 0 if self.strict_mode and score < self.threshold else score
@@ -149,7 +157,10 @@ class ToolCorrectnessMetric(BaseMetric):
             if self.tools_called[i].name != self.expected_tools[i].name:
                 return 0.0
             if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
-                if self.tools_called[i].input_parameters != self.expected_tools[i].input_parameters:
+                if (
+                    self.tools_called[i].input_parameters
+                    != self.expected_tools[i].input_parameters
+                ):
                     return 0.0
             if ToolCallParams.OUTPUT in self.evaluation_params:
                 if self.tools_called[i].output != self.expected_tools[i].output:
@@ -167,11 +178,18 @@ class ToolCorrectnessMetric(BaseMetric):
                     continue
                 if expected_tool.name == called_tool.name:
                     match_score = 1.0
-                    if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
+                    if (
+                        ToolCallParams.INPUT_PARAMETERS
+                        in self.evaluation_params
+                    ):
                         match_score *= self._compare_dicts(
-                            expected_tool.input_parameters, called_tool.input_parameters
+                            expected_tool.input_parameters,
+                            called_tool.input_parameters,
                         )
-                    if ToolCallParams.OUTPUT in self.evaluation_params and expected_tool.output != called_tool.output:
+                    if (
+                        ToolCallParams.OUTPUT in self.evaluation_params
+                        and expected_tool.output != called_tool.output
+                    ):
                         match_score = 0.0
                     if match_score > best_score:
                         best_score = match_score
@@ -179,7 +197,11 @@ class ToolCorrectnessMetric(BaseMetric):
             if best_score > 0:
                 total_score += best_score
                 matched_called_tools.add(best_called_tool)
-        return total_score / len(self.expected_tools) if self.expected_tools else 0.0            
+        return (
+            total_score / len(self.expected_tools)
+            if self.expected_tools
+            else 0.0
+        )
 
     # Consider ordering score
     def _compute_weighted_lcs(self):
@@ -187,16 +209,29 @@ class ToolCorrectnessMetric(BaseMetric):
         dp = [[0.0] * (n + 1) for _ in range(m + 1)]
         for i in range(1, m + 1):
             for j in range(1, n + 1):
-                expected_tool, called_tool = self.expected_tools[i - 1], self.tools_called[j - 1]
+                expected_tool, called_tool = (
+                    self.expected_tools[i - 1],
+                    self.tools_called[j - 1],
+                )
                 if expected_tool.name != called_tool.name:
                     dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
                     continue
                 score = 1.0
                 if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
-                    score *= self._compare_dicts(expected_tool.input_parameters, called_tool.input_parameters)
-                if ToolCallParams.OUTPUT in self.evaluation_params and expected_tool.output != called_tool.output:
+                    score *= self._compare_dicts(
+                        expected_tool.input_parameters,
+                        called_tool.input_parameters,
+                    )
+                if (
+                    ToolCallParams.OUTPUT in self.evaluation_params
+                    and expected_tool.output != called_tool.output
+                ):
                     score = 0.0
-                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1] + score if score > 0 else 0)
+                dp[i][j] = max(
+                    dp[i - 1][j],
+                    dp[i][j - 1],
+                    dp[i - 1][j - 1] + score if score > 0 else 0,
+                )
         i, j, total_score = m, n, 0.0
         lcs = []
         while i > 0 and j > 0:

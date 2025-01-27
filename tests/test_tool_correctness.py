@@ -4,17 +4,25 @@ from deepeval import evaluate
 
 tool_correctness_metric = ToolCorrectnessMetric(
     threshold=0.5,
-    evaluation_params=[ToolCallParams.TOOL, ToolCallParams.INPUT_PARAMETERS, ToolCallParams.OUTPUT],
+    evaluation_params=[
+        ToolCallParams.TOOL,
+        ToolCallParams.INPUT_PARAMETERS,
+        ToolCallParams.OUTPUT,
+    ],
 )
 
 exact_match = LLMTestCase(
     input="",
     actual_output="",
     tools_called=[
-        ToolCall(name="tool1", input_parameters={"a": 1, "b": 2, "c": 2}, output="x")
+        ToolCall(
+            name="tool1", input_parameters={"a": 1, "b": 2, "c": 2}, output="x"
+        )
     ],
     expected_tools=[
-        ToolCall(name="tool1", input_parameters={"a": 1, "b": 4, "c": 2}, output="x")
+        ToolCall(
+            name="tool1", input_parameters={"a": 1, "b": 4, "c": 2}, output="x"
+        )
     ],
 )
 

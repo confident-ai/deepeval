@@ -33,7 +33,9 @@ class MetricConfiguration(BaseModel):
     assessment_questions: Optional[List[str]] = None
     language: Optional[Languages] = None
     embeddings: Optional[str] = None
-    evaluation_params: Optional[Union[List[LLMTestCaseParams], List[ToolCallParams]]] = None
+    evaluation_params: Optional[
+        Union[List[LLMTestCaseParams], List[ToolCallParams]]
+    ] = None
 
     class Config:
         arbitrary_types_allowed = True
