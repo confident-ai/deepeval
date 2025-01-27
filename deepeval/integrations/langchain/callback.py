@@ -43,7 +43,10 @@ from deepeval.tracing import (
     TraceData,
 )
 import threading
+from langsmith import utils as ls_utils
+import warnings
 
+warnings.filterwarnings("ignore", category=ls_utils.LangSmithMissingAPIKeyWarning)
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
@@ -56,9 +59,6 @@ class LangChainCallbackHandler(BaseTracer):
         super().__init__(*args, **kwargs)
 
     def _start_trace(self, run: Run) -> None:
-        # set outtermost provider
-        if not trace_manager.get_outter_provider():
-            trace_manager.set_outter_provider(TraceProvider.LANGCHAIN)
         # Create trace instance
         parent_id = run.parent_run_id
         parent_id_string = str(run.parent_run_id) if parent_id else None
@@ -110,7 +110,8 @@ class LangChainCallbackHandler(BaseTracer):
                 parent_trace.traces.append(trace_instance)
             # # Monitor (send to Observatory) if root trace
             else:
-                if trace_manager.get_outter_provider() == TraceProvider.LANGCHAIN:
+                current_trace_stack = trace_manager.get_trace_stack_copy()
+                if len(current_trace_stack) == 0:
                     track_params = self.track_params.get(run.id, {})
                     dict_representation = dataclass_to_dict(trace_instance)
                     if trace_instance.type == LangChainTraceType.CHAIN:
@@ -127,7 +128,6 @@ class LangChainCallbackHandler(BaseTracer):
                         trace_stack=dict_representation,
                     )
                 else:
-                    current_trace_stack = trace_manager.get_trace_stack_copy()
                     parent_trace = current_trace_stack[-1]
                     parent_trace.traces.append(trace_instance)
                     trace_manager.set_trace_stack(current_trace_stack)
