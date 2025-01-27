@@ -13,7 +13,6 @@ class LLMTestCaseParams(Enum):
     RETRIEVAL_CONTEXT = "retrieval_context"
     TOOLS_CALLED = "tools_called"
     EXPECTED_TOOLS = "expected_tools"
-    REASONING = "reasoning"
 
 
 class ToolCallParams(Enum):
