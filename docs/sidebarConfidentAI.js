@@ -12,12 +12,13 @@ module.exports = {
       },
       {
         type: "category",
-        label: "Evaluation & Testing",
+        label: "LLM Evaluation",
         items: [
-          "confident-ai-testing-n-evaluation-experiments",
           "confident-ai-testing-n-evaluation-test-run",
+          "confident-ai-testing-n-evaluation-unit-testing",
+          "confident-ai-testing-n-evaluation-experiments",
         ],
-        collapsed: true,
+        collapsed: false,
       },
       {
         type: "category",
