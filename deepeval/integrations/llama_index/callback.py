@@ -193,7 +193,7 @@ class LlamaIndexCallbackHandler(BaseCallbackHandler):
             "inputPayload": None,
             "outputPayload": None,
             "parentId": None,
-            "rootParentId": None
+            "rootParentId": None,
         }
 
         if "exception" in processed_payload:

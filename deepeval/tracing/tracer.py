@@ -487,7 +487,7 @@ class Tracer:
             "inputPayload": None,
             "outputPayload": None,
             "parentId": None,
-            "rootParentId": None
+            "rootParentId": None,
         }
         if trace_provider == TraceProvider.DEFAULT:
             if trace_type == TraceType.AGENT:
