@@ -6,6 +6,7 @@ from tqdm import tqdm as tqdm_bar
 from pydantic import BaseModel
 import asyncio
 import random
+import shutil
 import math
 import os
 
@@ -94,6 +95,14 @@ class ContextGenerator:
                     smallest_document_token_count
                     + (self.chunk_overlap * (num_context_per_document - 1))
                 ) // num_context_per_document
+                # Delete chroma collection if chunking is unsuccessful
+                for path in self.document_paths:
+                    full_document_path, _ = os.path.splitext(path)
+                    document_name = os.path.basename(full_document_path)
+                    collection_path=f".vector_db/{document_name}processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
+                    if os.path.exists(collection_path):
+                        shutil.rmtree(collection_path)
+                        print(f"Deleted ChromaDB folder: {collection_path}")
                 raise ValueError(
                     f"Your smallest document is only sized {smallest_document_token_count} tokens."
                     f"Please adjust the chunk_size to no more than {suggested_chunk_size}."
@@ -164,6 +173,14 @@ class ContextGenerator:
                     smallest_document_token_count
                     + (self.chunk_overlap * (num_context_per_document - 1))
                 ) // num_context_per_document
+                # Delete chroma collection if chunking is unsuccessful
+                for path in self.document_paths:
+                    full_document_path, _ = os.path.splitext(path)
+                    document_name = os.path.basename(full_document_path)
+                    collection_path=f".vector_db/{document_name}processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
+                    if os.path.exists(collection_path):
+                        shutil.rmtree(collection_path)
+                        print(f"Deleted ChromaDB folder: {collection_path}")
                 raise ValueError(
                     f"Your smallest document is only sized {smallest_document_token_count} tokens."
                     f"Please adjust the chunk_size to no more than {suggested_chunk_size}."
@@ -551,6 +568,7 @@ class ContextGenerator:
 
     def _load_docs(self):
         import chromadb
+        from chromadb.errors import InvalidCollectionException
 
         for path in tqdm_bar(self.document_paths, "✨ 🚀 ✨ Loading Documents"):
             try:
@@ -568,7 +586,7 @@ class ContextGenerator:
                     self.source_files_to_collections_map = {}
                 self.source_files_to_collections_map[path] = collection
 
-            except:
+            except InvalidCollectionException:
                 if self.doc_to_chunker_map == None:
                     self.doc_to_chunker_map = {}
                 doc_chunker = DocumentChunker(self.embedder)
