@@ -102,6 +102,7 @@ class ContextGenerator:
                     collection_path=f".vector_db/{document_name}processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
                     if os.path.exists(collection_path):
                         shutil.rmtree(collection_path)
+                        print(f"Deleted ChromaDB folder: {collection_path}")
                 raise ValueError(
                     f"Your smallest document is only sized {smallest_document_token_count} tokens."
                     f"Please adjust the chunk_size to no more than {suggested_chunk_size}."
@@ -179,6 +180,7 @@ class ContextGenerator:
                     collection_path=f".vector_db/{document_name}processed_chunks_{self.chunk_size}_{self.chunk_overlap}"
                     if os.path.exists(collection_path):
                         shutil.rmtree(collection_path)
+                        print(f"Deleted ChromaDB folder: {collection_path}")
                 raise ValueError(
                     f"Your smallest document is only sized {smallest_document_token_count} tokens."
                     f"Please adjust the chunk_size to no more than {suggested_chunk_size}."
