@@ -57,11 +57,8 @@ class DAGMetric(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                dag = DeepAcyclicGraph(
-                    root_node=self.root_node, metric=self, test_case=test_case
-                )
-                self.score = dag._run()
-                self.success = self.score >= self.threshold
+                self.root_node._execute(metric=self, test_case=test_case)
+                self.success = self.is_successful()
                 return self.score
 
     async def a_measure(
@@ -77,11 +74,8 @@ class DAGMetric(BaseMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            dag = DeepAcyclicGraph(
-                root_node=self.root_node, metric=self, test_case=test_case
-            )
-            self.score = await dag._a_run()
-            self.success = self.score >= self.threshold
+            await self.root_node._a_execute(metric=self, test_case=test_case)
+            self.success = self.is_successful()
             return self.score
 
     def is_successful(self) -> bool:

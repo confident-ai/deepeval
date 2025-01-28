@@ -10,24 +10,22 @@ test_case = LLMTestCase(
     actual_output=(
         "Day 1: Eiffel Tower, dinner at Le Jules Verne. "
         "Day 2: Louvre Museum, lunch at Angelina Paris. "
-        "Day 3: Montmartre, evening at a wine bar."
     ),
     tools_called=[
         ToolCall(
             name="Itinerary Generator",
             description="Creates travel plans based on destination and duration.",
-            input_parameters={"destination": "Paris", "days": 3},
+            input_parameters={"destination": "Paris", "days": 2},
             output=[
                 "Day 1: Eiffel Tower, Le Jules Verne.",
                 "Day 2: Louvre Museum, Angelina Paris.",
-                "Day 3: Montmartre, wine bar.",
             ],
         ),
         ToolCall(
             name="Restaurant Finder",
             description="Finds top restaurants in a city.",
             input_parameters={"city": "Paris"},
-            output=["Le Jules Verne", "Angelina Paris", "local wine bars"],
+            output=["Le Jules Verne", "Angelina Paris"],
         ),
     ],
 )

@@ -1,6 +1,7 @@
 from typing import Optional, List, Union, Literal
 from dataclasses import dataclass
 from pydantic import create_model
+import asyncio
 
 from deepeval.metrics.dag.types import (
     BinaryJudgementVerdict,
@@ -18,6 +19,8 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
 
 
 class BaseNode:
+    _indegree: Optional[int] = None
+
     def set_parent(self, parent: "BaseNode"):
         if hasattr(self, "_parent"):
             self._parent = parent
@@ -37,12 +40,29 @@ class BaseNode:
         )
 
 
+def increment_indegree(node: BaseNode):
+    if node._indegree is None:
+        node._indegree = 1
+    else:
+        node._indegree += 1
+
+
+def decrement_indegree(node: BaseNode):
+    if node._indegree is None:
+        node._indegree = 0
+    else:
+        node._indegree -= 1
+
+
 @dataclass
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
-    score: Optional[int]
-    child: Optional[BaseNode]
-    _parent: BaseNode
+    score: Optional[int] = None
+    child: Optional[BaseNode] = None
+    _parent: Optional[BaseNode] = None
+
+    def __hash__(self):
+        return id(self)
 
     def __post_init__(self):
         # Ensure either `score` or `child` is set, but not both
@@ -55,7 +75,7 @@ class VerdictNode(BaseNode):
                 "A VerdictNode must have either a 'score' or a 'child'."
             )
 
-        if isinstance(self.child, "VerdictNode"):
+        if isinstance(self.child, VerdictNode):
             raise ValueError(
                 "A VerdictNode must not have another VerdictNode as a 'child'."
             )
@@ -68,27 +88,43 @@ class VerdictNode(BaseNode):
 
         if self.child is not None:
             self.child.set_parent(self)
+            increment_indegree(self.child)
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
-        if (
-            not hasattr(self._parent, "verdict")
-            or self.verdict != self._parent.verdict.verdict
-        ):
+        decrement_indegree(self)
+        if self._indegree != 0:
             return
 
-        if self.score is not None:
-            # generate reason
+        if isinstance(self._parent, NonBinaryJudgementNode) or isinstance(
+            self._parent, BinaryJudgementNode
+        ):
+            if self._parent.verdict.verdict != self.verdict:
+                return
+
+        if self.child is not None:
+            self.child._execute(metric=metric, test_case=test_case)
+        else:
+            metric.score = self.score
+            metric.reason = "Reason unsupported yet."
             return
 
     async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
-        if (
-            not hasattr(self._parent, "verdict")
-            or self.verdict != self._parent.verdict.verdict
-        ):
+        print("!!!")
+        decrement_indegree(self)
+        if self._indegree != 0:
             return
 
-        if self.score is not None:
-            # generate reason
+        if isinstance(self._parent, NonBinaryJudgementNode) or isinstance(
+            self._parent, BinaryJudgementNode
+        ):
+            if self._parent.verdict.verdict != self.verdict:
+                return
+
+        if self.child is not None:
+            await self.child._a_execute(metric=metric, test_case=test_case)
+        else:
+            metric.score = self.score
+            metric.reason = "Reason unsupported yet."
             return
 
 
@@ -97,9 +133,13 @@ class TaskNode(BaseNode):
     instructions: str
     evaluation_params: Optional[List[LLMTestCaseParams]]
     output_label: str
-    output: Optional[str]
     children: List[BaseNode]
-    _parents: Optional[List[BaseNode]]
+    output: Optional[str] = None
+    verbose_logs: Optional[str] = None
+    _parents: Optional[List[BaseNode]] = None
+
+    def __hash__(self):
+        return id(self)
 
     def __post_init__(self):
         for child in self.children:
@@ -110,10 +150,14 @@ class TaskNode(BaseNode):
 
         for child in self.children:
             child.set_parent(self)
+            increment_indegree(child)
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
-        text = """"""
+        decrement_indegree(self)
+        if self._indegree != 0:
+            return
 
+        text = """"""
         for child in self.children:
             if isinstance(child, TaskNode):
                 text += f"{child.output_label}:\n{child.output}\n\n"
@@ -122,31 +166,78 @@ class TaskNode(BaseNode):
             value = getattr(test_case, param.value)
             if isinstance(value, ToolCall):
                 value = repr(value)
-            text += f"{G_EVAL_PARAMS[param]}:\n{value}\n\n"
+            text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
         prompt = TaskNodeTemplate.generate_task_output(
             instructions=self.instructions,
             text=text,
         )
         if metric.using_native_model:
-            res, cost = metric.model.a_generate(prompt)
+            res, cost = metric.model.generate(prompt)
             metric.evaluation_cost += cost
             self.output = res
         else:
-            res = self.model.a_generate(prompt=prompt)
+            res = metric.model.generate(prompt=prompt)
             self.output = res
 
+        self.verbose_logs = f"{prompt}{self.output}"
+        print("Task Node")
+        print(self.verbose_logs)
+        print("-----------------------")
+        for children in self.children:
+            children._execute(metric=metric, test_case=test_case)
+
     async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
-        pass
+        decrement_indegree(self)
+        if self._indegree != 0:
+            return
+
+        text = """"""
+        for child in self.children:
+            if isinstance(child, TaskNode):
+                text += f"{child.output_label}:\n{child.output}\n\n"
+
+        for param in self.evaluation_params:
+            value = getattr(test_case, param.value)
+            if isinstance(value, ToolCall):
+                value = repr(value)
+            text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
+
+        prompt = TaskNodeTemplate.generate_task_output(
+            instructions=self.instructions,
+            text=text,
+        )
+        if metric.using_native_model:
+            res, cost = await metric.model.a_generate(prompt)
+            metric.evaluation_cost += cost
+            self.output = res
+        else:
+            res = await metric.model.a_generate(prompt=prompt)
+            self.output = res
+
+        self.verbose_logs = f"{prompt}{self.output}"
+        print("Task Node")
+        print(self.verbose_logs)
+        print("-----------------------")
+        await asyncio.gather(
+            *(
+                child._a_execute(metric=metric, test_case=test_case)
+                for child in self.children
+            )
+        )
 
 
 @dataclass
 class BinaryJudgementNode(BaseNode):
     criteria: str
-    evaluation_params: Optional[List[LLMTestCaseParams]]
-    verdict: Optional[BinaryJudgementVerdict]
     children: List[VerdictNode]
-    _parents: Optional[List[BaseNode]]
+    evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    verdict: Optional[BinaryJudgementVerdict] = None
+    verbose_logs: Optional[str] = None
+    _parents: Optional[List[BaseNode]] = None
+
+    def __hash__(self):
+        return id(self)
 
     def __post_init__(self):
         if len(self.children) != 2:
@@ -174,19 +265,24 @@ class BinaryJudgementNode(BaseNode):
 
         for child in self.children:
             child.set_parent(self)
+            increment_indegree(child)
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
+        decrement_indegree(self)
+        if self._indegree != 0:
+            return
+
         text = """"""
+        for parent in self._parents:
+            if isinstance(parent, TaskNode):
+                text += f"{parent.output_label}:\n{parent.output}\n\n"
 
-        for child in self.children:
-            if isinstance(child, TaskNode):
-                text += f"{child.output_label}:\n{child.output}\n\n"
-
-        for param in self.evaluation_params:
-            value = getattr(test_case, param.value)
-            if isinstance(value, ToolCall):
-                value = repr(value)
-            text += f"{G_EVAL_PARAMS[param]}:\n{value}\n\n"
+        if self.evaluation_params is not None:
+            for param in self.evaluation_params:
+                value = getattr(test_case, param.value)
+                if isinstance(value, ToolCall):
+                    value = repr(value)
+                text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
         prompt = BinaryJudgementTemplate.generate_binary_verdict(
             criteria=self.criteria,
@@ -207,20 +303,79 @@ class BinaryJudgementNode(BaseNode):
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                metric.verdict = BinaryJudgementVerdict(**data)
+                self.verdict = BinaryJudgementVerdict(**data)
+
+        self.verbose_logs = f"{prompt}{self.verdict}"
+        print("Binary Node")
+        print(self.verbose_logs)
+        print("-----------------------")
+
+        for children in self.children:
+            children._execute(metric=metric, test_case=test_case)
 
     async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
-        pass
+        decrement_indegree(self)
+        if self._indegree != 0:
+            return
+
+        text = """"""
+        for parent in self._parents:
+            if isinstance(parent, TaskNode):
+                text += f"{parent.output_label}:\n{parent.output}\n\n"
+
+        if self.evaluation_params is not None:
+            for param in self.evaluation_params:
+                value = getattr(test_case, param.value)
+                if isinstance(value, ToolCall):
+                    value = repr(value)
+                text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
+
+        prompt = BinaryJudgementTemplate.generate_binary_verdict(
+            criteria=self.criteria,
+            text=text,
+        )
+        if metric.using_native_model:
+            res, cost = await metric.model.a_generate(
+                prompt, schema=BinaryJudgementVerdict
+            )
+            metric.evaluation_cost += cost
+            self.verdict = res
+        else:
+            try:
+                res: BinaryJudgementVerdict = await metric.model.a_generate(
+                    prompt, schema=BinaryJudgementVerdict
+                )
+                self.verdict = res
+            except TypeError:
+                res = await metric.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                self.verdict = BinaryJudgementVerdict(**data)
+
+        self.verbose_logs = f"{prompt}{self.verdict}"
+        print("Binary Node")
+        print(self.verbose_logs)
+        print("-----------------------")
+
+        await asyncio.gather(
+            *(
+                child._a_execute(metric=metric, test_case=test_case)
+                for child in self.children
+            )
+        )
 
 
 @dataclass
 class NonBinaryJudgementNode(BaseNode):
     criteria: str
-    evaluation_params: Optional[List[LLMTestCaseParams]]
-    verdict: Optional[NonBinaryJudgementVerdict]
     children: List[VerdictNode]
-    _parents: Optional[List[BaseNode]]
-    _verdicts_options: Optional[List[str]]
+    evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    verdict: Optional[NonBinaryJudgementVerdict] = None
+    verbose_logs: Optional[str] = None
+    _parents: Optional[List[BaseNode]] = None
+    _verdicts_options: Optional[List[str]] = None
+
+    def __hash__(self):
+        return id(self)
 
     def __post_init__(self):
         # Check if children is not empty
@@ -258,19 +413,24 @@ class NonBinaryJudgementNode(BaseNode):
 
         for child in self.children:
             child.set_parent(self)
+            increment_indegree(child)
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
+        decrement_indegree(self)
+        if self._indegree != 0:
+            return
+
         text = """"""
+        for parent in self._parents:
+            if isinstance(parent, TaskNode):
+                text += f"{parent.output_label}:\n{parent.output}\n"
 
-        for child in self.children:
-            if isinstance(child, TaskNode):
-                text += f"{child.output_label}:\n{child.output}\n\n"
-
-        for param in self.evaluation_params:
-            value = getattr(test_case, param.value)
-            if isinstance(value, ToolCall):
-                value = repr(value)
-            text += f"{G_EVAL_PARAMS[param]}:\n{value}\n\n"
+        if self.evaluation_params is not None:
+            for param in self.evaluation_params:
+                value = getattr(test_case, param.value)
+                if isinstance(value, ToolCall):
+                    value = repr(value)
+                text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
         prompt = NonBinaryJudgementTemplate.generate_non_binary_verdict(
             criteria=self.criteria, text=text, options=self._verdict_options
@@ -290,5 +450,59 @@ class NonBinaryJudgementNode(BaseNode):
                 data = trimAndLoadJson(res, self)
                 self.verdict = self.verdict_type(**data)
 
+        self.verbose_logs = f"{prompt}{self.verdict}"
+        print("Non Binary Node")
+        print(self.verbose_logs)
+        print("-----------------------")
+
+        for children in self.children:
+            children._execute(metric=metric, test_case=test_case)
+
     async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
-        pass
+        decrement_indegree(self)
+        if self._indegree != 0:
+            return
+
+        text = """"""
+        for parent in self._parents:
+            if isinstance(parent, TaskNode):
+                text += f"{parent.output_label}:\n{parent.output}\n"
+
+        if self.evaluation_params is not None:
+            for param in self.evaluation_params:
+                value = getattr(test_case, param.value)
+                if isinstance(value, ToolCall):
+                    value = repr(value)
+                text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
+
+        prompt = NonBinaryJudgementTemplate.generate_non_binary_verdict(
+            criteria=self.criteria, text=text, options=self._verdict_options
+        )
+        if metric.using_native_model:
+            res, cost = await metric.model.a_generate(
+                prompt, schema=self.verdict_type
+            )
+            metric.evaluation_cost += cost
+            self.verdict = res
+        else:
+            try:
+                res: self.verdict_type = await metric.model.a_generate(
+                    prompt, schema=self.verdict_type
+                )
+                self.verdict = res
+            except TypeError:
+                res = await metric.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                self.verdict = self.verdict_type(**data)
+
+        self.verbose_logs = f"{prompt}{self.verdict}"
+        print("Non Binary Node")
+        print(self.verbose_logs)
+        print("-----------------------")
+
+        await asyncio.gather(
+            *(
+                child._a_execute(metric=metric, test_case=test_case)
+                for child in self.children
+            )
+        )

@@ -19,8 +19,6 @@ class BinaryJudgementTemplate:
 
 {text}
 
-
-
 Output:
 """
 
@@ -33,8 +31,6 @@ class NonBinaryJudgementTemplate:
         return f"""{criteria}
 
 {text}
-
-
 
 Output:
 """

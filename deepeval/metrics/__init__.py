@@ -4,6 +4,7 @@ from .base_metric import (
     BaseMultimodalMetric,
 )
 
+from .dag.dag import DAGMetric
 from .bias.bias import BiasMetric
 from .toxicity.toxicity import ToxicityMetric
 from .hallucination.hallucination import HallucinationMetric

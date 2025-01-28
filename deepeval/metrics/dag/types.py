@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class BinaryJudgementVerdict(BaseModel):
-    verdict: Literal["YES", "NO"]
+    verdict: Literal[True, False]
     reason: str
 
 
