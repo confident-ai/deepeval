@@ -11,6 +11,8 @@ module.exports = {
         "legal-doc-summarizer-selecting-your-metrics",
         "legal-doc-summarizer-running-an-evaluation",
         "legal-doc-summarizer-iterating-on-hyperparameters",
+        "legal-doc-summarizer-catching-llm-regressions",
+        "legal-doc-summarizer-maintaining-a-dataset",
       ],
       collapsed: false,
     },
