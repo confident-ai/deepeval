@@ -13,6 +13,7 @@ module.exports = {
         "legal-doc-summarizer-iterating-on-hyperparameters",
         "legal-doc-summarizer-catching-llm-regressions",
         "legal-doc-summarizer-maintaining-a-dataset",
+        "legal-doc-summarizer-pulling-dataset",
       ],
       collapsed: false,
     },
