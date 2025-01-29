@@ -1,0 +1,68 @@
+---
+id: legal-doc-summarizer-selecting-your-metrics
+title: Selecting the Right Summarization Metrics
+sidebar_label: Selecting Summarization Metrics
+---
+
+Having a clear **evaluation criteria makes selecting the right summarization metrics easy**. This is because DeepEval's `GEval` metric allows you to define custom summarization metrics simply by providing your evaluation criteria. If you've followed the steps in the previous section, this is as simple as pasting in or rewording your criteria.
+
+For example, if your goal is to generate concise summaries, your evaluation criteria might assess whether the summary remains concise while preserving all essential information from the document. Here's how you can create a custom Concision `GEval` metric:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCaseParams
+
+concision_metric = GEval(
+    name="Concision",
+    criteria="Assess if the actual output remains concise while preserving all essential information.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+)
+```
+
+:::info  
+When defining `GEval`, you must provide `evaluation_params`, which specify the test case parameters to evaluate. [More information here.](/docs/metrics-llm-evals)  
+:::
+
+## Selecting Metrics from Evaluation Criteria
+
+Let's now begin **selecting the metrics** for our legal document summarizer. First, we'll need to revisit the evaluation criteria we defined in the previous section:
+
+1. The summary must be concise.
+2. The summary must be complete.
+
+The first criterion specifies that the _summary must be concise_. Fortunately, we've already defined a **Concision metric** in the section above, which we can put to use. The second criterion states that the summary must be complete, ensuring no important information is lost from the original document.
+
+:::tip
+While brief evaluation criteria (e.g., "the actual output must be concise") are acceptable, it's generally better to be more **specific** to ensure consistent metric scoring, especially given the non-deterministic nature of LLMs.
+:::
+
+### Defining Completeness Metric
+
+This means, instead of saying "the summary must be complete," we might specify, "the summary must retain all important information from the document." Here's how we can define a `GEval` metric for **Completeness**:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCaseParams
+
+completeness_metric = GEval(
+    name="Completeness",
+    criteria="Assess whether the actual output retains all key information from the input.",
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+)
+```
+
+:::note
+`LLMTestCaseParams.INPUT` refers to your document (input to your LLM summarizer), while `LLMTestCaseParams.ACTUAL_OUTPUT` is the summary (generated output). [More information available here.](/docs/metrics-llm-evals)  
+:::
+
+### Conclusion
+
+With our two metrics for concision and completeness defined, let's begin running evaluations in the next section.
+
+:::info Additional Tips  
+DeepEval offers a built-in `Summarization` metric. Other useful summarization metrics you can define with `GEval` include:
+
+- **Fluency** – Ensures the summary is grammatically correct and natural.
+- **Coherence** – Checks if the summary flows logically and maintains readability.
+- **Hallucination** – Identifies incorrect or fabricated information.
+- **Factual Consistency** – Ensures the summary accurately reflects the source content.

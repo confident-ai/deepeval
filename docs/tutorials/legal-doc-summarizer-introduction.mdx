@@ -1,0 +1,48 @@
+---
+id: legal-doc-summarizer-introduction
+title: Introduction
+sidebar_label: Introduction
+---
+
+In this tutorial, we'll go through the entire process of evaluating a legal document summarizer, from choosing your metrics to running evaluations and monitoring performance in production.
+
+:::tip  
+If you're working with LLMs for summarization, this tutorial is for you. While we focus on evaluating a legal document summarizer, the concepts apply to **any LLM application that generates summaries**.
+
+:::
+
+We'll cover:
+
+- How to define summarization criteria
+- Selecting the right summarization metrics
+- Running evaluations on your summarizer
+- Iterating on your summarizer’s hyperparameters
+- Monitoring and evaluating LLM summarizers in production
+
+:::note  
+Before we begin, make sure you're logged into Confident AI. If you haven’t set up your account yet, visit the [setting up section](tutorial-setup).
+
+```
+deepeval login
+```
+
+:::
+
+## Legal Document Summarizer
+
+The LLM summarizer application we'll be evaluating is designed to **extract key points** from legal texts while maintaining their _original intent_. This ensures that important clauses, obligations, and legal nuances are preserved without unnecessary details or misinterpretation.
+
+:::info
+We'll be using GPT-3.5 to generate these summaries. Below is the prompt template that will be guiding the model:
+
+```
+You are an AI assistant tasked with summarizing legal documents
+concisely and accurately. Given the following legal text, generate
+a summary that captures the key points while avoiding unnecessary
+details. Ensure neutrality and refrain from interpreting beyond the
+provided text.
+```
+
+:::
+
+Now that we've established the context for our summarizer, let's move on to [defining our evaluation criteria](legal-doc-summarizer-defining-a-summarization-criteria) in the next section.
