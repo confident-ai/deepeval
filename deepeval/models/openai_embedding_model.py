@@ -69,11 +69,8 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             self.model_name = KEY_FILE_HANDLER.fetch_data(
                 KeyValues.LOCAL_EMBEDDING_MODEL_NAME
             )
-            if self.should_use_local_ollama(): 
-                return OpenAI(
-                    base_url=base_url,
-                    api_key=api_key
-                )
+            if self.should_use_local_ollama():
+                return OpenAI(base_url=base_url, api_key=api_key)
             else:
                 return OpenAIEmbeddings(
                     model=self.model_name,
@@ -141,7 +138,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             KeyValues.LOCAL_EMBEDDING_BASE_URL
         )
         return base_url == "http://localhost:11434/v1/"
-        
+
     def get_model_name(self):
         if self.should_use_azure_openai():
             return "azure openai"
