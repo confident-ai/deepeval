@@ -62,7 +62,11 @@ deepeval login
 
 ## Create Your First Test Case
 
-Run `touch test_example.py` to create a test file in your root directory. Open `test_example.py` and paste in your first test case:
+Run `touch test_example.py` to create a test file in your root directory. An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in `deepeval` is represents a single unit of LLM app interaction. For a series of LLM interactions (i.e. conversation), visit the conversational test cases [section](/docs/evaluation-test-cases#conversational-test-case) instead.
+
+![ok](https://confident-docs.s3.amazonaws.com/llm-test-case.svg)
+
+Open `test_example.py` and paste in your first test case:
 
 ```python title="test_example.py"
 from deepeval import assert_test
@@ -100,7 +104,7 @@ To use **ANY** custom LLM of your choice, [check out this part of the docs](/gui
 
 You can either **save test runs on Confident AI for analysis and comparison for a more robust evaluation workflow**, or locally on your machine.
 
-#### Confident AI (recommended)
+#### Confident AI (highly recommended)
 
 Simply login with `deepeval login` (or [click here](https://app.confident-ai.com)) to get your API key.
 
