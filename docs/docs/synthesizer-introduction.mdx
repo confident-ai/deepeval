@@ -195,15 +195,18 @@ There are two optional parameters when creating an `EvolutionConfig`:
 
 `Evolution` is an `ENUM` that specifies the different data evolution techniques you wish to employ to make synthetic `Golden`s more realistic. `deepeval`'s `Synthesizer` supports 7 types of evolutions, which are randomly sampled based on a defined distribution. You can apply multiple evolutions to each `Golden`, and later access the evolution sequence through the `Golden`'s additional metadata field.
 
+If used for RAG evaluation: Note that some evolution techinques do not necessarily require that the evolved input can be answered from the context. Currently, only these 4 types of evolutions stick to the context: `Evolution.MULTICONTEXT`, `Evolution.CONCRETIZING`, `Evolution.CONSTRAINED` and `Evolution.COMPARATIVE`. 
+
+
 ```python
 from deepeval.synthesizer import Evolution
 
 available_evolutions = {
     Evolution.REASONING: 1/7,
-    Evolution.MULTICONTEXT: 1/7,
-    Evolution.CONCRETIZING: 1/7,
-    Evolution.CONSTRAINED: 1/7,
-    Evolution.COMPARATIVE: 1/7,
+    Evolution.MULTICONTEXT: 1/7, # sticks to the context
+    Evolution.CONCRETIZING: 1/7, # sticks to the context
+    Evolution.CONSTRAINED: 1/7, # sticks to the context
+    Evolution.COMPARATIVE: 1/7, # sticks to the context
     Evolution.HYPOTHETICAL: 1/7,
     Evolution.IN_BREADTH: 1/7,
 }
