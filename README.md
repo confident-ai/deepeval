@@ -39,12 +39,12 @@
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama3 with confidence.
 
 
-> [!TIP]
+> [!IMPORTANT]
 > Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to the DeepEval platform](https://confident-ai.com?utm_source=GitHub) to compare iterations of your LLM app, generate & share testing reports, and more.
 > 
 > ![Demo GIF](assets/demo.gif)
 
-> Want to talk LLM evaluation? [Come join our discord.](https://discord.com/invite/a3K9c8GRGt)
+> Want to talk LLM evaluation, need help picking metrics, or just to say hi? [Come join our discord.](https://discord.com/invite/a3K9c8GRGt)
 
 <br />
 
@@ -91,16 +91,16 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - TruthfulQA
   - HumanEval
   - GSM8K
-- [Automatically integrated with Confident AI](https://app.confident-ai.com?utm_source=GitHub) for continuous evaluation throughout the lifetime of your LLM (app):
-  - log evaluation results and analyze metrics pass / fails
-  - compare and pick the optimal hyperparameters (eg. prompt templates, chunk size, models used, etc.) based on evaluation results
-  - debug evaluation results via LLM traces
-  - manage evaluation test cases / datasets in one place
-  - track events to identify live LLM responses in production
-  - real-time evaluation in production
-  - add production events to existing evaluation datasets to strength evals over time
+- [100% integrated with Confident AI](https://confident-ai.com?utm_source=GitHub) for the full evaluation lifecycle:
+  - Curate/annotate evaluation datasets on the cloud
+  - Benchmark LLM app using dataset, and compare with previous iterations to experiment which models/prompts works best
+  - Fine-tune metrics for custom results
+  - Debug evaluation results via LLM traces
+  - Monitor & evaluate LLM responses in product to improve datasets with real-world data
+  - Repeat until perfection
 
-(Note that while some metrics are for RAG, others are better for a fine-tuning use case. Make sure to consult our docs to pick the right metric.)
+> [!TIP]
+> Confident AI is the DeepEval platform. Create an account [here.](https://app.confident-ai.com?utm_source=GitHub)
 
 <br />
 
