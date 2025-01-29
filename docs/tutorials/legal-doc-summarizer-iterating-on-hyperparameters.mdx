@@ -4,13 +4,11 @@ title: Iterating on Hyperparameters
 sidebar_label: Iterating on Hyperparameters
 ---
 
-In this section, we'll be iterating on our hyperparameters in order to improve the completeness factor, since one of our generated summaries failed to meet the required score threshold to pass the Completeness `GEval` metric.
+In this section, we'll iterate on our summarizer's hyperparameters to enhance summary quality. Our focus is improving the completeness factor, as one of the summaries in the previous section failed to meet the threshold for the Completeness `GEval` metric.
 
-## Iterating on Hyperparameters
+### Revisiting the Summarizer's Hyperparameters
 
-### Revisiting Hyperparameters
-
-Let's first revisit the hyperparameters used to generate these summaries, which we defined in the introduction section.
+Let's first revisit the hyperparameters (prompt template and model) we used to generate these summaries, which we first defined in the introduction section of this tutorial.
 
 ```python
 prompt_template = """
@@ -23,17 +21,17 @@ prompt_template = """
 model = "gpt-3.5"
 ```
 
-:::note
+## Improving the Prompt Template
+
 In our original prompt template, we instructed our legal summarizer to:
 
 > **"Generate a summary that captures the key points while avoiding unnecessary details."**
 
-This phrasing may have inadvertently led the LLM to exclude details it considered unnecessary (even though it wasn't), potentially omitting important context.
+:::note
+This phrasing may have inadvertently led the LLM to **exclude details it considered unnecessary** (even though it wasn't), potentially omitting important context.
 :::
 
-### Improving Hyperparameters
-
-To address the issue above, we can refine the prompt to the following:
+To address the issue above, we can redefine it to ensure that the summary remains concise without omitting details from the document, refining the prompt as follows:
 
 ```python
 prompt_template = """
@@ -45,9 +43,9 @@ prompt_template = """
 """
 ```
 
-## Re-run Evaluations
+## Testing the Prompt Template Change
 
-We'll need to **re-run our evaluations** on the same dataset we defined previously to determine whether our hyperparameter iterations have improved performance. To do so, simply generate summaries for the same set of input documents and pass the test cases into a dataset for evaluation.
+In order to test our prompt template improvement, we'll need to **re-run our evaluations** on the same dataset from the previous section and look out for improvements. To do so, we'll generate summaries for the same set of input documents using our improved models and pass the new test cases into an `EvaluationDataset` for evaluation.
 
 ```python
 new_dataset = ...
@@ -61,10 +59,29 @@ evaluate(
 ```
 
 :::tip
-The `evaluate` function allows you to **log hyperparameters**, making it especially useful for tracking improvements and regressions across the same dataset. This helps attribute changes in performance to specific hyperparameter adjustments, enabling you to **identify the best version** of your LLM summarizer. Learn more about [the evaluate function here](/docs/evaluation-introduction#evaluating-without-pytest)
+You can see that we're now **logging hyperparameters** with the `evaluate` function, which makes it easy to compare evaluations across runs on Confident AI and _attribute score changes to specific hyperparameter changes_. Learn more about [the evaluate function here](/docs/evaluation-introduction#evaluating-without-pytest).
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: "20px",
+  }}
+>
+  <video width="100%" autoPlay loop muted playsInlines>
+    <source
+      src="https://confident-docs.s3.us-east-1.amazonaws.com/tutorial-legal-document-summarizer-hyperparameters.mp4"
+      type="video/mp4"
+    />
+  </video>
+</div>
+
 :::
 
-Our previously failing summary has now passed the completeness metric. Unfortunately, the new prompt template has caused a new problem with the 3rd test case, and that test case is now failing the concision metric.
+### New Evaluation Report
+
+Our prompt change was effective, improving the previously failing summary so that it now passes the test case. However, the new prompt template has introduced an entirely new issue with the third test case, which is now failing the concision metric.
 
 <details><summary>Click to see new failing test case</summary>
 <p>
@@ -153,3 +170,7 @@ failing_llm_test_case = LLMTestCase(
     />
   </video>
 </div>
+
+:::note
+In the next section, we'll learn how to compare evaluation test runs and catch regressions.
+:::
