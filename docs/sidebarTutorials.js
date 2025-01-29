@@ -10,6 +10,7 @@ module.exports = {
         "legal-doc-summarizer-defining-a-summarization-criteria",
         "legal-doc-summarizer-selecting-your-metrics",
         "legal-doc-summarizer-running-an-evaluation",
+        "legal-doc-summarizer-iterating-on-hyperparameters",
       ],
       collapsed: false,
     },
