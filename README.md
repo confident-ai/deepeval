@@ -38,11 +38,13 @@
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama3 with confidence.
 
+
 > [!TIP]
 > Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to the DeepEval platform](https://confident-ai.com?utm_source=GitHub) to compare iterations of your LLM app, generate & share testing reports, and more.
 > 
 > ![Demo GIF](assets/demo.gif)
 
+> Want to talk LLM evaluation? [Come join our discord.](https://discord.com/invite/a3K9c8GRGt)
 
 <br />
 
