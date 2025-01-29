@@ -47,14 +47,27 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 > ‼️ You can now run DeepEval's metrics on the cloud for free directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)'s infrastructure 🥳
 
 - Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
-  - G-Eval
-  - Summarization
-  - Answer Relevancy
-  - Faithfulness
-  - Contextual Recall
-  - Contextual Precision
-  - RAGAS
-  - Hallucination
+  - **General metrics:**
+    - G-Eval
+    - Hallucination
+    - Summarization
+    - Bias
+    - Toxicity
+  - **RAG metrics:**
+    - Answer Relevancy
+    - Faithfulness
+    - Contextual Recall
+    - Contextual Precision
+    - Contextual Relevancy
+    - RAGAS
+  - **Agentic metrics:**
+    - Task Completion
+    - Tool Correctness
+  - **Conversational metrics:**
+    - Knowledge Retention
+    - Conversation Completeness
+    - Conversation Relevancy
+    - Role Adherence
   - etc.
 - [Red team your LLM application](https://docs.confident-ai.com/docs/red-teaming-introduction) for 40+ safety vulnerabilities in a few lines of code, including:
   - Toxicity
