@@ -38,13 +38,17 @@
 
 Whether your application is implemented via RAG or fine-tuning, LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal hyperparameters to improve your RAG pipeline, prevent prompt drifting, or even transition from OpenAI to hosting your own Llama3 with confidence.
 
-> Want to talk LLM evaluation? [Come join our discord.](https://discord.com/invite/a3K9c8GRGt)
+> [!TIP]
+> Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to Confident AI](https://confident-ai.com?utm_source=GitHub) to compare iterations of your LLM app, generate & share testing reports, and more.
+> 
+> ![Demo GIF](assets/demo.gif)
+
 
 <br />
 
 # 🔥 Metrics and Features
 
-> ‼️ You can now run DeepEval's metrics on the cloud for free directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)'s infrastructure 🥳
+> 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)'s infrastructure
 
 - Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
   - **General metrics:**
@@ -69,14 +73,14 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
     - Conversation Relevancy
     - Role Adherence
   - etc.
+- Build your own custom metrics that are automatically integrated with DeepEval's ecosystem.
+- Generate synthetic datasets for evaluation.
+- Integrates seamlessly with **ANY** CI/CD environment.
 - [Red team your LLM application](https://docs.confident-ai.com/docs/red-teaming-introduction) for 40+ safety vulnerabilities in a few lines of code, including:
   - Toxicity
   - Bias
   - SQL Injection
   - etc., using advanced 10+ attack enhancement strategies such as prompt injections.
-- Evaluate your entire dataset in bulk in under 20 lines of Python code **in parallel**. Do this via the CLI in a Pytest-like manner, or through our `evaluate()` function.
-- Create your own custom metrics that are automatically integrated with DeepEval's ecosystem by inheriting DeepEval's base metric class.
-- Integrates seamlessly with **ANY** CI/CD environment.
 - Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://docs.confident-ai.com/docs/benchmarks-introduction?utm_source=GitHub), which includes:
   - MMLU
   - HellaSwag
@@ -212,7 +216,7 @@ test_case = LLMTestCase(
 
 answer_relevancy_metric.measure(test_case)
 print(answer_relevancy_metric.score)
-# Most metrics also offer an explanation
+# All metrics also offer an explanation
 print(answer_relevancy_metric.reason)
 ```
 
