@@ -39,9 +39,17 @@ test_case = LLMTestCase(
 ```
 
 :::info
-Since `deepeval` is an LLM evaluation framework, the ** `input` and `actual_output` are always mandatory.** However, this does not mean they are necessarily used for evaluation.
+Since `deepeval` is an LLM evaluation framework, the ** `input` and `actual_output` are always mandatory.** However, this does not mean they are necessarily used for evaluation, and you can also add additional parameters such as the `tools_called` for each `LLMTestCase`.
 
-Additionally, depending on the specific metric you're evaluating your test cases on, you may or may not require a `retrieval_context`, `expected_output`, `context`, `tools_called`, and/or `expected_tools` as additional parameters. For example, you won't need `expected_output`, `context`, `tools_called`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
+<video width="100%" autoPlay loop muted playsInlines>
+  <source
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/test-case-tools-called.mp4"
+    type="video/mp4"
+  />
+</video>
+
+To get your own testing report with `deepeval`, sign up to [Confident AI.](https://app.confident-ai.com)
+
 :::
 
 ## LLM Test Case
@@ -50,7 +58,7 @@ An `LLMTestCase` in `deepeval` can be used to unit test LLM application (which c
 
 ![ok](https://confident-docs.s3.amazonaws.com/llm-test-case.svg)
 
-Different metrics will require a different combination of `LLMTestCase` parameters, but they all require an `input` and `actual_output` - regardless of whether they are used for evaluation for not.
+Different metrics will require a different combination of `LLMTestCase` parameters, but they all require an `input` and `actual_output` - regardless of whether they are used for evaluation for not. For example, you won't need `expected_output`, `context`, `tools_called`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
 
 With the exception of conversational metrics, which are metrics to evaluate conversations instead of individual LLM responses, you can use any LLM evaluation metric `deepeval` offers to evaluate an `LLMTestCase`.
 
