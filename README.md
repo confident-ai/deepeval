@@ -18,7 +18,7 @@
         <a href="#-metrics-and-features">Metrics and Features</a> |
         <a href="#-quickstart">Getting Started</a> |
         <a href="#-integrations">Integrations</a> |
-        <a href="https://confident-ai.com?utm_source=GitHub">Confident AI</a>
+        <a href="https://confident-ai.com?utm_source=GitHub">DeepEval Platform</a>
     <p>
 </h4>
 
@@ -99,7 +99,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - Monitor & evaluate LLM responses in product to improve datasets with real-world data
   - Repeat until perfection
 
-> [!TIP]
+> [!NOTE]
 > Confident AI is the DeepEval platform. Create an account [here.](https://app.confident-ai.com?utm_source=GitHub)
 
 <br />
@@ -268,18 +268,18 @@ evaluate(dataset, [answer_relevancy_metric])
 dataset.evaluate([answer_relevancy_metric])
 ```
 
-# Real-time Evaluations on Confident AI
+# LLM Evaluation With Confident AI
 
-We offer a [web platform](https://app.confident-ai.com?utm_source=Github) for you to:
+The correct LLM evaluation lifecycle is only achievable with [the DeepEval platform](https://confident-ai.com?utm_source=Github). It allows you to:
 
-1. Log and view all the test results / metrics data from DeepEval's test runs.
-2. Debug evaluation results via LLM traces.
-3. Compare and pick the optimal hyperparameteres (prompt templates, models, chunk size, etc.).
-4. Create, manage, and centralize your evaluation datasets.
-5. Track events in production and augment your evaluation dataset for continuous evaluation.
-6. Track events in production, view evaluation results and historical insights.
+1. Curate/annotate evaluation datasets on the cloud
+2. Benchmark LLM app using dataset, and compare with previous iterations to experiment which models/prompts works best
+3. Fine-tune metrics for custom results
+4. Debug evaluation results via LLM traces
+5. Monitor & evaluate LLM responses in product to improve datasets with real-world data
+6. Repeat until perfection
 
-Everything on Confident AI, including how to use Confident is available [here](https://docs.confident-ai.com/docs/confident-ai-introduction?utm_source=GitHub).
+Everything on Confident AI, including how to use Confident is available [here](https://docs.confident-ai.com/confidnet-ai/confident-ai-introduction?utm_source=GitHub).
 
 To begin, login from the CLI:
 
@@ -297,7 +297,7 @@ deepeval test run test_chatbot.py
 
 You should see a link displayed in the CLI once the test has finished running. Paste it into your browser to view the results!
 
-![ok](https://d2lsxfc3p6r9rv.cloudfront.net/confident-test-cases.png)
+![Demo GIF](assets/demo.gif)
 
 <br />
 
@@ -311,18 +311,14 @@ Please read [CONTRIBUTING.md](https://github.com/confident-ai/deepeval/blob/main
 
 Features:
 
+- [x] Integration with Confident AI
 - [x] Implement G-Eval
-- [x] Referenceless Evaluation
-- [x] Production Evaluation & Logging
+- [X] Implement RAG metrics
+- [X] Implement Conversational metrics  
 - [x] Evaluation Dataset Creation
-
-Integrations:
-
-- [x] lLamaIndex
-- [ ] langChain
-- [ ] Guidance
+- [x] Red-Teaming
+- [ ] DAG custom metrics
 - [ ] Guardrails
-- [ ] EmbedChain
 
 <br />
 
