@@ -48,9 +48,9 @@ The QA agent provided a speculative response about a potential Ultra plan. While
 ```python
 input_3 = "How does MadeUpCompany's adherence to GDPR, HIPAA, and SOC 2 ensure data protection?"
 print(qa_agent.generate(input_3))
-# "MadeUpCompany ensures data protection through strict adherence to GDPR, HIPAA, and SOC 2 standards.
+# MadeUpCompany ensures data protection through strict adherence to GDPR, HIPAA, and SOC 2 standards.
 # This includes robust encryption protocols, access control mechanisms, and regular security audits
-# to safeguard sensitive data."
+# to safeguard sensitive data.
 ```
 
 While the response is generally relevant to data protection, it incorrectly assumes knowledge about MadeUpCompany when the QA agent is meant to provide answers specifically about CloudMate. Instead, the system should have either declined to answer or clarified its limitations.
