@@ -6,6 +6,7 @@ from deepeval.test_case import (
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     check_llm_test_case_params,
+    construct_verbose_logs,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -59,6 +60,14 @@ class DAGMetric(BaseMetric):
             else:
                 self.dag._execute(metric=self, test_case=test_case)
                 self.success = self.is_successful()
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        # f"Statements:\n{prettify_list(self.statements)}",
+                        # f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
                 return self.score
 
     async def a_measure(
@@ -76,6 +85,14 @@ class DAGMetric(BaseMetric):
         ):
             await self.dag._a_execute(metric=self, test_case=test_case)
             self.success = self.is_successful()
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    # f"Statements:\n{prettify_list(self.statements)}",
+                    # f"Verdicts:\n{prettify_list(self.verdicts)}",
+                    f"Score: {self.score}\nReason: {self.reason}",
+                ],
+            )
             return self.score
 
     def is_successful(self) -> bool:
