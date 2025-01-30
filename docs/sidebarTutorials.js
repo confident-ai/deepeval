@@ -2,17 +2,17 @@ module.exports = {
   tutorials: [
     "tutorial-introduction",
     "tutorial-setup",
-    {
-      type: "category",
-      label: "RAG QA Agent ",
-      items: [
-        "qa-agent-introduction",
-        "qa-agent-generating-a-synthetic-dataset",
-        "qa-agent-defining-an-evaluation-criteria",
-        "qa-agent-choosing-metrics",
-      ],
-      collapsed: false,
-    },
+    // {
+    //   type: "category",
+    //   label: "RAG QA Agent ",
+    //   items: [
+    //     "qa-agent-introduction",
+    //     "qa-agent-generating-a-synthetic-dataset",
+    //     "qa-agent-defining-an-evaluation-criteria",
+    //     "qa-agent-choosing-metrics",
+    //   ],
+    //   collapsed: false,
+    // },
     {
       type: "category",
       label: "Legal Document Summarizer",
