@@ -1,5 +1,4 @@
 module.exports = {
-    tutorials: [
   tutorials: [
     "tutorial-introduction",
     "tutorial-setup",
