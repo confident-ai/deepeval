@@ -81,7 +81,7 @@ You can see that we're now **logging hyperparameters** with the `evaluate` funct
 
 ### New Evaluation Report
 
-Our prompt change was effective, improving the previously failing summary so that it now passes the test case. However, the new prompt template has introduced an entirely new issue with the third test case, which is now failing the concision metric.
+Our prompt change was effective, improving the previously failing summary so that it now passes. However, the new prompt template has introduced an entirely new issue with the third test case, which is now failing the concision metric.
 
 <details><summary>Click to see new failing test case</summary>
 <p>
@@ -172,5 +172,5 @@ failing_llm_test_case = LLMTestCase(
 </div>
 
 :::note
-In the next section, we'll learn how to compare evaluation test runs and catch regressions.
+In the next section, we'll learn how to compare evaluation test runs and catch these regressions.
 :::

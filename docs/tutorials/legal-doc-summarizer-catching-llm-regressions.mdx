@@ -38,7 +38,7 @@ A test case is highlighted in red if any metric scores **regress** and in green 
 
 ### Inspecting Concision Regression
 
-As hypothesized, our first test case is failing because the summary is complete. However, the third test case's concision issue is interesting. Specifically, when comparing the metric reasons, the previous test stated: _"The actual output succinctly summarizes all essential elements from the original data."_ Now, it says: _"The output is overly repetitive, stating the same key information multiple times."_ It's not only lacking concision but also repetitive.
+As hypothesized, our first test case is now passing because the summary is complete. However, the third test case's concision issue is quite interesting. Specifically, when comparing the metric reasons, the previous test case stated: _"The actual output succinctly summarizes all essential elements from the original data."_ Now, it says: _"The output is overly repetitive, stating the same key information multiple times."_ It's not only lacking concision but also repetitive.
 
 <details><summary>View metric reason changes</summary>
 <p>
@@ -60,7 +60,7 @@ model = "gpt-4.o"
 
 ### Running Evaluations one Final Time
 
-Our model passed all test cases, which is a great sign. However, it's important to acknowledge that our `EvaluationDataset` consists of only five documents—**an extremely small sample**. As the number of documents increases, so does the _potential for errors_. But if your model consistently passes across a larger dataset, it will demonstrate true robustness.
+Changing the model resulted in all the test cases passing! However, it's important to acknowledge that our `EvaluationDataset` consists of only five documents—**an extremely small sample**. As the number of documents increases, so does the _potential for errors_. But if your model consistently passes across a larger dataset, it will demonstrate true robustness.
 
 <div
   style={{

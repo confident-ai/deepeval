@@ -57,18 +57,20 @@ California law will govern the agreement. However, no details are included regar
 the payment structure.
 ```
 
-Immediately, you can see that there are **2 issues** with generated summary: first, it’s too lengthy. The legal document summarizer we’re building is designed to help lawyers work efficiently, so keeping summaries concise is essential. Second, the summary omits compensation details, which is a significant problem. A complete summary is crucial to ensure that lawyers don’t miss any vital information in their fast-paced line of work.
+Immediately, you can see that there are **2 issues** with the generated summary.
+
+First, it’s **too lengthy**. The legal document summarizer we’re building is designed to help lawyers work efficiently, so keeping summaries concise is essential. Second, the summary **omits compensation details**, which is a significant problem. A complete summary (meaning no information is lost in the summary) is crucial in esuring that lawyers don’t miss any vital information in their fast-paced line of work.
 
 :::info  
-**Generating even more summaries** can help reveal additional issues in your LLM summarizer, such as fluency problems (especially in non-English languages) or hallucinations that didn't exist in other summary generations.  
+**Generating even more summaries** can help reveal additional issues in your LLM summarizer, such as fluency problems (especially in non-English languages) or hallucinations that may not have existed in other summarization generations.  
 :::
 
 ## Defining Your Evaluation Criteria
 
 From generating a single summary, we've already identified **two key points** that matter for our LLM summarizer:
 
-- The summary must be concise.
-- The summary must be complete.
+- The summary must be _concise_.
+- The summary must be _complete_.
 
 These points define our **evaluation criteria**. In practice, you'll want to test your summarizer with as many documents as possible. The more examples you run, the more patterns and gaps you'll uncover, helping you refine and build a comprehensive set of evaluation criteria.
 
