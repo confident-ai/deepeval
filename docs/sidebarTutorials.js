@@ -4,6 +4,17 @@ module.exports = {
     "tutorial-setup",
     {
       type: "category",
+      label: "RAG QA Agent ",
+      items: [
+        "qa-agent-introduction",
+        "qa-agent-generating-a-synthetic-dataset",
+        "qa-agent-defining-an-evaluation-criteria",
+        "qa-agent-choosing-metrics",
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
       label: "Legal Document Summarizer",
       items: [
         "legal-doc-summarizer-introduction",
@@ -15,7 +26,7 @@ module.exports = {
         "legal-doc-summarizer-maintaining-a-dataset",
         "legal-doc-summarizer-pulling-dataset",
       ],
-      collapsed: false,
+      collapsed: true,
     },
     {
       type: "category",
@@ -32,7 +43,7 @@ module.exports = {
         "tutorial-production-monitoring",
         "tutorial-production-evaluation",
       ],
-      collapsed: false,
+      collapsed: true,
     },
   ],
 };
