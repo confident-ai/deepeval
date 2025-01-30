@@ -3,7 +3,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
@@ -11,7 +11,7 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
-from deepeval.metrics.dag.graph import BaseNode, DeepAcyclicGraph
+from deepeval.metrics.dag.graph import DeepAcyclicGraph
 from deepeval.metrics.dag.utils import is_valid_dag, extract_required_params
 
 
@@ -19,7 +19,7 @@ class DAGMetric(BaseMetric):
     def __init__(
         self,
         name: str,
-        root_node: BaseNode,
+        dag: DeepAcyclicGraph,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
         async_mode: bool = True,
@@ -27,10 +27,10 @@ class DAGMetric(BaseMetric):
         verbose_mode: bool = False,
         _include_dag_suffix: bool = True,
     ):
-        if is_valid_dag(root_node) == False:
+        if is_valid_dag(dag.root_node) == False:
             raise ValueError("Cycle detected in DAG graph.")
 
-        self.root_node = root_node
+        self.dag = dag
         self.name = name
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -46,7 +46,7 @@ class DAGMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         check_llm_test_case_params(
-            test_case, extract_required_params(self.root_node), self
+            test_case, extract_required_params(self.dag.root_node), self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -57,7 +57,7 @@ class DAGMetric(BaseMetric):
                     self.a_measure(test_case, _show_indicator=False)
                 )
             else:
-                self.root_node._execute(metric=self, test_case=test_case)
+                self.dag._execute(metric=self, test_case=test_case)
                 self.success = self.is_successful()
                 return self.score
 
@@ -67,14 +67,14 @@ class DAGMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         check_llm_test_case_params(
-            test_case, extract_required_params(self.root_node), self
+            test_case, extract_required_params(self.dag.root_node), self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            await self.root_node._a_execute(metric=self, test_case=test_case)
+            await self.dag._a_execute(metric=self, test_case=test_case)
             self.success = self.is_successful()
             return self.score
 
