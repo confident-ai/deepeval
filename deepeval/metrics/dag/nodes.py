@@ -109,7 +109,6 @@ class VerdictNode(BaseNode):
             return
 
     async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
-        print("!!!")
         decrement_indegree(self)
         if self._indegree != 0:
             return
@@ -181,9 +180,7 @@ class TaskNode(BaseNode):
             self.output = res
 
         self.verbose_logs = f"{prompt}{self.output}"
-        print("Task Node")
-        print(self.verbose_logs)
-        print("-----------------------")
+
         for children in self.children:
             children._execute(metric=metric, test_case=test_case)
 
@@ -207,6 +204,7 @@ class TaskNode(BaseNode):
             instructions=self.instructions,
             text=text,
         )
+
         if metric.using_native_model:
             res, cost = await metric.model.a_generate(prompt)
             metric.evaluation_cost += cost
@@ -216,9 +214,7 @@ class TaskNode(BaseNode):
             self.output = res
 
         self.verbose_logs = f"{prompt}{self.output}"
-        print("Task Node")
-        print(self.verbose_logs)
-        print("-----------------------")
+
         await asyncio.gather(
             *(
                 child._a_execute(metric=metric, test_case=test_case)
@@ -306,9 +302,6 @@ class BinaryJudgementNode(BaseNode):
                 self.verdict = BinaryJudgementVerdict(**data)
 
         self.verbose_logs = f"{prompt}{self.verdict}"
-        print("Binary Node")
-        print(self.verbose_logs)
-        print("-----------------------")
 
         for children in self.children:
             children._execute(metric=metric, test_case=test_case)
@@ -352,9 +345,6 @@ class BinaryJudgementNode(BaseNode):
                 self.verdict = BinaryJudgementVerdict(**data)
 
         self.verbose_logs = f"{prompt}{self.verdict}"
-        print("Binary Node")
-        print(self.verbose_logs)
-        print("-----------------------")
 
         await asyncio.gather(
             *(
@@ -451,9 +441,6 @@ class NonBinaryJudgementNode(BaseNode):
                 self.verdict = self.verdict_type(**data)
 
         self.verbose_logs = f"{prompt}{self.verdict}"
-        print("Non Binary Node")
-        print(self.verbose_logs)
-        print("-----------------------")
 
         for children in self.children:
             children._execute(metric=metric, test_case=test_case)
@@ -496,9 +483,6 @@ class NonBinaryJudgementNode(BaseNode):
                 self.verdict = self.verdict_type(**data)
 
         self.verbose_logs = f"{prompt}{self.verdict}"
-        print("Non Binary Node")
-        print(self.verbose_logs)
-        print("-----------------------")
 
         await asyncio.gather(
             *(
