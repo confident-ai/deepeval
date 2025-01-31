@@ -133,7 +133,7 @@ class Synthesizer:
             # Generate contexts from provided docs
             if self.context_generator is None:
                 self.context_generator = ContextGenerator(
-                    document_paths,
+                    document_paths=document_paths,
                     embedder=context_construction_config.embedder,
                     chunk_size=context_construction_config.chunk_size,
                     chunk_overlap=context_construction_config.chunk_overlap,
@@ -193,7 +193,7 @@ class Synthesizer:
         # Generate contexts from provided docs
         if self.context_generator is None:
             self.context_generator = ContextGenerator(
-                document_paths,
+                document_paths=document_paths,
                 embedder=context_construction_config.embedder,
                 chunk_size=context_construction_config.chunk_size,
                 chunk_overlap=context_construction_config.chunk_overlap,
