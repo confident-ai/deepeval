@@ -98,7 +98,7 @@ class VerdictNode(BaseNode):
         if isinstance(self._parent, NonBinaryJudgementNode) or isinstance(
             self._parent, BinaryJudgementNode
         ):
-            if self._parent.verdict.verdict != self.verdict:
+            if self._parent._verdict.verdict != self.verdict:
                 return
 
         if self.child is not None:
@@ -116,7 +116,7 @@ class VerdictNode(BaseNode):
         if isinstance(self._parent, NonBinaryJudgementNode) or isinstance(
             self._parent, BinaryJudgementNode
         ):
-            if self._parent.verdict.verdict != self.verdict:
+            if self._parent._verdict.verdict != self.verdict:
                 return
 
         if self.child is not None:
@@ -130,11 +130,11 @@ class VerdictNode(BaseNode):
 @dataclass
 class TaskNode(BaseNode):
     instructions: str
-    evaluation_params: Optional[List[LLMTestCaseParams]]
     output_label: str
     children: List[BaseNode]
-    output: Optional[str] = None
-    verbose_logs: Optional[str] = None
+    evaluation_params: List[LLMTestCaseParams] = None
+    _output: Optional[str] = None
+    _verbose_logs: Optional[str] = None
     _parents: Optional[List[BaseNode]] = None
 
     def __hash__(self):
@@ -159,7 +159,7 @@ class TaskNode(BaseNode):
         text = """"""
         for child in self.children:
             if isinstance(child, TaskNode):
-                text += f"{child.output_label}:\n{child.output}\n\n"
+                text += f"{child.output_label}:\n{child._output}\n\n"
 
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
@@ -174,13 +174,12 @@ class TaskNode(BaseNode):
         if metric.using_native_model:
             res, cost = metric.model.generate(prompt)
             metric.evaluation_cost += cost
-            self.output = res
+            self._output = res
         else:
             res = metric.model.generate(prompt=prompt)
-            self.output = res
+            self._output = res
 
-        self.verbose_logs = f"{prompt}{self.output}"
-
+        self._verbose_logs = f"{prompt}{self._output}"
         for children in self.children:
             children._execute(metric=metric, test_case=test_case)
 
@@ -208,13 +207,12 @@ class TaskNode(BaseNode):
         if metric.using_native_model:
             res, cost = await metric.model.a_generate(prompt)
             metric.evaluation_cost += cost
-            self.output = res
+            self._output = res
         else:
             res = await metric.model.a_generate(prompt=prompt)
-            self.output = res
+            self._output = res
 
-        self.verbose_logs = f"{prompt}{self.output}"
-
+        self._verbose_logs = f"{prompt}{self._output}"
         await asyncio.gather(
             *(
                 child._a_execute(metric=metric, test_case=test_case)
@@ -228,8 +226,8 @@ class BinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
-    verdict: Optional[BinaryJudgementVerdict] = None
-    verbose_logs: Optional[str] = None
+    _verdict: Optional[BinaryJudgementVerdict] = None
+    _verbose_logs: Optional[str] = None
     _parents: Optional[List[BaseNode]] = None
 
     def __hash__(self):
@@ -271,7 +269,7 @@ class BinaryJudgementNode(BaseNode):
         text = """"""
         for parent in self._parents:
             if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent.output}\n\n"
+                text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -289,20 +287,19 @@ class BinaryJudgementNode(BaseNode):
                 prompt, schema=BinaryJudgementVerdict
             )
             metric.evaluation_cost += cost
-            self.verdict = res
+            self._verdict = res
         else:
             try:
                 res: BinaryJudgementVerdict = metric.model.generate(
                     prompt, schema=BinaryJudgementVerdict
                 )
-                self.verdict = res
+                self._verdict = res
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self.verdict = BinaryJudgementVerdict(**data)
+                self._verdict = BinaryJudgementVerdict(**data)
 
-        self.verbose_logs = f"{prompt}{self.verdict}"
-
+        self._verbose_logs = f"{prompt}{self._verdict}"
         for children in self.children:
             children._execute(metric=metric, test_case=test_case)
 
@@ -314,7 +311,7 @@ class BinaryJudgementNode(BaseNode):
         text = """"""
         for parent in self._parents:
             if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent.output}\n\n"
+                text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -332,20 +329,19 @@ class BinaryJudgementNode(BaseNode):
                 prompt, schema=BinaryJudgementVerdict
             )
             metric.evaluation_cost += cost
-            self.verdict = res
+            self._verdict = res
         else:
             try:
                 res: BinaryJudgementVerdict = await metric.model.a_generate(
                     prompt, schema=BinaryJudgementVerdict
                 )
-                self.verdict = res
+                self._verdict = res
             except TypeError:
                 res = await metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self.verdict = BinaryJudgementVerdict(**data)
+                self._verdict = BinaryJudgementVerdict(**data)
 
-        self.verbose_logs = f"{prompt}{self.verdict}"
-
+        self._verbose_logs = f"{prompt}{self._verdict}"
         await asyncio.gather(
             *(
                 child._a_execute(metric=metric, test_case=test_case)
@@ -359,10 +355,9 @@ class NonBinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
-    verdict: Optional[NonBinaryJudgementVerdict] = None
-    verbose_logs: Optional[str] = None
+    _verdict: Optional[NonBinaryJudgementVerdict] = None
+    _verbose_logs: Optional[str] = None
     _parents: Optional[List[BaseNode]] = None
-    _verdicts_options: Optional[List[str]] = None
 
     def __hash__(self):
         return id(self)
@@ -395,7 +390,7 @@ class NonBinaryJudgementNode(BaseNode):
         self._verdict_options = list(verdicts_set)
 
         # Dynamically create NonBinaryJudgementVerdict class
-        self.verdict_type = create_model(
+        self._verdict_type = create_model(
             "NonBinaryJudgementVerdict",
             verdict=(Literal[tuple(self._verdict_options)], ...),
             reason=(str, ...),
@@ -413,7 +408,7 @@ class NonBinaryJudgementNode(BaseNode):
         text = """"""
         for parent in self._parents:
             if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent.output}\n"
+                text += f"{parent.output_label}:\n{parent._output}\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -426,22 +421,21 @@ class NonBinaryJudgementNode(BaseNode):
             criteria=self.criteria, text=text, options=self._verdict_options
         )
         if metric.using_native_model:
-            res, cost = metric.model.generate(prompt, schema=self.verdict_type)
+            res, cost = metric.model.generate(prompt, schema=self._verdict_type)
             metric.evaluation_cost += cost
-            self.verdict = res
+            self._verdict = res
         else:
             try:
-                res: self.verdict_type = metric.model.generate(
-                    prompt, schema=self.verdict_type
+                res: self._verdict_type = metric.model.generate(
+                    prompt, schema=self._verdict_type
                 )
-                self.verdict = res
+                self._verdict = res
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self.verdict = self.verdict_type(**data)
+                self._verdict = self._verdict_type(**data)
 
-        self.verbose_logs = f"{prompt}{self.verdict}"
-
+        self._verbose_logs = f"{prompt}{self._verdict}"
         for children in self.children:
             children._execute(metric=metric, test_case=test_case)
 
@@ -453,7 +447,7 @@ class NonBinaryJudgementNode(BaseNode):
         text = """"""
         for parent in self._parents:
             if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent.output}\n"
+                text += f"{parent.output_label}:\n{parent._output}\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -467,23 +461,22 @@ class NonBinaryJudgementNode(BaseNode):
         )
         if metric.using_native_model:
             res, cost = await metric.model.a_generate(
-                prompt, schema=self.verdict_type
+                prompt, schema=self._verdict_type
             )
             metric.evaluation_cost += cost
-            self.verdict = res
+            self._verdict = res
         else:
             try:
-                res: self.verdict_type = await metric.model.a_generate(
-                    prompt, schema=self.verdict_type
+                res: self._verdict_type = await metric.model.a_generate(
+                    prompt, schema=self._verdict_type
                 )
-                self.verdict = res
+                self._verdict = res
             except TypeError:
                 res = await metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self.verdict = self.verdict_type(**data)
+                self._verdict = self._verdict_type(**data)
 
-        self.verbose_logs = f"{prompt}{self.verdict}"
-
+        self._verbose_logs = f"{prompt}{self._verdict}"
         await asyncio.gather(
             *(
                 child._a_execute(metric=metric, test_case=test_case)

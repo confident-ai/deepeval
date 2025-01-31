@@ -5,3 +5,4 @@ from .nodes import (
     BinaryJudgementNode,
     NonBinaryJudgementNode,
 )
+from .graph import DeepAcyclicGraph

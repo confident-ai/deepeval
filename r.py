@@ -59,3 +59,32 @@ async def main():
 import asyncio
 
 asyncio.run(main())
+
+
+from deepeval.metrics.dag import (
+    TaskNode,
+    BinaryJudgementNode,
+    NonBinaryJudgementNode,
+    VerdictNode,
+)
+
+correct_order_node = NonBinaryJudgementNode(
+    criteria="Are the headings in the correct order: 'intro' => 'body' => 'conclusion'?",
+    children=[
+        VerdictNode(verdict="Yes", score=10),
+        VerdictNode(verdict="Two are out of order", score=4),
+        VerdictNode(verdict="All out of order", score=2),
+    ],
+)
+
+correct_headings_node = BinaryJudgementNode(
+    criteria="Does the heading contain all three: 'intro', 'body', and 'conclusion'?",
+    children=[VerdictNode(verdict=False, score=0), correct_order_node],
+)
+
+extract_headings_node = TaskNode(
+    instructions="Extract all headings in `actual_output`",
+    LLMTestCaseParams=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    output_label="Summary headings",
+    children=[correct_headings_node, correct_order_node],
+)
