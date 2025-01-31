@@ -33,6 +33,7 @@ setup(
         "pytest-xdist",
         "portalocker",
         "langchain",
+        "llama-index",
         "langchain-core",
         "langchain_openai",
         "langchain-community",

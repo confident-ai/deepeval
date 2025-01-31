@@ -29,7 +29,7 @@ from deepeval.test_case import (
 def copy_metrics(
     metrics: List[
         Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
-    ]
+    ],
 ) -> List[Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric]]:
     copied_metrics = []
     for metric in metrics:

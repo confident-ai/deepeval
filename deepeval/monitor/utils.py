@@ -5,7 +5,7 @@ from deepeval.monitor.api import Link, CustomProperty, CustomPropertyType
 def process_additional_data(
     additional_data: Optional[
         Dict[str, Union[str, Link, List[Link], Dict]]
-    ] = None
+    ] = None,
 ):
     custom_properties = None
     if additional_data:

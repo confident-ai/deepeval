@@ -1,5 +1,4 @@
-"""An implementation of the Ragas metric
-"""
+"""An implementation of the Ragas metric"""
 
 from typing import Optional, Union, Any, List
 from langchain_core.language_models import BaseChatModel

@@ -1,5 +1,4 @@
-"""Test for callbacks
-"""
+"""Test for callbacks"""
 
 from transformers import (
     Seq2SeqTrainer,
