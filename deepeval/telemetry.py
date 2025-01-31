@@ -20,7 +20,7 @@ class Feature(Enum):
     UNKNOWN = "unknown"
 
 
-TELEMETRY_DATA_FILE = ".deepeval_telemtry.txt"
+TELEMETRY_DATA_FILE = ".deepeval_telemetry.txt"
 
 #########################################################
 ### Telemetry Config ####################################
