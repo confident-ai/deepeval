@@ -5,10 +5,19 @@ sidebar_label: Setup LLM Connection Endpoint
 ---
 
 :::tip
-This is particularly helpful if you wish to enable a no-code evaluation workflow for non-technical users, or simulating conversations to be evaluated in one click of a button.
+This is particularly helpful if you wish to:
+
+- Enable no-code evaluation workflows for non-technical users
+- Simulate conversations to be evaluated in a click of a button
+- Red-team LLM applications
+
 :::
 
 You can also setup an LLM endpoint that accepts a `POST` request over HTTPS to **enable users to run evaluations directly on the platform without having to code**, and start an evaluation through a click of a button instead. At a high level, you would have to provide Confident AI with the mappings to test case parameters such as the `actual_output`, `retrieval_context`, etc., and at evaluation time Confident AI will use the dataset and metrics settings you've specified for your experiment to unit test your LLM application.
+
+:::note
+If you're setting this up for red-teaming, all you need to do is return the `actual_output` of your model, and nothing else such as `retrieval_context` (although you're free to return additional data).
+:::
 
 ### Create an LLM Endpoint
 
