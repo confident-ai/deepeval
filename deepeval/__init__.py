@@ -2,7 +2,7 @@ import os
 import warnings
 import re
 
-# Optionally add telemtry
+# Optionally add telemetry
 from ._version import __version__
 
 from deepeval.event import track
