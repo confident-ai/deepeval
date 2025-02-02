@@ -1,6 +1,7 @@
 module.exports = {
   tutorials: [
     "tutorial-introduction",
+    // "use-cases",
     "tutorial-setup",
     {
       type: "category",
