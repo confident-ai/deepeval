@@ -4,7 +4,22 @@ module.exports = {
     "tutorial-setup",
     {
       type: "category",
-      label: "RAG QA Agent ",
+      label: "Legal Doc Summarization",
+      items: [
+        "doc-summarization-introduction",
+        "doc-summarization-defining-a-criteria",
+        "doc-summarization-selecting-metrics",
+        "doc-summarization-running-an-evaluation",
+        "doc-summarization-iterating-on-hyperparameters",
+        "doc-summarization-catching-llm-regressions",
+        "doc-summarization-annotating-datasets",
+        "doc-summarization-using-datasets",
+      ],
+      collapsed: true,
+    },
+    {
+      type: "category",
+      label: "RAG QA Agent",
       items: [
         "qa-agent-introduction",
         "qa-agent-generating-a-synthetic-dataset",
@@ -13,7 +28,7 @@ module.exports = {
         "qa-agent-running-evaluations",
         "qa-agent-improving-hyperparameters",
       ],
-      collapsed: false,
+      collapsed: true,
     },
     {
       type: "category",
