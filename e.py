@@ -108,11 +108,12 @@ funny_metric = ConversationalGEval(
 evaluate(
     test_cases=[convo_test_case, convo_test_case_2, convo_test_case_3],
     metrics=[
-        RoleAdherenceMetric(),
-        ConversationRelevancyMetric(),
-        funny_metric,
+        RoleAdherenceMetric(verbose_mode=True),
+        # ConversationRelevancyMetric(),
+        # funny_metric,
     ],
     hyperparameters={"model": "claude", "prompt template": role},
+    run_async=False,
 )
 
 

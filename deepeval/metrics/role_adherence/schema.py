@@ -1,9 +1,15 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
-class OutOfCharacterResponseIndicies(BaseModel):
-    indicies: List[int]
+class OutOfCharacterResponseVerdict(BaseModel):
+    index: int
+    reason: str
+    actual_output: Optional[str]
+
+
+class OutOfCharacterResponseVerdicts(BaseModel):
+    verdicts: List[OutOfCharacterResponseVerdict]
 
 
 class Reason(BaseModel):
