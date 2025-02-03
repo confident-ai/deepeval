@@ -18,6 +18,7 @@ from deepeval.test_run.api import (
     LLMApiTestCase,
     ConversationalApiTestCase,
     TestRunHttpResponse,
+    MetricData,
 )
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.utils import (
@@ -50,6 +51,8 @@ class MetricScoreType(BaseModel):
 class MetricScores(BaseModel):
     metric: str
     scores: List[float]
+    passes: int
+    fails: int
 
 
 class MetricsAverageDict:
@@ -192,56 +195,114 @@ class TestRun(BaseModel):
             del test_case.conversational_instance_id
 
     def construct_metrics_scores(self) -> int:
-        metrics_dict: Dict[str, List[float]] = {}
+        # Use a dict to aggregate scores, passes, and fails for each metric.
+        metrics_dict: Dict[str, Dict[str, Any]] = {}
         valid_scores = 0
+
+        def process_metric_data(metric_data: MetricData):
+            nonlocal valid_scores
+            name = metric_data.name
+            score = metric_data.score
+            success = metric_data.success
+            if score is None or success is None:
+                return
+            valid_scores += 1
+
+            # Initialize dict entry if needed.
+            if name not in metrics_dict:
+                metrics_dict[name] = {"scores": [], "passes": 0, "fails": 0}
+
+            # Append the score.
+            metrics_dict[name]["scores"].append(score)
+
+            # Increment passes or fails based on the metric_data.success flag.
+            if success:
+                metrics_dict[name]["passes"] += 1
+            else:
+                metrics_dict[name]["fails"] += 1
+
+        # Process non-conversational test cases.
         for test_case in self.test_cases:
             if test_case.metrics_data is None:
                 continue
             for metric_data in test_case.metrics_data:
-                name = metric_data.name
-                score = metric_data.score
-                if score is None:
-                    continue
-                valid_scores += 1
-                if name in metrics_dict:
-                    metrics_dict[name].append(score)
-                else:
-                    metrics_dict[name] = [score]
+                process_metric_data(metric_data)
 
+        # Process conversational test cases.
         for convo_test_case in self.conversational_test_cases:
             if convo_test_case.metrics_data is not None:
                 for metric_data in convo_test_case.metrics_data:
-                    name = metric_data.name
-                    score = metric_data.score
-                    if score is None:
-                        continue
-                    valid_scores += 1
-                    if name in metrics_dict:
-                        metrics_dict[name].append(score)
-                    else:
-                        metrics_dict[name] = [score]
+                    process_metric_data(metric_data)
 
             for turn in convo_test_case.turns:
                 if turn.metrics_data is None:
                     continue
                 for metric_data in turn.metrics_data:
-                    name = metric_data.name
-                    score = metric_data.score
-                    if score is None:
-                        continue
-                    valid_scores += 1
-                    if name in metrics_dict:
-                        metrics_dict[name].append(score)
-                    else:
-                        metrics_dict[name] = [score]
+                    process_metric_data(metric_data)
 
-        # metrics_scores combines both conversational and nonconvo and mllm scores
-        # might need to separate in the future
+        # Create MetricScores objects with the aggregated data.
         self.metrics_scores = [
-            MetricScores(metric=metric, scores=scores)
-            for metric, scores in metrics_dict.items()
+            MetricScores(
+                metric=metric,
+                scores=data["scores"],
+                passes=data["passes"],
+                fails=data["fails"],
+            )
+            for metric, data in metrics_dict.items()
         ]
         return valid_scores
+
+    # def construct_metrics_scores(self) -> int:
+    #     metrics_dict: Dict[str, List[float]] = {}
+    #     valid_scores = 0
+    #     for test_case in self.test_cases:
+    #         if test_case.metrics_data is None:
+    #             continue
+    #         for metric_data in test_case.metrics_data:
+    #             name = metric_data.name
+    #             score = metric_data.score
+    #             if score is None:
+    #                 continue
+    #             valid_scores += 1
+    #             if name in metrics_dict:
+    #                 metrics_dict[name].append(score)
+    #             else:
+    #                 metrics_dict[name] = [score]
+
+    #     for convo_test_case in self.conversational_test_cases:
+    #         if convo_test_case.metrics_data is not None:
+    #             for metric_data in convo_test_case.metrics_data:
+    #                 name = metric_data.name
+    #                 score = metric_data.score
+    #                 if score is None:
+    #                     continue
+    #                 valid_scores += 1
+    #                 if name in metrics_dict:
+    #                     metrics_dict[name].append(score)
+    #                 else:
+    #                     metrics_dict[name] = [score]
+
+    #         for turn in convo_test_case.turns:
+    #             if turn.metrics_data is None:
+    #                 continue
+    #             for metric_data in turn.metrics_data:
+    #                 name = metric_data.name
+    #                 score = metric_data.score
+    #                 if score is None:
+    #                     continue
+    #                 valid_scores += 1
+    #                 if name in metrics_dict:
+    #                     metrics_dict[name].append(score)
+    #                 else:
+    #                     metrics_dict[name] = [score]
+
+    #     # metrics_scores combines both conversational and nonconvo and mllm scores
+    #     # might need to separate in the future
+    #     self.metrics_scores = [
+    #         MetricScores(metric=metric, scores=scores)
+    #         for metric, scores in metrics_dict.items()
+    #     ]
+    #     return valid_scores
 
     def calculate_test_passes_and_fails(self):
         test_passed = 0
