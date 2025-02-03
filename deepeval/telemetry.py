@@ -129,6 +129,7 @@ IS_RUNNING_IN_JUPYTER = (
 def capture_evaluation_run(type: str):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Ran {type}") as span:
+            span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
@@ -148,6 +149,7 @@ def capture_evaluation_run(type: str):
 def capture_metric_type(metric_name: str, _track: bool = True):
     if not telemetry_opt_out() and _track:
         with tracer.start_as_current_span(metric_name) as span:
+            span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
@@ -166,6 +168,7 @@ def capture_synthesizer_run(
         with tracer.start_as_current_span(f"Invoked synthesizer") as span:
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
+            span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
@@ -194,6 +197,7 @@ def capture_red_teamer_run(
         with tracer.start_as_current_span(f"Invokved redteamer") as span:
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
+            span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
@@ -223,6 +227,7 @@ def capture_guardrails(guards: List[str]):
         with tracer.start_as_current_span(f"Ran guardrails") as span:
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
+            span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
@@ -244,6 +249,7 @@ def capture_benchmark_run(benchmark: str, num_tasks: int):
         with tracer.start_as_current_span(f"Ran benchmark") as span:
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
+            span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
@@ -266,6 +272,7 @@ def capture_login_event():
             last_feature = get_last_feature()
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
+            span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
@@ -347,3 +354,12 @@ def get_feature_status(feature: Feature) -> str:
     data = read_telemetry_file()
     feature_status_key = f"DEEPEVAL_{feature.value.upper()}_STATUS"
     return data.get(feature_status_key, "new")
+
+def set_logged_in_with(logged_in_with: str):
+    data = read_telemetry_file()
+    data["LOGGED_IN_WITH"] = logged_in_with
+    write_telemetry_file(data)
+
+def get_logged_in_with():
+    data = read_telemetry_file()
+    return data["LOGGED_IN_WITH"]
