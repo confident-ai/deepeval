@@ -20,4 +20,4 @@ class CybersecurityGuard(BaseDecorativeGuard):
 
     @property
     def __name__(self):
-        "Cybersecurity Guard"
+        return "Cybersecurity Guard"
