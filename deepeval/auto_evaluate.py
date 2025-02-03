@@ -156,7 +156,7 @@ def generate_goldens(
                 include_expected_output=include_expected_output,
                 max_goldens_per_context=max_goldens_per_context,
                 max_concurrent=max_concurrent,
-                async_mod=async_mode,
+                async_mode=async_mode,
                 filtration_config=filtration_config,
                 evolution_config=evolution_config,
                 styling_config=styling_config,
