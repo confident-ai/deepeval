@@ -74,5 +74,5 @@ The `ConversationalGEval` is an adapted version of [`GEval`](/docs/metrics-llm-e
 Unlike regular `GEval` though, the `ConversationalGEval` takes the entire conversation history into account during evaluation.
 
 :::tip
-Similar to the original [G-Eval paper](<(https://arxiv.org/abs/2303.16634)>), the `ConversationalGEval` metric uses the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation. This step was introduced in the paper to minimize bias in LLM scoring, and is automatically handled by `deepeval` (unless you're using a custom LLM).
+Similar to the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the `ConversationalGEval` metric uses the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation. This step was introduced in the paper to minimize bias in LLM scoring, and is automatically handled by `deepeval` (unless you're using a custom LLM).
 :::
