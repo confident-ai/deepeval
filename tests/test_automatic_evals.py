@@ -1,6 +1,6 @@
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
 from deepeval.integrations import trace_llama_index, trace_langchain
-from deepeval.auto_evaluate import auto_evaluate
+from deepeval import evaluate, auto_evaluate
 
 #######################################################
 ### LLamaIndex ########################################
