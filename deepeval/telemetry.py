@@ -355,11 +355,13 @@ def get_feature_status(feature: Feature) -> str:
     feature_status_key = f"DEEPEVAL_{feature.value.upper()}_STATUS"
     return data.get(feature_status_key, "new")
 
+
 def set_logged_in_with(logged_in_with: str):
     data = read_telemetry_file()
     data["LOGGED_IN_WITH"] = logged_in_with
     write_telemetry_file(data)
 
+
 def get_logged_in_with():
     data = read_telemetry_file()
-    return data["LOGGED_IN_WITH"]
+    return data.get("LOGGED_IN_WITH", "NA")
