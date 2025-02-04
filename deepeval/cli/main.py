@@ -5,7 +5,12 @@ from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.cli.test import app as test_app
 from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event
-import webbrowser
+import random
+import string
+from deepeval.cli.server import start_server
+
+PROD = "https://app.confident-ai.com"
+LOCAL = "http://localhost:3000"
 
 app = typer.Typer(name="deepeval")
 app.add_typer(test_app, name="test")
@@ -13,6 +18,9 @@ app.add_typer(recommend_app, name="recommend")
 
 
 
+def generate_pairing_code():
+    """Generate a random pairing code."""
+    return "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 @app.command()
 def login(
@@ -46,23 +54,20 @@ def login(
             if confident_api_key:
                 api_key = confident_api_key
             else:
-                """Login to the DeepEval platform."""
                 print("Welcome to [bold]DeepEval[/bold]!")
-                print(
-                    "Login and grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
-                )
-                webbrowser.open(
-                    "https://app.confident-ai.com/auth/signup?utm_source=deepeval"
-                )
+
+                # Start the pairing server
+                pairing_code = generate_pairing_code()
+                start_server(pairing_code, PROD)
+
+                # paste in api key
                 if api_key == "":
                     while True:
                         api_key = input("Paste your API Key: ").strip()
                         if api_key:
                             break
                         else:
-                            print(
-                                "API Key cannot be empty. Please try again.\n"
-                            )
+                            print("API Key cannot be empty. Please try again.\n")
 
             KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
             print("Congratulations! Login successful :raising_hands: ")
