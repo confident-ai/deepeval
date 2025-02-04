@@ -22,6 +22,7 @@ class Endpoints(Enum):
     EVENT_ENDPOINT = "/v1/event"
     FEEDBACK_ENDPOINT = "/v1/feedback"
     PROMPT_ENDPOINT = "/v1/prompt"
+    RECOMMEND_ENDPOINT = "/v1/recommend-metrics"
     EVALUATE_ENDPOINT = "/evaluate"
     GUARD_ENDPOINT = "/guard"
     GUARDRAILS_ENDPOINT = "/guardrails"
