@@ -1,9 +1,9 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import List, Literal
+from pydantic import BaseModel
 
 
 class HallucinationVerdict(BaseModel):
-    verdict: str
+    verdict: Literal["yes", "no"]
     reason: str
 
 

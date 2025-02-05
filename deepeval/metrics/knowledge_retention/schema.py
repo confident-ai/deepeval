@@ -1,9 +1,9 @@
-from typing import List, Dict, Union, Optional
+from typing import Dict, Optional, Any
 from pydantic import BaseModel
 
 
 class Knowledge(BaseModel):
-    data: Dict[str, Union[str, List[str]]]
+    data: Dict[str, Any]
 
 
 class KnowledgeRetentionVerdict(BaseModel):

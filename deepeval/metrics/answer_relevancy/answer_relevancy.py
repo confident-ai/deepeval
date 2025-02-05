@@ -62,7 +62,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 self.statements: List[str] = self._generate_statements(
                     test_case.actual_output
                 )
-                self.verdicts: List[AnswerRelvancyVerdict] = (
+                self.verdicts: List[AnswerRelevancyVerdict] = (
                     self._generate_verdicts(test_case.input)
                 )
                 self.score = self._calculate_score()
@@ -95,7 +95,7 @@ class AnswerRelevancyMetric(BaseMetric):
             self.statements: List[str] = await self._a_generate_statements(
                 test_case.actual_output
             )
-            self.verdicts: List[AnswerRelvancyVerdict] = (
+            self.verdicts: List[AnswerRelevancyVerdict] = (
                 await self._a_generate_verdicts(test_case.input)
             )
             self.score = self._calculate_score()
@@ -171,7 +171,7 @@ class AnswerRelevancyMetric(BaseMetric):
 
     async def _a_generate_verdicts(
         self, input: str
-    ) -> List[AnswerRelvancyVerdict]:
+    ) -> List[AnswerRelevancyVerdict]:
         if len(self.statements) == 0:
             return []
 
@@ -193,10 +193,10 @@ class AnswerRelevancyMetric(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return [
-                    AnswerRelvancyVerdict(**item) for item in data["verdicts"]
+                    AnswerRelevancyVerdict(**item) for item in data["verdicts"]
                 ]
 
-    def _generate_verdicts(self, input: str) -> List[AnswerRelvancyVerdict]:
+    def _generate_verdicts(self, input: str) -> List[AnswerRelevancyVerdict]:
         if len(self.statements) == 0:
             return []
 
@@ -216,7 +216,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return [
-                    AnswerRelvancyVerdict(**item) for item in data["verdicts"]
+                    AnswerRelevancyVerdict(**item) for item in data["verdicts"]
                 ]
 
     async def _a_generate_statements(
