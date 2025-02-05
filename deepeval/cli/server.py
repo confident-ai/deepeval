@@ -2,7 +2,6 @@ from typing import Dict
 from rich import print
 import socketserver
 import http.server
-import webbrowser
 import threading
 import json
 
@@ -11,7 +10,7 @@ from deepeval.telemetry import set_logged_in_with
 LOGGED_IN_WITH = "logged_in_with"
 
 
-def start_server(pairing_code: str, prod_url: str) -> str:
+def start_server(pairing_code: str, port: str, prod_url: str) -> str:
 
     class PairingHandler(http.server.SimpleHTTPRequestHandler):
 
@@ -30,7 +29,6 @@ def start_server(pairing_code: str, prod_url: str) -> str:
             content_length = int(self.headers["Content-Length"])
             body = self.rfile.read(content_length)
             data: Dict = json.loads(body)
-
             if self.path == f"/{LOGGED_IN_WITH}":
                 logged_in_with = data.get(LOGGED_IN_WITH)
                 pairing_code_recieved = data.get("pairing_code")
@@ -39,21 +37,15 @@ def start_server(pairing_code: str, prod_url: str) -> str:
                     self.send_response(200)
                     self.send_header("Access-Control-Allow-Origin", prod_url)
                     self.end_headers()
-                    print(f"Logged in with: {logged_in_with}")
                     threading.Thread(target=httpd.shutdown, daemon=True).start()
                     return
+                    
                 self.send_response(400)
                 self.send_header("Access-Control-Allow-Origin", prod_url)
                 self.end_headers()
                 self.wfile.write(b"Invalid pairing code or data")
 
-    with socketserver.TCPServer(("localhost", 0), PairingHandler) as httpd:
-        port = httpd.server_address[1]
-        login_url = f"{prod_url}/pair?code={pairing_code}&port={port}"
-        print(
-            f"Login and grab your API key here: [link={prod_url}]{prod_url}[/link] "
-        )
-        webbrowser.open(login_url)
+    with socketserver.TCPServer(("localhost", port), PairingHandler) as httpd:
         thread = threading.Thread(target=httpd.serve_forever, daemon=True)
         thread.start()
         thread.join()
