@@ -17,10 +17,10 @@ app.add_typer(test_app, name="test")
 app.add_typer(recommend_app, name="recommend")
 
 
-
 def generate_pairing_code():
     """Generate a random pairing code."""
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
 
 @app.command()
 def login(
@@ -67,7 +67,9 @@ def login(
                         if api_key:
                             break
                         else:
-                            print("API Key cannot be empty. Please try again.\n")
+                            print(
+                                "API Key cannot be empty. Please try again.\n"
+                            )
 
             KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
             print("Congratulations! Login successful :raising_hands: ")

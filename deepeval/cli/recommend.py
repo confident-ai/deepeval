@@ -47,12 +47,16 @@ def ask_yes_no(question: str) -> bool:
         if answer in ("y", "n"):
             return answer == "y"
         else:
-            print("[red]Invalid input.[/red] Please enter '[rgb(5,245,141)]Y[/rgb(5,245,141)]' for Yes or '[rgb(5,245,141)]N[/rgb(5,245,141)]' for No.")
+            print(
+                "[red]Invalid input.[/red] Please enter '[rgb(5,245,141)]Y[/rgb(5,245,141)]' for Yes or '[rgb(5,245,141)]N[/rgb(5,245,141)]' for No."
+            )
 
 
 @app.command()
 def metrics():
-    print("\n[bold]Welcome to [cyan]DeepEval[/cyan]! Let's find the best evaluation metrics for you.[/bold] :sparkles:\n")
+    print(
+        "\n[bold]Welcome to [cyan]DeepEval[/cyan]! Let's find the best evaluation metrics for you.[/bold] :sparkles:\n"
+    )
 
     is_last_question = False
     question_index = 0
@@ -70,16 +74,20 @@ def metrics():
             user_answers.append(answer)
 
         if is_last_question:
-            print("\n[bold rgb(5,245,141)]:rocket: Generating your recommended metrics...[/bold rgb(5,245,141)]\n")
+            print(
+                "\n[bold rgb(5,245,141)]:rocket: Generating your recommended metrics...[/bold rgb(5,245,141)]\n"
+            )
             response: RecommendMetricsResponseData = get_recommended_metrics(
                 question_index + 1, user_answers
             )
-            
+
             print("[bold cyan]Recommended Metrics:[/bold cyan]")
             for metric in response.recommendedMetrics:
                 print(f" -  {metric}")
 
-            print("\n:clap: [bold]You're all set![/bold] Run '[bold cyan]deepeval login[/bold cyan]' to start evaluating and analyzing metric scores on Confident AI.\n")
+            print(
+                "\n:clap: [bold]You're all set![/bold] Run '[bold cyan]deepeval login[/bold cyan]' to start evaluating and analyzing metric scores on Confident AI.\n"
+            )
             break
 
         question_index += 1

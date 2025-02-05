@@ -10,6 +10,7 @@ from deepeval.telemetry import set_logged_in_with
 
 LOGGED_IN_WITH = "logged_in_with"
 
+
 def start_server(pairing_code: str, prod_url: str) -> str:
 
     class PairingHandler(http.server.SimpleHTTPRequestHandler):
@@ -49,7 +50,9 @@ def start_server(pairing_code: str, prod_url: str) -> str:
     with socketserver.TCPServer(("localhost", 0), PairingHandler) as httpd:
         port = httpd.server_address[1]
         login_url = f"{prod_url}/pair?code={pairing_code}&port={port}"
-        print(f"Login and grab your API key here: [link={prod_url}]{prod_url}[/link] ")
+        print(
+            f"Login and grab your API key here: [link={prod_url}]{prod_url}[/link] "
+        )
         webbrowser.open(login_url)
         thread = threading.Thread(target=httpd.serve_forever, daemon=True)
         thread.start()
