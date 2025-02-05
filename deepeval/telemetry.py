@@ -144,6 +144,19 @@ def capture_evaluation_run(type: str):
     else:
         yield
 
+@contextmanager
+def capture_recommend_metrics():
+    if not telemetry_opt_out():
+        with tracer.start_as_current_span("Recommend") as span:
+            span.set_attribute("logged_in_with", get_logged_in_with())
+            span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
+            span.set_attribute("user.status", get_status())
+            span.set_attribute("user.unique_id", get_unique_id())
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
+            yield span
+    else:
+        yield
 
 @contextmanager
 def capture_metric_type(metric_name: str, _track: bool = True):
@@ -158,7 +171,6 @@ def capture_metric_type(metric_name: str, _track: bool = True):
             yield span
     else:
         yield
-
 
 @contextmanager
 def capture_synthesizer_run(

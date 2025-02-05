@@ -7,6 +7,7 @@ from deepeval.cli.types import (
     RecommendMetricsResponseData,
 )
 from deepeval.confident.api import Api, HttpMethods, Endpoints
+from deepeval.telemetry import capture_recommend_metrics
 from deepeval.constants import LOGIN_PROMPT
 
 app = typer.Typer(name="recommend")
@@ -55,41 +56,45 @@ def ask_yes_no(question: str) -> bool:
 
 @app.command()
 def metrics():
-    print(
-        "\n[bold]Welcome to [cyan]DeepEval[/cyan]! Let's find the best evaluation metrics for you.[/bold] :sparkles:\n"
-    )
-    print(f"{LOGIN_PROMPT}\n")
-
-    is_last_question = False
-    question_index = 0
-    user_answers = []
-
-    while True:
-        response: RecommendMetricsResponseData = get_next_question(
-            question_index
-        )
-        question = response.question
-        is_last_question = response.isLastQuestion
-
-        if question:
-            answer = ask_yes_no(question)
-            user_answers.append(answer)
-
-        if is_last_question:
+    with capture_recommend_metrics() as span:
+        try:
             print(
-                "\n[bold rgb(5,245,141)]:rocket: Generating your recommended metrics...[/bold rgb(5,245,141)]\n"
+                "\n[bold]Welcome to [cyan]DeepEval[/cyan]! Let's find the best evaluation metrics for you.[/bold] :sparkles:\n"
             )
-            response: RecommendMetricsResponseData = get_recommended_metrics(
-                question_index + 1, user_answers
-            )
+            print(f"{LOGIN_PROMPT}\n")
 
-            print("[bold cyan]Recommended Metrics:[/bold cyan]")
-            for metric in response.recommendedMetrics:
-                print(f" -  {metric}")
+            is_last_question = False
+            question_index = 0
+            user_answers = []
 
-            print(
-                "\n:clap: [bold]You're all set![/bold] You can also run '[bold cyan]deepeval login[/bold cyan]' to get reports of your metric scores on Confident AI.\n"
-            )
-            break
+            while True:
+                response: RecommendMetricsResponseData = get_next_question(
+                    question_index
+                )
+                question = response.question
+                is_last_question = response.isLastQuestion
 
-        question_index += 1
+                if question:
+                    answer = ask_yes_no(question)
+                    user_answers.append(answer)
+
+                if is_last_question:
+                    print(
+                        "\n[bold rgb(5,245,141)]:rocket: Generating your recommended metrics...[/bold rgb(5,245,141)]\n"
+                    )
+                    response: RecommendMetricsResponseData = get_recommended_metrics(
+                        question_index + 1, user_answers
+                    )
+
+                    print("[bold cyan]Recommended Metrics:[/bold cyan]")
+                    for metric in response.recommendedMetrics:
+                        print(f" -  {metric}")
+
+                    print(
+                        "\n:clap: [bold]You're all set![/bold] You can also run '[bold cyan]deepeval login[/bold cyan]' to get reports of your metric scores on Confident AI.\n"
+                    )
+                    break
+
+                question_index += 1
+        except:
+            span.set_attribute("completed", False)
