@@ -1,3 +1,4 @@
+import webbrowser
 import typer
 from typing import Optional
 from rich import print
@@ -54,13 +55,14 @@ def login(
             if confident_api_key:
                 api_key = confident_api_key
             else:
-                print("Welcome to [bold]DeepEval[/bold]!")
-
-                # Start the pairing server
-                pairing_code = generate_pairing_code()
-                start_server(pairing_code, PROD)
-
-                # paste in api key
+                """Login to the DeepEval platform."""
+                print("Welcome to :sparkles:[bold]DeepEval[/bold]:sparkles:!")
+                print(
+                    "Login and grab your API key here: [link=https://app.confident-ai.com]https://app.confident-ai.com[/link] "
+                )
+                webbrowser.open(
+                    "https://app.confident-ai.com/auth/signup?utm_source=deepeval"
+                )
                 if api_key == "":
                     while True:
                         api_key = input("Paste your API Key: ").strip()
@@ -72,9 +74,11 @@ def login(
                             )
 
             KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
-            print("Congratulations! Login successful :raising_hands: ")
             print(
-                "If you are new to DeepEval, follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/docs/getting-started]https://docs.confident-ai.com/docs/getting-started[/link][/bold]"
+                "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
+            )
+            print(
+                "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. Follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/confident-ai/confident-ai-introduction]https://docs.confident-ai.com/confident-ai/confident-ai-introduction[/link][/bold]"
             )
         except:
             span.set_attribute("completed", False)

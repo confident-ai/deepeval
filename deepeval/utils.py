@@ -202,7 +202,9 @@ def login_with_confident_api_key(api_key: string):
     from rich import print
 
     KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
-    print("Congratulations! Login successful :raising_hands: ")
+    print(
+        "🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
+    )
 
 
 def set_is_running_deepeval(flag: bool):

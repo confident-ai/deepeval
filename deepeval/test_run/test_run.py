@@ -776,8 +776,7 @@ class TestRunManager:
 
             console.print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! View results on "
-                f"[link={link}]{link}[/link].",
-                LOGIN_PROMPT,
+                f"[link={link}]{link}[/link]."
             )
 
             if is_in_ci_env() == False:
@@ -786,8 +785,9 @@ class TestRunManager:
             return link
         else:
             console.print(
-                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run 'deepeval login' to save and analyze evaluation results on Confident AI. ",
+                "\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run [bold]'deepeval login'[/bold] to save and analyze evaluation results on Confident AI.\n",
                 LOGIN_PROMPT,
+                "\n",
             )
 
     def save_test_run_locally(self):
