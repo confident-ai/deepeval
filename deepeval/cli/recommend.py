@@ -7,6 +7,7 @@ from deepeval.cli.types import (
     RecommendMetricsResponseData,
 )
 from deepeval.confident.api import Api, HttpMethods, Endpoints
+from deepeval.constants import LOGIN_PROMPT
 
 app = typer.Typer(name="recommend")
 
@@ -43,7 +44,7 @@ def get_recommended_metrics(question_index: int, user_answers: List[bool]):
 
 def ask_yes_no(question: str) -> bool:
     while True:
-        answer = input(f"{question} [Y/N]").strip().lower()
+        answer = input(f"{question} [y/N]").strip().lower()
         if answer in ("y", "n"):
             return answer == "y"
         else:
@@ -57,6 +58,7 @@ def metrics():
     print(
         "\n[bold]Welcome to [cyan]DeepEval[/cyan]! Let's find the best evaluation metrics for you.[/bold] :sparkles:\n"
     )
+    print(f"{LOGIN_PROMPT}\n")
 
     is_last_question = False
     question_index = 0
@@ -86,7 +88,7 @@ def metrics():
                 print(f" -  {metric}")
 
             print(
-                "\n:clap: [bold]You're all set![/bold] Run '[bold cyan]deepeval login[/bold cyan]' to start evaluating and analyzing metric scores on Confident AI.\n"
+                "\n:clap: [bold]You're all set![/bold] You can also run '[bold cyan]deepeval login[/bold cyan]' to get reports of your metric scores on Confident AI.\n"
             )
             break
 
