@@ -4,19 +4,48 @@ title: Using Custom LLMs for Evaluation
 sidebar_label: Using Custom LLMs for Evaluation
 ---
 
-All of `deepeval`'s metrics uses LLMs for evaluation, and is currently defaulted to OpenAI's GPT models. However, for users that don't wish to use OpenAI's GPT models and would instead prefer other providers such as Claude (Anthropic), Gemini (Google), Llama-3 (Meta), or Mistral, `deepeval` provides an easy way for anyone to use literaly **ANY** custom LLM for evaluation.
+All of `deepeval`'s metrics uses LLMs for evaluation, and is currently defaulted to OpenAI's GPT models. However, for users that don't wish to use OpenAI's GPT models and would instead prefer other providers such as Claude (Anthropic), Gemini (Google), Llama-3 (Meta), or general-purpose evaluation models like Selene Mini (Atla), `deepeval` provides an easy way for anyone to use literaly **ANY** custom LLM for evaluation.
 
 This guide will show you how to create custom LLMs for evaluation in `deepeval`, and demonstrate various methods to enforce valid JSON LLM outputs that are required for evaluation with the following examples:
 
-- Llama-3 8B from Hugging Face `transformers`
+- Atla Selene Mini from Hugging Face `transformers`
 - Mistral-7B v0.3 from Hugging Face `transformers`
 - Gemini 1.5 Flash from Vertex AI
 - Claude-3 Opus from Anthropic
 
 ## Creating A Custom LLM
 
-Here's a quick example on a custom Llama-3 8B model being used for evaluation in `deepeval`:
+Here's a quick example on a custom Selene Mini (8B) model being used for evaluation in `deepeval`. Selene is based on the same architecture as Llama-3.1, but is optimized for evaluation tasks.
 
+**Install the necessary libraries**
+```bash
+!pip install -U bitsandbytes lm-format-enforcer
+```
+
+**Load the model and tokenizer**
+```Python
+import transformers
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+import torch
+
+quantization_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_use_double_quant=True,
+)
+
+selene_model = AutoModelForCausalLM.from_pretrained(
+    "AtlaAI/Selene-1-Mini-Llama-3.1-8B",
+    device_map="auto",
+    quantization_config=quantization_config # remove to load FP16 model
+)
+selene_tokenizer = AutoTokenizer.from_pretrained(
+    "AtlaAI/Selene-1-Mini-Llama-3.1-8B"
+)
+```
+
+**Create a custom model class**
 ```python
 import transformers
 import torch
@@ -25,55 +54,71 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from deepeval.models import DeepEvalBaseLLM
 
+from deepeval.models.base_model import DeepEvalBaseLLM
+from lmformatenforcer import JsonSchemaParser
+from lmformatenforcer.integrations.transformers import (
+    build_transformers_prefix_allowed_tokens_fn,
+)
+from transformers import pipeline
+from pydantic import BaseModel
+import json
 
-class CustomLlama3_8B(DeepEvalBaseLLM):
-    def __init__(self):
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_use_double_quant=True,
-        )
-
-        model_4bit = AutoModelForCausalLM.from_pretrained(
-            "meta-llama/Meta-Llama-3-8B-Instruct",
-            device_map="auto",
-            quantization_config=quantization_config,
-        )
-        tokenizer = AutoTokenizer.from_pretrained(
-            "meta-llama/Meta-Llama-3-8B-Instruct"
-        )
-
-        self.model = model_4bit
+class CustomSeleneMini(DeepEvalBaseLLM):
+    def __init__(
+        self,
+        model,
+        tokenizer
+    ):
+        self.model = model
         self.tokenizer = tokenizer
 
     def load_model(self):
         return self.model
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, schema: BaseModel = None) -> BaseModel | str:
         model = self.load_model()
 
+        # HF pipeline for inference of text generation
         pipeline = transformers.pipeline(
             "text-generation",
             model=model,
             tokenizer=self.tokenizer,
             use_cache=True,
             device_map="auto",
-            max_length=2500,
+            num_return_sequences=1,
+            max_new_tokens=512,
             do_sample=True,
             top_k=5,
-            num_return_sequences=1,
             eos_token_id=self.tokenizer.eos_token_id,
             pad_token_id=self.tokenizer.eos_token_id,
         )
 
-        return pipeline(prompt)
+        if schema is not None:
+            # Create parser required for JSON confinement using lmformatenforcer
+            parser = JsonSchemaParser(schema.model_json_schema())
+            prefix_function = build_transformers_prefix_allowed_tokens_fn(
+                pipeline.tokenizer, parser
+            )
+            # Output and load valid JSON
+            output_dict = pipeline(chat_template, prefix_allowed_tokens_fn=prefix_function)
+            output = output_dict[0]["generated_text"][len(chat_template):]
+            json_result = json.loads(output)
+            # Return valid JSON object according to the schema DeepEval supplied
+            return schema(**json_result)
 
-    async def a_generate(self, prompt: str) -> str:
-        return self.generate(prompt)
+        # Generate response using the chat template
+        response = pipeline(chat_template)[0]["generated_text"]
+
+        # Extract the assistant's response from the generated text
+        # assistant_response = response[len(chat_template):].strip()
+
+        return response
+
+    async def a_generate(self, prompt: str, schema: BaseModel = None) -> BaseModel | str:
+        return self.generate(prompt, schema)
 
     def get_model_name(self):
-        return "Llama-3 8B"
+        return "Atla Selene Mini"
 ```
 
 There are **SIX** rules to follow when creating a custom LLM evaluation model:
@@ -81,20 +126,16 @@ There are **SIX** rules to follow when creating a custom LLM evaluation model:
 1. Inherit `DeepEvalBaseLLM`.
 2. Implement the `get_model_name()` method, which simply returns a string representing your custom model name.
 3. Implement the `load_model()` method, which will be responsible for returning a model object.
-4. Implement the `generate()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
-5. The `generate()` method should return the generated string output from your custom LLM. Note that we called `pipeline(prompt)` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
+4. Implement the `generate()` method with 1) a parameter of type string that acts as the prompt to your custom LLM and 2) a parameter of type `BaseModel` which is used to confine the LLM output to a valid JSON. See the **JSON Confinement for Custom LLMs** section below for implementation details.
+5. The `generate()` method should return a `BaseModel` object containing the generated output from your custom LLM. Note that we called `pipeline(prompt)` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
 6. Implement the `a_generate()` method, with the same function signature as `generate()`. **Note that this is an async method**. In this example, we called `self.generate(prompt)`, which simply reuses the synchronous `generate()` method. However, although optional, you should implement an asynchronous version (if possible) to speed up evaluation.
 
-:::caution
-In later sections, you'll find an exception to rules 4. and 5., as the `generate()` and `a_generate()` method can actually be rewritten to optimize custom LLM outputs that are essential for evaluation.
-:::
-
-Then, instantiate the `CustomLlama3_8B` class and test the `generate()` (or `a_generate()`) method out:
+Then, instantiate the `CustomSeleneMini` class and test the `generate()` (or `a_generate()`) method out:
 
 ```python
 ...
 
-custom_llm = CustomLlama3_8B()
+custom_llm = CustomSeleneMini(model=selene_model, tokenizer=selene_tokenizer)
 print(custom_llm.generate("Write me a joke"))
 ```
 
@@ -113,16 +154,16 @@ metric.measure(...)
 ## JSON Confinement for Custom LLMs
 
 :::tip
-This section is also highly applicable if you're looking to [benchmark your own LLM](/docs/benchmarks-introduction), as open-source LLMs often require JSON and output confinement to output valid answers for public benchmarks supported by `deepeval`.
+When using open-source LLMs with `deepeval`, it's important to implement JSON output confinement to ensure they generate valid responses for supported public benchmarks. This allows you to properly [benchmark your own LLM](/docs/benchmarks-introduction) against other models.
 :::
 
-In the previous section, we learnt how to create a custom LLM, but if you've ever used custom LLMs for evaluation in `deepeval`, you may have encountered the following error:
+When creating the CustomModel() class, we need to ensure that the `generate()` method returns a valid JSON to avoid the below error:
 
 ```bash
 ValueError: Evaluation LLM outputted an invalid JSON. Please use a better evaluation model.
 ```
 
-This error arises when the custom LLM used for evaluation is unable to generate valid JSONs during metric calculation, which stops the evaluation process altogether. This happens because for smaller and less powerful LLMs, prompt engineering alone is not sufficient to enforce JSON outputs, which so happens to be the method used in `deepeval`'s metrics. As a result, it's vital to find a workaround for users not using OpenAI's GPT models for evaluation.
+This arises when the custom LLM used for evaluation is unable to generate valid JSONs during metric calculation, which stops the evaluation process altogether. This happens because for smaller and less powerful LLMs, prompt engineering alone is not sufficient to enforce JSON outputs, which so happens to be the method used in `deepeval`'s metrics.
 
 :::info
 All of `deepeval`'s metrics require the evaluation model to generate valid JSONs to extract properties such as: reasons, verdicts, statements, and other types of LLM-generated responses that are later used for calculating metric scores, and so when the generated JSONs required to extract these properties are invalid (eg. missing brackets, incomplete string quotations, extra trailing commas, or mismatched keys), `deepeval` won't be able to use the necessary information required for metric calculation. Here's an example of an invalid JSON an open-source model like `mistralai/Mistral-7B-Instruct-v0.3` might output:
@@ -135,9 +176,9 @@ All of `deepeval`'s metrics require the evaluation model to generate valid JSONs
 
 :::
 
-### Rewriting the `generate()` and `a_generate()` Method Signatures
+### `generate()` and `a_generate()` Method Signatures
 
-In the previous section, we saw how the `generate()` and `a_generate()` methods must accept _one_ argument of type `str` and return the corresponding LLM generated `str`. To enforce JSON outputs generated by your custom LLM, the first step is to rewrite the `generate()` and `a_generate()` method to **accept an additional argument of type `BaseModel`, and output a `BaseModel` instead of a `str`.**
+In order to enforce JSON outputs generated by your custom LLM, we write the `generate()` and `a_generate()` method to **accept an additional argument of type `BaseModel`, and output a `BaseModel` instead of a `str`.**
 
 :::note
 The `BaseModel` type is a type provided by the `pydantic` library, which is an extremely common typing library in Python.
@@ -148,102 +189,23 @@ from pydantic import BaseModel
 
 :::
 
-Continuing from the `CustomLlama3_8B` example, here is what the method signature for the new `generate()` and `a_generate()` methods should look like:
+You might be wondering, **how does this help with enforcing JSON outputs?**
 
-```python
-from pydantic import BaseModel
+It helps because in `deepeval`'s metrics, when there is a `schema: BaseModel` argument defined for the `generate()` and/or `a_generate()` method, `deepeval` will inject your generate methods with the Pydantic schemas which you can leverage to enforce JSON outputs. Let's see how we do that.
 
-class CustomLlama3_8B(DeepEvalBaseLLM):
-    ...
+### Generating valid JSONs
 
-    def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
-        pass
+With the method signatures, `deepeval` automatically injects your custom LLM with the required Pydantic schemas, which we can leverage to enforce JSON outputs for each LLM generation.
 
-    async def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
-        return self.generate(prompt, schema)
-```
-
-You might be wondering, **how does changing the method signature help with enforcing JSON outputs?**
-
-It helps because in `deepeval`'s metrics, when there is a `schema: BaseModel` argument defined for the `generate()` and/or `a_generate()` method, `deepeval` will inject your generate methods with the Pydantic schemas which you can leverage to enforce JSON outputs. Let's see how we can do that.
-
-### Reimplementing the `generate()` and `a_generate()` Methods
-
-With the new method signatures, `deepeval` will now automatically inject your custom LLM with the required Pydantic schemas, which you can leverage to enforce JSON outputs for each LLM generation.
-
-There are many ways to leverage Pydantic schemas to confine LLMs to generate valid JSONs, and continuing with our `CustomLlama3_8B` example we will be using the `lm-format-enforcer` library to confine JSON outputs using the provided Pydantic schema.
+There are many ways to leverage Pydantic schemas to confine LLMs to generate valid JSONs. In our `CustomSeleneMini` example, we used the `lm-format-enforcer` library to confine JSON outputs using the provided Pydantic schema.
 
 ```console
 pip install lm-format-enforcer
 ```
 
-```python
-import json
-import transformers
-from pydantic import BaseModel
-from lmformatenforcer import JsonSchemaParser
-from lmformatenforcer.integrations.transformers import (
-    build_transformers_prefix_allowed_tokens_fn,
-)
-
-from deepeval.models import DeepEvalBaseLLM
-
-
-class CustomLlama3_8B(DeepEvalBaseLLM):
-    ...
-
-    def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
-        # Same as the previous example above
-        model = self.load_model()
-        pipeline = transformers.pipeline(
-            "text-generation",
-            model=model,
-            tokenizer=self.tokenizer,
-            use_cache=True,
-            device_map="auto",
-            max_length=2500,
-            do_sample=True,
-            top_k=5,
-            num_return_sequences=1,
-            eos_token_id=self.tokenizer.eos_token_id,
-            pad_token_id=self.tokenizer.eos_token_id,
-        )
-
-        # Create parser required for JSON confinement using lmformatenforcer
-        parser = JsonSchemaParser(schema.schema())
-        prefix_function = build_transformers_prefix_allowed_tokens_fn(
-            pipeline.tokenizer, parser
-        )
-
-        # Output and load valid JSON
-        output_dict = pipeline(prompt, prefix_allowed_tokens_fn=prefix_function)
-        output = output_dict[0]["generated_text"][len(prompt) :]
-        json_result = json.loads(output)
-
-        # Return valid JSON object according to the schema DeepEval supplied
-        return schema(**json_result)
-
-    async def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
-        return self.generate(prompt, schema)
-
-```
-
 :::tip
-We're calling `self.generate(prompt, schema)` in the `a_generate()` method to keep things simple, but you should aim to implement an asynchronous version of your custom LLM implementation and enforce JSON outputs the same way you would in the `generate()` method to keep evaluations fast.
+We called `self.generate(prompt, schema)` in the `a_generate()` method to keep things simple, but you should aim to implement an asynchronous version of your custom LLM implementation and enforce JSON outputs the same way you would in the `generate()` method to keep evaluations fast.
 :::
-
-Now, try running metrics with the new `generate()` and `a_generate()` methods:
-
-```python
-from deepeval.metrics import AnswerRelevancyMetric
-...
-
-custom_llm = CustomLlama3_8B()
-metric = AnswerRelevancyMetric(model=custom_llm)
-metric.measure(...)
-```
-
-**Congratulations 🎉!** You can now evaluate using any custom LLM of your choice on all LLM evaluation metrics offered by `deepeval`, without JSON errors (hopefully).
 
 In the next section, we'll go through two JSON confinement libraries that covers a wide range of LLM interfaces.
 
@@ -328,7 +290,7 @@ class CustomMistral7B(DeepEvalBaseLLM):
         )
 
         # Create parser required for JSON confinement using lmformatenforcer
-        parser = JsonSchemaParser(schema.schema())
+        parser = JsonSchemaParser(schema.model_json_schema())
         prefix_function = build_transformers_prefix_allowed_tokens_fn(
             pipeline.tokenizer, parser
         )
@@ -338,7 +300,7 @@ class CustomMistral7B(DeepEvalBaseLLM):
         output = output_dict[0]["generated_text"][len(prompt) :]
         json_result = json.loads(output)
 
-        # Return valid JSON object according to the schema DeepEval supplied
+        # Return valid JSON object according to the schema supplied
         return schema(**json_result)
 
     async def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
@@ -349,7 +311,7 @@ class CustomMistral7B(DeepEvalBaseLLM):
 ```
 
 :::note
-Similar to the `CustomLlama3_8B` example, you can similarly:
+Similar to the `CustomSeleneMini` example, you can similarly:
 
 - pass in a `quantization_config` parameter if your compute resources are limited
 - use the `lm-format-enforcer` library for JSON confinement
