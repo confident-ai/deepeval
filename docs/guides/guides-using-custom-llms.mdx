@@ -23,7 +23,7 @@ Here's a quick example on a custom Selene Mini (8B) model being used for evaluat
 ```
 
 **Load the model and tokenizer**
-```Python
+```python
 import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import torch
@@ -105,14 +105,7 @@ class CustomSeleneMini(DeepEvalBaseLLM):
             json_result = json.loads(output)
             # Return valid JSON object according to the schema DeepEval supplied
             return schema(**json_result)
-
-        # Generate response using the chat template
-        response = pipeline(chat_template)[0]["generated_text"]
-
-        # Extract the assistant's response from the generated text
-        # assistant_response = response[len(chat_template):].strip()
-
-        return response
+        return pipeline(prompt)
 
     async def a_generate(self, prompt: str, schema: BaseModel = None) -> BaseModel | str:
         return self.generate(prompt, schema)
