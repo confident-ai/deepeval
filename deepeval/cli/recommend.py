@@ -82,8 +82,10 @@ def metrics():
                     print(
                         "\n[bold rgb(5,245,141)]:rocket: Generating your recommended metrics...[/bold rgb(5,245,141)]\n"
                     )
-                    response: RecommendMetricsResponseData = get_recommended_metrics(
-                        question_index + 1, user_answers
+                    response: RecommendMetricsResponseData = (
+                        get_recommended_metrics(
+                            question_index + 1, user_answers
+                        )
                     )
 
                     print("[bold cyan]Recommended Metrics:[/bold cyan]")

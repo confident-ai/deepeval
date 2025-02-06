@@ -26,10 +26,12 @@ def generate_pairing_code():
     """Generate a random pairing code."""
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
+
 def find_available_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("localhost", 0))  # Bind to port 0 to get an available port
-        return s.getsockname()[1] 
+        return s.getsockname()[1]
+
 
 @app.command()
 def login(
@@ -70,7 +72,9 @@ def login(
                 port = find_available_port()
                 pairing_code = generate_pairing_code()
                 pairing_thread = threading.Thread(
-                    target=start_server, args=(pairing_code, port, PROD), daemon=True
+                    target=start_server,
+                    args=(pairing_code, port, PROD),
+                    daemon=True,
                 )
                 pairing_thread.start()
 
@@ -81,7 +85,6 @@ def login(
                 )
                 webbrowser.open(login_url)
 
-            
                 if api_key == "":
                     while True:
                         api_key = input("Paste your API Key: ").strip()
@@ -93,11 +96,8 @@ def login(
                             )
 
             KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
-            logged_in_with = get_logged_in_with()
-            if logged_in_with:
-                print("Logged in with: ", logged_in_with)
             span.set_attribute("completed", False)
-            
+
             print(
                 "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
             )
@@ -105,9 +105,6 @@ def login(
                 "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. Follow our quickstart tutorial here: [bold][link=https://docs.confident-ai.com/confident-ai/confident-ai-introduction]https://docs.confident-ai.com/confident-ai/confident-ai-introduction[/link][/bold]"
             )
         except:
-            logged_in_with = get_logged_in_with()
-            if logged_in_with:
-                print("\nLogged in with: ", logged_in_with)
             span.set_attribute("completed", False)
 
 

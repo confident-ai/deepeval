@@ -39,7 +39,7 @@ def start_server(pairing_code: str, port: str, prod_url: str) -> str:
                     self.end_headers()
                     threading.Thread(target=httpd.shutdown, daemon=True).start()
                     return
-                    
+
                 self.send_response(400)
                 self.send_header("Access-Control-Allow-Origin", prod_url)
                 self.end_headers()

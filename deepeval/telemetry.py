@@ -144,6 +144,7 @@ def capture_evaluation_run(type: str):
     else:
         yield
 
+
 @contextmanager
 def capture_recommend_metrics():
     if not telemetry_opt_out():
@@ -158,6 +159,7 @@ def capture_recommend_metrics():
     else:
         yield
 
+
 @contextmanager
 def capture_metric_type(metric_name: str, _track: bool = True):
     if not telemetry_opt_out() and _track:
@@ -171,6 +173,7 @@ def capture_metric_type(metric_name: str, _track: bool = True):
             yield span
     else:
         yield
+
 
 @contextmanager
 def capture_synthesizer_run(
