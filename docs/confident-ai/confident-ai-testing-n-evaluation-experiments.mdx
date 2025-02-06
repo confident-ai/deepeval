@@ -20,10 +20,36 @@ You can then edit the metric configurations (such as threshold), add additional 
 
 ![ok](https://confident-bucket.s3.amazonaws.com/confident-edit-experiment.svg)
 
-## Running Your First Evaluation On Confident AI
+## Running Your First Experiment
 
 :::danger
 We **DON'T** recommend doing this until you're 100% happy with the evaluations you run locally as explain in the previous section. Running evaluations on Confident AI brings no additional benefits apart from the fact that you can trigger it on the platform without going through code. This benefits non-technical team members that need no-code workflows, but also means you lose the capability to fully customize your metrics.
 :::
+
+### Triggered from `deepeval`
+
+The first way to run an experiment is to send over a list of `LLMTestCase`s/`ConversationalTestCase`s. This means you'll have to generate `actual_output`s in code, or for some users mean retrieving historical response logs for model generations such that they can be sent to Confident AI for evaluation.
+
+```python
+from deepeval import confident_evaluate
+from deepeval.test_case import LLMTestCase
+
+test_cases = []
+# Replace as you see fit
+for data in historical_data:
+    test_case = LLMTestCase(
+        input=data["input"],
+        actual_output=data["actual_output"],
+        expected_output=data["expected_output"]
+    )
+    test_cases.append(test_case)
+
+confident_evaluate(
+    experiment_name="Your Experiment Name",
+    test_cases=[test_cases]
+)
+```
+
+### From Confident AI
 
 Once you've created an experiment, all you need to do is [setup an LLM connection endpoint.](/confident-ai/advanced-llm-connection) Once this is done, simply press the **Evaluate** button on the **Evaluations** page, select your experiment, and press evaluate!

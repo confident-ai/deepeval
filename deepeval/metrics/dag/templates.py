@@ -19,6 +19,14 @@ class BinaryJudgementTemplate:
 
 {text}
 
+**
+IMPORTANT: Please make sure to only return a json with two keys: `verdict` (True or False), and
+{{
+    "verdict": True,
+    "reason": "..."
+}}
+**
+
 Output:
 """
 

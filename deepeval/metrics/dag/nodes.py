@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pydantic import create_model
 import asyncio
 
-from deepeval.metrics.dag.types import (
+from deepeval.metrics.dag.schema import (
     BinaryJudgementVerdict,
     NonBinaryJudgementVerdict,
 )
@@ -13,7 +13,7 @@ from deepeval.metrics.dag.templates import (
     NonBinaryJudgementTemplate,
 )
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.metrics.g_eval.g_eval import G_EVAL_PARAMS
+from deepeval.metrics.g_eval.g_eval import G_EVAL_PARAMS, GEval
 from deepeval.metrics.utils import trimAndLoadJson
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
 
@@ -58,26 +58,21 @@ def decrement_indegree(node: BaseNode):
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
     score: Optional[int] = None
-    child: Optional[BaseNode] = None
+    g_eval: Optional[GEval] = None
     _parent: Optional[BaseNode] = None
 
     def __hash__(self):
         return id(self)
 
     def __post_init__(self):
-        # Ensure either `score` or `child` is set, but not both
-        if self.score is not None and self.child is not None:
+        # Ensure either `score` or `g_eval` is set, but not both
+        if self.score is not None and self.g_eval is not None:
             raise ValueError(
-                "A VerdictNode can have either a 'score' or a 'child', but not both."
+                "A VerdictNode can have either a 'score' or a 'g_eval', but not both."
             )
-        if self.score is None and self.child is None:
+        if self.score is None and self.g_eval is None:
             raise ValueError(
-                "A VerdictNode must have either a 'score' or a 'child'."
-            )
-
-        if isinstance(self.child, VerdictNode):
-            raise ValueError(
-                "A VerdictNode must not have another VerdictNode as a 'child'."
+                "A VerdictNode must have either a 'score' or a 'g_eval'."
             )
 
         if self.score is not None:
@@ -85,10 +80,6 @@ class VerdictNode(BaseNode):
                 raise ValueError(
                     "The score must be between 0 and 10, inclusive."
                 )
-
-        if self.child is not None:
-            self.child.set_parent(self)
-            increment_indegree(self.child)
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
         decrement_indegree(self)
@@ -101,12 +92,25 @@ class VerdictNode(BaseNode):
             if self._parent._verdict.verdict != self.verdict:
                 return
 
-        if self.child is not None:
-            self.child._execute(metric=metric, test_case=test_case)
+        if self.g_eval is not None:
+            g_eval_args = {
+                "name": self.g_eval.name,
+                "evaluation_params": self.g_eval.evaluation_params,
+                "model": metric.model,
+                "verbose_mode": metric.verbose_mode,
+            }
+            if self.g_eval.criteria:
+                g_eval_args["criteria"] = self.g_eval.criteria
+            else:
+                g_eval_args["evaluation_steps"] = self.g_eval.evaluation_steps
+            copied_g_eval = GEval(**g_eval_args)
+
+            copied_g_eval.measure(test_case=test_case, _show_indicator=False)
+            metric.score = copied_g_eval.score
+            metric.reason = copied_g_eval.reason
         else:
             metric.score = self.score
             metric.reason = "Reason unsupported yet."
-            return
 
     async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
         decrement_indegree(self)
@@ -119,12 +123,27 @@ class VerdictNode(BaseNode):
             if self._parent._verdict.verdict != self.verdict:
                 return
 
-        if self.child is not None:
-            await self.child._a_execute(metric=metric, test_case=test_case)
+        if self.g_eval is not None:
+            g_eval_args = {
+                "name": self.g_eval.name,
+                "evaluation_params": self.g_eval.evaluation_params,
+                "model": metric.model,
+                "verbose_mode": metric.verbose_mode,
+            }
+            if self.g_eval.criteria:
+                g_eval_args["criteria"] = self.g_eval.criteria
+            else:
+                g_eval_args["evaluation_steps"] = self.g_eval.evaluation_steps
+            copied_g_eval = GEval(**g_eval_args)
+
+            await copied_g_eval.a_measure(
+                test_case=test_case, _show_indicator=False
+            )
+            metric.score = copied_g_eval.score
+            metric.reason = copied_g_eval.reason
         else:
             metric.score = self.score
             metric.reason = "Reason unsupported yet."
-            return
 
 
 @dataclass
@@ -133,8 +152,8 @@ class TaskNode(BaseNode):
     output_label: str
     children: List[BaseNode]
     evaluation_params: List[LLMTestCaseParams] = None
-    _output: Optional[str] = None
     _verbose_logs: Optional[str] = None
+    _output: Optional[str] = None
     _parents: Optional[List[BaseNode]] = None
 
     def __hash__(self):
@@ -157,9 +176,10 @@ class TaskNode(BaseNode):
             return
 
         text = """"""
-        for child in self.children:
-            if isinstance(child, TaskNode):
-                text += f"{child.output_label}:\n{child._output}\n\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
@@ -189,9 +209,10 @@ class TaskNode(BaseNode):
             return
 
         text = """"""
-        for child in self.children:
-            if isinstance(child, TaskNode):
-                text += f"{child.output_label}:\n{child.output}\n\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         for param in self.evaluation_params:
             value = getattr(test_case, param.value)
@@ -226,8 +247,8 @@ class BinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
-    _verdict: Optional[BinaryJudgementVerdict] = None
     _verbose_logs: Optional[str] = None
+    _verdict: Optional[BinaryJudgementVerdict] = None
     _parents: Optional[List[BaseNode]] = None
 
     def __hash__(self):
@@ -242,9 +263,7 @@ class BinaryJudgementNode(BaseNode):
         # Check if all children are ClassificationResultNode and their classifications are boolean
         for child in self.children:
             if not isinstance(child, VerdictNode):
-                raise TypeError(
-                    "All children must be of type BinaryJudgementNode."
-                )
+                raise TypeError("All children must be of type VerdictNode.")
             if not isinstance(child.verdict, bool):
                 raise ValueError(
                     "All children BinaryJudgementNode must have a boolean vedict."
@@ -254,7 +273,7 @@ class BinaryJudgementNode(BaseNode):
         verdicts = [child.verdict for child in self.children]
         if verdicts.count(True) != 1 or verdicts.count(False) != 1:
             raise ValueError(
-                "BinaryJudgementNode must have one True and one False child."
+                "BinaryJudgementNode must have one True and one False VerdictNode child."
             )
 
         for child in self.children:
@@ -355,8 +374,8 @@ class NonBinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
-    _verdict: Optional[NonBinaryJudgementVerdict] = None
     _verbose_logs: Optional[str] = None
+    _verdict: Optional[NonBinaryJudgementVerdict] = None
     _parents: Optional[List[BaseNode]] = None
 
     def __hash__(self):

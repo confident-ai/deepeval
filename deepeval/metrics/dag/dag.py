@@ -13,7 +13,11 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
 from deepeval.metrics.dag.graph import DeepAcyclicGraph
-from deepeval.metrics.dag.utils import is_valid_dag, extract_required_params
+from deepeval.metrics.dag.utils import copy_graph
+from deepeval.metrics.dag.utils import (
+    is_valid_dag_from_roots,
+    extract_required_params,
+)
 
 
 class DAGMetric(BaseMetric):
@@ -28,10 +32,11 @@ class DAGMetric(BaseMetric):
         verbose_mode: bool = False,
         _include_dag_suffix: bool = True,
     ):
-        if is_valid_dag(dag.root_node) == False:
+        if is_valid_dag_from_roots(dag.root_nodes) == False:
             raise ValueError("Cycle detected in DAG graph.")
 
-        self.dag = dag
+        self.dag = copy_graph(dag)
+        print("asd")
         self.name = name
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -47,7 +52,7 @@ class DAGMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         check_llm_test_case_params(
-            test_case, extract_required_params(self.dag.root_node), self
+            test_case, extract_required_params(self.dag.root_nodes), self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -76,7 +81,7 @@ class DAGMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         check_llm_test_case_params(
-            test_case, extract_required_params(self.dag.root_node), self
+            test_case, extract_required_params(self.dag.root_nodes), self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -100,7 +105,7 @@ class DAGMetric(BaseMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
+                self.success = self.score >= self.threshold
             except:
                 self.success = False
         return self.success
