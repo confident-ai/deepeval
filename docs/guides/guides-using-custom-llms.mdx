@@ -103,7 +103,7 @@ class CustomSeleneMini(DeepEvalBaseLLM):
             output_dict = pipeline(chat_template, prefix_allowed_tokens_fn=prefix_function)
             output = output_dict[0]["generated_text"][len(chat_template):]
             json_result = json.loads(output)
-            # Return valid JSON object according to the schema DeepEval supplied
+            # Return valid JSON object according to the schema supplied
             return schema(**json_result)
         return pipeline(prompt)
 
