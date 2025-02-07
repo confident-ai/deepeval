@@ -288,10 +288,15 @@ class VerdictNode(BaseNode):
     score: int
 ```
 
-There are two mandatory parameters when creating a `VerdictNode`:
+There are one mandatory two optional parameters when creating a `VerdictNode`:
 
 - `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is a `NonBinaryJudgementNode`, else boolean if the parent is a `BinaryJudgementNode`.
-- `score`: a integar between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value.
+- [Optional] `score`: a integar between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value. You must provide a score if `g_eval` is `None`.
+- [Optional] `g_eval`: a [`GEval`](/docs/metrics-llm-evals) metric instance. If the `score` is not provided, the `DAGMetric` will use this provided `g_eval` metric instance to calculate a score instead.
+
+:::caution
+You must provide `score` or `g_eval`, but not both.
+:::
 
 ## How Is It Calculated?
 

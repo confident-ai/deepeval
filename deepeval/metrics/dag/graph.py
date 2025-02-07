@@ -15,7 +15,6 @@ class DeepAcyclicGraph:
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase) -> None:
         for root_node in self.root_nodes:
-            print("excuting dag!")
             root_node._execute(metric=metric, test_case=test_case, depth=0)
 
     async def _a_execute(
