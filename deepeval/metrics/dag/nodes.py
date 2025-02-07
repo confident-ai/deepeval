@@ -18,6 +18,7 @@ from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.g_eval.g_eval import G_EVAL_PARAMS, GEval
 from deepeval.metrics.utils import trimAndLoadJson
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
+from deepeval.utils import prettify_list
 
 
 class BaseNode:
@@ -96,7 +97,6 @@ class VerdictNode(BaseNode):
             if self._parent._verdict.verdict != self.verdict:
                 return
 
-        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         if self.g_eval is not None:
             g_eval_args = {
                 "name": self.g_eval.name,
@@ -111,10 +111,16 @@ class VerdictNode(BaseNode):
             copied_g_eval = GEval(**g_eval_args)
 
             copied_g_eval.measure(test_case=test_case, _show_indicator=False)
+            metric._verbose_steps.append(
+                construct_node_verbose_log(self, depth, copied_g_eval)
+            )
             metric.score = copied_g_eval.score
             if metric.include_reason:
                 metric.reason = copied_g_eval.reason
         else:
+            metric._verbose_steps.append(
+                construct_node_verbose_log(self, depth)
+            )
             metric.score = self.score / 10
             if metric.include_reason:
                 metric.reason = self._generate_reason(metric=metric)
@@ -132,7 +138,6 @@ class VerdictNode(BaseNode):
             if self._parent._verdict.verdict != self.verdict:
                 return
 
-        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         if self.g_eval is not None:
             g_eval_args = {
                 "name": self.g_eval.name,
@@ -149,10 +154,16 @@ class VerdictNode(BaseNode):
             await copied_g_eval.a_measure(
                 test_case=test_case, _show_indicator=False
             )
+            metric._verbose_steps.append(
+                construct_node_verbose_log(self, depth, copied_g_eval)
+            )
             metric.score = copied_g_eval.score
             if metric.include_reason:
                 metric.reason = copied_g_eval.reason
         else:
+            metric._verbose_steps.append(
+                construct_node_verbose_log(self, depth)
+            )
             metric.score = self.score / 10
             if metric.include_reason:
                 metric.reason = await self._a_generate_reason(metric=metric)
@@ -576,7 +587,9 @@ class NonBinaryJudgementNode(BaseNode):
         )
 
 
-def construct_node_verbose_log(node: BaseNode, depth: int) -> str:
+def construct_node_verbose_log(
+    node: BaseNode, depth: int, g_eval: Optional[GEval] = None
+) -> str:
     if isinstance(node, BinaryJudgementNode) or isinstance(
         node, NonBinaryJudgementNode
     ):
@@ -609,10 +622,17 @@ def construct_node_verbose_log(node: BaseNode, depth: int) -> str:
     elif isinstance(node, VerdictNode):
         is_g_eval = node.g_eval is not None
         type = "GEval" if is_g_eval else "Deterministic"
-        return (
+        verbose_log = (
             "________________________\n"
             f"| VerdictNode | Level == {depth} |\n"
             "**********************************\n"
             f"Verdict: {node.verdict}\n"
             f"Type: {type}"
         )
+        if is_g_eval:
+            verbose_log += f"\n\nCriteria:\n{g_eval.criteria}\n"
+            verbose_log += (
+                f"Evaluation Steps:\n{prettify_list(g_eval.evaluation_steps)}"
+            )
+
+        return verbose_log

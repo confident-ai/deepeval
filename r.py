@@ -36,7 +36,7 @@ task_node = TaskNode(
 )
 
 
-dag_metric = DAGMetric(name="dag", root_node=task_node, async_mode=False)
+dag_metric = DAGMetric(name="dag", root_node=[task_node], async_mode=False)
 
 # dag_metric.measure(
 #     test_case=LLMTestCase(input="..", actual_output="Les miserable")

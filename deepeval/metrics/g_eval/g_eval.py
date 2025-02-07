@@ -170,7 +170,6 @@ class GEval(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:

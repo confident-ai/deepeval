@@ -149,7 +149,7 @@ extract_headings_node = TaskNode(
 )
 
 # create the DAG
-dag = DAG(root_node=extract_headings_node)
+dag = DAG(root_nodes=[extract_headings_node])
 ```
 
 When creating your DAG, there are three important points to remember:
@@ -195,10 +195,10 @@ There are four node types that make up your deep acyclic graph. You'll be using 
 ```python
 from deepeval.metrics.dag import DeepAcyclicGraph
 
-dag = DeepAcyclicGraph(root_node=...)
+dag = DeepAcyclicGraph(root_nodes=...)
 ```
 
-Here, `root_node` is of type `TaskNode`, `BinaryJudgementNode`, or `NonBinaryJudgementNode`. Let's go through all of them in more detail.
+Here, `root_nodes` is a list of type `TaskNode`, `BinaryJudgementNode`, or `NonBinaryJudgementNode`. Let's go through all of them in more detail.
 
 ### `TaskNode`
 
