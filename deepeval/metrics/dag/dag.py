@@ -21,12 +21,14 @@ from deepeval.metrics.dag.utils import (
 
 
 class DAGMetric(BaseMetric):
+
     def __init__(
         self,
         name: str,
         dag: DeepAcyclicGraph,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
+        include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
@@ -35,12 +37,13 @@ class DAGMetric(BaseMetric):
         if is_valid_dag_from_roots(dag.root_nodes) == False:
             raise ValueError("Cycle detected in DAG graph.")
 
+        self._verbose_steps: List[str] = []
         self.dag = copy_graph(dag)
-        print("asd")
         self.name = name
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
+        self.include_reason = include_reason
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
@@ -68,8 +71,7 @@ class DAGMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        # f"Statements:\n{prettify_list(self.statements)}",
-                        # f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        *self._verbose_steps,
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
@@ -93,8 +95,7 @@ class DAGMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    # f"Statements:\n{prettify_list(self.statements)}",
-                    # f"Verdicts:\n{prettify_list(self.verdicts)}",
+                    *self._verbose_steps,
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
