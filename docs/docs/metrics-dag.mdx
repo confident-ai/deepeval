@@ -1,7 +1,7 @@
 ---
 id: metrics-dag
 title: Deep Acyclic Graph
-sidebar_label: DAG
+sidebar_label: Deep Acyclic Graph
 ---
 
 import Equation from "@site/src/components/equation";
@@ -58,7 +58,7 @@ The team aligned on next steps: engineering finalizing fixes, marketing preparin
 
 ```
 
-### Starting With G-Eval
+### Why Not G-Eval?
 
 :::note
 Feel free to skip this section if you've already decided that `GEval` is not for you.
@@ -87,7 +87,11 @@ metric = GEval(
 )
 ```
 
-However, this might not **always** give you the perfect score according to your criteria, and is **not** as deterministic as you think. Instead, you can build a `DAGMetric` instead that gives deterministic scores based on the logic you've decided for your evaluation criteria.
+However, this will **NOT** give you the exact score according to your criteria, and is **NOT** as deterministic as you think. Instead, you can build a `DAGMetric` instead that gives deterministic scores based on the logic you've decided for your evaluation criteria.
+
+:::tip DID YOU KNOW?
+You can still use `GEval` in the `DAGMetric`, but the `DAGMetric` will give you much greater control.
+:::
 
 ### Building Your Decision Tree
 

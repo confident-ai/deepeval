@@ -29,6 +29,7 @@ module.exports = {
           items: [
             "metrics-introduction",
             "metrics-llm-evals",
+            "metrics-dag",
             "metrics-answer-relevancy",
             "metrics-faithfulness",
             "metrics-contextual-precision",
@@ -36,7 +37,6 @@ module.exports = {
             "metrics-contextual-relevancy",
             "metrics-task-completion",
             "metrics-tool-correctness",
-            "metrics-dag",
             "metrics-bias",
             "metrics-toxicity",
             "metrics-summarization",

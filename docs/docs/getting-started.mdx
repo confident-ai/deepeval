@@ -253,51 +253,56 @@ print(correctness_metric.score, correctness_metric.reason)
 Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjuction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](/docs/metrics-llm-evals)
 
 :::tip
-If you wish to customize your metrics a bit more, you can choose to implement your own metric. You can find [a comprehensive step-by-step guide here](/guides/guides-building-custom-metrics), but here's a quick example of how you can create a metric that is **NOT** evaluated using LLMs:
+
+Although `GEval` is great it many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric` (deep acyclic graph)](/docs/metrics-dag) instead, which is **a metric that is deterministic, LLM-powered, and based on a decision tree you define.**
+
+Take this decision tree for example, which evaluates a Summarization use case based on the `actual_output` of your `LLMTestCase`. Here, we want to check whether the `actual_output` contains the correct "summary headings", and whether they are in the correct order.
+
+<details><summary>Click to see code associated with diagram below</summary>
 
 ```python
-from deepeval.scorer import Scorer
-from deepeval.metrics import BaseMetric
+from deepeval.metrics.dag import (
+    DAG,
+    TaskNode,
+    BinaryJudgementNode,
+    NonBinaryJudgementNode,
+    VerdictNode,
+)
+from deepeval.metrics import DAGMetric
 
-class RougeMetric(BaseMetric):
-    def __init__(self, threshold: float = 0.5):
-        self.threshold = threshold
-        self.scorer = Scorer()
+correct_order_node = NonBinaryJudgementNode(
+    criteria="Are the summary headings in the correct order: 'intro' => 'body' => 'conclusion'?",
+    children=[
+        VerdictNode(verdict="Yes", score=10),
+        VerdictNode(verdict="Two are out of order", score=4),
+        VerdictNode(verdict="All out of order", score=2),
+    ],
+)
 
-    def measure(self, test_case: LLMTestCase):
-        self.score = self.scorer.rouge_score(
-            prediction=test_case.actual_output,
-            target=test_case.expected_output,
-            score_type="rouge1"
-        )
-        self.success = self.score >= self.threshold
-        return self.score
+correct_headings_node = BinaryJudgementNode(
+    criteria="Does the summary headings contain all three: 'intro', 'body', and 'conclusion'?",
+    children=[VerdictNode(verdict=False, score=0), correct_order_node],
+)
 
-    # Async implementation of measure(). If async version for
-    # scoring method does not exist, just reuse the measure method.
-    async def a_measure(self, test_case: LLMTestCase):
-        return self.measure(test_case)
+extract_headings_node = TaskNode(
+    instructions="Extract all headings in `actual_output`",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    output_label="Summary headings",
+    children=[correct_headings_node, correct_order_node],
+)
 
-    def is_successful(self):
-        return self.success
+# Initialize the DAG
+dag = DAG(root_nodes=[extract_headings_node])
 
-    @property
-    def __name__(self):
-        return "Rouge Metric"
-
-#####################
-### Example Usage ###
-#####################
-test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
-metric = RougeMetric()
-
-metric.measure(test_case)
-print(metric.is_successful())
+# Create metric!
+metric = DAGMetric(name="Summarization", dag=dag)
 ```
 
-You'll notice that although not documented, `deepeval` additionally offers a `scorer` module for more traditional NLP scoring method and can be found [here.](https://github.com/confident-ai/deepeval/blob/main/deepeval/scorer/scorer.py)
+</details>
 
-You can also create a custom metric to combine several different metrics into one. For example. combining the `AnswerRelevancyMetric` and `FaithfulnessMetric` to test whether an LLM output is both relevant and faithful (ie. not hallucinating).
+![ok](https://confident-docs.s3.amazonaws.com/dag-formatting-metric.svg)
+
+For more information, visit the [`DAGMetric` documentation.](/docs/metrics-dag)
 
 :::
 
