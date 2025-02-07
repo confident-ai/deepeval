@@ -15,7 +15,7 @@ class DeepAcyclicGraph:
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase) -> None:
         for root_node in self.root_nodes:
-            root_node._execute(metric=metric, test_case=test_case)
+            root_node._execute(metric=metric, test_case=test_case, depth=0)
 
     async def _a_execute(
         self,
@@ -24,7 +24,9 @@ class DeepAcyclicGraph:
     ) -> None:
         await asyncio.gather(
             *(
-                root_node._a_execute(metric=metric, test_case=test_case)
+                root_node._a_execute(
+                    metric=metric, test_case=test_case, depth=0
+                )
                 for root_node in self.root_nodes
             )
         )

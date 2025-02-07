@@ -4,10 +4,12 @@ from pydantic import create_model
 import asyncio
 
 from deepeval.metrics.dag.schema import (
+    Reason,
     BinaryJudgementVerdict,
     NonBinaryJudgementVerdict,
 )
 from deepeval.metrics.dag.templates import (
+    VerdictNodeTemplate,
     TaskNodeTemplate,
     BinaryJudgementTemplate,
     NonBinaryJudgementTemplate,
@@ -29,12 +31,14 @@ class BaseNode:
                 self._parents = []
             self._parents.append(parent)
 
-    def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
         raise NotImplementedError(
             "This node type must implement the _execute method."
         )
 
-    async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    async def _a_execute(
+        self, metric: BaseMetric, test_case: LLMTestCase, depth: int
+    ):
         raise NotImplementedError(
             "This node type must implement the _a_execute method."
         )
@@ -81,7 +85,7 @@ class VerdictNode(BaseNode):
                     "The score must be between 0 and 10, inclusive."
                 )
 
-    def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
         decrement_indegree(self)
         if self._indegree != 0:
             return
@@ -92,6 +96,7 @@ class VerdictNode(BaseNode):
             if self._parent._verdict.verdict != self.verdict:
                 return
 
+        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         if self.g_eval is not None:
             g_eval_args = {
                 "name": self.g_eval.name,
@@ -107,12 +112,16 @@ class VerdictNode(BaseNode):
 
             copied_g_eval.measure(test_case=test_case, _show_indicator=False)
             metric.score = copied_g_eval.score
-            metric.reason = copied_g_eval.reason
+            if metric.include_reason:
+                metric.reason = copied_g_eval.reason
         else:
-            metric.score = self.score
-            metric.reason = "Reason unsupported yet."
+            metric.score = self.score / 10
+            if metric.include_reason:
+                metric.reason = self._generate_reason(metric=metric)
 
-    async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    async def _a_execute(
+        self, metric: BaseMetric, test_case: LLMTestCase, depth: int
+    ):
         decrement_indegree(self)
         if self._indegree != 0:
             return
@@ -123,6 +132,7 @@ class VerdictNode(BaseNode):
             if self._parent._verdict.verdict != self.verdict:
                 return
 
+        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         if self.g_eval is not None:
             g_eval_args = {
                 "name": self.g_eval.name,
@@ -140,10 +150,52 @@ class VerdictNode(BaseNode):
                 test_case=test_case, _show_indicator=False
             )
             metric.score = copied_g_eval.score
-            metric.reason = copied_g_eval.reason
+            if metric.include_reason:
+                metric.reason = copied_g_eval.reason
         else:
-            metric.score = self.score
-            metric.reason = "Reason unsupported yet."
+            metric.score = self.score / 10
+            if metric.include_reason:
+                metric.reason = await self._a_generate_reason(metric=metric)
+
+    def _generate_reason(self, metric: BaseMetric):
+        prompt = VerdictNodeTemplate.generate_reason(
+            verbose_steps=metric._verbose_steps,
+            score=metric.score,
+            name=metric.__name__,
+        )
+        if metric.using_native_model:
+            res, cost = metric.model.generate(prompt, schema=Reason)
+            metric.evaluation_cost += cost
+        else:
+            try:
+                res: Reason = metric.model.generate(prompt, schema=Reason)
+            except TypeError:
+                res = metric.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                res = Reason(**data)
+
+        return res.reason
+
+    async def _a_generate_reason(self, metric: BaseMetric):
+        prompt = VerdictNodeTemplate.generate_reason(
+            verbose_steps=metric._verbose_steps,
+            score=metric.score,
+            name=metric.__name__,
+        )
+        if metric.using_native_model:
+            res, cost = await metric.model.a_generate(prompt, schema=Reason)
+            metric.evaluation_cost += cost
+        else:
+            try:
+                res: Reason = await metric.model.a_generate(
+                    prompt, schema=Reason
+                )
+            except TypeError:
+                res = await metric.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                res = Reason(**data)
+
+        return res.reason
 
 
 @dataclass
@@ -170,7 +222,7 @@ class TaskNode(BaseNode):
             child.set_parent(self)
             increment_indegree(child)
 
-    def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
         decrement_indegree(self)
         if self._indegree != 0:
             return
@@ -199,11 +251,15 @@ class TaskNode(BaseNode):
             res = metric.model.generate(prompt=prompt)
             self._output = res
 
-        self._verbose_logs = f"{prompt}{self._output}"
+        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         for children in self.children:
-            children._execute(metric=metric, test_case=test_case)
+            children._execute(
+                metric=metric, test_case=test_case, depth=depth + 1
+            )
 
-    async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    async def _a_execute(
+        self, metric: BaseMetric, test_case: LLMTestCase, depth: int
+    ):
         decrement_indegree(self)
         if self._indegree != 0:
             return
@@ -233,10 +289,12 @@ class TaskNode(BaseNode):
             res = await metric.model.a_generate(prompt=prompt)
             self._output = res
 
-        self._verbose_logs = f"{prompt}{self._output}"
+        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         await asyncio.gather(
             *(
-                child._a_execute(metric=metric, test_case=test_case)
+                child._a_execute(
+                    metric=metric, test_case=test_case, depth=depth + 1
+                )
                 for child in self.children
             )
         )
@@ -280,7 +338,7 @@ class BinaryJudgementNode(BaseNode):
             child.set_parent(self)
             increment_indegree(child)
 
-    def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
         decrement_indegree(self)
         if self._indegree != 0:
             return
@@ -318,11 +376,15 @@ class BinaryJudgementNode(BaseNode):
                 data = trimAndLoadJson(res, self)
                 self._verdict = BinaryJudgementVerdict(**data)
 
-        self._verbose_logs = f"{prompt}{self._verdict}"
+        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         for children in self.children:
-            children._execute(metric=metric, test_case=test_case)
+            children._execute(
+                metric=metric, test_case=test_case, depth=depth + 1
+            )
 
-    async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    async def _a_execute(
+        self, metric: BaseMetric, test_case: LLMTestCase, depth: int
+    ):
         decrement_indegree(self)
         if self._indegree != 0:
             return
@@ -360,10 +422,12 @@ class BinaryJudgementNode(BaseNode):
                 data = trimAndLoadJson(res, self)
                 self._verdict = BinaryJudgementVerdict(**data)
 
-        self._verbose_logs = f"{prompt}{self._verdict}"
+        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         await asyncio.gather(
             *(
-                child._a_execute(metric=metric, test_case=test_case)
+                child._a_execute(
+                    metric=metric, test_case=test_case, depth=depth + 1
+                )
                 for child in self.children
             )
         )
@@ -409,7 +473,7 @@ class NonBinaryJudgementNode(BaseNode):
         self._verdict_options = list(verdicts_set)
 
         # Dynamically create NonBinaryJudgementVerdict class
-        self._verdict_type = create_model(
+        self._verdict_schema = create_model(
             "NonBinaryJudgementVerdict",
             verdict=(Literal[tuple(self._verdict_options)], ...),
             reason=(str, ...),
@@ -419,7 +483,7 @@ class NonBinaryJudgementNode(BaseNode):
             child.set_parent(self)
             increment_indegree(child)
 
-    def _execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
         decrement_indegree(self)
         if self._indegree != 0:
             return
@@ -440,25 +504,31 @@ class NonBinaryJudgementNode(BaseNode):
             criteria=self.criteria, text=text, options=self._verdict_options
         )
         if metric.using_native_model:
-            res, cost = metric.model.generate(prompt, schema=self._verdict_type)
+            res, cost = metric.model.generate(
+                prompt, schema=self._verdict_schema
+            )
             metric.evaluation_cost += cost
             self._verdict = res
         else:
             try:
-                res: self._verdict_type = metric.model.generate(
-                    prompt, schema=self._verdict_type
+                res: self._verdict_schema = metric.model.generate(
+                    prompt, schema=self._verdict_schema
                 )
                 self._verdict = res
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self._verdict = self._verdict_type(**data)
+                self._verdict = self._verdict_schema(**data)
 
-        self._verbose_logs = f"{prompt}{self._verdict}"
+        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         for children in self.children:
-            children._execute(metric=metric, test_case=test_case)
+            children._execute(
+                metric=metric, test_case=test_case, depth=depth + 1
+            )
 
-    async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase):
+    async def _a_execute(
+        self, metric: BaseMetric, test_case: LLMTestCase, depth: int
+    ):
         decrement_indegree(self)
         if self._indegree != 0:
             return
@@ -480,25 +550,69 @@ class NonBinaryJudgementNode(BaseNode):
         )
         if metric.using_native_model:
             res, cost = await metric.model.a_generate(
-                prompt, schema=self._verdict_type
+                prompt, schema=self._verdict_schema
             )
             metric.evaluation_cost += cost
             self._verdict = res
         else:
             try:
-                res: self._verdict_type = await metric.model.a_generate(
-                    prompt, schema=self._verdict_type
+                res: self._verdict_schema = await metric.model.a_generate(
+                    prompt, schema=self._verdict_schema
                 )
                 self._verdict = res
             except TypeError:
                 res = await metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self._verdict = self._verdict_type(**data)
+                self._verdict = self._verdict_schema(**data)
 
-        self._verbose_logs = f"{prompt}{self._verdict}"
+        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
         await asyncio.gather(
             *(
-                child._a_execute(metric=metric, test_case=test_case)
+                child._a_execute(
+                    metric=metric, test_case=test_case, depth=depth + 1
+                )
                 for child in self.children
             )
+        )
+
+
+def construct_node_verbose_log(node: BaseNode, depth: int) -> str:
+    if isinstance(node, BinaryJudgementNode) or isinstance(
+        node, NonBinaryJudgementNode
+    ):
+        is_binary_node = isinstance(node, BinaryJudgementNode)
+        node_type = (
+            "BinaryJudgementNode"
+            if is_binary_node
+            else "NonBinaryJudgementNode"
+        )
+        underscore_multiple = 34 if is_binary_node else 37
+        star_multiple = 48 if is_binary_node else 56
+        return (
+            f"{'_' * underscore_multiple}\n"
+            f"| {node_type} | Level == {depth} |\n"
+            f"{'*' * star_multiple}\n"
+            "Criteria:\n"
+            f"{node.criteria}\n\n"
+            f"Verdict: {node._verdict.verdict}\n"
+            f"Reason: {node._verdict.reason}\n"
+        )
+    elif isinstance(node, TaskNode):
+        return (
+            "______________________\n"
+            f"| TaskNode | Level == {depth} |\n"
+            "*******************************\n"
+            "Instructions:\n"
+            f"{node.instructions}\n\n"
+            f"{node.output_label}:\n{node._output}\n"
+        )
+    elif isinstance(node, VerdictNode):
+        is_g_eval = node.g_eval is not None
+        type = "GEval" if is_g_eval else "Deterministic"
+        return (
+            "________________________\n"
+            f"| VerdictNode | Level == {depth} |\n"
+            "**********************************\n"
+            f"Verdict: {node.verdict}\n"
+            f"Type: {type}"
         )
