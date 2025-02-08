@@ -53,6 +53,7 @@ class MetricScores(BaseModel):
     scores: List[float]
     passes: int
     fails: int
+    errors: int
 
 
 class MetricsAverageDict:
@@ -204,22 +205,28 @@ class TestRun(BaseModel):
             name = metric_data.name
             score = metric_data.score
             success = metric_data.success
-            if score is None or success is None:
-                return
-            valid_scores += 1
-
             # Initialize dict entry if needed.
             if name not in metrics_dict:
-                metrics_dict[name] = {"scores": [], "passes": 0, "fails": 0}
+                metrics_dict[name] = {
+                    "scores": [],
+                    "passes": 0,
+                    "fails": 0,
+                    "errors": 0,
+                }
 
-            # Append the score.
-            metrics_dict[name]["scores"].append(score)
-
-            # Increment passes or fails based on the metric_data.success flag.
-            if success:
-                metrics_dict[name]["passes"] += 1
+            if score is None or success is None:
+                metrics_dict[name]["errors"] += 1
             else:
-                metrics_dict[name]["fails"] += 1
+                valid_scores += 1
+
+                # Append the score.
+                metrics_dict[name]["scores"].append(score)
+
+                # Increment passes or fails based on the metric_data.success flag.
+                if success:
+                    metrics_dict[name]["passes"] += 1
+                else:
+                    metrics_dict[name]["fails"] += 1
 
         # Process non-conversational test cases.
         for test_case in self.test_cases:
@@ -247,62 +254,11 @@ class TestRun(BaseModel):
                 scores=data["scores"],
                 passes=data["passes"],
                 fails=data["fails"],
+                errors=data["errors"],
             )
             for metric, data in metrics_dict.items()
         ]
         return valid_scores
-
-    # def construct_metrics_scores(self) -> int:
-    #     metrics_dict: Dict[str, List[float]] = {}
-    #     valid_scores = 0
-    #     for test_case in self.test_cases:
-    #         if test_case.metrics_data is None:
-    #             continue
-    #         for metric_data in test_case.metrics_data:
-    #             name = metric_data.name
-    #             score = metric_data.score
-    #             if score is None:
-    #                 continue
-    #             valid_scores += 1
-    #             if name in metrics_dict:
-    #                 metrics_dict[name].append(score)
-    #             else:
-    #                 metrics_dict[name] = [score]
-
-    #     for convo_test_case in self.conversational_test_cases:
-    #         if convo_test_case.metrics_data is not None:
-    #             for metric_data in convo_test_case.metrics_data:
-    #                 name = metric_data.name
-    #                 score = metric_data.score
-    #                 if score is None:
-    #                     continue
-    #                 valid_scores += 1
-    #                 if name in metrics_dict:
-    #                     metrics_dict[name].append(score)
-    #                 else:
-    #                     metrics_dict[name] = [score]
-
-    #         for turn in convo_test_case.turns:
-    #             if turn.metrics_data is None:
-    #                 continue
-    #             for metric_data in turn.metrics_data:
-    #                 name = metric_data.name
-    #                 score = metric_data.score
-    #                 if score is None:
-    #                     continue
-    #                 valid_scores += 1
-    #                 if name in metrics_dict:
-    #                     metrics_dict[name].append(score)
-    #                 else:
-    #                     metrics_dict[name] = [score]
-
-    #     # metrics_scores combines both conversational and nonconvo and mllm scores
-    #     # might need to separate in the future
-    #     self.metrics_scores = [
-    #         MetricScores(metric=metric, scores=scores)
-    #         for metric, scores in metrics_dict.items()
-    #     ]
-    #     return valid_scores
 
     def calculate_test_passes_and_fails(self):
         test_passed = 0

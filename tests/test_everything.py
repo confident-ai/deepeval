@@ -192,7 +192,7 @@ def test_everything():
         actual_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
-        context=["I love coffee"],
+        # context=["I love coffee"],
     )
     c_test_case = ConversationalTestCase(
         turns=[test_case, test_case], chatbot_role="have a conversation"
