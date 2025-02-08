@@ -48,7 +48,7 @@ JSON:
     @staticmethod
     def generate_reason(input, verdicts, score):
         # given the input and retrieval context for this input, where the verdict is whether ... and the node is the ..., give a reason for the score
-        return f"""Given the input, retrieval contexts, and contextual precision score, provide a CONCISE summarize for the score. Explain why it is not higher, but also why it is at its current score.
+        return f"""Given the input, retrieval contexts, and contextual precision score, provide a CONCISE summary for the score. Explain why it is not higher, but also why it is at its current score.
 The retrieval contexts is a list of JSON with three keys: `verdict`, `reason` (reason for the verdict) and `node`. `verdict` will be either 'yes' or 'no', which represents whether the corresponding 'node' in the retrieval context is relevant to the input. 
 Contextual precision represents if the relevant nodes are ranked higher than irrelevant nodes. Also note that retrieval contexts is given IN THE ORDER OF THEIR RANKINGS.
 
@@ -60,11 +60,11 @@ Example JSON:
 }}
 
 
-DO NOT mention 'verdict' in your reason, but instead phrase it as irrelevant nodes. The term 'verdict' are just here for you to understand the broader scope of things.
+DO NOT mention 'verdict' in your reason, but instead phrase it as irrelevant nodes. The term 'verdict' is just here for you to understand the broader scope of things.
 Also DO NOT mention there are `reason` fields in the retrieval contexts you are presented with, instead just use the information in the `reason` field.
 In your reason, you MUST USE the `reason`, QUOTES in the 'reason', and the node RANK (starting from 1, eg. first node) to explain why the 'no' verdicts should be ranked lower than the 'yes' verdicts.
-When addressing nodes, make it explicit that it is nodes in retrieval context.
-If the score is 1, keep it short and say something positive with an upbeat tone (but don't overdo it otherwise it gets annoying).
+When addressing nodes, make it explicit that they are nodes in retrieval contexts.
+If the score is 1, keep it short and say something positive with an upbeat tone (but don't overdo it, otherwise it gets annoying).
 **
 
 Contextual Precision Score:
