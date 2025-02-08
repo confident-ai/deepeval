@@ -101,7 +101,7 @@ from deepeval.red_teaming import AttackEnhancement
 results = red_teamer.scan(
     target_model_callback=target_model_callback,
     attacks_per_vulnerability_type=5,
-    vulnerabilities=vulnerabilities
+    vulnerabilities=vulnerabilities,
     attack_enhancements={
         AttackEnhancement.BASE64: 0.25,
         AttackEnhancement.GRAY_BOX_ATTACK: 0.25,
