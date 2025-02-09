@@ -262,7 +262,7 @@ Take this decision tree for example, which evaluates a Summarization use case ba
 
 ```python
 from deepeval.metrics.dag import (
-    DAG,
+    DeepAcyclicGraph,
     TaskNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
@@ -292,7 +292,7 @@ extract_headings_node = TaskNode(
 )
 
 # Initialize the DAG
-dag = DAG(root_nodes=[extract_headings_node])
+dag = DeepAcyclicGraph(root_nodes=[extract_headings_node])
 
 # Create metric!
 metric = DAGMetric(name="Summarization", dag=dag)

@@ -124,7 +124,7 @@ Here's how this decision tree would look like in code:
 
 ```python
 from deepeval.metrics.dag import (
-    DAG,
+    DeepAcyclicGraph,
     TaskNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
@@ -153,7 +153,7 @@ extract_headings_node = TaskNode(
 )
 
 # create the DAG
-dag = DAG(root_nodes=[extract_headings_node])
+dag = DeepAcyclicGraph(root_nodes=[extract_headings_node])
 ```
 
 When creating your DAG, there are three important points to remember:
