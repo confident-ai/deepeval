@@ -175,6 +175,7 @@ def create_api_test_case(
             evaluationCost=None,
             order=order,
             testCases=[],
+            additionalMetadata=test_case.additional_metadata
         )
         api_test_case.instance_id = id(api_test_case)
         api_test_case.turns = [

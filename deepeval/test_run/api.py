@@ -117,6 +117,9 @@ class ConversationalApiTestCase(BaseModel):
         default_factory=lambda: [], alias="testCases"
     )
     order: Union[int, None] = Field(None)
+    additional_metadata: Optional[Dict] = Field(
+        None, alias="additionalMetadata"
+    )
 
     def update_metric_data(self, metrics_data: MetricData):
         if self.metrics_data is None:
