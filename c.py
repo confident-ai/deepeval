@@ -44,7 +44,9 @@ for fake_datum in fake_data:
 
 # Define metrics
 answer_relevancy = AnswerRelevancyMetric(threshold=0.5)
-faithfulness = FaithfulnessMetric(threshold=0.5)
+# faithfulness = FaithfulnessMetric(threshold=0.5)
+
+answer_relevancy.audit(test_cases)
 
 # Run evaluation
-evaluate(test_cases=test_cases, metrics=[answer_relevancy, faithfulness])
+# evaluate(test_cases=test_cases, metrics=[answer_relevancy, faithfulness])
