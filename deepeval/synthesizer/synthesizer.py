@@ -185,7 +185,7 @@ class Synthesizer:
                 ) as progress_bar:
                     goldens = self._a_generate_text_to_sql_from_context(
                         context=contexts,
-                        include_expected_output=include_expected_output,  
+                        include_expected_output=include_expected_output,
                         max_goldens_per_context=max_goldens_per_context,
                         _progress_bar=progress_bar,
                         _send_data=False,
@@ -242,13 +242,13 @@ class Synthesizer:
 
                 # Generate goldens from generated contexts
                 goldens = await self.a_generate_goldens_from_contexts(
-                contexts=contexts,
-                include_expected_output=include_expected_output,
-                max_goldens_per_context=max_goldens_per_context,
-                source_files=source_files,
-                _context_scores=context_scores,
-                _progress_bar=progress_bar,
-            )
+                    contexts=contexts,
+                    include_expected_output=include_expected_output,
+                    max_goldens_per_context=max_goldens_per_context,
+                    source_files=source_files,
+                    _context_scores=context_scores,
+                    _progress_bar=progress_bar,
+                )
             elif use_case == UseCase.TEXT2SQL:
                 goldens = await self._a_generate_text_to_sql_from_context(
                     context=contexts,
@@ -256,7 +256,7 @@ class Synthesizer:
                     max_goldens_per_context=max_goldens_per_context,
                     _progress_bar=progress_bar,
                 )
-            
+
         self.synthetic_goldens.extend(goldens)
         return goldens
 
