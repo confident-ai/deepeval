@@ -146,6 +146,7 @@ module.exports = {
         "integrations-chroma",
         "integrations-weaviate",
         "integrations-qdrant",
+        "integrations-pgvector",
       ],
       collapsed: true,
     },

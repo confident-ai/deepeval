@@ -1,25 +1,24 @@
 ---
-id: integrations-qdrant
-title: Qdrant
-sidebar_label: Qdrant
+id: integrations-pgvector
+title: PGVector
+sidebar_label: PGVector
 ---
 
 ## Quick Summary
 
-DeepEval allows you to evaluate your **Qdrant** retriever and optimize retrieval hyperparameters like `top-K`, `embedding model`, and `distance (similarity) function`.
+DeepEval allows you to evaluate your **PGVector** retriever and optimize retrieval hyperparameters like `top-K`, `embedding model`, and `similarity function`.
 
 :::info
-To get started, install Qdrant’s Python client using the following command:
+To get started, install PGVector and the PostgreSQL client using the following command:
 
 ```
-pip install qdrant-client
+pip install psycopg2 pgvector
 ```
 
 :::
+PGVector is an open-source PostgreSQL extension that enables **semantic search** and similarity-based retrieval directly within PostgreSQL, making it a scalable, SQL-native solution for LLM applications and RAG pipelines. Learn more about PGVector [here](https://github.com/pgvector/pgvector).
 
-Qdrant is a high-performance and scalable vector database optimized for **semantic search and retrieval** in RAG applications. It efficiently handles **high-dimensional embeddings** and **fast similarity searches**, making it a powerful choice for AI-driven applications. Learn more about Qdrant [here](https://qdrant.tech/documentation/).
-
-This diagram illustrates how the Qdrant retriever fits into your RAG pipeline.
+This diagram illustrates how PGVector fits into your RAG pipeline.
 
 <div
   style={{
@@ -30,7 +29,7 @@ This diagram illustrates how the Qdrant retriever fits into your RAG pipeline.
   }}
 >
   <img
-    src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*d_t9FzfdZyelyzBx_CVUNA.png"
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/pgvector.png"
     style={{
       margin: "10px",
       height: "auto",
@@ -42,73 +41,78 @@ This diagram illustrates how the Qdrant retriever fits into your RAG pipeline.
       fontSize: "13px",
     }}
   >
-    Source: Ashish Abraham
+    Source: HexaCluster
   </div>
 </div>
 
-## Setup Qdrant
+## Setup PGVector
 
-To get started, connect to your local or cloud-hosted Qdrant instance.
+To get started, connect to your PostgreSQL database.
 
 ```python
-import qdrant_client
+import psycopg2
 import os
 
-client = qdrant_client.QdrantClient(
-    url="http://localhost:6333"  # Change this if using Qdrant Cloud
+# Connect to PostgreSQL database
+conn = psycopg2.connect(
+    dbname="your_database",
+    user="your_user",
+    password=os.getenv("PG_PASSWORD"),  # Set in environment variable
+    host="localhost",
+    port="5432"
 )
+cursor = conn.cursor()
 ```
 
-Next, create a Qdrant collection with the appropriate vector configuration. The collection will store document embeddings as `vectors` and their corresponding text as metadata.
+Next, create a table to store `text` and embedding `vectors`.
 
 ```python
-# Define collection name
-collection_name = "documents"
+# Enable the pgvector extension (only needed once)
+cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
-# Create collection if it doesn't exist
-if collection_name not in [col.name for col in client.get_collections().collections]:
-    client.create_collection(
-        collection_name=collection_name,
-        vectors_config=qdrant_client.http.models.VectorParams(
-            size=384,  # Vector dimensionality
-            distance="cosine"  # Similarity function
-        ),
-    )
+# Define table schema for text and embeddings
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS documents (
+        id SERIAL PRIMARY KEY,
+        text TEXT,
+        embedding vector(384)  -- Defines a 384-dimension vector
+    );
+""")
+conn.commit()
 ```
 
-Finally, define an embedding model to convert your document chunks into vectors before indexing them in Qdrant.
+Finally, convert document chunks into vectors using an embedding model and insert them into PostgreSQL.
 
 ```python
 # Load an embedding model
 from sentence_transformers import SentenceTransformer
+
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Example document chunks
 document_chunks = [
-    "Qdrant is an efficient vector database.",
+    "PGVector brings vector search to PostgreSQL.",
     "RAG improves AI-generated responses with retrieved context.",
     "Vector search enables high-precision semantic retrieval.",
     ...
 ]
 
-# Store chunks with embeddings
-for i, chunk in enumerate(document_chunks):
+# Store chunks with embeddings in PGVector
+for chunk in document_chunks:
     embedding = model.encode(chunk).tolist()  # Convert text to vector
-    client.upsert(
-        collection_name=collection_name,
-        points=[
-            qdrant_client.http.models.PointStruct(
-                id=i, vector=embedding, payload={"text": chunk}
-            )
-        ]
+    cursor.execute(
+        "INSERT INTO documents (text, embedding) VALUES (%s, %s);",
+        (chunk, embedding)
     )
+
+conn.commit()
 ```
 
-To use Qdrant as part of your RAG pipeline, retrieve relevant contexts using similarity search and insert them into your prompt template. This ensures your model has the necessary context to generate accurate and informed responses.
+To use PGVector as part of your RAG pipeline, perform a similarity search in PostgreSQL to retrieve the most relevant document chunks and insert them into your prompt template. This ensures your model has the necessary context to generate accurate and well-informed responses.
 
-## Evaluating Qdrant Retrieval
+## Evaluating PGVector Retrieval
 
-Evaluating your Qdrant retriever consists of 2 steps:
+Evaluating your PGVector retriever consists of two steps:
 
 1. Preparing an `input` query along with the expected LLM response, and using the `input` to generate a response from your RAG pipeline to create an `LLMTestCase` containing the input, actual output, expected output, and retrieval context.
 2. Evaluating the test case using a selection of retrieval metrics.
@@ -119,21 +123,21 @@ An `LLMTestCase` allows you to create unit tests for your LLM applications, help
 
 ### Preparing your Test Case
 
-Since the first step in generating a response from your RAG pipeline is retrieving the relevant `retrieval_context` from your Qdrant collection, first perform this retrieval for your `input` query.
+Since the first step in generating a response from your RAG pipeline is retrieving the relevant `retrieval_context` from your PGVector table, perform this retrieval for your `input` query.
 
 ```python
 def search(query, top_k=3):
     query_embedding = model.encode(query).tolist()
 
-    search_results = client.search(
-        collection_name=collection_name,
-        query_vector=query_embedding,
-        limit=top_k  # Retrieve the top K most similar results
-    )
+    cursor.execute("""
+        SELECT text FROM documents
+        ORDER BY embedding <-> %s  -- Use <-> for cosine similarity
+        LIMIT %s;
+    """, (query_embedding, top_k))
 
-    return [hit.payload["text"] for hit in search_results] if search_results else None
+    return [row[0] for row in cursor.fetchall()]
 
-query = "How does Qdrant work?"
+query = "How does PGVector work?"
 retrieval_context = search(query)
 ```
 
@@ -157,7 +161,7 @@ print(actual_output)
 Let's examine the `actual_output` generated by our RAG pipeline:
 
 ```
-Qdrant is a scalable vector database optimized for high-performance semantic retrieval.
+PGVector enables efficient vector search within PostgreSQL for AI applications.
 ```
 
 Finally, create an `LLMTestCase` using the input and expected output you prepared, along with the actual output and retrieval context you generated.
@@ -169,13 +173,13 @@ test_case = LLMTestCase(
     input=input,
     actual_output=actual_output,
     retrieval_context=retrieval_context,
-    expected_output="Qdrant is a powerful vector database optimized for semantic search and retrieval.",
+    expected_output="PGVector is an extension that brings efficient vector search capabilities to PostgreSQL.",
 )
 ```
 
 ### Running Evaluations
 
-To run evaluations on the `LLMTestCase`, we first need to define relevant `deepeval` metrics to evaluate the Qdrant retriever: contextual recall, contextual precision, and contextual relevancy.
+To run evaluations on the `LLMTestCase`, we first need to define relevant `deepeval` metrics to evaluate the PGVector retriever: contextual recall, contextual precision, and contextual relevancy.
 
 :::note
 These **contextual metrics** help assess your retriever. For more retriever evaluation details, check out this [guide](/guides/guides-rag-evaluation).
@@ -204,7 +208,7 @@ evaluate(
 )
 ```
 
-## Improving Qdrant Retrieval
+## Improving PGVector Retrieval
 
 Below is a table outlining the hypothetical metric scores for your evaluation run.
 
@@ -218,9 +222,9 @@ Below is a table outlining the hypothetical metric scores for your evaluation ru
 Each contextual metric evaluates a **specific hyperparameter**. To learn more about this, read [this guide on RAG evaluation](/guides/guides-rag-evaluation).
 :::
 
-To improve your Qdrant retriever, you'll need to experiment with various hyperparameters and prepare `LLMTestCase`s using generations from different retriever versions.
+To improve your PGVector retriever, you'll need to experiment with various hyperparameters and prepare `LLMTestCase`s using generations from different retriever versions.
 
-Ultimately, analyzing improvements and regressions in **contextual metric scores** (the three metrics defined above) will help you determine the optimal hyperparameter combination for your Qdrant retriever.
+Ultimately, analyzing improvements and regressions in **contextual metric scores** (the three metrics defined above) will help you determine the optimal hyperparameter combination for your PGVector retriever.
 
 :::tip
 For a more detailed guide on tuning your retriever’s hyperparameters, check out [this guide](/guides/guides-optimizing-hyperparameters).
