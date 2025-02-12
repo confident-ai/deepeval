@@ -145,6 +145,7 @@ module.exports = {
         "integrations-elastic",
         "integrations-chroma",
         "integrations-weaviate",
+        "integrations-qdrant",
       ],
       collapsed: true,
     },
