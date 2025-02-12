@@ -42,7 +42,7 @@ class FaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
-        custom_template_class: Optional[Type] = None
+        custom_template_class: Optional[Type] = None,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
