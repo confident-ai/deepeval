@@ -6,18 +6,19 @@ sidebar_label: Elasticsearch
 
 ## Quick Summary
 
-**Elasticsearch** is a distributed search engine that serves as a high-performance vector database for your RAG application. It was designed for scalability, high-speed queries, relevance optimization, and efficiently handles **production-scale retrieval workloads**. Learn more about Elasticsearch [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html).
+DeepEval allows you to evaluate your **Elasticsearch** retriever and optimize retrieval hyperparameters like `top-K`, `embedding model`, and `similarity function`.
 
 :::info
-To get started, install the Python library through the CLI using the following command:
+To get started, install Elasticsearch through the CLI using the following command:
 
 ```
 pip install elasticsearch
 ```
 
 :::
+Elasticsearch is a fast and scalable search engine that works as a high-performance vector database for RAG applications. It handles **large-scale retrieval workloads** efficiently, making it ideal for production use. Learn more about Elasticsearch [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html).
 
-DeepEval allows you to evaluate your Elasticsearch retriever and optimize retrieval hyperparameters such as `top-K`, `embedding model`, and/or `similarity function`. This diagram provides a great overview of how Elasticsearch functions as a vector database within your RAG pipeline:
+This diagram illustrates how the Elasticsearch retriever fits into your RAG pipeline.
 
 <div
   style={{
@@ -41,7 +42,7 @@ DeepEval allows you to evaluate your Elasticsearch retriever and optimize retrie
 
 ## Setup Elasticsearch
 
-To get started, simply connect to your local Elastic cluster using the `"elastic"` username and the password set in your environment variable `ELASTIC_PASSWORD`.
+To get started, connect to your local Elastic cluster using the `"elastic"` username and the `ELASTIC_PASSWORD` environment variable.
 
 ```python
 import os
@@ -56,7 +57,7 @@ client = Elasticsearch(
 )
 ```
 
-Next, create an Elasticsearch index with the correct type mappings to store `text` and `embedding` as a `dense_vector` for similarity search, ensuring efficient retrieval.
+Next, create an Elasticsearch index with the appropriate type mappings to store `text` and `embedding` as a `dense_vector`.
 
 ```python
 # Create index if it doesn't exist
@@ -71,7 +72,7 @@ if not es.indices.exists(index=index_name):
     })
 ```
 
-Finally, define an embedding model to embed your document chunks before adding them to your Elasticsearch index for retrieval.
+Finally, define an embedding model to convert your document chunks into vectors before indexing them in Elasticsearch for retrieval.
 
 ```python
 # Load an embedding model
@@ -92,15 +93,22 @@ for i, chunk in enumerate(document_chunks):
     es.index(index=index_name, id=i, body={"text": chunk, "embedding": embedding})
 ```
 
+To use Elasticsearch as part of your RAG pipeline, simply use it to retrieve relevant contexts and insert them into your prompt template for generation. This ensures your model has the necessary context to generate accurate and informed responses.
+
 ## Evaluating Elasticsearch Retrieval
 
-To begin evaluating your Elasticsearch retriever, simply prepare an `input` query, generate a response to the input using your RAG pipeline, and store the `input`, `actual_output`, and `retrieval_context` values in an `LLMTestCase` for evaluation.
+Evaluating your Elasticsearch retriever consists of 2 steps:
 
-:::tip
+1. Preparing an `input` query along with the expected LLM response, and using the `input` to generate a response from your RAG pipeline to create an `LLMTestCase` containing the input, actual output, expected output, and retrieval context.
+2. Evaluating the test case using a selection of retrieval metrics.
+
+:::information
 An `LLMTestCase` allows you to create unit tests for your LLM applications, helping you identify specific weaknesses in your RAG application.
 :::
 
-First, retrieve the `retrieval_context` from your Elasticsearch index for your `input` query.
+### Preparing your Test Case
+
+Since the first step in generating a response from your RAG pipeline is retrieving the relevant `retrieval_context` from your Elasticsearch index, first perform this retrieval for your `input` query.
 
 ```python
 def search(query):
@@ -121,7 +129,7 @@ query = "How does Elasticsearch work?"
 retrieval_context = search(query)
 ```
 
-Next, pass the retrieval context to your LLM to generate a response.
+Next, pass the retrieved context into your LLM's prompt template to generate a response.
 
 ```python
 prompt = """
@@ -135,12 +143,34 @@ Supporting Context:
 """
 
 actual_output = generate(prompt) # hypothetical function, replace with your own LLM
+print(actual_output)
 ```
 
-Finally, run `evaluate()` using deepeval to assess contextual recall, precision, and relevancy of your Elasticsearch retriever.
+Let's examine the `actual_output` generated by our RAG pipeline:
+
+```
+Elasticsearch indexes document chunks using an inverted index for fast full-text search and retrieval.
+```
+
+Finally, create an `LLMTestCase` using the input and expected output you prepared, along with the actual output and retrieval context you generated.
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(
+    input=input,
+    actual_output=actual_output,
+    retrieval_context=retrieval_context,
+    expected_output="Elasticsearch uses inverted indexes for keyword searches and dense vector similarity for semantic search.",
+)
+```
+
+### Running Evaluations
+
+To run evaluations on the `LLMTestCase`, we first need to define relevant `deepeval` metrics to evaluate the Elastisearch retriever: contextual recall, contextual precision, and contextual relevancy.
 
 :::note
-These 3 contextual metrics help evaluate the performance of your retriever. For more details on retriever evaluation, check out this [guide](/guides/guides-rag-evaluation).
+These **contextual metrics** help assess your retriever. For more retriever evaluation details, check out this [guide](/guides/guides-rag-evaluation).  
 :::
 
 ```python
@@ -149,30 +179,41 @@ from deepeval.metrics import (
     ContextualPrecisionMetric,
     ContextualRelevancyMetric,
 )
-from deepeval.test_case import LLMTestCase
+
+contextual_recall = ContextualRecallMetric(),
+contextual_precision = ContextualPrecisionMetric()
+contextual_relevancy = ontextualRelevancyMetric()
+```
+
+Finally, pass the test case and metrics into the `evaluate` function to begin the evaluation.
+
+```
 from deepeval import evaluate
 
-...
-test_case = LLMTestCase(
-    input=input,
-    actual_output=actual_output,
-    retrieval_context=retrieval_context,
-    expected_output="Elasticserach uses inverted indexes for keyword searches and dense vector similarity for semantic search.",
-)
 evaluate(
     [test_case],
-    metrics=[
-        ContextualRecallMetric(),
-        ContextualPrecisionMetric(),
-        ContextualRelevancyMetric(),
-    ],
+    metrics=[contextual_recall, contextual_precision, contextual_relevancy]
 )
 ```
 
 ## Improving Elasticsearch Retrieval
 
-To improve your Elasticsearch retriever, experiment with various hyperparameters and prepare `LLMTestCases` using generations from different versions of these retrievers. Analyzing improvements and regressions in **contextual metric scores** (the 3 metrics we defined above) will help you determine the optimal hyperparameter combination for your Elasticsearch retriever.
+Below is a table outlining the hypothetical metric scores for your evaluation run.
+
+| <div style={{width: "350px"}}>Metric</div> | <div style={{width: "350px"}}>Score</div> |
+| ------------------------------------------ | ----------------------------------------- |
+| Contextual Precision                       | 0.85                                      |
+| Contextual Recall                          | 0.92                                      |
+| Contextual Relevancy                       | 0.44                                      |
+
+:::info
+Each contextual metric evaluates a **specific hyperparameter**. To learn more about this, read [this guide on RAG evaluation](/guides/guides-rag-evaluation).
+:::
+
+To improve your Elasticsearch retriever, you'll need to experiment with various hyperparameters and prepare `LLMTestCase`s using generations from different retriever versions.
+
+Ultimately, analyzing improvements and regressions in **contextual metric scores** (the three metrics defined above) will help you determine the optimal hyperparameter combination for your Elasticsearch retriever.
 
 :::tip
-For a more detailed guide on iterating on your retriever's hyperparameters, you may want to [check out this guide](/guides/guides-optimizing-hyperparameters).
+For a more detailed guide on tuning your retriever’s hyperparameters, check out [this guide](/guides/guides-optimizing-hyperparameters).
 :::
