@@ -111,6 +111,7 @@ class Synthesizer:
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
         context_construction_config: Optional[ContextConstructionConfig] = None,
+        use_case: UseCase = UseCase.QA,
         _send_data=True,
     ):
         self.synthesis_cost = 0 if self.using_native_model else None
@@ -153,29 +154,42 @@ class Synthesizer:
                 f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
             )
 
-            # Generate goldens from generated contexts
-            with synthesizer_progress_context(
-                method="docs",
-                num_evolutions=self.evolution_config.num_evolutions,
-                evolutions=self.evolution_config.evolutions,
-                evaluation_model=self.model.get_model_name(),
-                embedder=context_construction_config.embedder.get_model_name(),
-                max_generations=len(contexts) * max_goldens_per_context,
-            ) as progress_bar:
-                goldens = self.generate_goldens_from_contexts(
-                    contexts,
-                    include_expected_output,
-                    max_goldens_per_context,
-                    source_files,
-                    _context_scores=context_scores,
-                    _progress_bar=progress_bar,
-                    _send_data=False,
-                )
+            if use_case == UseCase.QA:
 
-        # Wrap-up Synthesis
-        if _send_data == True:
-            pass
-        return goldens
+                # Generate goldens from generated contexts
+                with synthesizer_progress_context(
+                    method="docs",
+                    num_evolutions=self.evolution_config.num_evolutions,
+                    evolutions=self.evolution_config.evolutions,
+                    evaluation_model=self.model.get_model_name(),
+                    embedder=context_construction_config.embedder.get_model_name(),
+                    max_generations=len(contexts) * max_goldens_per_context,
+                ) as progress_bar:
+                    goldens = self.generate_goldens_from_contexts(
+                        contexts,
+                        include_expected_output,
+                        max_goldens_per_context,
+                        source_files,
+                        _context_scores=context_scores,
+                        _progress_bar=progress_bar,
+                        _send_data=False,
+                    )
+            elif use_case == UseCase.TEXT2SQL:
+                with synthesizer_progress_context(
+                    method="docs",
+                    num_evolutions=self.evolution_config.num_evolutions,
+                    evolutions=self.evolution_config.evolutions,
+                    evaluation_model=self.model.get_model_name(),
+                    embedder=context_construction_config.embedder.get_model_name(),
+                    max_generations=len(contexts) * max_goldens_per_context,
+                ) as progress_bar:
+                    goldens = self._a_generate_text_to_sql_from_context(
+                        context=contexts,
+                        include_expected_output=include_expected_output,  
+                        max_goldens_per_context=max_goldens_per_context,
+                        _progress_bar=progress_bar,
+                        _send_data=False,
+                    )
 
     async def a_generate_goldens_from_docs(
         self,
@@ -183,6 +197,7 @@ class Synthesizer:
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
         context_construction_config: Optional[ContextConstructionConfig] = None,
+        use_case: UseCase = UseCase.QA,
     ):
         if context_construction_config is None:
             context_construction_config = ContextConstructionConfig(
@@ -223,7 +238,10 @@ class Synthesizer:
             embedder=context_construction_config.embedder.get_model_name(),
             max_generations=len(contexts) * max_goldens_per_context,
         ) as progress_bar:
-            goldens = await self.a_generate_goldens_from_contexts(
+            if use_case == UseCase.QA:
+
+                # Generate goldens from generated contexts
+                goldens = await self.a_generate_goldens_from_contexts(
                 contexts=contexts,
                 include_expected_output=include_expected_output,
                 max_goldens_per_context=max_goldens_per_context,
@@ -231,6 +249,14 @@ class Synthesizer:
                 _context_scores=context_scores,
                 _progress_bar=progress_bar,
             )
+            elif use_case == UseCase.TEXT2SQL:
+                goldens = await self._a_generate_text_to_sql_from_context(
+                    context=contexts,
+                    include_expected_output=include_expected_output,
+                    max_goldens_per_context=max_goldens_per_context,
+                    _progress_bar=progress_bar,
+                )
+            
         self.synthetic_goldens.extend(goldens)
         return goldens
 
