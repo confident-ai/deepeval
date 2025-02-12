@@ -142,6 +142,7 @@ module.exports = {
         "integrations-llamaindex",
         "integrations-huggingface",
         "integrations-cognee",
+        "integrations-chroma",
         "integrations-elastic",
       ],
       collapsed: true,
