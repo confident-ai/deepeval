@@ -4,10 +4,17 @@ class AnswerRelevancyTemplate:
         return f"""Given the text, breakdown and generate a list of statements presented. Ambiguous statements and single words can also be considered as statements.
 
 Example:
-Example text: Shoes. The shoes can be refunded at no extra cost. Thanks for asking the question!
+Example text: 
+Our new laptop model features a high-resolution Retina display for crystal-clear visuals. It also includes a fast-charging battery, giving you up to 12 hours of usage on a single charge. For security, we’ve added fingerprint authentication and an encrypted SSD. Plus, every purchase comes with a one-year warranty and 24/7 customer support.
 
 {{
-    "statements": ["Shoes.", "Shoes can be refunded at no extra cost", "Thanks for asking the question!"]
+    "statements": [
+        "The new laptop model has a high-resolution Retina display.",
+        "It includes a fast-charging battery with up to 12 hours of usage.",
+        "Security features include fingerprint authentication and an encrypted SSD.",
+        "Every purchase comes with a one-year warranty.",
+        "24/7 customer support is included."
+    ]
 }}
 ===== END OF EXAMPLE ======
         
@@ -32,23 +39,42 @@ The provided statements are statements made in the actual output.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key mapping to a list of JSON objects.
-Example input: What should I do if there is an earthquake?
-Example statements: ["Shoes.", "Thanks for asking the question!", "Is there anything else I can help you with?", "Duck and hide"]
+Example input: 
+What features does the new laptop have?
+
+Example statements: 
+[
+    "The new laptop model has a high-resolution Retina display.",
+    "It includes a fast-charging battery with up to 12 hours of usage.",
+    "Security features include fingerprint authentication and an encrypted SSD.",
+    "Every purchase comes with a one-year warranty.",
+    "24/7 customer support is included.",
+    "Pineapples taste great on pizza."
+]
+
 Example JSON:
 {{
     "verdicts": [
         {{
-            "verdict": "no",
-            "reason": "The 'Shoes.' statement made in the actual output is completely irrelevant to the input, which asks about what to do in the event of an earthquake."
-        }},
-        {{
-            "verdict": "idk"
-        }},
-        {{
-            "verdict": "idk"
+            "verdict": "yes"
         }},
         {{
             "verdict": "yes"
+        }},
+        {{
+            "verdict": "yes"
+        }},
+        {{
+            "verdict": "no",
+            "reason": "A one-year warranty is a purchase benefit, not a feature of the laptop itself."
+        }},
+        {{
+            "verdict": "no",
+            "reason": "Customer support is a service, not a feature of the laptop."
+        }},
+        {{
+            "verdict": "no",
+            "reason": "The statement about pineapples on pizza is completely irrelevant to the input, which asks about laptop features."
         }}
     ]  
 }}
