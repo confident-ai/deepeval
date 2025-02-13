@@ -102,24 +102,60 @@ Note that the `model-version` is **optional**. If you ever wish to stop using Az
 deepeval unset-azure-openai
 ```
 
-## Using local LLM models
+## Using Ollama
 
-There are several local LLM providers that offer an OpenAI API compatible endpoint, like Ollama or LM Studio. To use them with `deepeval` you need to configure them using the CLI. This will make `deepeval` use the local LLM model for **all** LLM-based metrics.
+:::note
+Before getting started, make sure your [Ollama model](https://ollama.com/search) is installed and running.
 
-To configure any of those providers, you need to supply the base URL where the service is running. These are some of the most popular alternatives for base URLs:
+```bash
+ollama run deepseek-r1:1.5b
+```
 
-- Ollama: http://localhost:11434/v1/
-- LM Studio: http://localhost:1234/v1/
+:::
 
-So, to configure a model using Ollama, use the following command:
+To use **Ollama** models for your metrics, run `deepeval set-ollama <model>` in your CLI. For example:
+
+```bash
+deepeval set-ollama deepseek-r1:1.5b
+```
+
+:::tip
+[Visit Ollama](https://ollama.com/search) to see the full list of **available models**.
+:::
+
+Optionally, you can specify the **base URL** of your local Ollama model instance if you've defined a custom port. The default base URL is set to `http://localhost:11434/v1/`.
+
+```bash
+deepeval set-ollama deepseek-r1:1.5b \
+    --base-url="http://localhost:11434/v1/"
+```
+
+To stop using your local Ollama model and move back to OpenAI, run:
+
+```bash
+deepeval unset-ollama
+```
+
+## Using other local LLM models
+
+In additional to Ollama, DeepEval also supports local LLM providers that offer an OpenAI API compatible endpoint like LM Studio. To use them with `deepeval` you need to configure them using the CLI. This will make `deepeval` use the local LLM model for **all** LLM-based metrics.
+
+To configure any of those providers, you need to supply the **base URL** where the service is running. These are some of the most popular alternatives for base URLs:
+
+- LM Studio: `http://localhost:1234/v1/`
+- vLLM: `http://localhost:8000/v1/`
+
+So, to configure a model using LM studio, use the following command:
 
 ```
 deepeval set-local-model --model-name=<model_name> \
-    --base-url="http://localhost:11434/v1/" \
-    --api-key="ollama"
+    --base-url="http://localhost:1234/v1/" \
+    --api-key=<api-key>
 ```
 
-Where model_name is one of the LLM that appears when executing `ollama list`. For additional instructions about model availability and base URLs, consult the provider's documentation.
+:::note
+For additional instructions about model availability and base URLs, consult **each provider's documentation**.
+:::
 
 If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
 

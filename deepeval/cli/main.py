@@ -195,6 +195,53 @@ def unset_azure_openai_embedding_env():
     )
 
 
+#############################################
+# Ollama Integration ########################
+#############################################
+
+@app.command(name="set-ollama")
+def set_local_model_env(
+    model_name: str = typer.Argument(..., help="Name of the Ollama model"),
+    base_url: str = typer.Option(
+        "http://localhost:11434/v1",
+        "-b",
+        "--base-url",
+        help="Base URL for the local model API",
+    ),
+    format: Optional[str] = typer.Option(
+        "json",
+        "-f",
+        "--format",
+        help="Format of the response from the local model (default: json)",
+    ),
+):
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_BASE_URL, base_url)
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "NO")
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_API_KEY, "ollama")
+    if format:
+        KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_FORMAT, format)
+    print(
+        ":raising_hands: Congratulations! You're now using a local Ollama model for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-ollama")
+def unset_local_model_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_BASE_URL)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_FORMAT)
+    print(    
+        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
+    )
+
+#############################################
+# Local Model Integration ###################
+#############################################
+
 @app.command(name="set-local-model")
 def set_local_model_env(
     model_name: str = typer.Option(
@@ -225,6 +272,23 @@ def set_local_model_env(
     )
 
 
+@app.command(name="unset-local-model")
+def unset_local_model_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_BASE_URL)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_FORMAT)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
+
+    print(
+        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
+    )
+
+
+#############################################
+# Local Embedding Model Integration #########
+#############################################
+
 @app.command(name="set-local-embeddings")
 def set_local_embeddings_env(
     model_name: str = typer.Option(
@@ -247,19 +311,6 @@ def set_local_embeddings_env(
 
     print(
         ":raising_hands: Congratulations! You're now using local embeddings for all evals that require text embeddings."
-    )
-
-
-@app.command(name="unset-local-model")
-def unset_local_model_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_BASE_URL)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_FORMAT)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
-
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
 
 

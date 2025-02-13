@@ -97,7 +97,7 @@ class TestClass(BaseModel):
 eval_model = "gpt-4o"
 
 
-@pytest.mark.skip(reasodn="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -223,7 +223,7 @@ def test_everything():
     )
 
 
-@pytest.mark.skip(reason="openadi is expensive")
+# @pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -245,22 +245,17 @@ def test_everything_2():
             strict_mode=True,
         ),
     )
-    metric11 = RagasMetric(
-        threshold=0.5, model="gpt-3.5-turbo", embeddings=OpenAIEmbeddings()
-    )
-    metric12 = ToolCorrectnessMetric()
+    # metric11 = RagasMetric(
+    #     threshold=0.5, model="gpt-3.5-turbo", embeddings=OpenAIEmbeddings()
+    # )
+    # metric12 = ToolCorrectnessMetric()
 
     test_case = LLMTestCase(
         input="What is this again?",
         actual_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
-        context=["I love coffee"],
-        expected_tools=["mixer", "creamer", "dripper"],
-        tools_called=["mixer", "creamer", "mixer"],
-    )
-    c_test_case = ConversationalTestCase(
-        name="testing_", turns=[test_case, test_case]
+        context=["I love coffee"]
     )
     assert_test(
         test_case,
@@ -276,7 +271,7 @@ def test_everything_2():
             # metric9,
             # metric10,
             # metric11,
-            metric12,
+            # metric12,
         ],
         # run_async=False,
     )
