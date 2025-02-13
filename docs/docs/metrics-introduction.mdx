@@ -147,7 +147,7 @@ To configure any of those providers, you need to supply the **base URL** where t
 
 So, to configure a model using LM studio, use the following command:
 
-```
+```bash
 deepeval set-local-model --model-name=<model_name> \
     --base-url="http://localhost:1234/v1/" \
     --api-key=<api-key>
@@ -159,7 +159,7 @@ For additional instructions about model availability and base URLs, consult **ea
 
 If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
 
-```console
+```bash
 deepeval unset-local-model
 ```
 
