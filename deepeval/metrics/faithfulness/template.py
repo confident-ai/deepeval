@@ -4,24 +4,25 @@ from typing import Optional
 class FaithfulnessTemplate:
     @staticmethod
     def generate_claims(text):
-        return f"""Based on the given text, please generate a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text.
-
+        return f"""Based on the given text, please extract a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text.
+These truths, MUST BE COHERENT, and CANNOT be taken out of context.
+    
 Example:
 Example Text: 
-"Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
+"Albert Einstein, the genius often associated with wild hair and mind-bending theories, famously won the Nobel Prize in Physics—though not for his groundbreaking work on relativity, as many assume. Instead, in 1968, he was honored for his discovery of the photoelectric effect, a phenomenon that laid the foundation for quantum mechanics."
 
 Example JSON: 
 {{
     "claims": [
-        "Einstein won the noble prize for his discovery of the photoelectric effect.",
-        "Einstein won the noble prize in 1968."
+        "Einstein won the noble prize for his discovery of the photoelectric effect in 1968."
+        "The photoelectric effect is a phenomenon that laid the foundation for quantum mechanics."
     ]  
 }}
 ===== END OF EXAMPLE ======
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "claims" key as a list of strings. No words or explanation is needed.
-Only include claims that are factual, and the claims you extract should include the full context it was presented in, NOT cherry picked facts.
+Only include claims that are factual, BUT IT DOESN'T MATTER IF THEY ARE FACTUALLY CORRECT. The claims you extract should include the full context it was presented in, NOT cherry picked facts.
 You should NOT include any prior knowledge, and take the text at face value when extracting claims.
 **
 
@@ -40,23 +41,23 @@ JSON:
         else:
             limit = f" the {extraction_limit} most important FACTUAL, undisputed truths per document"
         return f"""Based on the given text, please generate a comprehensive list of{limit}, that can inferred from the provided text.
-
+These truths, MUST BE COHERENT. They must NOT be taken out of context.
+        
 Example:
 Example Text: 
-"Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
+"Albert Einstein, the genius often associated with wild hair and mind-bending theories, famously won the Nobel Prize in Physics—though not for his groundbreaking work on relativity, as many assume. Instead, in 1968, he was honored for his discovery of the photoelectric effect, a phenomenon that laid the foundation for quantum mechanics."
 
 Example JSON: 
 {{
-    "truths": [
-        "Einstein won the noble prize for his discovery of the photoelectric effect.",
-        "Einstein won the noble prize in 1968."
+    "claims": [
+        "Einstein won the noble prize for his discovery of the photoelectric effect in 1968."
+        "The photoelectric effect is a phenomenon that laid the foundation for quantum mechanics."
     ]  
 }}
 ===== END OF EXAMPLE ======
-
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "truths" key as a list of strings. No words or explanation is needed.
-Only include truths that are factual.
+Only include truths that are factual, BUT IT DOESN'T MATTER IF THEY ARE FACTUALLY CORRECT.
 **
 
 Text:
