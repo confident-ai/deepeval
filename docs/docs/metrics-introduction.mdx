@@ -84,7 +84,7 @@ Alternatively, if you're working in a notebook enviornment (Jupyter or Colab), s
 Please **do not include** quotation marks when setting your `OPENAI_API_KEY` if you're working in a notebook enviornment.
 :::
 
-## Using Azure OpenAI
+### Azure OpenAI
 
 `deepeval` also allows you to use Azure OpenAI for metrics that are evaluated using an LLM. Run the following command in the CLI to configure your `deepeval` enviornment to use Azure OpenAI for **all** LLM-based metrics.
 
@@ -136,7 +136,7 @@ To stop using your local Ollama model and move back to OpenAI, run:
 deepeval unset-ollama
 ```
 
-## Using other local LLM models
+### Other Local Providers
 
 In additional to Ollama, DeepEval also supports local LLM providers that offer an OpenAI API compatible endpoint like LM Studio. To use them with `deepeval` you need to configure them using the CLI. This will make `deepeval` use the local LLM model for **all** LLM-based metrics.
 
@@ -163,7 +163,7 @@ If you ever wish to stop using your local LLM model and move back to regular Ope
 deepeval unset-local-model
 ```
 
-## Using A Custom LLM
+## Using Any Custom LLM
 
 `deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
 
