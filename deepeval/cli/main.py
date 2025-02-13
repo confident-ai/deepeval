@@ -232,7 +232,7 @@ def unset_local_model_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_BASE_URL)
     KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_API_KEY)
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_FORMAT)
     print(    
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
