@@ -88,6 +88,16 @@ def get_turns_in_sliding_window(turns: List[LLMTestCase], window_size: int):
         yield turns[max(0, i - window_size + 1) : i + 1]
 
 
+def print_verbose_logs(metric: str, logs: str):
+    print("*" * 50)
+    print(f"{metric} Verbose Logs")
+    print("*" * 50)
+    print("")
+    print(logs)
+    print("")
+    print("=" * 70)
+
+
 def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
     verbose_logs = ""
     for i in range(len(steps) - 1):
@@ -294,16 +304,6 @@ def initialize_multimodal_model(
     return MultimodalGPTModel(model=model), True
 
 
-def print_verbose_logs(metric: str, logs: str):
-    print("*" * 50)
-    print(f"{metric} Verbose Logs")
-    print("*" * 50)
-    print("")
-    print(logs)
-    print("")
-    print("=" * 70)
-
-
 def initialize_schematic_model(
     model: Optional[Union[str, DeepEvalBaseLLM, SchematicGPTModel]] = None,
 ) -> Tuple[DeepEvalBaseLLM, bool]:
@@ -318,13 +318,3 @@ def initialize_schematic_model(
         return model, False
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return SchematicGPTModel(model=model), True
-
-
-def print_verbose_logs(metric: str, logs: str):
-    print("*" * 50)
-    print(f"{metric} Verbose Logs")
-    print("*" * 50)
-    print("")
-    print(logs)
-    print("")
-    print("=" * 70)

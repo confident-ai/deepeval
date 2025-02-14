@@ -199,6 +199,7 @@ def unset_azure_openai_embedding_env():
 # Ollama Integration ########################
 #############################################
 
+
 @app.command(name="set-ollama")
 def set_local_model_env(
     model_name: str = typer.Argument(..., help="Name of the Ollama model"),
@@ -234,13 +235,15 @@ def unset_local_model_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_API_KEY)
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_FORMAT)
-    print(    
+    print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
+
 
 #############################################
 # Local Model Integration ###################
 #############################################
+
 
 @app.command(name="set-local-model")
 def set_local_model_env(
@@ -288,6 +291,7 @@ def unset_local_model_env():
 #############################################
 # Local Embedding Model Integration #########
 #############################################
+
 
 @app.command(name="set-local-embeddings")
 def set_local_embeddings_env(
