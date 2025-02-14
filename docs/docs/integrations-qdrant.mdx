@@ -6,10 +6,10 @@ sidebar_label: Qdrant
 
 ## Quick Summary
 
-DeepEval allows you to evaluate your **Qdrant** retriever and optimize retrieval hyperparameters like `top-K`, `embedding model`, and `distance (similarity) function`.
+Qdrant is a vector database and vector similarity search engine that is **optimized for fast retrieval**. It was written in rust, achieves 3ms response for 1M Open AI Embeddings, and comes with built-in memory compression.
 
 :::info
-To get started, install Qdrant’s Python client using the following command:
+You can easily get started with Qdrant in python by running the following command in your CLI:
 
 ```
 pip install qdrant-client
@@ -17,9 +17,13 @@ pip install qdrant-client
 
 :::
 
-Qdrant is a high-performance and scalable vector database optimized for **semantic search and retrieval** in RAG applications. It efficiently handles **high-dimensional embeddings** and **fast similarity searches**, making it a powerful choice for AI-driven applications. Learn more about Qdrant [here](https://qdrant.tech/documentation/).
+With DeepEval, you can evaluate your Qdrant retriever and **optimize for performance** in addition to speed, by configuring hyperparameters in your Qdrant retrieval pipeline such as `vector dimensionality`, `distance` (or similarity function), `embedding model`, `limit` (or top-K), among many others.
 
-This diagram illustrates how the Qdrant retriever fits into your RAG pipeline.
+:::tip
+To learn more about Qdrant, [visit their documentation](https://qdrant.tech/documentation/).
+:::
+
+This diagram demonstrates how the Qdrant retriever integrates with an external embedding model and an LLM generator to enhance your RAG pipeline.
 
 <div
   style={{
@@ -48,7 +52,7 @@ This diagram illustrates how the Qdrant retriever fits into your RAG pipeline.
 
 ## Setup Qdrant
 
-To get started, connect to your local or cloud-hosted Qdrant instance.
+To get started with Qdrant, first create a Python `QdrantClient` to connect to your local or cloud-hosted Qdrant instance by providing the corresponding URL.
 
 ```python
 import qdrant_client
@@ -59,9 +63,15 @@ client = qdrant_client.QdrantClient(
 )
 ```
 
-Next, create a Qdrant collection with the appropriate vector configuration. The collection will store document embeddings as `vectors` and their corresponding text as metadata.
+Next, create a Qdrant collection with the appropriate vector configurations. This collection will store your document embeddings as `vectors` and the corresponding text chunks as metadata. In the code snippet below, we set the `distance` function to cosine similarity and define a vector dimension of 384.
+
+:::tip
+You'll want to iterate and test different values for hyperparameters like `size` and `distance` if you don't achieve satisfying scores during evaluation.
+:::
 
 ```python
+...
+
 # Define collection name
 collection_name = "documents"
 
@@ -76,7 +86,7 @@ if collection_name not in [col.name for col in client.get_collections().collecti
     )
 ```
 
-Finally, define an embedding model to convert your document chunks into vectors before indexing them in Qdrant.
+To add documents to your Qdrant collection, first embed the chunks before upserting them using the `PointStruct` structure. In this example, we'll use `all-MiniLM-L6-v2` from `sentence_transformers` as our embedding model.
 
 ```python
 # Load an embedding model
@@ -85,9 +95,9 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Example document chunks
 document_chunks = [
-    "Qdrant is an efficient vector database.",
-    "RAG improves AI-generated responses with retrieved context.",
-    "Vector search enables high-precision semantic retrieval.",
+    "Qdrant is a vector database optimized for fast similarity search.",
+    "It uses HNSW for efficient high-dimensional vector indexing.",
+    "Qdrant supports disk-based storage for handling large datasets.",
     ...
 ]
 
@@ -104,24 +114,31 @@ for i, chunk in enumerate(document_chunks):
     )
 ```
 
-To use Qdrant as part of your RAG pipeline, retrieve relevant contexts using similarity search and insert them into your prompt template. This ensures your model has the necessary context to generate accurate and informed responses.
+We'll use this `Qdrant` collection in the following sections as our retrieval engine to retrieve contexts using cosine similarity for response generation. The retrieved contexts will be passed to our LLM generator, which will generate the final response in our RAG pipeline.
 
 ## Evaluating Qdrant Retrieval
 
-Evaluating your Qdrant retriever consists of 2 steps:
+To evaluate your Qdrant retriever, you'll first need to prepare an `LLMTestCase`, which includes an `input`, `actual_output`, `expected_output`, and `retrieval_context`. This requires defining an `input` and `expected_output` before generating a response and extracting the retrieval contexts.
 
-1. Preparing an `input` query along with the expected LLM response, and using the `input` to generate a response from your RAG pipeline to create an `LLMTestCase` containing the input, actual output, expected output, and retrieval context.
-2. Evaluating the test case using a selection of retrieval metrics.
+In this example, we'll be using the following input:
 
-:::information
-An `LLMTestCase` allows you to create unit tests for your LLM applications, helping you identify specific weaknesses in your RAG application.
-:::
+```bash
+"How does Qdrant work?"
+```
+
+and the corresponding expected output:
+
+```bash
+"Qdrant performs fast and scalable vector search using HNSW indexing and disk-based storage."
+```
 
 ### Preparing your Test Case
 
-Since the first step in generating a response from your RAG pipeline is retrieving the relevant `retrieval_context` from your Qdrant collection, first perform this retrieval for your `input` query.
+To generate the response or `actual_output` from your RAG pipeline, you'll first need to retrieve relevant contexts from your `Qdrant` collection. To achieve this, we'll define a `search` function that embeds the `input` using the same embedding model (`all-MiniLM-L6-v2`) as above, then search for the top 3 most similar vectors and extract the corresponding texts.
 
 ```python
+...
+
 def search(query, top_k=3):
     query_embedding = model.encode(query).tolist()
 
@@ -137,9 +154,11 @@ query = "How does Qdrant work?"
 retrieval_context = search(query)
 ```
 
-Next, pass the retrieved context into your LLM's prompt template to generate a response.
+We'll then insert these contexts into our prompt template to provide additional context and help ground the response.
 
 ```python
+...
+
 prompt = """
 Answer the user question based on the supporting context
 
@@ -154,16 +173,12 @@ actual_output = generate(prompt) # hypothetical function, replace with your own 
 print(actual_output)
 ```
 
-Let's examine the `actual_output` generated by our RAG pipeline:
-
-```
-Qdrant is a scalable vector database optimized for high-performance semantic retrieval.
-```
-
-Finally, create an `LLMTestCase` using the input and expected output you prepared, along with the actual output and retrieval context you generated.
+We'll then pass the input and expected output that was initially defined into an `LLMTestCase`, along with the actual output and retrieval context that we generated and searched for.
 
 ```python
 from deepeval.test_case import LLMTestCase
+
+...
 
 test_case = LLMTestCase(
     input=input,
@@ -173,12 +188,18 @@ test_case = LLMTestCase(
 )
 ```
 
+Before proceeding with evaluations, let's examine the `actual_output` that was generated:
+
+```bash
+Qdrant is a scalable vector database optimized for high-performance retrieval.
+```
+
 ### Running Evaluations
 
-To run evaluations on the `LLMTestCase`, we first need to define relevant `deepeval` metrics to evaluate the Qdrant retriever: contextual recall, contextual precision, and contextual relevancy.
+To evaluate your `Qdrant` retriever engine, define the selection of metrics you wish to evaluate your retriever on, before passing the metrics and test case into the `evaluate` function.
 
-:::note
-These **contextual metrics** help assess your retriever. For more retriever evaluation details, check out this [guide](/guides/guides-rag-evaluation).
+:::tip
+Unless you have custom evaluation criteria, it's best to evaluate your test case using `ContextualRecallMetric`, `ContextualPrecisionMetric`, and `ContextualRelevancyMetric`, as these metrics assess the effectiveness of your retriever. [You can learn more about RAG metrics here](/guides/guides-rag-evaluation)
 :::
 
 ```python
@@ -188,15 +209,11 @@ from deepeval.metrics import (
     ContextualRelevancyMetric,
 )
 
+...
+
 contextual_recall = ContextualRecallMetric(),
 contextual_precision = ContextualPrecisionMetric()
 contextual_relevancy = ontextualRelevancyMetric()
-```
-
-Finally, pass the test case and metrics into the `evaluate` function to begin the evaluation.
-
-```
-from deepeval import evaluate
 
 evaluate(
     [test_case],
@@ -206,22 +223,37 @@ evaluate(
 
 ## Improving Qdrant Retrieval
 
-Below is a table outlining the hypothetical metric scores for your evaluation run.
+Let's say that after running multiple test cases, we observed that the **Contextual Precision** score is lower than expected. This suggests that while our retriever is fetching relevant contexts, some of them might not be the best match for the query, leading to noise in the response.
 
-| <div style={{width: "350px"}}>Metric</div> | <div style={{width: "350px"}}>Score</div> |
-| ------------------------------------------ | ----------------------------------------- |
-| Contextual Precision                       | 0.85                                      |
-| Contextual Recall                          | 0.92                                      |
-| Contextual Relevancy                       | 0.44                                      |
+### Key Findings
+
+| Query                                        | Contextual Precision Score | Contextual Recall Score |
+| -------------------------------------------- | -------------------------- | ----------------------- |
+| "How does Qdrant store vector data?"         | 0.39                       | 0.92                    |
+| "Explain Qdrant's indexing method."          | 0.35                       | 0.89                    |
+| "What makes Qdrant efficient for retrieval?" | 0.42                       | 0.83                    |
+
+### Addressing Low Precision
+
+Since **precision** evaluates how well the retrieved contexts match the query, a lower score often indicates that some retrieved results are not as semantically relevant as they should be. Possible solutions include:
+
+- **Using a More Domain-Specific Embedding Model**  
+  If your use case involves technical documentation, a general-purpose model like `all-MiniLM-L6-v2` might not be the best fit. Consider testing models such as:
+
+  - `BAAI/bge-small-en` for better retrieval ranking.
+  - `sentence-transformers/msmarco-distilbert-base-v4` for dense passage retrieval.
+  - `nomic-ai/nomic-embed-text-v1` for long-form document retrieval.
+
+- **Adjusting Vector Dimensions**  
+  If switching models, ensure that the vector dimensions in Qdrant match the embedding output to avoid misalignment.
+
+- **Filtering Less Relevant Results**  
+  Applying metadata filters can help exclude unrelated chunks that might be skewing precision.
+
+### Next Steps
+
+Once you've tested alternative embedding models, you'll want to generate new test cases and re-evaluate retrieval quality to measure improvements. Keep an eye on **Contextual Precision**, as an increase indicates more focused and relevant context retrieval.
 
 :::info
-Each contextual metric evaluates a **specific hyperparameter**. To learn more about this, read [this guide on RAG evaluation](/guides/guides-rag-evaluation).
-:::
-
-To improve your Qdrant retriever, you'll need to experiment with various hyperparameters and prepare `LLMTestCase`s using generations from different retriever versions.
-
-Ultimately, analyzing improvements and regressions in **contextual metric scores** (the three metrics defined above) will help you determine the optimal hyperparameter combination for your Qdrant retriever.
-
-:::tip
-For a more detailed guide on tuning your retriever’s hyperparameters, check out [this guide](/guides/guides-optimizing-hyperparameters).
+For deeper insights into retrieval performance and to compare embedding model variations, consider tracking your evaluations in [Confident AI](https://www.confident-ai.com/).
 :::
