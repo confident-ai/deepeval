@@ -53,12 +53,8 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 > 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)'s infrastructure
 
 - Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
-  - **General metrics:**
     - G-Eval
-    - Hallucination
-    - Summarization
-    - Bias
-    - Toxicity
+    - DAG (deep acyclic graph)
   - **RAG metrics:**
     - Answer Relevancy
     - Faithfulness
@@ -69,6 +65,11 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
   - **Agentic metrics:**
     - Task Completion
     - Tool Correctness
+  - **Others:**
+    - Hallucination
+    - Summarization
+    - Bias
+    - Toxicity
   - **Conversational metrics:**
     - Knowledge Retention
     - Conversation Completeness
@@ -150,7 +151,12 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
 def test_case():
-    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
+    correctness_metric = GEval(
+        name="Correctness",
+        criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
+        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+        threshold=0.5
+    )
     test_case = LLMTestCase(
         input="What if these shoes don't fit?",
         # Replace this with the actual output from your LLM application
@@ -171,11 +177,12 @@ And finally, run `test_chatbot.py` in the CLI:
 deepeval test run test_chatbot.py
 ```
 
-**Your test should have passed ✅** Let's breakdown what happened.
+**Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
-- The variable `input` mimics user input, and `actual_output` is a placeholder for your chatbot's intended output based on this query.
-- The variable `retrieval_context` contains the relevant information from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an out-of-the-box metric provided by DeepEval. It helps evaluate the relevancy of your LLM output based on the provided context.
-- The metric score ranges from 0 - 1. The `threshold=0.5` threshold ultimately determines whether your test has passed or not.
+- The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
+- The variable `expected_output` represents the ideal answer for a given `input`, and [`GEval`](/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM output's on any custom custom with human-like accuracy.
+- In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`.
+- All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
 [Read our documentation](https://docs.confident-ai.com/docs/getting-started?utm_source=GitHub) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
 
