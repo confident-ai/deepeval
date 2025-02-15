@@ -54,7 +54,7 @@ Whether your application is implemented via RAG or fine-tuning, LangChain or Lla
 
 - Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
     - G-Eval
-    - DAG (deep acyclic graph)
+    - DAG ([deep acyclic graph](https://docs.confident-ai.com/docs/metrics-dag))
   - **RAG metrics:**
     - Answer Relevancy
     - Faithfulness
