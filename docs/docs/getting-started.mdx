@@ -108,9 +108,7 @@ deepeval test run test_example.py
 You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running `GEval`, since `GEval` is an LLM-evaluated metric. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
 :::
 
-You can either save test runs on Confident AI for analysis and comparison for a more robust evaluation workflow, or locally on your machine.
-
-#### Confident AI (highly recommended)
+#### Save Results On Confident AI (highly recommended)
 
 Simply login with `deepeval login` (or [click here](https://app.confident-ai.com)) to get your API key.
 
@@ -137,7 +135,7 @@ You should save your test run as a dataset on Confident AI, which allows you to 
 This allows you to run experiments with different models, prompts, and pinpoint regressions/improvements, and allows for domain experts to collaborate on evaluation datasets that is otherwise difficult for an engineer, researcher, and data scientist to curate.
 :::
 
-#### Locally
+#### Save Results Locally
 
 Simply set the `DEEPEVAL_RESULTS_FOLDER` environment variable to your relative path of choice.
 
