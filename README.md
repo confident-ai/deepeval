@@ -163,7 +163,7 @@ def test_case():
         actual_output="We offer a 30-day full refund at no extra costs.",
         retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
     )
-    assert_test(test_case, [answer_relevancy_metric])
+    assert_test(test_case, [correctness_metric])
 ```
 Set your `OPENAI_API_KEY` as an environment variable (you can also evaluate using your own custom model, for more details visit [this part of our docs](https://docs.confident-ai.com/docs/metrics-introduction#using-a-custom-llm?utm_source=GitHub)):
 
