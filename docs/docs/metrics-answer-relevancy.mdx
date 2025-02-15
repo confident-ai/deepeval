@@ -42,9 +42,6 @@ test_case = LLMTestCase(
 metric.measure(test_case)
 print(metric.score)
 print(metric.reason)
-
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
 ```
 
 There are six optional parameters when creating an `AnswerRelevancyMetric`:
