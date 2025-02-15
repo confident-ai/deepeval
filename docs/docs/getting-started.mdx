@@ -102,7 +102,7 @@ deepeval test run test_example.py
 - In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
-Different metrics will require different parameters in an `LLMTestCase` for evaluation, so be sure to checkout each metric's documentation pages to avoid any unexpected errors.
+**If you don't have a labelled dataset, don't worry**, because the `expected_output` is only required in this example. Different metrics will require different parameters in an `LLMTestCase` for evaluation, so be sure to checkout each metric's documentation pages to avoid any unexpected errors.
 
 :::info
 You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running `GEval`, since `GEval` is an LLM-evaluated metric. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
