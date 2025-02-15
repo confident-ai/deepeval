@@ -70,18 +70,23 @@ Open `test_example.py` and paste in your first test case:
 
 ```python title="test_example.py"
 from deepeval import assert_test
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import GEval
 
-def test_answer_relevancy():
-    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-    test_case = LLMTestCase(
-        input="What if these shoes don't fit?",
-        # Replace this with the actual output of your LLM application
-        actual_output="We offer a 30-day full refund at no extra cost.",
-        retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
+def test_correctness():
+    correctness_metric = GEval(
+        name="Correctness",
+        criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
+        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+        threshold=0.5
     )
-    assert_test(test_case, [answer_relevancy_metric])
+    test_case = LLMTestCase(
+        input="I have a persistent cough and fever. Should I be worried?",
+        # Replace this with the actual output of your LLM application
+        actual_output="A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don’t improve in a few days.",
+        expected_output="A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs."
+    )
+    assert_test(test_case, [correctness_metric])
 ```
 
 Run `deepeval test run` from the root directory of your project:
@@ -93,16 +98,17 @@ deepeval test run test_example.py
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
 - The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
-- The variable `retrieval_context` contains the retrieved context from your knowledge base, and `AnswerRelevancyMetric(threshold=0.5)` is an default metric provided by `deepeval` for you to evaluate your LLM output's relevancy based on the provided retrieval context.
+- The variable `expected_output` represents the ideal answer for a given `input`, and [`GEval`](/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM output's on any custom custom with human-like accuracy.
+- In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
-:::info
-You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running the `AnswerRelevancyMetric`, since the `AnswerRelevancyMetric` is an LLM-evaluated metric.
+Different metrics will require different parameters in an `LLMTestCase` for evaluation, so be sure to checkout each metric's documentation pages to avoid any unexpected errors.
 
-To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
+:::info
+You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running `GEval`, since `GEval` is an LLM-evaluated metric. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
 :::
 
-You can either **save test runs on Confident AI for analysis and comparison for a more robust evaluation workflow**, or locally on your machine.
+You can either save test runs on Confident AI for analysis and comparison for a more robust evaluation workflow, or locally on your machine.
 
 #### Confident AI (highly recommended)
 
@@ -128,7 +134,7 @@ After you've pasted in your API key, Confident AI will generate testing reports 
 :::tip
 You should save your test run as a dataset on Confident AI, which allows you to reuse the set of `input`s and any `expected_output`, `context`, etc. for subsequent evaluations.
 
-This workflow allows you to run experiments with different models, prompts, and pinpoint regressions/improvements, and allows for domain experts to collaborate on evaluation datasets that is otherwise difficult for an engineer, researcher, and data scientist to curate.
+This allows you to run experiments with different models, prompts, and pinpoint regressions/improvements, and allows for domain experts to collaborate on evaluation datasets that is otherwise difficult for an engineer, researcher, and data scientist to curate.
 :::
 
 #### Locally
@@ -149,18 +155,23 @@ The whole point of evaluation is to help you iterate towards a better LLM applic
 
 ```python title="test_example.py"
 from deepeval import assert_test
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import GEval
 
-def test_answer_relevancy():
-    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-    test_case = LLMTestCase(
-        input="What if these shoes don't fit?",
-        # Replace this with the actual output of your LLM application
-        actual_output="I agree, its a pretty nice day today",
-        retrieval_context=["All customers are eligible for a 30 day full refund at no extra cost."]
+def test_correctness():
+    correctness_metric = GEval(
+        name="Correctness",
+        criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
+        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+        threshold=0.5
     )
-    assert_test(test_case, [answer_relevancy_metric])
+    test_case = LLMTestCase(
+        input="I have a persistent cough and fever. Should I be worried?",
+        # Replace this with the actual output of your LLM application
+        actual_output="A persistent cough and fever are usually just signs of a cold or flu, so you probably don’t need to worry unless it lasts more than a few weeks. Just rest and drink plenty of fluids, and it should go away on its own.",
+        expected_output="A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs."
+    )
+    assert_test(test_case, [correctness_metric])
 ```
 
 ```console
@@ -171,7 +182,7 @@ deepeval test run test_example.py
 In this example, we've delibrately showed a "worse" `actual_output` that is extremely irrelevant when compared to the previous test case. In reality, you'll not be hardcoding the `actual_output`s but rather be generating them at evaluation time.
 :::
 
-After running the new testrun , you should see the `AnswerRelevancyMetric()` failing, and it is because the `actual_output` is now not relevant at all to the `input`. This is actually known as a "regression", and you can catch these by including `deepeval` in CI/CD pipeliens, or just in a python script.
+After running the new `test run` , you should see the `GEval` correctness metric failing, and it is because the `actual_output` is incorrect according to the `expected_output`. This is actually known as a "regression", and you can catch these by including `deepeval` in CI/CD pipeliens, or just in a python script.
 
 Based on these two results, you can decide which iterate is better, and whether the latest change you've made to your LLM application is safe to deploy.
 
@@ -211,7 +222,17 @@ deepeval recommend metrics
 
 ### Default Metrics
 
-`deepeval` offers 14+ research backed default metrics covering a wide range of use-cases (such as RAG and fine-tuning). To create a metric, simply import from the `deepeval.metrics` module:
+`deepeval` offers 14+ research backed default metrics covering a wide range of use-cases. Here are a few metrics for RAG pipelines and agents:
+
+- Answer Relevancy
+- Faithfulness
+- Contextual Relevancy
+- Contextual Recall
+- Contextual Precision
+- Tool Correctness
+- Task Completion
+
+To create a metric, simply import from the `deepeval.metrics` module:
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -314,7 +335,7 @@ To avoid redundant code, `deepeval` offers an easy way to apply as many metrics 
 ...
 
 def test_everything():
-    assert_test(test_case, [answer_relevancy_metric, correctness_metric])
+    assert_test(test_case, [correctness_metric, answer_relevancy_metric])
 ```
 
 In this scenario, `test_everything` only passes if all metrics are passing. Run `deepeval test run` again to see the results:

@@ -62,7 +62,7 @@ An `LLMTestCase` in `deepeval` can be used to unit test LLM application (which c
 
 ![ok](https://confident-docs.s3.amazonaws.com/llm-test-case.svg)
 
-Different metrics will require a different combination of `LLMTestCase` parameters, but they all require an `input` and `actual_output` - regardless of whether they are used for evaluation for not. For example, you won't need `expected_output`, `context`, `tools_called`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
+**Different metrics will require a different combination of `LLMTestCase` parameters, but they all require an `input` and `actual_output`** - regardless of whether they are used for evaluation for not. For example, you won't need `expected_output`, `context`, `tools_called`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
 
 With the exception of conversational metrics, which are metrics to evaluate conversations instead of individual LLM responses, you can use any LLM evaluation metric `deepeval` offers to evaluate an `LLMTestCase`.
 
