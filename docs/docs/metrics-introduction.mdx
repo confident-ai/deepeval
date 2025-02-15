@@ -9,19 +9,23 @@ sidebar_label: Introduction
 In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, a test case represents the thing you're trying to measure. `deepeval` offers a range of default metrics for you to quickly get started with, such as:
 
 - G-Eval
-- Prompt Alignment
-- Faithfulness
-- Answer Relevancy
-- Contextual Relevancy
-- Contextual Precision
-- Contextual Recall
-- Tool Correctness
-- Json Correctness
-- Ragas
-- Hallucination
-- Toxicity
-- Bias
-- Summarization
+- DAG (Deep Acyclic Graph)
+- RAG:
+  - Answer Relevancy
+  - Faithfulness
+  - Contextual Relevancy
+  - Contextual Precision
+  - Contextual Recall
+- Agents:
+  - Tool Correctness
+  - Task Completion
+- Others:
+  - Json Correctness
+  - Ragas
+  - Hallucination
+  - Toxicity
+  - Bias
+  - Summarization
 
 `deepeval` also offers conversational metrics, which are metrics used to evaluate conversations instead of individual, granular LLM interactions. These include:
 
@@ -44,27 +48,51 @@ deepeval recommend metrics
 
 ## Types of Metrics
 
-A **_custom_** metric is a type of metric you can easily create by implementing abstract methods and properties of base classes provided by `deepeval`. They are extremely versatile and seamlessly integrate with Confident AI without requiring any additional setup. As you'll see later, a custom metric can either be an **_LLM-Eval_** (LLM evaluated) or **_classic_** metric. A classic metric is a type of metric whose criteria isn't evaluated using an LLM.
+`deepeval` offers a wide range of **_custom_** and **_default_** metrics and all of them uses LLM-as-a-judge. There are two types of custom metrics, with varying degree of deterministicity:
 
-`deepeval` also offers **_default_** metrics, which can either be conversational or non-conversational. Non-conversational metrics are used to evaluate `LLMTestCase`s, while conversational metrics can be used to evaluate `ConversationalTestCase`s.
+- [G-Eval](/docs/metrics-llm-evals)
+- [DAG](/docs/metrics-dag)
 
-:::caution
-Since there are way more non-conversational metrics in `deepeval` than conversational metrics, you should assume the term 'metrics' refer to non-conversational metrics.
+The DAG metric is a decision-tree based LLM-evaluated metric, and is currently the most versitile metric `deepeval` has to offer. However, G-Eval is also extremely competent and takes no effort at all to setup so we recommend everyone to start with G-Eval and move to DAG if there's a need for it.
+
+:::note
+
+You can also inhert a `BaseMetric` class to create your own custom metric. They are extremely easy to create and almost 10% of all metrics ran using `deepeval` are self-built metrics.
+
 :::
 
-Almost all default metrics offered by `deepeval` are LLM-Evals, which means they are evaluated using LLMs. This is deliberate because LLM-Evals are versatile in nature and better align with human expectations when compared to traditional model based approaches.
+`deepeval` also offers **_default_** metrics, which are pre-built for different LLM systems/use cases. For example, `deepeval` offers the famous RAG metrics out-of-the-box:
 
-`deepeval`'s LLM-Evals are a step up to other implementations because they:
-
-- are extra reliable as LLMs are only used for extremely specific tasks during evaluation to greatly reduce stochasticity and flakiness in scores.
-- provide a comprehensive reason for the scores computed.
-- can be computed using any LLM.
-
-All of `deepeval`'s default metrics output a score between 0-1, and require a `threshold` argument to instantiate. A default metric is only successful if the evaluation score is equal to or greater than `threshold`.
+- [Answer Relevancy](/docs/metrics-answer-relevancy)
+- [Faithfulness](/docs/metrics-faithfulness)
+- [Contextual Relevancy](/docs/metrics-contextual-relevancy)
+- [Contextual Precision](/docs/metrics-contextual-precision)
+- [Contextual Recall](/docs/metrics-contextual-recall)
 
 :::info
-All GPT models from OpenAI are available for LLM-Evals (metrics that use LLMs for evaluation). You can switch between models by providing a string corresponding to OpenAI's model names via the optional `model` argument when instantiating an LLM-Eval.
+`deepeval` deliberately uses LLM-as-a-judge for all metrics because our experience tells us that they better align with human expectations when compared to traditional model based approaches.
 :::
+
+`deepeval`'s metrics are a step up to other implementations because they:
+
+- Make deterministic metric scores possible (when using `DAGMetric`).
+- Easily customizable (`GEval` and `DAGMetric`).
+- Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores.
+- Provide a comprehensive reason for the scores computed.
+- Can be computed using any LLM.
+- Integrated 100% with Confident AI.
+
+All of `deepeval`'s metrics output a score between 0-1. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
+
+:::tip
+All LLMs from OpenAI are available for LLM-Evals (metrics that use LLMs for evaluation). You can switch between models by providing a string corresponding to OpenAI's model names via the optional `model` argument when instantiating an LLM-Eval.
+:::
+
+### What About Non LLM-Evals?
+
+If you're looking to use something like **ROUGE**, **BLEU**, or **BLURT**, etc. you can create a custom metric and use the `scorer` module available in `deepeval` for scoring by following [this guide](/guides/guides-building-custom-metrics#building-a-custom-non-llm-eval).
+
+The `scorer` module is available but not documented because our experience tells us these scorers are not useful as LLM metrics where outputs require a high level of reasoning to evaluate.
 
 ## Using OpenAI
 
