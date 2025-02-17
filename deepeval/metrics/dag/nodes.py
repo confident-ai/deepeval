@@ -58,7 +58,7 @@ def decrement_indegree(node: BaseNode):
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
     score: Optional[int] = None
-    child: Optional[BaseNode] = None
+    child: Optional[BaseNode | GEval] = None
     _parent: Optional[BaseNode] = None
 
     def __hash__(self):
@@ -98,7 +98,7 @@ class VerdictNode(BaseNode):
                     "name": self.child.name,
                     "evaluation_params": self.child.evaluation_params,
                     "model": metric.model,
-                    "verbose_mode": metric.verbose_mode,
+                    "verbose_mode": False,
                 }
                 if self.child.criteria:
                     g_eval_args["criteria"] = self.child.criteria
@@ -148,7 +148,7 @@ class VerdictNode(BaseNode):
                     "name": self.child.name,
                     "evaluation_params": self.child.evaluation_params,
                     "model": metric.model,
-                    "verbose_mode": metric.verbose_mode,
+                    "verbose_mode": False,
                 }
                 if self.child.criteria:
                     g_eval_args["criteria"] = self.child.criteria
@@ -370,7 +370,7 @@ class BinaryJudgementNode(BaseNode):
         for child in self.children:
             child.set_parent(self)
             increment_indegree(child)
-            if child.child is not None:
+            if child.child is not None and isinstance(child.child, BaseNode):
                 increment_indegree(child.child)
         #         print("binary node nested", child.child.__class__.__name__, id(child.child), child.child._indegree)
         #     print("binary node", child.__class__.__name__, id(child), child._indegree)
@@ -527,7 +527,7 @@ class NonBinaryJudgementNode(BaseNode):
         for child in self.children:
             child.set_parent(self)
             increment_indegree(child)
-            if child.child is not None:
+            if child.child is not None and isinstance(child.child, BaseNode):
                 increment_indegree(child.child)
         #         print("non binary node nested", child.child.__class__.__name__, id(child.child), child.child._indegree)
         #     print("non binary node", child.__class__.__name__, id(child), child._indegree)

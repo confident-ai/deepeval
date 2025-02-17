@@ -146,7 +146,10 @@ correct_order_node = NonBinaryJudgementNode(
 
 correct_headings_node = BinaryJudgementNode(
     criteria="Does the summary headings contain all three: 'intro', 'body', and 'conclusion'?",
-    children=[VerdictNode(verdict=False, score=0), correct_order_node],
+    children=[
+        VerdictNode(verdict=False, score=0),
+        VerdictNode(verdict=True, child=correct_order_node),
+    ],
 )
 
 extract_headings_node = TaskNode(
@@ -164,7 +167,7 @@ When creating your DAG, there are three important points to remember:
 
 1. There should only be an edge to a parent node **if the current node depends on the output of the parent node.**
 2. All nodes, except for `VerdictNode`s, can have access to an `LLMTestCase` at any point in time.
-3. All leaf nodes are `VerdictNode`s.
+3. All leaf nodes are `VerdictNode`s, but not all `VerdictNode`s are leaf nodes.
 
 **IMPORTANT:** You'll see that in our example, `extract_headings_node` has `correct_order_node` as a child because `correct_order_node`'s `criteria` depends on the extracted summary headings from the `actual_output` of the `LLMTestCase`.
 
@@ -290,20 +293,22 @@ The `VerdictNode` **is always a leaf node** and must not be the root node of you
 ```python
 from typing import Union
 from deepeval.metrics.dag import BaseNode
+from deepeval.metrics import GEval
 
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
     score: int
+    child: Union[GEval, BaseNode]
 ```
 
 There are one mandatory two optional parameters when creating a `VerdictNode`:
 
 - `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is a `NonBinaryJudgementNode`, else boolean if the parent is a `BinaryJudgementNode`.
 - [Optional] `score`: a integar between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value. You must provide a score if `g_eval` is `None`.
-- [Optional] `g_eval`: a [`GEval`](/docs/metrics-llm-evals) metric instance. If the `score` is not provided, the `DAGMetric` will use this provided `g_eval` metric instance to calculate a score instead.
+- [Optional] `child`: a `BaseNode` **OR** [`GEval`](/docs/metrics-llm-evals) metric instance. If the `score` is not provided, the `DAGMetric` will use this provided `child` to run the provided `GEval` metric instance to calculate a score, **OR** propagate the DAG execution to the `BaseNode` `child`.
 
 :::caution
-You must provide `score` or `g_eval`, but not both.
+You must provide `score` or `child`, but not both.
 :::
 
 ## How Is It Calculated?
