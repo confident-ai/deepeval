@@ -161,7 +161,9 @@ def capture_recommend_metrics():
 
 
 @contextmanager
-def capture_metric_type(metric_name: str, async_mode: bool, _track: bool = True):
+def capture_metric_type(
+    metric_name: str, async_mode: bool, _track: bool = True
+):
     if not telemetry_opt_out() and _track:
         with tracer.start_as_current_span(metric_name) as span:
             span.set_attribute("async_mode", async_mode)

@@ -331,8 +331,6 @@ class BinaryJudgementNode(BaseNode):
 
         # Check if all children are ClassificationResultNode and their classifications are boolean
         for child in self.children:
-            if not isinstance(child, VerdictNode):
-                raise TypeError("All children must be of type VerdictNode.")
             if not isinstance(child.verdict, bool):
                 raise ValueError(
                     "All children BinaryJudgementNode must have a boolean vedict."
@@ -465,9 +463,6 @@ class NonBinaryJudgementNode(BaseNode):
 
         verdicts_set = set()
         for child in self.children:
-            if not isinstance(child, VerdictNode):
-                raise TypeError("All children must be of type VerdictNode.")
-
             # Check if the verdict attribute of each child is a string
             if not isinstance(child.verdict, str):
                 raise ValueError(
