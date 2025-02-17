@@ -54,6 +54,15 @@ module.exports = {
         showLastUpdateTime: true,
       },
     ],
+    [
+      "@docusaurus/plugin-content-blog",
+      {
+        id: "changelogs",
+        path: "changelogs",
+        routeBasePath: "changelogs",
+        editUrl: "https://github.com/confident-ai/deepeval/edit/main/docs/",
+      },
+    ],
   ],
 
   title: "DeepEval - The Open-Source LLM Evaluation Framework",
@@ -159,6 +168,11 @@ module.exports = {
             href: "https://confident-ai.com/blog",
             position: "left",
             label: "Blogs",
+          },
+          {
+            to: "changelogs",
+            label: "Changelogs",
+            position: "left",
           },
           {
             href: "https://confident-ai.com",
