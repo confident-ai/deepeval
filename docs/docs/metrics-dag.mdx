@@ -46,7 +46,7 @@ Alice: "Bob, can we provide a stable version by then?"
 Bob: "Yes, we’ll share an early build."
 Charlie: "Great, we'll start preparing assets."
 Alice: "Plan: fixes by Friday, marketing prep Monday, sync next Wednesday. Thanks, everyone!"
-"""
+""",
     actual_output="""
 Intro:
 Alice outlined the agenda: product updates, blockers, and marketing alignment.
@@ -126,6 +126,7 @@ Some might skeptical if this complexity is necessary but in reality, you'll quic
 Here's how this decision tree would look like in code:
 
 ```python
+from deepeval.test_case import LLMTestCaseParams
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
     TaskNode,
