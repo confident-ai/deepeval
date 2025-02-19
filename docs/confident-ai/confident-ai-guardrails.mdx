@@ -146,6 +146,9 @@ guard_result = await guardrails.a_guard_output(input, output)
 The `Guardrails.guard` method returns a `GuardResult` object, which can be used to retry LLM response generations when necessary.
 
 ```python
+from typing import List
+from pydantic import BaseModel
+
 class GuardResult(BaseModel):
   breached: bool
   guard_data: List[GuardData]

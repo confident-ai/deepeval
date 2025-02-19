@@ -10,34 +10,40 @@ The **Hallucination Guard** is an output guard that analyzes the responses gener
 `HallucinationGuard` is only available as an **output guard**.
 :::
 
+Here's what an unsafe output would look like in the context of graphic content:
+
+> _"You should visit the Sydney sometime. Australia's capitol is a great place to be."_
+>
+> _— probably your LLM_
+
 ## Example
+
+Since `HallucinationGuard` is an output guard, simply provide it as a guard in the list of `guards` when initializing a `Guardrails` object:
 
 ```python
 from deepeval.guardrails import HallucinationGuard
 
-model_output = "The capital of Australia is Sydney."
-
-hallucination_guard = HallucinationGuard()
-guard_result = hallucination_guard.guard(response=model_output)
+guardrails = Guardrails(guards=[HallucinationGuard()])
 ```
 
-There are no required arguments when initializing the `HallucinationGuard` object. The `guard` function accepts a single parameter `response`, which is the output of your LLM application.
-
-## Interpreting Guard Result
+Then, call the `guard_output` method to make use of the `HallucinationGuard`:
 
 ```python
-print(guard_result.score)
-print(guard_result.score_breakdown)
+...
+
+output = generate_output(input)
+guard_result = guardrails.guard_output(input=input, output=output)
+print(guard_result)
 ```
 
-`guard_result.score` is an integer that is `1` if the guard has been breached. The `score_breakdown` for `HallucinationGuard` is a dictionary containing:
+:::note
+There are no required arguments when initializing a `HallucinationGuard`.
+:::
 
-- `score`: A binary value (1 or 0), where 1 indicates that hallucinated content was detected.
-- `reason`: A brief explanation of why the score was assigned.
+The returned `guard_result` is of type `GuardResult`, which you can use to control downstream application logic (such as returning a default error message to users):
 
-```json
-{
-  "score": 1,
-  "reason": "The statement 'The capital of Australia is Sydney' is incorrect; the capital is Canberra."
-}
+```python
+...
+
+print(guard_result.breached, guard_result.guard_data)
 ```

@@ -10,34 +10,40 @@ The **Modernization Guard** is an output guard that analyzes the responses gener
 `ModernizationGuard` is only available as an **output guard**.
 :::
 
+Here's what an unsafe output would look like in the context of modernization:
+
+> _"The response references information from 2020, which is outdated. The latest iPhone model is the iPhone 16, released in 2024."_
+>
+> — Probably your LLM
+
 ## Example
 
-```python
-from deepeval.guardrails import ModernizationGuard
-
-model_output = "The latest iPhone model was released in 2020."
-
-modernization_guard = ModernizationGuard()
-guard_result = modernization_guard.guard(response=model_output)
-```
-
-There are no required arguments when initializing the `ModernizationGuard` object. The `guard` function accepts a single parameter `response`, which is the output of your LLM application.
-
-## Interpreting Guard Result
+Since `SyntaxGuard` is an output guard, simply provide it as a guard in the list of `guards` when initializing a `Guardrails` object:
 
 ```python
-print(guard_result.score)
-print(guard_result.score_breakdown)
+from deepeval.guardrails import SyntaxGuard
+
+guardrails = Guardrails(guards=[SyntaxGuard()])
 ```
 
-`guard_result.score` is an integer that is `1` if the guard has been breached. The `score_breakdown` for `ModernizationGuard` is a dictionary containing:
+Then, call the `guard_output` method to make use of the `SyntaxGuard`:
 
-- `score`: A binary value (1 or 0), where 1 indicates that outdated content was detected.
-- `reason`: A brief explanation of why the score was assigned.
+```python
+...
 
-```json
-{
-  "score": 1,
-  "reason": "The response references information from 2020, which is outdated. The latest iPhone model is the iPhone 16, released in 2024."
-}
+output = generate_output(input)
+guard_result = guardrails.guard_output(input=input, output=output)
+print(guard_result)
+```
+
+:::note
+There are no required arguments when initializing a `SyntaxGuard`.
+:::
+
+The returned `guard_result` is of type `GuardResult`, which you can use to control downstream application logic (such as returning a default error message to users):
+
+```python
+...
+
+print(guard_result.breached, guard_result.guard_data)
 ```
