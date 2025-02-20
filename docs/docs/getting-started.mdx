@@ -16,7 +16,7 @@ and iterate on LLM (applications) and was built with the following principles in
 - Red team, safety scan LLM applications for security vulnerabilities.
 - Real-time evaluations in production.
 
-Additionally, DeepEval integrates natively with [Confident AI](https://app.confident-ai.com), which allows anyone to **evaluate, regression test, red team, and monitor** LLM applications on the cloud.
+Additionally, DeepEval has a cloud platform [Confident AI](https://app.confident-ai.com), which allow teams to use DeepEval to **evaluate, regression test, red team, and monitor** LLM applications on the cloud.
 
 <Envelope />
 
@@ -300,7 +300,10 @@ correct_order_node = NonBinaryJudgementNode(
 
 correct_headings_node = BinaryJudgementNode(
     criteria="Does the summary headings contain all three: 'intro', 'body', and 'conclusion'?",
-    children=[VerdictNode(verdict=False, score=0), correct_order_node],
+    children=[
+        VerdictNode(verdict=False, score=0),
+        VerdictNode(verdict=True, child=correct_order_node)
+    ],
 )
 
 extract_headings_node = TaskNode(
