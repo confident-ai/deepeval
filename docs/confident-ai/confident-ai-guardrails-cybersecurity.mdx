@@ -23,15 +23,15 @@ Since `TopicalGuard` is a input guard, simply provide it as a guard in the list 
 ```python
 from deepeval.guardrails import CybersecurityGuard
 from deepeval.guardrails.cybersecurity_guard import (
-    CyberattackType
+    CyberattackCategory
 )
 
 # Initialize the CybersecurityGuard
 cybersecurity_guard = CybersecurityGuard(
-    purpose=purpose,
-    cyberattack_types=[
-        CyberattackType.SQL_INJECTION,
-        CyberattackType.SHELL_INJECTION,
+    purpose="You're a medical chatbot.",
+    categories=[
+        CyberattackCategory.SQL_INJECTION,
+        CyberattackCategory.SHELL_INJECTION,
     ],
 )
 
@@ -41,7 +41,7 @@ guardrails = Guardrails(guards=[cybersecurity_guard])
 There is 2 required parameter when creating a `CybersecurityGuard`:
 
 - `purpose`: A string describing the purpose of your LLM application.
-- `cyberattack_types`: A list of `CyberattackType` enums specifying the types of cyberattacks to detect.
+- `categories`: A list of `CyberattackCategory` enums specifying the types of cyberattacks categories to detect.
 
 Then, call the `guard_input` method to make use of the `CybersecurityGuard`:
 
