@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 import asyncio
 
 from deepeval.test_case import (
@@ -42,6 +42,7 @@ class FaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
+        template: Type[FaithfulnessTemplate] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -132,7 +133,7 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt: dict = FaithfulnessTemplate.generate_reason(
+        prompt = self.template.generate_reason(
             contradictions=contradictions,
             score=format(self.score, ".2f"),
         )
@@ -159,7 +160,7 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt: dict = FaithfulnessTemplate.generate_reason(
+        prompt = self.template.generate_reason(
             contradictions=contradictions,
             score=format(self.score, ".2f"),
         )
@@ -182,7 +183,7 @@ class FaithfulnessMetric(BaseMetric):
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
-        prompt = FaithfulnessTemplate.generate_verdicts(
+        prompt = self.template.generate_verdicts(
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
         if self.using_native_model:
@@ -210,7 +211,7 @@ class FaithfulnessMetric(BaseMetric):
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
-        prompt = FaithfulnessTemplate.generate_verdicts(
+        prompt = self.template.generate_verdicts(
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
         if self.using_native_model:
@@ -232,7 +233,7 @@ class FaithfulnessMetric(BaseMetric):
                 return verdicts
 
     async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_truths(
+        prompt = self.template.generate_truths(
             text="\n\n".join(retrieval_context),
             extraction_limit=self.truths_extraction_limit,
         )
@@ -250,7 +251,7 @@ class FaithfulnessMetric(BaseMetric):
                 return data["truths"]
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_truths(
+        prompt = self.template.generate_truths(
             text="\n\n".join(retrieval_context),
             extraction_limit=self.truths_extraction_limit,
         )
@@ -268,7 +269,7 @@ class FaithfulnessMetric(BaseMetric):
                 return data["truths"]
 
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
+        prompt = self.template.generate_claims(text=actual_output)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
@@ -283,7 +284,7 @@ class FaithfulnessMetric(BaseMetric):
                 return data["claims"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
+        prompt = self.template.generate_claims(text=actual_output)
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost
