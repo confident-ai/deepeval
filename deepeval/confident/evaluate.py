@@ -20,7 +20,7 @@ from deepeval.utils import is_confident
 
 
 def confident_evaluate(
-    experiment_name: str,
+    metric_collection: str,
     test_cases: Union[List[LLMTestCase], List[ConversationalTestCase]],
     disable_browser_opening: Optional[bool] = False,
 ):
@@ -41,7 +41,7 @@ def confident_evaluate(
 
             api = Api(base_url=DEEPEVAL_BASE_URL)
             confident_request_data = ConfidentEvaluateRequestData(
-                experimentName=experiment_name, testCases=test_cases
+                metricCollection=metric_collection, testCases=test_cases
             )
             try:
                 body = confident_request_data.model_dump(

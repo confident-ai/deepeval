@@ -5,7 +5,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 
 
 class ConfidentEvaluateRequestData(BaseModel):
-    experiment_name: str = Field(alias="experimentName")
+    metric_collection: str = Field(alias="metricCollection")
     test_cases: List[Union[LLMTestCase, ConversationalTestCase]] = Field(
         alias="testCases"
     )
