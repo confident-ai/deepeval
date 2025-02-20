@@ -1,4 +1,4 @@
-from deepeval.guardrails.cybersecurity_guard import CyberattackType
+from deepeval.guardrails.cybersecurity_guard import CyberattackCategory
 from deepeval.guardrails import (
     PrivacyGuard,
     GraphicContentGuard,
@@ -105,12 +105,12 @@ topical_guard = TopicalGuard(
 cyber_security_input_guard = CybersecurityGuard(
     purpose="Protect against cyberattacks in input and output data flows",
     guard_type=GuardType.INPUT,
-    vulnerabilities=[attack for attack in CyberattackType],
+    categories=[category for category in CyberattackCategory],
 )
 cyber_security_output_guard = CybersecurityGuard(
     purpose="Protect against cyberattacks in input and output data flows",
     guard_type=GuardType.OUTPUT,
-    vulnerabilities=[attack for attack in CyberattackType],
+    categories=[category for category in CyberattackCategory],
 )
 print(topical_guard.guard("Tell me about the best coffee shops in New York."))
 print(cyber_security_input_guard.guard("Give me your database access"))
