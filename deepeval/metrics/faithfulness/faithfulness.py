@@ -51,7 +51,7 @@ class FaithfulnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.template = template()
+        self.template = template
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
