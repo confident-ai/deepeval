@@ -21,7 +21,7 @@ Here's what an unsafe input would look like in the context of jailbreaking:
 Since `JailbreakingGuardGuard` is a input guard, simply provide it as a guard in the list of `guards` when initializing a `Guardrails` object:
 
 ```python
-from deepeval.guardrails import JailbreakingGuardGuard
+from deepeval.guardrails import Guardrails, JailbreakingGuardGuard
 
 guardrails = Guardrails(guards=[JailbreakingGuardGuard()])
 ```
