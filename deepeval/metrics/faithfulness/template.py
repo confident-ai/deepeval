@@ -49,7 +49,7 @@ Example Text:
 
 Example JSON: 
 {{
-    "claims": [
+    "truths": [
         "Einstein won the noble prize for his discovery of the photoelectric effect in 1968."
         "The photoelectric effect is a phenomenon that laid the foundation for quantum mechanics."
     ]  
