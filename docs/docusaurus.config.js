@@ -161,9 +161,10 @@ module.exports = {
             label: "Blogs",
           },
           {
-            href: "https://confident-ai.com",
+            href: "https://app.confident-ai.com",
             className: "header-confident-link",
             position: "right",
+            label: 'Try DeepEval Cloud',
           },
           {
             href: "https://discord.gg/a3K9c8GRGt",
@@ -171,7 +172,7 @@ module.exports = {
             position: "right",
           },
           {
-            href: "https://github.com/mr-gpt/deepeval",
+            href: "https://github.com/confident-ai/deepeval",
             position: "right",
             className: "header-github-link",
           },
