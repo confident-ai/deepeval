@@ -161,7 +161,7 @@ module.exports = {
             label: "Blogs",
           },
           {
-            href: "https://app.confident-ai.com",
+            href: "https://confident-ai.com",
             className: "header-confident-link",
             position: "right",
             label: 'Try DeepEval Cloud',
