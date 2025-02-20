@@ -81,7 +81,7 @@ def confident_evaluate(
 
         if response:
             Console().print(
-                f"[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation of experiment '{experiment_name}' started! View progress on "
+                f"[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation of metric collection '{metric_collection}' started! View progress on "
                 f"[link={response.link}]{response.link}[/link]"
             )
 
