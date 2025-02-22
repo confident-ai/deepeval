@@ -301,6 +301,20 @@ def capture_login_event():
     else:
         yield
 
+@contextmanager
+def capture_pull_dataset():
+    if not telemetry_opt_out():
+        with tracer.start_as_current_span(f"Pull") as span:
+            span.set_attribute("logged_in_with", get_logged_in_with())
+            span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
+            span.set_attribute("user.status", get_status())
+            span.set_attribute("user.unique_id", get_unique_id())
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
+            yield span
+    else:
+        yield
+
 
 #########################################################
 ### Helper Functions ####################################
