@@ -227,12 +227,13 @@ class TaskNode(BaseNode):
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
 ```
 
-There are three mandatory and one optional parameter when creating a `TaskNode`:
+There are three mandatory and two optional parameter when creating a `TaskNode`:
 
 - `instructions`: a string specifying how to process parameters of an `LLMTestCase`, and/or outputs from a previous parent `TaskNode`.
 - `output_label`: a string representing the final output. The `children` `BaseNode`s will use the `output_label` to reference the output from the current `TaskNode`.
 - `children`: a list of `BaseNode`s. There **must not** be a `VerdictNode` in the list of children.
 - [Optional] `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for processing.
+- [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 :::info
 For example, if you intend to breakdown the `actual_output` of an `LLMTestCase` into distinct sentences, the `output_label` would be something like "Extracted Sentences", which children `BaseNode`s can reference for subsequent judgement in your decision tree.
@@ -253,11 +254,12 @@ class BinaryJudgementNode(BaseNode):
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
 ```
 
-There are two mandatory and one optional parameter when creating a `BinaryJudgementNode`:
+There are two mandatory and two optional parameter when creating a `BinaryJudgementNode`:
 
 - `criteria`: a yes/no question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** to output `True` or `False`.
 - `children`: a list of exactly two `VerdictNode`s, one with a `verdict` value of `True`, and the other with a value of `False`.
 - [Optional] `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 :::tip
 If you have a `TaskNode` as a parent node (which by the way is automatically set by `deepeval` when you supply the list of `children`), you can base your `criteria` on the output of the parent `TaskNode` by referencing the `output_label`.
@@ -280,11 +282,12 @@ class NonBinaryJudgementNode(BaseNode):
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
 ```
 
-There are two mandatory and one optional parameter when creating a `NonBinaryJudgementNode`:
+There are two mandatory and two optional parameter when creating a `NonBinaryJudgementNode`:
 
 - `criteria`: an open-ended question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** what to output.
 - `children`: a list of `VerdictNode`s, where the `verdict` values determine the possible verdict of the current `NonBinaryJudgementNode`.
 - [Optional] `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 ### `VerdictNode`
 

@@ -59,7 +59,6 @@ class VerdictNode(BaseNode):
     verdict: Union[str, bool]
     score: Optional[int] = None
     child: Optional[BaseNode | GEval] = None
-    label: Optional[str] = None
     _parent: Optional[BaseNode] = None
 
     def __hash__(self):
@@ -643,7 +642,13 @@ class NonBinaryJudgementNode(BaseNode):
 def construct_node_verbose_log(
     node: BaseNode, depth: int, g_eval: Optional[GEval] = None
 ) -> str:
-    label = node.label if node.label else "None"
+    if (
+        isinstance(node, BinaryJudgementNode)
+        or isinstance(node, NonBinaryJudgementNode)
+        or isinstance(node, TaskNode)
+    ):
+        label = node.label if node.label else "None"
+
     if isinstance(node, BinaryJudgementNode) or isinstance(
         node, NonBinaryJudgementNode
     ):
@@ -682,7 +687,6 @@ def construct_node_verbose_log(
             "________________________\n"
             f"| VerdictNode | Level == {depth} |\n"
             "**********************************\n"
-            f"Label: {label}\n"
             f"Verdict: {node.verdict}\n"
             f"Type: {type}"
         )
