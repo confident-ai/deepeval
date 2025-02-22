@@ -25,7 +25,6 @@ module.exports = {
         label: "LLM Observability",
         items: [
           "confident-ai-llm-monitoring",
-          "confident-ai-llm-monitoring-conversations",
           "confident-ai-llm-monitoring-evaluations",
           "confident-ai-llm-monitoring-dataset",
           {
@@ -49,7 +48,7 @@ module.exports = {
           "confident-ai-human-feedback-adding",
           "confident-ai-human-feedback-platform",
         ],
-        collapsed: true,
+        collapsed: false,
       },
       {
         type: "category",
