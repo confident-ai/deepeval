@@ -42,7 +42,9 @@ correct_order_node = NonBinaryJudgementNode(
 )
 
 correct_headings_node = BinaryJudgementNode(
+    label="Correct Heading Node",
     criteria="Does the summary headings contain all three: 'intro', 'body', and 'conclusion'?",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     children=[
         VerdictNode(verdict=False, score=0),
         VerdictNode(verdict=True, child=correct_order_node),
@@ -59,7 +61,7 @@ extract_headings_node = TaskNode(
 from deepeval.metrics.dag.utils import copy_graph
 
 # create the DAG
-dag = DeepAcyclicGraph(root_nodes=[extract_headings_node])
+dag = DeepAcyclicGraph(root_nodes=[correct_headings_node])
 
 
 # copy_graph(dag)

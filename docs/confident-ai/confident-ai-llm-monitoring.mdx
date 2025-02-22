@@ -202,7 +202,7 @@ monitor_id = deepeval.monitor(...)
 
 **Congratulations 🎉!** With a few lines of code, `deepeval` now automatically logs all outputs of your LLM application in production to Confident AI.
 
-## Logging Hyperparameters
+### Logging Hyperparameters
 
 :::info
 In addition to tracking which model was used to generate each output, you can log custom hyperparameters for every monitored interaction.
@@ -225,7 +225,7 @@ deepeval.monitor(
 )
 ```
 
-## Logging Custom Properties
+### Logging Custom Properties
 
 Similar to hyperparameters, you can easily associate custom additional data for each output, which would also allow you to filter and search for on Confident AI.
 
@@ -258,7 +258,7 @@ There are four types of data you can log for `additional_data`:
 
 Although you can technically log a link as a native string, the `Link(value="...")` class allows you to access said link directly on Confident AI. You should also aim to have your `Link`s start with 'https://...'.
 
-## Logging Conversations
+### Logging Conversations
 
 If you're building conversational agents or conversational systems such as LLM chatbots or voice agents, you can group together monitored outputs as sequential messages.
 

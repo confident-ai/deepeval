@@ -1,7 +1,11 @@
 import asyncio
 from typing import List
 
-from deepeval.metrics.dag import BaseNode
+from deepeval.metrics.dag import (
+    BaseNode,
+    NonBinaryJudgementNode,
+    BinaryJudgementNode,
+)
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 
@@ -11,6 +15,15 @@ class DeepAcyclicGraph:
         self,
         root_nodes: List[BaseNode],
     ):
+        for root_node in root_nodes:
+            if isinstance(root_node, NonBinaryJudgementNode) or isinstance(
+                root_node, BinaryJudgementNode
+            ):
+                if len(root_nodes) > 1:
+                    raise ValueError(
+                        "You cannot provide more than one root node when using 'BinaryJudgementNode' or 'NonBinaryJudgementNode' in root_nodes."
+                    )
+
         self.root_nodes = root_nodes
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase) -> None:

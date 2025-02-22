@@ -59,6 +59,7 @@ class VerdictNode(BaseNode):
     verdict: Union[str, bool]
     score: Optional[int] = None
     child: Optional[BaseNode | GEval] = None
+    label: Optional[str] = None
     _parent: Optional[BaseNode] = None
 
     def __hash__(self):
@@ -226,6 +227,7 @@ class TaskNode(BaseNode):
     output_label: str
     children: List[BaseNode]
     evaluation_params: List[LLMTestCaseParams] = None
+    label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _output: Optional[str] = None
     _parents: Optional[List[BaseNode]] = None
@@ -336,6 +338,7 @@ class BinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[BinaryJudgementVerdict] = None
     _parents: Optional[List[BaseNode]] = None
@@ -383,9 +386,10 @@ class BinaryJudgementNode(BaseNode):
             return
 
         text = """"""
-        for parent in self._parents:
-            if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent._output}\n\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -432,9 +436,10 @@ class BinaryJudgementNode(BaseNode):
             return
 
         text = """"""
-        for parent in self._parents:
-            if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent._output}\n\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -482,6 +487,7 @@ class NonBinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[NonBinaryJudgementVerdict] = None
     _parents: Optional[List[BaseNode]] = None
@@ -540,9 +546,10 @@ class NonBinaryJudgementNode(BaseNode):
             return
 
         text = """"""
-        for parent in self._parents:
-            if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent._output}\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -588,9 +595,10 @@ class NonBinaryJudgementNode(BaseNode):
             return
 
         text = """"""
-        for parent in self._parents:
-            if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent._output}\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -635,6 +643,7 @@ class NonBinaryJudgementNode(BaseNode):
 def construct_node_verbose_log(
     node: BaseNode, depth: int, g_eval: Optional[GEval] = None
 ) -> str:
+    label = node.label if node.label else "None"
     if isinstance(node, BinaryJudgementNode) or isinstance(
         node, NonBinaryJudgementNode
     ):
@@ -645,11 +654,12 @@ def construct_node_verbose_log(
             else "NonBinaryJudgementNode"
         )
         underscore_multiple = 34 if is_binary_node else 37
-        star_multiple = 48 if is_binary_node else 56
+        star_multiple = 48 if is_binary_node else 53
         return (
             f"{'_' * underscore_multiple}\n"
             f"| {node_type} | Level == {depth} |\n"
             f"{'*' * star_multiple}\n"
+            f"Label: {label}\n\n"
             "Criteria:\n"
             f"{node.criteria}\n\n"
             f"Verdict: {node._verdict.verdict}\n"
@@ -660,6 +670,7 @@ def construct_node_verbose_log(
             "______________________\n"
             f"| TaskNode | Level == {depth} |\n"
             "*******************************\n"
+            f"Label: {label}\n\n"
             "Instructions:\n"
             f"{node.instructions}\n\n"
             f"{node.output_label}:\n{node._output}\n"
@@ -671,6 +682,7 @@ def construct_node_verbose_log(
             "________________________\n"
             f"| VerdictNode | Level == {depth} |\n"
             "**********************************\n"
+            f"Label: {label}\n"
             f"Verdict: {node.verdict}\n"
             f"Type: {type}"
         )
