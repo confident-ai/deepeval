@@ -16,7 +16,7 @@ module.exports = {
         items: [
           "confident-ai-testing-n-evaluation-test-run",
           "confident-ai-testing-n-evaluation-unit-testing",
-          "confident-ai-testing-n-evaluation-experiments",
+          "confident-ai-testing-n-evaluation-metric-collections",
         ],
         collapsed: false,
       },

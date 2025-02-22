@@ -62,7 +62,7 @@ Essentially, `auto_convert_goldens_to_test_cases` is convenient if you have a co
 
 ## Convert Goldens Into Test Cases
 
-Here is an example of how you can use goldens as an intermediary variable to generate an `actual_output` before converting them to test cases for evaluation:
+Here is an example of how you can use goldens as an intermediary variable to **generate** an `actual_output` before converting them to test cases for evaluation:
 
 ```python
 # Pull from Confident
@@ -95,6 +95,10 @@ def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
 # Data preprocessing before setting the dataset test cases
 dataset.test_cases = convert_goldens_to_test_cases(dataset.goldens)
 ```
+
+:::caution
+**PLEASE DO NOT** create a list of test cases and **not** add it to a dataset (ie. always do `dataset.test_cases = ...`). Adding test cases to a dataset allows `deepeval` to preserve the ordering of `Goldens` stored in your dataset, which allows for regression testing, and better management of testing data.
+:::
 
 ## Running Evaluations With Datasets
 

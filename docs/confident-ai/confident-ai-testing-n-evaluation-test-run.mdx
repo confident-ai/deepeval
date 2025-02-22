@@ -6,15 +6,19 @@ sidebar_label: Running Evaluations
 
 As you saw in the [quickstart section earlier](/confident-ai/confident-ai-introduction#run-your-first-evaluation), a test run on Confident AI is created when you run an evaluation with `deepeval`. A test run is made up of a list of test cases, containing the `input`, `actual_output`, etc. of your LLM application, and each with its own set of metric scores to represent the performance of your LLM application as a whole.
 
-In short, a test run is a benchmark for your LLM application.
+In short, a test run is a benchmark for your LLM application, and you can also think of LLM evaluation with Confident AI and `deepeval` as unit-testing for LLMs.
 
-- Evaluating test cases locally on `deepeval` and sending it to Confident AI after evaluation.
-- Running an evaluation directly on Confident AI.
+:::caution
+**Everything in this section and the next is about running evaluations locally** using `deepeval`. If you wish to learn how to run evaluations on the cloud instead, [visit this section.](/confident-ai/confident-ai-testing-n-evaluation-metric-collections)
 
-You can also think of LLM evaluation with Confident AI and `deepeval` as unit-testing for LLMs.
+Typically, there are only a three reasons why you'll need to run evaluations on the cloud instead:
 
-:::caution IMPORTANT
-**Before you being, you definitely want to** familiarize yourself with [what a test case is](/docs/evaluation-test-cases) as it is vital for LLM evaluation.
+- You're building in Typescript, and so cannot leverage `deepeval`'s metrics in Python.
+- You want to trigger evaluations directly on the platform in a click of a button.
+- You want to save cost on tokens used for evaluation.
+
+Saving cost is the weakest reason to run evaluations on the cloud. Code-driven metrics that you run locally is the best way to customize and improve metrics as your testing criteria grows and matures.
+
 :::
 
 ## Running An Evaluation
