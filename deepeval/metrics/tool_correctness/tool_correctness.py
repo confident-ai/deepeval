@@ -17,10 +17,14 @@ from deepeval.test_case import (
 from deepeval.metrics import BaseMetric
 
 required_params: List[LLMTestCaseParams | MLLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT | MLLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT | MLLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.TOOLS_CALLED | MLLMTestCaseParams.TOOLS_CALLED,
-    LLMTestCaseParams.EXPECTED_TOOLS | MLLMTestCaseParams.EXPECTED_TOOLS,
+    LLMTestCaseParams.INPUT,
+    MLLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
+    MLLMTestCaseParams.ACTUAL_OUTPUT,
+    LLMTestCaseParams.TOOLS_CALLED,
+    MLLMTestCaseParams.TOOLS_CALLED,
+    LLMTestCaseParams.EXPECTED_TOOLS,
+    MLLMTestCaseParams.EXPECTED_TOOLS,
 ]
 
 
