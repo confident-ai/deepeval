@@ -7,6 +7,7 @@ module.exports = {
         items: [
           "confident-ai-evaluation-dataset-management",
           "confident-ai-evaluation-dataset-evaluation",
+          "confident-ai-evaluation-dataset-improvement",
         ],
         collapsed: false,
       },
@@ -26,7 +27,6 @@ module.exports = {
         items: [
           "confident-ai-llm-monitoring",
           "confident-ai-llm-monitoring-evaluations",
-          "confident-ai-llm-monitoring-dataset",
           {
             type: "category",
             label: "LLM Tracing",

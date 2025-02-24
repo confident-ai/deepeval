@@ -4,7 +4,7 @@ title: Metrics On The Cloud
 sidebar_label: Metrics On The Cloud
 ---
 
-In the previous two sections, we saw how you can run evaluations locally using `deepeval`, which is the better way to run evals. However, if you are using another programming language such as Typescript, or wish to trigger evaluations on the platform directly in a click of a button, you'll need to define and run metrics on Confident AI instead.
+In the previous two sections, we saw how you can [run evaluations locally](/confident-ai/confident-ai-testing-n-evaluation-test-run) using `deepeval`, which is the better way to run evals. However, if you are using another programming language such as Typescript, or wish to trigger evaluations on the platform directly in a click of a button, you'll need to define and run metrics on Confident AI instead.
 
 :::note
 There's way more advantages to running evaluations locally via `deepeval`, mainly being the ease of metrics customization. Feel free to skip this section if you're already able to run evaluations locally.
@@ -21,7 +21,7 @@ Ultimately, regardless of your chosen approach, you must first define a collecti
 You should probably opt for the former unless you have non-technical team members looking to run evaluations whenever they feel like it. The reason why triggering evaluations via HTTPs is preferred is because you don't need to setup a connection for Confident AI to get responses from your LLM endpoint, which greatly reduces the complexity of everything.
 :::
 
-## Creating Your Metric Collection
+## Create A Metric Collection
 
 Creating a collection of metrics on Confident AI allows you to specify which group of metrics you wish to evaluate your LLM application on. The list of available metrics corresponds 100% to `deepeval`'s metrics, which [can be found here.](/docs/metrics-introduction)
 
