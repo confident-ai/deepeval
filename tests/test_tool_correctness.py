@@ -1,4 +1,4 @@
-from deepeval.test_case import LLMTestCase, ToolCall, ToolCallParams
+from deepeval.test_case import LLMTestCase, ToolCall, ToolCallParams, MLLMTestCase
 from deepeval.metrics import ToolCorrectnessMetric
 from deepeval import evaluate
 
@@ -11,7 +11,7 @@ tool_correctness_metric = ToolCorrectnessMetric(
     ],
 )
 
-exact_match = LLMTestCase(
+exact_match = LLMTestCase or MLLMTestCase(
     input="",
     actual_output="",
     tools_called=[
@@ -26,7 +26,7 @@ exact_match = LLMTestCase(
     ],
 )
 
-tool_name_mismatch = LLMTestCase(
+tool_name_mismatch = LLMTestCase or MLLMTestCase(
     input="",
     actual_output="",
     tools_called=[
@@ -37,7 +37,7 @@ tool_name_mismatch = LLMTestCase(
     ],
 )
 
-input_parameter_mismatch = LLMTestCase(
+input_parameter_mismatch = LLMTestCase or MLLMTestCase(
     input="",
     actual_output="",
     tools_called=[
@@ -48,7 +48,7 @@ input_parameter_mismatch = LLMTestCase(
     ],
 )
 
-output_mismatch = LLMTestCase(
+output_mismatch = LLMTestCase or MLLMTestCase(
     input="",
     actual_output="",
     tools_called=[
@@ -59,7 +59,7 @@ output_mismatch = LLMTestCase(
     ],
 )
 
-extra_tools_called = LLMTestCase(
+extra_tools_called = LLMTestCase or MLLMTestCase(
     input="",
     actual_output="",
     tools_called=[
@@ -71,7 +71,7 @@ extra_tools_called = LLMTestCase(
     ],
 )
 
-missing_tools = LLMTestCase(
+missing_tools = LLMTestCase or MLLMTestCase(
     input="",
     actual_output="",
     tools_called=[],
@@ -80,7 +80,7 @@ missing_tools = LLMTestCase(
     ],
 )
 
-correct_ordering = LLMTestCase(
+correct_ordering = LLMTestCase or MLLMTestCase(
     input="",
     actual_output="",
     tools_called=[
@@ -93,7 +93,7 @@ correct_ordering = LLMTestCase(
     ],
 )
 
-out_of_order_tools = LLMTestCase(
+out_of_order_tools = LLMTestCase or MLLMTestCase(
     input="",
     actual_output="",
     tools_called=[
@@ -106,7 +106,7 @@ out_of_order_tools = LLMTestCase(
     ],
 )
 
-missing_and_out_of_order = LLMTestCase(
+missing_and_out_of_order = LLMTestCase or MLLMTestCase(
     input="",
     actual_output="",
     tools_called=[

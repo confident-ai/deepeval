@@ -1,6 +1,6 @@
 from typing import List, Optional, Any
 from deepeval.dataset.api import Golden, ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 import json
 import re
 
@@ -27,10 +27,10 @@ def convert_goldens_to_test_cases(
     goldens: List[Golden],
     _alias: Optional[str] = None,
     _id: Optional[str] = None,
-) -> List[LLMTestCase]:
+) -> List[LLMTestCase | MLLMTestCase]:
     test_cases = []
     for index, golden in enumerate(goldens):
-        test_case = LLMTestCase(
+        test_case = LLMTestCase | MLLMTestCase(
             input=golden.input,
             actual_output=golden.actual_output,
             expected_output=golden.expected_output,

@@ -234,6 +234,8 @@ def create_api_test_case(
                 name=name,
                 multimodalInput=test_case.input,
                 multimodalActualOutput=test_case.actual_output,
+                toolsCalled=test_case.tools_called,
+                expectedTools=test_case.expected_tools,
                 success=success,
                 metricsData=metrics_data,
                 runDuration=None,
