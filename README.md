@@ -147,8 +147,9 @@ Open `test_chatbot.py` and write your first test case using DeepEval:
 ```python
 import pytest
 from deepeval import assert_test
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics import AnswerRelevancyMetric, GEval
 from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCaseParams
 
 def test_case():
     correctness_metric = GEval(
@@ -160,7 +161,8 @@ def test_case():
     test_case = LLMTestCase(
         input="What if these shoes don't fit?",
         # Replace this with the actual output from your LLM application
-        actual_output="We offer a 30-day full refund at no extra costs.",
+        actual_output="You have 30 days to get a full refund at no extra cost.",
+        expected_output="We offer a 30-day full refund at no extra costs.",
         retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
     )
     assert_test(test_case, [correctness_metric])
