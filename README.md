@@ -147,9 +147,8 @@ Open `test_chatbot.py` and write your first test case using DeepEval:
 ```python
 import pytest
 from deepeval import assert_test
-from deepeval.metrics import AnswerRelevancyMetric, GEval
-from deepeval.test_case import LLMTestCase
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 def test_case():
     correctness_metric = GEval(
