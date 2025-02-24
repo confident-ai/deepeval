@@ -193,7 +193,8 @@ class TestRun(BaseModel):
                 del turn.conversational_instance_id
 
         for test_case in self.test_cases:
-            del test_case.conversational_instance_id
+            if hasattr(test_case, 'conversational_instance_id'):
+                del test_case.conversational_instance_id
 
     def construct_metrics_scores(self) -> int:
         # Use a dict to aggregate scores, passes, and fails for each metric.
