@@ -8,23 +8,17 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    MLLMTestCase,
-    MLLMTestCaseParams,
     ConversationalTestCase,
     ToolCallParams,
     ToolCall,
 )
 from deepeval.metrics import BaseMetric
 
-required_params: List[LLMTestCaseParams | MLLMTestCaseParams] = [
+required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,
-    MLLMTestCaseParams.INPUT,
     LLMTestCaseParams.ACTUAL_OUTPUT,
-    MLLMTestCaseParams.ACTUAL_OUTPUT,
     LLMTestCaseParams.TOOLS_CALLED,
-    MLLMTestCaseParams.TOOLS_CALLED,
     LLMTestCaseParams.EXPECTED_TOOLS,
-    MLLMTestCaseParams.EXPECTED_TOOLS,
 ]
 
 
@@ -49,7 +43,7 @@ class ToolCorrectnessMetric(BaseMetric):
 
     def measure(
         self,
-        test_case: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
+        test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
@@ -91,7 +85,7 @@ class ToolCorrectnessMetric(BaseMetric):
             return self.score
 
     async def a_measure(
-        self, test_case: Union[LLMTestCase, MLLMTestCase], _show_indicator: bool = True
+        self, test_case: LLMTestCase, _show_indicator: bool = True
     ) -> float:
         return self.measure(test_case, _show_indicator=_show_indicator)
 
