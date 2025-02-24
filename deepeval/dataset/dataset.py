@@ -658,7 +658,9 @@ class EvaluationDataset:
                     ):
                         if "goldens" in cg:
                             cg["turns"] = cg.pop("goldens")
-                        conversational_goldens.append(ConversationalGolden(**cg))
+                        conversational_goldens.append(
+                            ConversationalGolden(**cg)
+                        )
 
                     response = DatasetHttpResponse(
                         goldens=convert_keys_to_snake_case(result["goldens"]),

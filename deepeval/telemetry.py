@@ -301,6 +301,7 @@ def capture_login_event():
     else:
         yield
 
+
 @contextmanager
 def capture_pull_dataset():
     if not telemetry_opt_out():
