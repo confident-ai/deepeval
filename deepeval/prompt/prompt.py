@@ -55,13 +55,10 @@ class Prompt:
                     endpoint=Endpoints.PROMPT_ENDPOINT,
                     params={"alias": self.alias, "version": version},
                 )
-                print(result)
                 response = PromptHttpResponse(
                     promptVersionId=result["promptVersionId"],
                     template=result["value"],
                 )
-                print("asldfkdnal")
-                print(response)
                 self.version = version
                 self.template = response.template
                 self._prompt_version_id = response.promptVersionId

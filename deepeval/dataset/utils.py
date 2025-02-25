@@ -27,10 +27,10 @@ def convert_goldens_to_test_cases(
     goldens: List[Golden],
     _alias: Optional[str] = None,
     _id: Optional[str] = None,
-) -> List[LLMTestCase | MLLMTestCase]:
+) -> List[LLMTestCase]:
     test_cases = []
     for index, golden in enumerate(goldens):
-        test_case = LLMTestCase | MLLMTestCase(
+        test_case = LLMTestCase(
             input=golden.input,
             actual_output=golden.actual_output,
             expected_output=golden.expected_output,

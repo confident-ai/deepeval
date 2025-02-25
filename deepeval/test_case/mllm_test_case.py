@@ -28,6 +28,7 @@ class MLLMImage:
 
         return False
 
+
 class ToolCall(BaseModel):
     name: str
     description: Optional[str] = None
