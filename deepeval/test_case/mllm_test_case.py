@@ -1,10 +1,10 @@
 import os
 from urllib.parse import urlparse
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Union, Any
+from typing import List, Optional, Dict, Union
 from enum import Enum
-import json
-from pydantic import BaseModel, Field
+
+from deepeval.test_case import ToolCall
 
 
 @dataclass
@@ -27,79 +27,6 @@ class MLLMImage:
             return os.path.exists(parsed_url.path)
 
         return False
-
-
-class ToolCall(BaseModel):
-    name: str
-    description: Optional[str] = None
-    reasoning: Optional[str] = None
-    output: Optional[Any] = None
-    input_parameters: Optional[Dict[str, Any]] = Field(
-        None, serialization_alias="inputParameters"
-    )
-
-    def __eq__(self, other):
-        if not isinstance(other, ToolCall):
-            return False
-        return (
-            self.name == other.name
-            and self.input_parameters == other.input_parameters
-            and self.output == other.output
-        )
-
-    def __hash__(self):
-        input_params = (
-            self.input_parameters if self.input_parameters is not None else {}
-        )
-        output_hashable = (
-            frozenset(self.output.items())
-            if isinstance(self.output, dict)
-            else self.output
-        )
-        return hash(
-            (self.name, frozenset(input_params.items()), output_hashable)
-        )
-
-    def __repr__(self):
-        fields = []
-
-        # Add basic fields
-        if self.name:
-            fields.append(f'name="{self.name}"')
-        if self.description:
-            fields.append(f'description="{self.description}"')
-        if self.reasoning:
-            fields.append(f'reasoning="{self.reasoning}"')
-
-        # Handle nested fields like input_parameters
-        if self.input_parameters:
-            formatted_input = json.dumps(self.input_parameters, indent=4)
-            formatted_input = self._indent_nested_field(
-                "input_parameters", formatted_input
-            )
-            fields.append(formatted_input)
-
-        # Handle nested fields like output
-        if isinstance(self.output, dict):
-            formatted_output = json.dumps(self.output, indent=4)
-            formatted_output = self._indent_nested_field(
-                "output", formatted_output
-            )
-            fields.append(formatted_output)
-        elif self.output is not None:
-            fields.append(f"output={repr(self.output)}")
-
-        # Combine fields with proper formatting
-        fields_str = ",\n    ".join(fields)
-        return f"ToolCall(\n    {fields_str}\n)"
-
-    @staticmethod
-    def _indent_nested_field(field_name: str, formatted_field: str) -> str:
-        """Helper method to indent multi-line fields for better readability."""
-        lines = formatted_field.splitlines()
-        return f"{field_name}={lines[0]}\n" + "\n".join(
-            f"    {line}" for line in lines[1:]
-        )
 
 
 class MLLMTestCaseParams(Enum):
