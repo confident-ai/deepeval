@@ -1,4 +1,4 @@
-from typing import List, Union, Dict
+from typing import List, Dict
 
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -6,23 +6,23 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
 )
 from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-    ConversationalTestCase,
+    MLLMTestCase,
+    MLLMTestCaseParams,
     ToolCallParams,
     ToolCall,
 )
 from deepeval.metrics import BaseMetric
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.TOOLS_CALLED,
-    LLMTestCaseParams.EXPECTED_TOOLS,
+# Simplified required params for MLLM only
+required_params: List[MLLMTestCaseParams] = [
+    MLLMTestCaseParams.INPUT,
+    MLLMTestCaseParams.ACTUAL_OUTPUT,
+    MLLMTestCaseParams.TOOLS_CALLED,
+    MLLMTestCaseParams.EXPECTED_TOOLS,
 ]
 
 
-class ToolCorrectnessMetric(BaseMetric):
+class MultimodalToolCorrectnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
@@ -43,11 +43,9 @@ class ToolCorrectnessMetric(BaseMetric):
 
     def measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: MLLMTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
         check_llm_test_case_params(test_case, required_params, self)
         self.test_case = test_case
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -85,7 +83,7 @@ class ToolCorrectnessMetric(BaseMetric):
             return self.score
 
     async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
+        self, test_case: MLLMTestCase, _show_indicator: bool = True
     ) -> float:
         return self.measure(test_case, _show_indicator=_show_indicator)
 
