@@ -9,6 +9,7 @@ from deepeval.monitor.api import (
     EventHttpResponse,
     Link,
 )
+from deepeval.prompt import Prompt
 
 
 def monitor(
@@ -25,7 +26,7 @@ def monitor(
     additional_data: Optional[
         Dict[str, Union[str, Link, List[Link], Dict]]
     ] = None,
-    hyperparameters: Optional[Dict[str, str]] = {},
+    hyperparameters: Optional[Dict[str, Union[str, Prompt]]] = {},
     fail_silently: Optional[bool] = False,
     raise_exception: Optional[bool] = True,
     trace_stack: Optional[Dict[str, Any]] = None,

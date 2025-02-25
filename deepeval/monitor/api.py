@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Union
 from enum import Enum
 
+from deepeval.prompt import PromptApi
+
 
 class Link(BaseModel):
     value: str
@@ -22,7 +24,7 @@ class CustomProperty(BaseModel):
 
 
 class APIEvent(BaseModel):
-    name: str = Field(..., alias="name")
+    name: str = Field(alias="name")
     input: str
     response: str
     retrieval_context: Optional[List[str]] = Field(
@@ -38,7 +40,7 @@ class APIEvent(BaseModel):
     ] = Field(None, alias="customProperties")
     trace_stack: Optional[Dict] = Field(None, alias="traceStack")
     trace_provider: Optional[str] = Field(None, alias="traceProvider")
-    hyperparameters: Optional[Dict] = Field(None)
+    hyperparameters: Optional[Dict[str, Union[str, PromptApi]]] = Field(None)
 
     class Config:
         use_enum_values = True
