@@ -9,15 +9,24 @@ from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 
 class Prompt:
-    def __init__(self, alias: str):
+    _prompt_version_id: Optional[str] = None
+
+    def __init__(
+        self, alias: Optional[str] = None, template: Optional[str] = None
+    ):
+        if alias is None and template is None:
+            raise TypeError(
+                "Unable to create Prompt where 'alias' and 'template' are both None. Please provide at least one to continue."
+            )
+
         self.alias = alias
-        self.template = None
+        self.template = template
         self.version = None
 
     def interpolate(self, **kwargs):
         if self.template is None:
             raise TypeError(
-                "Unable to interpolate empty prompt template. Please pull a prompt from Confident AI to continue."
+                "Unable to interpolate empty prompt template. Please pull a prompt from Confident AI or set template manually to continue."
             )
 
         formatted_template = re.sub(r"\{\{ (\w+) \}\}", r"{\1}", self.template)
@@ -46,11 +55,16 @@ class Prompt:
                     endpoint=Endpoints.PROMPT_ENDPOINT,
                     params={"alias": self.alias, "version": version},
                 )
+                print(result)
                 response = PromptHttpResponse(
-                    value=result["value"], version=result["version"]
+                    promptVersionId=result["promptVersionId"],
+                    template=result["value"],
                 )
-                self.template = response.value
-                self.version = response.version
+                print("asldfkdnal")
+                print(response)
+                self.version = version
+                self.template = response.template
+                self._prompt_version_id = response.promptVersionId
 
                 end_time = time.perf_counter()
                 time_taken = format(end_time - start_time, ".2f")
@@ -60,5 +74,5 @@ class Prompt:
                 )
         else:
             raise Exception(
-                "Run `deepeval login` to pull prompt from Confident AI"
+                "Run `deepeval login` to pull prompt template from Confident AI"
             )
