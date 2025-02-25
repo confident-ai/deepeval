@@ -225,6 +225,7 @@ class TaskNode(BaseNode):
     output_label: str
     children: List[BaseNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
 ```
 
 There are three mandatory and two optional parameter when creating a `TaskNode`:
@@ -252,6 +253,7 @@ class BinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
 ```
 
 There are two mandatory and two optional parameter when creating a `BinaryJudgementNode`:
@@ -280,6 +282,7 @@ class NonBinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
 ```
 
 There are two mandatory and two optional parameter when creating a `NonBinaryJudgementNode`:
