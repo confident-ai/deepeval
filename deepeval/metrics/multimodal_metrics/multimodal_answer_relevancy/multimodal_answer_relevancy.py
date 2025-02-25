@@ -17,13 +17,13 @@ from deepeval.metrics.multimodal_metrics.multimodal_answer_relevancy.schema impo
 from deepeval.metrics.indicator import metric_progress_indicator
 
 
-required_params: List[MLLMTestCaseParams] = [
-    MLLMTestCaseParams.INPUT,
-    MLLMTestCaseParams.ACTUAL_OUTPUT,
-]
-
-
 class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
+
+    _required_params: List[MLLMTestCaseParams] = [
+        MLLMTestCaseParams.INPUT,
+        MLLMTestCaseParams.ACTUAL_OUTPUT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -47,7 +47,7 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
     ) -> float:
         check_mllm_test_case_params(
-            test_case, required_params, None, None, self
+            test_case, self._required_params, None, None, self
         )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -83,7 +83,7 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
     ) -> float:
         check_mllm_test_case_params(
-            test_case, required_params, None, None, self
+            test_case, self._required_params, None, None, self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

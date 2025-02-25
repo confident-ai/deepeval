@@ -13,16 +13,16 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 
-# Simplified required params for MLLM only
-required_params: List[MLLMTestCaseParams] = [
-    MLLMTestCaseParams.INPUT,
-    MLLMTestCaseParams.ACTUAL_OUTPUT,
-    MLLMTestCaseParams.TOOLS_CALLED,
-    MLLMTestCaseParams.EXPECTED_TOOLS,
-]
-
 
 class MultimodalToolCorrectnessMetric(BaseMetric):
+
+    _required_params: List[MLLMTestCaseParams] = [
+        MLLMTestCaseParams.INPUT,
+        MLLMTestCaseParams.ACTUAL_OUTPUT,
+        MLLMTestCaseParams.TOOLS_CALLED,
+        MLLMTestCaseParams.EXPECTED_TOOLS,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -46,7 +46,7 @@ class MultimodalToolCorrectnessMetric(BaseMetric):
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        check_llm_test_case_params(test_case, required_params, self)
+        check_llm_test_case_params(test_case, self._required_params, self)
         self.test_case = test_case
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
             self.tools_called: List[ToolCall] = test_case.tools_called

@@ -20,15 +20,15 @@ from deepeval.metrics.contextual_precision.template import (
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.contextual_precision.schema import *
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.RETRIEVAL_CONTEXT,
-    LLMTestCaseParams.EXPECTED_OUTPUT,
-]
-
 
 class ContextualPrecisionMetric(BaseMetric):
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.RETRIEVAL_CONTEXT,
+        LLMTestCaseParams.EXPECTED_OUTPUT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -53,7 +53,7 @@ class ContextualPrecisionMetric(BaseMetric):
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -90,7 +90,7 @@ class ContextualPrecisionMetric(BaseMetric):
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
