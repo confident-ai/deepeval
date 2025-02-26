@@ -29,7 +29,7 @@ fake_data = [
             "Tetanus, a bacterial infection caused by Clostridium tetani, can enter the body through open wounds. Ensure that your tetanus vaccination is up to date, especially if the wound was caused by a rusty or dirty object.",
         ],
     },
-        {
+    {
         "input": "3 What should I do if I accidentally cut my finger deeply?",
         "actual_output": """If you cut your finger deeply, rinse it with soap and water, apply pressure to stop bleeding, and cover it with a clean bandage. Seek medical care if it keeps bleeding, is very deep, or shows signs of infection like redness or swelling. Ensure your tetanus shot is up to date.""",
         "retrieval_context": [
@@ -40,7 +40,7 @@ fake_data = [
             "Tetanus, a bacterial infection caused by Clostridium tetani, can enter the body through open wounds. Ensure that your tetanus vaccination is up to date, especially if the wound was caused by a rusty or dirty object.",
         ],
     },
-        {
+    {
         "input": "4 What should I do if I accidentally cut my finger deeply?",
         "actual_output": """If you cut your finger deeply, rinse it with soap and water, apply pressure to stop bleeding, and cover it with a clean bandage. Seek medical care if it keeps bleeding, is very deep, or shows signs of infection like redness or swelling. Ensure your tetanus shot is up to date.""",
         "retrieval_context": [
@@ -51,7 +51,7 @@ fake_data = [
             "Tetanus, a bacterial infection caused by Clostridium tetani, can enter the body through open wounds. Ensure that your tetanus vaccination is up to date, especially if the wound was caused by a rusty or dirty object.",
         ],
     },
-        {
+    {
         "input": "5 What should I do if I accidentally cut my finger deeply?",
         "actual_output": """If you cut your finger deeply, rinse it with soap and water, apply pressure to stop bleeding, and cover it with a clean bandage. Seek medical care if it keeps bleeding, is very deep, or shows signs of infection like redness or swelling. Ensure your tetanus shot is up to date.""",
         "retrieval_context": [
@@ -62,7 +62,6 @@ fake_data = [
             "Tetanus, a bacterial infection caused by Clostridium tetani, can enter the body through open wounds. Ensure that your tetanus vaccination is up to date, especially if the wound was caused by a rusty or dirty object.",
         ],
     },
-
 ]
 
 
@@ -82,6 +81,6 @@ answer_relevancy = AnswerRelevancyMetric(threshold=0.5)
 
 
 # Run evaluation
-# evaluate(test_cases=test_cases, metrics=[answer_relevancy])
+evaluate(test_cases=test_cases, metrics=[answer_relevancy])
 
-confident_evaluate(test_cases=test_cases, metric_collection="DogFood")
+# confident_evaluate(test_cases=test_cases, metric_collection="DogFood")

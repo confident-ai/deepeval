@@ -158,16 +158,16 @@ def create_api_test_case(
         if test_case.name:
             name = test_case.name
         else:
-            name = os.getenv(
-                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
+            order = (
+                test_case._dataset_rank
+                if test_case._dataset_rank is not None
+                else index
             )
 
-        order = (
-            test_case._dataset_rank
-            if test_case._dataset_rank is not None
-            else index
-        )
-        print(order)
+            name = os.getenv(
+                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{order}"
+            )
+
         api_test_case = ConversationalApiTestCase(
             name=name,
             success=True,
@@ -203,19 +203,19 @@ def create_api_test_case(
             test_case.comments = comments
             metrics_data = None
         else:
+            order = (
+                test_case._dataset_rank
+                if test_case._dataset_rank is not None
+                else index
+            )
+
             success = True
             if test_case.name is not None:
                 name = test_case.name
             else:
-                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
-            order = (
-                    test_case._dataset_rank
-                    if test_case._dataset_rank is not None
-                    else index
-            )
+                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
             metrics_data = []
 
-        print(order)
         if isinstance(test_case, LLMTestCase):
             api_test_case = LLMApiTestCase(
                 name=name,
@@ -627,7 +627,6 @@ async def a_execute_test_cases(
                         copied_llm_metrics: List[BaseMetric] = copy_metrics(
                             llm_metrics
                         )
-                        print(llm_test_case_counter)
                         task = execute_with_semaphore(
                             func=a_execute_llm_test_cases,
                             metrics=copied_llm_metrics,
