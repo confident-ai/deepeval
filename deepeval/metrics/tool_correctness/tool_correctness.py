@@ -48,7 +48,7 @@ class ToolCorrectnessMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
+            test_case = test_case.turns[-1]
         check_llm_test_case_params(test_case, self._required_params, self)
         self.test_case = test_case
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
