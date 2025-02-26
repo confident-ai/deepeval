@@ -14,15 +14,16 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.TOOLS_CALLED,
-    LLMTestCaseParams.EXPECTED_TOOLS,
-]
-
 
 class ToolCorrectnessMetric(BaseMetric):
+
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.TOOLS_CALLED,
+        LLMTestCaseParams.EXPECTED_TOOLS,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -48,7 +49,7 @@ class ToolCorrectnessMetric(BaseMetric):
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+        check_llm_test_case_params(test_case, self._required_params, self)
         self.test_case = test_case
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
             self.tools_called: List[ToolCall] = test_case.tools_called

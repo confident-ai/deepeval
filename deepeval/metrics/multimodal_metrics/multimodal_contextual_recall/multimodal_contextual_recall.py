@@ -16,15 +16,16 @@ from deepeval.models import DeepEvalBaseMLLM
 from deepeval.metrics.multimodal_metrics.multimodal_contextual_recall.schema import *
 from deepeval.metrics.indicator import metric_progress_indicator
 
-required_params: List[MLLMTestCaseParams] = [
-    MLLMTestCaseParams.INPUT,
-    MLLMTestCaseParams.ACTUAL_OUTPUT,
-    MLLMTestCaseParams.RETRIEVAL_CONTEXT,
-    MLLMTestCaseParams.EXPECTED_OUTPUT,
-]
-
 
 class MultimodalContextualRecallMetric(BaseMultimodalMetric):
+
+    _required_params: List[MLLMTestCaseParams] = [
+        MLLMTestCaseParams.INPUT,
+        MLLMTestCaseParams.ACTUAL_OUTPUT,
+        MLLMTestCaseParams.RETRIEVAL_CONTEXT,
+        MLLMTestCaseParams.EXPECTED_OUTPUT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -48,7 +49,7 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
     ) -> float:
         check_mllm_test_case_params(
-            test_case, required_params, None, None, self
+            test_case, self._required_params, None, None, self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -83,7 +84,7 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
     ) -> float:
         check_mllm_test_case_params(
-            test_case, required_params, None, None, self
+            test_case, self._required_params, None, None, self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
