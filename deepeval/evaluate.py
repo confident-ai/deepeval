@@ -167,6 +167,7 @@ def create_api_test_case(
             if test_case._dataset_rank is not None
             else index
         )
+        print(order)
         api_test_case = ConversationalApiTestCase(
             name=name,
             success=True,
@@ -207,9 +208,14 @@ def create_api_test_case(
                 name = test_case.name
             else:
                 name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
-            order = test_case._dataset_rank
+            order = (
+                    test_case._dataset_rank
+                    if test_case._dataset_rank is not None
+                    else index
+            )
             metrics_data = []
 
+        print(order)
         if isinstance(test_case, LLMTestCase):
             api_test_case = LLMApiTestCase(
                 name=name,
@@ -621,6 +627,7 @@ async def a_execute_test_cases(
                         copied_llm_metrics: List[BaseMetric] = copy_metrics(
                             llm_metrics
                         )
+                        print(llm_test_case_counter)
                         task = execute_with_semaphore(
                             func=a_execute_llm_test_cases,
                             metrics=copied_llm_metrics,
