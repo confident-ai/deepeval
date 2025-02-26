@@ -92,7 +92,6 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             test_case, self._required_params, self, require_chatbot_role=True
         )
 
-        print(_show_indicator, "@")
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
