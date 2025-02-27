@@ -273,7 +273,7 @@ Under the hood, `deepeval` first generates a series of evaluation steps, before 
 
 :::tip
 
-Although `GEval` is great it many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric` (deep acyclic graph)](/docs/metrics-dag) instead, which is **a metric that is deterministic, LLM-powered, and based on a decision tree you define.**
+Although `GEval` is great in many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric` (deep acyclic graph)](/docs/metrics-dag) instead, which is **a metric that is deterministic, LLM-powered, and based on a decision tree you define.**
 
 Take this decision tree for example, which evaluates a Summarization use case based on the `actual_output` of your `LLMTestCase`. Here, we want to check whether the `actual_output` contains the correct "summary headings", and whether they are in the correct order.
 
