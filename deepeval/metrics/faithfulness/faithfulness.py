@@ -235,7 +235,7 @@ class FaithfulnessMetric(BaseMetric):
 
     async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
         prompt = self.template.generate_truths(
-            text="\n\n".join(retrieval_context),
+            retrieval_context="\n\n".join(retrieval_context),
             extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
@@ -253,7 +253,7 @@ class FaithfulnessMetric(BaseMetric):
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
         prompt = self.template.generate_truths(
-            text="\n\n".join(retrieval_context),
+            retrieval_context="\n\n".join(retrieval_context),
             extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
@@ -270,7 +270,7 @@ class FaithfulnessMetric(BaseMetric):
                 return data["truths"]
 
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
-        prompt = self.template.generate_claims(text=actual_output)
+        prompt = self.template.generate_claims(actual_output=actual_output)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
@@ -285,7 +285,7 @@ class FaithfulnessMetric(BaseMetric):
                 return data["claims"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
-        prompt = self.template.generate_claims(text=actual_output)
+        prompt = self.template.generate_claims(actual_output=actual_output)
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost

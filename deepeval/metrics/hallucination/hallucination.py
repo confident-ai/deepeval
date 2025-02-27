@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, Type, Union, List
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -34,6 +34,7 @@ class HallucinationMetric(BaseMetric):
         async_mode: bool = False,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        template: Type[HallucinationTemplate] = HallucinationTemplate,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -42,6 +43,7 @@ class HallucinationMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.template = template
 
     def measure(
         self,
@@ -121,7 +123,7 @@ class HallucinationMetric(BaseMetric):
             else:
                 contradictions.append(verdict.reason)
 
-        prompt: dict = HallucinationTemplate.generate_reason(
+        prompt: dict = self.template.generate_reason(
             factual_alignments=factual_alignments,
             contradictions=contradictions,
             score=format(self.score, ".2f"),
@@ -152,7 +154,7 @@ class HallucinationMetric(BaseMetric):
             else:
                 contradictions.append(verdict.reason)
 
-        prompt: dict = HallucinationTemplate.generate_reason(
+        prompt: dict = self.template.generate_reason(
             factual_alignments=factual_alignments,
             contradictions=contradictions,
             score=format(self.score, ".2f"),
@@ -175,7 +177,7 @@ class HallucinationMetric(BaseMetric):
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
         verdicts: List[HallucinationVerdict] = []
-        prompt = HallucinationTemplate.generate_verdicts(
+        prompt = self.template.generate_verdicts(
             actual_output=actual_output, contexts=contexts
         )
         if self.using_native_model:
@@ -202,7 +204,7 @@ class HallucinationMetric(BaseMetric):
         self, actual_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
         verdicts: List[HallucinationVerdict] = []
-        prompt = HallucinationTemplate.generate_verdicts(
+        prompt = self.template.generate_verdicts(
             actual_output=actual_output, contexts=contexts
         )
         if self.using_native_model:

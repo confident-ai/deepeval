@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Type, Union
 import asyncio
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -37,6 +37,9 @@ class ContextualRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        template: Type[
+            ContextualRelevancyTemplate
+        ] = ContextualRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,6 +48,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.template = template
 
     def measure(
         self,
@@ -120,18 +124,18 @@ class ContextualRelevancyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        irrelevancies = []
+        irrelevant_statements = []
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
                 if verdict.verdict.lower() == "no":
-                    irrelevancies.append(verdict.reason)
+                    irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = ContextualRelevancyTemplate.generate_reason(
+        prompt: dict = self.template.generate_reason(
             input=input,
-            irrelevancies=irrelevancies,
+            irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
         )
@@ -152,18 +156,18 @@ class ContextualRelevancyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        irrelevancies = []
+        irrelevant_statements = []
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
                 if verdict.verdict.lower() == "no":
-                    irrelevancies.append(verdict.reason)
+                    irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = ContextualRelevancyTemplate.generate_reason(
+        prompt: dict = self.template.generate_reason(
             input=input,
-            irrelevancies=irrelevancies,
+            irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
         )
@@ -198,9 +202,7 @@ class ContextualRelevancyMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, context: List[str]
     ) -> ContextualRelevancyVerdicts:
-        prompt = ContextualRelevancyTemplate.generate_verdicts(
-            input=input, context=context
-        )
+        prompt = self.template.generate_verdicts(input=input, context=context)
         if self.using_native_model:
             res, cost = await self.model.a_generate(
                 prompt, schema=ContextualRelevancyVerdicts
@@ -221,9 +223,7 @@ class ContextualRelevancyMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, context: str
     ) -> ContextualRelevancyVerdicts:
-        prompt = ContextualRelevancyTemplate.generate_verdicts(
-            input=input, context=context
-        )
+        prompt = self.template.generate_verdicts(input=input, context=context)
         if self.using_native_model:
             res, cost = self.model.generate(
                 prompt, schema=ContextualRelevancyVerdicts

@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Type, Union
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -35,6 +35,7 @@ class ToxicityMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        template: Type[ToxicityTemplate] = ToxicityTemplate,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -43,6 +44,7 @@ class ToxicityMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.template = template
 
     def measure(
         self,
@@ -124,7 +126,7 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = ToxicityTemplate.generate_reason(
+        prompt: dict = self.template.generate_reason(
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
@@ -151,7 +153,7 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = ToxicityTemplate.generate_reason(
+        prompt: dict = self.template.generate_reason(
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
@@ -174,7 +176,7 @@ class ToxicityMetric(BaseMetric):
             return []
 
         verdicts: List[ToxicityVerdict] = []
-        prompt = ToxicityTemplate.generate_verdicts(opinions=self.opinions)
+        prompt = self.template.generate_verdicts(opinions=self.opinions)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -200,7 +202,7 @@ class ToxicityMetric(BaseMetric):
             return []
 
         verdicts: List[ToxicityVerdict] = []
-        prompt = ToxicityTemplate.generate_verdicts(opinions=self.opinions)
+        prompt = self.template.generate_verdicts(opinions=self.opinions)
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
