@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Type, Union
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -33,6 +33,9 @@ class AnswerRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[
+            AnswerRelevancyTemplate
+        ] = AnswerRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -41,6 +44,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -121,7 +125,7 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = AnswerRelevancyTemplate.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             irrelevant_statements=irrelevant_statements,
             input=input,
             score=format(self.score, ".2f"),
@@ -150,7 +154,7 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = AnswerRelevancyTemplate.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             irrelevant_statements=irrelevant_statements,
             input=input,
             score=format(self.score, ".2f"),
@@ -175,9 +179,9 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = AnswerRelevancyTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             input=input,
-            actual_output=self.statements,
+            statements=self.statements,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -200,9 +204,9 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = AnswerRelevancyTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             input=input,
-            actual_output=self.statements,
+            statements=self.statements,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
@@ -223,7 +227,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self,
         actual_output: str,
     ) -> List[str]:
-        prompt = AnswerRelevancyTemplate.generate_statements(
+        prompt = self.evaluation_template.generate_statements(
             actual_output=actual_output,
         )
         if self.using_native_model:
@@ -245,7 +249,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self,
         actual_output: str,
     ) -> List[str]:
-        prompt = AnswerRelevancyTemplate.generate_statements(
+        prompt = self.evaluation_template.generate_statements(
             actual_output=actual_output,
         )
         if self.using_native_model:

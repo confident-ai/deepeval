@@ -97,7 +97,7 @@ class TestClass(BaseModel):
 eval_model = "gpt-4o"
 
 
-# @pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -192,7 +192,7 @@ def test_everything():
         actual_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
-        # context=["I love coffee"],
+        context=["I love coffee"],
     )
     c_test_case = ConversationalTestCase(
         turns=[test_case, test_case], chatbot_role="have a conversation"
@@ -201,23 +201,23 @@ def test_everything():
         test_case,
         [
             metric1,
-            # metric2,
-            # metric3,
-            # metric4,
-            # metric5,
-            # metric6,
-            # metric7,
-            # metric8,
-            # metric9,
-            # metric10,
-            # metric11,
-            # metric12,
-            # # metric13,
-            # metric14,
-            # metric15,
-            # metric16,
-            # metric17,
-            # metric18,
+            metric2,
+            metric3,
+            metric4,
+            metric5,
+            metric6,
+            metric7,
+            metric8,
+            metric9,
+            metric10,
+            metric11,
+            metric12,
+            # metric13,
+            metric14,
+            metric15,
+            metric16,
+            metric17,
+            metric18,
         ],
         run_async=True,
     )
@@ -277,14 +277,14 @@ def test_everything_2():
     )
 
 
-from deepeval.prompt import Prompt
+# from deepeval.prompt import Prompt
 
-prompt = Prompt(alias="New Prompt")
-prompt.pull()
+# prompt = Prompt(alias="New Prompt")
+# prompt.pull()
 
 
-@deepeval.log_hyperparameters(
-    model="gpt-4", prompt_template="another template!"
-)
-def hyperparameters():
-    return {"System Prompt": prompt, "temperature": 1}
+# @deepeval.log_hyperparameters(
+#     model="gpt-4", prompt_template="another template!"
+# )
+# def hyperparameters():
+#     return {"System Prompt": prompt, "temperature": 1}
