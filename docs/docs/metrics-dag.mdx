@@ -85,7 +85,7 @@ metric = GEval(
         "The `actual_output` is completely wrong if it misses any of the headings: 'intro', 'body', 'conclusion'.",
         "If the `actual_output` has all the complete headings but are in the wrong order, penalize it.",
         "If the summary has all the correct headings and they are in the right order, give it a perfect score."
-    ]
+    ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
 )
 ```

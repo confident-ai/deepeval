@@ -218,7 +218,19 @@ module.exports = {
             ],
           },
           {
-            title: "Community",
+            title: "Articles You Must Read",
+            items: [
+              {
+                label: "LLM evaluation metrics",
+                to: "https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation",
+              },
+              {label: "LLM-as-a-judge", to: "https://www.confident-ai.com/blog/why-llm-as-a-judge-is-the-best-llm-evaluation-method"},
+              {label: "LLM testing", to: "https://www.confident-ai.com/blog/llm-testing-in-2024-top-methods-and-strategies"},
+              {label: "LLM chatbot evaluation", to: "https://www.confident-ai.com/blog/llm-chatbot-evaluation-explained-top-chatbot-evaluation-metrics-and-testing-techniques"},
+            ],
+          },
+          {
+            title: "Evaluation Community",
             items: [
               {
                 label: "GitHub",
