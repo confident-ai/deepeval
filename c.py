@@ -81,6 +81,11 @@ answer_relevancy = AnswerRelevancyMetric(threshold=0.5)
 
 
 # Run evaluation
-evaluate(test_cases=test_cases, metrics=[answer_relevancy])
+# evaluate(test_cases=test_cases, metrics=[answer_relevancy])
 
-# confident_evaluate(test_cases=test_cases, metric_collection="DogFood")
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.test_cases = test_cases
+
+confident_evaluate(test_cases=dataset, metric_collection="DogFood")
