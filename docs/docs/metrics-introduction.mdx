@@ -179,11 +179,11 @@ To use **Ollama** models for your metrics, run `deepeval set-ollama <model>` in 
 deepeval set-ollama deepseek-r1:1.5b
 ```
 
-Optionally, you can specify the **base URL** of your local Ollama model instance if you've defined a custom port. The default base URL is set to `http://localhost:11434/v1/`.
+Optionally, you can specify the **base URL** of your local Ollama model instance if you've defined a custom port. The default base URL is set to `http://localhost:11434`.
 
 ```bash
 deepeval set-ollama deepseek-r1:1.5b \
-    --base-url="http://localhost:11434/v1/"
+    --base-url="http://localhost:11434"
 ```
 
 To stop using your local Ollama model and move back to OpenAI, run:
@@ -191,6 +191,10 @@ To stop using your local Ollama model and move back to OpenAI, run:
 ```bash
 deepeval unset-ollama
 ```
+
+:::caution
+The `deepeval set-ollama` command is used exclusively to configure LLM models. If you intend to use a custom embedding model from Ollama with the synthesizer, please [refer to this section of the guide](/guides/guides-using-custom-embedding-models).
+:::
 
 ### Other Local Providers
 
