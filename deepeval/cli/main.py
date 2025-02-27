@@ -204,16 +204,10 @@ def unset_azure_openai_embedding_env():
 def set_local_model_env(
     model_name: str = typer.Argument(..., help="Name of the Ollama model"),
     base_url: str = typer.Option(
-        "http://localhost:11434/v1",
+        "http://localhost:11434",
         "-b",
         "--base-url",
         help="Base URL for the local model API",
-    ),
-    format: Optional[str] = typer.Option(
-        "json",
-        "-f",
-        "--format",
-        help="Format of the response from the local model (default: json)",
     ),
 ):
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_NAME, model_name)
@@ -221,8 +215,6 @@ def set_local_model_env(
     KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "YES")
     KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "NO")
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_API_KEY, "ollama")
-    if format:
-        KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_FORMAT, format)
     print(
         ":raising_hands: Congratulations! You're now using a local Ollama model for all evals that require an LLM."
     )
@@ -234,7 +226,6 @@ def unset_local_model_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_BASE_URL)
     KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_FORMAT)
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
