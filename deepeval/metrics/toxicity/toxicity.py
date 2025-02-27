@@ -15,7 +15,6 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
 )
-from deepeval.metrics.bias.template import BiasTemplate
 from deepeval.metrics.toxicity.template import ToxicityTemplate
 from deepeval.metrics.toxicity.schema import *
 
@@ -35,7 +34,7 @@ class ToxicityMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        template: Type[ToxicityTemplate] = ToxicityTemplate,
+        evaluation_template: Type[ToxicityTemplate] = ToxicityTemplate,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -44,7 +43,7 @@ class ToxicityMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.template = template
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -126,7 +125,7 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = self.template.generate_reason(
+        prompt: dict = self.evaluation_template.generate_reason(
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
@@ -153,7 +152,7 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = self.template.generate_reason(
+        prompt: dict = self.evaluation_template.generate_reason(
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
@@ -176,7 +175,9 @@ class ToxicityMetric(BaseMetric):
             return []
 
         verdicts: List[ToxicityVerdict] = []
-        prompt = self.template.generate_verdicts(opinions=self.opinions)
+        prompt = self.evaluation_template.generate_verdicts(
+            opinions=self.opinions
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -202,7 +203,9 @@ class ToxicityMetric(BaseMetric):
             return []
 
         verdicts: List[ToxicityVerdict] = []
-        prompt = self.template.generate_verdicts(opinions=self.opinions)
+        prompt = self.evaluation_template.generate_verdicts(
+            opinions=self.opinions
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -222,7 +225,9 @@ class ToxicityMetric(BaseMetric):
                 return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
+        prompt = self.evaluation_template.generate_opinions(
+            actual_output=actual_output
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Opinions)
             self.evaluation_cost += cost
@@ -239,7 +244,9 @@ class ToxicityMetric(BaseMetric):
                 return data["opinions"]
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
+        prompt = self.evaluation_template.generate_opinions(
+            actual_output=actual_output
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Opinions)
             self.evaluation_cost += cost

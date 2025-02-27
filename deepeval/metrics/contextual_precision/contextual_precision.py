@@ -37,7 +37,7 @@ class ContextualPrecisionMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        template: Type[
+        evaluation_template: Type[
             ContextualPrecisionTemplate
         ] = ContextualPrecisionTemplate,
     ):
@@ -48,7 +48,7 @@ class ContextualPrecisionMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.template = template
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -130,7 +130,7 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reasons": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = self.template.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             input=input,
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
@@ -157,7 +157,7 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reasons": verdict.reason}
             for verdict in self.verdicts
         ]
-        prompt = self.template.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             input=input,
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
@@ -179,7 +179,7 @@ class ContextualPrecisionMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
     ) -> List[ContextualPrecisionVerdict]:
-        prompt = self.template.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             input=input,
             expected_output=expected_output,
             retrieval_context=retrieval_context,
@@ -208,7 +208,7 @@ class ContextualPrecisionMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
     ) -> List[ContextualPrecisionVerdict]:
-        prompt = self.template.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             input=input,
             expected_output=expected_output,
             retrieval_context=retrieval_context,

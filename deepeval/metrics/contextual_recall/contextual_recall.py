@@ -36,7 +36,9 @@ class ContextualRecallMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        template: Type[ContextualRecallTemplate] = ContextualRecallTemplate,
+        evaluation_template: Type[
+            ContextualRecallTemplate
+        ] = ContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,7 +47,7 @@ class ContextualRecallMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.template = template
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -129,7 +131,7 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = self.template.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             expected_output=expected_output,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
@@ -161,7 +163,7 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = self.template.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             expected_output=expected_output,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
@@ -197,7 +199,7 @@ class ContextualRecallMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, expected_output: str, retrieval_context: List[str]
     ) -> List[ContextualRecallVerdict]:
-        prompt = self.template.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             expected_output=expected_output, retrieval_context=retrieval_context
         )
         if self.using_native_model:
@@ -223,7 +225,7 @@ class ContextualRecallMetric(BaseMetric):
     def _generate_verdicts(
         self, expected_output: str, retrieval_context: List[str]
     ) -> List[ContextualRecallVerdict]:
-        prompt = self.template.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             expected_output=expected_output, retrieval_context=retrieval_context
         )
         if self.using_native_model:

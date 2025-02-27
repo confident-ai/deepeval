@@ -37,7 +37,7 @@ class ContextualRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        template: Type[
+        evaluation_template: Type[
             ContextualRelevancyTemplate
         ] = ContextualRelevancyTemplate,
     ):
@@ -48,7 +48,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.template = template
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -133,7 +133,7 @@ class ContextualRelevancyMetric(BaseMetric):
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = self.template.generate_reason(
+        prompt: dict = self.evaluation_template.generate_reason(
             input=input,
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
@@ -165,7 +165,7 @@ class ContextualRelevancyMetric(BaseMetric):
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = self.template.generate_reason(
+        prompt: dict = self.evaluation_template.generate_reason(
             input=input,
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
@@ -202,7 +202,9 @@ class ContextualRelevancyMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, context: List[str]
     ) -> ContextualRelevancyVerdicts:
-        prompt = self.template.generate_verdicts(input=input, context=context)
+        prompt = self.evaluation_template.generate_verdicts(
+            input=input, context=context
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
                 prompt, schema=ContextualRelevancyVerdicts
@@ -223,7 +225,9 @@ class ContextualRelevancyMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, context: str
     ) -> ContextualRelevancyVerdicts:
-        prompt = self.template.generate_verdicts(input=input, context=context)
+        prompt = self.evaluation_template.generate_verdicts(
+            input=input, context=context
+        )
         if self.using_native_model:
             res, cost = self.model.generate(
                 prompt, schema=ContextualRelevancyVerdicts

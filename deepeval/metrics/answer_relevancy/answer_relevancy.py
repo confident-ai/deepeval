@@ -33,7 +33,9 @@ class AnswerRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        template: Type[AnswerRelevancyTemplate] = AnswerRelevancyTemplate,
+        evaluation_template: Type[
+            AnswerRelevancyTemplate
+        ] = AnswerRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -42,7 +44,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.template = template
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -123,7 +125,7 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = self.template.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             irrelevant_statements=irrelevant_statements,
             input=input,
             score=format(self.score, ".2f"),
@@ -152,7 +154,7 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        prompt = self.template.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             irrelevant_statements=irrelevant_statements,
             input=input,
             score=format(self.score, ".2f"),
@@ -177,7 +179,7 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = self.template.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             input=input,
             statements=self.statements,
         )
@@ -202,7 +204,7 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        prompt = self.template.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             input=input,
             statements=self.statements,
         )
@@ -225,7 +227,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self,
         actual_output: str,
     ) -> List[str]:
-        prompt = self.template.generate_statements(
+        prompt = self.evaluation_template.generate_statements(
             actual_output=actual_output,
         )
         if self.using_native_model:
@@ -247,7 +249,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self,
         actual_output: str,
     ) -> List[str]:
-        prompt = self.template.generate_statements(
+        prompt = self.evaluation_template.generate_statements(
             actual_output=actual_output,
         )
         if self.using_native_model:

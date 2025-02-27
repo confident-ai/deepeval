@@ -476,7 +476,8 @@ class SummarizationMetric(BaseMetric):
     async def _a_generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_truths(
-            text=text, extraction_limit=self.truths_extraction_limit
+            retrieval_context=text,
+            extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Truths)
@@ -493,7 +494,7 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(text=text)
+        prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
@@ -510,7 +511,8 @@ class SummarizationMetric(BaseMetric):
     def _generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_truths(
-            text=text, extraction_limit=self.truths_extraction_limit
+            retrieval_context=text,
+            extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Truths)
@@ -527,7 +529,7 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(text=text)
+        prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost
