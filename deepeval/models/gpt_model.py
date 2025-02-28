@@ -207,11 +207,18 @@ class GPTModel(DeepEvalBaseLLM):
             chat_model = self.load_model()
             model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
             response: ChatResponse = chat_model.chat(
-                model=model_name, 
-                messages=[{'role': 'user', 'content': prompt}],
-                format=schema.model_json_schema() if schema else None
+                model=model_name,
+                messages=[{"role": "user", "content": prompt}],
+                format=schema.model_json_schema() if schema else None,
             )
-            return (schema.model_validate_json(response.message.content) if schema else response.message.content, 0)
+            return (
+                (
+                    schema.model_validate_json(response.message.content)
+                    if schema
+                    else response.message.content
+                ),
+                0,
+            )
         elif self.should_use_local_model() or self.should_use_azure_openai():
             if schema:
                 chat_model = self.load_model(enforce_json=True)
@@ -281,11 +288,18 @@ class GPTModel(DeepEvalBaseLLM):
             chat_model = self.load_model(async_mode=True)
             model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
             response: ChatResponse = await chat_model.chat(
-                model=model_name, 
-                messages=[{'role': 'user', 'content': prompt}],
-                format=schema.model_json_schema() if schema else None
+                model=model_name,
+                messages=[{"role": "user", "content": prompt}],
+                format=schema.model_json_schema() if schema else None,
             )
-            return (schema.model_validate_json(response.message.content) if schema else response.message.content, 0)
+            return (
+                (
+                    schema.model_validate_json(response.message.content)
+                    if schema
+                    else response.message.content
+                ),
+                0,
+            )
         elif self.should_use_local_model() or self.should_use_azure_openai():
             if schema:
                 chat_model = self.load_model(enforce_json=True)
@@ -298,7 +312,6 @@ class GPTModel(DeepEvalBaseLLM):
                 with get_openai_callback() as cb:
                     res = await chat_model.ainvoke(prompt)
                     return res.content, cb.total_cost
-
 
     ###############################################
     # Other generate functions
@@ -385,9 +398,8 @@ class GPTModel(DeepEvalBaseLLM):
         except Exception as e:
             raise Exception(f"An unexpected error occurred: {str(e)}")
 
-
     ###############################################
-    # Model 
+    # Model
     ###############################################
 
     def get_model_name(self):
@@ -411,12 +423,10 @@ class GPTModel(DeepEvalBaseLLM):
         return value.lower() == "yes" if value is not None else False
 
     def should_use_ollama_model(self):
-        base_url = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_API_KEY
-        )
+        base_url = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_API_KEY)
         return base_url == "ollama"
 
-    def load_model(self, enforce_json: bool=False, async_mode: bool=False):
+    def load_model(self, enforce_json: bool = False, async_mode: bool = False):
         if self.should_use_ollama_model():
             format = "json" if enforce_json else None
             base_url = KEY_FILE_HANDLER.fetch_data(
