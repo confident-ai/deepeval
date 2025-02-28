@@ -51,6 +51,7 @@ grpcio = "^1.67.1"
 instructor = "*"
 twine="5.1.1"
 datasets="*"
+ollama="*"
 
 [tool.black]
 line-length = 80

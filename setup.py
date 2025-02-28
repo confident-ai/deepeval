@@ -46,6 +46,7 @@ setup(
         "grpcio>=1.67.1,<2.0.0",
         "nest-asyncio",
         "datasets",
+        "ollama",
     ],
     extras_require={
         "dev": ["black"],

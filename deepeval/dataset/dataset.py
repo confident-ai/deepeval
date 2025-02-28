@@ -413,7 +413,7 @@ class EvaluationDataset:
         self,
         file_path: str,
         input_col_name: str,
-        actual_output_col_name: str,
+        actual_output_col_name: Optional[str] = None,
         expected_output_col_name: Optional[str] = None,
         context_col_name: Optional[str] = None,
         context_col_delimiter: str = ";",
@@ -447,7 +447,9 @@ class EvaluationDataset:
         )
 
         inputs = get_column_data(df, input_col_name)
-        actual_outputs = get_column_data(df, actual_output_col_name)
+        actual_outputs = get_column_data(
+            df, actual_output_col_name, default=None
+        )
         expected_outputs = get_column_data(
             df, expected_output_col_name, default=None
         )
@@ -532,7 +534,7 @@ class EvaluationDataset:
         self,
         file_path: str,
         input_key_name: str,
-        actual_output_key_name: str,
+        actual_output_key_name: Optional[str] = None,
         expected_output_key_name: Optional[str] = None,
         context_key_name: Optional[str] = None,
         retrieval_context_key_name: Optional[str] = None,
