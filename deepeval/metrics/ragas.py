@@ -65,7 +65,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         }
         dataset = Dataset.from_dict(data)
 
-        with capture_metric_type(self.__name__, _track=self._track):
+        with capture_metric_type(self.__name__, _track=self._track, async_mode=False):
             # Evaluate the dataset using Ragas
             scores = evaluate(
                 dataset, metrics=[context_precision], llm=chat_model
@@ -143,7 +143,7 @@ class RAGASContextualRecallMetric(BaseMetric):
             "contexts": [test_case.retrieval_context],
         }
         dataset = Dataset.from_dict(data)
-        with capture_metric_type(self.__name__, _track=self._track):
+        with capture_metric_type(self.__name__, _track=self._track, async_mode=False):
             scores = evaluate(dataset, [context_recall], llm=chat_model)
             context_recall_score = scores["context_recall"][0]
             self.success = context_recall_score >= self.threshold
@@ -212,7 +212,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
         }
         dataset = Dataset.from_dict(data)
 
-        with capture_metric_type(self.__name__, _track=self._track):
+        with capture_metric_type(self.__name__, _track=self._track, async_mode=False):
             scores = evaluate(
                 dataset,
                 metrics=[ContextEntityRecall()],
@@ -360,7 +360,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         }
         dataset = Dataset.from_dict(data)
 
-        with capture_metric_type(self.__name__, _track=self._track):
+        with capture_metric_type(self.__name__, _track=self._track, async_mode=False):
             scores = evaluate(
                 dataset,
                 metrics=[ResponseRelevancy(embeddings=self.embeddings)],
@@ -432,7 +432,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
             "answer": [test_case.actual_output],
         }
         dataset = Dataset.from_dict(data)
-        with capture_metric_type(self.__name__, _track=self._track):
+        with capture_metric_type(self.__name__, _track=self._track, async_mode=False):
             scores = evaluate(dataset, metrics=[faithfulness], llm=chat_model)
             faithfulness_score = scores["faithfulness"][0]
             self.success = faithfulness_score >= self.threshold
@@ -500,7 +500,7 @@ class RagasMetric(BaseMetric):
             RAGASFaithfulnessMetric(model=self.model, _track=False),
         ]
 
-        with capture_metric_type(self.__name__):
+        with capture_metric_type(self.__name__, async_mode=False):
             for metric in metrics:
                 score = metric.measure(test_case)
                 score_breakdown[metric.__name__] = score
