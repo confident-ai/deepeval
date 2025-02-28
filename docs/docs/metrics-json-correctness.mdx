@@ -32,6 +32,21 @@ class ExampleSchema(BaseModel):
     name: str
 ```
 
+:::tip
+If your `actual_output` is a list of JSON objects, you can simply create a list schema by wrapping your existing schema in a `RootModel`. For example:
+
+```python
+from pydantic import RootModel
+from typing import List
+
+...
+
+class ExampleSchemaList(RootModel[List[ExampleSchema]]):
+    pass
+```
+
+:::
+
 Then supply it as the `expected_schema` when creating a `JsonCorrectnessMetric`:
 
 ```python
