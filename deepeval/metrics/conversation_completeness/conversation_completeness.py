@@ -148,6 +148,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 return data["reason"]
 
     def _generate_reason(self) -> str:
+        if self.include_reason is False:
+            return None
+
         incompletenesses: List[str] = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":

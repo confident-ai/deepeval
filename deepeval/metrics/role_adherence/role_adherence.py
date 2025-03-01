@@ -122,6 +122,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             return self.score
 
     async def _a_generate_reason(self, role: str) -> str:
+        if self.include_reason is False:
+            return None
+
         prompt = RoleAdherenceTemplate.generate_reason(
             score=self.score,
             role=role,

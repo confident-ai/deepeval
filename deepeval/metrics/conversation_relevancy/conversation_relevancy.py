@@ -134,6 +134,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             return self.score
 
     async def _a_generate_reason(self) -> str:
+        if self.include_reason is False:
+            return None
+
         irrelevancies: List[Dict[str, str]] = []
         for index, verdict in enumerate(self.verdicts):
             if verdict.verdict.strip().lower() == "no":
