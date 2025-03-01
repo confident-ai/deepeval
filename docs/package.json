@@ -29,7 +29,8 @@
     "react-player": "^2.16.0",
     "rehype-katex": "7",
     "remark-math": "6",
-    "sass": "^1.76.0"
+    "sass": "^1.76.0",
+    "zwitch": "^2.0.4"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "2.4.1",

@@ -54,10 +54,16 @@ def camel_to_snake(name: str) -> str:
 
 def convert_keys_to_snake_case(data: Any) -> Any:
     if isinstance(data, dict):
-        return {
-            camel_to_snake(k): convert_keys_to_snake_case(v)
-            for k, v in data.items()
-        }
+        new_dict = {}
+        for k, v in data.items():
+            new_key = camel_to_snake(k)
+            if k == "additionalMetadata":
+                new_dict[new_key] = (
+                    v  # Convert key but do not recurse into value
+                )
+            else:
+                new_dict[new_key] = convert_keys_to_snake_case(v)
+        return new_dict
     elif isinstance(data, list):
         return [convert_keys_to_snake_case(i) for i in data]
     else:

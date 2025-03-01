@@ -18,14 +18,15 @@ from deepeval.metrics.task_completion.template import TaskCompletionTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.task_completion.schema import *
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.TOOLS_CALLED,
-]
-
 
 class TaskCompletionMetric(BaseMetric):
+
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.TOOLS_CALLED,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -49,8 +50,8 @@ class TaskCompletionMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -86,8 +87,8 @@ class TaskCompletionMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(

@@ -8,7 +8,7 @@ class PromptAlignmentTemplate:
     ):
         return f"""For the provided list of prompt instructions, determine whether each instruction has been followed in the LLM actual output.
 Please generate a list of JSON with two keys: `verdict` and `reason`.
-The 'verdict' key should STRICTLY be either a 'yes' or 'no'. Only answer 'yes' the instruction COMPLETELY follows the instruction, and 'no' otherwise.
+The 'verdict' key should STRICTLY be either a 'yes' or 'no'. Only answer 'yes' if the instruction COMPLETELY follows the instruction, and 'no' otherwise.
 You should be EXTRA STRICT AND CAREFUL when giving a 'yes'.
 The 'reason' is the reason for the verdict.
 Provide a 'reason' ONLY if the answer is 'no'. 

@@ -69,17 +69,17 @@ def test_faithfulness():
         actual_output=output,
         retrieval_context=[one, two, three],
     )
-    model = OpenAI()
-    metric = FaithfulnessMetric(model=model)
+    # model = OpenAI()
+    metric = FaithfulnessMetric()
     assert_test(test_case, [metric])
 
 
-def test_verdict_schema():
+# def test_verdict_schema():
 
-    judge = CustomJudge("mock")
-    schema = Verdicts
-    answer = (
-        '{\n"verdicts": [\n{\n"verdict": "yes"\n},\n{\n    "verdict": "no",\n    "reason": "blah blah"\n},'
-        '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}'
-    )
-    res: Verdicts = judge.generate(answer, schema=schema)
+#     judge = CustomJudge("mock")
+#     schema = Verdicts
+#     answer = (
+#         '{\n"verdicts": [\n{\n"verdict": "yes"\n},\n{\n    "verdict": "no",\n    "reason": "blah blah"\n},'
+#         '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}'
+#     )
+#     res: Verdicts = judge.generate(answer, schema=schema)

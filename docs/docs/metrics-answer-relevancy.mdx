@@ -42,9 +42,6 @@ test_case = LLMTestCase(
 metric.measure(test_case)
 print(metric.score)
 print(metric.reason)
-
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
 ```
 
 There are six optional parameters when creating an `AnswerRelevancyMetric`:
@@ -55,6 +52,18 @@ There are six optional parameters when creating an `AnswerRelevancyMetric`:
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+:::info
+
+If you are looking to generate a comprehensive evaluation report for your `test_case` or run multiple metrics on a single test case, use the `evaluate` function.
+
+```python
+...
+
+evaluate([test_case], [metric])
+```
+
+:::
 
 ## How Is It Calculated?
 

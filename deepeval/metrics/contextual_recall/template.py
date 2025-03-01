@@ -1,7 +1,13 @@
+from typing import List
+
+
 class ContextualRecallTemplate:
     @staticmethod
     def generate_reason(
-        expected_output, supportive_reasons, unsupportive_reasons, score
+        expected_output: str,
+        supportive_reasons: str,
+        unsupportive_reasons: str,
+        score: float,
     ):
         return f"""
 Given the original expected output, a list of supportive reasons, and a list of unsupportive reasons (which are deduced directly from the 'expected output'), and a contextual recall score (closer to 1 the better), summarize a CONCISE reason for the score.
@@ -36,7 +42,7 @@ JSON:
 """
 
     @staticmethod
-    def generate_verdicts(expected_output, retrieval_context):
+    def generate_verdicts(expected_output: str, retrieval_context: List[str]):
         return f"""
 For EACH sentence in the given expected output below, determine whether the sentence can be attributed to the nodes of retrieval contexts. Please generate a list of JSON with two keys: `verdict` and `reason`.
 The `verdict` key should STRICTLY be either a 'yes' or 'no'. Answer 'yes' if the sentence can be attributed to any parts of the retrieval context, else answer 'no'.

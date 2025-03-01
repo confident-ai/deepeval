@@ -192,7 +192,7 @@ def test_everything():
         actual_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
-        # context=["I love coffee"],
+        context=["I love coffee"],
     )
     c_test_case = ConversationalTestCase(
         turns=[test_case, test_case], chatbot_role="have a conversation"
@@ -223,7 +223,7 @@ def test_everything():
     )
 
 
-# @pytest.mark.skip(reason="openadi is expensive")
+@pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -255,7 +255,7 @@ def test_everything_2():
         actual_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
-        context=["I love coffee"]
+        context=["I love coffee"],
     )
     assert_test(
         test_case,
@@ -277,8 +277,14 @@ def test_everything_2():
     )
 
 
-@deepeval.log_hyperparameters(
-    model="gpt-4", prompt_template="another template!"
-)
-def hyperparameters():
-    return {"chunk_size": 600, "temperature": 1}
+# from deepeval.prompt import Prompt
+
+# prompt = Prompt(alias="New Prompt")
+# prompt.pull()
+
+
+# @deepeval.log_hyperparameters(
+#     model="gpt-4", prompt_template="another template!"
+# )
+# def hyperparameters():
+#     return {"System Prompt": prompt, "temperature": 1}

@@ -1,15 +1,18 @@
 ---
 id: metrics-dag
-title: Deep Acyclic Graph
-sidebar_label: Deep Acyclic Graph
+title: DAG (Deep Acyclic Graph)
+sidebar_label: DAG
 ---
 
 import Equation from "@site/src/components/equation";
 
-The deep acyclic graph (DAG) metric in `deepeval` is a custom metric for you to easily build deterministic decision trees for evaluation with the help of using LLM as a judge.
+The deep acyclic graph (DAG) metric in `deepeval` is currently the most versatile custom metric for you to easily build deterministic decision trees for evaluation with the help of using LLM-as-a-judge.
 
 :::info
-The `DAGMetric` is a **custom metric based on a LLM-powered decision tree, and gives you more deterministic control** over [`GEval`.](/docs/metrics-llm-evals)
+The `DAGMetric` is a **custom metric based on a LLM-powered decision tree, and gives you more deterministic control** over [`GEval`.](/docs/metrics-llm-evals) You can however also use `GEval` within your `DAGMetric`.
+
+![ok](https://confident-docs.s3.amazonaws.com/dag-formatting-metric.svg)
+
 :::
 
 ## Required Arguments
@@ -43,7 +46,7 @@ Alice: "Bob, can we provide a stable version by then?"
 Bob: "Yes, we’ll share an early build."
 Charlie: "Great, we'll start preparing assets."
 Alice: "Plan: fixes by Friday, marketing prep Monday, sync next Wednesday. Thanks, everyone!"
-"""
+""",
     actual_output="""
 Intro:
 Alice outlined the agenda: product updates, blockers, and marketing alignment.
@@ -82,7 +85,7 @@ metric = GEval(
         "The `actual_output` is completely wrong if it misses any of the headings: 'intro', 'body', 'conclusion'.",
         "If the `actual_output` has all the complete headings but are in the wrong order, penalize it.",
         "If the summary has all the correct headings and they are in the right order, give it a perfect score."
-    ]
+    ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
 )
 ```
@@ -123,6 +126,7 @@ Some might skeptical if this complexity is necessary but in reality, you'll quic
 Here's how this decision tree would look like in code:
 
 ```python
+from deepeval.test_case import LLMTestCaseParams
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
     TaskNode,
@@ -142,7 +146,10 @@ correct_order_node = NonBinaryJudgementNode(
 
 correct_headings_node = BinaryJudgementNode(
     criteria="Does the summary headings contain all three: 'intro', 'body', and 'conclusion'?",
-    children=[VerdictNode(verdict=False, score=0), correct_order_node],
+    children=[
+        VerdictNode(verdict=False, score=0),
+        VerdictNode(verdict=True, child=correct_order_node),
+    ],
 )
 
 extract_headings_node = TaskNode(
@@ -160,7 +167,7 @@ When creating your DAG, there are three important points to remember:
 
 1. There should only be an edge to a parent node **if the current node depends on the output of the parent node.**
 2. All nodes, except for `VerdictNode`s, can have access to an `LLMTestCase` at any point in time.
-3. All leaf nodes are `VerdictNode`s.
+3. All leaf nodes are `VerdictNode`s, but not all `VerdictNode`s are leaf nodes.
 
 **IMPORTANT:** You'll see that in our example, `extract_headings_node` has `correct_order_node` as a child because `correct_order_node`'s `criteria` depends on the extracted summary headings from the `actual_output` of the `LLMTestCase`.
 
@@ -218,14 +225,16 @@ class TaskNode(BaseNode):
     output_label: str
     children: List[BaseNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
 ```
 
-There are three mandatory and one optional parameter when creating a `TaskNode`:
+There are three mandatory and two optional parameter when creating a `TaskNode`:
 
 - `instructions`: a string specifying how to process parameters of an `LLMTestCase`, and/or outputs from a previous parent `TaskNode`.
 - `output_label`: a string representing the final output. The `children` `BaseNode`s will use the `output_label` to reference the output from the current `TaskNode`.
 - `children`: a list of `BaseNode`s. There **must not** be a `VerdictNode` in the list of children.
 - [Optional] `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for processing.
+- [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 :::info
 For example, if you intend to breakdown the `actual_output` of an `LLMTestCase` into distinct sentences, the `output_label` would be something like "Extracted Sentences", which children `BaseNode`s can reference for subsequent judgement in your decision tree.
@@ -244,13 +253,15 @@ class BinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
 ```
 
-There are two mandatory and one optional parameter when creating a `BinaryJudgementNode`:
+There are two mandatory and two optional parameter when creating a `BinaryJudgementNode`:
 
 - `criteria`: a yes/no question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** to output `True` or `False`.
 - `children`: a list of exactly two `VerdictNode`s, one with a `verdict` value of `True`, and the other with a value of `False`.
 - [Optional] `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 :::tip
 If you have a `TaskNode` as a parent node (which by the way is automatically set by `deepeval` when you supply the list of `children`), you can base your `criteria` on the output of the parent `TaskNode` by referencing the `output_label`.
@@ -271,13 +282,15 @@ class NonBinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
 ```
 
-There are two mandatory and one optional parameter when creating a `NonBinaryJudgementNode`:
+There are two mandatory and two optional parameter when creating a `NonBinaryJudgementNode`:
 
 - `criteria`: an open-ended question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** what to output.
 - `children`: a list of `VerdictNode`s, where the `verdict` values determine the possible verdict of the current `NonBinaryJudgementNode`.
 - [Optional] `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 ### `VerdictNode`
 
@@ -286,20 +299,22 @@ The `VerdictNode` **is always a leaf node** and must not be the root node of you
 ```python
 from typing import Union
 from deepeval.metrics.dag import BaseNode
+from deepeval.metrics import GEval
 
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
     score: int
+    child: Union[GEval, BaseNode]
 ```
 
 There are one mandatory two optional parameters when creating a `VerdictNode`:
 
 - `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is a `NonBinaryJudgementNode`, else boolean if the parent is a `BinaryJudgementNode`.
 - [Optional] `score`: a integar between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value. You must provide a score if `g_eval` is `None`.
-- [Optional] `g_eval`: a [`GEval`](/docs/metrics-llm-evals) metric instance. If the `score` is not provided, the `DAGMetric` will use this provided `g_eval` metric instance to calculate a score instead.
+- [Optional] `child`: a `BaseNode` **OR** [`GEval`](/docs/metrics-llm-evals) metric instance. If the `score` is not provided, the `DAGMetric` will use this provided `child` to run the provided `GEval` metric instance to calculate a score, **OR** propagate the DAG execution to the `BaseNode` `child`.
 
 :::caution
-You must provide `score` or `g_eval`, but not both.
+You must provide `score` or `child`, but not both.
 :::
 
 ## How Is It Calculated?

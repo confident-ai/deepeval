@@ -1,8 +1,12 @@
 ---
 id: confident-ai-evaluation-dataset-evaluation
-title: Using Datasets For Evaluation
-sidebar_label: Using Datasets For Evaluation
+title: Using Datasets
+sidebar_label: Using Datasets
 ---
+
+:::note
+A more comprehensive walkthrough on how to use datasets for LLM evaluation can be found in the [evaluation section](/confident-ai/confident-ai-testing-n-evaluation-test-run), but this is a great introduction nevertheless.
+:::
 
 You can pull evaluation datasets created on Confident AI like how you would pull code from a GitHub repo by specifying the dataset `alias`, which the unique name of your dataset within a project.
 
@@ -14,7 +18,7 @@ dataset.pull(alias="QA Dataset", auto_convert_goldens_to_test_cases=True)
 print(dataset)
 ```
 
-Once the dataset is pulled locally, you can start running evaluations using [`deepeval`'s metrics.](/docs/metrics-introduction)
+Once the dataset is pulled **locally**, you can start running evaluations using [`deepeval`'s metrics](/docs/metrics-introduction), which is **also ran locally:**
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
@@ -24,8 +28,10 @@ from deepeval import evaluate
 evaluate(dataset, metrics=[AnswerRelevancyMetric()])
 ```
 
-:::caution
-Here we're just showing the simplest example. In reality, you will likely have to generate `actual_output`s before running evaluations as the datasets you store on Confident AI will likely not have pre-computed `actual_output`s.
+We're just showing the simplest example here, and this code assumes your dataset already have pre-computed `actual_output`s. In reality, you will likely have to generate `actual_output`s before running evaluations as this is the whole point of testing and evaluation.
+
+:::tip
+If you want to run metrics on the cloud instead (although not recommended), [click here.](/confident-ai/confident-ai-testing-n-evaluation-metric-collections) We don't recommend running metrics on the cloud unless you have to because running evals locally gives you more control in your code to determine what metrics to customize, and how your LLM application wish to generate these `actual_output`s at evaluation time.
 :::
 
 When you pull a dataset from Confident AI, you are pulling **raw goldens**, not test cases. For those of you where your dataset does not have pre-computed `actual_output`, `retrieval_context`, and/or `tools_called`, you'll need an additional step to generate these parameters at evaluation time based on the `input` of each golden.
@@ -62,7 +68,7 @@ Essentially, `auto_convert_goldens_to_test_cases` is convenient if you have a co
 
 ## Convert Goldens Into Test Cases
 
-Here is an example of how you can use goldens as an intermediary variable to generate an `actual_output` before converting them to test cases for evaluation:
+Here is an example of how you can use goldens as an intermediary variable to **generate** an `actual_output` before converting them to test cases for evaluation:
 
 ```python
 # Pull from Confident
@@ -95,6 +101,10 @@ def convert_goldens_to_test_cases(goldens: List[Golden]) -> List[LLMTestCase]:
 # Data preprocessing before setting the dataset test cases
 dataset.test_cases = convert_goldens_to_test_cases(dataset.goldens)
 ```
+
+:::caution
+**PLEASE DO NOT** create a list of test cases and **not** add it to a dataset (ie. always do `dataset.test_cases = ...`). Adding test cases to a dataset allows `deepeval` to preserve the ordering of `Goldens` stored in your dataset, which allows for regression testing, and better management of testing data.
+:::
 
 ## Running Evaluations With Datasets
 
@@ -193,11 +203,13 @@ Don't forget to also login to Confident AI, otherwise you wouldn't be able to pu
 
 ## Using Datasets on Confident AI
 
-With a dataset, you can enable anyone to run evaluations directly on Confident AI in a click of a button, without needing to code. It involves a 4-step process:
+With a dataset, you can enable non-technical team members to [trigger evaluations directly on Confident AI](/confident-ai/confident-ai-testing-n-evaluation-metric-collections#triggering-evaluations-on-confident-ai) in a click of a button, without needing to code.
 
-1. [Create an experiment](/confident-ai/confident-ai-testing-n-evaluation-experiments) and specify which metrics you wish to run evaluations with.
-2. Specify which dataset you'll be using for evaluation.
-3. [Setup and connect your LLM endpoint](/confident-ai/confident-ai-advanced-llm-connection) for Confident AI to prompt at evaluation time. Test cases will be used for evaluation based on the `actual_output` your LLM connection endpoint has returned.
+It involves a 4-step process:
+
+1. [Create a metric collection](/confident-ai/confident-ai-testing-n-evaluation-metric-collections#create-a-metric-collection) to specify which metrics to evaluation your LLM application on.
+2. Select which dataset you'll be using to test your LLM application.
+3. [Setup and connect your LLM endpoint](/confident-ai/confident-ai-advanced-llm-connection) for Confident AI to prompt at evaluation time. Test cases will be used for evaluation based on the `actual_output` (and/or `retrieval_context` and `tools_called`) your LLM connection endpoint has returned.
 4. Press the evaluate button on the **Evaluations** page to start an evaluation.
 
 :::info
@@ -205,3 +217,5 @@ We don't recommend you setting up this workflow unless you need to be able to ru
 
 Running evaluations with `deepeval` gives you more flexibility for metrics and customizations, but running evaluations on Confident AI unlocks evaluations for non-technical team members.
 :::
+
+Since the quality of your evaluation results is a function of the quality of your dataset, we'll see how you can improve your datasets over time to make your benchmarking more and more robust throughout the lifetime of your LLM application.

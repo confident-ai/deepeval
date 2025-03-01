@@ -24,6 +24,7 @@ from deepeval.dataset.api import (
     DatasetHttpResponse,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
+from deepeval.telemetry import capture_pull_dataset
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
@@ -412,7 +413,7 @@ class EvaluationDataset:
         self,
         file_path: str,
         input_col_name: str,
-        actual_output_col_name: str,
+        actual_output_col_name: Optional[str] = None,
         expected_output_col_name: Optional[str] = None,
         context_col_name: Optional[str] = None,
         context_col_delimiter: str = ";",
@@ -446,7 +447,9 @@ class EvaluationDataset:
         )
 
         inputs = get_column_data(df, input_col_name)
-        actual_outputs = get_column_data(df, actual_output_col_name)
+        actual_outputs = get_column_data(
+            df, actual_output_col_name, default=None
+        )
         expected_outputs = get_column_data(
             df, expected_output_col_name, default=None
         )
@@ -531,7 +534,7 @@ class EvaluationDataset:
         self,
         file_path: str,
         input_key_name: str,
-        actual_output_key_name: str,
+        actual_output_key_name: Optional[str] = None,
         expected_output_key_name: Optional[str] = None,
         context_key_name: Optional[str] = None,
         retrieval_context_key_name: Optional[str] = None,
@@ -632,75 +635,78 @@ class EvaluationDataset:
             )
 
     def pull(self, alias: str, auto_convert_goldens_to_test_cases: bool = True):
-        if is_confident() or self._confident_api_key is not None:
-            api = Api(api_key=self._confident_api_key)
-            with Progress(
-                SpinnerColumn(style="rgb(106,0,255)"),
-                TextColumn("[progress.description]{task.description}"),
-                transient=False,
-            ) as progress:
-                task_id = progress.add_task(
-                    f"Pulling [rgb(106,0,255)]'{alias}'[/rgb(106,0,255)] from Confident AI...",
-                    total=100,
-                )
-                start_time = time.perf_counter()
-                result = api.send_request(
-                    method=HttpMethods.GET,
-                    endpoint=Endpoints.DATASET_ENDPOINT,
-                    params={"alias": alias},
-                )
-
-                conversational_goldens = []
-                for cg in convert_keys_to_snake_case(
-                    result["conversationalGoldens"]
-                ):
-                    if "goldens" in cg:
-                        cg["turns"] = cg.pop("goldens")
-                    conversational_goldens.append(ConversationalGolden(**cg))
-
-                response = DatasetHttpResponse(
-                    goldens=convert_keys_to_snake_case(result["goldens"]),
-                    conversationalGoldens=conversational_goldens,
-                    datasetId=result["datasetId"],
-                )
-
-                self._alias = alias
-                self._id = response.datasetId
-                self.goldens = []
-                self.conversational_goldens = []
-                self.test_cases = []
-
-                if auto_convert_goldens_to_test_cases:
-                    llm_test_cases = convert_goldens_to_test_cases(
-                        response.goldens, alias, response.datasetId
+        with capture_pull_dataset():
+            if is_confident() or self._confident_api_key is not None:
+                api = Api(api_key=self._confident_api_key)
+                with Progress(
+                    SpinnerColumn(style="rgb(106,0,255)"),
+                    TextColumn("[progress.description]{task.description}"),
+                    transient=False,
+                ) as progress:
+                    task_id = progress.add_task(
+                        f"Pulling [rgb(106,0,255)]'{alias}'[/rgb(106,0,255)] from Confident AI...",
+                        total=100,
                     )
-                    conversational_test_cases = (
-                        convert_convo_goldens_to_convo_test_cases(
-                            response.conversational_goldens,
-                            alias,
-                            response.datasetId,
+                    start_time = time.perf_counter()
+                    result = api.send_request(
+                        method=HttpMethods.GET,
+                        endpoint=Endpoints.DATASET_ENDPOINT,
+                        params={"alias": alias},
+                    )
+
+                    conversational_goldens = []
+                    for cg in convert_keys_to_snake_case(
+                        result["conversationalGoldens"]
+                    ):
+                        if "goldens" in cg:
+                            cg["turns"] = cg.pop("goldens")
+                        conversational_goldens.append(
+                            ConversationalGolden(**cg)
                         )
-                    )
-                    self._llm_test_cases.extend(llm_test_cases)
-                    self._conversational_test_cases.extend(
-                        conversational_test_cases
-                    )
-                else:
-                    self.goldens = response.goldens
-                    self.conversational_goldens = (
-                        response.conversational_goldens
+
+                    response = DatasetHttpResponse(
+                        goldens=convert_keys_to_snake_case(result["goldens"]),
+                        conversationalGoldens=conversational_goldens,
+                        datasetId=result["datasetId"],
                     )
 
-                end_time = time.perf_counter()
-                time_taken = format(end_time - start_time, ".2f")
-                progress.update(
-                    task_id,
-                    description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
+                    self._alias = alias
+                    self._id = response.datasetId
+                    self.goldens = []
+                    self.conversational_goldens = []
+                    self.test_cases = []
+
+                    if auto_convert_goldens_to_test_cases:
+                        llm_test_cases = convert_goldens_to_test_cases(
+                            response.goldens, alias, response.datasetId
+                        )
+                        conversational_test_cases = (
+                            convert_convo_goldens_to_convo_test_cases(
+                                response.conversational_goldens,
+                                alias,
+                                response.datasetId,
+                            )
+                        )
+                        self._llm_test_cases.extend(llm_test_cases)
+                        self._conversational_test_cases.extend(
+                            conversational_test_cases
+                        )
+                    else:
+                        self.goldens = response.goldens
+                        self.conversational_goldens = (
+                            response.conversational_goldens
+                        )
+
+                    end_time = time.perf_counter()
+                    time_taken = format(end_time - start_time, ".2f")
+                    progress.update(
+                        task_id,
+                        description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
+                    )
+            else:
+                raise Exception(
+                    "Run `deepeval login` to pull dataset from Confident AI"
                 )
-        else:
-            raise Exception(
-                "Run `deepeval login` to pull dataset from Confident AI"
-            )
 
     def generate_goldens_from_docs(
         self,

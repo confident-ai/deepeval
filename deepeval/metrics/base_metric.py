@@ -1,11 +1,17 @@
 from abc import abstractmethod
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, List
 
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
+from deepeval.test_case import (
+    LLMTestCase,
+    ConversationalTestCase,
+    MLLMTestCase,
+    LLMTestCaseParams,
+)
 from deepeval.models import DeepEvalBaseLLM
 
 
 class BaseMetric:
+    __required_params = List[LLMTestCaseParams]
     threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None

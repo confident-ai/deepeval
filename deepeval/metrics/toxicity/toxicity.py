@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Type, Union
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -15,17 +15,17 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
 )
-from deepeval.metrics.bias.template import BiasTemplate
 from deepeval.metrics.toxicity.template import ToxicityTemplate
 from deepeval.metrics.toxicity.schema import *
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-]
-
 
 class ToxicityMetric(BaseMetric):
+
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -34,6 +34,7 @@ class ToxicityMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[ToxicityTemplate] = ToxicityTemplate,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -42,6 +43,7 @@ class ToxicityMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -49,8 +51,8 @@ class ToxicityMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -85,8 +87,8 @@ class ToxicityMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -123,7 +125,7 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = ToxicityTemplate.generate_reason(
+        prompt: dict = self.evaluation_template.generate_reason(
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
@@ -150,7 +152,7 @@ class ToxicityMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "yes":
                 toxics.append(verdict.reason)
 
-        prompt: dict = ToxicityTemplate.generate_reason(
+        prompt: dict = self.evaluation_template.generate_reason(
             toxics=toxics,
             score=format(self.score, ".2f"),
         )
@@ -173,7 +175,9 @@ class ToxicityMetric(BaseMetric):
             return []
 
         verdicts: List[ToxicityVerdict] = []
-        prompt = ToxicityTemplate.generate_verdicts(opinions=self.opinions)
+        prompt = self.evaluation_template.generate_verdicts(
+            opinions=self.opinions
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -199,7 +203,9 @@ class ToxicityMetric(BaseMetric):
             return []
 
         verdicts: List[ToxicityVerdict] = []
-        prompt = ToxicityTemplate.generate_verdicts(opinions=self.opinions)
+        prompt = self.evaluation_template.generate_verdicts(
+            opinions=self.opinions
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -219,7 +225,9 @@ class ToxicityMetric(BaseMetric):
                 return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
+        prompt = self.evaluation_template.generate_opinions(
+            actual_output=actual_output
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Opinions)
             self.evaluation_cost += cost
@@ -236,7 +244,9 @@ class ToxicityMetric(BaseMetric):
                 return data["opinions"]
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
+        prompt = self.evaluation_template.generate_opinions(
+            actual_output=actual_output
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Opinions)
             self.evaluation_cost += cost

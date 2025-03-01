@@ -1,7 +1,5 @@
 import asyncio
 from typing import Optional, List, Tuple, Union
-import math
-import textwrap
 
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
@@ -19,15 +17,16 @@ from deepeval.metrics.multimodal_metrics.image_reference.schema import (
     ReasonScore,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.utils import get_or_create_event_loop, prettify_list
-
-required_params: List[MLLMTestCaseParams] = [
-    MLLMTestCaseParams.INPUT,
-    MLLMTestCaseParams.ACTUAL_OUTPUT,
-]
+from deepeval.utils import get_or_create_event_loop
 
 
 class ImageReferenceMetric(BaseMultimodalMetric):
+
+    _required_params: List[MLLMTestCaseParams] = [
+        MLLMTestCaseParams.INPUT,
+        MLLMTestCaseParams.ACTUAL_OUTPUT,
+    ]
+
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
@@ -49,7 +48,7 @@ class ImageReferenceMetric(BaseMultimodalMetric):
         self, test_case: MLLMTestCase, _show_indicator: bool = True
     ) -> float:
         check_mllm_test_case_params(
-            test_case, required_params, None, None, self
+            test_case, self._required_params, None, None, self
         )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -140,7 +139,7 @@ class ImageReferenceMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
     ) -> float:
         check_mllm_test_case_params(
-            test_case, required_params, None, None, self
+            test_case, self._required_params, None, None, self
         )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(

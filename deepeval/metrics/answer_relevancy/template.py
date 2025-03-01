@@ -1,6 +1,9 @@
+from typing import List
+
+
 class AnswerRelevancyTemplate:
     @staticmethod
-    def generate_statements(actual_output):
+    def generate_statements(actual_output: str):
         return f"""Given the text, breakdown and generate a list of statements presented. Ambiguous statements and single words can also be considered as statements.
 
 Example:
@@ -29,7 +32,7 @@ JSON:
 """
 
     @staticmethod
-    def generate_verdicts(input, actual_output):
+    def generate_verdicts(input: str, statements: str):
         return f"""For the provided list of statements, determine whether each statement is relevant to address the input.
 Please generate a list of JSON with two keys: `verdict` and `reason`.
 The 'verdict' key should STRICTLY be either a 'yes', 'idk' or 'no'. Answer 'yes' if the statement is relevant to addressing the original input, 'no' if the statement is irrelevant, and 'idk' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to address the input).
@@ -86,13 +89,15 @@ Input:
 {input}
 
 Statements:
-{actual_output}
+{statements}
 
 JSON:
 """
 
     @staticmethod
-    def generate_reason(irrelevant_statements, input, score):
+    def generate_reason(
+        irrelevant_statements: List[str], input: str, score: float
+    ):
         return f"""Given the answer relevancy score, the list of reasons of irrelevant statements made in the actual output, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
 The irrelevant statements represent things in the actual output that is irrelevant to addressing whatever is asked/talked about in the input.
 If there is nothing irrelevant, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).

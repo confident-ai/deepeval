@@ -5,7 +5,7 @@ class ContextualRelevancyTemplate:
     @staticmethod
     def generate_reason(
         input: str,
-        irrelevancies: List[str],
+        irrelevant_statements: List[str],
         relevant_statements: List[str],
         score: float,
     ):
@@ -30,7 +30,7 @@ Input:
 {input}
 
 Reasons for why the retrieval context is irrelevant to the input:
-{irrelevancies}
+{irrelevant_statements}
 
 Statement in the retrieval context that is relevant to the input:
 {relevant_statements}

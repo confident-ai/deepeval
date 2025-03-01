@@ -1,11 +1,11 @@
-from deepeval import evaluate
+from deepeval import evaluate, confident_evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
 
 # See above for contents of fake data
 fake_data = [
     {
-        "input": "I have a persistent cough and fever. Should I be worried?",
+        "input": "1 I have a persistent cough and fever. Should I be worried?",
         "actual_output": (
             "Based on your symptoms, it could be a sign of a viral or bacterial infection. "
             "However, if the fever persists for more than three days or you experience difficulty breathing, "
@@ -19,7 +19,40 @@ fake_data = [
         ],
     },
     {
-        "input": "What should I do if I accidentally cut my finger deeply?",
+        "input": "2 What should I do if I accidentally cut my finger deeply?",
+        "actual_output": """If you cut your finger deeply, rinse it with soap and water, apply pressure to stop bleeding, and cover it with a clean bandage. Seek medical care if it keeps bleeding, is very deep, or shows signs of infection like redness or swelling. Ensure your tetanus shot is up to date.""",
+        "retrieval_context": [
+            "Deep cuts that are more than 0.25 inches deep or expose fat, muscle, or bone require immediate medical attention. Such wounds may need stitches to heal properly.",
+            "To minimize the risk of infection, wash the wound thoroughly with soap and water. Avoid using alcohol or hydrogen peroxide, as these can irritate the tissue and delay healing.",
+            "If the bleeding persists for more than 10 minutes or soaks through multiple layers of cloth or bandages, seek emergency care. Continuous bleeding might indicate damage to an artery or vein.",
+            "Watch for signs of infection, including redness, swelling, warmth, pain, or pus. Infections can develop even in small cuts if not properly cleaned or if the individual is at risk (e.g., diabetic or immunocompromised).",
+            "Tetanus, a bacterial infection caused by Clostridium tetani, can enter the body through open wounds. Ensure that your tetanus vaccination is up to date, especially if the wound was caused by a rusty or dirty object.",
+        ],
+    },
+    {
+        "input": "3 What should I do if I accidentally cut my finger deeply?",
+        "actual_output": """If you cut your finger deeply, rinse it with soap and water, apply pressure to stop bleeding, and cover it with a clean bandage. Seek medical care if it keeps bleeding, is very deep, or shows signs of infection like redness or swelling. Ensure your tetanus shot is up to date.""",
+        "retrieval_context": [
+            "Deep cuts that are more than 0.25 inches deep or expose fat, muscle, or bone require immediate medical attention. Such wounds may need stitches to heal properly.",
+            "To minimize the risk of infection, wash the wound thoroughly with soap and water. Avoid using alcohol or hydrogen peroxide, as these can irritate the tissue and delay healing.",
+            "If the bleeding persists for more than 10 minutes or soaks through multiple layers of cloth or bandages, seek emergency care. Continuous bleeding might indicate damage to an artery or vein.",
+            "Watch for signs of infection, including redness, swelling, warmth, pain, or pus. Infections can develop even in small cuts if not properly cleaned or if the individual is at risk (e.g., diabetic or immunocompromised).",
+            "Tetanus, a bacterial infection caused by Clostridium tetani, can enter the body through open wounds. Ensure that your tetanus vaccination is up to date, especially if the wound was caused by a rusty or dirty object.",
+        ],
+    },
+    {
+        "input": "4 What should I do if I accidentally cut my finger deeply?",
+        "actual_output": """If you cut your finger deeply, rinse it with soap and water, apply pressure to stop bleeding, and cover it with a clean bandage. Seek medical care if it keeps bleeding, is very deep, or shows signs of infection like redness or swelling. Ensure your tetanus shot is up to date.""",
+        "retrieval_context": [
+            "Deep cuts that are more than 0.25 inches deep or expose fat, muscle, or bone require immediate medical attention. Such wounds may need stitches to heal properly.",
+            "To minimize the risk of infection, wash the wound thoroughly with soap and water. Avoid using alcohol or hydrogen peroxide, as these can irritate the tissue and delay healing.",
+            "If the bleeding persists for more than 10 minutes or soaks through multiple layers of cloth or bandages, seek emergency care. Continuous bleeding might indicate damage to an artery or vein.",
+            "Watch for signs of infection, including redness, swelling, warmth, pain, or pus. Infections can develop even in small cuts if not properly cleaned or if the individual is at risk (e.g., diabetic or immunocompromised).",
+            "Tetanus, a bacterial infection caused by Clostridium tetani, can enter the body through open wounds. Ensure that your tetanus vaccination is up to date, especially if the wound was caused by a rusty or dirty object.",
+        ],
+    },
+    {
+        "input": "5 What should I do if I accidentally cut my finger deeply?",
         "actual_output": """If you cut your finger deeply, rinse it with soap and water, apply pressure to stop bleeding, and cover it with a clean bandage. Seek medical care if it keeps bleeding, is very deep, or shows signs of infection like redness or swelling. Ensure your tetanus shot is up to date.""",
         "retrieval_context": [
             "Deep cuts that are more than 0.25 inches deep or expose fat, muscle, or bone require immediate medical attention. Such wounds may need stitches to heal properly.",
@@ -46,7 +79,13 @@ for fake_datum in fake_data:
 answer_relevancy = AnswerRelevancyMetric(threshold=0.5)
 # faithfulness = FaithfulnessMetric(threshold=0.5)
 
-answer_relevancy.audit(test_cases)
 
 # Run evaluation
-# evaluate(test_cases=test_cases, metrics=[answer_relevancy, faithfulness])
+# evaluate(test_cases=test_cases, metrics=[answer_relevancy])
+
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.test_cases = test_cases
+
+confident_evaluate(test_cases=dataset, metric_collection="DogFood")

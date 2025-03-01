@@ -22,7 +22,8 @@ from deepeval.utils import prettify_list
 
 
 class BaseNode:
-    _indegree: Optional[int] = None
+    _indegree: int = 0
+    _depth: int = 0
 
     def set_parent(self, parent: "BaseNode"):
         if hasattr(self, "_parent"):
@@ -46,24 +47,18 @@ class BaseNode:
 
 
 def increment_indegree(node: BaseNode):
-    if node._indegree is None:
-        node._indegree = 1
-    else:
-        node._indegree += 1
+    node._indegree += 1
 
 
 def decrement_indegree(node: BaseNode):
-    if node._indegree is None:
-        node._indegree = 0
-    else:
-        node._indegree -= 1
+    node._indegree -= 1
 
 
 @dataclass
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
     score: Optional[int] = None
-    g_eval: Optional[GEval] = None
+    child: Optional[BaseNode | GEval] = None
     _parent: Optional[BaseNode] = None
 
     def __hash__(self):
@@ -71,13 +66,13 @@ class VerdictNode(BaseNode):
 
     def __post_init__(self):
         # Ensure either `score` or `g_eval` is set, but not both
-        if self.score is not None and self.g_eval is not None:
+        if self.score is not None and self.child is not None:
             raise ValueError(
-                "A VerdictNode can have either a 'score' or a 'g_eval', but not both."
+                "A VerdictNode can have either a 'score' or a 'child', but not both."
             )
-        if self.score is None and self.g_eval is None:
+        if self.score is None and self.child is None:
             raise ValueError(
-                "A VerdictNode must have either a 'score' or a 'g_eval'."
+                "A VerdictNode must have either a 'score' or a 'child'."
             )
 
         if self.score is not None:
@@ -88,7 +83,7 @@ class VerdictNode(BaseNode):
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
         decrement_indegree(self)
-        if self._indegree != 0:
+        if self._indegree > 0:
             return
 
         if isinstance(self._parent, NonBinaryJudgementNode) or isinstance(
@@ -97,26 +92,35 @@ class VerdictNode(BaseNode):
             if self._parent._verdict.verdict != self.verdict:
                 return
 
-        if self.g_eval is not None:
-            g_eval_args = {
-                "name": self.g_eval.name,
-                "evaluation_params": self.g_eval.evaluation_params,
-                "model": metric.model,
-                "verbose_mode": metric.verbose_mode,
-            }
-            if self.g_eval.criteria:
-                g_eval_args["criteria"] = self.g_eval.criteria
-            else:
-                g_eval_args["evaluation_steps"] = self.g_eval.evaluation_steps
-            copied_g_eval = GEval(**g_eval_args)
+        if self.child is not None:
+            if isinstance(self.child, GEval):
+                g_eval_args = {
+                    "name": self.child.name,
+                    "evaluation_params": self.child.evaluation_params,
+                    "model": metric.model,
+                    "verbose_mode": False,
+                }
+                if self.child.criteria:
+                    g_eval_args["criteria"] = self.child.criteria
+                else:
+                    g_eval_args["evaluation_steps"] = (
+                        self.child.evaluation_steps
+                    )
+                copied_g_eval = GEval(**g_eval_args)
 
-            copied_g_eval.measure(test_case=test_case, _show_indicator=False)
-            metric._verbose_steps.append(
-                construct_node_verbose_log(self, depth, copied_g_eval)
-            )
-            metric.score = copied_g_eval.score
-            if metric.include_reason:
-                metric.reason = copied_g_eval.reason
+                copied_g_eval.measure(
+                    test_case=test_case, _show_indicator=False
+                )
+                metric._verbose_steps.append(
+                    construct_node_verbose_log(self, depth, copied_g_eval)
+                )
+                metric.score = copied_g_eval.score
+                if metric.include_reason:
+                    metric.reason = copied_g_eval.reason
+            else:
+                self.child._execute(
+                    metric=metric, test_case=test_case, depth=depth
+                )
         else:
             metric._verbose_steps.append(
                 construct_node_verbose_log(self, depth)
@@ -129,7 +133,7 @@ class VerdictNode(BaseNode):
         self, metric: BaseMetric, test_case: LLMTestCase, depth: int
     ):
         decrement_indegree(self)
-        if self._indegree != 0:
+        if self._indegree > 0:
             return
 
         if isinstance(self._parent, NonBinaryJudgementNode) or isinstance(
@@ -138,28 +142,35 @@ class VerdictNode(BaseNode):
             if self._parent._verdict.verdict != self.verdict:
                 return
 
-        if self.g_eval is not None:
-            g_eval_args = {
-                "name": self.g_eval.name,
-                "evaluation_params": self.g_eval.evaluation_params,
-                "model": metric.model,
-                "verbose_mode": metric.verbose_mode,
-            }
-            if self.g_eval.criteria:
-                g_eval_args["criteria"] = self.g_eval.criteria
-            else:
-                g_eval_args["evaluation_steps"] = self.g_eval.evaluation_steps
-            copied_g_eval = GEval(**g_eval_args)
+        if self.child is not None:
+            if isinstance(self.child, GEval):
+                g_eval_args = {
+                    "name": self.child.name,
+                    "evaluation_params": self.child.evaluation_params,
+                    "model": metric.model,
+                    "verbose_mode": False,
+                }
+                if self.child.criteria:
+                    g_eval_args["criteria"] = self.child.criteria
+                else:
+                    g_eval_args["evaluation_steps"] = (
+                        self.child.evaluation_steps
+                    )
+                copied_g_eval = GEval(**g_eval_args)
 
-            await copied_g_eval.a_measure(
-                test_case=test_case, _show_indicator=False
-            )
-            metric._verbose_steps.append(
-                construct_node_verbose_log(self, depth, copied_g_eval)
-            )
-            metric.score = copied_g_eval.score
-            if metric.include_reason:
-                metric.reason = copied_g_eval.reason
+                await copied_g_eval.a_measure(
+                    test_case=test_case, _show_indicator=False
+                )
+                metric._verbose_steps.append(
+                    construct_node_verbose_log(self, depth, copied_g_eval)
+                )
+                metric.score = copied_g_eval.score
+                if metric.include_reason:
+                    metric.reason = copied_g_eval.reason
+            else:
+                await self.child._a_execute(
+                    metric=metric, test_case=test_case, depth=depth
+                )
         else:
             metric._verbose_steps.append(
                 construct_node_verbose_log(self, depth)
@@ -215,6 +226,7 @@ class TaskNode(BaseNode):
     output_label: str
     children: List[BaseNode]
     evaluation_params: List[LLMTestCaseParams] = None
+    label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _output: Optional[str] = None
     _parents: Optional[List[BaseNode]] = None
@@ -229,13 +241,17 @@ class TaskNode(BaseNode):
                     "A TaskNode must not have a VerdictNode as one of their 'children'."
                 )
 
+        # print("-------")
         for child in self.children:
             child.set_parent(self)
             increment_indegree(child)
+        #     print("task node", child.__class__.__name__, id(child), child._indegree)
+        # print("-------")
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
+        self._depth = max(0, self._depth, depth)
         decrement_indegree(self)
-        if self._indegree != 0:
+        if self._indegree > 0:
             return
 
         text = """"""
@@ -262,17 +278,20 @@ class TaskNode(BaseNode):
             res = metric.model.generate(prompt=prompt)
             self._output = res
 
-        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
+        metric._verbose_steps.append(
+            construct_node_verbose_log(self, self._depth)
+        )
         for children in self.children:
             children._execute(
-                metric=metric, test_case=test_case, depth=depth + 1
+                metric=metric, test_case=test_case, depth=self._depth + 1
             )
 
     async def _a_execute(
         self, metric: BaseMetric, test_case: LLMTestCase, depth: int
     ):
+        self._depth = max(0, self._depth, depth)
         decrement_indegree(self)
-        if self._indegree != 0:
+        if self._indegree > 0:
             return
 
         text = """"""
@@ -300,11 +319,13 @@ class TaskNode(BaseNode):
             res = await metric.model.a_generate(prompt=prompt)
             self._output = res
 
-        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
+        metric._verbose_steps.append(
+            construct_node_verbose_log(self, self._depth)
+        )
         await asyncio.gather(
             *(
                 child._a_execute(
-                    metric=metric, test_case=test_case, depth=depth + 1
+                    metric=metric, test_case=test_case, depth=self._depth + 1
                 )
                 for child in self.children
             )
@@ -316,6 +337,7 @@ class BinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[BinaryJudgementVerdict] = None
     _parents: Optional[List[BaseNode]] = None
@@ -333,6 +355,7 @@ class BinaryJudgementNode(BaseNode):
         for child in self.children:
             if not isinstance(child, VerdictNode):
                 raise TypeError("All children must be of type VerdictNode.")
+
             if not isinstance(child.verdict, bool):
                 raise ValueError(
                     "All children BinaryJudgementNode must have a boolean vedict."
@@ -345,19 +368,27 @@ class BinaryJudgementNode(BaseNode):
                 "BinaryJudgementNode must have one True and one False VerdictNode child."
             )
 
+        # print("-------")
         for child in self.children:
             child.set_parent(self)
             increment_indegree(child)
+            if child.child is not None and isinstance(child.child, BaseNode):
+                increment_indegree(child.child)
+        #         print("binary node nested", child.child.__class__.__name__, id(child.child), child.child._indegree)
+        #     print("binary node", child.__class__.__name__, id(child), child._indegree)
+        # print("-------")
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
+        self._depth = max(0, self._depth, depth)
         decrement_indegree(self)
-        if self._indegree != 0:
+        if self._indegree > 0:
             return
 
         text = """"""
-        for parent in self._parents:
-            if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent._output}\n\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -387,23 +418,27 @@ class BinaryJudgementNode(BaseNode):
                 data = trimAndLoadJson(res, self)
                 self._verdict = BinaryJudgementVerdict(**data)
 
-        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
+        metric._verbose_steps.append(
+            construct_node_verbose_log(self, self._depth)
+        )
         for children in self.children:
             children._execute(
-                metric=metric, test_case=test_case, depth=depth + 1
+                metric=metric, test_case=test_case, depth=self._depth + 1
             )
 
     async def _a_execute(
         self, metric: BaseMetric, test_case: LLMTestCase, depth: int
     ):
+        self._depth = max(0, self._depth, depth)
         decrement_indegree(self)
-        if self._indegree != 0:
+        if self._indegree > 0:
             return
 
         text = """"""
-        for parent in self._parents:
-            if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent._output}\n\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -433,11 +468,13 @@ class BinaryJudgementNode(BaseNode):
                 data = trimAndLoadJson(res, self)
                 self._verdict = BinaryJudgementVerdict(**data)
 
-        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
+        metric._verbose_steps.append(
+            construct_node_verbose_log(self, self._depth)
+        )
         await asyncio.gather(
             *(
                 child._a_execute(
-                    metric=metric, test_case=test_case, depth=depth + 1
+                    metric=metric, test_case=test_case, depth=self._depth + 1
                 )
                 for child in self.children
             )
@@ -449,6 +486,7 @@ class NonBinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
     evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[NonBinaryJudgementVerdict] = None
     _parents: Optional[List[BaseNode]] = None
@@ -490,19 +528,27 @@ class NonBinaryJudgementNode(BaseNode):
             reason=(str, ...),
         )
 
+        # print("-------")
         for child in self.children:
             child.set_parent(self)
             increment_indegree(child)
+            if child.child is not None and isinstance(child.child, BaseNode):
+                increment_indegree(child.child)
+        #         print("non binary node nested", child.child.__class__.__name__, id(child.child), child.child._indegree)
+        #     print("non binary node", child.__class__.__name__, id(child), child._indegree)
+        # print("-------")
 
     def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
+        self._depth = max(0, self._depth, depth)
         decrement_indegree(self)
-        if self._indegree != 0:
+        if self._indegree > 0:
             return
 
         text = """"""
-        for parent in self._parents:
-            if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent._output}\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -531,23 +577,27 @@ class NonBinaryJudgementNode(BaseNode):
                 data = trimAndLoadJson(res, self)
                 self._verdict = self._verdict_schema(**data)
 
-        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
+        metric._verbose_steps.append(
+            construct_node_verbose_log(self, self._depth)
+        )
         for children in self.children:
             children._execute(
-                metric=metric, test_case=test_case, depth=depth + 1
+                metric=metric, test_case=test_case, depth=self._depth + 1
             )
 
     async def _a_execute(
         self, metric: BaseMetric, test_case: LLMTestCase, depth: int
     ):
+        self._depth = max(0, self._depth, depth)
         decrement_indegree(self)
-        if self._indegree != 0:
+        if self._indegree > 0:
             return
 
         text = """"""
-        for parent in self._parents:
-            if isinstance(parent, TaskNode):
-                text += f"{parent.output_label}:\n{parent._output}\n"
+        if self._parents is not None:
+            for parent in self._parents:
+                if isinstance(parent, TaskNode):
+                    text += f"{parent.output_label}:\n{parent._output}\n"
 
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -576,11 +626,13 @@ class NonBinaryJudgementNode(BaseNode):
                 data = trimAndLoadJson(res, self)
                 self._verdict = self._verdict_schema(**data)
 
-        metric._verbose_steps.append(construct_node_verbose_log(self, depth))
+        metric._verbose_steps.append(
+            construct_node_verbose_log(self, self._depth)
+        )
         await asyncio.gather(
             *(
                 child._a_execute(
-                    metric=metric, test_case=test_case, depth=depth + 1
+                    metric=metric, test_case=test_case, depth=self._depth + 1
                 )
                 for child in self.children
             )
@@ -590,6 +642,13 @@ class NonBinaryJudgementNode(BaseNode):
 def construct_node_verbose_log(
     node: BaseNode, depth: int, g_eval: Optional[GEval] = None
 ) -> str:
+    if (
+        isinstance(node, BinaryJudgementNode)
+        or isinstance(node, NonBinaryJudgementNode)
+        or isinstance(node, TaskNode)
+    ):
+        label = node.label if node.label else "None"
+
     if isinstance(node, BinaryJudgementNode) or isinstance(
         node, NonBinaryJudgementNode
     ):
@@ -600,11 +659,12 @@ def construct_node_verbose_log(
             else "NonBinaryJudgementNode"
         )
         underscore_multiple = 34 if is_binary_node else 37
-        star_multiple = 48 if is_binary_node else 56
+        star_multiple = 48 if is_binary_node else 53
         return (
             f"{'_' * underscore_multiple}\n"
             f"| {node_type} | Level == {depth} |\n"
             f"{'*' * star_multiple}\n"
+            f"Label: {label}\n\n"
             "Criteria:\n"
             f"{node.criteria}\n\n"
             f"Verdict: {node._verdict.verdict}\n"
@@ -615,12 +675,13 @@ def construct_node_verbose_log(
             "______________________\n"
             f"| TaskNode | Level == {depth} |\n"
             "*******************************\n"
+            f"Label: {label}\n\n"
             "Instructions:\n"
             f"{node.instructions}\n\n"
             f"{node.output_label}:\n{node._output}\n"
         )
     elif isinstance(node, VerdictNode):
-        is_g_eval = node.g_eval is not None
+        is_g_eval = node.child is not None
         type = "GEval" if is_g_eval else "Deterministic"
         verbose_log = (
             "________________________\n"

@@ -5,6 +5,7 @@ from deepeval.metrics.dag import (
     BaseNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
+    VerdictNode,
     TaskNode,
     DeepAcyclicGraph,
 )
@@ -85,7 +86,16 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
             key: args[key]
             for key in valid_params
             if key in args
-            and key not in ["children", "_parents", "_parent", "_verdict"]
+            and key
+            not in [
+                "children",
+                "child",
+                "_parents",
+                "_parent",
+                "_verdict",
+                "_indegree",
+                "_depth",
+            ]
         }
         if (
             isinstance(node, TaskNode)
@@ -97,7 +107,12 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
                 children=[copy_node(child) for child in node.children]
             )
         else:
-            copied_node = node_class(**valid_args)
+            if isinstance(node, VerdictNode) and node.child:
+                copied_node = node_class(
+                    **valid_args, child=copy_node(node.child)
+                )
+            else:
+                copied_node = node_class(**valid_args)
 
         visited[node] = copied_node
         return copied_node

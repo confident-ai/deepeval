@@ -16,7 +16,6 @@ class LLMTestCaseParams(Enum):
 
 
 class ToolCallParams(Enum):
-    TOOL = "tool"
     INPUT_PARAMETERS = "input_parameters"
     OUTPUT = "output"
 
@@ -40,8 +39,16 @@ class ToolCall(BaseModel):
         )
 
     def __hash__(self):
+        input_params = (
+            self.input_parameters if self.input_parameters is not None else {}
+        )
+        output_hashable = (
+            frozenset(self.output.items())
+            if isinstance(self.output, dict)
+            else self.output
+        )
         return hash(
-            (self.name, frozenset(self.input_parameters.items()), self.output)
+            (self.name, frozenset(input_params.items()), output_hashable)
         )
 
     def __repr__(self):

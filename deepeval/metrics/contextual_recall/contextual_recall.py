@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Type, Union
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -18,15 +18,16 @@ from deepeval.metrics.contextual_recall.template import ContextualRecallTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.contextual_recall.schema import *
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.RETRIEVAL_CONTEXT,
-    LLMTestCaseParams.EXPECTED_OUTPUT,
-]
-
 
 class ContextualRecallMetric(BaseMetric):
+
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.RETRIEVAL_CONTEXT,
+        LLMTestCaseParams.EXPECTED_OUTPUT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -35,6 +36,9 @@ class ContextualRecallMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[
+            ContextualRecallTemplate
+        ] = ContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -43,6 +47,7 @@ class ContextualRecallMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -50,8 +55,8 @@ class ContextualRecallMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -85,8 +90,8 @@ class ContextualRecallMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -126,7 +131,7 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = ContextualRecallTemplate.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             expected_output=expected_output,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
@@ -158,7 +163,7 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = ContextualRecallTemplate.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             expected_output=expected_output,
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
@@ -194,7 +199,7 @@ class ContextualRecallMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, expected_output: str, retrieval_context: List[str]
     ) -> List[ContextualRecallVerdict]:
-        prompt = ContextualRecallTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             expected_output=expected_output, retrieval_context=retrieval_context
         )
         if self.using_native_model:
@@ -220,7 +225,7 @@ class ContextualRecallMetric(BaseMetric):
     def _generate_verdicts(
         self, expected_output: str, retrieval_context: List[str]
     ) -> List[ContextualRecallVerdict]:
-        prompt = ContextualRecallTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             expected_output=expected_output, retrieval_context=retrieval_context
         )
         if self.using_native_model:

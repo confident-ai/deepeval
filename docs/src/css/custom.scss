@@ -116,17 +116,43 @@ html[data-theme="dark"] .header-github-link:before {
   margin: 40px auto 10px auto;
 }
 
+html[data-theme="dark"] .header-confident-link {
+  background-color: white;
+  color: black;
+  box-shadow: -4px 4px 0 #6d28d9;
+}
+
+.header-confident-link {
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 15px;
+  column-gap: 0.1rem;
+  border: 1px solid black;
+  box-shadow: -4px 4px 0 black;
+  transition: all 0.2s ease-in-out;
+}
+
+html[data-theme="dark"] .header-confident-link:hover {
+  box-shadow: 0px 0px 0 transparent;
+  transform: translateX(-4px) translateY(4px);
+}
+
 .header-confident-link:hover {
-  opacity: 0.6;
+  box-shadow: 0px 0px 0 transparent;
+  transform: translateX(-4px) translateY(4px);
 }
 
 .header-confident-link:before {
   content: "";
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
+  align-items: center;
   background: url("/icons/logo.svg");
   background-size: cover;
+  margin-right: 0.5rem;
 }
 
 .header-discord-link:hover {
@@ -179,7 +205,23 @@ html[data-theme="dark"] #rag-evaluation {
   #rag-evaluation {
     width: 60%;
   }
+
+  .header-confident-link {
+    font-size: 13px;
+    padding: 4px 10px;
+  }
+
+  .header-confident-link::before {
+    display: none;
+  }
 }
+
+@media (max-width: 1130px) {
+  .header-confident-link {
+    display: none;
+  }
+}
+
 
 @media (max-width: 600px) {
   #confident-workflow {

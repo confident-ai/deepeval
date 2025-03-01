@@ -1,9 +1,11 @@
-from typing import List
+from typing import List, Dict
 
 
 class ContextualPrecisionTemplate:
     @staticmethod
-    def generate_verdicts(input, expected_output, retrieval_context: List[str]):
+    def generate_verdicts(
+        input: str, expected_output: str, retrieval_context: List[str]
+    ):
         document_count_str = f" ({len(retrieval_context)} document{'s' if len(retrieval_context) > 1 else ''})"
         return f"""Given the input, expected output, and retrieval context, please generate a list of JSON objects to determine whether each node in the retrieval context was remotely useful in arriving at the expected output.
 
@@ -46,7 +48,9 @@ JSON:
 """
 
     @staticmethod
-    def generate_reason(input, verdicts, score):
+    def generate_reason(
+        input: str, score: float, verdicts: List[Dict[str, str]]
+    ):
         # given the input and retrieval context for this input, where the verdict is whether ... and the node is the ..., give a reason for the score
         return f"""Given the input, retrieval contexts, and contextual precision score, provide a CONCISE summary for the score. Explain why it is not higher, but also why it is at its current score.
 The retrieval contexts is a list of JSON with three keys: `verdict`, `reason` (reason for the verdict) and `node`. `verdict` will be either 'yes' or 'no', which represents whether the corresponding 'node' in the retrieval context is relevant to the input. 

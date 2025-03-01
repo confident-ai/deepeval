@@ -42,9 +42,8 @@ test_case = LLMTestCase(
     actual_output="We offer a 30-day full refund at no extra cost."
 )
 
-metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+# Evaluate your test_case
+evaluate([test_case], [metric])
 ```
 
 There are one mandatory and six optional parameters when creating an `PromptAlignmentMetric`:
@@ -56,6 +55,17 @@ There are one mandatory and six optional parameters when creating an `PromptAlig
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+:::info
+Alternatively, you can call each metric's `measure` method directly.
+
+```python
+metric.measure(test_case)
+print(metric.score)
+print(metric.reason)
+```
+
+:::
 
 ## How Is It Calculated?
 

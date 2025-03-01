@@ -71,6 +71,7 @@ module.exports = {
                 "multimodal-metrics-contextual-precision",
                 "multimodal-metrics-contextual-recall",
                 "multimodal-metrics-contextual-relevancy",
+                "multimodal-metrics-tool-correctness"
               ],
               collapsed: true,
             },

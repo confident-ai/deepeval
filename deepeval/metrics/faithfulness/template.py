@@ -1,9 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 
 
 class FaithfulnessTemplate:
     @staticmethod
-    def generate_claims(text):
+    def generate_claims(actual_output: str):
         return f"""Based on the given text, please extract a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text.
 These truths, MUST BE COHERENT, and CANNOT be taken out of context.
     
@@ -27,13 +27,15 @@ You should NOT include any prior knowledge, and take the text at face value when
 **
 
 Text:
-{text}
+{actual_output}
 
 JSON:
 """
 
     @staticmethod
-    def generate_truths(text, extraction_limit: Optional[int] = None):
+    def generate_truths(
+        retrieval_context: str, extraction_limit: Optional[int] = None
+    ):
         if extraction_limit is None:
             limit = " FACTUAL, undisputed truths"
         elif extraction_limit == 1:
@@ -49,7 +51,7 @@ Example Text:
 
 Example JSON: 
 {{
-    "claims": [
+    "truths": [
         "Einstein won the noble prize for his discovery of the photoelectric effect in 1968."
         "The photoelectric effect is a phenomenon that laid the foundation for quantum mechanics."
     ]  
@@ -61,13 +63,13 @@ Only include truths that are factual, BUT IT DOESN'T MATTER IF THEY ARE FACTUALL
 **
 
 Text:
-{text}
+{retrieval_context}
 
 JSON:
 """
 
     @staticmethod
-    def generate_verdicts(claims, retrieval_context):
+    def generate_verdicts(claims: List[str], retrieval_context: str):
         return f"""Based on the given claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH claim contradicts any facts in the retrieval context. The JSON will have 2 fields: 'verdict' and 'reason'.
 The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given claim agrees with the context. 
 Provide a 'reason' ONLY if the answer is 'no'. 
@@ -119,7 +121,7 @@ JSON:
 """
 
     @staticmethod
-    def generate_reason(score, contradictions):
+    def generate_reason(score: float, contradictions: List[str]):
         return f"""Below is a list of Contradictions. It is a list of strings explaining why the 'actual output' does not align with the information presented in the 'retrieval context'. Contradictions happen in the 'actual output', NOT the 'retrieval context'.
 Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is to the retrieval context (higher the better), CONCISELY summarize the contradictions to justify the score. 
 

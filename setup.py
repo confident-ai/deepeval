@@ -43,9 +43,10 @@ setup(
         "opentelemetry-api>=1.24.0,<2.0.0",
         "opentelemetry-sdk>=1.24.0,<2.0.0",
         "opentelemetry-exporter-otlp-proto-grpc>=1.24.0,<2.0.0",
-        "grpcio==1.67.1",
+        "grpcio>=1.67.1,<2.0.0",
         "nest-asyncio",
         "datasets",
+        "ollama",
     ],
     extras_require={
         "dev": ["black"],

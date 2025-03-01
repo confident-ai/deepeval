@@ -10,34 +10,40 @@ The **Graphic Content Guard** is an output guard that analyzes the responses gen
 `GraphicContentGuard` is only available as an **output guard**.
 :::
 
+Here's what an unsafe output would look like in the context of graphic content:
+
+> _"The output contains graphic violence, with disturbing descriptions of harm and blood."_
+>
+> _— probably your LLM_
+
 ## Example
 
-```python
-from deepeval.guardrails import GraphicContentGuard
-
-model_output = "I will cut you open and watch you bleed."
-
-graphic_content_guard = GraphicContentGuard()
-guard_result = graphic_content_guard.guard(response=model_output)
-```
-
-There are no required arguments when initializing the `GraphicContentGuard ` object. The `guard` function accepts a single parameter `response`, which is the output of your LLM application.
-
-## Interpreting Guard Result
+Since `GraphicContentGuard` is an output guard, simply provide it as a guard in the list of `guards` when initializing a `Guardrails` object:
 
 ```python
-print(guard_result.score)
-print(guard_result.score_breakdown)
+from deepeval.guardrails import Guardrails, GraphicContentGuard
+
+guardrails = Guardrails(guards=[GraphicContentGuard()])
 ```
 
-`guard_result.score` is an integer that is `1` if the guard has been breached. The `score_breakdown` for `GraphicContentGuard` is a dictionary containing:
+Then, call the `guard_output` method to make use of the `GraphicContentGuard`:
 
-- `score`: A binary value (1 or 0), where 1 indicates that hallucinated content was detected.
-- `reason`: A brief explanation of why the score was assigned.
+```python
+...
 
-```json
-{
-  "score": 1,
-  "reason": "The output contains graphic violence, with disturbing descriptions of harm and blood."
-}
+output = generate_output(input)
+guard_result = guardrails.guard_output(input=input, output=output)
+print(guard_result)
+```
+
+:::note
+There are no required arguments when initializing a `GraphicContentGuard`.
+:::
+
+The returned `guard_result` is of type `GuardResult`, which you can use to control downstream application logic (such as returning a default error message to users):
+
+```python
+...
+
+print(guard_result.breached, guard_result.guard_data)
 ```

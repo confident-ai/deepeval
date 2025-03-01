@@ -18,3 +18,6 @@ from .multimodal_answer_relevancy.multimodal_answer_relevancy import (
 from .multimodal_faithfulness.multimodal_faithfulness import (
     MultimodalFaithfulnessMetric,
 )
+from .multimodal_tool_correctness.multimodal_tool_correctness import (
+    MultimodalToolCorrectnessMetric,
+)

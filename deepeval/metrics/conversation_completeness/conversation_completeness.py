@@ -16,19 +16,18 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import (
     LLMTestCaseParams,
-    LLMTestCase,
     ConversationalTestCase,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.conversation_completeness.schema import *
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-]
-
 
 class ConversationCompletenessMetric(BaseConversationalMetric):
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -51,7 +50,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     def measure(
         self, test_case: ConversationalTestCase, _show_indicator: bool = True
     ):
-        check_conversational_test_case_params(test_case, required_params, self)
+        check_conversational_test_case_params(
+            test_case, self._required_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -62,7 +63,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 )
             else:
                 self.turns: List[Dict[str, str]] = format_turns(
-                    test_case.turns, required_params
+                    test_case.turns, self._required_params
                 )
                 self.user_intentions = self._extract_user_intentions()
                 self.verdicts = [
@@ -89,14 +90,16 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        check_conversational_test_case_params(test_case, required_params, self)
+        check_conversational_test_case_params(
+            test_case, self._required_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
             self.turns: List[Dict[str, str]] = format_turns(
-                test_case.turns, required_params
+                test_case.turns, self._required_params
             )
             self.user_intentions = await self._a_extract_user_intentions()
             self.verdicts = await asyncio.gather(
@@ -145,6 +148,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 return data["reason"]
 
     def _generate_reason(self) -> str:
+        if self.include_reason is False:
+            return None
+
         incompletenesses: List[str] = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":

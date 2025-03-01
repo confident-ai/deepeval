@@ -158,15 +158,16 @@ def create_api_test_case(
         if test_case.name:
             name = test_case.name
         else:
-            name = os.getenv(
-                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
+            order = (
+                test_case._dataset_rank
+                if test_case._dataset_rank is not None
+                else index
             )
 
-        order = (
-            test_case._dataset_rank
-            if test_case._dataset_rank is not None
-            else index
-        )
+            name = os.getenv(
+                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{order}"
+            )
+
         api_test_case = ConversationalApiTestCase(
             name=name,
             success=True,
@@ -202,12 +203,17 @@ def create_api_test_case(
             test_case.comments = comments
             metrics_data = None
         else:
+            order = (
+                test_case._dataset_rank
+                if test_case._dataset_rank is not None
+                else index
+            )
+
             success = True
             if test_case.name is not None:
                 name = test_case.name
             else:
-                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
-            order = test_case._dataset_rank
+                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
             metrics_data = []
 
         if isinstance(test_case, LLMTestCase):
@@ -234,6 +240,8 @@ def create_api_test_case(
                 name=name,
                 multimodalInput=test_case.input,
                 multimodalActualOutput=test_case.actual_output,
+                toolsCalled=test_case.tools_called,
+                expectedTools=test_case.expected_tools,
                 success=success,
                 metricsData=metrics_data,
                 runDuration=None,

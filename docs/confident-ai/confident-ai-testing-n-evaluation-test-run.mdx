@@ -6,15 +6,19 @@ sidebar_label: Running Evaluations
 
 As you saw in the [quickstart section earlier](/confident-ai/confident-ai-introduction#run-your-first-evaluation), a test run on Confident AI is created when you run an evaluation with `deepeval`. A test run is made up of a list of test cases, containing the `input`, `actual_output`, etc. of your LLM application, and each with its own set of metric scores to represent the performance of your LLM application as a whole.
 
-In short, a test run is a benchmark for your LLM application.
+Running evaluations allow you to benchmark different iterations of your LLM application, and is something you would do **in development** in order to catch problems before it is deployed to production.
 
-- Evaluating test cases locally on `deepeval` and sending it to Confident AI after evaluation.
-- Running an evaluation directly on Confident AI.
+:::caution
+**Everything in this section and the next is about running evaluations locally** using `deepeval`. If you wish to learn how to run evaluations on the cloud instead, [visit this section.](/confident-ai/confident-ai-testing-n-evaluation-metric-collections)
 
-You can also think of LLM evaluation with Confident AI and `deepeval` as unit-testing for LLMs.
+Typically, there are only a three reasons why you'll need to run evaluations on the cloud instead:
 
-:::caution IMPORTANT
-**Before you being, you definitely want to** familiarize yourself with [what a test case is](/docs/evaluation-test-cases) as it is vital for LLM evaluation.
+- You're building in Typescript, and so cannot leverage `deepeval`'s metrics in Python.
+- You want to trigger evaluations directly on the platform in a click of a button.
+- You want to save cost on tokens used for evaluation.
+
+Saving cost is the weakest reason to run evaluations on the cloud. Code-driven metrics that you run locally is the best way to customize and improve metrics as your testing criteria grows and matures.
+
 :::
 
 ## Running An Evaluation
@@ -128,7 +132,7 @@ evaluate(test_cases=test_cases, metrics=[answer_relevancy, faithfulness], identi
 
 Don't forget to update your `identifier` and congratulations 🎉! All your test cases are now passing with flying colors.
 
-## Comparing Two Test Runs
+## Catching Regressions
 
 Now that you've created two test runs, (`identifier`="First Run" and `identifier`="Second Run") - which are benchmarks of your LLM application, you can compare test results side by side to identify regressions and improvements.
 
@@ -162,17 +166,19 @@ By selecting one of the historical test runs, you'll be able to see exactly how 
 
 ## Testing Reports On Confident AI
 
-All test runs created, on Confident AI or locally via `deepeval`(ie. `evaluate()` or `deepeval test run`), are automatically sent to Confident AI for anyone in your organization to view, share, download, and comment on. Here are the list of things you can do with Confident AI's testing reports:
+All evaluations ran, either locally via `deepeval`(ie. `evaluate()`, `deepeval test run`) or [on Confident AI](/confident-ai/confident-ai-testing-n-evaluation-metric-collections), are automatically sent to Confident AI. Confident AI will generate testing reports out of your testing data for anyone in your organization to analyze, share, download, and collaborate on.
+
+Here are the list of benefits you get with Confident AI's testing reports:
 
 - Analyze metric score distributions, averages, and median scores.
 - Inspect test cases, including parameters such as `actual_output`, `retrieval_context`, and `tools_called`, and their associated metric results including score, reasoning, errors (if any), and verbose logs (for debugging your evaluation model's chain of thought).
 - Filter for and select specific test cases for sharing.
 - Download test cases as CSV or JSON (if you're running a conversational test run).
-- Create a dataset from the test cases in a test run.
+- [Create a dataset](/confident-ai/confident-ai-evaluation-dataset-management#from-an-existing-test-run) from the test cases in a test run.
 - Compare different test runs side by side.
 - Create a public link to share with external stakeholders that might be interested in your LLM evaluation process.
 
-<video width="100%" autoPlay loop muted playsInlines>
+<video width="100%" controls muted playsInline>
   <source
     src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-full-test-run.mp4"
     type="video/mp4"

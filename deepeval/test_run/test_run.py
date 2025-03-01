@@ -104,7 +104,7 @@ class TestRun(BaseModel):
         default_factory=lambda: [], alias="metricsScores"
     )
     identifier: Optional[str] = None
-    hyperparameters: Optional[Dict[Any, Any]] = Field(None)
+    hyperparameters: Optional[Dict[str, Any]] = Field(None)
     test_passed: Optional[int] = Field(None, alias="testPassed")
     test_failed: Optional[int] = Field(None, alias="testFailed")
     run_duration: float = Field(0.0, alias="runDuration")
@@ -193,7 +193,8 @@ class TestRun(BaseModel):
                 del turn.conversational_instance_id
 
         for test_case in self.test_cases:
-            del test_case.conversational_instance_id
+            if hasattr(test_case, "conversational_instance_id"):
+                del test_case.conversational_instance_id
 
     def construct_metrics_scores(self) -> int:
         # Use a dict to aggregate scores, passes, and fails for each metric.

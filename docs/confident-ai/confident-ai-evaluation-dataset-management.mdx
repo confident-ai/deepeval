@@ -10,9 +10,25 @@ Confident AI provides your team a centralized place to **create, upload, and edi
 An evaluation dataset on Confident AI is a collection of goldens, which is extremely similar to a test case. You can learn more about goldens [here.](#what-is-a-golden)
 :::
 
+Datasets on Confident AI also offer revision history and daily backups on-demand. There are four ways to populate your datasets with goldens:
+
+- [Create manually](#create-individual-goldens) on the dataset editor
+- [Import](#import-goldens-from-csv) from an existing CSV file
+- [Upload](#upload-goldens-via-deepeval) via API requests (through `deepeval`)
+- [From an existing test run](#from-an-existing-test-run) with the available test cases
+
+The last method, from an existing test run, means that you can **create a dataset out of test runs that you have already ran**. This means you can easily reuse the test set for subsequent benchmarking of your LLM application.
+
 ## Create Your First Dataset
 
 To create your first dataset, simply navigate to the **Datasets** page in your project space. There, you'll see a button that says _Create Dataset_, and you will be required to name your first dataset by providing it with an alias. This alias will be used to identify which will be used for evaluation later on.
+
+<video width="100%" controls muted playsInline>
+  <source
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-create-dataset.mp4"
+    type="video/mp4"
+  />
+</video>
 
 ## Populate Your Dataset With Golden(s)
 
@@ -136,6 +152,19 @@ dataset.push(alias="QA Dataset", overwrite=True)
 :::note
 `deepeval` will prompt you in the terminal if no value for `overwrite` is provided.
 :::
+
+### From An Existing Test Run
+
+Sometimes, you may already have [ran an evaluation](/confident-ai/confident-ai-testing-n-evaluation-test-run) and have existing test runs on Confident AI. This doesn't mean it is too late to create a dataset, but instead makes life easier as you can create a dataset out of an existing test run, and later reuse this dataset to better benchmark all future iterations of your LLM application.
+
+To create a dataset from an existing test run, go to **Evaluation** > Select a test run to go to an individual **Test Run** page > **Test Cases**, and click on the **Save as new dataset** button.
+
+<video width="100%" controls muted playsInline>
+  <source
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-dataset-from-test-run.mp4"
+    type="video/mp4"
+  />
+</video>
 
 ## What is a Golden?
 

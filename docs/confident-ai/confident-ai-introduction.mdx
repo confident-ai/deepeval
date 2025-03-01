@@ -10,7 +10,7 @@ import Equation from "@site/src/components/equation";
 Are you following best LLM evaluation practices? Without a serious evaluation workflow, your testing results aren't really valid, and you might be wasting a lot of time iterating on the wrong things.
 :::
 
-**Confident AI is the LLM evaluation platform for DeepEval**. It is native to DeepEval, and was designed for teams building LLM applications to maximize its performance, and to safeguard against unsatisfactory LLM outputs. Whilst DeepEval's open-source metrics are great for running evaluations, there is so much more to building a robust LLM evaluation workflow than collecting metric scores.
+**Confident AI is the cloud platform for DeepEval**. It is native to DeepEval, and was designed for teams building LLM applications to maximize its performance, and to safeguard against unsatisfactory LLM outputs. Whilst DeepEval's open-source metrics are great for running evaluations, there is so much more to building a robust LLM evaluation workflow than collecting metric scores.
 
 If you're _serious_ about LLM evaluation, Confident AI is for you.
 
@@ -59,7 +59,7 @@ Apart from running the actual evaluations, you'll need a way to:
 
 Confident AI enforces this by offering an opinionated, centralized platform to manage all the things mentioned above, which for you means "more accurate, informative, and faster insights", and allows you to "identify any performance gaps and identify how to improve my LLM system".
 
-<video width="100%" autoPlay loop muted playsInlines>
+<video width="100%" controls muted playsInline>
   <source
     src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-full-test-run.mp4"
     type="video/mp4"
@@ -154,7 +154,7 @@ Follow the instructions displayed on the CLI (to create an account, get your Con
 :::tip DID YOU KNOW?
 You can also login directly in Python if you already have a Confident API Key:
 
-```python
+```python title="main.py"
 deepeval.login_with_confident_api_key("your-confident-api-key")
 ```
 
