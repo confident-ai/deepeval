@@ -66,6 +66,9 @@ class ContextGenerator:
         self.source_files_to_collections_map: Optional[
             Dict[str, Collection]
         ] = None
+        
+        # cost tracking
+        self.total_cost = 0.0
 
     #########################################################
     ### Generate Contexts ###################################
@@ -499,7 +502,8 @@ class ContextGenerator:
     def evaluate_chunk(self, chunk) -> float:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
-            res, _ = self.model.generate(prompt, schema=ContextScore)
+            res, cost = self.model.generate(prompt, schema=ContextScore)
+            self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
             try:
@@ -523,7 +527,8 @@ class ContextGenerator:
     async def a_evaluate_chunk(self, chunk) -> float:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
-            res, _ = await self.model.a_generate(prompt, schema=ContextScore)
+            res, cost = await self.model.a_generate(prompt, schema=ContextScore)
+            self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
 
