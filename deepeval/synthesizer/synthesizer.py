@@ -179,9 +179,7 @@ class Synthesizer:
                     _reset_cost=False,
                 )
         if self.cost_tracking and self.using_native_model:
-            print(
-                f"💰 API cost: {self.synthesis_cost:.6f}"
-            )
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         # Wrap-up Synthesis
         if _send_data == True:
             pass
@@ -248,9 +246,7 @@ class Synthesizer:
             )
         self.synthetic_goldens.extend(goldens)
         if _reset_cost and self.cost_tracking and self.using_native_model:
-            print(
-                f"💰 API cost: {self.synthesis_cost:.6f}"
-            )
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
 
     #############################################################
@@ -380,9 +376,7 @@ class Synthesizer:
         if _send_data == True:
             pass
         if _reset_cost and self.cost_tracking and self.using_native_model:
-            print(
-                f"💰 API cost: {self.synthesis_cost:.6f}"
-            )
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
 
     async def a_generate_goldens_from_contexts(
@@ -425,11 +419,9 @@ class Synthesizer:
                 for index, context in enumerate(contexts)
             ]
             await asyncio.gather(*tasks)
-            
+
         if _reset_cost and self.cost_tracking and self.using_native_model:
-            print(
-                f"💰 API cost: {self.synthesis_cost:.6f}"
-            )
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
 
     async def _a_generate_from_context(

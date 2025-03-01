@@ -66,7 +66,7 @@ class ContextGenerator:
         self.source_files_to_collections_map: Optional[
             Dict[str, Collection]
         ] = None
-        
+
         # cost tracking
         self.total_cost = 0.0
 
