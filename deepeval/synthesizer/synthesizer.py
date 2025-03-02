@@ -81,6 +81,7 @@ class Synthesizer:
         filtration_config: Optional[FiltrationConfig] = None,
         evolution_config: Optional[EvolutionConfig] = None,
         styling_config: Optional[StylingConfig] = None,
+        cost_tracking: bool = False,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.async_mode = async_mode
@@ -100,6 +101,8 @@ class Synthesizer:
         self.styling_config = (
             styling_config if styling_config is not None else StylingConfig()
         )
+        self.cost_tracking = cost_tracking
+        self.synthesis_cost = 0 if self.using_native_model else None
 
     #############################################################
     # Generate Goldens from Docs
@@ -127,6 +130,7 @@ class Synthesizer:
                     include_expected_output=include_expected_output,
                     max_goldens_per_context=max_goldens_per_context,
                     context_construction_config=context_construction_config,
+                    _reset_cost=False,
                 )
             )
         else:
@@ -149,6 +153,8 @@ class Synthesizer:
                     max_context_size=context_construction_config.max_context_length,
                 )
             )
+            if self.synthesis_cost:
+                self.synthesis_cost += self.context_generator.total_cost
             print(
                 f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
             )
@@ -170,8 +176,10 @@ class Synthesizer:
                     _context_scores=context_scores,
                     _progress_bar=progress_bar,
                     _send_data=False,
+                    _reset_cost=False,
                 )
-
+        if self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         # Wrap-up Synthesis
         if _send_data == True:
             pass
@@ -183,12 +191,14 @@ class Synthesizer:
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
         context_construction_config: Optional[ContextConstructionConfig] = None,
+        _reset_cost=True,
     ):
         if context_construction_config is None:
             context_construction_config = ContextConstructionConfig(
                 critic_model=self.model
             )
-        self.synthesis_cost = 0 if self.using_native_model else None
+        if _reset_cost:
+            self.synthesis_cost = 0 if self.using_native_model else None
 
         # Generate contexts from provided docs
         if self.context_generator is None:
@@ -210,6 +220,8 @@ class Synthesizer:
                 max_context_size=context_construction_config.max_context_length,
             )
         )
+        if self.synthesis_cost:
+            self.synthesis_cost += self.context_generator.total_cost
         print(
             f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
         )
@@ -230,8 +242,11 @@ class Synthesizer:
                 source_files=source_files,
                 _context_scores=context_scores,
                 _progress_bar=progress_bar,
+                _reset_cost=False,
             )
         self.synthetic_goldens.extend(goldens)
+        if _reset_cost and self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
 
     #############################################################
@@ -247,8 +262,10 @@ class Synthesizer:
         _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
         _send_data: bool = True,
+        _reset_cost: bool = True,
     ) -> List[Golden]:
-        self.synthesis_cost = 0 if self.using_native_model else None
+        if _reset_cost:
+            self.synthesis_cost = 0 if self.using_native_model else None
         # Intialize Goldens as an empty list
         goldens: List[Golden] = []
 
@@ -358,6 +375,8 @@ class Synthesizer:
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
             pass
+        if _reset_cost and self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
 
     async def a_generate_goldens_from_contexts(
@@ -368,8 +387,10 @@ class Synthesizer:
         source_files: Optional[List[str]] = None,
         _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
+        _reset_cost: bool = True,
     ) -> List[Golden]:
-        self.synthesis_cost = 0 if self.using_native_model else None
+        if _reset_cost:
+            self.synthesis_cost = 0 if self.using_native_model else None
         semaphore = asyncio.Semaphore(self.max_concurrent)
         goldens: List[Golden] = []
         with synthesizer_progress_context(
@@ -399,6 +420,8 @@ class Synthesizer:
             ]
             await asyncio.gather(*tasks)
 
+        if _reset_cost and self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
 
     async def _a_generate_from_context(
