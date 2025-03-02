@@ -763,13 +763,17 @@ class Synthesizer:
                 rewrite_prompt = SynthesizerTemplate.rewrite_synthetic_inputs(
                     context, input, feedback
                 )
-                rewritten_res: RewrittenInput = await self._a_generate_schema(
-                    rewrite_prompt,
-                    RewrittenInput,
-                    self.model,
+                rewritten_res: Optional[RewrittenInput] = (
+                    await self._a_generate_schema(
+                        rewrite_prompt,
+                        RewrittenInput,
+                        self.model,
+                    )
                 )
-                input = rewritten_res.rewritten_input
-
+                input = rewritten_res.rewritten_input if rewritten_res else None
+            # Filter out invalid json directly
+            if not input:
+                continue
             scores.append(score)
             filtered_inputs.append(SyntheticData(input=input))
 
@@ -930,12 +934,14 @@ class Synthesizer:
         prompt: str,
         schema: BaseModel,
         model: DeepEvalBaseLLM,
-    ) -> BaseModel:
+    ) -> Optional[BaseModel]:
         if isinstance(model, GPTModel):
             res, cost = await model.a_generate(prompt)
             if self.synthesis_cost is not None:
                 self.synthesis_cost += cost
             data = trimAndLoadJson(res, self)
+            if not data:
+                return None
             if schema == SyntheticDataList:
                 data_list = [SyntheticData(**item) for item in data["data"]]
                 return SyntheticDataList(data=data_list)

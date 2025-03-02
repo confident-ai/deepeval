@@ -260,7 +260,9 @@ def trimAndLoadJson(
         error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
         if metric is not None:
             metric.error = error_str
-        raise ValueError(error_str)
+        print(error_str)
+        return None
+        # raise ValueError(error_str)
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
