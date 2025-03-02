@@ -153,24 +153,23 @@ class ContextGenerator:
         source_files = []
 
         # Check if chunk_size is valid for document lengths
+        # Chuqing: use negative policy for personal purposes:
+        #          delete invalid files instead of raising error.
+        #          Can recover by copying the part in non-async function
         if self.doc_to_chunker_map is not None:
-            smallest_document_token_count = min(
-                chunker.text_token_count
-                for chunker in self.doc_to_chunker_map.values()
+            min_valid_document_token_count = math.ceil(
+                (num_context_per_document - 1)
+                * (self.chunk_size - self.chunk_overlap)
             )
-            smallest_document_num_chunks = 1 + math.floor(
-                (smallest_document_token_count - self.chunk_size)
-                / (self.chunk_size - self.chunk_overlap)
-            )
-            if smallest_document_num_chunks < num_context_per_document:
-                suggested_chunk_size = (
-                    smallest_document_token_count
-                    + (self.chunk_overlap * (num_context_per_document - 1))
-                ) // num_context_per_document
-                raise ValueError(
-                    f"Your smallest document is only sized {smallest_document_token_count} tokens."
-                    f"Please adjust the chunk_size to no more than {suggested_chunk_size}."
-                )
+            invalid_list = []
+            for doc, chunker in self.doc_to_chunker_map.items():
+                if chunker.text_token_count < min_valid_document_token_count:
+                    invalid_list.append(doc)
+                    print(
+                        f"Removing {doc}: total token size is less than the lowerbound"
+                    )
+            for doc in invalid_list:
+                del self.doc_to_chunker_map[doc]
 
         # Chunk docs if not already cached via ChromaDB
         async def a_chunk_and_store(key, chunker: DocumentChunker):
