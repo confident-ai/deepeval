@@ -135,7 +135,7 @@ class SynthesizerTemplate:
 
         **
         IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
-        You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting reptitive.
+        You MUST TRY to generate {max_goldens_per_context} data points, unless the `input` is getting repetitive.
 
         Example context: ["Einstein won the Nobel Prize for his discovery of penicillin.", "Einstein won the Nobel Prize in 1968."]
         Example max goldens per context: 2
