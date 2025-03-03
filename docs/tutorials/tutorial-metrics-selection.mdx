@@ -95,7 +95,7 @@ contextual_relevancy_metric = ContextualRelevancyMetric()
 Next, we'll define our custom G-Eval metric for professionalism. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're only assessing the LLM's `actual_output`.
 
 ```python
-from deepeval.test_case_import import LLMTestCaseParams
+from deepeval.test_case import LLMTestCaseParams
 from deepeval.metrics import GEval
 
 # Define criteria for evaluating professionalism
