@@ -146,6 +146,7 @@ class Synthesizer:
                     similarity_threshold=context_construction_config.context_similarity_threshold,
                     max_retries=context_construction_config.max_retries,
                 )
+            self.context_generator.total_cost = 0
             self.context_generator._load_docs()
             contexts, source_files, context_scores = (
                 self.context_generator.generate_contexts(
@@ -212,8 +213,8 @@ class Synthesizer:
                 similarity_threshold=context_construction_config.context_similarity_threshold,
                 max_retries=context_construction_config.max_retries,
             )
+        self.context_generator.total_cost = 0
         await self.context_generator._a_load_docs()
-
         contexts, source_files, context_scores = (
             await self.context_generator.a_generate_contexts(
                 num_context_per_document=context_construction_config.max_contexts_per_document,
