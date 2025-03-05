@@ -10,6 +10,7 @@ Example:
 Example text: 
 Our new laptop model features a high-resolution Retina display for crystal-clear visuals. It also includes a fast-charging battery, giving you up to 12 hours of usage on a single charge. For security, we’ve added fingerprint authentication and an encrypted SSD. Plus, every purchase comes with a one-year warranty and 24/7 customer support.
 
+JSON:
 {{
     "statements": [
         "The new laptop model has a high-resolution Retina display.",

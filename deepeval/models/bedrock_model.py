@@ -204,7 +204,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         *args,
         **kwargs
     ):
-        model_id = model_id or default_multimodal_bedrock_model
+        self.model_id = model_id or default_multimodal_bedrock_model
         if model_id not in valid_bedrock_models:
             raise ValueError(
                 f"Invalid model. Available Bedrock models: {', '.join(model for model in valid_bedrock_models)}"
