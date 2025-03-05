@@ -100,7 +100,7 @@ class MultimodalToolCorrectnessMetric(BaseMetric):
         ]
 
         if self.should_exact_match:
-            return f"{'Exact match' if self._calculate_exact_match_score() else 'Not an exact match'}: expected {tools_called_names}, called {expected_tools_names}. See details above."
+            return f"{'Exact match' if self._calculate_exact_match_score() else 'Not an exact match'}: expected {expected_tools_names}, called {tools_called_names}. See details above."
 
         elif self.should_consider_ordering:
             lcs, weighted_length = self._compute_weighted_lcs()
