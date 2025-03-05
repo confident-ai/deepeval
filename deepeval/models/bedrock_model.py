@@ -30,6 +30,7 @@ valid_bedrock_models = [
 
 default_bedrock_model = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
 default_multimodal_bedrock_model = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
+default_system_message = "You are a helpful AI assistant. Always generate your response as a valid json. No explanation is needed just the json."
 
 class BedrockModel(DeepEvalBaseLLM):
     """A class that integrates with AWS Bedrock for model inference and text generation.
@@ -62,6 +63,7 @@ class BedrockModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model_id: Optional[str] = None,
+        system_prompt: Optional[str] = None,
         access_key_id: Optional[str] = None,
         secret_access_key: Optional[str] = None,
         session_token: Optional[str] = None,
@@ -69,12 +71,13 @@ class BedrockModel(DeepEvalBaseLLM):
     ):
         """Initializes the BedrockModel with model_id, system_prompt, and optional AWS credentials."""
         self.model_id = model_id or default_bedrock_model
-
+        
         if model_id not in valid_bedrock_models:
             raise ValueError(
                 f"Invalid model. Available Bedrock models: {', '.join(model for model in valid_bedrock_models)}"
             )
 
+        self.system_prompt = system_prompt or default_system_message
         self.access_key_id = access_key_id or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_ACCESS_KEY_ID)
         self.secret_access_key = secret_access_key or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SECRET_ACCESS_KEY)
         self.session_token = session_token or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SESSION_TOKEN)
@@ -113,8 +116,12 @@ class BedrockModel(DeepEvalBaseLLM):
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
-            "messages": messages
+            "messages": messages,
+            "system": self.system_prompt
         }
+
+        if self.system_prompt:
+            payload["system"] = self.system_prompt
         
         try:
             response = self.client.invoke_model(
@@ -197,6 +204,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
     def __init__(
         self,
         model_id: Optional[str] = None,
+        system_prompt: Optional[str] = None,
         access_key_id: Optional[str] = None,
         secret_access_key: Optional[str] = None,
         session_token: Optional[str] = None,
@@ -210,6 +218,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
                 f"Invalid model. Available Bedrock models: {', '.join(model for model in valid_bedrock_models)}"
             )
 
+        self.system_prompt = system_prompt or default_system_message
         self.access_key_id = access_key_id or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_ACCESS_KEY_ID)
         self.secret_access_key = secret_access_key or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SECRET_ACCESS_KEY)
         self.session_token = session_token or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SESSION_TOKEN)
@@ -298,7 +307,8 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
-            "messages": [{"role": "user", "content": content_list}]
+            "messages": [{"role": "user", "content": content_list}],
+            "system": self.system_prompt
         }
 
         try:
