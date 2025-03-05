@@ -155,12 +155,7 @@ class GEval(BaseMetric):
             )
             g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
-            self.score = float(g_score) / 10
-            self.score = (
-                0
-                if self.strict_mode and self.score < self.threshold
-                else self.score
-            )
+            self.score = float(g_score) / 10 if not self.strict_mode else int(g_score)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -233,11 +228,19 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = GEvalTemplate.generate_evaluation_results(
-            evaluation_steps=self.number_evaluation_steps(),
-            text=text,
-            parameters=g_eval_params_str,
-        )
+
+        if not self.strict_mode:
+            prompt = GEvalTemplate.generate_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                text=text,
+                parameters=g_eval_params_str,
+            )
+        else: 
+            prompt = GEvalTemplate.generate_strict_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                text=text,
+                parameters=g_eval_params_str,
+            )
 
         try:
             # Don't have to check for using native model
@@ -291,11 +294,18 @@ class GEval(BaseMetric):
             self.evaluation_params
         )
 
-        prompt = GEvalTemplate.generate_evaluation_results(
-            evaluation_steps=self.number_evaluation_steps(),
-            text=text,
-            parameters=g_eval_params_str,
-        )
+        if not self.strict_mode:
+            prompt = GEvalTemplate.generate_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                text=text,
+                parameters=g_eval_params_str,
+            )
+        else: 
+            prompt = GEvalTemplate.generate_strict_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                text=text,
+                parameters=g_eval_params_str,
+            )
 
         try:
             res, cost = self.model.generate_raw_response(
