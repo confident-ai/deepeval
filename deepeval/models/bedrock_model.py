@@ -61,7 +61,7 @@ class BedrockModel(DeepEvalBaseLLM):
     """
     def __init__(
         self,
-        model_id: str,
+        model_id: Optional[str] = None,
         access_key_id: Optional[str] = None,
         secret_access_key: Optional[str] = None,
         session_token: Optional[str] = None,
@@ -113,8 +113,7 @@ class BedrockModel(DeepEvalBaseLLM):
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
-            "messages": messages,
-            "system": self.system_prompt
+            "messages": messages
         }
         
         try:
