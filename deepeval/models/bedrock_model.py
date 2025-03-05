@@ -298,8 +298,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
-            "messages": [{"role": "user", "content": content_list}],
-            "system": self.system_prompt
+            "messages": [{"role": "user", "content": content_list}]
         }
 
         try:
