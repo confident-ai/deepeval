@@ -74,7 +74,7 @@ class BedrockModel(DeepEvalBaseLLM):
         
         if model_id not in valid_bedrock_models:
             raise ValueError(
-                f"Invalid model. Available Bedrock models: {', '.join(model for model in valid_bedrock_models)}"
+                f"Invalid model: {model_id}. Available Bedrock models: {', '.join(model for model in valid_bedrock_models)}"
             )
 
         self.system_prompt = system_prompt or default_system_message
