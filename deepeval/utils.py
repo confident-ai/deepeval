@@ -211,6 +211,7 @@ def login_with_confident_api_key(api_key: string):
         raise ValueError("Unable to login, please provide a non-empty api key.")
 
     from rich import print
+
     KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
     print(
         "🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
