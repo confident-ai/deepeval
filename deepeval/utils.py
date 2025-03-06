@@ -205,8 +205,12 @@ def set_should_use_cache(yes: bool):
 
 
 def login_with_confident_api_key(api_key: string):
-    from rich import print
+    if not isinstance(api_key, str):
+        raise ValueError("Oh no! Please provide an api key string to login.")
+    elif len(api_key) == 0:
+        raise ValueError("Unable to login, please provide a non-empty api key.")
 
+    from rich import print
     KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
     print(
         "🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
