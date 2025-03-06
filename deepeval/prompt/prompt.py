@@ -20,7 +20,7 @@ class Prompt:
             )
 
         self.alias = alias
-        self.evaluation_template = evaluation_template
+        self.template = template
         self.version = None
 
     def interpolate(self, **kwargs):
