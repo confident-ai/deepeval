@@ -25,7 +25,7 @@ While a `ConversationalTestCase` is a list of turns represented by `LLMTestCase`
 Here's an example implementation of a test case:
 
 ```python
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, ToolCall
 
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
@@ -33,8 +33,7 @@ test_case = LLMTestCase(
     actual_output="We offer a 30-day full refund at no extra cost.",
     context=["All customers are eligible for a 30 day full refund at no extra cost."],
     retrieval_context=["Only shoes can be refunded."],
-    tools_called=["WebSearch"],
-    expected_tools=["WebSearch", "QueryDatabase"]
+    tools_called=[ToolCall(name="WebSearch")]
 )
 ```
 
