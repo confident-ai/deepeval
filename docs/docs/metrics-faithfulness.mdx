@@ -52,7 +52,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are seven optional parameters when creating a `FaithfulnessMetric`:
+There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
@@ -61,6 +61,7 @@ There are seven optional parameters when creating a `FaithfulnessMetric`:
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `truths_extraction_limit`: an int which when set, determines the maximum number of factual truths to extract from the `retrieval_context`. The truths extracted will be used to determine the degree of factual alignment, and will be ordered by importance, decided by your evaluation `model`. Defaulted to `None`.
+- [Optional] `evaluation_template`: a class of type `FaithfulnessTemplate`, which allows you to override the default prompt templates used to compute the `FaithfulnessMetric` score. You can learn what the default prompts looks like [here](https://github.com/confident-ai/deepeval/blob/main/deepeval/metrics/faithfulness/template.py), and should read the [How Is It Calculated](#how-is-it-calculated) section below to understand how you can tailor it to your needs. Defaulted to `deepeval`'s `FaithfulnessTemplate`.
 
 ## How Is It Calculated?
 

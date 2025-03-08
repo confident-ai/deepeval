@@ -62,7 +62,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are six optional parameters when creating a `ContextualRecallMetric`:
+There are **SEVEN** optional parameters when creating a `ContextualRecallMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
@@ -70,6 +70,7 @@ There are six optional parameters when creating a `ContextualRecallMetric`:
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `evaluation_template`: a class of type `ContextualRecallTemplate`, which allows you to override the default prompt templates used to compute the `ContextualRecallMetric` score. You can learn what the default prompts looks like [here](https://github.com/confident-ai/deepeval/blob/main/deepeval/metrics/contextual_recall/template.py), and should read the [How Is It Calculated](#how-is-it-calculated) section below to understand how you can tailor it to your needs. Defaulted to `deepeval`'s `ContextualRecallTemplate`.
 
 ## How Is It Calculated?
 
