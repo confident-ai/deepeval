@@ -58,7 +58,7 @@ def decrement_indegree(node: BaseNode):
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
     score: Optional[int] = None
-    child: Optional[BaseNode | GEval] = None
+    child: Optional[Union[BaseNode, GEval]] = None
     _parent: Optional[BaseNode] = None
 
     def __hash__(self):
