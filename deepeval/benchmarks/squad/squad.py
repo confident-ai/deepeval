@@ -8,7 +8,7 @@ from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.squad.task import SQuADTask
 from deepeval.benchmarks.squad.template import SQuADTemplate
-from deepeval.benchmarks.schema import MultipleChoiceSchemaLower
+from deepeval.benchmarks.schema import StringSchema
 from deepeval.telemetry import capture_benchmark_run
 from deepeval.metrics.utils import initialize_model
 
@@ -132,8 +132,8 @@ class SQuAD(DeepEvalBaseBenchmark):
 
         # Enforced model generation
         try:
-            res: MultipleChoiceSchemaLower = model.generate(
-                prompt=prompt, schema=MultipleChoiceSchemaLower
+            res: StringSchema = model.generate(
+                prompt=prompt, schema=StringSchema
             )
             prediction = res.answer
         except TypeError:
