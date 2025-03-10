@@ -30,7 +30,7 @@ valid_bedrock_models = [
 
 default_bedrock_model = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
 default_multimodal_bedrock_model = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
-default_system_message = "You are a helpful AI assistant. Always generate your response as a valid json. No explanation is needed just the json."
+default_system_message = "You are a helpful AI assistant. Always generate your response as a valid json. No explanation or extra information is needed just the json."
 
 class BedrockModel(DeepEvalBaseLLM):
     """A class that integrates with AWS Bedrock for model inference and text generation.
@@ -72,9 +72,9 @@ class BedrockModel(DeepEvalBaseLLM):
         """Initializes the BedrockModel with model_id, system_prompt, and optional AWS credentials."""
         self.model_id = model_id or default_bedrock_model
         
-        if model_id not in valid_bedrock_models:
+        if self.model_id not in valid_bedrock_models:
             raise ValueError(
-                f"Invalid model: {model_id}. Available Bedrock models: {', '.join(model for model in valid_bedrock_models)}"
+                f"Invalid model: {self.model_id}. Available Bedrock models: {', '.join(model for model in valid_bedrock_models)}"
             )
 
         self.system_prompt = system_prompt or default_system_message
@@ -96,6 +96,7 @@ class BedrockModel(DeepEvalBaseLLM):
             aws_secret_access_key=self.secret_access_key,
             aws_session_token=self.session_token if self.session_token else None
         )
+        print("DEBUG: boto3.client called")
 
     def load_model(self):
         """Loads the Bedrock client."""
@@ -113,21 +114,22 @@ class BedrockModel(DeepEvalBaseLLM):
         """Generates text using the Bedrock model and returns the response as a Pydantic model."""
         messages = [{"role": "user", "content": prompt}]
         
+        if schema:
+            self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
+        
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
             "messages": messages,
             "system": self.system_prompt
         }
-
-        if self.system_prompt:
-            payload["system"] = self.system_prompt
         
         try:
             response = self.client.invoke_model(
                 modelId=self.model_id,
                 body=json.dumps(payload)
             )
+
             response_body = json.loads(response["body"].read().decode("utf-8"))
 
             content = response_body.get("content", [])
@@ -213,7 +215,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         **kwargs
     ):
         self.model_id = model_id or default_multimodal_bedrock_model
-        if model_id not in valid_bedrock_models:
+        if self.model_id not in valid_bedrock_models:
             raise ValueError(
                 f"Invalid model. Available Bedrock models: {', '.join(model for model in valid_bedrock_models)}"
             )
@@ -248,66 +250,100 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
             A Bedrock model instance ready for evaluation.
         """
         return self.client
+    
+    def extract_json(self, text: str) -> dict:
+        """Attempts to parse the given text into a valid JSON dictionary."""
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            logger.error("Error decoding JSON")
+            return {}
 
     def encode_pil_image(self, pil_image: PILImage) -> str:
-        """Convert a PIL image to a base64-encoded string (JPEG format)."""
+        """Convert a PIL image to a base64-encoded string."""
         image_buffer = BytesIO()
-        pil_image.save(image_buffer, format="JPEG")
+        format = pil_image.format.lower()
+        pil_image.save(image_buffer, format=format)
         image_bytes = image_buffer.getvalue()
-        return base64.b64encode(image_bytes).decode("utf-8")
+        mime_type = f"image/{format}"
+        return base64.b64encode(image_bytes).decode("utf-8"), mime_type
+    
+    def download_image(self, url: str) -> PILImage:
+        """Downloads an image from a URL and returns it as a PIL image."""
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+        }
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            return PILImage.open(BytesIO(response.content))
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Failed to download image from URL {url}: {str(e)}")
 
-    def generate_prompt(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> List[dict]:
-        """Constructs the message payload with both text and image inputs."""
+
+    def generate_prompt(self, multimodal_input: List[Union[str, MLLMImage]]) -> List[dict]:
+        """Constructs the message payload with both text and image inputs for Anthropic (base64 only)."""
         prompt = []
+        
         for item in multimodal_input:
+            message = {"role": "user", "content": []}
+            
             if isinstance(item, str):
-                prompt.append({"type": "text", "text": item})
+                if item.strip():  # Ensure text is not empty or whitespace-only
+                    message["content"].append({"type": "text", "text": item})
+            
             elif isinstance(item, MLLMImage):
+                if not hasattr(item, "local") or not hasattr(item, "url"):
+                    raise ValueError("Invalid MLLMImage object: Missing 'local' or 'url' attributes.")
+                
                 if item.local:
-                    image = PILImage.open(item.url)
-                    image_data = self.encode_pil_image(image)
-                    prompt.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}})
+                    try:
+                        image = PILImage.open(item.url)
+                        image_data, mime_type = self.encode_pil_image(image)
+                        message["content"].append({
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": mime_type,
+                                "data": image_data
+                            }
+                        })
+                    except FileNotFoundError:
+                        raise ValueError(f"Local image file not found: {item.url}")
                 else:
-                    prompt.append({"type": "image_url", "image_url": {"url": item.url}})
+                    # Remote image handling
+                    if not isinstance(item.url, str) or not item.url.startswith("http"):
+                        raise ValueError("Invalid remote image URL.")
+                    image = self.download_image(item.url)
+                    image_data, mime_type = self.encode_pil_image(image)
+                    message["content"].append({
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": mime_type,
+                            "data": image_data
+                        }
+                    })
+            else:
+                raise ValueError(f"Invalid input type: Expected str or MLLMImage, got {type(item).__name__}")
+
+            if message["content"]:
+                prompt.append(message)
+
         return prompt
 
     def generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Tuple[str, Optional[float]]:
         """Sends a synchronous request to Bedrock for text & image-based generation."""
         
-        content_list = []
-        
-        for item in multimodal_input:
-            if isinstance(item, str):
+        messages_list = self.generate_prompt(multimodal_input)
 
-                content_list.append({"type": "text", "text": item})
-            elif isinstance(item, MLLMImage):
-                try:
-                    media_type = mimetypes.guess_type(item.url)[0] or "image/jpeg"
-
-                    if item.local:
-                        with open(item.url, "rb") as img_file:
-                            image_base64 = base64.b64encode(img_file.read()).decode("utf-8")
-                    else:
-                        response = requests.get(item.url)
-                        image_base64 = base64.b64encode(response.content).decode("utf-8")
-                    
-                    content_list.append({
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": image_base64
-                        }
-                    })
-                    logger.info(f"Processed image: {item.url} with media type {media_type}")
-                except Exception as img_error:
-                    logger.error(f"Error processing image {item.url}: {img_error}")
-                    raise
+        if schema:
+            self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
 
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
-            "messages": [{"role": "user", "content": content_list}],
+            "messages": messages_list,
             "system": self.system_prompt
         }
 
@@ -317,7 +353,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
                 body=json.dumps(payload)
             )
             response_body = json.loads(response["body"].read().decode("utf-8"))
-
+        
             content = response_body.get("content", [])
             if content and isinstance(content, list):
                 generated_text = content[0].get('text', '')
@@ -327,7 +363,8 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
 
             if schema:
                 try:
-                    return schema(**generated_text)
+                    extracted_result = self.extract_json(generated_text)
+                    return schema(**extracted_result)
                 except ValidationError as e:
                     logger.error(f"Validation error: {e}")
                     return None
@@ -337,9 +374,9 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
             logger.error(f"Error during Bedrock model inference: {e}")
             raise
 
-    async def a_generate(self, multimodal_input: List[Union[str, MLLMImage]]) -> Tuple[str, Optional[float]]:
+    async def a_generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Tuple[str, Optional[float]]:
         """Async wrapper for the generate function."""
-        return self.generate(multimodal_input)
+        return self.generate(multimodal_input, schema)
 
     def get_model_name(self) -> str:
         return self.model_id
