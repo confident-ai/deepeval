@@ -19,7 +19,7 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, GPTModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
 
@@ -245,6 +245,20 @@ class GEval(BaseMetric):
             )
 
         try:
+            # don't use log probabilities for unsupported gpt models
+            unsupported_gpt_models = {
+                "o1",
+                "o1-preview",
+                "o1-2024-12-17",
+                "o3-mini",
+                "o3-mini-2025-01-31",
+            }
+            if isinstance(self.model, str) and self.model in unsupported_gpt_models:
+                raise AttributeError(f"Model {self.model} is unsupported.")
+            if isinstance(self.model, GPTModel) and self.model.model_name in unsupported_gpt_models:
+                raise AttributeError(f"Model {self.model.model} is unsupported.")
+
+
             # Don't have to check for using native model
             # since generate raw response only exist for deepeval's native model
             res, cost = await self.model.a_generate_raw_response(
@@ -310,6 +324,19 @@ class GEval(BaseMetric):
             )
 
         try:
+            # don't use log probabilities for unsupported gpt models
+            unsupported_gpt_models = {
+                "o1",
+                "o1-preview",
+                "o1-2024-12-17",
+                "o3-mini",
+                "o3-mini-2025-01-31",
+            }
+            if isinstance(self.model, str) and self.model in unsupported_gpt_models:
+                raise AttributeError(f"Model {self.model} is unsupported.")
+            if isinstance(self.model, GPTModel) and self.model.model in unsupported_gpt_models:
+                raise AttributeError(f"Model {self.model.model} is unsupported.")
+
             res, cost = self.model.generate_raw_response(
                 prompt, logprobs=True, top_logprobs=self.top_logprobs
             )
