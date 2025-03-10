@@ -48,7 +48,7 @@ synthesizer.generate_goldens_from_docs(
 )
 ```
 
-There are one mandatory and eleven optional parameters when using the `generate_goldens_from_docs` method:
+There are **ONE** mandatory and **THREE** optional parameters when using the `generate_goldens_from_docs` method:
 
 - `document_paths`: a list strings, representing the path to the documents from which contexts will be extracted from. Supported documents types include: `.txt`, `.docx`, and `.pdf`.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `True`.
@@ -73,7 +73,7 @@ synthesizer.generate_goldens_from_docs(
 )
 ```
 
-There are seven optional parameters when creating a `ContextConstructionConfig`:
+There are **SEVEN** optional parameters when creating a `ContextConstructionConfig`:
 
 - [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4o` when initialized as a standalone instance.
 - [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.

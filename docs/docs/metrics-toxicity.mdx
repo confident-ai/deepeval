@@ -6,7 +6,7 @@ sidebar_label: Toxicity
 
 import Equation from "@site/src/components/equation";
 
-The toxicity metric is another **referenceless** metric that evaluates toxicness in your LLM outputs. This is particularly useful for a fine-tuning use case.
+The toxicity metric is another **referenceless** metric that uses uses LLM-as-a-judge to evaluate toxicness in your LLM outputs. This is particularly useful for a fine-tuning use case.
 
 :::tip Did Your Know?
 You can run evaluations **DURING** fine-tuning using `deepeval`'s [Hugging Face integration](integrations-huggingface)?
@@ -22,8 +22,9 @@ To use the `ToxicityMetric`, you'll have to provide the following arguments when
 ## Example
 
 ```python
-from deepeval.metrics import ToxicityMetric
+from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import ToxicityMetric
 
 metric = ToxicityMetric(threshold=0.5)
 test_case = LLMTestCase(
@@ -32,12 +33,14 @@ test_case = LLMTestCase(
     actual_output="Sarah always meant well, but you couldn't help but sigh when she volunteered for a project."
 )
 
-metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are six optional parameters when creating a `ToxicityMetric`:
+There are **SIX** optional parameters when creating a `ToxicityMetric`:
 
 - [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
@@ -48,6 +51,21 @@ There are six optional parameters when creating a `ToxicityMetric`:
 
 :::note
 Similar to the `BiasMetric`, the `threshold` in toxicity is a maxmium threshold.
+:::
+
+### As a standalone
+
+You can also run the `ToxicityMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?

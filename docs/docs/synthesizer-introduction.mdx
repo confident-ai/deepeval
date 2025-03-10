@@ -34,7 +34,7 @@ from deepeval.synthesizer import Synthesizer
 synthesizer = Synthesizer()
 ```
 
-There are six optional parameters when creating a `Synthesizer`:
+There are **SEVEN** optional parameters when creating a `Synthesizer`:
 
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
@@ -158,7 +158,7 @@ filtration_config = FiltrationConfig(
 synthesizer = Synthesizer(filtration_config=filtration_config)
 ```
 
-There are three optional parameters when creating a `FiltrationConfig`:
+There are **THREE** optional parameters when creating a `FiltrationConfig`:
 
 - [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4o` when initialized as a standalone instance.
 - [Optional] `synthetic_input_quality_threshold`: a float representing the minimum quality threshold for synthetic input generation. Inputs with `quality_score`s lower than the `synthetic_input_quality_threshold` will be rejected. Defaulted to `0.5`.
@@ -187,7 +187,7 @@ evolution_config = EvolutionConfig(
 synthesizer = Synthesizer(evolution_config=evolution_config)
 ```
 
-There are two optional parameters when creating an `EvolutionConfig`:
+There are **TWO** optional parameters when creating an `EvolutionConfig`:
 
 - [Optional] `evolutions`: a dict with `Evolution` keys and sampling probability values, specifying the distribution of data evolutions to be used. Defaulted to all `Evolution`s with equal probability.
 - [Optional] `num_evolutions`: the number of evolution steps to apply to each generated input. This parameter controls the complexity and diversity of the generated dataset by iteratively refining and evolving the initial inputs. Defaulted to 1.
@@ -232,7 +232,7 @@ styling_config = StylingConfig(
 synthesizer = Synthesizer(styling_config=styling_config)
 ```
 
-There are four optional parameters when creating a `StylingConfig`:
+There are **FOUR** optional parameters when creating a `StylingConfig`:
 
 - [Optional] `input_format`: a string, which specifies the desired format of the generated `input`s in the synthesized goldens. Defaulted to `None`.
 - [Optional] `expected_output_format`: a string, which specifies the desired format of the generated `expected_output`s in the synthesized goldens. Defaulted to `None`.

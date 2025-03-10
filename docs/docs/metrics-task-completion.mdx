@@ -6,7 +6,7 @@ sidebar_label: Task Completion
 
 import Equation from "@site/src/components/equation";
 
-The task completion metric evaluates how effectively an **LLM agent accomplishes a task** as outlined in the `input`, based on `tools_called` and the `actual_output` of the agent. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task** as outlined in the `input`, based on `tools_called` and the `actual_output` of the agent. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::info
 `TaskCompletion` is an **agentic metric**, and is specifically for evaluating _tool-calling_ LLM agents. To see why each test case parameter is necessary in calculating the `TaskCompletion` score, see [how is it calculated](/docs/metrics-task-completion#how-is-it-calculated).
@@ -24,8 +24,8 @@ To use the `TaskCompletion`, you'll have to provide the following arguments when
 
 ```python
 from deepeval import evaluate
-from deepeval.metrics import TaskCompletionMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import TaskCompletionMetric
 
 metric = TaskCompletionMetric(
     threshold=0.7,
@@ -59,15 +59,14 @@ test_case = LLMTestCase(
     ],
 )
 
-metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
 
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
+evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are six optional parameters when creating an `TaskCompletionMetric`:
+There are **SIX** optional parameters when creating an `TaskCompletionMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
@@ -75,6 +74,21 @@ There are six optional parameters when creating an `TaskCompletionMetric`:
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### As a standalone
+
+You can also run the `TaskCompletionMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
 
 ## How Is It Calculated?
 

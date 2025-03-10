@@ -106,6 +106,7 @@ You can also inhert a `BaseMetric` class to create your own custom metric. They 
 - Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores.
 - Provide a comprehensive reason for the scores computed.
 - Can be computed using any LLM.
+- Can be customized by [overriding evaluation prompts.](/docs/metrics-introduction#customizing-metric-prompts)
 - Integrated 100% with Confident AI.
 
 All of `deepeval`'s metrics output a score between 0-1. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
@@ -227,6 +228,15 @@ deepeval unset-local-model
 
 `deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
 
+This includes any of your favorite models such as:
+
+- Azure OpenAI
+- Claude via AWS Bedrock
+- Google Vertex AI
+- Mistral 7B
+
+All the examples can be [found here.](/guides/guides-using-custom-llms#more-examples)
+
 :::caution
 We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputing responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](/guides/guides-using-custom-llms).
 
@@ -239,274 +249,6 @@ deepeval test run test_example.py -i -c
 The `-i` flag ignores errors while the `-c` flag utilizes the local `deepeval` cache, so for a partially successful test run you don't have to rerun test cases that didn't error.
 
 :::
-
-### Azure OpenAI Example
-
-Here is an example of creating a custom Azure OpenAI model through langchain's `AzureChatOpenAI` module for evaluation:
-
-```python
-from langchain_openai import AzureChatOpenAI
-from deepeval.models.base_model import DeepEvalBaseLLM
-
-class AzureOpenAI(DeepEvalBaseLLM):
-    def __init__(
-        self,
-        model
-    ):
-        self.model = model
-
-    def load_model(self):
-        return self.model
-
-    def generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        return chat_model.invoke(prompt).content
-
-    async def a_generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        res = await chat_model.ainvoke(prompt)
-        return res.content
-
-    def get_model_name(self):
-        return "Custom Azure OpenAI Model"
-
-# Replace these with real values
-custom_model = AzureChatOpenAI(
-    openai_api_version=openai_api_version,
-    azure_deployment=azure_deployment,
-    azure_endpoint=azure_endpoint,
-    openai_api_key=openai_api_key,
-)
-azure_openai = AzureOpenAI(model=custom_model)
-print(azure_openai.generate("Write me a joke"))
-```
-
-When creating a custom LLM evaluation model you should **ALWAYS**:
-
-- inherit `DeepEvalBaseLLM`.
-- implement the `get_model_name()` method, which simply returns a string representing your custom model name.
-- implement the `load_model()` method, which will be responsible for returning a model object.
-- implement the `generate()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
-- the `generate()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt).content` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
-- implement the `a_generate()` method, with the same function signature as `generate()`. **Note that this is an async method**. In this example, we called `await chat_model.ainvoke(prompt)`, which is an asynchronous wrapper provided by LangChain's chat models.
-
-:::tip
-The `a_generate()` method is what `deepeval` uses to generate LLM outputs when you execute metrics / run evaluations asynchronously.
-
-If your custom model object does not have an asynchronous interface, simply reuse the same code from `generate()` (scroll down to the `Mistral7B` example for more details). However, this would make `a_generate()` a blocking process, regardless of whether you've turned on `async_mode` for a metric or not.
-:::
-
-Lastly, to use it for evaluation for an LLM-Eval:
-
-```python
-from deepeval.metrics import AnswerRelevancyMetric
-...
-
-metric = AnswerRelevancyMetric(model=azure_openai)
-```
-
-:::note
-While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globally for all LLM-Evals, a custom LLM has to be set each time you instantiate a metric. Remember to provide your custom LLM instance through the `model` parameter for metrics you wish to use it for.
-:::
-
-### Mistral 7B Example
-
-Here is an example of creating a custom [Mistral 7B model](https://huggingface.co/docs/transformers/model_doc/mistral) through Hugging Face's `transformers` library for evaluation:
-
-```python
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from deepeval.models.base_model import DeepEvalBaseLLM
-
-class Mistral7B(DeepEvalBaseLLM):
-    def __init__(
-        self,
-        model,
-        tokenizer
-    ):
-        self.model = model
-        self.tokenizer = tokenizer
-
-    def load_model(self):
-        return self.model
-
-    def generate(self, prompt: str) -> str:
-        model = self.load_model()
-
-        device = "cuda" # the device to load the model onto
-
-        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
-        model.to(device)
-
-        generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
-        return self.tokenizer.batch_decode(generated_ids)[0]
-
-    async def a_generate(self, prompt: str) -> str:
-        return self.generate(prompt)
-
-    def get_model_name(self):
-        return "Mistral 7B"
-
-model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1")
-tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
-
-mistral_7b = Mistral7B(model=model, tokenizer=tokenizer)
-print(mistral_7b.generate("Write me a joke"))
-```
-
-Note that for this particular implementation, we initialized our `Mistral7B` model with an additional `tokenizer` parameter, as this is required in the decoding step of the `generate()` method.
-
-:::info
-You'll notice we simply reused `generate()` in `a_generate()`, because unfortunately there's no asynchronous interface for Hugging Face's `transformers` library, which would make all metric executions a synchronous, blocking process.
-
-However, you can try offloading the generation process to a separate thread instead:
-
-```python
-import asyncio
-
-class Mistral7B(DeepEvalBaseLLM):
-    # ... (existing code) ...
-
-    async def a_generate(self, prompt: str) -> str:
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, self.generate, prompt)
-```
-
-Some additional considerations and reasons why you should be extra careful with this implementation:
-
-- Running the generation in a separate thread may not fully utilize GPU resources if the model is GPU-based.
-- There could be potential performance implications of frequently switching between threads.
-- You'd need to ensure thread safety if multiple async generations are happening concurrently and sharing resources.
-
-:::
-
-Lastly, to use your custom `Mistral7B` model for evaluation:
-
-```python
-from deepeval.metrics import AnswerRelevancyMetric
-...
-
-metric = AnswerRelevancyMetric(model=mistral_7b)
-```
-
-:::tip
-You need to specify the custom evaluation model you created via the `model` argument when creating a metric.
-:::
-
-### Google VertexAI Example
-
-Here is an example of creating a custom Google's [Gemini](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/model-versioning#stable-version) model through langchain's `ChatVertexAI` module for evaluation:
-
-```python
-from langchain_google_vertexai import (
-    ChatVertexAI,
-    HarmBlockThreshold,
-    HarmCategory
-)
-from deepeval.models.base_model import DeepEvalBaseLLM
-
-class GoogleVertexAI(DeepEvalBaseLLM):
-    """Class to implement Vertex AI for DeepEval"""
-    def __init__(self, model):
-        self.model = model
-
-    def load_model(self):
-        return self.model
-
-    def generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        return chat_model.invoke(prompt).content
-
-    async def a_generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        res = await chat_model.ainvoke(prompt)
-        return res.content
-
-    def get_model_name(self):
-        return "Vertex AI Model"
-
-# Initilialize safety filters for vertex model
-# This is important to ensure no evaluation responses are blocked
-safety_settings = {
-    HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-}
-
-#TODO : Add values for project and location below
-custom_model_gemini = ChatVertexAI(
-    model_name="gemini-1.0-pro-002"
-    , safety_settings=safety_settings
-    , project= "<project-id>"
-    , location= "<region>" #example : us-central1
-)
-
-# initiatialize the  wrapper class
-vertexai_gemini = GoogleVertexAI(model=custom_model_gemini)
-print(vertexai_gemini.generate("Write me a joke"))
-```
-
-To use it for evaluation for an LLM-Eval:
-
-```python
-from deepeval.metrics import AnswerRelevancyMetric
-...
-
-metric = AnswerRelevancyMetric(model=vertexai_gemini)
-```
-
-### AWS Bedrock Example
-
-Here is an example of creating a custom AWS Bedrock model through the `langchain_community.chat_models` module for evaluation:
-
-```python
-from langchain_community.chat_models import BedrockChat
-from deepeval.models.base_model import DeepEvalBaseLLM
-
-class AWSBedrock(DeepEvalBaseLLM):
-    def __init__(
-        self,
-        model
-    ):
-        self.model = model
-
-    def load_model(self):
-        return self.model
-
-    def generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        return chat_model.invoke(prompt).content
-
-    async def a_generate(self, prompt: str) -> str:
-        chat_model = self.load_model()
-        res = await chat_model.ainvoke(prompt)
-        return res.content
-
-    def get_model_name(self):
-        return "Custom Azure OpenAI Model"
-
-# Replace these with real values
-custom_model = BedrockChat(
-    credentials_profile_name=<your-profile-name>, # e.g. "default"
-    region_name=<your-region-name>, # e.g. "us-east-1"
-    endpoint_url=<your-bedrock-endpoint>, # e.g. "https://bedrock-runtime.us-east-1.amazonaws.com"
-    model_id=<your-model-id>, # e.g. "anthropic.claude-v2"
-    model_kwargs={"temperature": 0.4},
-)
-
-aws_bedrock = AWSBedrock(model=custom_model)
-print(aws_bedrock.generate("Write me a joke"))
-```
-
-Finally, supply the newly created `aws_bedrock` model to LLM-Evals:
-
-```python
-from deepeval.metrics import AnswerRelevancyMetric
-...
-
-metric = AnswerRelevancyMetric(model=aws_bedrock)
-```
 
 ## Running Evaluations With Metrics
 
@@ -660,4 +402,55 @@ metric.measure(test_case)
 
 :::note
 Turning `verbose_mode` on will print the inner workings of a metric whenever `measure()` or `a_measure()` is called.
+:::
+
+## Customizing Metric Prompts
+
+All of `deepeval`'s metrics uses LLM-as-a-judge which comes with a set of default prompt templates unique to each metric that are used for evaluation. While `deepeval` has a laid out algorithm to each metric, you can still customize these prompt templates to improve the accuracy and stability of your evaluation scores. This can be done by providing a custom template class as the `evaluation_template` to your metric of choice (example below).
+
+:::info
+For example, in the `AnswerRelevancyMetric`, you might disagree with what we consider something to be "relevant", but with this capability you can now override any opinions `deepeval` has in its default evaluation prompts.
+:::
+
+You're most likely to find this valuable if you're [using a custom LLM](/guides/guides-using-custom-llms), because `deepeval`'s metrics are mostly adopted for OpenAI's models, which are in general more powerful than your choice of custom LLM.
+
+:::note
+This means you can better handle invalid JSON outputs (along with [JSON confinement](/guides/guides-using-custom-llms#json-confinement-for-custom-llms)) which comes with weaker models, and provide better examples for in-context learning for your custom LLM judges for better metric accuracy.
+:::
+
+Here's a quick example of how you can define a custom `AnswerRelevancyTemplate` and inject it into the `AnswerRelevancyMetric` through the `evaluation_params` parameter:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
+
+# Define custom template
+class CustomTemplate(AnswerRelevancyTemplate):
+    @staticmethod
+    def generate_statements(actual_output: str):
+        return f"""Given the text, breakdown and generate a list of statements presented.
+
+Example:
+Our new laptop model features a high-resolution Retina display for crystal-clear visuals.
+
+{{
+    "statements": [
+        "The new laptop model has a high-resolution Retina display."
+    ]
+}}
+===== END OF EXAMPLE ======
+
+Text:
+{actual_output}
+
+JSON:
+"""
+
+# Inject custom template to metric
+metric = AnswerRelevancyMetric(evaluation_template=CustomTemplate)
+metric.measure(...)
+```
+
+:::tip
+You can find examples of how this can be done in more detail on the **Customize Your Template** section of each individual metric page, which shows code examples, and a link to `deepeval`'s GitHub showing the default templates currently used.
 :::

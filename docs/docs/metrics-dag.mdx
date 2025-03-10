@@ -188,7 +188,7 @@ format_correctness.measure(test_case)
 print(format_correctness.score)
 ```
 
-There are one required and six optional parameters when creating a `DAGMetric`:
+There are one required and **SIX** optional parameters when creating a `DAGMetric`:
 
 - `name`: name of metric.
 - `dag`: a `DeepAcyclicGraph` which represents your evaluation decision tree.
@@ -228,7 +228,7 @@ class TaskNode(BaseNode):
     label: Optional[str] = None
 ```
 
-There are three mandatory and two optional parameter when creating a `TaskNode`:
+There are **THREE** mandatory and **TWO** optional parameter when creating a `TaskNode`:
 
 - `instructions`: a string specifying how to process parameters of an `LLMTestCase`, and/or outputs from a previous parent `TaskNode`.
 - `output_label`: a string representing the final output. The `children` `BaseNode`s will use the `output_label` to reference the output from the current `TaskNode`.
@@ -256,7 +256,7 @@ class BinaryJudgementNode(BaseNode):
     label: Optional[str] = None
 ```
 
-There are two mandatory and two optional parameter when creating a `BinaryJudgementNode`:
+There are **TWO** mandatory and **TWO** optional parameter when creating a `BinaryJudgementNode`:
 
 - `criteria`: a yes/no question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** to output `True` or `False`.
 - `children`: a list of exactly two `VerdictNode`s, one with a `verdict` value of `True`, and the other with a value of `False`.
@@ -285,7 +285,7 @@ class NonBinaryJudgementNode(BaseNode):
     label: Optional[str] = None
 ```
 
-There are two mandatory and two optional parameter when creating a `NonBinaryJudgementNode`:
+There are **TWO** mandatory and **TWO** optional parameter when creating a `NonBinaryJudgementNode`:
 
 - `criteria`: an open-ended question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** what to output.
 - `children`: a list of `VerdictNode`s, where the `verdict` values determine the possible verdict of the current `NonBinaryJudgementNode`.
@@ -307,7 +307,7 @@ class VerdictNode(BaseNode):
     child: Union[GEval, BaseNode]
 ```
 
-There are one mandatory two optional parameters when creating a `VerdictNode`:
+There are **ONE** mandatory **TWO** optional parameters when creating a `VerdictNode`:
 
 - `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is a `NonBinaryJudgementNode`, else boolean if the parent is a `BinaryJudgementNode`.
 - [Optional] `score`: a integar between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value. You must provide a score if `g_eval` is `None`.

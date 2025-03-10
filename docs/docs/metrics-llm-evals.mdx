@@ -4,7 +4,7 @@ title: G-Eval
 sidebar_label: G-Eval
 ---
 
-G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most versatile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
+G-Eval is a framework that uses LLM-as-a-judge with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most versatile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
 
 :::tip
 
@@ -43,7 +43,7 @@ correctness_metric = GEval(
 )
 ```
 
-There are three mandatory and six optional parameters required when instantiating an `GEval` class:
+There are **THREE** mandatory and **SIX** optional parameters required when instantiating an `GEval` class:
 
 - `name`: name of metric
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
@@ -71,10 +71,27 @@ test_case = LLMTestCase(
     expected_output="The cat."
 )
 
-correctness_metric.measure(test_case)
-print(correctness_metric.score)
-print(correctness_metric.reason)
+# To run metric as a standalone
+# correctness_metric.measure(test_case)
+# print(correctness_metric.score, correctness_metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[correctness_metric])
 ```
+
+### As a standalone
+
+You can also run `GEval` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+correctness_metric.measure(test_case)
+print(correctness_metric.score, correctness_metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
 
 ## What is G-Eval?
 

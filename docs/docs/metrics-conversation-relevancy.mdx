@@ -22,6 +22,7 @@ Additionally, each `LLMTestCase`s in `turns` requires the following arguments:
 ## Example
 
 ```python
+from deepeval import evaluate
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.metrics import ConversationRelevancyMetric
 
@@ -30,12 +31,14 @@ convo_test_case = ConversationalTestCase(
 )
 metric = ConversationRelevancyMetric(threshold=0.5)
 
-metric.measure(convo_test_case)
-print(metric.score)
-print(metric.reason)
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There are seven optional parameters when creating a `ConversationRelevancyMetric`:
+There are **SEVEN** optional parameters when creating a `ConversationRelevancyMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
@@ -44,6 +47,21 @@ There are seven optional parameters when creating a `ConversationRelevancyMetric
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `window_size`: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to 3.
+
+### As a standalone
+
+You can also run the `ContextualRelevancyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
 
 ## How Is It Calculated?
 
