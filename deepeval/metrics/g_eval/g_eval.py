@@ -1,7 +1,6 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Optional, List, Tuple, Union, Dict
-from pydantic import BaseModel
 from langchain.schema import AIMessage
 import math
 from deepeval.metrics import BaseMetric
@@ -11,6 +10,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     ToolCall,
 )
+
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -20,6 +20,7 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM, GPTModel
+from deepeval.models.gpt_model import unsupported_log_probs_gpt_models
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
 
@@ -32,6 +33,19 @@ G_EVAL_PARAMS = {
     LLMTestCaseParams.EXPECTED_TOOLS: "Expected Tools",
     LLMTestCaseParams.TOOLS_CALLED: "Tools Called",
 }
+
+
+def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
+
+    if isinstance(model, str) and model in unsupported_log_probs_gpt_models:
+        return True
+    elif (
+        isinstance(model, GPTModel)
+        and model.model_name in unsupported_log_probs_gpt_models
+    ):
+        return True
+
+    return False
 
 
 def construct_g_eval_params_string(
@@ -246,18 +260,8 @@ class GEval(BaseMetric):
 
         try:
             # don't use log probabilities for unsupported gpt models
-            unsupported_gpt_models = {
-                "o1",
-                "o1-preview",
-                "o1-2024-12-17",
-                "o3-mini",
-                "o3-mini-2025-01-31",
-            }
-            if isinstance(self.model, str) and self.model in unsupported_gpt_models:
-                raise AttributeError(f"Model {self.model} is unsupported.")
-            if isinstance(self.model, GPTModel) and self.model.model_name in unsupported_gpt_models:
-                raise AttributeError(f"Model {self.model.model} is unsupported.")
-
+            if no_log_prob_support(self.model):
+                raise AttributeError("log_probs unsupported.")
 
             # Don't have to check for using native model
             # since generate raw response only exist for deepeval's native model
@@ -325,17 +329,8 @@ class GEval(BaseMetric):
 
         try:
             # don't use log probabilities for unsupported gpt models
-            unsupported_gpt_models = {
-                "o1",
-                "o1-preview",
-                "o1-2024-12-17",
-                "o3-mini",
-                "o3-mini-2025-01-31",
-            }
-            if isinstance(self.model, str) and self.model in unsupported_gpt_models:
-                raise AttributeError(f"Model {self.model} is unsupported.")
-            if isinstance(self.model, GPTModel) and self.model.model in unsupported_gpt_models:
-                raise AttributeError(f"Model {self.model.model} is unsupported.")
+            if no_log_prob_support(self.model):
+                raise AttributeError("log_probs unsupported.")
 
             res, cost = self.model.generate_raw_response(
                 prompt, logprobs=True, top_logprobs=self.top_logprobs
