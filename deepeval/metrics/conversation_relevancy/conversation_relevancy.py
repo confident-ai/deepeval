@@ -23,13 +23,13 @@ from deepeval.test_case import (
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.conversation_relevancy.schema import *
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-]
-
 
 class ConversationRelevancyMetric(BaseConversationalMetric):
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -52,7 +52,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
     def measure(
         self, test_case: ConversationalTestCase, _show_indicator: bool = True
     ):
-        check_conversational_test_case_params(test_case, required_params, self)
+        check_conversational_test_case_params(
+            test_case, self._required_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -69,7 +71,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                     llm_test_cases_windows.append(turns_window)
 
                 self.turns_sliding_windows = process_llm_test_cases_windows(
-                    llm_test_cases_windows, required_params
+                    llm_test_cases_windows, self._required_params
                 )
                 self.verdicts = [
                     self._generate_verdict(window)
@@ -94,7 +96,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
     ) -> float:
-        check_conversational_test_case_params(test_case, required_params, self)
+        check_conversational_test_case_params(
+            test_case, self._required_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -107,7 +111,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                 llm_test_cases_windows.append(turns_window)
 
             self.turns_sliding_windows = process_llm_test_cases_windows(
-                llm_test_cases_windows, required_params
+                llm_test_cases_windows, self._required_params
             )
             self.verdicts = await asyncio.gather(
                 *[
@@ -130,6 +134,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             return self.score
 
     async def _a_generate_reason(self) -> str:
+        if self.include_reason is False:
+            return None
+
         irrelevancies: List[Dict[str, str]] = []
         for index, verdict in enumerate(self.verdicts):
             if verdict.verdict.strip().lower() == "no":

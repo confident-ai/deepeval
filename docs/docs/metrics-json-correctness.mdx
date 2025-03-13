@@ -32,6 +32,21 @@ class ExampleSchema(BaseModel):
     name: str
 ```
 
+:::tip
+If your `actual_output` is a list of JSON objects, you can simply create a list schema by wrapping your existing schema in a `RootModel`. For example:
+
+```python
+from pydantic import RootModel
+from typing import List
+
+...
+
+class ExampleSchemaList(RootModel[List[ExampleSchema]]):
+    pass
+```
+
+:::
+
 Then supply it as the `expected_schema` when creating a `JsonCorrectnessMetric`:
 
 ```python
@@ -51,12 +66,14 @@ test_case = LLMTestCase(
     actual_output="{'name': null}"
 )
 
-metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are one mandatory and six optional parameters when creating an `PromptAlignmentMetric`:
+There are **ONE** mandatory and **SIX** optional parameters when creating an `PromptAlignmentMetric`:
 
 - `expected_schema`: a `pydantic` `BaseModel` specifying the schema of the Json that is expected from your LLM.
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
@@ -68,6 +85,21 @@ There are one mandatory and six optional parameters when creating an `PromptAlig
 
 :::info
 Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the `actual_output` has the wrong schema, **AND** if `include_reason` is set to `True`.
+:::
+
+### As a standalone
+
+You can also run the `JsonCorrectnessMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?

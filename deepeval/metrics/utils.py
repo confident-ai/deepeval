@@ -29,7 +29,7 @@ from deepeval.test_case import (
 def copy_metrics(
     metrics: List[
         Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
-    ]
+    ],
 ) -> List[Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric]]:
     copied_metrics = []
     for metric in metrics:
@@ -86,6 +86,16 @@ def process_llm_test_cases_windows(
 def get_turns_in_sliding_window(turns: List[LLMTestCase], window_size: int):
     for i in range(len(turns)):
         yield turns[max(0, i - window_size + 1) : i + 1]
+
+
+def print_verbose_logs(metric: str, logs: str):
+    print("*" * 50)
+    print(f"{metric} Verbose Logs")
+    print("*" * 50)
+    print("")
+    print(logs)
+    print("")
+    print("=" * 70)
 
 
 def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
@@ -267,22 +277,15 @@ def initialize_model(
     # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
-    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
-    return GPTModel(model=model), True
 
+    # If the model is a string, we initialize a GPTModel and use as a native model
+    if isinstance(model, str) or model is None:
+        return GPTModel(model=model), True
 
-# Please don't use this method, dirty hack
-def is_native_model(
-    model: Optional[Union[str, DeepEvalBaseLLM, GPTModel]] = None,
-) -> bool:
-    # If model is a GPTModel, it should be deemed as using native model
-    if isinstance(model, GPTModel):
-        return True
-    # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
-    if isinstance(model, DeepEvalBaseLLM):
-        return False
-    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
-    return True
+    # Otherwise (the model is a wrong type), we raise an error
+    raise TypeError(
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, or GPTModel."
+    )
 
 
 def initialize_multimodal_model(
@@ -301,16 +304,6 @@ def initialize_multimodal_model(
     return MultimodalGPTModel(model=model), True
 
 
-def print_verbose_logs(metric: str, logs: str):
-    print("*" * 50)
-    print(f"{metric} Verbose Logs")
-    print("*" * 50)
-    print("")
-    print(logs)
-    print("")
-    print("=" * 70)
-
-
 def initialize_schematic_model(
     model: Optional[Union[str, DeepEvalBaseLLM, SchematicGPTModel]] = None,
 ) -> Tuple[DeepEvalBaseLLM, bool]:
@@ -325,13 +318,3 @@ def initialize_schematic_model(
         return model, False
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return SchematicGPTModel(model=model), True
-
-
-def print_verbose_logs(metric: str, logs: str):
-    print("*" * 50)
-    print(f"{metric} Verbose Logs")
-    print("*" * 50)
-    print("")
-    print(logs)
-    print("")
-    print("=" * 70)

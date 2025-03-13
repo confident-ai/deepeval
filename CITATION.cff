@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+authors:
+  - family-names: Ip
+    given-names: Jeffrey
+  - family-names: Vongthongsri
+    given-names: Kritin
+title: deepeval
+version: 2.5.3
+date-released: "2025-03-12"
+url: https://confident-ai.com
+repository-code: https://github.com/confident-ai/deepeval
+license: Apache-2.0
+type: software
+description: The Open-Source LLM Evaluation Framework

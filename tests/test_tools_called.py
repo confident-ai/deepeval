@@ -36,16 +36,16 @@ from deepeval.test_case import LLMTestCaseParams
 from deepeval import evaluate
 
 tool_correctness_metric = ToolCorrectnessMetric(verbose_mode=True)
-tool_correctness_geval_metric = GEval(
-    name="Tool Correctness",
-    criteria="Is the expected tools same as tools called",
-    evaluation_params=[
-        LLMTestCaseParams.TOOLS_CALLED,
-        LLMTestCaseParams.EXPECTED_TOOLS,
-    ],
-    verbose_mode=True,
-)
-tool_correctness_geval_metric.measure(tool_test_case)
+# tool_correctness_geval_metric = GEval(
+#     name="Tool Correctness",
+#     criteria="Is the expected tools same as tools called",
+#     evaluation_params=[
+#         LLMTestCaseParams.TOOLS_CALLED,
+#         LLMTestCaseParams.EXPECTED_TOOLS,
+#     ],
+#     verbose_mode=True,
+# )
+# tool_correctness_geval_metric.measure(tool_test_case)
 tool_correctness_metric.measure(tool_test_case)
 
 ################################################

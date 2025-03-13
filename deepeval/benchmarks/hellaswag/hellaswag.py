@@ -9,7 +9,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.hellaswag.task import HellaSwagTask
 from deepeval.benchmarks.hellaswag.template import HellaSwagTemplate
 from deepeval.benchmarks.utils import should_use_batch
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import MultipleChoiceSchema
 from deepeval.telemetry import capture_benchmark_run
 
@@ -24,6 +23,8 @@ class HellaSwag(DeepEvalBaseBenchmark):
         confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
+
         assert n_shots <= 15, "HellaSwag only supports n_shots <= 15."
         super().__init__(**kwargs)
         self.tasks: List[HellaSwagTask] = (

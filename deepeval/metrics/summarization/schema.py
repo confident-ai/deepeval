@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Literal
 from enum import Enum
 
 
@@ -10,7 +10,7 @@ class ScoreType(Enum):
 
 class SummarizationAlignmentVerdict(BaseModel):
     # yes, no, or idk
-    verdict: str
+    verdict: Literal["yes", "no", "idk"]
     reason: Optional[str] = Field(default=None)
 
 

@@ -2,12 +2,13 @@ import os
 import warnings
 import re
 
-# Optionally add telemtry
+# Optionally add telemetry
 from ._version import __version__
 
 from deepeval.event import track
 from deepeval.monitor import monitor, a_monitor, send_feedback, a_send_feedback
 from deepeval.evaluate import evaluate, assert_test
+from deepeval.auto_evaluate import auto_evaluate
 from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login_with_confident_api_key
 from deepeval.telemetry import *
@@ -23,6 +24,7 @@ __all__ = [
     "a_send_feedback",
     "send_feedback",
     "evaluate",
+    "auto_evaluate",
     "assert_test",
     "on_test_run_end",
     "trace_langchain",

@@ -9,7 +9,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard.template import BigBenchHardTemplate
 from deepeval.benchmarks.utils import should_use_batch
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import *
 from deepeval.telemetry import capture_benchmark_run
 
@@ -57,6 +56,8 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         ] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
+
         assert n_shots <= 3, "BBH only supports n_shots <= 3"
         super().__init__(**kwargs)
         self.tasks: List[BigBenchHardTask] = (
@@ -199,7 +200,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         try:
             res = model.generate(prompt=prompt, schema=pydantic_model)
             prediction = str(res.answer)
-        except TypeError:
+        except (AttributeError, TypeError):
             prompt += self.confinement_instructions_dict[task]
             prediction = model.generate(prompt)
 

@@ -38,3 +38,25 @@ Example JSON:
 
 JSON:
 """
+
+    @staticmethod
+    def generate_strict_evaluation_results(evaluation_steps, text, parameters):
+        return f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is either 1 (follows the criteria outlined in the steps) or 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
+
+Evaluation Steps:
+{evaluation_steps}
+
+{text}
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
+
+Example JSON:
+{{
+    "score": 0,
+    "reason": "The text does not follow the evaluation steps provided."
+}}
+**
+
+JSON:
+"""

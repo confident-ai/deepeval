@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Union
 from enum import Enum
 
+from deepeval.test_case import ToolCall
+
 
 @dataclass
 class MLLMImage:
@@ -33,6 +35,8 @@ class MLLMTestCaseParams(Enum):
     EXPECTED_OUTPUT = "expected_output"
     CONTEXT = "context"
     RETRIEVAL_CONTEXT = "retrieval_context"
+    TOOLS_CALLED = "tools_called"
+    EXPECTED_TOOLS = "expected_tools"
 
 
 @dataclass
@@ -44,6 +48,8 @@ class MLLMTestCase:
     retrieval_context: Optional[List[Union[str, MLLMImage]]] = None
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
+    tools_called: Optional[List[ToolCall]] = None
+    expected_tools: Optional[List[ToolCall]] = None
     name: Optional[str] = field(default=None)
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
@@ -77,4 +83,22 @@ class MLLMTestCase:
             ):
                 raise TypeError(
                     "'retrieval_context' must be None or a list of strings or MLLMImage instances"
+                )
+
+        # Ensure `tools_called` is None or a list of strings
+        if self.tools_called is not None:
+            if not isinstance(self.tools_called, list) or not all(
+                isinstance(item, ToolCall) for item in self.tools_called
+            ):
+                raise TypeError(
+                    "'tools_called' must be None or a list of `ToolCall`"
+                )
+
+        # Ensure `expected_tools` is None or a list of strings
+        if self.expected_tools is not None:
+            if not isinstance(self.expected_tools, list) or not all(
+                isinstance(item, ToolCall) for item in self.expected_tools
+            ):
+                raise TypeError(
+                    "'expected_tools' must be None or a list of `ToolCall`"
                 )

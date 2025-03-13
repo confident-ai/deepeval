@@ -21,13 +21,14 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.summarization.schema import *
 from deepeval.metrics.faithfulness.schema import *
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-]
-
 
 class SummarizationMetric(BaseMetric):
+
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -65,8 +66,8 @@ class SummarizationMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -115,8 +116,8 @@ class SummarizationMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -475,7 +476,8 @@ class SummarizationMetric(BaseMetric):
     async def _a_generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_truths(
-            text=text, extraction_limit=self.truths_extraction_limit
+            retrieval_context=text,
+            extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Truths)
@@ -492,7 +494,7 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(text=text)
+        prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
@@ -509,7 +511,8 @@ class SummarizationMetric(BaseMetric):
     def _generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_truths(
-            text=text, extraction_limit=self.truths_extraction_limit
+            retrieval_context=text,
+            extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Truths)
@@ -526,7 +529,7 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(text=text)
+        prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost

@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 import asyncio
 
 from deepeval.test_case import (
@@ -25,14 +25,14 @@ from deepeval.metrics.faithfulness.schema import (
     Claims,
 )
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.RETRIEVAL_CONTEXT,
-]
-
 
 class FaithfulnessMetric(BaseMetric):
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.RETRIEVAL_CONTEXT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -42,6 +42,7 @@ class FaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
+        evaluation_template: Type[FaithfulnessTemplate] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -50,6 +51,7 @@ class FaithfulnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
@@ -61,8 +63,8 @@ class FaithfulnessMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -96,8 +98,8 @@ class FaithfulnessMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -132,7 +134,7 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt: dict = FaithfulnessTemplate.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             contradictions=contradictions,
             score=format(self.score, ".2f"),
         )
@@ -159,7 +161,7 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt: dict = FaithfulnessTemplate.generate_reason(
+        prompt = self.evaluation_template.generate_reason(
             contradictions=contradictions,
             score=format(self.score, ".2f"),
         )
@@ -182,7 +184,7 @@ class FaithfulnessMetric(BaseMetric):
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
-        prompt = FaithfulnessTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
         if self.using_native_model:
@@ -210,7 +212,7 @@ class FaithfulnessMetric(BaseMetric):
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
-        prompt = FaithfulnessTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             claims=self.claims, retrieval_context="\n\n".join(self.truths)
         )
         if self.using_native_model:
@@ -232,8 +234,8 @@ class FaithfulnessMetric(BaseMetric):
                 return verdicts
 
     async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_truths(
-            text="\n\n".join(retrieval_context),
+        prompt = self.evaluation_template.generate_truths(
+            retrieval_context="\n\n".join(retrieval_context),
             extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
@@ -250,8 +252,8 @@ class FaithfulnessMetric(BaseMetric):
                 return data["truths"]
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_truths(
-            text="\n\n".join(retrieval_context),
+        prompt = self.evaluation_template.generate_truths(
+            retrieval_context="\n\n".join(retrieval_context),
             extraction_limit=self.truths_extraction_limit,
         )
         if self.using_native_model:
@@ -268,7 +270,9 @@ class FaithfulnessMetric(BaseMetric):
                 return data["truths"]
 
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
+        prompt = self.evaluation_template.generate_claims(
+            actual_output=actual_output
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
@@ -283,7 +287,9 @@ class FaithfulnessMetric(BaseMetric):
                 return data["claims"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
-        prompt = FaithfulnessTemplate.generate_claims(text=actual_output)
+        prompt = self.evaluation_template.generate_claims(
+            actual_output=actual_output
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost

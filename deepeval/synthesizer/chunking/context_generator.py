@@ -1,4 +1,6 @@
 from typing import List, Tuple, Dict, Optional, Union
+from langchain_core.documents import Document
+from llama_index.core.schema import TextNode
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm as tqdm_bar
 from pydantic import BaseModel
@@ -26,22 +28,28 @@ class ContextScore(BaseModel):
 class ContextGenerator:
     def __init__(
         self,
-        document_paths: List[str],
         embedder: DeepEvalBaseEmbeddingModel,
+        document_paths: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
         max_retries: int = 3,
         filter_threshold: float = 0.5,
         similarity_threshold: float = 0.5,
+        _nodes: Optional[List[Union[TextNode, Document]]] = None,
     ):
         from chromadb.api.models.Collection import Collection
+
+        # Ensure either document_paths or _nodes is provided
+        if not document_paths and not _nodes:
+            raise ValueError("`document_path` is empty or missing.")
 
         # Chunking parameters
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.total_chunks = 0
         self.document_paths: List[str] = document_paths
+        self._nodes = _nodes
 
         # Model parameters
         self.model, self.using_native_model = initialize_model(model)
@@ -58,6 +66,9 @@ class ContextGenerator:
         self.source_files_to_collections_map: Optional[
             Dict[str, Collection]
         ] = None
+
+        # cost tracking
+        self.total_cost = 0.0
 
     #########################################################
     ### Generate Contexts ###################################
@@ -98,7 +109,9 @@ class ContextGenerator:
             for key, chunker in tqdm_bar(
                 self.doc_to_chunker_map.items(), "✨ 📚 ✨ Chunking Documents"
             ):
-                self.source_files_to_collections_map[key] = chunker.chunk_doc()
+                self.source_files_to_collections_map[key] = chunker.chunk_doc(
+                    self.chunk_size, self.chunk_overlap
+                )
 
         # Progress Bar
         p_bar = tqdm_bar(
@@ -162,7 +175,7 @@ class ContextGenerator:
         # Chunk docs if not already cached via ChromaDB
         async def a_chunk_and_store(key, chunker: DocumentChunker):
             self.source_files_to_collections_map[key] = (
-                await chunker.a_chunk_doc()
+                await chunker.a_chunk_doc(self.chunk_size, self.chunk_overlap)
             )
 
         if self.source_files_to_collections_map == None:
@@ -228,6 +241,48 @@ class ContextGenerator:
             )
         )
         return path, contexts_per_doc, scores_per_doc, num_chunks
+
+    #########################################################
+    ### Generate Contexts from Nodes ########################
+    #########################################################
+
+    def generate_contexts_from_nodes(
+        self, num_context: int, max_chunks_per_context: int = 3
+    ):
+        scores = []
+        contexts = []
+        source_files = []
+
+        # Determine the number of contexts to generate
+        nodes_collection = self.source_files_to_collections_map["nodes"]
+        num_chunks = nodes_collection.count()
+        num_context = min(num_context, num_chunks)
+
+        # Progress Bar
+        p_bar = tqdm_bar(
+            total=max_chunks_per_context * num_context,
+            desc="✨ 🧩 ✨ Generating Contexts",
+        )
+
+        # Generate contexts
+        self.total_chunks = 0
+        for path, _ in self.source_files_to_collections_map.items():
+            contexts_per_doc, scores_per_doc = (
+                self._get_n_random_contexts_per_doc(
+                    path=path,
+                    n_contexts_per_doc=num_context,
+                    context_size=max_chunks_per_context,
+                    similarity_threshold=self.similarity_threshold,
+                    p_bar=p_bar,
+                )
+            )
+            contexts.extend(contexts_per_doc)
+            scores.extend(scores_per_doc)
+            for _ in contexts_per_doc:
+                source_files.append(path)
+            self.total_chunks += num_chunks
+
+        return contexts, source_files, scores
 
     #########################################################
     ### Get Random Contexts #################################
@@ -447,7 +502,8 @@ class ContextGenerator:
     def evaluate_chunk(self, chunk) -> float:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
-            res, _ = self.model.generate(prompt, schema=ContextScore)
+            res, cost = self.model.generate(prompt, schema=ContextScore)
+            self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
             try:
@@ -471,7 +527,8 @@ class ContextGenerator:
     async def a_evaluate_chunk(self, chunk) -> float:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
-            res, _ = await self.model.a_generate(prompt, schema=ContextScore)
+            res, cost = await self.model.a_generate(prompt, schema=ContextScore)
+            self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
 
@@ -519,9 +576,7 @@ class ContextGenerator:
             except:
                 if self.doc_to_chunker_map == None:
                     self.doc_to_chunker_map = {}
-                doc_chunker = DocumentChunker(
-                    self.embedder, self.chunk_size, self.chunk_overlap
-                )
+                doc_chunker = DocumentChunker(self.embedder)
                 doc_chunker.load_doc(path)
                 if path not in self.doc_to_chunker_map:
                     self.doc_to_chunker_map[path] = doc_chunker
@@ -548,9 +603,7 @@ class ContextGenerator:
             except:
                 if self.doc_to_chunker_map is None:
                     self.doc_to_chunker_map = {}
-                doc_chunker = DocumentChunker(
-                    self.embedder, self.chunk_size, self.chunk_overlap
-                )
+                doc_chunker = DocumentChunker(self.embedder)
                 await doc_chunker.a_load_doc(path)
                 if path not in self.doc_to_chunker_map:
                     self.doc_to_chunker_map[path] = doc_chunker
@@ -558,6 +611,56 @@ class ContextGenerator:
         # Process all documents asynchronously with a progress bar
         tasks = [a_process_document(path) for path in self.document_paths]
         await tqdm_asyncio.gather(*tasks, desc="✨ 🚀 ✨ Loading Documents")
+
+    #########################################################
+    ### Load Nodes ##########################################
+    #########################################################
+
+    def _load_nodes(self):
+        import chromadb
+        from chromadb.errors import InvalidCollectionException
+
+        for _ in tqdm_bar(range(1), "✨ 🚀 ✨ Loading Nodes"):
+            try:
+                # Create ChromaDB client
+                client = chromadb.PersistentClient(
+                    path=f".vector_db/{self._nodes[0].id_}"
+                )
+                collection = client.get_collection(name=f"processed_chunks")
+                self.source_files_to_collections_map = {}
+                self.source_files_to_collections_map["nodes"] = collection
+
+            except InvalidCollectionException:
+                doc_chunker = DocumentChunker(self.embedder)
+                collection = doc_chunker.from_nodes(self._nodes)
+                self.source_files_to_collections_map = {}
+                self.source_files_to_collections_map["nodes"] = collection
+
+    async def _a_load_nodes(self):
+        import chromadb
+
+        async def a_process_nodes(path):
+            try:
+                # Create ChromaDB client
+                client = chromadb.PersistentClient(
+                    path=f".vector_db/{self._nodes[0].id_}"
+                )
+                collection = client.get_collection(name=f"processed_chunks")
+                # Needs to strictly be after getting collection so map is assigned to None if exception is raised
+                if self.source_files_to_collections_map == None:
+                    self.source_files_to_collections_map = {}
+                self.source_files_to_collections_map["nodes"] = collection
+
+            except:
+                if self.doc_to_chunker_map == None:
+                    self.doc_to_chunker_map = {}
+                doc_chunker = DocumentChunker(self.embedder)
+                collection = await doc_chunker.a_from_nodes(self._nodes)
+                self.source_files_to_collections_map["nodes"] = collection
+
+        # Process all documents asynchronously with a progress bar
+        tasks = [a_process_nodes() for _ in range(1)]
+        await tqdm_asyncio.gather(*tasks, desc="✨ 🚀 ✨ Loading Nodes")
 
     #########################################################
     ### Check Docs Loaded ###################################

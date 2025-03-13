@@ -1,1 +1,1 @@
-from .types import CyberattackType
+from .category import CyberattackCategory

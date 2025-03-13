@@ -1,5 +1,4 @@
-"""Tests for answer relevancy
-"""
+"""Tests for answer relevancy"""
 
 import pytest
 from deepeval.metrics.answer_relevancy.schema import Verdicts

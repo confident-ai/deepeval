@@ -13,12 +13,12 @@ class LLMTestCaseParams(Enum):
     RETRIEVAL_CONTEXT = "retrieval_context"
     TOOLS_CALLED = "tools_called"
     EXPECTED_TOOLS = "expected_tools"
-    REASONING = "reasoning"
+
 
 class ToolCallParams(Enum):
-    TOOL="tool"
-    INPUT_PARAMETERS="input_parameters"
-    OUTPUT="output"
+    INPUT_PARAMETERS = "input_parameters"
+    OUTPUT = "output"
+
 
 class ToolCall(BaseModel):
     name: str
@@ -28,6 +28,28 @@ class ToolCall(BaseModel):
     input_parameters: Optional[Dict[str, Any]] = Field(
         None, serialization_alias="inputParameters"
     )
+
+    def __eq__(self, other):
+        if not isinstance(other, ToolCall):
+            return False
+        return (
+            self.name == other.name
+            and self.input_parameters == other.input_parameters
+            and self.output == other.output
+        )
+
+    def __hash__(self):
+        input_params = (
+            self.input_parameters if self.input_parameters is not None else {}
+        )
+        output_hashable = (
+            frozenset(self.output.items())
+            if isinstance(self.output, dict)
+            else self.output
+        )
+        return hash(
+            (self.name, frozenset(input_params.items()), output_hashable)
+        )
 
     def __repr__(self):
         fields = []

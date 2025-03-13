@@ -2,8 +2,6 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
-
-from typing import Any, List
 import asyncio
 
 import deepeval
@@ -13,7 +11,6 @@ import deepeval
 ###########################################################
 
 # set llama index global handler
-
 deepeval.trace_llama_index()
 
 ###########################################################
@@ -34,8 +31,8 @@ index = VectorStoreIndex(nodes)
 
 async def chatbot(input):
     query_engine = index.as_query_engine(similarity_top_k=5)
-    res = query_engine.query(input).response
-    return res
+    res = await query_engine.aquery(input)
+    return res.response
 
 
 #############################################################
@@ -58,7 +55,7 @@ async def query_and_print(query: str):
 
 
 async def main():
-    tasks = [chatbot(query) for query in user_inputs]
+    tasks = [query_and_print(query) for query in user_inputs]
     await asyncio.gather(*tasks)
 
 

@@ -145,7 +145,7 @@ And run the test file in the CLI:
 deepeval test run test_example.py
 ```
 
-There are two mandatory and one optional parameter when calling the `assert_test()` function:
+There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function:
 
 - `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics of type `BaseMetric`
@@ -220,6 +220,14 @@ The `-id` flag followed by a string allows you to name test runs and better iden
 deepeval test run test_example.py -id "My Latest Test Run"
 ```
 
+### Display Mode
+
+The `-d` flag followed by a string of "all", "passing", or "failing" allows you to display only certain test cases in the terminal. For example, you can display "failing" only if you only care about the failing test cases.
+
+```
+deepeval test run test_example.py -d "failing"
+```
+
 ### Repeats
 
 Repeat each test case by providing a number to the `-r` flag to specify how many times to rerun each test case.
@@ -255,7 +263,7 @@ answer_relevancy_metric = AnswerRelevancyMetric()
 evaluate(dataset, [answer_relevancy_metric])
 ```
 
-There are two mandatory and twelve optional arguments when calling the `evaluate()` function:
+There are **TWO** mandatory and **THIRTEEN** optional arguments when calling the `evaluate()` function:
 
 - `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
 - `metrics`: a list of metrics of type `BaseMetric`.
@@ -268,6 +276,7 @@ There are two mandatory and twelve optional arguments when calling the `evaluate
 - [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for each test case. Defaulted to `False`.
 - [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
+- [Optional] `display`: a str of either `"all"`, `"failing"` or `"passing"`, which allows you to selectively decide which type of test cases to display as the final result. Defaulted to `"all"`.
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.

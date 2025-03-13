@@ -18,6 +18,26 @@ Evaluating a dataset means exactly the same as evaluating your LLM system, becau
 
 :::
 
+You should also aim to group test cases of a certain category together in an `EvaluationDataset`. This will allow you to follow best practices:
+
+- Ensure telling test coverage: A well-structured dataset should reflect the full range of real-world inputs the LLM is expected to handle. This includes diverse linguistic styles, varying levels of complexity, and edge cases that challenge the model’s robustness. Don't just include test cases that are easy to pass.
+- Focused, quantitative test cases: A dataset should be designed with a clear evaluation scope while allowing for multiple relevant performance metrics. Rather than being overly broad or too narrow, it should be structured to provide meaningful, statistically reliable insights.
+- Define clear objectives: Each dataset should align with a well-defined evaluation goal, ensuring that test cases serve a specific analytical purpose. While organizing test cases into distinct datasets can provide clarity, unnecessary fragmentation should be avoided if multiple aspects of an LLM’s performance are best assessed together.
+
+:::info
+
+If you don't already have an `EvaluationDataset`, a great starting point is to simply write down the prompts you're currently using to manually eyeball your LLM outputs. You can also do this on [Confident AI](https://confident-ai.com) which integrates 100% with `deepeval`:
+
+<video width="100%" controls muted playsInline>
+  <source
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-create-dataset.mp4"
+    type="video/mp4"
+  />
+</video>
+Full documentation for datasets on Confident AI [here.](/confident-ai/confident-ai-evaluation-dataset-management)
+
+:::
+
 ## Create An Evaluation Dataset
 
 An `EvaluationDataset` in `deepeval` is simply a collection of `LLMTestCase`s and/or `Golden`s.

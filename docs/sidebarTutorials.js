@@ -1,49 +1,52 @@
 module.exports = {
-    tutorials: [
-      "tutorial-introduction",
-      {
-        type: "category",
-        label: "Before We Begin",
-        items: ["tutorial-setup", "tutorial-llm-application-example"],
-        collapsed: false,
-      },
-      {
-        type: "category",
-        label: "Choosing Your Metrics",
-        items: [
-          "tutorial-metrics-defining-an-evaluation-criteria",
-          "tutorial-metrics-selection",
-        ],
-        collapsed: false,
-      },
-      {
-        type: "category",
-        label: "Evaluating Your LLM",
-        items: [
-          "tutorial-evaluations-running-an-evaluation",
-          "tutorial-evaluations-hyperparameters",
-          "tutorial-evaluations-catching-regressions",
-        ],
-        collapsed: false,
-      },
-      {
-        type: "category",
-        label: "Improving Your Evaluation Dataset",
-        items: [
-          "tutorial-dataset-synthesis",
-          "tutorial-dataset-confident",
-        ],
-        collapsed: false,
-      },
-      {
-        type: "category",
-        label: "Continous Evaluation in Production",
-        items: [
-          "tutorial-production-monitoring",
-          "tutorial-production-evaluation",
-        ],
-        collapsed: false,
-      },
-    ],
-  };
-  
+  tutorials: [
+    "tutorial-introduction",
+    // "use-cases",
+    "tutorial-setup",
+    {
+      type: "category",
+      label: "Legal Doc Summarization",
+      items: [
+        "doc-summarization-introduction",
+        "doc-summarization-defining-a-criteria",
+        "doc-summarization-selecting-metrics",
+        "doc-summarization-running-an-evaluation",
+        "doc-summarization-iterating-on-hyperparameters",
+        "doc-summarization-catching-llm-regressions",
+        "doc-summarization-annotating-datasets",
+        "doc-summarization-using-datasets",
+      ],
+      collapsed: true,
+    },
+    {
+      type: "category",
+      label: "RAG QA Agent",
+      items: [
+        "qa-agent-introduction",
+        "qa-agent-generating-a-synthetic-dataset",
+        "qa-agent-defining-an-evaluation-criteria",
+        "qa-agent-choosing-metrics",
+        "qa-agent-running-evaluations",
+        "qa-agent-improving-hyperparameters",
+      ],
+      collapsed: true,
+    },
+    {
+      type: "category",
+      label: "Medical Chatbot",
+      items: [
+        "tutorial-llm-application-example",
+        "tutorial-metrics-defining-an-evaluation-criteria",
+        "tutorial-metrics-selection",
+        "tutorial-evaluations-running-an-evaluation",
+        "tutorial-evaluations-hyperparameters",
+        "tutorial-evaluations-catching-regressions",
+        "tutorial-dataset-synthesis",
+        "tutorial-dataset-confident",
+        "tutorial-production-monitoring",
+        "tutorial-production-evaluation",
+      ],
+      collapsed: true,
+    },
+  ],
+};

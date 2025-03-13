@@ -7,7 +7,6 @@ from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.human_eval.task import HumanEvalTask
 from deepeval.benchmarks.human_eval.template import HumanEvalTemplate
-from deepeval.scorer import Scorer
 from deepeval.telemetry import capture_benchmark_run
 
 
@@ -19,6 +18,8 @@ class HumanEval(DeepEvalBaseBenchmark):
         verbose_mode: bool = False,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
+
         super().__init__(**kwargs)
         self.tasks: List[HumanEvalTask] = (
             list(HumanEvalTask) if tasks is None else tasks

@@ -14,7 +14,7 @@ import Equation from "@site/src/components/equation";
 
 ## Arguments
 
-There are two optional arguments when using the `MMLU` benchmark:
+There are **TWO** optional arguments when using the `MMLU` benchmark:
 
 - [Optional] `tasks`: a list of tasks (`MMLUTask` enums), specifying which of the **57 subject** areas to evaluate in the language model. By default, this is set to all tasks. Detailed descriptions of the `MMLUTask` enum can be found [here](#mmlu-tasks).
 - [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This is set to **5 by default** and cannot exceed this number.
@@ -25,7 +25,7 @@ The code below evaluates a custom `mistral_7b` model ([click here to learn how t
 
 ```python
 from deepeval.benchmarks import MMLU
-from deepeval.benchmarks.tasks import MMLUTask
+from deepeval.benchmarks.mmlu.task import MMLUTask
 
 # Define benchmark with specific tasks and shots
 benchmark = MMLU(

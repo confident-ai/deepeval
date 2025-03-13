@@ -96,13 +96,12 @@ Once you've set up your `RedTeamer`, and defined your target model and list of v
 
 ```python
 from deepeval.red_teaming import AttackEnhancement
-
 ...
 
 results = red_teamer.scan(
     target_model_callback=target_model_callback,
     attacks_per_vulnerability_type=5,
-    vulnerabilities=vulnerabilities
+    vulnerabilities=vulnerabilities,
     attack_enhancements={
         AttackEnhancement.BASE64: 0.25,
         AttackEnhancement.GRAY_BOX_ATTACK: 0.25,
@@ -113,12 +112,13 @@ results = red_teamer.scan(
 print("Red Teaming Results: ", results)
 ```
 
-There are 3 required parameters and 1 optional parameter when calling the scan method:
+There are 3 required parameters and 2 optional parameter when calling the scan method:
 
 - `vulnerabilities`: A list of `Vulnerability` objects specifying the vulnerabilities to be tested.
 - `attacks_per_vulnerability_type`: An integer specifying the number of attacks to be generated per vulnerability type.
 - `target_model_callback`: A callback function representing the model you wish to red-team. The function should accept a `prompt: str` and return a `str` response.
 - [Optional] `attack_enhancements`: A dict of `AttackEnhancement` enum keys specifying the distribution of attack enhancements to be used. Defaulted to uniform distribution of all available `AttackEnhancements`.
+- [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during red-teaming. Defaulted to `False`.
 
 :::tip
 You can check out the full list of [**10+ attack enhancements** here](/docs/red-teaming-attack-enhancements).

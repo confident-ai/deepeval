@@ -26,6 +26,7 @@ You'll also need to supply any additional arguments such as `expected_output` an
 To create a custom metric that evaluates entire LLM conversations, simply instantiate a `ConversationalGEval` class and define an evaluation criteria in everyday language:
 
 ```python
+from deepeval import evaluate
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ConversationalTestCase
 from deepeval.metrics import ConversationalGEval
 
@@ -46,12 +47,14 @@ professionalism_metric = ConversationalGEval(
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
-metric.measure(convo_test_case)
-print(metric.score)
-print(metric.reason)
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There are three mandatory and six optional parameters required when instantiating an `ConversationalGEval` class:
+There are **THREE** mandatory and **SIX** optional parameters required when instantiating an `ConversationalGEval` class:
 
 - `name`: name of metric. This will **not** affect the evaluation.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
@@ -67,6 +70,21 @@ There are three mandatory and six optional parameters required when instantiatin
 For accurate and valid results, only test case parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
 :::
 
+### As a standalone
+
+You can also run the `ConversationalGEval` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
+
 ## How Is It Calculated?
 
 The `ConversationalGEval` is an adapted version of [`GEval`](/docs/metrics-llm-evals), so alike `GEval`, the `ConversationalGEval` metric is a two-step algorithm that first generates a series of `evaluation_steps` using chain of thoughts (CoTs) based on the given `criteria`, before using the generated `evaluation_steps` to determine the final score using the `evaluation_params` presented in an LLMTestCase of each turn.
@@ -74,5 +92,5 @@ The `ConversationalGEval` is an adapted version of [`GEval`](/docs/metrics-llm-e
 Unlike regular `GEval` though, the `ConversationalGEval` takes the entire conversation history into account during evaluation.
 
 :::tip
-Similar to the original [G-Eval paper](<(https://arxiv.org/abs/2303.16634)>), the `ConversationalGEval` metric uses the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation. This step was introduced in the paper to minimize bias in LLM scoring, and is automatically handled by `deepeval` (unless you're using a custom LLM).
+Similar to the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the `ConversationalGEval` metric uses the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation. This step was introduced in the paper to minimize bias in LLM scoring, and is automatically handled by `deepeval` (unless you're using a custom LLM).
 :::

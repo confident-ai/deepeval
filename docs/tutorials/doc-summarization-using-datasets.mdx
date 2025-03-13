@@ -1,0 +1,59 @@
+---
+id: doc-summarization-using-datasets
+title: Pulling your Dataset for Evaluation
+sidebar_label: Pulling Dataset for Evaluation
+---
+
+To **start using your legal document dataset for evaluation**, you’ll need to:
+
+1. Pull your dataset from Confident AI.
+2. Compute the summaries.
+3. Begin running evaluations.
+
+## Pulling Your Dataset
+
+Pulling a dataset from Confident AI is as simple as calling the `pull` method from an `EvaluationDataset` and providing the dataset alias, or name that you defined on Confident AI.
+
+```python
+from deepeval import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="Legal Documents Dataset", auto_convert_goldens_to_test_cases=False)
+```
+
+:::note
+By default, `auto_convert_goldens_to_test_cases` is `True`, but it will raise an error if your dataset, `Legal Documents Dataset`, hasn't been populated with summaries in the `actual_output` field, which is a mandatory field in a test case. [Learn more about test cases here](/docs/evaluation-test-cases).
+:::
+
+## Converting Goldens to Test Cases
+
+Next, we'll convert the goldens in the dataset we pulled into `LLMTestCase`s and add them to our evaluation dataset. This is much simpler than parsing your PDF documents every single time you run an evaluation!
+
+```python
+from deepeval.test_case import LLMTestCase
+
+for golden in dataset.goldens:
+    actual_output = llm.summarize(golden.input)  # Replace with logic to compute actual output
+
+    dataset.add_test_case(
+        LLMTestCase(
+            input=golden.input,
+            actual_output=actual_output,
+        )
+    )
+```
+
+## Evaluating Your Dataset
+
+Finally, run the `evaluate` function to run evaluations on your newly pulled dataset.
+
+```python
+from deepeval import evaluate
+
+...
+evaluate(
+  dataset,
+  metrics = [concision metric, completeness_metric], # add more metrics as you deem fit
+  hyperparameters={"model": model, "prompt template": prompt_template}
+)
+```

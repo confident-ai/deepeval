@@ -13,6 +13,7 @@ from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
 from deepeval.test_case.utils import check_valid_test_cases_type
 from deepeval.test_run.hyperparameters import process_hyperparameters
+from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.utils import (
     get_or_create_event_loop,
     should_ignore_errors,
@@ -157,15 +158,16 @@ def create_api_test_case(
         if test_case.name:
             name = test_case.name
         else:
-            name = os.getenv(
-                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{index}"
+            order = (
+                test_case._dataset_rank
+                if test_case._dataset_rank is not None
+                else index
             )
 
-        order = (
-            test_case._dataset_rank
-            if test_case._dataset_rank is not None
-            else index
-        )
+            name = os.getenv(
+                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{order}"
+            )
+
         api_test_case = ConversationalApiTestCase(
             name=name,
             success=True,
@@ -174,6 +176,7 @@ def create_api_test_case(
             evaluationCost=None,
             order=order,
             testCases=[],
+            additionalMetadata=test_case.additional_metadata,
         )
         api_test_case.instance_id = id(api_test_case)
         api_test_case.turns = [
@@ -200,12 +203,17 @@ def create_api_test_case(
             test_case.comments = comments
             metrics_data = None
         else:
+            order = (
+                test_case._dataset_rank
+                if test_case._dataset_rank is not None
+                else index
+            )
+
             success = True
             if test_case.name is not None:
                 name = test_case.name
             else:
-                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{index}")
-            order = test_case._dataset_rank
+                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
             metrics_data = []
 
         if isinstance(test_case, LLMTestCase):
@@ -232,6 +240,8 @@ def create_api_test_case(
                 name=name,
                 multimodalInput=test_case.input,
                 multimodalActualOutput=test_case.actual_output,
+                toolsCalled=test_case.tools_called,
+                expectedTools=test_case.expected_tools,
                 success=success,
                 metricsData=metrics_data,
                 runDuration=None,
@@ -1019,6 +1029,7 @@ def evaluate(
     identifier: Optional[str] = None,
     throttle_value: int = 0,
     max_concurrent: int = 100,
+    display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
 ) -> EvaluationResult:
     check_valid_test_cases_type(test_cases)
 
@@ -1077,7 +1088,7 @@ def evaluate(
     run_duration = end_time - start_time
     if print_results:
         for test_result in test_results:
-            print_test_result(test_result)
+            print_test_result(test_result, display)
 
         aggregate_metric_pass_rates(test_results)
 
@@ -1092,8 +1103,16 @@ def evaluate(
     )
 
 
-def print_test_result(test_result: TestResult):
+def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
     if test_result.metrics_data is None:
+        return
+
+    if (
+        display == TestRunResultDisplay.PASSING.value
+        and test_result.success is False
+    ):
+        return
+    elif display == TestRunResultDisplay.FAILING.value and test_result.success:
         return
 
     print("")

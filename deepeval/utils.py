@@ -54,10 +54,16 @@ def camel_to_snake(name: str) -> str:
 
 def convert_keys_to_snake_case(data: Any) -> Any:
     if isinstance(data, dict):
-        return {
-            camel_to_snake(k): convert_keys_to_snake_case(v)
-            for k, v in data.items()
-        }
+        new_dict = {}
+        for k, v in data.items():
+            new_key = camel_to_snake(k)
+            if k == "additionalMetadata":
+                new_dict[new_key] = (
+                    v  # Convert key but do not recurse into value
+                )
+            else:
+                new_dict[new_key] = convert_keys_to_snake_case(v)
+        return new_dict
     elif isinstance(data, list):
         return [convert_keys_to_snake_case(i) for i in data]
     else:
@@ -199,10 +205,17 @@ def set_should_use_cache(yes: bool):
 
 
 def login_with_confident_api_key(api_key: string):
+    if not isinstance(api_key, str):
+        raise ValueError("Oh no! Please provide an api key string to login.")
+    elif len(api_key) == 0:
+        raise ValueError("Unable to login, please provide a non-empty api key.")
+
     from rich import print
 
     KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
-    print("Congratulations! Login successful :raising_hands: ")
+    print(
+        "🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
+    )
 
 
 def set_is_running_deepeval(flag: bool):

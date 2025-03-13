@@ -1,8 +1,8 @@
 class RoleAdherenceTemplate:
     @staticmethod
-    def extract_out_of_character_response_indicies(turns, role):
+    def extract_out_of_character_response_verdicts(turns, role):
         return f"""Based on the given list of message exchanges between a user and an LLM chatbot, generate a JSON object to specify which `actual_outputs` did not adhere to the specified chatbot role. 
-The JSON will have 1 field: "indicies", which is a list of integers specifying the indices of the LLM actual_output/responses that did NOT adhere to the chatbot role.
+The JSON will have 1 field: "verdicts", which is a list of verdicts specifying the indices and reasons of the LLM actual_output/responses that did NOT adhere to the chatbot role.
 You MUST USE look at all messages provided in the list of messages to make an informed judgement on role adherence.
 
 **
@@ -36,12 +36,15 @@ Example Messages:
 
 Example JSON:
 {{
-    "indicies": [4]
+    "verdicts": {{
+        "index": 4,
+        "reason": "The LLM chatbot claims that 'I'm the greatest wizard ever' even though it was explicitly asked to adhere to the role of a humble and doubtful wizard."
+    }}
 }}
 ===== END OF EXAMPLE ======
 
 In this example, the 4th indexed was selected as it drastically deviates from the character's humble nature and shows extreme arrogance and overconfidence instead.
-You DON'T have to provide anything else other than the JSON of "indicies".
+You DON'T have to provide anything else other than the JSON of "verdicts".
 **
 
 Chatbot Role:
@@ -55,7 +58,7 @@ JSON:
 
     @staticmethod
     def generate_reason(score, role, out_of_character_responses):
-        return f"""Below is a list of LLM chatboat responses that is out of character with respect to the specified chatbot role. It is drawn from a list of messages in a conversation, which you have minimal knowledge of.
+        return f"""Below is a list of LLM chatbot responses (actual_outputs) that is out of character with respect to the specified chatbot role. It is drawn from a list of messages in a conversation, which you have minimal knowledge of.
 Given the role adherence score, which is a 0-1 score indicating how well the chatbot responses has adhered to the given role through a conversation, with 1 being the best and 0 being worst, provide a reason by quoting the out of character responses to justify the score. 
 
 ** 

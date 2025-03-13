@@ -29,10 +29,9 @@ class Guardrails:
             # Prepare parameters for API request
             api_guards = []
             for guard in self.guards:
-                print(guard.__name__, "@")
                 api_guard = ApiGuard(
                     guard=guard.__name__,
-                    guard_type=guard.guard_type,
+                    guard_type=GuardType.INPUT,
                     input=input,
                     vulnerability_types=getattr(guard, "vulnerabilities", None),
                     purpose=getattr(guard, "purpose", None),
@@ -76,7 +75,7 @@ class Guardrails:
             for guard in self.guards:
                 api_guard = ApiGuard(
                     guard=guard.__name__,
-                    guard_type=guard.guard_type,
+                    guard_type=GuardType.OUTPUT,
                     input=input,
                     response=response,
                     vulnerability_types=getattr(guard, "vulnerabilities", None),
@@ -98,7 +97,6 @@ class Guardrails:
                     endpoint=Endpoints.GUARDRAILS_ENDPOINT,
                     body=body,
                 )
-                print(response)
                 return GuardsResponseData(**response).result
             else:
                 raise Exception(

@@ -1,5 +1,4 @@
 import asyncio
-from pydantic import Field
 from tqdm import tqdm
 from typing import Dict, List, Optional, Union
 
@@ -102,7 +101,8 @@ class RedTeamer:
             AttackEnhancement.MATH_PROBLEM: 1 / 11,
             AttackEnhancement.MULTILINGUAL: 1 / 11,
         },
-        max_concurrent_tasks: int = 10,
+        max_concurrent: int = 10,
+        ignore_errors: bool = False,
     ):
         try:
             import pandas as pd
@@ -121,7 +121,8 @@ class RedTeamer:
                     attacks_per_vulnerability_type,
                     vulnerabilities,
                     attack_enhancements,
-                    max_concurrent_tasks,
+                    max_concurrent,
+                    ignore_errors=ignore_errors,
                 )
             )
         else:
@@ -143,6 +144,7 @@ class RedTeamer:
                         attacks_per_vulnerability_type=attacks_per_vulnerability_type,
                         vulnerabilities=vulnerabilities,
                         attack_enhancements=attack_enhancements,
+                        ignore_errors=ignore_errors,
                     )
                 )
 
@@ -195,6 +197,7 @@ class RedTeamer:
                             "Error": None,
                         }
 
+                        # this will only go through if ignore_errors == True
                         if attack.error:
                             result["Error"] = attack.error
                             red_teaming_results_breakdown.append(result)
@@ -204,11 +207,14 @@ class RedTeamer:
                             target_output = target_model_callback(attack.input)
                             result["Target Output"] = target_output
                         except Exception:
-                            result["Error"] = (
-                                "Error generating output from target LLM"
-                            )
-                            red_teaming_results_breakdown.append(result)
-                            continue
+                            if ignore_errors:
+                                result["Error"] = (
+                                    "Error generating output from target LLM"
+                                )
+                                red_teaming_results_breakdown.append(result)
+                                continue
+                            else:
+                                raise
 
                         test_case = LLMTestCase(
                             input=attack.input,
@@ -221,11 +227,14 @@ class RedTeamer:
                             result["Reason"] = metric.reason
                             scores.append(metric.score)
                         except Exception:
-                            result["Error"] = (
-                                f"Error evaluating target LLM output for the '{vulnerability_type.value}' vulnerability"
-                            )
-                            red_teaming_results_breakdown.append(result)
-                            continue
+                            if ignore_errors:
+                                result["Error"] = (
+                                    f"Error evaluating target LLM output for the '{vulnerability_type.value}' vulnerability"
+                                )
+                                red_teaming_results_breakdown.append(result)
+                                continue
+                            else:
+                                raise
 
                         red_teaming_results_breakdown.append(result)
 
@@ -267,7 +276,8 @@ class RedTeamer:
             AttackEnhancement.MATH_PROBLEM: 1 / 11,
             AttackEnhancement.MULTILINGUAL: 1 / 11,
         },
-        max_concurrent_tasks: int = 10,  # Throttling limit, control concurrency
+        max_concurrent: int = 10,  # Throttling limit, control concurrency
+        ignore_errors: bool = False,
     ):
         try:
             import pandas as pd
@@ -290,7 +300,8 @@ class RedTeamer:
                     attacks_per_vulnerability_type=attacks_per_vulnerability_type,
                     vulnerabilities=vulnerabilities,
                     attack_enhancements=attack_enhancements,
-                    max_concurrent_tasks=max_concurrent_tasks,
+                    ignore_errors=ignore_errors,
+                    max_concurrent=max_concurrent,
                 )
             )
 
@@ -315,7 +326,7 @@ class RedTeamer:
             red_teaming_results_breakdown = []
 
             # Create a semaphore for throttling concurrent tasks
-            semaphore = asyncio.Semaphore(max_concurrent_tasks)
+            semaphore = asyncio.Semaphore(max_concurrent)
 
             # Total number of attacks across all vulnerabilities
             total_attacks = sum(
@@ -336,13 +347,14 @@ class RedTeamer:
             ):
                 async with (
                     semaphore
-                ):  # Ensures only `max_concurrent_tasks` run concurrently
+                ):  # Ensures only `max_concurrent` run concurrently
                     vulnerability_results = (
                         await self._a_evaluate_vulnerability_type(
                             target_model_callback,
                             vulnerability_type,
                             attacks,
                             metrics_map,
+                            ignore_errors=ignore_errors,
                         )
                     )
                     pbar.update(
@@ -425,6 +437,7 @@ class RedTeamer:
         vulnerability: str,
         vulnerability_type: VulnerabilityType,
         metrics_map,
+        ignore_errors: bool,
     ) -> VulnerabilityResult:
         result = VulnerabilityResult(
             input=attack.input,
@@ -442,9 +455,12 @@ class RedTeamer:
             # Generate actual output using the 'input'
             actual_output = await target_model_callback(attack.input)
             result.actual_output = actual_output
-        except Exception as e:
-            result.error = "Error generating output from target LLM"
-            return result
+        except Exception:
+            if ignore_errors:
+                result.error = "Error generating output from target LLM"
+                return result
+            else:
+                raise
 
         test_case = LLMTestCase(
             input=attack.input,
@@ -456,8 +472,11 @@ class RedTeamer:
             result.score = metric.score
             result.reason = metric.reason
         except:
-            result.error = f"Error evaluating target LLM output for the '{vulnerability_type.value}' vulnerability type"
-            return result
+            if ignore_errors:
+                result.error = f"Error evaluating target LLM output for the '{vulnerability_type.value}' vulnerability type"
+                return result
+            else:
+                raise
 
         return result
 
@@ -467,6 +486,7 @@ class RedTeamer:
         vulnerability_type: VulnerabilityType,
         attacks: List[Attack],
         metrics_map,
+        ignore_errors: bool,
     ) -> List[VulnerabilityResult]:
         results = await asyncio.gather(
             *[
@@ -476,6 +496,7 @@ class RedTeamer:
                     vulnerability=attack.vulnerability,
                     vulnerability_type=vulnerability_type,
                     metrics_map=metrics_map,
+                    ignore_errors=ignore_errors,
                 )
                 for attack in attacks
             ]

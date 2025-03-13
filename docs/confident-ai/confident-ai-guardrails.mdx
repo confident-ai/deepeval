@@ -6,15 +6,13 @@ sidebar_label: Introduction
 
 Confident AI enables you to safeguard your LLM applications against malicious inputs and outputs with just one line of code. Our comprehensive suite of guardrails acts as binary metrics to evaluate user inputs and/or LLM responses for malicious intent and unsafe behavior.
 
-Confident AI's guardrails is different because it is blazing fast and incredibly accurate.
-
-:::tip
+:::info
 Confident AI offers **10+ guards** designed to detect 20+ LLM vulnerabilities.
 :::
 
 ## Types of Guardrails
 
-There are two types of guardrails: **input guards**, which protect against malicious inputs before they reach your LLM, and **output guards**, which evaluate the LLM's responses before they reach your users.
+There are two types of guardrails: **input guardrails**, which protect against malicious inputs before they reach your LLM, and **output guardrails**, which evaluate the LLM's responses before they reach your users.
 
 <div
   style={{
@@ -37,17 +35,9 @@ There are two types of guardrails: **input guards**, which protect against malic
 
 The number of guards you choose to set up and whether you decide to utilize both types of guards depends on your priorities regarding **latency, cost, and LLM safety**.
 
-:::note
-While most guards are strictly for input or output guarding, some guards such as cybersecurity offer **both input and output guarding capabilities**. For these guards, you can specify the `guard_type` during initialization.
+:::tip
 
-```python
-from deepeval.guardrails import CybersecurityGuard, GuardType
-
-guard = CybersecurityGuard(
-    guard_type=GuardType.INPUT # or GuardType.OUTPUT
-    ...
-)
-```
+While most guards are only either for input or output guarding, some guards such as the [cybersecurity guard](/confident-ai/confident-ai-guardrails-cybersecurity) offer both input and output guarding capabilities.
 
 :::
 
@@ -77,9 +67,17 @@ Confident AI offers a robust selection of input and output guards for comprehens
 | `ToxicityGuard`       | Detects harmful, offensive, or toxic outputs to maintain respectful and safe interactions.                                       |
 | `CybersecurityGuard`  | Detects outputs that may have been breached or manipulated as a result of a cyberattack.                                         |
 
-## Guarding your LLM Application
+### Custom Guards
 
-### Creating Your Guardrail
+Most guards on Confident AI are custom guards. This is because guardrails have strict accuracy and speed requirements and so would require tailored computations of such guards for most use cases.
+
+:::note
+
+Getting your custom guard created typically takes less than a week, and you should reach out to your contacy at Confident AI or email support@confident-ai.com to get started.
+
+:::
+
+## Guarding your LLM Application
 
 To begin guarding your LLM application, simply import and initialize the guards you desire from `deepeval.guardrails` and pass them to an instantiated `Guardrails` object. Then, call the `guard_output` method with the user input and LLM response.
 
@@ -96,7 +94,7 @@ guardrails = Guardrails(
 )
 ```
 
-### Guarding Inputs
+### Guard Your First Input
 
 It is not uncommon to want to guard against malicious user inputs, as it is the best way to not waste tokens generating text that you shouldn't even be generating in the first place. To guard against inputs, simply call the `guard_input()` method and supply the `input`.
 
@@ -111,7 +109,7 @@ guard_result = guardrails.guard_input(input=input)
 print(guard_result.breached)
 ```
 
-### Guarding Outputs
+### Guard Your First Output
 
 To ensure that an unsatisfactory output never reaches an end user, you'll want to guard against generated outputs and re-generate them until satisfactory.
 
@@ -146,6 +144,9 @@ guard_result = await guardrails.a_guard_output(input, output)
 The `Guardrails.guard` method returns a `GuardResult` object, which can be used to retry LLM response generations when necessary.
 
 ```python
+from typing import List
+from pydantic import BaseModel
+
 class GuardResult(BaseModel):
   breached: bool
   guard_data: List[GuardData]

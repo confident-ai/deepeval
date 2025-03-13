@@ -85,25 +85,43 @@ turns = [
 You can use the `KnowledgeRetentionMetric` as follows:
 
 ```python
-from deepeval.metrics import KnowledgeRetentionMetric
+from deepeval import evaluate
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics import KnowledgeRetentionMetric
 ...
 
-test_case = ConversationalTestCase(turns=turns)
+convo_test_case = ConversationalTestCase(turns=turns)
 metric = KnowledgeRetentionMetric(threshold=0.5)
 
-metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There are five optional parameters when creating a `KnowledgeRetentionMetric`:
+There are **FIVE** optional parameters when creating a `KnowledgeRetentionMetric`:
 
 - [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### As a standalone
+
+You can also run the `KnowledgeRetentionMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
 
 ## How Is It Calculated?
 

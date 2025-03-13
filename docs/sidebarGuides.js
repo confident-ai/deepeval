@@ -1,16 +1,36 @@
 module.exports = {
-    guides: [
+  guides: [
+    {
+      type: "category",
+      label: "Retrieval Augmented Generation",
+      items: [
         "guides-rag-evaluation",
-        "guides-using-custom-llms",
+        "guides-rag-triad",
         "guides-using-synthesizer",
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
+      label: "Customizations",
+      items: [
+        "guides-using-custom-llms",
+        "guides-using-custom-embedding-models",
+        "guides-building-custom-metrics",
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
+      label: "Others",
+      items: [
         "guides-optimizing-hyperparameters",
         "guides-regression-testing-in-cicd",
-        "guides-building-custom-metrics",
         "guides-llm-observability",
         "guides-red-teaming",
         "guides-answer-correctness-metric",
-        "guides-rag-triad",
-        "guides-using-custom-embedding-models",
-    ],
-  };
-  
+      ],
+      collapsed: false,
+    },
+  ],
+};

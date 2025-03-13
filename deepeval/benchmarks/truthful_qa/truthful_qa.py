@@ -11,7 +11,6 @@ from deepeval.benchmarks.truthful_qa.task import TruthfulQATask
 from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
 from deepeval.benchmarks.truthful_qa.template import TruthfulQATemplate
 from deepeval.benchmarks.utils import should_use_batch
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import NumberSchema, ListOfNumbersSchema
 from deepeval.telemetry import capture_benchmark_run
 
@@ -33,6 +32,8 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         ] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
+
         super().__init__(**kwargs)
         self.tasks: List[TruthfulQATask] = (
             list(TruthfulQATask) if tasks is None else tasks

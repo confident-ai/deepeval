@@ -1,5 +1,4 @@
-"""Tests for various benchmark functions.
-"""
+"""Tests for various benchmark functions."""
 
 # import pytest
 # from deepeval.benchmarks import GSM8K

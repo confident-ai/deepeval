@@ -1,10 +1,17 @@
 from abc import abstractmethod
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
+from deepeval.test_case import (
+    LLMTestCase,
+    ConversationalTestCase,
+    MLLMTestCase,
+    LLMTestCaseParams,
+)
+from deepeval.models import DeepEvalBaseLLM
 
 
 class BaseMetric:
+    __required_params = List[LLMTestCaseParams]
     threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None
@@ -19,6 +26,8 @@ class BaseMetric:
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
     skipped = False
+    model = Optional[DeepEvalBaseLLM]
+    using_native_model = Optional[bool]
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:

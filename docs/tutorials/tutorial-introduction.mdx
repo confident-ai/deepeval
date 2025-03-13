@@ -6,6 +6,15 @@ sidebar_label: Tutorial Introduction
 
 **DeepEval** is the open-source LLM evaluation framework and in this complete end-to-end tutorial, we'll show you exactly how you can use DeepEval to improve your LLM application one step at a time. This tutorial will walk you through how to evaluate and test your LLM application all the way from the initial development stages to post-production.
 
+:::info
+Before we begin, run the following code to set up your Confident AI account and **retrieve your API key**.
+
+```
+deepeval login
+```
+
+:::
+
 For **LLM evaluation in development**, we'll cover:
 
 - How to choose your LLM evaluation metrics and use them in `deepeval`
@@ -23,7 +32,7 @@ Once your LLM is ready for deployment, for **LLM evaluation in production**, we'
 Just because your LLM application is in production doesn't mean you don't need LLM evaluation during development, and the same is true the other way around.
 :::
 
-## Quick Terminologies
+## Terminologies
 
 Before diving into the tutorial, let's go over the terminology used commonly used in LLM evaluation:
 
@@ -32,13 +41,15 @@ Before diving into the tutorial, let's go over the terminology used commonly use
 - **Generation model**: this refers to the model used to generate LLM responses based on some input, and also the LLM to be evaluated. We'll be referring to this as simply model throughout this tutorial.
 - **Evaluation model**: this referes to the LLM used for evaluation, **NOT** the LLM to be evaluated.
 
-## What Will We Be Evaluating?
+## Which Use Cases Will Be Evaluated?
 
-We'll be evaluating an LLM medical chatbot in this tutorial for demonstration purposes, and as you'll see in later sections, we'll start by building one ourselves before showing how you can improve your system prompts and models through evaluation results to iterate on your systemm prompt and model.
+We'll be going through a few use cases in this tutorial including:
 
-:::note
-Your use case is most likely not a medical chatbot, or even chatbot related, but that's OK. The concept is the same for all use cases - you pick a criteria, you use the metrics `deepeval` offers based on your criteria, and you iterate based on the results of these evaluations.
-:::
+- Legal document summarization
+- Medical chatbot
+- RAG QA Agent
+
+Your use case might not be either one, and your evaluation criteria for each could be different, but that's OK. The concept is the same for all use cases - you pick a criteria, you use the metrics `deepeval` offers based on your criteria, and you iterate based on the results of these evaluations.
 
 ## Who Is This Tutorial For?
 

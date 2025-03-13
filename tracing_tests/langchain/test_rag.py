@@ -1,20 +1,22 @@
-import bs4
-from langchain import hub
-from langchain_chroma import Chroma
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import OpenAIEmbeddings
-from langchain_openai import ChatOpenAI
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_chroma import Chroma
+from langchain import hub
+import bs4
 
 import deepeval
+import asyncio
 
 deepeval.trace_langchain()
 
-llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
+#############################################################
+### Setup LLM ###############################################
+#############################################################
 
-# Load, chunk and index the contents of the blog.
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 loader = WebBaseLoader(
     web_paths=("https://lilianweng.github.io/posts/2023-06-23-agent/",),
     bs_kwargs=dict(
@@ -24,7 +26,6 @@ loader = WebBaseLoader(
     ),
 )
 docs = loader.load()
-
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000, chunk_overlap=200
 )
@@ -32,8 +33,6 @@ splits = text_splitter.split_documents(docs)
 vectorstore = Chroma.from_documents(
     documents=splits, embedding=OpenAIEmbeddings()
 )
-
-# Retrieve and generate using the relevant snippets of the blog.
 retriever = vectorstore.as_retriever()
 prompt = hub.pull("rlm/rag-prompt")
 
@@ -49,5 +48,34 @@ rag_chain = (
     | StrOutputParser()
 )
 
-input = "What is Task Decomposition?"
-output = rag_chain.invoke(input)
+
+async def chatbot(input: str) -> str:
+    output = await rag_chain.ainvoke(input)
+    return output
+
+
+#############################################################
+### test chatbot input ######################################
+#############################################################
+
+user_inputs = [
+    "What is Task Decomposition?",
+    "What is Chain of Thought",
+    "What are AI agents",
+    "What is planning",
+    "What is react framework (not the js library)",
+]
+
+
+async def query_and_print(query: str):
+    output = await chatbot(query)
+    print(f"Query: {query}\nResponse: {output}\n")
+
+
+async def main():
+    tasks = [query_and_print(query) for query in user_inputs]
+    await asyncio.gather(*tasks)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

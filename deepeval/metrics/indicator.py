@@ -37,7 +37,8 @@ def metric_progress_indicator(
     total: int = 9999,
     transient: bool = True,
 ):
-    with capture_metric_type(metric.__name__):
+    captured_async_mode = False if async_mode == None else async_mode
+    with capture_metric_type(metric.__name__, async_mode=captured_async_mode):
         console = Console(file=sys.stderr)  # Direct output to standard error
         if _show_indicator:
             with Progress(

@@ -1,12 +1,15 @@
 from langchain_core.tracers.base import BaseTracer
-from langchain_core.tracers.schemas import Run
 from langchain_core.messages import BaseMessage
+from langchain_core.tracers.schemas import Run
+from deepeval.monitor import monitor
+from contextvars import ContextVar
 from time import perf_counter
 from itertools import chain
+from copy import deepcopy
 from enum import Enum
+import logging
 import json
 import math
-from copy import deepcopy
 from typing import (
     Any,
     Dict,
@@ -36,95 +39,128 @@ from deepeval.tracing import (
     TraceStatus,
     TraceProvider,
     LangChainTraceType,
+    BaseTrace,
     TraceData,
 )
-from deepeval.monitor import monitor
+import threading
+from langsmith import utils as ls_utils
+import warnings
+
+warnings.filterwarnings(
+    "ignore", category=ls_utils.LangSmithMissingAPIKeyWarning
+)
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class LangChainCallbackHandler(BaseTracer):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, auto_eval=False, *args, **kwargs) -> None:
+        self.auto_eval = auto_eval
+        self.event_map: Dict[str, BaseTrace] = {}
+        self.track_params: Dict[str, Dict] = {}
+        self.event_map_lock = threading.Lock()
         super().__init__(*args, **kwargs)
-        self.event_map: Dict[str, TraceData] = {}
-        self.track_params = {}
 
     def _start_trace(self, run: Run) -> None:
-        # set outtermost provider
-        if not trace_manager.get_outter_provider():
-            trace_manager.set_outter_provider(TraceProvider.LANGCHAIN)
+        # Create trace instance
+        parent_id = run.parent_run_id
+        parent_id_string = str(run.parent_run_id) if parent_id else None
+        run_id_string = str(run.id)
+        if not parent_id:
+            self.track_params[run_id_string] = {}
         self.run_map[str(run.id)] = run
-        event_type = self.convert_event_type_to_deepeval_trace_type(
-            run.run_type
-        )
-        trace_instance = self.create_trace_instance(
-            event_type=event_type, name=run.name
-        )
-        self.event_map[str(run.id)] = trace_instance
-        trace_manager.append_to_trace_stack(trace_instance)
+        with self.event_map_lock:
+            root_parent_id = (
+                self.event_map[parent_id_string].rootParentId
+                if parent_id
+                else run_id_string
+            )
+            event_type = self.convert_event_type_to_deepeval_trace_type(
+                run.run_type
+            )
+            trace_instance = self.create_trace_instance(
+                event_type=event_type,
+                name=run.name,
+                parent_id=parent_id_string,
+                root_parent_id=root_parent_id,
+            )
+            # Update event_map with trace instance
+            self.event_map[run_id_string] = trace_instance
 
     def _end_trace(self, run: Run) -> None:
-        trace_instance = self.event_map[str(run.id)]
-        event_type = trace_instance.type
-        processed_payload = dict(
-            self._flatten(
-                chain(
-                    self._as_input(self._convert_io(run.inputs)),
-                    self._as_output(self._convert_io(run.outputs)),
-                    self._prompts(run.inputs),
-                    self._input_messages(run.inputs),
-                    self._output_messages(run.outputs),
-                    self._prompt_template(run),
-                    self._invocation_parameters(run),
-                    self._model_name(run.extra),
-                    self._token_counts(run.outputs),
-                    self._function_calls(run.outputs),
-                    self._tools(run),
-                    self._retrieval_documents(run),
-                    self._metadata(run),
+        with self.event_map_lock:
+            # Update trace instance created in _start_trace
+            trace_instance = self.event_map[str(run.id)]
+            event_type = trace_instance.type
+            processed_payload = dict(
+                self._flatten(
+                    chain(
+                        self._as_input(self._convert_io(run.inputs)),
+                        self._as_output(self._convert_io(run.outputs)),
+                        self._prompts(run.inputs),
+                        self._input_messages(run.inputs),
+                        self._output_messages(run.outputs),
+                        self._prompt_template(run),
+                        self._invocation_parameters(run),
+                        self._model_name(run.extra),
+                        self._token_counts(run.outputs),
+                        self._function_calls(run.outputs),
+                        self._tools(run),
+                        self._retrieval_documents(run),
+                        self._metadata(run),
+                    )
                 )
             )
-        )
-        trace_instance = self.update_trace_instance(
-            trace_instance, event_type, processed_payload, run
-        )
-        trace_instance.inputPayload = class_to_dict(run.inputs)
-        trace_instance.outputPayload = class_to_dict(run.outputs)
-        current_trace_stack = trace_manager.get_trace_stack_copy()
+            trace_instance: BaseTrace = self.update_trace_instance(
+                trace_instance, event_type, processed_payload, run
+            )
+            trace_instance.inputPayload = class_to_dict(run.inputs)
+            trace_instance.outputPayload = class_to_dict(run.outputs)
+            # Update event map if not root trace
+            if trace_instance.parentId is not None:
+                parent_trace = self.event_map.get(trace_instance.parentId)
+                parent_trace.traces.append(trace_instance)
+            # # Monitor (send to Observatory) if root trace
+            else:
+                current_trace_stack = trace_manager.get_trace_stack_copy()
+                if len(current_trace_stack) == 0:
+                    track_params = self.track_params.get(run.id, {})
+                    dict_representation = dataclass_to_dict(trace_instance)
+                    if trace_instance.type == LangChainTraceType.CHAIN:
+                        track_params["input"] = (
+                            trace_instance.chainAttributes.input
+                        )
+                        track_params["response"] = (
+                            trace_instance.chainAttributes.output
+                        )
+                    monitor(
+                        event_name=trace_instance.name,
+                        model=track_params.get("model") or "NA",
+                        input=track_params.get("input") or "NA",
+                        response=track_params.get("response") or "NA",
+                        retrieval_context=track_params.get("retrieval_context"),
+                        completion_time=trace_instance.executionTime,
+                        token_usage=track_params.get("token_usage"),
+                        trace_stack=dict_representation,
+                    )
+                else:
+                    parent_trace = current_trace_stack[-1]
+                    parent_trace.traces.append(trace_instance)
+                    trace_manager.set_trace_stack(current_trace_stack)
 
-        if len(current_trace_stack) > 1:
-            parent_trace = current_trace_stack[-2]
-            parent_trace.traces.append(trace_instance)
-            trace_manager.set_trace_stack(current_trace_stack)
-        if len(current_trace_stack) == 1:
-            dict_representation = dataclass_to_dict(current_trace_stack[0])
-            trace_manager.set_dict_trace_stack(dict_representation)
-            trace_manager.clear_trace_stack()
+            # Delete trace_instance from the event_map once processed
+            del self.event_map[str(run.id)]
 
-            if current_trace_stack[0].type == LangChainTraceType.CHAIN:
-                self.track_params["input"] = current_trace_stack[
-                    0
-                ].chainAttributes.input
-                self.track_params["response"] = current_trace_stack[
-                    0
-                ].chainAttributes.output
-
-            if trace_manager.get_outter_provider() == TraceProvider.LANGCHAIN:
-                monitor(
-                    event_name=current_trace_stack[0].name,
-                    model=self.track_params.get("model") or "NA",
-                    input=self.track_params.get("input") or "NA",
-                    response=self.track_params.get("response") or "NA",
-                    retrieval_context=self.track_params.get(
-                        "retrieval_context"
-                    ),
-                    completion_time=current_trace_stack[0].executionTime,
-                    token_usage=self.track_params.get("token_usage"),
-                    trace_stack=dict_representation,
-                )
-        else:
-            trace_manager.pop_trace_stack()
+    ############################################
+    ### Creating Trace Instances ###############
+    ############################################
 
     def create_trace_instance(
-        self, event_type: LangChainTraceType | str, name: str
+        self,
+        event_type: LangChainTraceType | str,
+        name: str,
+        parent_id: Optional[str],
+        root_parent_id: str,
     ) -> TraceData:
         trace_kwargs = {
             "traceProvider": TraceProvider.LANGCHAIN,
@@ -135,6 +171,8 @@ class LangChainCallbackHandler(BaseTracer):
             "traces": [],
             "inputPayload": None,
             "outputPayload": None,
+            "parentId": parent_id,
+            "rootParentId": root_parent_id,
         }
         if event_type == LangChainTraceType.CHAIN:
             trace_kwargs["chainAttributes"] = None
@@ -159,7 +197,6 @@ class LangChainCallbackHandler(BaseTracer):
         processed_payload: Optional[Dict[str, Any]],
         run: Run,
     ) -> TraceData:
-
         trace_instance.executionTime = (
             perf_counter() - trace_instance.executionTime
         )
@@ -203,10 +240,12 @@ class LangChainCallbackHandler(BaseTracer):
                 prompt_template_variables=None,
             )
             trace_instance.llmAttributes = attributes
-            self.track_params["model"] = processed_payload.get("llm_model_name")
-            self.track_params["token_usage"] = processed_payload.get(
+            track_params = self.track_params[trace_instance.rootParentId]
+            track_params["model"] = processed_payload.get("llm_model_name")
+            track_params["token_usage"] = processed_payload.get(
                 "llm_token_count_total"
             )
+
         elif event_type == LangChainTraceType.RETRIEVER:
             retrieval_documents: List[RetrievalNode] = []
             total_content_length = 0
@@ -237,7 +276,8 @@ class LangChainCallbackHandler(BaseTracer):
                 top_k=len("retrieval_documents"),
             )
             trace_instance.retrieverAttributes = attributes
-            self.track_params["retrieval_context"] = [
+            track_params = self.track_params[trace_instance.rootParentId]
+            track_params["retrieval_context"] = [
                 doc.content for doc in retrieval_documents
             ]
         elif event_type == LangChainTraceType.TOOL:
@@ -263,6 +303,10 @@ class LangChainCallbackHandler(BaseTracer):
             )
             trace_instance.genericAttributes = attributes
         return trace_instance
+
+    ############################################
+    ### Helper Functions #######################
+    ############################################
 
     def convert_event_type_to_deepeval_trace_type(self, event_type: str):
         # TODO: add more types

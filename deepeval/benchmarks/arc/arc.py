@@ -8,7 +8,6 @@ from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.arc.mode import ARCMode
 from deepeval.benchmarks.arc.template import ARCTemplate
-from deepeval.scorer import Scorer
 from deepeval.benchmarks.schema import MultipleChoiceSchema
 from deepeval.telemetry import capture_benchmark_run
 
@@ -23,6 +22,8 @@ class ARC(DeepEvalBaseBenchmark):
         confinement_instructions: Optional[str] = None,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
+
         assert n_shots <= 5, "ARC only supports n_shots <= 5"
         super().__init__(**kwargs)
         self.mode: ARCMode = mode

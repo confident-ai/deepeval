@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Type, Union
 import asyncio
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -21,14 +21,14 @@ from deepeval.metrics.contextual_relevancy.template import (
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.contextual_relevancy.schema import *
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.RETRIEVAL_CONTEXT,
-]
-
 
 class ContextualRelevancyMetric(BaseMetric):
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.RETRIEVAL_CONTEXT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -37,6 +37,9 @@ class ContextualRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[
+            ContextualRelevancyTemplate
+        ] = ContextualRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -45,6 +48,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -52,8 +56,8 @@ class ContextualRelevancyMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -86,8 +90,8 @@ class ContextualRelevancyMetric(BaseMetric):
         _show_indicator: bool = True,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[0]
-        check_llm_test_case_params(test_case, required_params, self)
+            test_case = test_case.turns[-1]
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -120,18 +124,18 @@ class ContextualRelevancyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        irrelevancies = []
+        irrelevant_statements = []
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
                 if verdict.verdict.lower() == "no":
-                    irrelevancies.append(verdict.reason)
+                    irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = ContextualRelevancyTemplate.generate_reason(
+        prompt: dict = self.evaluation_template.generate_reason(
             input=input,
-            irrelevancies=irrelevancies,
+            irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
         )
@@ -152,18 +156,18 @@ class ContextualRelevancyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        irrelevancies = []
+        irrelevant_statements = []
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
                 if verdict.verdict.lower() == "no":
-                    irrelevancies.append(verdict.reason)
+                    irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
 
-        prompt: dict = ContextualRelevancyTemplate.generate_reason(
+        prompt: dict = self.evaluation_template.generate_reason(
             input=input,
-            irrelevancies=irrelevancies,
+            irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
         )
@@ -198,7 +202,7 @@ class ContextualRelevancyMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, context: List[str]
     ) -> ContextualRelevancyVerdicts:
-        prompt = ContextualRelevancyTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             input=input, context=context
         )
         if self.using_native_model:
@@ -221,7 +225,7 @@ class ContextualRelevancyMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, context: str
     ) -> ContextualRelevancyVerdicts:
-        prompt = ContextualRelevancyTemplate.generate_verdicts(
+        prompt = self.evaluation_template.generate_verdicts(
             input=input, context=context
         )
         if self.using_native_model:
