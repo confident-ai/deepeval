@@ -32,11 +32,23 @@ JSON:
 class TaskNodeTemplate:
     @staticmethod
     def generate_task_output(instructions: str, text: str):
-        return f"""{instructions}
+        return f"""Given the following instructions, generate an output.
+
+{instructions}
 
 {text}
 
-Output:
+===END OF INSTRUCTIONS===
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'output' key as the output from the instructions.
+Example JSON:
+{{
+    "output": "your output goes here"
+}}
+**
+
+JSON:
 """
 
 

@@ -61,7 +61,7 @@ extract_headings_node = TaskNode(
 from deepeval.metrics.dag.utils import copy_graph
 
 # create the DAG
-dag = DeepAcyclicGraph(root_nodes=[correct_headings_node])
+dag = DeepAcyclicGraph(root_nodes=[extract_headings_node])
 
 
 # copy_graph(dag)
