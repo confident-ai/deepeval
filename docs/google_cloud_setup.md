@@ -30,14 +30,14 @@ from deepeval.models import GeminiModel, MultimodalGeminiModel
 # For text-only evaluation
 model = GeminiModel(
     model_name="gemini-1.5-pro",
-    project_id="your-project-id",
+    project="your-project-id",
     location="us-central1"
 )
 
 # For multimodal evaluation
 model = MultimodalGeminiModel(
     model_name="gemini-1.5-pro",
-    project_id="your-project-id",
+    project="your-project-id",
     location="us-central1"
 )
 ```
@@ -55,23 +55,37 @@ Make sure you have:
 ## Available Models
 
 ### Text-Only Models
-- gemini-1.5-flash
-- gemini-1.5-flash-001
-- gemini-1.5-flash-002
+- gemini-2.0-pro-exp-02-05
+- gemini-2.0-flash
+- gemini-2.0-flash-001
+- gemini-2.0-flash-002
+- gemini-2.0-flash-lite
+- gemini-2.0-flash-lite-001
 - gemini-1.5-pro
 - gemini-1.5-pro-001
 - gemini-1.5-pro-002
+- gemini-1.5-flash
+- gemini-1.5-flash-001
+- gemini-1.5-flash-002
 - gemini-1.0-pro
 - gemini-1.0-pro-001
 - gemini-1.0-pro-002
+- gemini-1.0-pro-vision
+- gemini-1.0-pro-vision-001
 
 ### Multimodal Models
-- gemini-1.5-flash
-- gemini-1.5-flash-001
-- gemini-1.5-flash-002
+- gemini-2.0-pro-exp-02-05
+- gemini-2.0-flash
+- gemini-2.0-flash-001
+- gemini-2.0-flash-002
+- gemini-2.0-flash-lite
+- gemini-2.0-flash-lite-001
 - gemini-1.5-pro
 - gemini-1.5-pro-001
 - gemini-1.5-pro-002
+- gemini-1.5-flash
+- gemini-1.5-flash-001
+- gemini-1.5-flash-002
 - gemini-1.0-pro-vision
 - gemini-1.0-pro-vision-001
 
@@ -89,7 +103,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 # Initialize the model
 model = GeminiModel(
     model_name="gemini-1.5-pro",
-    project_id="your-project-id",
+    project="your-project-id",
     location="us-central1"
 )
 
