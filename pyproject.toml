@@ -49,8 +49,8 @@ opentelemetry-sdk = "^1.24.0"
 opentelemetry-exporter-otlp-proto-grpc = "^1.24.0" 
 grpcio = "1.67.1"
 instructor = "*"
+google-genai = "^1.5.0"
 twine="5.1.1"
-pydantic-openapi-schema = ">=1.5.1"
 
 [tool.black]
 line-length = 80

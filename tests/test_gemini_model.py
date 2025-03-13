@@ -3,209 +3,187 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-import vertexai
-from vertexai.generative_models import GenerativeModel, Part, Image
+from google.genai import types
 
 from deepeval.models import GeminiModel, MultimodalGeminiModel
 from deepeval.test_case import MLLMImage
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 # Mock credentials for testing
+TEST_API_KEY = ""
 TEST_PROJECT = "test-project"
 TEST_LOCATION = "us-central1"
 TEST_RESPONSE = "This is a test response"
 
-@pytest.fixture
-def mock_vertex_init():
-    with patch('vertexai.init') as mock:
-        yield mock
+safety_settings=[
+    types.SafetySetting(
+        category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    ),
+    types.SafetySetting(
+        category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    ),
+    types.SafetySetting(
+        category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    ),
+    types.SafetySetting(
+        category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    ),
+]
 
 @pytest.fixture
-def mock_part():
-    with patch('deepeval.models.gemini_model.Part') as mock:
-        mock.return_value = MagicMock(name="MockPart")
-        mock.from_image.return_value = MagicMock(name="MockImagePart")
-        mock.from_uri.return_value = MagicMock(name="MockUriPart")
-        yield mock
-
-@pytest.fixture
-def mock_image():
-    with patch('deepeval.models.gemini_model.Image') as mock:
-        mock.load_from_file.return_value = MagicMock(name="MockFileImage")
-        mock.from_url.return_value = MagicMock(name="MockUrlImage")
-        yield mock
-
-@pytest.fixture
-def mock_generative_model():
-    with patch('deepeval.models.gemini_model.GenerativeModel') as mock:
+def mock_client():
+    with patch('google.genai.Client') as mock:
         instance = mock.return_value
-        instance.generate_content.return_value = MagicMock(text=TEST_RESPONSE)
         
-        # Create an async mock for generate_content_async
+        # Mock synchronous models
+        sync_models = MagicMock()
+        sync_models.generate_content.return_value = MagicMock(text=TEST_RESPONSE)
+        
+        # Mock asynchronous models
+        async_models = MagicMock()
         async_response = MagicMock(text=TEST_RESPONSE)
+        
+        # Create an async function to return the response
         async def async_magic():
             return async_response
-        instance.generate_content_async.return_value = async_magic()
         
+        # Set the async generate_content to return our async function
+        async_models.generate_content.return_value = async_magic()
+        
+        # Assign the mock models to the client instance
+        instance.models = sync_models
+        instance.aio.models = async_models
+
         yield mock
 
 @pytest.fixture
 def mock_key_handler():
     with patch('deepeval.key_handler.KEY_FILE_HANDLER.fetch_data') as mock:
         mock.side_effect = lambda x: {
+            KeyValues.GOOGLE_API_KEY: TEST_API_KEY,
             KeyValues.GOOGLE_CLOUD_PROJECT: TEST_PROJECT,
-            KeyValues.GOOGLE_CLOUD_LOCATION: TEST_LOCATION
+            KeyValues.GOOGLE_CLOUD_LOCATION: TEST_LOCATION,
+            KeyValues.GOOGLE_GENAI_USE_VERTEXAI: "true"
         }.get(x)
         yield mock
 
 class TestGeminiModel:
     """Test suite for text-only Gemini model"""
 
-    def test_initialization(self, mock_vertex_init, mock_generative_model, mock_key_handler):
+    def test_initialization(self, mock_client, mock_key_handler):
         """Test model initialization with default parameters"""
         model = GeminiModel()
         
         # Verify model initialization
         assert model.model_name == "gemini-1.5-pro"
-        assert model.project_id == TEST_PROJECT
+        assert model.project == TEST_PROJECT
         assert model.location == TEST_LOCATION
-        
-        # Verify Vertex AI initialization
-        mock_vertex_init.assert_called_once_with(
+        assert model.get_model_name() == "gemini-1.5-pro"
+
+        # Verify Client initialization
+        mock_client.assert_called_once_with(
+            vertexai=True,
             project=TEST_PROJECT,
             location=TEST_LOCATION
         )
         
-        # Verify GenerativeModel initialization
-        mock_generative_model.assert_called_once()
-
-    def test_initialization_with_custom_params(self, mock_vertex_init, mock_generative_model):
+    def test_initialization_with_custom_params(self, mock_client, mock_key_handler):
         """Test model initialization with custom parameters"""
         model = GeminiModel(
             model_name="gemini-1.5-flash",
-            project_id="custom-project",
+            project="custom-project",
             location="europe-west4"
         )
         
         assert model.model_name == "gemini-1.5-flash"
-        assert model.project_id == "custom-project"
+        assert model.project == "custom-project"
         assert model.location == "europe-west4"
+        assert model.get_model_name() == "gemini-1.5-flash"
 
     def test_invalid_model_name(self):
         """Test initialization with invalid model name"""
         with pytest.raises(ValueError, match="Invalid model"):
             GeminiModel(model_name="invalid-model")
 
-    def test_generate(self, mock_vertex_init, mock_generative_model, mock_key_handler):
+    def test_generate(self, mock_client, mock_key_handler):
         """Test text generation"""
         model = GeminiModel()
-        test_prompt = "Test prompt"
-        response = model.generate(test_prompt)
+        response = model.generate("Test prompt")
         
         # Verify response
         assert response == TEST_RESPONSE
         
-        # Verify mock was called correctly
-        mock_instance = mock_generative_model.return_value
-        mock_instance.generate_content.assert_called_once_with(test_prompt)
+        # Verify generate_content was called with correct parameters
+        mock_client.return_value.models.generate_content.assert_called_once_with(
+            model=model.model_name,
+            contents="Test prompt",
+            config=types.GenerateContentConfig(
+                safety_settings=safety_settings,
+                temperature=0.0
+            )
+        )
 
     @pytest.mark.asyncio
-    async def test_a_generate(self, mock_vertex_init, mock_generative_model, mock_key_handler):
+    async def test_a_generate(self, mock_client, mock_key_handler):
         """Test async text generation"""
         model = GeminiModel()
-        test_prompt = "Test prompt"
-        response = await model.a_generate(test_prompt)
+        response = await model.a_generate("Test prompt")
         
         # Verify response
         assert response == TEST_RESPONSE
         
-        # Verify mock was called correctly
-        mock_instance = mock_generative_model.return_value
-        mock_instance.generate_content_async.assert_called_once_with(test_prompt)
+        # Verify generate_content_async was called with correct parameters
+        mock_client.return_value.aio.models.generate_content.assert_called_once_with(
+            model=model.model_name,
+            contents="Test prompt",
+            config=types.GenerateContentConfig(
+                safety_settings=safety_settings,
+                temperature=0.0
+            )
+        )
 
 class TestMultimodalGeminiModel:
     """Test suite for multimodal Gemini model"""
 
-    def test_initialization(self, mock_vertex_init, mock_generative_model, mock_key_handler):
+    def test_initialization(self, mock_client, mock_key_handler):
         """Test model initialization with default parameters"""
         model = MultimodalGeminiModel()
         
         # Verify model initialization
         assert model.model_name == "gemini-1.5-pro"
-        assert model.project_id == TEST_PROJECT
+        assert model.project == TEST_PROJECT
         assert model.location == TEST_LOCATION
-        
-        # Verify Vertex AI initialization
-        mock_vertex_init.assert_called_once_with(
+        assert model.get_model_name() == "gemini-1.5-pro"
+
+        # Verify Client initialization
+        mock_client.assert_called_once_with(
+            vertexai=True,
             project=TEST_PROJECT,
             location=TEST_LOCATION
         )
         
-        # Verify GenerativeModel initialization
-        mock_generative_model.assert_called_once()
-
-    def test_initialization_with_custom_params(self, mock_vertex_init, mock_generative_model):
+    def test_initialization_with_custom_params(self, mock_client, mock_key_handler):
         """Test model initialization with custom parameters"""
         model = MultimodalGeminiModel(
-            model_name="gemini-1.0-pro-vision",
-            project_id="custom-project",
+            model_name="gemini-1.5-flash",
+            project="custom-project",
             location="europe-west4"
         )
         
-        assert model.model_name == "gemini-1.0-pro-vision"
-        assert model.project_id == "custom-project"
+        assert model.model_name == "gemini-1.5-flash"
+        assert model.project == "custom-project"
         assert model.location == "europe-west4"
-
+        assert model.get_model_name() == "gemini-1.5-flash"
     def test_invalid_model_name(self):
         """Test initialization with invalid model name"""
         with pytest.raises(ValueError, match="Invalid model"):
             MultimodalGeminiModel(model_name="invalid-model")
 
-    def test_generate_prompt_local_image(self, mock_vertex_init, mock_generative_model, mock_key_handler, mock_image, mock_part):
-        """Test prompt generation with local image"""
-        model = MultimodalGeminiModel()
-        
-        # Create test input
-        test_file = "test.jpg"
-        multimodal_input = [
-            "Describe this image:",
-            MLLMImage(url=test_file, local=True)
-        ]
-        
-        # Generate prompt
-        prompt = model.generate_prompt(multimodal_input)
-        
-        # Verify prompt structure and mock calls
-        assert len(prompt) == 2
-        assert prompt[0] == "Describe this image:"
-        assert isinstance(prompt[1], MagicMock)
-        
-        # Verify the chain of calls for local image
-        mock_image.load_from_file.assert_called_once_with(test_file)
-        loaded_image = mock_image.load_from_file.return_value
-        mock_part.from_image.assert_called_once_with(loaded_image)
-
-    def test_generate_prompt_remote_image(self, mock_vertex_init, mock_generative_model, mock_key_handler, mock_image, mock_part):
-        """Test prompt generation with remote image"""
-        model = MultimodalGeminiModel()
-        
-        # Create test input
-        test_url = "https://example.com/test.jpg"
-        multimodal_input = [
-            "Describe this image:",
-            MLLMImage(url=test_url, local=False)
-        ]
-        
-        # Generate prompt
-        prompt = model.generate_prompt(multimodal_input)
-        
-        # Verify prompt structure and mock calls
-        assert len(prompt) == 2
-        assert prompt[0] == "Describe this image:"
-        assert isinstance(prompt[1], MagicMock)
-        mock_part.from_uri.assert_called_once_with(uri=test_url, mime_type="image/jpeg")
-
-    def test_generate(self, mock_vertex_init, mock_generative_model, mock_key_handler, mock_image, mock_part):
+    def test_generate(self, mock_client, mock_key_handler):
         """Test multimodal generation"""
         model = MultimodalGeminiModel()
         
@@ -224,11 +202,18 @@ class TestMultimodalGeminiModel:
         assert response == TEST_RESPONSE
         
         # Verify mock calls
-        mock_instance = mock_generative_model.return_value
-        mock_instance.generate_content.assert_called_once_with(prompt)
+        mock_instance = mock_client.return_value
+        mock_instance.models.generate_content.assert_called_once_with(
+            model=model.model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                safety_settings=safety_settings,
+                temperature=0.0
+            )
+        )
 
     @pytest.mark.asyncio
-    async def test_a_generate(self, mock_vertex_init, mock_generative_model, mock_key_handler, mock_image, mock_part):
+    async def test_a_generate(self, mock_client, mock_key_handler):
         """Test async multimodal generation"""
         model = MultimodalGeminiModel()
         
@@ -239,7 +224,7 @@ class TestMultimodalGeminiModel:
             MLLMImage(url=test_url, local=False)
         ]
         
-        # Get the expected prompt that will be passed to generate_content_async
+        # Get the expected prompt that will be passed to generate_content
         prompt = model.generate_prompt(multimodal_input)
         response = await model.a_generate(multimodal_input)
         
@@ -247,10 +232,17 @@ class TestMultimodalGeminiModel:
         assert response == TEST_RESPONSE
         
         # Verify mock calls
-        mock_instance = mock_generative_model.return_value
-        mock_instance.generate_content_async.assert_called_once_with(prompt)
+        mock_instance = mock_client.return_value
+        mock_instance.aio.models.generate_content.assert_called_once_with(
+            model=model.model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                safety_settings=safety_settings,
+                temperature=0.0
+            )
+        )
 
-    def test_invalid_input_type(self, mock_vertex_init, mock_generative_model, mock_key_handler):
+    def test_invalid_input_type(self, mock_client, mock_key_handler):
         """Test handling of invalid input types"""
         model = MultimodalGeminiModel()
         

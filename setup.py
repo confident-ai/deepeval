@@ -28,7 +28,6 @@ setup(
         "rich",
         "protobuf",
         "pydantic",  # loosen pydantic requirements as we support multiple
-        "pydantic-openapi-schema>=1.5.1",  # For OpenAPI schema conversion
         "sentry-sdk",
         "pytest-repeat",
         "pytest-xdist",
@@ -45,7 +44,8 @@ setup(
         "opentelemetry-exporter-otlp-proto-grpc>=1.24.0,<2.0.0",
         "grpcio>=1.67.1,<2.0.0",
         "nest-asyncio",
-        "google-cloud-aiplatform>=1.78.0",
+        "google-genai>=1.5.0",
+        "requests>=2.31.0",
     ],
     extras_require={
         "dev": ["black"],

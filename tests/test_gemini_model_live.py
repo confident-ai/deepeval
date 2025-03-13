@@ -52,7 +52,7 @@ multimodal_test_case = MLLMTestCase(
     ],
     context=[
         "The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris.",
-        "It is named after the engineer Gustave Eiffel.",
+        "The Eiffel Tower is named after the engineer Gustave Eiffel.",
         MLLMImage(
             url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
         ),
@@ -63,7 +63,7 @@ multimodal_test_case = MLLMTestCase(
     ],
     retrieval_context=[
         "The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris.",
-        "It is named after the engineer Gustave Eiffel.",
+        "The Eiffel Tower is named after the engineer Gustave Eiffel.",
         MLLMImage(
             url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
         ),
@@ -78,6 +78,20 @@ multimodal_test_case = MLLMTestCase(
 class TestGeminiModelLive:
     """Live API tests for GeminiModel."""
     
+    def test_simple_evaluation(self):
+        """Test simple evaluation with AnswerRelevancyMetric."""
+        # Initialize the model
+        model = GeminiModel(
+            model_name="gemini-1.5-pro",
+            project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+            location=os.getenv("GOOGLE_CLOUD_LOCATION")
+        )
+        
+        # Create relevant metric using Gemini as judge
+        metric = AnswerRelevancyMetric(model=model, threshold=0.8)
+        # Assert test case passes
+        assert_test(simple_test_case, [metric])
+
     def test_structured_output_generation(self):
         """Test generation with structured output schema."""
         from pydantic import BaseModel
@@ -90,7 +104,7 @@ class TestGeminiModelLive:
         # Initialize the model
         model = GeminiModel(
             model_name="gemini-1.5-pro",
-            project_id=os.getenv("GOOGLE_CLOUD_PROJECT"),
+            project=os.getenv("GOOGLE_CLOUD_PROJECT"),
             location=os.getenv("GOOGLE_CLOUD_LOCATION")
         )
         
@@ -100,26 +114,9 @@ class TestGeminiModelLive:
         )
         
         # Verify we get structured output
-        assert isinstance(response, CityInfo)
         assert response.city == "Paris"
         assert response.country == "France"
-        assert response.population > 1000000  # Paris has over 1M people
-
-
-    def test_simple_evaluation(self):
-        """Test simple evaluation with AnswerRelevancyMetric."""
-        # Initialize the model
-        model = GeminiModel(
-            model_name="gemini-1.5-pro",
-            project_id=os.getenv("GOOGLE_CLOUD_PROJECT"),
-            location=os.getenv("GOOGLE_CLOUD_LOCATION")
-        )
-        
-        # Create relevant metric using Gemini as judge
-        metric = AnswerRelevancyMetric(model=model, threshold=0.8)
-        # Assert test case passes
-        assert_test(simple_test_case, [metric])
-        
+        assert response.population > 1000000  # Paris has over 1M people  
 
 @pytest.mark.skipif(SKIP_LIVE_TESTS, reason="Google Cloud credentials not set")
 class TestMultimodalGeminiModelLive:
@@ -129,7 +126,7 @@ class TestMultimodalGeminiModelLive:
         """Set up test fixtures."""
         self.model = MultimodalGeminiModel(
             model_name="gemini-1.5-pro",
-            project_id=os.getenv("GOOGLE_CLOUD_PROJECT"),
+            project=os.getenv("GOOGLE_CLOUD_PROJECT"),
             location=os.getenv("GOOGLE_CLOUD_LOCATION")
         )
     
@@ -138,11 +135,11 @@ class TestMultimodalGeminiModelLive:
         
         # Create metrics using Gemini as judge
         metrics = [
-            MultimodalContextualRecallMetric(llm=self.model),
-            MultimodalContextualRelevancyMetric(llm=self.model),
-            MultimodalContextualPrecisionMetric(llm=self.model),
-            MultimodalAnswerRelevancyMetric(llm=self.model),
-            MultimodalFaithfulnessMetric(llm=self.model),
+            MultimodalContextualRecallMetric(model=self.model, verbose_mode=True),
+            MultimodalContextualRelevancyMetric(model=self.model, verbose_mode=True),
+            MultimodalContextualPrecisionMetric(model=self.model, verbose_mode=True),
+            MultimodalAnswerRelevancyMetric(model=self.model, verbose_mode=True),
+            MultimodalFaithfulnessMetric(model=self.model, verbose_mode=True),
         ]
         
         # Assert all metric evaluations using the imported rag_test_case

@@ -1,20 +1,26 @@
 from typing import Optional, List, Dict, Tuple, Union
+import json
 from pydantic import BaseModel
-import vertexai
-from vertexai.generative_models import GenerativeModel, GenerationConfig, Part, Image, HarmCategory, HarmBlockThreshold
-from pydantic_openapi_schema.v3.v3_1_0 import Schema
+from google import genai
+from google.genai import types
 
 from deepeval.models.base_model import DeepEvalBaseLLM, DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 valid_gemini_models = [
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-001",
-    "gemini-1.5-flash-002",
+    "gemini-2.0-pro-exp-02-05",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-001",
+    "gemini-2.0-flash-002",
+    "gemini-2.0-flash-lite",
+    "gemini-2.0-flash-lite-001",
     "gemini-1.5-pro",
     "gemini-1.5-pro-001",
     "gemini-1.5-pro-002",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-001",
+    "gemini-1.5-flash-002",
     "gemini-1.0-pro",
     "gemini-1.0-pro-001",
     "gemini-1.0-pro-002",
@@ -23,12 +29,18 @@ valid_gemini_models = [
 ]
 
 valid_multimodal_gemini_models = [
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-001",
-    "gemini-1.5-flash-002",
+    "gemini-2.0-pro-exp-02-05",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-001",
+    "gemini-2.0-flash-002",
+    "gemini-2.0-flash-lite",
+    "gemini-2.0-flash-lite-001",
     "gemini-1.5-pro",
     "gemini-1.5-pro-001",
     "gemini-1.5-pro-002",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-001",
+    "gemini-1.5-flash-002",
     "gemini-1.0-pro-vision",
     "gemini-1.0-pro-vision-001"
 ]
@@ -37,16 +49,19 @@ default_gemini_model = "gemini-1.5-pro"
 default_multimodal_gemini_model = "gemini-1.5-pro"
 
 class GeminiModel(DeepEvalBaseLLM):
-    """Class that implements Google Vertex AI Gemini models for text-based evaluation.
+    """Class that implements Google Gemini models for text-based evaluation.
     
-    This class provides integration with Google's Gemini models through Vertex AI,
+    This class provides integration with Google's Gemini models through the Google GenAI SDK,
     supporting text-only inputs for evaluation tasks.
+    To use Gemini API, set api_key attribute only.
+    To use Vertex AI API, set project and location attributes.
     
     Attributes:
         model_name: Name of the Gemini model to use
-        project_id: Google Cloud project ID
-        location: Google Cloud region
-        
+        api_key: Google API key for authentication
+        project: Google Cloud project ID
+        location: Google Cloud location
+    
     Example:
         ```python
         from deepeval.models import GeminiModel
@@ -54,8 +69,7 @@ class GeminiModel(DeepEvalBaseLLM):
         # Initialize the model
         model = GeminiModel(
             model_name="gemini-1.5-pro-001",
-            project_id="your-project-id",
-            location="us-central1"
+            api_key="your-api-key"
         )
         
         # Generate text
@@ -65,7 +79,8 @@ class GeminiModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model_name: Optional[str] = None,
-        project_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+        project: Optional[str] = None,
         location: Optional[str] = None,
         *args,
         **kwargs
@@ -76,40 +91,85 @@ class GeminiModel(DeepEvalBaseLLM):
                 f"Invalid model. Available Gemini models: {', '.join(model for model in valid_gemini_models)}"
             )
             
-        # Get credentials from key handler if not provided
-        self.project_id = project_id or KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_CLOUD_PROJECT)
+        # Get API key from key handler if not provided
+        self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_API_KEY)
+        self.project = project or KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_CLOUD_PROJECT)
         self.location = location or KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_CLOUD_LOCATION)
-        
-        if not self.project_id or not self.location:
-            raise ValueError(
-                "Google Cloud project_id and location are required. Either provide them directly "
-                "or set them in your DeepEval configuration."
-            )
-            
-        # Initialize Vertex AI with project and location
-        vertexai.init(project=self.project_id, location=self.location)
-            
-        super().__init__(model_name, *args, **kwargs)
 
-    def load_model(self, *args, **kwargs):
-        """Loads and initializes the Gemini model.
+        super().__init__(model_name, *args, **kwargs)
+    
+    def should_use_vertexai(self):
+        """Checks if the model should use Vertex AI for generation.
+        
+        This is determined first by the value of `GOOGLE_GENAI_USE_VERTEXAI`
+        environment variable. If not set, it checks for the presence of the
+        project and location.
         
         Returns:
-            A GenerativeModel instance configured with safety settings optimized for evaluation.
+            True if the model should use Vertex AI, False otherwise
         """
-        # Initialize safety filters - set to minimum for evaluation purposes
-        safety_settings = {
-            HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE
-        }
+        value = KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_GENAI_USE_VERTEXAI)
+        if value is not None:
+            return value.lower() == "true"
 
-        return GenerativeModel(
-            model_name=self.model_name,
-            safety_settings=safety_settings
-        )
+        if self.project and self.location:
+            return True
+        else:
+            return False
+        
+    def load_model(self, *args, **kwargs):
+        """Creates a client.
+        With Gen AI SDK, model is set at inference time, so there is no
+        model to load and initialize.
+        This method name is kept for compatibility with other LLMs.
+        
+        Returns:
+            A GenerativeModel instance configured for evaluation.
+        """
+        if self.should_use_vertexai():
+            if not self.project or not self.location:
+                raise ValueError(
+                    "When using Vertex AI API, both project and location are required."
+                    "Either provide them as arguments or set GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION environment variables, "
+                    "or set them in your DeepEval configuration."
+                )
+                
+            # Create client for Vertex AI
+            self.client = genai.Client(
+                vertexai=True, project=self.project, location=self.location
+            )
+        else:
+            if not self.api_key:
+                raise ValueError(
+                    "Google API key is required. Either provide it directly, set GOOGLE_API_KEY environment variable, "
+                    "or set it in your DeepEval configuration."
+                )
+                
+            # Create client for Gemini API
+            self.client = genai.Client(api_key=self.api_key)
+
+        # Configure default model generation settings
+        self.model_safety_settings = [
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            ),
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            ),
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            ),
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            ),
+        ]
+        self.model_temperature = 0.0
+
+        return self.client.models
 
     def generate(
         self,
@@ -126,21 +186,26 @@ class GeminiModel(DeepEvalBaseLLM):
             Generated text response or structured output as Pydantic model
         """
         if schema is not None:
-            # Convert Pydantic model to OpenAPI schema
-            schema_dict = Schema.from_pydantic(schema).model_dump()
-            
-            response = self.model.generate_content(
-                prompt,
-                generation_config=GenerationConfig(
-                    response_mime_type="application/json",
-                    response_schema=schema_dict
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type='application/json',
+                    response_schema=schema,
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.model_temperature
                 )
             )
-            
-            # Parse response back into Pydantic model
-            return schema.model_validate_json(response.text)
+            return response.parsed
         else:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.model_temperature
+                )
+            )
             return response.text
 
     async def a_generate(
@@ -158,21 +223,26 @@ class GeminiModel(DeepEvalBaseLLM):
             Generated text response or structured output as Pydantic model
         """
         if schema is not None:
-            # Convert Pydantic model to OpenAPI schema
-            schema_dict = Schema.from_pydantic(schema).model_dump()
-            
-            response = await self.model.generate_content_async(
-                prompt,
-                generation_config=GenerationConfig(
-                    response_mime_type="application/json",
-                    response_schema=schema_dict
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type='application/json',
+                    response_schema=schema,
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.model_temperature
                 )
             )
-            
-            # Parse response back into Pydantic model
-            return schema.model_validate_json(response.text)
+            return response.parsed
         else:
-            response = await self.model.generate_content_async(prompt)
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.model_temperature
+                )
+            )
             return response.text
 
     def get_model_name(self) -> str:
@@ -181,16 +251,19 @@ class GeminiModel(DeepEvalBaseLLM):
 
 
 class MultimodalGeminiModel(DeepEvalBaseMLLM):
-    """Class that implements Google Vertex AI Gemini models for multimodal evaluation.
+    """Class that implements Google Gemini models for multimodal evaluation.
     
-    This class provides integration with Google's Gemini models through Vertex AI,
+    This class provides integration with Google's Gemini models through the Google GenAI SDK,
     supporting both text and multimodal (text + image) inputs for evaluation tasks.
+    To use Gemini API, set api_key attribute only.
+    To use Vertex AI API, set project and location attributes.
     
     Attributes:
         model_name: Name of the Gemini model to use
-        project_id: Google Cloud project ID
-        location: Google Cloud region
-        
+        api_key: Google API key for authentication
+        project: Google Cloud project ID
+        location: Google Cloud location
+    
     Example:
         ```python
         from deepeval.models import MultimodalGeminiModel
@@ -198,8 +271,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         # Initialize the model
         model = MultimodalGeminiModel(
             model_name="gemini-pro-vision",
-            project_id="your-project-id",
-            location="us-central1"
+            api_key="your-api-key"
         )
         
         # Generate text from text + image input
@@ -212,7 +284,8 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
     def __init__(
         self,
         model_name: Optional[str] = None,
-        project_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+        project: Optional[str] = None,
         location: Optional[str] = None,
         *args,
         **kwargs
@@ -223,52 +296,96 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 f"Invalid model. Available Multimodal Gemini models: {', '.join(model for model in valid_multimodal_gemini_models)}"
             )
             
-        # Get credentials from key handler if not provided
-        self.project_id = project_id or KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_CLOUD_PROJECT)
+        # Get API key from key handler if not provided
+        self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_API_KEY)
+        self.project = project or KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_CLOUD_PROJECT)
         self.location = location or KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_CLOUD_LOCATION)
-        
-        if not self.project_id or not self.location:
-            raise ValueError(
-                "Google Cloud project_id and location are required. Either provide them directly "
-                "or set them in your DeepEval configuration."
-            )
-            
-        # Initialize Vertex AI with project and location
-        vertexai.init(project=self.project_id, location=self.location)
-            
+
         super().__init__(model_name, *args, **kwargs)
         self.model = self.load_model(*args, **kwargs)
 
-    def load_model(self, *args, **kwargs):
-        """Loads and initializes the Gemini model.
+    def should_use_vertexai(self):
+        """Checks if the model should use Vertex AI for generation.
+        
+        This is determined first by the value of `GOOGLE_GENAI_USE_VERTEXAI`
+        environment variable. If not set, it checks for the presence of the
+        project and location.
         
         Returns:
-            A GenerativeModel instance configured with safety settings optimized for evaluation.
+            True if the model should use Vertex AI, False otherwise
         """
-        # Initialize safety filters - set to minimum for evaluation purposes
-        safety_settings = {
-            HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE
-        }
+        value = KEY_FILE_HANDLER.fetch_data(KeyValues.GOOGLE_GENAI_USE_VERTEXAI)
+        if value is not None:
+            return value.lower() == "true"
 
-        return GenerativeModel(
-            model_name=self.model_name,
-            safety_settings=safety_settings
-        )
+        if self.project and self.location:
+            return True
+        else:
+            return False
+
+    def load_model(self, *args, **kwargs):
+        """Creates a client.
+        With Gen AI SDK, model is set at inference time, so there is no
+        model to load and initialize.
+        This method name is kept for compatibility with other LLMs.
+        
+        Returns:
+            A GenerativeModel instance configured for evaluation.
+        """
+        if self.should_use_vertexai():
+            if not self.project or not self.location:
+                raise ValueError(
+                    "When using Vertex AI API, both project and location are required."
+                    "Either provide them as arguments or set GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION environment variables, "
+                    "or set them in your DeepEval configuration."
+                )
+                
+            # Create client for Vertex AI
+            self.client = genai.Client(
+                vertexai=True, project=self.project, location=self.location
+            )
+        else:
+            if not self.api_key:
+                raise ValueError(
+                    "Google API key is required. Either provide it directly, set GOOGLE_API_KEY environment variable, "
+                    "or set it in your DeepEval configuration."
+                )
+                
+            # Create client for Gemini API
+            self.client = genai.Client(api_key=self.api_key)
+
+        # Configure default model generation settings
+        self.model_safety_settings = [
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            ),
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            ),
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            ),
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            ),
+        ]
+        self.model_temperature = 0.0
+        return self.client.models
 
     def generate_prompt(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
-    ) -> List[Union[str, Part]]:
-        """Converts DeepEval multimodal input into Vertex AI compatible format.
+    ) -> List[Union[str, MLLMImage]]:
+        """Converts DeepEval multimodal input into GenAI SDK compatible format.
         
         Args:
             multimodal_input: List of strings and MLLMImage objects
             
         Returns:
-            List of strings and Vertex AI Part objects ready for model input
+            List of strings and PIL Image objects ready for model input
             
         Raises:
             ValueError: If an invalid input type is provided
@@ -279,9 +396,10 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 prompt.append(ele)
             elif isinstance(ele, MLLMImage):
                 if ele.local:
-                    image = Part.from_image(Image.load_from_file(ele.url))
+                    with open(ele.url, 'rb') as f:
+                        image = types.Part.from_bytes(data=f.read(), mime_type="image/jpeg")
                 else:
-                    image = Part.from_uri(uri=ele.url, mime_type="image/jpeg")
+                    image = types.Part.from_uri(file_uri=ele.url, mime_type="image/jpeg")
                 prompt.append(image)
             else:
                 raise ValueError(f"Invalid input type: {type(ele)}")
@@ -303,22 +421,29 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             Generated text response
         """
         prompt = self.generate_prompt(multimodal_input)
-        
+
         if schema is not None:
-            # Convert Pydantic model to OpenAPI schema
-            schema_dict = Schema.from_pydantic(schema).model_dump()
-            
-            response = self.model.generate_content(
-                prompt,
-                generation_config=GenerationConfig(
-                    response_mime_type="application/json",
-                    response_schema=schema_dict
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type='application/json',
+                    response_schema=schema,
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.model_temperature
                 )
-            ) 
+            )
+            return response.parsed
         else:
-            response = self.model.generate_content(prompt)
-        
-        return response.text
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.model_temperature
+                )
+            )
+            return response.text
 
     async def a_generate(
         self,
@@ -337,20 +462,27 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         prompt = self.generate_prompt(multimodal_input)
         
         if schema is not None:
-            # Convert Pydantic model to OpenAPI schema
-            schema_dict = Schema.from_pydantic(schema).model_dump()
-            
-            response = await self.model.generate_content_async(
-                prompt,
-                generation_config=GenerationConfig(
-                    response_mime_type="application/json",
-                    response_schema=schema_dict
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type='application/json',
+                    response_schema=schema,
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.model_temperature
                 )
-            )         
+            )
+            return response.parsed
         else:
-            response = await self.model.generate_content_async(prompt)
-        
-        return response.text
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.model_temperature
+                )
+            )
+            return response.text
 
     def get_model_name(self) -> str:
         """Returns the name of the Gemini model being used."""
