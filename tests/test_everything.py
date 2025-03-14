@@ -94,7 +94,7 @@ class TestClass(BaseModel):
     response: str
 
 
-eval_model = "o1"
+eval_model = "gpt-4o"
 
 
 @pytest.mark.skip(reason="openai is expensive")

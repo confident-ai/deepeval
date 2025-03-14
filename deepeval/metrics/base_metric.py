@@ -11,7 +11,7 @@ from deepeval.models import DeepEvalBaseLLM
 
 
 class BaseMetric:
-    __required_params = List[LLMTestCaseParams]
+    _required_params = List[LLMTestCaseParams]
     threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None
