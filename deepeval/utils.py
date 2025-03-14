@@ -205,7 +205,7 @@ def set_should_use_cache(yes: bool):
 
 
 def login_with_confident_api_key(api_key: string):
-    if not isinstance(api_key, str):
+    if not api_key or not isinstance(api_key, str):
         raise ValueError("Oh no! Please provide an api key string to login.")
     elif len(api_key) == 0:
         raise ValueError("Unable to login, please provide a non-empty api key.")
