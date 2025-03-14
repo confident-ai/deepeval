@@ -7,6 +7,7 @@ from deepeval.metrics.dag.schema import (
     Reason,
     BinaryJudgementVerdict,
     NonBinaryJudgementVerdict,
+    TaskNodeOutput,
 )
 from deepeval.metrics.dag.templates import (
     VerdictNodeTemplate,
@@ -271,12 +272,19 @@ class TaskNode(BaseNode):
             text=text,
         )
         if metric.using_native_model:
-            res, cost = metric.model.generate(prompt)
+            res, cost = metric.model.generate(prompt, schema=TaskNodeOutput)
             metric.evaluation_cost += cost
-            self._output = res
+            self._output = res.output
         else:
-            res = metric.model.generate(prompt=prompt)
-            self._output = res
+            try:
+                res: TaskNodeOutput = metric.model.generate(
+                    prompt, schema=TaskNodeOutput
+                )
+                self._output = res.output
+            except TypeError:
+                res = metric.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                self._output = TaskNodeOutput(**data).output
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
@@ -312,12 +320,21 @@ class TaskNode(BaseNode):
         )
 
         if metric.using_native_model:
-            res, cost = await metric.model.a_generate(prompt)
+            res, cost = await metric.model.a_generate(
+                prompt, schema=TaskNodeOutput
+            )
             metric.evaluation_cost += cost
-            self._output = res
+            self._output = res.output
         else:
-            res = await metric.model.a_generate(prompt=prompt)
-            self._output = res
+            try:
+                res: TaskNodeOutput = await metric.model.a_generate(
+                    prompt, schema=TaskNodeOutput
+                )
+                self._output = res.output
+            except TypeError:
+                res = await metric.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                self._output = TaskNodeOutput(**data).output
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)

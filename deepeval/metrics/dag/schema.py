@@ -1,9 +1,13 @@
-from typing import Literal
+from typing import Literal, Any
 from pydantic import BaseModel
 
 
 class Reason(BaseModel):
     reason: str
+
+
+class TaskNodeOutput(BaseModel):
+    output: str
 
 
 class BinaryJudgementVerdict(BaseModel):

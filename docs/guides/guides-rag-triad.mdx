@@ -52,11 +52,11 @@ test_case = LLMTestCase(input="...", actual_output="...", retrieval_context=["..
 Here, `input` is the user query, `actual_output` is the LLM generated response, and `retrieval_context` is a list of strings representing the retrieved text chunks. Then, define the RAG triad metrics:
 
 ```python
-from deepeval.metrics import AnswerRelevancy, Faithfulness, ContextualRelevancyMetric
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric, ContextualRelevancyMetric
 
 ...
-answer_relevancy = AnswerRelevancy()
-faithfulness = Faithfulness()
+answer_relevancy = AnswerRelevancyMetric()
+faithfulness = FaithfulnessMetric()
 contextual_relevancy = ContextualRelevancyMetric()
 ```
 
