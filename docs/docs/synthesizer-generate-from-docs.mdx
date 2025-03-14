@@ -31,10 +31,10 @@ The only difference between the `generate_goldens_from_docs()` and `generate_gol
 
 ## Generate Your Goldens
 
-Before you begin, you must install `chromadb==v0.5.3` as an additional dependency when generating from documents. The use of a vector database allows for faster indexing and retrieval of chunks during context construction.
+Before you begin, you must install `chromadb` as an additional dependency when generating from documents. The use of a vector database allows for efficient retrieval of chunks during context construction.
 
 ```python
-pip install chromadb==0.5.3
+pip install chromadb
 ```
 
 Then, to generate synthetic `Golden`s from documents, simply provide a list of document paths:
@@ -53,7 +53,7 @@ There are **ONE** mandatory and **THREE** optional parameters when using the `ge
 - `document_paths`: a list strings, representing the path to the documents from which contexts will be extracted from. Supported documents types include: `.txt`, `.docx`, and `.pdf`.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `True`.
 - [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
-- [Optional] `context_construction_config`: an instance of type `ContextConstructionConfig` that allows you to [customize the quality of contexts constructed](#customize-context-construction) from your documents. Defaulted to the default `ContextConstructionConfig` values.
+- [Optional] `context_construction_config`: an instance of type `ContextConstructionConfig` that allows you to [customize the quality and attributes of contexts constructed](#customize-context-construction) from your documents. Defaulted to the default `ContextConstructionConfig` values.
 
 :::info
 The final maximum number of goldens to be generated is the `max_goldens_per_context` multiplied by the `max_contexts_per_document` as specified in the `context_construction_config`, and **NOT** simply `max_goldens_per_context`.

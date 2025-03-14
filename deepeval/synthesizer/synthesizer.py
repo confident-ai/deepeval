@@ -87,7 +87,6 @@ class Synthesizer:
         self.async_mode = async_mode
         self.max_concurrent = max_concurrent
         self.synthetic_goldens: List[Golden] = []
-        self.context_generator = None
         self.filtration_config = (
             filtration_config
             if filtration_config is not None
@@ -135,29 +134,26 @@ class Synthesizer:
             )
         else:
             # Generate contexts from provided docs
-            if self.context_generator is None:
-                self.context_generator = ContextGenerator(
-                    document_paths=document_paths,
-                    embedder=context_construction_config.embedder,
-                    chunk_size=context_construction_config.chunk_size,
-                    chunk_overlap=context_construction_config.chunk_overlap,
-                    model=context_construction_config.critic_model,
-                    filter_threshold=context_construction_config.context_quality_threshold,
-                    similarity_threshold=context_construction_config.context_similarity_threshold,
-                    max_retries=context_construction_config.max_retries,
-                )
-            self.context_generator.total_cost = 0
-            self.context_generator._load_docs()
+            context_generator = ContextGenerator(
+                document_paths=document_paths,
+                embedder=context_construction_config.embedder,
+                chunk_size=context_construction_config.chunk_size,
+                chunk_overlap=context_construction_config.chunk_overlap,
+                model=context_construction_config.critic_model,
+                filter_threshold=context_construction_config.context_quality_threshold,
+                similarity_threshold=context_construction_config.context_similarity_threshold,
+                max_retries=context_construction_config.max_retries,
+            )
             contexts, source_files, context_scores = (
-                self.context_generator.generate_contexts(
-                    num_context_per_document=context_construction_config.max_contexts_per_document,
+                context_generator.generate_contexts(
+                    num_context_per_source_file=context_construction_config.max_contexts_per_document,
                     max_context_size=context_construction_config.max_context_length,
                 )
             )
             if self.synthesis_cost:
-                self.synthesis_cost += self.context_generator.total_cost
+                self.synthesis_cost += context_generator.total_cost
             print(
-                f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
+                f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks."
             )
 
             # Generate goldens from generated contexts
@@ -202,29 +198,26 @@ class Synthesizer:
             self.synthesis_cost = 0 if self.using_native_model else None
 
         # Generate contexts from provided docs
-        if self.context_generator is None:
-            self.context_generator = ContextGenerator(
-                document_paths=document_paths,
-                embedder=context_construction_config.embedder,
-                chunk_size=context_construction_config.chunk_size,
-                chunk_overlap=context_construction_config.chunk_overlap,
-                model=context_construction_config.critic_model,
-                filter_threshold=context_construction_config.context_quality_threshold,
-                similarity_threshold=context_construction_config.context_similarity_threshold,
-                max_retries=context_construction_config.max_retries,
-            )
-        self.context_generator.total_cost = 0
-        await self.context_generator._a_load_docs()
+        context_generator = ContextGenerator(
+            document_paths=document_paths,
+            embedder=context_construction_config.embedder,
+            chunk_size=context_construction_config.chunk_size,
+            chunk_overlap=context_construction_config.chunk_overlap,
+            model=context_construction_config.critic_model,
+            filter_threshold=context_construction_config.context_quality_threshold,
+            similarity_threshold=context_construction_config.context_similarity_threshold,
+            max_retries=context_construction_config.max_retries,
+        )
         contexts, source_files, context_scores = (
-            await self.context_generator.a_generate_contexts(
-                num_context_per_document=context_construction_config.max_contexts_per_document,
+            await context_generator.a_generate_contexts(
+                num_context_per_source_file=context_construction_config.max_contexts_per_document,
                 max_context_size=context_construction_config.max_context_length,
             )
         )
         if self.synthesis_cost:
-            self.synthesis_cost += self.context_generator.total_cost
+            self.synthesis_cost += context_generator.total_cost
         print(
-            f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
+            f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks."
         )
 
         # Generate goldens from generated contexts
