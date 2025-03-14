@@ -98,7 +98,7 @@ async def async_without_stream(user_message: str):
 
     # Run monitor() asynchronously in the background
     asyncio.create_task(
-        deepeval.a_monitor(input=user_message, output=output, model=model, event_name="RAG chatbot")
+        deepeval.a_monitor(input=user_message, response=output, model=model, event_name="RAG chatbot")
     )
     return output
 
