@@ -463,53 +463,44 @@ Remember, a `Golden` is basically an `LLMTestCase` but with no `actual_output`.
 
 ## Red Team Your LLM application
 
-LLM red teaming refers to the process of attacking your LLM application to expose any safety risks it may have, including but not limited to vulnerabilities such as bias, racism, encouraging illegal actions, etc. It is an automated way to test for LLM safety by prompting it with adversarial attacks, which will be all taken care of by `deepeval`.
+LLM red teaming refers to the process of attacking your LLM application to expose any safety risks it may have, including but not limited to vulnerabilities such as bias, racism, encouraging illegal actions, etc. It is an automated way to test for LLM safety by prompting it with adversarial attacks.
 
-:::info
+:::danger
+**IMPORTANT:** Since March 16th 2025, to provide a better red teaming experience for everyone, all of `deepeval`'s red teaming functionalities has been migrated to a separate called **DeepTeam** that is dedicated for red teaming. To install, run:
+
+```python
+pip install -U deepteam
+```
+
+DeepTeam is built on top of DeepEval and follows the same design principles, with the same customizations that you would expect in DeepEval's ecosystem. **Use DeepTeam alongside DeepEval** if you wish to do both regular LLM evaluation and LLM safety testing.
+
+Here is [DeepTeam's quickstart.](https://www.trydeepteam.com/docs/getting-started)
+:::
+
 Red teaming is a different form of testing from what you've seen above because while standard LLM evaluation tests your LLM on its **intended functionality**, red teaming is meant to test your LLM application against, intentional, adversarial attacks from malicious users.
-:::
 
-Here's how you can **scan your LLM for vulnerabilities in a few lines of code** using `deepeval`'s `RedTeamer`, an extremely powerful tool to automatically scan for [40+ vulnerabilities](red-teaming-vulnerabilities). First instantiate a `RedTeamer` instance:
-
-```python
-from deepeval.red_teaming import RedTeamer
-
-red_teamer = RedTeamer(
-    # describe purpose of your LLM application
-    target_purpose="Provide financial advice related to personal finance and market trends.",
-    # supply system prompt template
-    target_system_prompt="You are a financial assistant designed to help users with financial planning"
-)
-```
-
-Then, supply the target LLM application you wish to scan:
+Here's how you can **scan your LLM for vulnerabilities in a few lines of code** using [DeepTeam](https://www.trydeepteam.com/docs/getting-started), an extremely powerful package to automatically scan for [50+ vulnerabilities](red-teaming-vulnerabilities):
 
 ```python
-from deepeval.red_teaming import AttackEnhancement, Vulnerability
-...
+from deepteam import red_team
+from deepteam.vulnerabilities import Bias
+from deepteam.attacks.single_turn import PromptInjection
 
-results = red_teamer.scan(
-    # your target LLM of type DeepEvalBaseLLM
-    target_model=TargetLLM(),
-    attacks_per_vulnerability=5,
-    vulnerabilities=[v for v in Vulnerability],
-    attack_enhancements={
-        AttackEnhancement.BASE64: 0.25,
-        AttackEnhancement.GRAY_BOX_ATTACK: 0.25,
-        AttackEnhancement.JAILBREAK_CRESCENDO: 0.25,
-        AttackEnhancement.MULTILINGUAL: 0.25,
-    },
-)
-print("Red Teaming Results: ", results)
+def model_callback(input: str) -> str:
+    # Replace this with your LLM application
+    return f"I'm sorry but I can't answer this: {input}"
+
+bias = Bias(types=["race"])
+prompt_injection = PromptInjection()
+
+red_team(model_callback=model_callback, vulnerabilities=[bias], attacks=[prompt_injection])
 ```
 
-`deepeval`'s `RedTeamer` is highly customizable and offers a range of different advanced red teaming capabilities for anyone to leverage. We highly recommend you read more about the `RedTeamer` at the [red teaming section.](/docs/red-teaming-introduction)
-
-:::tip
-The `TargetLLM()` you see being provided as argument to the `target_model` parameter is of type `DeepEvalBaseLLM`, which is basically a wrapper to wrap your LLM application into `deepeval`'s ecosystem for easy evaluating. You can learn how to create a custom `TargetLLM` in a few lines of code [here.](/guides/guides-using-custom-llms#creating-a-custom-llm)
-:::
+`deepteam` is highly customizable and offers a range of different advanced red teaming capabilities for anyone to leverage. We highly recommend you read more about the `deepteam` in this [documentation.](/docs/red-teaming-introduction)
 
 And that's it! You now know how to not only test your LLM application for its functionality, but also for any underlying risks and vulnerabilities it may expose and make your systems susceptible to malicious attacks.
+
+For more in-depth red teaming, go to [DeepTeam's documentation.](https://www.trydeepteam.com/docs/getting-started)
 
 ## Using Confident AI
 
