@@ -11,6 +11,11 @@
         "statusCode": 301
       },
       {
+        "source": "/docs/red-teaming-owasp",
+        "destination": "https://www.trydeepteam.com/docs/red-teaming-owasp-top-10-for-llms",
+        "statusCode": 301
+      },
+      {
         "source": "/docs/red-teaming-attack-enhancements",
         "destination": "https://www.trydeepteam.com/docs/red-teaming-adversarial-attacks",
         "statusCode": 301
