@@ -47,6 +47,8 @@ setup(
         "nest-asyncio",
         "datasets",
         "ollama",
+        "boto3",
+        "pillow"
     ],
     extras_require={
         "dev": ["black"],

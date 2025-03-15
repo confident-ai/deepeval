@@ -7,6 +7,7 @@ from deepeval.models.base_model import (
 from deepeval.models.gpt_model import GPTModel, MultimodalGPTModel
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
+from deepeval.models.bedrock_model import BedrockModel, MultimodalBedrockModel
 
 # TODO: uncomment out once fixed
 # from deepeval.models.summac_model import SummaCModels
