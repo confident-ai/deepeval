@@ -16,7 +16,7 @@ import os
 from deepeval.models.gpt_model import GPTModel
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
-from deepeval.metrics.utils import trimAndLoadJson, initialize_model
+from deepeval.metrics.utils import is_gpt_model, trimAndLoadJson, initialize_model
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.models import DeepEvalBaseLLM
@@ -84,6 +84,8 @@ class Synthesizer:
         cost_tracking: bool = False,
     ):
         self.model, self.using_native_model = initialize_model(model)
+        self.using_gpt_model = is_gpt_model(model)
+
         self.async_mode = async_mode
         self.max_concurrent = max_concurrent
         self.synthetic_goldens: List[Golden] = []
@@ -950,9 +952,14 @@ class Synthesizer:
 
     def _generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Response)
-            self.synthesis_cost += cost
-            return res.response
+            if self.using_gpt_model:
+                res, cost = self.model.generate(prompt, schema=Response)
+                self.synthesis_cost += cost
+                return res.response
+            else:
+                res, cost = self.model.generate(prompt)
+                self.synthesis_cost += cost
+                return res.response
         else:
             try:
                 res: Response = self.model.generate(prompt, schema=Response)
@@ -963,9 +970,14 @@ class Synthesizer:
 
     async def _a_generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Response)
-            self.synthesis_cost += cost
-            return res.response
+            if self.using_gpt_model:
+                res, cost = await self.model.a_generate(prompt, schema=Response)
+                self.synthesis_cost += cost
+                return res.response
+            else:
+                res, cost = await self.model.a_generate(prompt)
+                self.synthesis_cost += cost
+                return res.response
         else:
             try:
                 res: Response = await self.model.a_generate(

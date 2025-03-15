@@ -3,6 +3,7 @@ import json
 import re
 from typing import Any, Dict, Optional, List, Union, Tuple
 from deepeval.errors import MissingTestCaseParamsError
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import (
     GPTModel,
     DeepEvalBaseLLM,
@@ -286,6 +287,25 @@ def initialize_model(
     raise TypeError(
         f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, or GPTModel."
     )
+
+
+def is_gpt_model(
+    model: Optional[Union[str, DeepEvalBaseLLM, GPTModel]] = None,
+) -> Tuple[DeepEvalBaseLLM, bool]:
+
+    azure_open_ai_value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
+    use_azure_open_ai = azure_open_ai_value.lower() == "yes" if azure_open_ai_value is not None else False
+    local_model_value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LOCAL_MODEL)
+    use_local_model = local_model_value.lower() == "yes" if local_model_value is not None else False
+    ollama_value = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_API_KEY)
+    use_ollama_model = ollama_value == "ollama"
+
+    if use_azure_open_ai or use_local_model or use_ollama_model:
+        return False
+    if isinstance(model, GPTModel) or isinstance(model, str) or model is None:
+        return True
+        
+    return False
 
 
 def initialize_multimodal_model(

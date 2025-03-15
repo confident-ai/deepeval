@@ -77,6 +77,10 @@ class ContextGenerator:
     ) -> Tuple[List[List[str]], List[str], List[float]]:
         from chromadb.api.models.Collection import Collection
 
+        vector_db_path = ".vector_db"
+        if os.path.exists(vector_db_path):
+            shutil.rmtree(vector_db_path)
+
         try:
             # Initialize lists for scores, contexts, and source files
             scores = []
@@ -125,7 +129,6 @@ class ContextGenerator:
 
         finally:
             # Always delete the .vector_db folder if it exists, regardless of success or failure
-            vector_db_path = ".vector_db"
             if os.path.exists(vector_db_path):
                 shutil.rmtree(vector_db_path)
 
@@ -136,6 +139,10 @@ class ContextGenerator:
         max_context_size: int = 3
     ) -> Tuple[List[List[str]], List[str], List[float]]:
         from chromadb.api.models.Collection import Collection
+
+        vector_db_path = ".vector_db"
+        if os.path.exists(vector_db_path):
+            shutil.rmtree(vector_db_path)
 
         try:
             # Initialize lists for scores, contexts, and source files
@@ -188,7 +195,6 @@ class ContextGenerator:
             return contexts, source_files, scores
 
         finally:
-            vector_db_path = ".vector_db"
             if os.path.exists(vector_db_path):
                 shutil.rmtree(vector_db_path)
 
