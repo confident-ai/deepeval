@@ -60,14 +60,15 @@ class BinaryJudgementTemplate:
 {text}
 
 **
-IMPORTANT: Please make sure to only return a json with two keys: `verdict` (true or false), and
+IMPORTANT: Please make sure to only return a json with two keys: `verdict` (true or false), and the 'reason' key providing the reason.
+Example JSON:
 {{
     "verdict": true,
     "reason": "..."
 }}
 **
 
-Output:
+JSON:
 """
 
 
@@ -80,5 +81,14 @@ class NonBinaryJudgementTemplate:
 
 {text}
 
-Output:
+**
+IMPORTANT: Please make sure to only return a json with two keys: 'verdict' {options} and 'reason' providing the reason.
+Example JSON:
+{{
+    "verdict": {options},
+    "reason": "..."
+}}
+**
+
+JSON:
 """
