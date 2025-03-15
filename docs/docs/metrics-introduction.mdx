@@ -235,7 +235,72 @@ This includes any of your favorite models such as:
 - Google Vertex AI
 - Mistral 7B
 
-All the examples can be [found here.](/guides/guides-using-custom-llms#more-examples)
+All the examples can be [found here](/guides/guides-using-custom-llms#more-examples), but down below is a quick example of a custom Azure OpenAI model through langchain's `AzureChatOpenAI` module for evaluation:
+
+```python
+from langchain_openai import AzureChatOpenAI
+from deepeval.models.base_model import DeepEvalBaseLLM
+
+class AzureOpenAI(DeepEvalBaseLLM):
+    def __init__(
+        self,
+        model
+    ):
+        self.model = model
+
+    def load_model(self):
+        return self.model
+
+    def generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        return chat_model.invoke(prompt).content
+
+    async def a_generate(self, prompt: str) -> str:
+        chat_model = self.load_model()
+        res = await chat_model.ainvoke(prompt)
+        return res.content
+
+    def get_model_name(self):
+        return "Custom Azure OpenAI Model"
+
+# Replace these with real values
+custom_model = AzureChatOpenAI(
+    openai_api_version=openai_api_version,
+    azure_deployment=azure_deployment,
+    azure_endpoint=azure_endpoint,
+    openai_api_key=openai_api_key,
+)
+azure_openai = AzureOpenAI(model=custom_model)
+print(azure_openai.generate("Write me a joke"))
+```
+
+When creating a custom LLM evaluation model you should **ALWAYS**:
+
+- inherit `DeepEvalBaseLLM`.
+- implement the `get_model_name()` method, which simply returns a string representing your custom model name.
+- implement the `load_model()` method, which will be responsible for returning a model object.
+- implement the `generate()` method with **one and only one** parameter of type string that acts as the prompt to your custom LLM.
+- the `generate()` method should return the final output string of your custom LLM. Note that we called `chat_model.invoke(prompt).content` to access the model generations in this particular example, but this could be different depending on the implementation of your custom model object.
+- implement the `a_generate()` method, with the same function signature as `generate()`. **Note that this is an async method**. In this example, we called `await chat_model.ainvoke(prompt)`, which is an asynchronous wrapper provided by LangChain's chat models.
+
+:::tip
+The `a_generate()` method is what `deepeval` uses to generate LLM outputs when you execute metrics / run evaluations asynchronously.
+
+If your custom model object does not have an asynchronous interface, simply reuse the same code from `generate()` (scroll down to the `Mistral7B` example for more details). However, this would make `a_generate()` a blocking process, regardless of whether you've turned on `async_mode` for a metric or not.
+:::
+
+Lastly, to use it for evaluation for an LLM-Eval:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+metric = AnswerRelevancyMetric(model=azure_openai)
+```
+
+:::note
+While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globally for all LLM-Evals, a custom LLM has to be set each time you instantiate a metric. Remember to provide your custom LLM instance through the `model` parameter for metrics you wish to use it for.
+:::
 
 :::caution
 We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputing responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](/guides/guides-using-custom-llms).
