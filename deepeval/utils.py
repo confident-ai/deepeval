@@ -9,7 +9,6 @@ from collections.abc import Iterable
 import tqdm
 import re
 import string
-import numpy as np
 from dataclasses import asdict, is_dataclass
 import re
 import asyncio
@@ -372,11 +371,15 @@ def delete_file_if_exists(file_path):
 
 
 def softmax(x):
+    import numpy as np
+
     e_x = np.exp(x - np.max(x, axis=1, keepdims=True))
     return e_x / e_x.sum(axis=1, keepdims=True)
 
 
 def cosine_similarity(vector_a, vector_b):
+    import numpy as np
+
     dot_product = np.dot(vector_a, vector_b)
     norm_a = np.linalg.norm(vector_a)
     norm_b = np.linalg.norm(vector_b)

@@ -1,5 +1,4 @@
 from typing import List, Dict, Optional
-from datasets import load_dataset
 from tqdm import tqdm
 import pandas as pd
 
@@ -238,6 +237,8 @@ class HellaSwag(DeepEvalBaseBenchmark):
         return res
 
     def load_benchmark_dataset(self, task: HellaSwagTask) -> List[Golden]:
+        from datasets import load_dataset
+
         # If dataset has been previously loaded, load from
         # instance var (to save time)
         if self.dataset:

@@ -1,9 +1,10 @@
-import numpy as np
 from typing import Optional
 from deepeval.models.base_model import DeepEvalBaseModel
 
 
 def softmax(x):
+    import numpy as np
+
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum(axis=0)
 

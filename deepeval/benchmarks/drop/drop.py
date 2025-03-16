@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict
-from datasets import load_dataset
 import pandas as pd
 from tqdm import tqdm
 from typing import Union
@@ -252,6 +251,8 @@ class DROP(DeepEvalBaseBenchmark):
         return res
 
     def load_benchmark_dataset(self, task: DROPTask) -> List[Golden]:
+        from datasets import load_dataset
+
         # cache dataset
         if self.dataset:
             dataset = self.dataset
