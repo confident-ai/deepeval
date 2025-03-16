@@ -1,5 +1,4 @@
-from typing import List, Optional, Dict, Tuple
-from datasets import load_dataset
+from typing import List, Optional, Dict
 import pandas as pd
 
 from deepeval.dataset import Golden
@@ -134,6 +133,8 @@ class HumanEval(DeepEvalBaseBenchmark):
         return {"prediction": functions, "score": score}
 
     def load_benchmark_dataset(self, task: HumanEvalTask) -> List[Golden]:
+        from datasets import load_dataset
+
         # Cache
         if self.dataset:
             dataset = self.dataset

@@ -1,4 +1,3 @@
-from datasets import load_dataset
 from typing import List, Optional, Dict, Union
 from tqdm import tqdm
 import pandas as pd
@@ -156,6 +155,8 @@ class SQuAD(DeepEvalBaseBenchmark):
         return {"prediction": prediction, "score": score}
 
     def load_benchmark_dataset(self, task: SQuADTask) -> List[Golden]:
+        from datasets import load_dataset
+
         dataset = load_dataset("rajpurkar/squad", trust_remote_code=True)
         self.dataset = dataset
 

@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict
-from datasets import load_dataset
 import pandas as pd
 from tqdm import tqdm
 
@@ -118,6 +117,8 @@ class ARC(DeepEvalBaseBenchmark):
         return {"prediction": prediction, "score": score}
 
     def load_benchmark_dataset(self, mode: ARCMode) -> List[Golden]:
+        from datasets import load_dataset
+
         # Load full dataset
         dataset_mapping = {
             ARCMode.CHALLENGE: "challenge_dataset",

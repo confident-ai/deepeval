@@ -41,8 +41,8 @@
         "statusCode": 301
       },
       {
-        "source": "/docs/red-teaming-vulnerabilities-illegal-activities",
-        "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-illegal-activities",
+        "source": "/docs/red-teaming-vulnerabilities-illegal-activity",
+        "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-illegal-activity",
         "statusCode": 301
       },
       {
