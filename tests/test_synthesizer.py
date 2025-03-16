@@ -268,7 +268,7 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
         max_goldens_per_context=1,
         document_paths=document_paths,
         context_construction_config=ContextConstructionConfig(
-            chunk_size=100, max_context_length=10
+            chunk_size=100, max_context_length=4,
         ),
         _send_data=False,
     )
