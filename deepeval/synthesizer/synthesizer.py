@@ -16,7 +16,11 @@ import os
 from deepeval.models.gpt_model import GPTModel
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
-from deepeval.metrics.utils import is_gpt_model, trimAndLoadJson, initialize_model
+from deepeval.metrics.utils import (
+    is_gpt_model,
+    trimAndLoadJson,
+    initialize_model,
+)
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.models import DeepEvalBaseLLM

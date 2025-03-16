@@ -21,6 +21,8 @@ To use the `JsonCorrectnessMetric`, you'll have to provide the following argumen
 - `input`
 - `actual_output`
 
+The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
 ## Example
 
 First define your schema by creating a `pydantic` `BaseModel`:

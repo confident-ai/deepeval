@@ -23,6 +23,8 @@ To use the `ImageHelpfulness`, you'll have to provide the following arguments wh
 Remember that the `actual_output` of an `MLLMTestCase` is a list of strings and `Image` objects. If multiple images are provided in the actual output, The final score will be the average of each image's helpfulness score.
 :::
 
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
 ## Example
 
 ```python

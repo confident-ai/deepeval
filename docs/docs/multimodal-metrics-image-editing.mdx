@@ -19,6 +19,8 @@ To use the `ImageEditingMetric`, you'll have to provide the following arguments 
 Both the input and output should each contain exactly **1 image**.
 :::
 
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
 ## Example
 
 ```python
