@@ -52,7 +52,6 @@ class DocumentChunker:
             )
 
         import chromadb
-        from chromadb.errors import InvalidCollectionException
 
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
@@ -62,7 +61,7 @@ class DocumentChunker:
         collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
-        except InvalidCollectionException:
+        except Exception as e:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -143,7 +142,6 @@ class DocumentChunker:
     async def a_from_nodes(self, nodes: List[Union[TextNode, LCDocument]]):
         # Create ChromaDB client
         import chromadb
-        from chromadb.errors import InvalidCollectionException
 
         client = chromadb.PersistentClient(path=f".vector_db/{nodes[0].id_}")
         collection_name = "processed_chunks"
@@ -187,13 +185,12 @@ class DocumentChunker:
     def from_nodes(self, nodes: List[Union[TextNode, LCDocument]]):
         # Create ChromaDB client
         import chromadb
-        from chromadb.errors import InvalidCollectionException
 
         client = chromadb.PersistentClient(path=f".vector_db/{nodes[0].id_}")
         collection_name = "processed_chunks"
         try:
             collection = client.get_collection(name=collection_name)
-        except InvalidCollectionException:
+        except Exception as e:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
             contents = [node.text for node in nodes]
