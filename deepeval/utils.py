@@ -86,7 +86,7 @@ def prettify_list(lst: List[Any]):
                 jsonObj = item.dict()
 
             formatted_elements.append(
-                json.dumps(jsonObj, indent=4).replace("\n", "\n    ")
+                json.dumps(jsonObj, indent=4, ensure_ascii=True).replace("\n", "\n    ")
             )
         else:
             formatted_elements.append(repr(item))  # Fallback for other types
