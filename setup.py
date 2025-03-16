@@ -45,6 +45,8 @@ setup(
         "opentelemetry-exporter-otlp-proto-grpc>=1.24.0,<2.0.0",
         "grpcio>=1.67.1,<2.0.0",
         "nest-asyncio",
+        "google-genai>=1.5.0",
+        "requests>=2.31.0",
         "datasets",
         "ollama",
     ],
