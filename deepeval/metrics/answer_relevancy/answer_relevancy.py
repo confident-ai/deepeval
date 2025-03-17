@@ -56,22 +56,25 @@ class AnswerRelevancyMetric(BaseMetric):
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self, _show_indicator=_show_indicator):
-            if self.async_mode:
-                loop = get_or_create_event_loop()
-                loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
-                )
-            else:
-                self.statements: List[str] = self._generate_statements(
-                    test_case.actual_output
-                )
-                self.verdicts: List[AnswerRelevancyVerdict] = (
-                    self._generate_verdicts(test_case.input)
-                )
-                self.score = self._calculate_score()
-                self.reason = self._generate_reason(test_case.input)
-                self.success = self.score >= self.threshold
+        
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            loop.run_until_complete(
+                self.a_measure(test_case, _show_indicator=False)
+            )
+        else:
+            self.statements: List[str] = self._generate_statements(
+                test_case.actual_output
+            )
+            self.verdicts: List[AnswerRelevancyVerdict] = (
+                self._generate_verdicts(test_case.input)
+            )
+            self.score = self._calculate_score()
+            self.reason = self._generate_reason(test_case.input)
+            self.success = self.score >= self.threshold
+            
+            # Handle verbose output before the progress indicator
+            if self.verbose_mode:
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -80,8 +83,12 @@ class AnswerRelevancyMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
+            
+            # Show progress indicator after verbose output
+            with metric_progress_indicator(self, _show_indicator=_show_indicator):
+                pass
 
-                return self.score
+        return self.score
 
     async def a_measure(
         self,
@@ -93,18 +100,19 @@ class AnswerRelevancyMetric(BaseMetric):
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(
-            self, async_mode=True, _show_indicator=_show_indicator
-        ):
-            self.statements: List[str] = await self._a_generate_statements(
-                test_case.actual_output
-            )
-            self.verdicts: List[AnswerRelevancyVerdict] = (
-                await self._a_generate_verdicts(test_case.input)
-            )
-            self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(test_case.input)
-            self.success = self.score >= self.threshold
+        
+        self.statements: List[str] = await self._a_generate_statements(
+            test_case.actual_output
+        )
+        self.verdicts: List[AnswerRelevancyVerdict] = (
+            await self._a_generate_verdicts(test_case.input)
+        )
+        self.score = self._calculate_score()
+        self.reason = await self._a_generate_reason(test_case.input)
+        self.success = self.score >= self.threshold
+        
+        # Handle verbose output before the progress indicator
+        if self.verbose_mode:
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -113,8 +121,14 @@ class AnswerRelevancyMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
+        
+        # Show progress indicator after verbose output
+        with metric_progress_indicator(
+            self, async_mode=True, _show_indicator=_show_indicator
+        ):
+            pass
 
-            return self.score
+        return self.score
 
     async def _a_generate_reason(self, input: str) -> str:
         if self.include_reason is False:
