@@ -5,7 +5,6 @@ import time
 import os
 
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
-from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.models import OpenAIEmbeddingModel
 from deepeval.dataset import EvaluationDataset
 from deepeval.synthesizer import Synthesizer

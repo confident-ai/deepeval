@@ -10,7 +10,14 @@ from deepeval.models import (
     MultimodalGPTModel,
     DeepEvalBaseMLLM,
 )
-from deepeval.models.gpt_model_schematic import SchematicGPTModel
+from deepeval.models.providers import (
+    GPTModel,
+    AzureOpenAIModel,
+    OllamaModel,
+    LocalModel,
+)
+from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+
 
 from deepeval.metrics import (
     BaseMetric,
@@ -266,26 +273,53 @@ def trimAndLoadJson(
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
+def should_use_azure_openai():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_local_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LOCAL_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_ollama_model():
+    base_url = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_API_KEY)
+    return base_url == "ollama"
+
+
 def initialize_model(
     model: Optional[Union[str, DeepEvalBaseLLM, GPTModel]] = None,
 ) -> Tuple[DeepEvalBaseLLM, bool]:
     """
     Returns a tuple of (initialized DeepEvalBaseLLM, using_native_model boolean)
     """
-    # If model is a GPTModel, it should be deemed as using native model
-    if isinstance(model, GPTModel):
+    # If model is natively supported, it should be deemed as using native model
+    if (
+        isinstance(model, GPTModel)
+        or isinstance(model, AzureOpenAIModel)
+        or isinstance(model, OllamaModel)
+        or isinstance(model, LocalModel)
+    ):
         return model, True
+
     # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
 
-    # If the model is a string, we initialize a GPTModel and use as a native model
-    if isinstance(model, str) or model is None:
-        return GPTModel(model=model), True
+    if should_use_ollama_model():
+        return OllamaModel(), True
+    elif should_use_local_model():
+        return LocalModel(), True
+    elif isinstance(model, str) or model is None:
+        if should_use_azure_openai():
+            return AzureOpenAIModel(model=model), True
+        else:
+            return GPTModel(model=model), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, or GPTModel."
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, GPTModel, AzureOpenAIModel, OllamaModel, LocalModel."
     )
 
 
@@ -332,19 +366,3 @@ def initialize_multimodal_model(
         return model, False
     # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
     return MultimodalGPTModel(model=model), True
-
-
-def initialize_schematic_model(
-    model: Optional[Union[str, DeepEvalBaseLLM, SchematicGPTModel]] = None,
-) -> Tuple[DeepEvalBaseLLM, bool]:
-    """
-    Returns a tuple of (initialized DeepEvalBaseLLM, using_native_model boolean)
-    """
-    # If model is a GPTModel, it should be deemed as using native model
-    if isinstance(model, SchematicGPTModel):
-        return model, True
-    # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
-    if isinstance(model, DeepEvalBaseLLM):
-        return model, False
-    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
-    return SchematicGPTModel(model=model), True

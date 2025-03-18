@@ -20,7 +20,7 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM, GPTModel
-from deepeval.models.gpt_model import unsupported_log_probs_gpt_models
+from deepeval.models.providers.gpt_model import unsupported_log_probs_gpt_models
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
 
