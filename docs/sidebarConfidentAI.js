@@ -17,6 +17,7 @@ module.exports = {
         items: [
           "confident-ai-testing-n-evaluation-test-run",
           "confident-ai-testing-n-evaluation-unit-testing",
+          "confident-ai-prompt-versioning",
           "confident-ai-testing-n-evaluation-metric-collections",
         ],
         collapsed: false,
@@ -49,12 +50,6 @@ module.exports = {
           "confident-ai-human-feedback-platform",
         ],
         collapsed: false,
-      },
-      {
-        type: "category",
-        label: "Hyperparameters",
-        items: ["confident-ai-hyperparameters-prompt-versioning"],
-        collapsed: true,
       },
       {
         type: "category",

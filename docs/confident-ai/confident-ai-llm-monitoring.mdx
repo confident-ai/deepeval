@@ -121,8 +121,8 @@ import deepeval
 def sync_without_stream(user_message: str):
     model = "gpt-4-turbo"
     response = openai.ChatCompletion.create(
-    model=model,
-    messages=[{"role": "user", "content": user_message}]
+        model=model,
+        messages=[{"role": "user", "content": user_message}]
     )
     output = response["choices"][0]["message"]["content"]
 
