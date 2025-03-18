@@ -190,8 +190,7 @@ class GPTModel(DeepEvalBaseLLM):
             with get_openai_callback() as cb:
                 res = chat_model.invoke(prompt)
                 return res.content, cb.total_cost
-    
-       
+
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(openai.RateLimitError),
@@ -239,7 +238,6 @@ class GPTModel(DeepEvalBaseLLM):
             with get_openai_callback() as cb:
                 res = await chat_model.ainvoke(prompt)
                 return res.content, cb.total_cost
-
 
     ###############################################
     # Other generate functions

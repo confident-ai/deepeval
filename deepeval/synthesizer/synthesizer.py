@@ -13,7 +13,7 @@ import tqdm
 import csv
 import os
 
-from deepeval.models.providers.gpt_model import GPTModel
+from deepeval.models import GPTModel
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (

@@ -4,7 +4,13 @@ from deepeval.models.base_model import (
     DeepEvalBaseMLLM,
     DeepEvalBaseEmbeddingModel,
 )
-from deepeval.models.providers.gpt_model import GPTModel, MultimodalGPTModel
+from deepeval.models.providers import (
+    GPTModel,
+    MultimodalGPTModel,
+    AzureOpenAIModel,
+    LocalModel,
+    OllamaModel,
+)
 from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
 
 # TODO: uncomment out once fixed

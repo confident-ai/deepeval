@@ -10,7 +10,7 @@ from deepeval.models import (
     MultimodalGPTModel,
     DeepEvalBaseMLLM,
 )
-from deepeval.models.providers import (
+from deepeval.models import (
     GPTModel,
     AzureOpenAIModel,
     OllamaModel,

@@ -13,7 +13,7 @@ from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.models.providers.gpt_model import GPTModel
+from deepeval.models import GPTModel
 from deepeval.models.gpt_model_schematic import *
 
 #########################################################

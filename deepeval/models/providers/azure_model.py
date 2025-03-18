@@ -99,19 +99,19 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
-            else:
-                completion = client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
-                        {"role": "user", "content": prompt},
-                    ],
-                )
-                output = completion.choices[0].message.content
-                cost = self.calculate_cost(
-                    completion.usage.prompt_tokens,
-                    completion.usage.completion_tokens,
-                )
-                return output, cost
+        else:
+            completion = client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "user", "content": prompt},
+                ],
+            )
+            output = completion.choices[0].message.content
+            cost = self.calculate_cost(
+                completion.usage.prompt_tokens,
+                completion.usage.completion_tokens,
+            )
+            return output, cost
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
@@ -156,19 +156,19 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
-            else:
-                completion = await client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
-                        {"role": "user", "content": prompt},
-                    ],
-                )
-                output = completion.choices[0].message.content
-                cost = self.calculate_cost(
-                    completion.usage.prompt_tokens,
-                    completion.usage.completion_tokens,
-                )
-                return output, cost
+        else:
+            completion = await client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "user", "content": prompt},
+                ],
+            )
+            output = completion.choices[0].message.content
+            cost = self.calculate_cost(
+                completion.usage.prompt_tokens,
+                completion.usage.completion_tokens,
+            )
+            return output, cost
 
     ###############################################
     # Utilities
