@@ -103,32 +103,30 @@ class AnswerRelevancyMetric(BaseMetric):
 
         self.evaluation_cost = 0 if self.using_native_model else None
         
-        # Generate all results before showing progress
-        self.statements: List[str] = await self._a_generate_statements(
-            test_case.actual_output
-        )
-        self.verdicts: List[AnswerRelevancyVerdict] = (
-            await self._a_generate_verdicts(test_case.input)
-        )
-        self.score = self._calculate_score()
-        self.reason = await self._a_generate_reason(test_case.input)
-        self.success = self.score >= self.threshold
-        
-        # Handle verbose output
-        if self.verbose_mode:
-            self.verbose_logs = construct_verbose_logs(
-                self,
-                steps=[
-                    f"Statements:\n{prettify_list(self.statements)}",
-                    f"Verdicts:\n{prettify_list(self.verdicts)}",
-                    f"Score: {self.score}\nReason: {self.reason}",
-                ],
+        with metric_progress_indicator(
+            self, async_mode=True, _show_indicator=_show_indicator
+        ):
+            # Generate all results
+            self.statements: List[str] = await self._a_generate_statements(
+                test_case.actual_output
             )
-        
-        # Show progress indicator at the end
-        if _show_indicator:
-            with metric_progress_indicator(self, async_mode=True, _show_indicator=True):
-                pass
+            self.verdicts: List[AnswerRelevancyVerdict] = (
+                await self._a_generate_verdicts(test_case.input)
+            )
+            self.score = self._calculate_score()
+            self.reason = await self._a_generate_reason(test_case.input)
+            self.success = self.score >= self.threshold
+            
+            # Handle verbose output
+            if self.verbose_mode:
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"Statements:\n{prettify_list(self.statements)}",
+                        f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
 
         return self.score
 
