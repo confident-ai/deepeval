@@ -111,7 +111,10 @@ model_pricing = {
     "o1-2024-12-17": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
     "o3-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
     "o3-mini-2025-01-31": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
-    "gpt-4.5-preview-2025-02-27": {"input": 75.00 / 1e6, "output": 150.00 / 1e6},
+    "gpt-4.5-preview-2025-02-27": {
+        "input": 75.00 / 1e6,
+        "output": 150.00 / 1e6,
+    },
 }
 
 default_gpt_model = "gpt-4o"
