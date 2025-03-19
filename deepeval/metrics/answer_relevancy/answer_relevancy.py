@@ -108,7 +108,6 @@ class AnswerRelevancyMetric(BaseMetric):
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
             
-            # Handle verbose output
             if self.verbose_mode:
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -119,7 +118,7 @@ class AnswerRelevancyMetric(BaseMetric):
                     ],
                 )
 
-        return self.score
+            return self.score
 
     async def _a_generate_reason(self, input: str) -> str:
         if self.include_reason is False:

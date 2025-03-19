@@ -11,6 +11,8 @@ from deepeval.models import (
     DeepEvalBaseMLLM,
 )
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
+import sys
+
 
 from deepeval.metrics import (
     BaseMetric,
@@ -26,7 +28,6 @@ from deepeval.test_case import (
     MLLMImage,
 )
 
-import sys
 
 
 def copy_metrics(
