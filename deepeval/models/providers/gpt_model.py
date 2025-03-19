@@ -8,7 +8,12 @@ import base64
 import json
 import re
 
-from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    wait_exponential_jitter,
+    RetryCallState,
+)
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage
 from langchain.schema import HumanMessage
@@ -18,9 +23,10 @@ from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
 
 
-def log_retry_error(retry_state):
+def log_retry_error(retry_state: RetryCallState):
+    exception = retry_state.outcome.exception()
     logging.error(
-        f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
+        f"OpenAI Error: {exception} Retrying: {retry_state.attempt_number} time(s)..."
     )
 
 
@@ -116,6 +122,7 @@ retryable_exceptions = (
     openai.RateLimitError,
     openai.APIConnectionError,
     openai.APITimeoutError,
+    openai.LengthFinishReasonError,
 )
 
 
