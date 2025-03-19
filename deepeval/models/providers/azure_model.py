@@ -123,7 +123,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[str, float]:
         client = self.load_model(async_mode=True)
         if schema:
-            client = AsyncAzureOpenAI(api_key=self.azure_openai_api_key)
             if self.model_name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.model_name,
