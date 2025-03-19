@@ -1,6 +1,7 @@
 import inspect
 import json
 import re
+import sys
 from typing import Any, Dict, Optional, List, Union, Tuple
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
@@ -11,7 +12,6 @@ from deepeval.models import (
     DeepEvalBaseMLLM,
 )
 from deepeval.models.gpt_model_schematic import SchematicGPTModel
-import sys
 
 
 from deepeval.metrics import (
