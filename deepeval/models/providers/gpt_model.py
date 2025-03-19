@@ -112,7 +112,11 @@ model_pricing = {
 
 default_gpt_model = "gpt-4o"
 
-retryable_exceptions = (openai.RateLimitError, openai.APIConnectionError, openai.APITimeoutError)
+retryable_exceptions = (
+    openai.RateLimitError,
+    openai.APIConnectionError,
+    openai.APITimeoutError,
+)
 
 
 class GPTModel(DeepEvalBaseLLM):
