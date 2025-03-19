@@ -59,33 +59,35 @@ class AnswerRelevancyMetric(BaseMetric):
         
         if self.async_mode:
             loop = get_or_create_event_loop()
-            loop.run_until_complete(
-                self.a_measure(test_case, _show_indicator=False)
+            return loop.run_until_complete(
+                self.a_measure(test_case, _show_indicator=_show_indicator)
             )
-        else:
-            self.statements: List[str] = self._generate_statements(
-                test_case.actual_output
-            )
-            self.verdicts: List[AnswerRelevancyVerdict] = (
-                self._generate_verdicts(test_case.input)
-            )
-            self.score = self._calculate_score()
-            self.reason = self._generate_reason(test_case.input)
-            self.success = self.score >= self.threshold
             
-            # Handle verbose output before the progress indicator
-            if self.verbose_mode:
-                self.verbose_logs = construct_verbose_logs(
-                    self,
-                    steps=[
-                        f"Statements:\n{prettify_list(self.statements)}",
-                        f"Verdicts:\n{prettify_list(self.verdicts)}",
-                        f"Score: {self.score}\nReason: {self.reason}",
-                    ],
-                )
-            
-            # Show progress indicator after verbose output
-            with metric_progress_indicator(self, _show_indicator=_show_indicator):
+        # Generate all results before showing progress
+        self.statements: List[str] = self._generate_statements(
+            test_case.actual_output
+        )
+        self.verdicts: List[AnswerRelevancyVerdict] = (
+            self._generate_verdicts(test_case.input)
+        )
+        self.score = self._calculate_score()
+        self.reason = self._generate_reason(test_case.input)
+        self.success = self.score >= self.threshold
+        
+        # Handle verbose output
+        if self.verbose_mode:
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    f"Statements:\n{prettify_list(self.statements)}",
+                    f"Verdicts:\n{prettify_list(self.verdicts)}",
+                    f"Score: {self.score}\nReason: {self.reason}",
+                ],
+            )
+        
+        # Show progress indicator at the end
+        if _show_indicator:
+            with metric_progress_indicator(self, _show_indicator=True):
                 pass
 
         return self.score
@@ -101,6 +103,7 @@ class AnswerRelevancyMetric(BaseMetric):
 
         self.evaluation_cost = 0 if self.using_native_model else None
         
+        # Generate all results before showing progress
         self.statements: List[str] = await self._a_generate_statements(
             test_case.actual_output
         )
@@ -111,7 +114,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.reason = await self._a_generate_reason(test_case.input)
         self.success = self.score >= self.threshold
         
-        # Handle verbose output before the progress indicator
+        # Handle verbose output
         if self.verbose_mode:
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -122,11 +125,10 @@ class AnswerRelevancyMetric(BaseMetric):
                 ],
             )
         
-        # Show progress indicator after verbose output
-        with metric_progress_indicator(
-            self, async_mode=True, _show_indicator=_show_indicator
-        ):
-            pass
+        # Show progress indicator at the end
+        if _show_indicator:
+            with metric_progress_indicator(self, async_mode=True, _show_indicator=True):
+                pass
 
         return self.score
 

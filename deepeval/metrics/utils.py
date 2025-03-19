@@ -26,6 +26,8 @@ from deepeval.test_case import (
     MLLMImage,
 )
 
+import sys
+
 
 def copy_metrics(
     metrics: List[
@@ -90,13 +92,14 @@ def get_turns_in_sliding_window(turns: List[LLMTestCase], window_size: int):
 
 
 def print_verbose_logs(metric: str, logs: str):
-    print("*" * 50)
-    print(f"{metric} Verbose Logs")
-    print("*" * 50)
-    print("")
-    print(logs)
-    print("")
-    print("=" * 70)
+    sys.stdout.write("*" * 50 + "\n")
+    sys.stdout.write(f"{metric} Verbose Logs\n")
+    sys.stdout.write("*" * 50 + "\n")
+    sys.stdout.write("\n")
+    sys.stdout.write(logs + "\n")
+    sys.stdout.write("\n")
+    sys.stdout.write("=" * 70 + "\n")
+    sys.stdout.flush()
 
 
 def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
