@@ -8,7 +8,12 @@ import base64
 import json
 import re
 
-from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    wait_exponential_jitter,
+    RetryCallState,
+)
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage
 from langchain.schema import HumanMessage
@@ -18,9 +23,10 @@ from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
 
 
-def log_retry_error(retry_state):
+def log_retry_error(retry_state: RetryCallState):
+    exception = retry_state.outcome.exception()
     logging.error(
-        f"OpenAI rate limit exceeded. Retrying: {retry_state.attempt_number} time(s)..."
+        f"OpenAI Error: {exception} Retrying: {retry_state.attempt_number} time(s)..."
     )
 
 
@@ -119,6 +125,13 @@ model_pricing = {
 
 default_gpt_model = "gpt-4o"
 
+retryable_exceptions = (
+    openai.RateLimitError,
+    openai.APIConnectionError,
+    openai.APITimeoutError,
+    openai.LengthFinishReasonError,
+)
+
 
 class GPTModel(DeepEvalBaseLLM):
     def __init__(
@@ -152,7 +165,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
+        retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
     def generate(
@@ -200,7 +213,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
+        retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
     async def a_generate(
@@ -252,7 +265,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
+        retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
     def generate_raw_response(
@@ -265,7 +278,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
+        retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
     async def a_generate_raw_response(
@@ -278,7 +291,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
+        retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
     def generate_samples(
@@ -459,7 +472,7 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
+        retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
     def generate(
@@ -481,7 +494,7 @@ class MultimodalGPTModel(DeepEvalBaseMLLM):
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
+        retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
     async def a_generate(
