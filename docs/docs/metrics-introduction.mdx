@@ -149,13 +149,18 @@ Please **do not include** quotation marks when setting your `OPENAI_API_KEY` if 
 
 `deepeval` also allows you to use Azure OpenAI for metrics that are evaluated using an LLM. Run the following command in the CLI to configure your `deepeval` enviornment to use Azure OpenAI for **all** LLM-based metrics.
 
-```console
-deepeval set-azure-openai --openai-endpoint=<endpoint> \
+```bash
+deepeval set-azure-openai \
+    --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
     --openai-api-key=<api_key> \
-    --deployment-name=<deployment_name> \
-    --openai-api-version=<openai_api_version> \
-    --model-version=<model_version>
+    --deployment-name=<deployment_name> \ # e.g. gpt-4o
+    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    --model-version=<model_version> # e.g. 2024-11-20
 ```
+
+:::info
+Your OpenAI API version must be at least `2024-08-01-preview`, when structured output was released.
+:::
 
 Note that the `model-version` is **optional**. If you ever wish to stop using Azure OpenAI and move back to regular OpenAI, simply run:
 
