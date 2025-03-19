@@ -22,27 +22,18 @@ from deepeval.models.providers.gpt_model import (
 class AzureOpenAIModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model: Optional[str] = None,
         *args,
         **kwargs,
     ):
-        model_name = model
-        if isinstance(model, str) and model not in valid_gpt_models:
-            raise ValueError(
-                f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
-            )
-        elif model is None:
-            model_name = default_gpt_model
-
         # fetch Azure deployment parameters
+        model_name = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AZURE_DEPLOYMENT_NAME
+        )
         self.azure_openai_api_key = KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_OPENAI_API_KEY
         )
         self.openai_api_version = KEY_FILE_HANDLER.fetch_data(
             KeyValues.OPENAI_API_VERSION
-        )
-        self.azure_deployment = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.AZURE_DEPLOYMENT_NAME
         )
         self.azure_endpoint = KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_OPENAI_ENDPOINT
@@ -211,12 +202,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 api_key=self.azure_openai_api_key,
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
-                azure_deployment=self.azure_deployment,
+                azure_deployment=self.model_name,
             )
         else:
             return AsyncAzureOpenAI(
                 api_key=self.azure_openai_api_key,
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
-                azure_deployment=self.azure_deployment,
+                azure_deployment=self.model_name,
             )
