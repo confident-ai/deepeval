@@ -915,7 +915,7 @@ class Synthesizer:
         else:
             try:
                 res = model.generate(prompt, schema=schema)
-                if isinstance(model, AzureOpenAIModel)
+                if isinstance(model, AzureOpenAIModel):
                     response, cost = res
                     if self.synthesis_cost is not None:
                         self.synthesis_cost += cost
