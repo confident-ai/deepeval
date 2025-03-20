@@ -915,7 +915,12 @@ class Synthesizer:
         else:
             try:
                 res = model.generate(prompt, schema=schema)
-                return res[0]
+                if isinstance(model, AzureOpenAIModel)
+                    response, cost = res
+                    if self.synthesis_cost is not None:
+                        self.synthesis_cost += cost
+                    return response
+                return res
             except TypeError:
                 res = model.generate(prompt)
                 data = trimAndLoadJson(res, self)
