@@ -1509,13 +1509,13 @@ tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<10"
 
 [[package]]
 name = "langchain-core"
-version = "0.3.46"
+version = "0.3.47"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "langchain_core-0.3.46-py3-none-any.whl", hash = "sha256:28b5689fc347975ea520b5364ab4aee5567e661553bbee5e97cabf4596c28ce0"},
-    {file = "langchain_core-0.3.46.tar.gz", hash = "sha256:5fca010eeb0a427be5aa8a8525e2112995dde790c584cef165be7c5e0ee1c2b5"},
+    {file = "langchain_core-0.3.47-py3-none-any.whl", hash = "sha256:ef7c78202e6fd9df79fe8128c828d08a95d3878cf4aec282580baf358a3f2ec5"},
+    {file = "langchain_core-0.3.47.tar.gz", hash = "sha256:975a3daabf8e8d583749b3c553cc412d0527d935dfe820317431b475fa0c585a"},
 ]
 
 [package.dependencies]
@@ -1749,13 +1749,13 @@ llama-index-core = ">=0.12.0,<0.13.0"
 
 [[package]]
 name = "llama-index-llms-openai"
-version = "0.3.25"
+version = "0.3.26"
 description = "llama-index llms openai integration"
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "llama_index_llms_openai-0.3.25-py3-none-any.whl", hash = "sha256:b21ea58f20c82f442b910b8f878bbbfd4937f601aa436cbe55b26c1d490762a6"},
-    {file = "llama_index_llms_openai-0.3.25.tar.gz", hash = "sha256:1e4fd1d166bb635ca7c03f0486c04d80978948c5b8d89c8b469ae5d02852cf4b"},
+    {file = "llama_index_llms_openai-0.3.26-py3-none-any.whl", hash = "sha256:2a2bcc2a8d66e1518b6c6af5a06447557575d21597cf45ded9c79f1dbe57f5aa"},
+    {file = "llama_index_llms_openai-0.3.26.tar.gz", hash = "sha256:8f676f4f13020676983d9496f5dddc41bd2ebbe9c29415c18bbba2f09bed4c96"},
 ]
 
 [package.dependencies]
@@ -2267,13 +2267,13 @@ pydantic = ">=2.9.0,<3.0.0"
 
 [[package]]
 name = "openai"
-version = "1.67.0"
+version = "1.68.0"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "openai-1.67.0-py3-none-any.whl", hash = "sha256:dbbb144f38739fc0e1d951bc67864647fca0b9ffa05aef6b70eeea9f71d79663"},
-    {file = "openai-1.67.0.tar.gz", hash = "sha256:3b386a866396daa4bf80e05a891c50a7746ecd7863b8a27423b62136e3b8f6bc"},
+    {file = "openai-1.68.0-py3-none-any.whl", hash = "sha256:20e279b0f3a78cb4a95f3eab2a180f3ee30c6a196aeebd6bf642a4f88ab85ee1"},
+    {file = "openai-1.68.0.tar.gz", hash = "sha256:c570c06c9ba10f98b891ac30a3dd7b5c89ed48094c711c7a3f35fb5ade6c0757"},
 ]
 
 [package.dependencies]
@@ -2281,8 +2281,10 @@ anyio = ">=3.5.0,<5"
 distro = ">=1.7.0,<2"
 httpx = ">=0.23.0,<1"
 jiter = ">=0.4.0,<1"
+numpy = ">=2.0.2"
 pydantic = ">=1.9.0,<3"
 sniffio = "*"
+sounddevice = ">=0.5.1"
 tqdm = ">4"
 typing-extensions = ">=4.11,<5"
 
@@ -2292,13 +2294,13 @@ realtime = ["websockets (>=13,<15)"]
 
 [[package]]
 name = "opentelemetry-api"
-version = "1.31.0"
+version = "1.31.1"
 description = "OpenTelemetry Python API"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "opentelemetry_api-1.31.0-py3-none-any.whl", hash = "sha256:145b72c6c16977c005c568ec32f4946054ab793d8474a17fd884b0397582c5f2"},
-    {file = "opentelemetry_api-1.31.0.tar.gz", hash = "sha256:d8da59e83e8e3993b4726e4c1023cd46f57c4d5a73142e239247e7d814309de1"},
+    {file = "opentelemetry_api-1.31.1-py3-none-any.whl", hash = "sha256:1511a3f470c9c8a32eeea68d4ea37835880c0eed09dd1a0187acc8b1301da0a1"},
+    {file = "opentelemetry_api-1.31.1.tar.gz", hash = "sha256:137ad4b64215f02b3000a0292e077641c8611aab636414632a9b9068593b7e91"},
 ]
 
 [package.dependencies]
@@ -2307,27 +2309,27 @@ importlib-metadata = ">=6.0,<8.7.0"
 
 [[package]]
 name = "opentelemetry-exporter-otlp-proto-common"
-version = "1.31.0"
+version = "1.31.1"
 description = "OpenTelemetry Protobuf encoding"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "opentelemetry_exporter_otlp_proto_common-1.31.0-py3-none-any.whl", hash = "sha256:42b402f2340c0612907799d91d13b928314f06c57c362dfa0c074e20b673f43d"},
-    {file = "opentelemetry_exporter_otlp_proto_common-1.31.0.tar.gz", hash = "sha256:e7fa0fe8cf2f87c190a59d820b6ba0821234178bc1227b5bd40ca057622d4ddc"},
+    {file = "opentelemetry_exporter_otlp_proto_common-1.31.1-py3-none-any.whl", hash = "sha256:7cadf89dbab12e217a33c5d757e67c76dd20ce173f8203e7370c4996f2e9efd8"},
+    {file = "opentelemetry_exporter_otlp_proto_common-1.31.1.tar.gz", hash = "sha256:c748e224c01f13073a2205397ba0e415dcd3be9a0f95101ba4aace5fc730e0da"},
 ]
 
 [package.dependencies]
-opentelemetry-proto = "1.31.0"
+opentelemetry-proto = "1.31.1"
 
 [[package]]
 name = "opentelemetry-exporter-otlp-proto-grpc"
-version = "1.31.0"
+version = "1.31.1"
 description = "OpenTelemetry Collector Protobuf over gRPC Exporter"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "opentelemetry_exporter_otlp_proto_grpc-1.31.0-py3-none-any.whl", hash = "sha256:68ffd825363f9654cc17b59c93a77dd33b352ef6a346822afed8cc24523a4751"},
-    {file = "opentelemetry_exporter_otlp_proto_grpc-1.31.0.tar.gz", hash = "sha256:d33a98d3768da4705b3c51959ffd49897094454e2d47d1d83293bf29c14712a1"},
+    {file = "opentelemetry_exporter_otlp_proto_grpc-1.31.1-py3-none-any.whl", hash = "sha256:f4055ad2c9a2ea3ae00cbb927d6253233478b3b87888e197d34d095a62305fae"},
+    {file = "opentelemetry_exporter_otlp_proto_grpc-1.31.1.tar.gz", hash = "sha256:c7f66b4b333c52248dc89a6583506222c896c74824d5d2060b818ae55510939a"},
 ]
 
 [package.dependencies]
@@ -2338,19 +2340,19 @@ grpcio = [
     {version = ">=1.66.2,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 opentelemetry-api = ">=1.15,<2.0"
-opentelemetry-exporter-otlp-proto-common = "1.31.0"
-opentelemetry-proto = "1.31.0"
-opentelemetry-sdk = ">=1.31.0,<1.32.0"
+opentelemetry-exporter-otlp-proto-common = "1.31.1"
+opentelemetry-proto = "1.31.1"
+opentelemetry-sdk = ">=1.31.1,<1.32.0"
 
 [[package]]
 name = "opentelemetry-proto"
-version = "1.31.0"
+version = "1.31.1"
 description = "OpenTelemetry Python Proto"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "opentelemetry_proto-1.31.0-py3-none-any.whl", hash = "sha256:ad4ded738e3d48d3280b37984eae75e63be01d8a0b04c83c743714aba960670d"},
-    {file = "opentelemetry_proto-1.31.0.tar.gz", hash = "sha256:5efe313788a8f4b739a94beb207749587a449a5e90c68b0b6a931567e8ca721d"},
+    {file = "opentelemetry_proto-1.31.1-py3-none-any.whl", hash = "sha256:1398ffc6d850c2f1549ce355744e574c8cd7c1dba3eea900d630d52c41d07178"},
+    {file = "opentelemetry_proto-1.31.1.tar.gz", hash = "sha256:d93e9c2b444e63d1064fb50ae035bcb09e5822274f1683886970d2734208e790"},
 ]
 
 [package.dependencies]
@@ -2358,34 +2360,34 @@ protobuf = ">=5.0,<6.0"
 
 [[package]]
 name = "opentelemetry-sdk"
-version = "1.31.0"
+version = "1.31.1"
 description = "OpenTelemetry Python SDK"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "opentelemetry_sdk-1.31.0-py3-none-any.whl", hash = "sha256:97c9a03865e69723725fb64fe04343a488c3e61e684eb804bd7d6da2215dfc60"},
-    {file = "opentelemetry_sdk-1.31.0.tar.gz", hash = "sha256:452d7d5b3c1db2e5e4cb64abede0ddd20690cb244a559c73a59652fdf6726070"},
+    {file = "opentelemetry_sdk-1.31.1-py3-none-any.whl", hash = "sha256:882d021321f223e37afaca7b4e06c1d8bbc013f9e17ff48a7aa017460a8e7dae"},
+    {file = "opentelemetry_sdk-1.31.1.tar.gz", hash = "sha256:c95f61e74b60769f8ff01ec6ffd3d29684743404603df34b20aa16a49dc8d903"},
 ]
 
 [package.dependencies]
-opentelemetry-api = "1.31.0"
-opentelemetry-semantic-conventions = "0.52b0"
+opentelemetry-api = "1.31.1"
+opentelemetry-semantic-conventions = "0.52b1"
 typing-extensions = ">=3.7.4"
 
 [[package]]
 name = "opentelemetry-semantic-conventions"
-version = "0.52b0"
+version = "0.52b1"
 description = "OpenTelemetry Semantic Conventions"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "opentelemetry_semantic_conventions-0.52b0-py3-none-any.whl", hash = "sha256:4d843652ae1f9f3c0d4d8df0bfef740627c90495ac043fc33f0a04bad3b606e2"},
-    {file = "opentelemetry_semantic_conventions-0.52b0.tar.gz", hash = "sha256:f8bc8873a69d0a2f45746c31980baad2bb10ccee16b1816497ccf99417770386"},
+    {file = "opentelemetry_semantic_conventions-0.52b1-py3-none-any.whl", hash = "sha256:72b42db327e29ca8bb1b91e8082514ddf3bbf33f32ec088feb09526ade4bc77e"},
+    {file = "opentelemetry_semantic_conventions-0.52b1.tar.gz", hash = "sha256:7b3d226ecf7523c27499758a58b542b48a0ac8d12be03c0488ff8ec60c5bae5d"},
 ]
 
 [package.dependencies]
 deprecated = ">=1.2.6"
-opentelemetry-api = "1.31.0"
+opentelemetry-api = "1.31.1"
 
 [[package]]
 name = "orjson"
@@ -3085,21 +3087,21 @@ dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments
 
 [[package]]
 name = "pytest-asyncio"
-version = "0.21.2"
+version = "0.25.3"
 description = "Pytest support for asyncio"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 files = [
-    {file = "pytest_asyncio-0.21.2-py3-none-any.whl", hash = "sha256:ab664c88bb7998f711d8039cacd4884da6430886ae8bbd4eded552ed2004f16b"},
-    {file = "pytest_asyncio-0.21.2.tar.gz", hash = "sha256:d67738fc232b94b326b9d060750beb16e0074210b98dd8b58a5239fa2a154f45"},
+    {file = "pytest_asyncio-0.25.3-py3-none-any.whl", hash = "sha256:9e89518e0f9bd08928f97a3482fdc4e244df17529460bc038291ccaf8f85c7c3"},
+    {file = "pytest_asyncio-0.25.3.tar.gz", hash = "sha256:fc1da2cf9f125ada7e710b4ddad05518d4cee187ae9412e9ac9271003497f07a"},
 ]
 
 [package.dependencies]
-pytest = ">=7.0.0"
+pytest = ">=8.2,<9"
 
 [package.extras]
-docs = ["sphinx (>=5.3)", "sphinx-rtd-theme (>=1.0)"]
-testing = ["coverage (>=6.2)", "flaky (>=3.5.0)", "hypothesis (>=5.7.1)", "mypy (>=0.931)", "pytest-trio (>=0.7.0)"]
+docs = ["sphinx (>=5.3)", "sphinx-rtd-theme (>=1)"]
+testing = ["coverage (>=6.2)", "hypothesis (>=5.7.1)"]
 
 [[package]]
 name = "pytest-repeat"
@@ -3550,18 +3552,18 @@ unleash = ["UnleashClient (>=6.0.1)"]
 
 [[package]]
 name = "setuptools"
-version = "77.0.1"
+version = "77.0.3"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "setuptools-77.0.1-py3-none-any.whl", hash = "sha256:81a234dff81a82bb52e522c8aef145d0dd4de1fd6de4d3b196d0f77dc2fded26"},
-    {file = "setuptools-77.0.1.tar.gz", hash = "sha256:a1246a1b4178c66d7cf50c9fc6d530fac3f89bc284cf803c7fa878c41b1a03b2"},
+    {file = "setuptools-77.0.3-py3-none-any.whl", hash = "sha256:67122e78221da5cf550ddd04cf8742c8fe12094483749a792d56cd669d6cf58c"},
+    {file = "setuptools-77.0.3.tar.gz", hash = "sha256:583b361c8da8de57403743e756609670de6fb2345920e36dc5c2d914c319c945"},
 ]
 
 [package.extras]
 check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1)", "ruff (>=0.8.0)"]
-core = ["importlib_metadata (>=6)", "jaraco.collections", "jaraco.functools (>=4)", "jaraco.text (>=3.7)", "more_itertools", "more_itertools (>=8.8)", "packaging", "packaging (>=24.2)", "platformdirs (>=4.2.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
+core = ["importlib_metadata (>=6)", "jaraco.functools (>=4)", "jaraco.text (>=3.7)", "more_itertools", "more_itertools (>=8.8)", "packaging (>=24.2)", "platformdirs (>=4.2.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
 cover = ["pytest-cov"]
 doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
 enabler = ["pytest-enabler (>=2.2)"]
@@ -3600,6 +3602,26 @@ files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
     {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
 ]
+
+[[package]]
+name = "sounddevice"
+version = "0.5.1"
+description = "Play and Record Sound with Python"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "sounddevice-0.5.1-py3-none-any.whl", hash = "sha256:e2017f182888c3f3c280d9fbac92e5dbddac024a7e3442f6e6116bd79dab8a9c"},
+    {file = "sounddevice-0.5.1-py3-none-macosx_10_6_x86_64.macosx_10_6_universal2.whl", hash = "sha256:d16cb23d92322526a86a9490c427bf8d49e273d9ccc0bd096feecd229cde6031"},
+    {file = "sounddevice-0.5.1-py3-none-win32.whl", hash = "sha256:d84cc6231526e7a08e89beff229c37f762baefe5e0cc2747cbe8e3a565470055"},
+    {file = "sounddevice-0.5.1-py3-none-win_amd64.whl", hash = "sha256:4313b63f2076552b23ac3e0abd3bcfc0c1c6a696fc356759a13bd113c9df90f1"},
+    {file = "sounddevice-0.5.1.tar.gz", hash = "sha256:09ca991daeda8ce4be9ac91e15a9a81c8f81efa6b695a348c9171ea0c16cb041"},
+]
+
+[package.dependencies]
+CFFI = ">=1.0"
+
+[package.extras]
+numpy = ["NumPy"]
 
 [[package]]
 name = "soupsieve"
@@ -4295,4 +4317,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <4.0"
-content-hash = "25a03232129c8131efccdf79def61dea182132eeb0e054eddf01bcc8548695e3"
+content-hash = "5d38a31d13281335ac7790b5b4d4dd5d94237762c3f822f1bbb7012f7b9c4046"
