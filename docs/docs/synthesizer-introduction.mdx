@@ -128,11 +128,18 @@ Altneratively, you can use the `save_as()` method to save synthetic goldens loca
 
 ```python
 synthesizer.save_as(
-    # Or 'csv'
+    # Type of file to save ('json' or 'csv')
     file_type='json',
+    # Directory where the file will be saved
     directory="./synthetic_data"
+    # Optional custom filename (overrides file_type)
+    file_name="my_custom_dataset.json",
+    # Optional - suppresses console output if True
+    silent=False
 )
 ```
+
+By default, the method generates a timestamp-based filename (e.g., "20240523_152045.json"). When you provide a custom filename with the `file_name` parameter, that name is used instead, and the file type is determined from its extension. For example, even if you specify `file_type='csv'`, if your `file_name` is "dataset.json", the data will be saved in JSON format. This makes it easy to control both the naming and format with a single parameter.
 
 ## Customize Your Generations
 
