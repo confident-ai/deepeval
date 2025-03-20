@@ -915,7 +915,7 @@ class Synthesizer:
         else:
             try:
                 res = model.generate(prompt, schema=schema)
-                return res
+                return res[0]
             except TypeError:
                 res = model.generate(prompt)
                 data = trimAndLoadJson(res, self)
@@ -963,7 +963,7 @@ class Synthesizer:
             else:
                 res, cost = self.model.generate(prompt)
                 self.synthesis_cost += cost
-                return res.response
+                return res
         else:
             try:
                 res: Response = self.model.generate(prompt, schema=Response)
@@ -981,7 +981,7 @@ class Synthesizer:
             else:
                 res, cost = await self.model.a_generate(prompt)
                 self.synthesis_cost += cost
-                return res.response
+                return res
         else:
             try:
                 res: Response = await self.model.a_generate(
