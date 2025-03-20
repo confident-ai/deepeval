@@ -1127,6 +1127,22 @@ class Synthesizer:
                 ", ".join(type for type in valid_file_types)
             )
 
+    def _validate_file_name(self, file_name: str) -> None:
+        """Validate that the provided file name is valid.
+
+        Args:
+            file_name: The file name to validate
+
+        Raises:
+            ValueError: If the file name is invalid
+        """
+        if file_name and "." in file_name:
+            raise ValueError(
+                "file_name should not contain periods or file extensions. "
+                "The file extension will be added based on the file_type "
+                "parameter."
+            )
+
     def _validate_goldens_exist(self, file_type: str) -> None:
         """Validate that synthetic goldens exist.
 
@@ -1153,32 +1169,26 @@ class Synthesizer:
 
         Args:
             file_type: Type of file to save as ('json' or 'csv').
-                Ignored if file_name is provided.
             directory: Directory path where the file will be saved.
-            file_name: Optional custom filename. If provided, file_type is
-                       ignored and the file type is determined from the
-                       extension of file_name.
-            quiet: If True, no output regarding the save will be printed.
+            file_name: Optional custom filename without extension. If provided,
+                       the file will be saved as "{file_name}.{file_type}".
+                       Must not contain file extension or periods.
+            quiet: Optional boolean to suppress output messages about the save location.
 
         Returns:
             Full path to the saved file.
 
         Raises:
             ValueError: If file_type is invalid, no synthetic goldens exist,
-            or file_name has an invalid extension.
+            or file_name contains periods.
         """
-        if file_name:
-            # Extract extension from file_name
-            base_name, extension = os.path.splitext(file_name)
-            extension = extension.lstrip(".")
-            file_type = extension
-        else:
-            # Just set the base name without extension
-            base_name = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-
         self._validate_file_type(file_type)
         self._validate_goldens_exist(file_type)
+        self._validate_file_name(file_name)
 
+        base_name = file_name or datetime.datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
+        )
         new_filename = f"{base_name}.{file_type}"
 
         os.makedirs(directory, exist_ok=True)

@@ -375,10 +375,10 @@ def mock_synthesizer():
 
 
 def test_save_with_custom_json_filename(mock_synthesizer, monkeypatch, tmpdir):
-    """Test saving goldens with a custom JSON filename."""
+    """Test saving goldens with a custom filename."""
     test_dir = str(tmpdir.mkdir("test_goldens"))
-    json_filename = "custom_test.json"
-    expected_path = os.path.join(test_dir, json_filename)
+    json_filename = "custom_test"
+    expected_path = os.path.join(test_dir, f"{json_filename}.json")
     mock_json_dump_called = False
 
     def mock_json_dump(data, file_obj, **kwargs):
@@ -386,20 +386,20 @@ def test_save_with_custom_json_filename(mock_synthesizer, monkeypatch, tmpdir):
         mock_json_dump_called = True
 
     monkeypatch.setattr(json, "dump", mock_json_dump)
-    result = mock_synthesizer.save_as("csv", test_dir, file_name=json_filename)
+    result = mock_synthesizer.save_as("json", test_dir, file_name=json_filename)
 
     assert result == expected_path
     assert mock_json_dump_called
 
 
-def test_save_with_invalid_extension(mock_synthesizer, tmpdir):
-    """Test that saving with an invalid file extension raises an error."""
-    test_dir = str(tmpdir.mkdir("invalid_ext"))
+def test_save_with_invalid_filename_containing_period(mock_synthesizer, tmpdir):
+    """Test that saving with a filename containing a period raises an error."""
+    test_dir = str(tmpdir.mkdir("invalid_filename"))
 
     with pytest.raises(ValueError) as exc_info:
-        mock_synthesizer.save_as("json", test_dir, file_name="test.txt")
+        mock_synthesizer.save_as("json", test_dir, file_name="test.something")
 
-    assert "Invalid file type" in str(exc_info.value)
+    assert "file_name should not contain periods" in str(exc_info.value)
 
 
 def test_save_with_empty_goldens(tmpdir):

@@ -84,7 +84,7 @@ dataframe = synthesizer.to_pandas()
 print(dataframe)
 ```
 
-Here’s an example of what the resulting DataFrame might look like:
+Here's an example of what the resulting DataFrame might look like:
 
 | <div style={{width: "200px"}}>input</div>      | actual_output | expected_output | <div style={{width: "280px"}}>input</div>                             | retrieval_context | n_chunks_per_context | context_length | context_quality | synthetic_input_quality | evolutions | source_file |
 | ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | -------------------- | -------------- | --------------- | ----------------------- | ---------- | ----------- |
@@ -124,7 +124,7 @@ evaluate(dataset, metrics=[AnswerRelevancyMetric()])
 
 ### Locally
 
-Altneratively, you can use the `save_as()` method to save synthetic goldens locally:
+Alternatively, you can use the `save_as()` method to save synthetic goldens locally:
 
 ```python
 synthesizer.save_as(
@@ -135,22 +135,36 @@ synthesizer.save_as(
 )
 ```
 
-By default, the method generates a timestamp-based filename (e.g., "20240523_152045.json"). When you provide a custom filename with the `file_name` parameter, that name is used instead, and the file type is determined from its extension. For example, even if you specify `file_type='csv'`, if your `file_name` is "dataset.json", the data will be saved in JSON format. This makes it easy to control both the naming and format with a single parameter.
+The `save_as()` method supports the following parameters:
 
-The following example shows how to save a synthetic dataset as a JSON file in the `./synthetic_data` directory with a custom filename:
+- `file_type`: Specifies the format to save the data ('json' or 'csv')
+- `directory`: The folder path where the file will be saved
+- `file_name`: Optional custom filename without extension - when provided, the file will be saved as "{file_name}.{file_type}"
+- `quiet`: Optional boolean to suppress output messages about the save location
+
+By default, the method generates a timestamp-based filename (e.g., "20240523_152045.json"). When you provide a custom filename with the `file_name` parameter, that name is used as the base filename and the extension is added according to the `file_type` parameter.
+
+For example, if you specify `file_type='json'` and `file_name='my_dataset'`, the file will be saved as "my_dataset.json".
 
 ```python
+# Save as JSON with a custom filename my_dataset.json
 synthesizer.save_as(
-    # Type of file to save ('json' or 'csv')
     file_type='json',
-    # Directory where the file will be saved
     directory="./synthetic_data",
-    # Optional custom filename (overrides file_type)
-    file_name="my_custom_dataset.json",
-    # Optional - suppresses console output if True
-    quiet=True
+    file_name="my_dataset"
+)
+
+# Save as CSV with a custom filename my_dataset.csv
+synthesizer.save_as(
+    file_type='csv',
+    directory="./synthetic_data",
+    file_name="my_dataset"
 )
 ```
+
+:::caution
+Note that `file_name` should not contain any periods or file extensions, as these will be automatically added based on the `file_type` parameter.
+:::
 
 ## Customize Your Generations
 
