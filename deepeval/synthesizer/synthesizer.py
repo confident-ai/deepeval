@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple, Dict
+from typing import List, Optional, Union, Tuple, Dict, Literal
 from rich.console import Console
 from pydantic import BaseModel
 from itertools import chain
@@ -1117,55 +1117,9 @@ class Synthesizer:
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Generation finished 🎉! You can also run 'deepeval login' to generate and save goldens directly on Confident AI."
             )
 
-    def _validate_file_type(self, file_type: str) -> None:
-        """Validate that the provided file type is supported.
-
-        Args:
-            file_type: The file type to validate
-
-        Raises:
-            ValueError: If the file type is not supported
-        """
-        if str(file_type).lower() not in valid_file_types:
-            raise ValueError(
-                "Invalid file type. Available file types to save as: "
-                ", ".join(type for type in valid_file_types)
-            )
-
-    def _validate_file_name(self, file_name: str) -> None:
-        """Validate that the provided file name is valid.
-
-        Args:
-            file_name: The file name to validate
-
-        Raises:
-            ValueError: If the file name is invalid
-        """
-        if file_name and "." in file_name:
-            raise ValueError(
-                "file_name should not contain periods or file extensions. "
-                "The file extension will be added based on the file_type "
-                "parameter."
-            )
-
-    def _validate_goldens_exist(self, file_type: str) -> None:
-        """Validate that synthetic goldens exist.
-
-        Args:
-            file_type: The file type to validate
-
-        Raises:
-            ValueError: If no synthetic goldens exist
-        """
-        if len(self.synthetic_goldens) == 0:
-            raise ValueError(
-                "No synthetic goldens found. Please generate goldens before "
-                f"attempting to save data as {file_type}"
-            )
-
     def save_as(
         self,
-        file_type: str,
+        file_type: Literal["json", "csv"],
         directory: str,
         file_name: Optional[str] = None,
         quiet: bool = False,
@@ -1187,9 +1141,24 @@ class Synthesizer:
             ValueError: If file_type is invalid, no synthetic goldens exist,
             or file_name contains periods.
         """
-        self._validate_file_type(file_type)
-        self._validate_goldens_exist(file_type)
-        self._validate_file_name(file_name)
+        if str(file_type).lower() not in valid_file_types:
+            raise ValueError(
+                "Invalid file type. Available file types to save as: "
+                ", ".join(type for type in valid_file_types)
+            )
+
+        if file_name and "." in file_name:
+            raise ValueError(
+                "file_name should not contain periods or file extensions. "
+                "The file extension will be added based on the file_type "
+                "parameter."
+            )
+
+        if len(self.synthetic_goldens) == 0:
+            raise ValueError(
+                "No synthetic goldens found. Please generate goldens before saving goldens."
+            )
+        
 
         base_name = file_name or datetime.datetime.now().strftime(
             "%Y%m%d_%H%M%S"
