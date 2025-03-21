@@ -1158,7 +1158,6 @@ class Synthesizer:
             raise ValueError(
                 "No synthetic goldens found. Please generate goldens before saving goldens."
             )
-        
 
         base_name = file_name or datetime.datetime.now().strftime(
             "%Y%m%d_%H%M%S"
