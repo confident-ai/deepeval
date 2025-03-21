@@ -12,7 +12,7 @@ import tqdm
 import csv
 import os
 
-from deepeval.models import GPTModel
+from deepeval.models import GPTModel, AzureOpenAIModel
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
@@ -914,6 +914,11 @@ class Synthesizer:
         else:
             try:
                 res = model.generate(prompt, schema=schema)
+                if isinstance(model, AzureOpenAIModel):
+                    response, cost = res
+                    if self.synthesis_cost is not None:
+                        self.synthesis_cost += cost
+                    return response
                 return res
             except TypeError:
                 res = model.generate(prompt)
@@ -962,7 +967,7 @@ class Synthesizer:
             else:
                 res, cost = self.model.generate(prompt)
                 self.synthesis_cost += cost
-                return res.response
+                return res
         else:
             try:
                 res: Response = self.model.generate(prompt, schema=Response)
@@ -980,7 +985,7 @@ class Synthesizer:
             else:
                 res, cost = await self.model.a_generate(prompt)
                 self.synthesis_cost += cost
-                return res.response
+                return res
         else:
             try:
                 res: Response = await self.model.a_generate(
