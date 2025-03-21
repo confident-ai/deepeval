@@ -3,16 +3,15 @@ import asyncio
 import pytest
 import time
 import os
+import json
 
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
-from deepeval.models import OpenAIEmbeddingModel
 from deepeval.dataset import EvaluationDataset
+from deepeval.dataset.golden import Golden
 from deepeval.synthesizer import Synthesizer
 from deepeval.synthesizer.config import *
-from deepeval.synthesizer import (
-    Evolution,
-    PromptEvolution,
-)
+from deepeval.synthesizer import Evolution
+
 
 #########################################################
 ### Context #############################################
@@ -60,7 +59,7 @@ MadeUpCompany is a pioneering technology firm founded in 2010, specializing in c
 context_2 = """Products and Services
 We offer a suite of services ranging from cloud storage solutions, data analytics platforms, to custom machine learning models tailored for specific business needs. Our most popular product is CloudMate, a cloud storage solution designed for businesses of all sizes. It offers seamless data migration, top-tier security protocols, and an easy-to-use interface. Our data analytics service, DataWiz, helps companies turn raw data into actionable insights using advanced algorithms."""
 context_3 = """Pricing
-We have a variety of pricing options tailored to different needs. Our basic cloud storage package starts at $9.99 per month, with premium plans offering more storage and functionalities. We also provide enterprise solutions on a case-by-case basis, so it’s best to consult with our sales team for customized pricing."""
+We have a variety of pricing options tailored to different needs. Our basic cloud storage package starts at $9.99 per month, with premium plans offering more storage and functionalities. We also provide enterprise solutions on a case-by-case basis, so it's best to consult with our sales team for customized pricing."""
 context_4 = """Technical Support
 Our customer support team is available 24/7 to assist with any technical issues. We offer multiple channels for support including live chat, email, and a toll-free number. Most issues are typically resolved within 24 hours. We also have an extensive FAQ section on our website and a community forum for peer support."""
 context_5 = """Security and Compliance
@@ -363,6 +362,55 @@ def test_save_goldens(synthesizer: Synthesizer, file_type: str):
         synthesizer.save_as("csv", "./goldens")
     elif file_type == "json":
         synthesizer.save_as("json", "./goldens")
+
+
+@pytest.fixture
+def mock_synthesizer():
+    """Create a synthesizer with mocked goldens for testing."""
+    synthesizer = Synthesizer(async_mode=True)
+    synthesizer.synthetic_goldens = [
+        Golden(input="test input", expected_output="test output")
+    ]
+    return synthesizer
+
+
+def test_save_with_custom_json_filename(mock_synthesizer, monkeypatch, tmpdir):
+    """Test saving goldens with a custom filename."""
+    test_dir = str(tmpdir.mkdir("test_goldens"))
+    json_filename = "custom_test"
+    expected_path = os.path.join(test_dir, f"{json_filename}.json")
+    mock_json_dump_called = False
+
+    def mock_json_dump(data, file_obj, **kwargs):
+        nonlocal mock_json_dump_called
+        mock_json_dump_called = True
+
+    monkeypatch.setattr(json, "dump", mock_json_dump)
+    result = mock_synthesizer.save_as("json", test_dir, file_name=json_filename)
+
+    assert result == expected_path
+    assert mock_json_dump_called
+
+
+def test_save_with_invalid_filename_containing_period(mock_synthesizer, tmpdir):
+    """Test that saving with a filename containing a period raises an error."""
+    test_dir = str(tmpdir.mkdir("invalid_filename"))
+
+    with pytest.raises(ValueError) as exc_info:
+        mock_synthesizer.save_as("json", test_dir, file_name="test.something")
+
+    assert "file_name should not contain periods" in str(exc_info.value)
+
+
+def test_save_with_empty_goldens(tmpdir):
+    """Test that saving with no goldens raises an error."""
+    test_dir = str(tmpdir.mkdir("empty_goldens"))
+    empty_synthesizer = Synthesizer(async_mode=True)
+
+    with pytest.raises(ValueError) as exc_info:
+        empty_synthesizer.save_as("json", test_dir, file_name="test.json")
+
+    assert "No synthetic goldens found" in str(exc_info.value)
 
 
 def test_load_goldens(file_name: str):

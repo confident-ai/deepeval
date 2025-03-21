@@ -7,7 +7,6 @@ import datetime
 import asyncio
 import random
 import json
-from rich.console import Console
 from rich import print
 import tqdm
 import csv
@@ -1113,20 +1112,87 @@ class Synthesizer:
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Generation finished 🎉! You can also run 'deepeval login' to generate and save goldens directly on Confident AI."
             )
 
-    def save_as(self, file_type: str, directory: str) -> str:
-        if file_type not in valid_file_types:
+    def _validate_file_type(self, file_type: str) -> None:
+        """Validate that the provided file type is supported.
+
+        Args:
+            file_type: The file type to validate
+
+        Raises:
+            ValueError: If the file type is not supported
+        """
+        if str(file_type).lower() not in valid_file_types:
             raise ValueError(
-                f"Invalid file type. Available file types to save as: {', '.join(type for type in valid_file_types)}"
+                "Invalid file type. Available file types to save as: "
+                ", ".join(type for type in valid_file_types)
             )
+
+    def _validate_file_name(self, file_name: str) -> None:
+        """Validate that the provided file name is valid.
+
+        Args:
+            file_name: The file name to validate
+
+        Raises:
+            ValueError: If the file name is invalid
+        """
+        if file_name and "." in file_name:
+            raise ValueError(
+                "file_name should not contain periods or file extensions. "
+                "The file extension will be added based on the file_type "
+                "parameter."
+            )
+
+    def _validate_goldens_exist(self, file_type: str) -> None:
+        """Validate that synthetic goldens exist.
+
+        Args:
+            file_type: The file type to validate
+
+        Raises:
+            ValueError: If no synthetic goldens exist
+        """
         if len(self.synthetic_goldens) == 0:
             raise ValueError(
-                f"No synthetic goldens found. Please generate goldens before attempting to save data as {file_type}"
+                "No synthetic goldens found. Please generate goldens before "
+                f"attempting to save data as {file_type}"
             )
-        new_filename = (
-            datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f".{file_type}"
+
+    def save_as(
+        self,
+        file_type: str,
+        directory: str,
+        file_name: Optional[str] = None,
+        quiet: bool = False,
+    ) -> str:
+        """Save synthetic goldens to a file.
+
+        Args:
+            file_type: Type of file to save as ('json' or 'csv').
+            directory: Directory path where the file will be saved.
+            file_name: Optional custom filename without extension. If provided,
+                       the file will be saved as "{file_name}.{file_type}".
+                       Must not contain file extension or periods.
+            quiet: Optional boolean to suppress output messages about the save location.
+
+        Returns:
+            Full path to the saved file.
+
+        Raises:
+            ValueError: If file_type is invalid, no synthetic goldens exist,
+            or file_name contains periods.
+        """
+        self._validate_file_type(file_type)
+        self._validate_goldens_exist(file_type)
+        self._validate_file_name(file_name)
+
+        base_name = file_name or datetime.datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
         )
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        new_filename = f"{base_name}.{file_type}"
+
+        os.makedirs(directory, exist_ok=True)
+
         full_file_path = os.path.join(directory, new_filename)
         if file_type == "json":
             with open(full_file_path, "w", encoding="utf-8") as file:
@@ -1165,5 +1231,7 @@ class Synthesizer:
                             golden.source_file,
                         ]
                     )
-        print(f"Synthetic goldens saved at {full_file_path}!")
+        if not quiet:
+            print(f"Synthetic goldens saved at {full_file_path}!")
+
         return full_file_path
