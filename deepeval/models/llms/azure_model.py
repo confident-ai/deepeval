@@ -8,7 +8,7 @@ import re
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
-from deepeval.models.providers.gpt_model import (
+from deepeval.models.llms.openai_model import (
     valid_gpt_models,
     structured_outputs_models,
     structured_outputs_models,

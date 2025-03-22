@@ -264,8 +264,9 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
         max_goldens_per_context=1,
         document_paths=document_paths,
         context_construction_config=ContextConstructionConfig(
+            max_contexts_per_document=2,
             chunk_size=100,
-            max_context_length=4,
+            max_context_length=2,
         ),
         _send_data=False,
     )
@@ -277,10 +278,12 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
     print(synthesizer.to_pandas())
     synthesizer.push("Test Dataset 3")
 
+
 from custom_judge import JSONCustomModel, CustomModel
+
 model = CustomModel()
 synthesizer_sync = Synthesizer(async_mode=False)
-synthesizer_async = Synthesizer(async_mode=True, max_concurrent=3, model=model)
+synthesizer_async = Synthesizer(async_mode=True, max_concurrent=3)
 
 # test_generate_goldens_from_docs(synthesizer_sync)
 test_generate_goldens_from_docs(synthesizer_async)
@@ -347,6 +350,7 @@ def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
 #########################################################
 ### Save to JSON/CSV ####################################
 #########################################################
+
 
 def test_save_goldens(synthesizer: Synthesizer, file_type: str):
     goldens = synthesizer.generate_goldens_from_docs(

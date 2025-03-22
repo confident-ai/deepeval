@@ -30,9 +30,7 @@ class JSONCustomModel(DeepEvalBaseLLM):
         model_name = "gpt-4o"
         super().__init__(model_name)
 
-    def generate(
-        self, prompt: str, schema: BaseModel
-    ):
+    def generate(self, prompt: str, schema: BaseModel):
         client = OpenAI()
         completion = client.beta.chat.completions.parse(
             model=self.model_name,
@@ -44,9 +42,7 @@ class JSONCustomModel(DeepEvalBaseLLM):
         structured_output: BaseModel = completion.choices[0].message.parsed
         return structured_output
 
-    async def a_generate(
-        self, prompt: str, schema: BaseModel
-    ):
+    async def a_generate(self, prompt: str, schema: BaseModel):
         client = AsyncOpenAI()
         completion = await client.beta.chat.completions.parse(
             model=self.model_name,
@@ -70,9 +66,7 @@ class CustomModel(DeepEvalBaseLLM):
         model_name = "gpt-3.5-turbo"
         super().__init__(model_name)
 
-    def generate(
-        self, prompt: str
-    ):
+    def generate(self, prompt: str):
         client = OpenAI()
         completion = client.chat.completions.create(
             model=self.model_name,
@@ -83,9 +77,7 @@ class CustomModel(DeepEvalBaseLLM):
         output = completion.choices[0].message.content
         return output
 
-    async def a_generate(
-        self, prompt: str
-    ):
+    async def a_generate(self, prompt: str):
         client = AsyncOpenAI()
         completion = await client.chat.completions.create(
             model=self.model_name,

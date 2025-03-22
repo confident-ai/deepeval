@@ -7,10 +7,10 @@ import os
 from llama_index.core.query_engine import BaseQueryEngine
 from llama_index.core.indices.base import BaseIndex
 from langchain_core.documents import Document
+from deepeval.metrics.utils import initialize_embedding_model
 
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.integrations import captured_data, Frameworks, auto_eval_state
-from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
 from deepeval.dataset.utils import convert_goldens_to_test_cases
 from deepeval.synthesizer import Synthesizer
 from deepeval.tracing import trace_manager
@@ -188,7 +188,7 @@ def generate_goldens_from_nodes(
 ):
     # generate contexts from nodes
     context_generator = ContextGenerator(
-        embedder=OpenAIEmbeddingModel(),
+        embedder=initialize_embedding_model(),
         _nodes=[node for _, node in doc_nodes.items()],
     )
     context_generator._load_nodes()
