@@ -155,6 +155,7 @@ module.exports = {
             label: "Guides",
             activeBasePath: 'guides',
           },
+          // {to: 'blog', label: 'Blog', position: 'left'},
           {
             href: "https://confident-ai.com/blog",
             position: "left",
