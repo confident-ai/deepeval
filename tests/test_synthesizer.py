@@ -213,7 +213,6 @@ evolution_config = EvolutionConfig(
     num_evolutions=1,
     evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
 )
-
 filtration_config = FiltrationConfig()
 seed = 3
 styling_config = StylingConfig(
@@ -222,7 +221,6 @@ styling_config = StylingConfig(
     input_format=scenarios[seed]["input_format"],
     expected_output_format="3 word answer",
 )
-
 synthesizer = Synthesizer(
     async_mode=False,
     evolution_config=evolution_config,
@@ -273,16 +271,16 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
     )
     end_time = time.time()
     duration = end_time - start_time
-    print("Generated goldens from docs:", goldens)
+    print("Generated goldens from docs:", goldens[0])
+    print(goldens[0].additional_metadata)
     print(f"Time taken: {duration} seconds")
     print(synthesizer.to_pandas())
     synthesizer.push("Test Dataset 3")
 
-
-synthesizer_sync = Synthesizer(
-    async_mode=False,
-)
-synthesizer_async = Synthesizer(async_mode=True, max_concurrent=3)
+from custom_judge import JSONCustomModel, CustomModel
+model = CustomModel()
+synthesizer_sync = Synthesizer(async_mode=False)
+synthesizer_async = Synthesizer(async_mode=True, max_concurrent=3, model=model)
 
 # test_generate_goldens_from_docs(synthesizer_sync)
 test_generate_goldens_from_docs(synthesizer_async)
@@ -349,7 +347,6 @@ def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
 #########################################################
 ### Save to JSON/CSV ####################################
 #########################################################
-
 
 def test_save_goldens(synthesizer: Synthesizer, file_type: str):
     goldens = synthesizer.generate_goldens_from_docs(

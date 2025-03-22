@@ -126,7 +126,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             return await embedding_model.aembed_documents(texts)
 
     def should_use_azure_openai(self):
-        value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
+        value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI_EMBEDDING)
         return value.lower() == "yes" if value is not None else False
 
     def should_use_local_embeddings(self):

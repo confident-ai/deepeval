@@ -38,7 +38,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self.azure_endpoint = KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_OPENAI_ENDPOINT
         )
-
         # args and kwargs will be passed to the underlying model, in load_model function
         self.args = args
         self.kwargs = kwargs

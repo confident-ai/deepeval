@@ -12,7 +12,7 @@ class OllamaModel(DeepEvalBaseLLM):
     ):
         model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
         self.base_url = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_BASE_URL
+            KeyValues.LOCAL_EMBEDDING_BASE_URL
         )
         super().__init__(model_name)
 
