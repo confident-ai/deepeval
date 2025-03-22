@@ -1,8 +1,6 @@
 from typing import Optional, List, Protocol
 
 
-from typing import Protocol, Optional
-
 class FaithfulnessTemplateProtocol(Protocol):
     @staticmethod
     def generate_claims(actual_output: str) -> str:
@@ -30,7 +28,7 @@ class FaithfulnessTemplate:
 These truths, MUST BE COHERENT, and CANNOT be taken out of context.
     
 Example:
-Example Text: 
+Example Text: q
 "Albert Einstein, the genius often associated with wild hair and mind-bending theories, famously won the Nobel Prize in Physics—though not for his groundbreaking work on relativity, as many assume. Instead, in 1968, he was honored for his discovery of the photoelectric effect, a phenomenon that laid the foundation for quantum mechanics."
 
 Example JSON: 
