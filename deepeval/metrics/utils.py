@@ -1,6 +1,7 @@
 import inspect
 import json
 import re
+import sys
 from typing import Any, Dict, Optional, List, Union, Tuple
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
@@ -19,6 +20,7 @@ from deepeval.models import (
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 
+
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
@@ -32,6 +34,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MLLMImage,
 )
+
 
 
 def copy_metrics(
@@ -97,13 +100,14 @@ def get_turns_in_sliding_window(turns: List[LLMTestCase], window_size: int):
 
 
 def print_verbose_logs(metric: str, logs: str):
-    print("*" * 50)
-    print(f"{metric} Verbose Logs")
-    print("*" * 50)
-    print("")
-    print(logs)
-    print("")
-    print("=" * 70)
+    sys.stdout.write("*" * 50 + "\n")
+    sys.stdout.write(f"{metric} Verbose Logs\n")
+    sys.stdout.write("*" * 50 + "\n")
+    sys.stdout.write("\n")
+    sys.stdout.write(logs + "\n")
+    sys.stdout.write("\n")
+    sys.stdout.write("=" * 70 + "\n")
+    sys.stdout.flush()
 
 
 def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
