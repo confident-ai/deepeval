@@ -164,7 +164,6 @@ def set_azure_openai_embedding_env(
     )
     KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI_EMBEDDING, "YES")
     KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_EMBEDDINGS, "NO")
-
     print(
         ":raising_hands: Congratulations! You're now using Azure OpenAI Embeddings within DeepEval."
     )
@@ -201,7 +200,7 @@ def unset_azure_openai_embedding_env():
 
 
 @app.command(name="set-ollama")
-def set_local_model_env(
+def set_ollama_model_env(
     model_name: str = typer.Argument(..., help="Name of the Ollama model"),
     base_url: str = typer.Option(
         "http://localhost:11434",
@@ -221,13 +220,46 @@ def set_local_model_env(
 
 
 @app.command(name="unset-ollama")
-def unset_local_model_env():
+def unset_ollama_model_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_BASE_URL)
     KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
     KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_API_KEY)
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
+    )
+
+
+@app.command(name="set-ollama-embeddings")
+def set_ollama_embeddings_env(
+    model_name: str = typer.Argument(..., help="Name of the Ollama embedding model"),
+    base_url: str = typer.Option(
+        "http://localhost:11434/v1/",
+        "-b",
+        "--base-url",
+        help="Base URL for the Ollama embedding model API",
+    ),
+):
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
+    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_API_KEY, "ollama")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_EMBEDDINGS, "YES")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO")
+
+    print(
+        ":raising_hands: Congratulations! You're now using Ollama embeddings for all evals that require text embeddings."
+    )
+
+
+@app.command(name="unset-ollama-embeddings")
+def unset_ollama_embeddings_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_BASE_URL)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_EMBEDDINGS)
+
+    print(
+        ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
     )
 
 

@@ -31,6 +31,10 @@ The only difference between the `generate_goldens_from_docs()` and `generate_gol
 
 ## Generate Your Goldens
 
+:::note
+If you do not have an `OPENAI_API_KEY` and wish to synthesize goldens, you'll need to use [**custom embedding models**](/guides/guides-using-custom-embedding-models) in addition to custom LLMs.
+:::
+
 Before you begin, you must install `chromadb` as an additional dependency when generating from documents. The use of a vector database allows for efficient retrieval of chunks during context construction.
 
 ```python
