@@ -16,7 +16,6 @@ class FaithfulnessTemplateProtocol(Protocol):
     ) -> str:
         ...
 
-
     @staticmethod
     def generate_reason(score: float, contradictions: List[str]) -> str:
 
