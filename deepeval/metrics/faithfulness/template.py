@@ -7,13 +7,13 @@ class FaithfulnessTemplateProtocol(Protocol):
         ...
 
     @staticmethod
-    def generate_verdicts(claims: List[str], retrieval_context: str) -> str:
-        ...
-
-    @staticmethod
     def generate_truths(
         retrieval_context: str, extraction_limit: Optional[int] = None
     ) -> str:
+        ...
+
+    @staticmethod
+    def generate_verdicts(claims: List[str], retrieval_context: str) -> str:
         ...
 
     @staticmethod
