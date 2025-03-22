@@ -15,7 +15,10 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
+from deepeval.metrics.faithfulness.template import (
+    FaithfulnessTemplateProtocol,
+    FaithfulnessTemplate
+)
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.faithfulness.schema import (
     FaithfulnessVerdict,
