@@ -35,6 +35,7 @@
   "devDependencies": {
     "@docusaurus/module-type-aliases": "2.4.1",
     "css-loader": "^7.1.2",
+    "prettier": "^3.5.3",
     "style-loader": "^4.0.0"
   },
   "browserslist": {

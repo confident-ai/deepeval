@@ -8,6 +8,8 @@ image: https://i.imgur.com/mErPwqL.png
 hide_table_of_contents: false
 ---
 
+import FeatureComparisonTable from "@site/src/components/feature-comparison-table";
+
 **TL;DR:** Ragas is well-suited for lightweight experimentation — much like using pandas for quick data analysis. DeepEval takes a broader approach, offering a full evaluation ecosystem designed for production workflows, CI/CD integration, custom metrics, and integration with Confident AI for team collaboration, reporting, and analysis. The right tool depends on whether you're running ad hoc evaluations or building scalable LLM testing into your LLM stack.
 
 ## How is DeepEval Different?
@@ -83,18 +85,18 @@ For those that argues that Ragas is more trusted because they have a research-pa
 
 ### Metrics
 
-DeepEval does RAG evaluation very well, but apart from RAG, also supports evaluating LLM chatbot (conversations), and LLM agents, all through its plug-and-play metrics.
+DeepEval and Ragas both specialize in RAG evaluation, however:
 
-import FeatureComparisonTable from "@site/src/components/feature-comparison-table";
+- **Ragas**'s metrics has limited support for explanability, verbose log debugging, and error handling, and customizations
+- **DeepEval**'s metrics go beyond RAG, with support for agentic workflows, LLM chatbot conversations, all through its plug-and-play metrics.
+
+DeepEval also integrates with Confident AI so you can bring these metrics to your organization whenever you're ready.
 
 <FeatureComparisonTable type="ragas::metrics" competitor="Ragas" />
 
 ### Dataset Generation
 
-DeepEval and Ragas both specialize in dataset generation, however:
-
-- **Ragas** is deeply locked into the Langchain and LlamaIndex ecosystem, meaning you can't easily generate from any documents, and offers limited customizations
-- **DeepEval**'s synthesizer is 100% customizable within a few lines of code
+DeepEval and Ragas both offers in dataset generation, and while Ragas is deeply locked into the Langchain and LlamaIndex ecosystem, meaning you can't easily generate from any documents, and offers limited customizations, DeepEval's synthesizer is 100% customizable within a few lines of code
 
 If you look at the table below, you'll see that DeepEval's synthesizer is very flexible.
 
