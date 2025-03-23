@@ -93,9 +93,11 @@ class AnswerRelevancyMetric(BaseMetric):
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
+        
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
+            # Generate all results
             self.statements: List[str] = await self._a_generate_statements(
                 test_case.actual_output
             )
@@ -105,14 +107,16 @@ class AnswerRelevancyMetric(BaseMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
-            self.verbose_logs = construct_verbose_logs(
-                self,
-                steps=[
-                    f"Statements:\n{prettify_list(self.statements)}",
-                    f"Verdicts:\n{prettify_list(self.verdicts)}",
-                    f"Score: {self.score}\nReason: {self.reason}",
-                ],
-            )
+            
+            if self.verbose_mode:
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"Statements:\n{prettify_list(self.statements)}",
+                        f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
 
             return self.score
 
