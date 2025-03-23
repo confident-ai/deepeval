@@ -4,7 +4,6 @@ description: As the open-source LLM evaluation framework, DeepEval offers everyt
 slug: deepeval-alternatives-compared
 authors: [penguine]
 tags: [comparisons]
-image: https://i.imgur.com/mErPwqL.png
 hide_table_of_contents: false
 ---
 
@@ -17,7 +16,7 @@ As an open-source all-in-one LLM evaluation framework, DeepEval replaces _a lot_
 3. Are looking for an open-source framework that leads to an enterprise-ready platform for organization wide, collaborative LLM evaluation
 4. Want to scale beyond testing not just for functionality, but also for safety
 
-This guide is an overview of some alternatives to DeepEval, how they compare, and why people still choose DeepEval.
+This guide is an overview of some alternatives to DeepEval, how they compare, and [why people choose DeepEval.](/blog/deepeval-alternatives-compared#why-people-choose-deepeval)
 
 ## Ragas
 
@@ -163,6 +162,6 @@ The platform is closed-source, making it difficult to customize evaluation metri
 
 DeepEval is purpose-built for the ideal LLM evaluation workflow with support for prompt, RAG, agents, and chatbot testing. It offers full customizability, reliable and reproducible results like no one else, and allow users to trust fully for pre-deployment regressions testing and A|B experimentation for prompts and models.
 
-Its enterprise-ready cloud platform Confident AI is free, self-served, with transparent features and pricing, and teams can upgrade to more features whenever they are ready and feel comfortable after testing the entire product out.
+Its enterprise-ready cloud platform [Confident AI](https://confident-ai.com) takes no extra lines of code to integration, and allows you to take LLM evaluation to your organization once you see value with DeepEval. It is self-served, has transparent pricing, and teams can upgrade to more features whenever they are ready and feel comfortable after testing the entire platform out.
 
-It includes additional toolkits such as synthetic dataset and LLM red teaming so your team never has to stitch together multiple tools for your LLMOps purpose.
+It includes additional toolkits such as synthetic dataset generation and LLM red teaming so your team never has to stitch together multiple tools for your LLMOps purpose.

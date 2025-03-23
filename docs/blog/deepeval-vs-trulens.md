@@ -4,7 +4,6 @@ description: As the open-source LLM evaluation framework, DeepEval offers everyt
 slug: deepeval-vs-trulens
 authors: [penguine]
 tags: [comparisons]
-image: https://i.imgur.com/mErPwqL.png
 hide_table_of_contents: false
 ---
 
