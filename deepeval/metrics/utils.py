@@ -20,7 +20,6 @@ from deepeval.models import (
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 
-
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
@@ -34,7 +33,6 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MLLMImage,
 )
-
 
 
 def copy_metrics(
