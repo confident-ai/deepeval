@@ -236,3 +236,7 @@
   color: #555 !important;
   margin-top: 0.25rem;
 }
+
+.cellText {
+  font-size: 13px;
+}

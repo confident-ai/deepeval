@@ -1214,6 +1214,162 @@ const datasets = {
       },
     ],
   },
+  braintrust: {
+    summary: [
+      {
+        feature: "RAG metrics",
+        description: "The popular RAG metrics such as faithfulness",
+        deepeval: true,
+        competitor: true,
+      },
+      {
+        feature: "Conversational metrics",
+        description: "Evaluates LLM chatbot conversationals",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Agentic metrics",
+        description: "Evaluates agentic workflows, tool use",
+        deepeval: true,
+        competitor: "Limited",
+      },
+      {
+        feature: "Safety LLM red teaming",
+        description:
+          "Metrics for LLM safety and security like bias, PII leakage",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Multi-modal LLM evaluation",
+        description: "Metrics involving image generations as well",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Custom, research-backed metrics",
+        description: "Custom metrics builder with research-backing",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Custom, deterministic metrics",
+        description: "Custom, LLM powered decision-based metrics",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Open-source",
+        description: "Open with nothing to hide",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "LLM evaluation platform",
+        description:
+          "Testing reports, regression A|B testing, metric analysis, metric validation",
+        deepeval: true,
+        competitor: true,
+      },
+      {
+        feature: "LLM observability platform",
+        description: "LLM tracing, monitoring, cost & latency tracking",
+        deepeval: true,
+        competitor: true,
+      },
+      {
+        feature: "Enterprise-ready platform",
+        description: "SSO, compliance, user roles & permissions, etc.",
+        deepeval: true,
+        competitor: true,
+      },
+      {
+        feature: "Is Confident in their product",
+        description: "Just kidding",
+        deepeval: true,
+        competitor: false,
+      },
+    ],
+  },
+  promptfoo: {
+    summary: [
+      {
+        feature: "RAG metrics",
+        description: "The popular RAG metrics such as faithfulness",
+        deepeval: true,
+        competitor: true,
+      },
+      {
+        feature: "Conversational metrics",
+        description: "Evaluates LLM chatbot conversationals",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Agentic metrics",
+        description: "Evaluates agentic workflows, tool use",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Safety LLM red teaming",
+        description:
+          "Metrics for LLM safety and security like bias, PII leakage",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Multi-modal LLM evaluation",
+        description: "Metrics involving image generations as well",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Custom, research-backed metrics",
+        description: "Custom metrics builder with research-backing",
+        deepeval: true,
+        competitor: true,
+      },
+      {
+        feature: "Custom, deterministic metrics",
+        description: "Custom, LLM powered decision-based metrics",
+        deepeval: true,
+        competitor: false,
+      },
+      {
+        feature: "Open-source",
+        description: "Open with nothing to hide",
+        deepeval: true,
+        competitor: true,
+      },
+      {
+        feature: "LLM evaluation platform",
+        description:
+          "Testing reports, regression A|B testing, metric analysis, metric validation",
+        deepeval: true,
+        competitor: true,
+      },
+      {
+        feature: "LLM observability platform",
+        description: "LLM tracing, monitoring, cost & latency tracking",
+        deepeval: true,
+        competitor: "Limited",
+      },
+      {
+        feature: "Enterprise-ready platform",
+        description: "SSO, compliance, user roles & permissions, etc.",
+        deepeval: true,
+        competitor: "Half-way there",
+      },
+      {
+        feature: "Is Confident in their product",
+        description: "Just kidding",
+        deepeval: true,
+        competitor: false,
+      },
+    ],
+  },
 };
 
 export default function FeatureComparisonTable({ type, competitor }) {
@@ -1222,7 +1378,7 @@ export default function FeatureComparisonTable({ type, competitor }) {
 
   const renderValue = (value) => {
     if (typeof value === "string") {
-      return value;
+      return <span className={styles.cellText}>{value}</span>;
     }
 
     return value ? (

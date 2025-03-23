@@ -78,6 +78,10 @@ module.exports = {
     [
       "@docusaurus/preset-classic",
       {
+        blog: {
+          blogTitle: 'DeepEval Blog',
+          blogDescription: 'The official LLM evaluation blog',
+        },
         docs: {
           path: "docs",
           editUrl: "https://github.com/confident-ai/deepeval/edit/main/docs/",
