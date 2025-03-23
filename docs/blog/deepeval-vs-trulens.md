@@ -8,6 +8,8 @@ image: https://i.imgur.com/mErPwqL.png
 hide_table_of_contents: false
 ---
 
+**TL;DR:** TruLens offers useful tooling for basic LLM app monitoring and runtime feedback, but it’s still early-stage and lacks many core evaluation features — including agentic and conversational metrics, granular test control, and safety testing. DeepEval takes a more complete approach to LLM evaluation, supporting structured testing, CI/CD workflows, custom metrics, and integration with Confident AI for collaborative analysis, sharing, and decision-making across teams.
+
 ## What Makes DeepEval Stand Out?
 
 ### 1. Purpose-Built for Developers

@@ -8,6 +8,8 @@ image: https://i.imgur.com/mErPwqL.png
 hide_table_of_contents: false
 ---
 
+**TL;DR:** Ragas is well-suited for lightweight experimentation — much like using pandas for quick data analysis. DeepEval takes a broader approach, offering a full evaluation ecosystem designed for production workflows, CI/CD integration, custom metrics, and integration with Confident AI for team collaboration, reporting, and analysis. The right tool depends on whether you're running ad hoc evaluations or building scalable LLM testing into your LLM stack.
+
 ## How is DeepEval Different?
 
 ### 1. We're built for developers
