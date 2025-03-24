@@ -69,12 +69,13 @@ class FinancialAdvisorLLM(DeepEvalBaseLLM):
         client = self.load_model()
         response = client.chat.completions.create(
             model="gpt-4o",
-            "messages": [
+            messages = [
                 {"role": "system", "content": self.get_system_prompt()},
                 {"role": "user", "content": prompt}
             ]
         )
-        return completion.choices[0].message
+
+        return response.choices[0].message.content
 
     # Async version of the generate method
     async def a_generate(self, prompt: str) -> str:
