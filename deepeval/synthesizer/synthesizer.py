@@ -694,6 +694,8 @@ class Synthesizer:
     ) -> Dict[PromptEvolution, float]:
         prompt_evolutions: Dict[PromptEvolution, float] = {}
         for evo, weight in evolutions.items():
+            if evo == Evolution.MULTICONTEXT:
+                continue
             prompt_evolution = self.map_evolution_to_prompt_evolution(evo)
             prompt_evolutions[prompt_evolution] = weight
         return prompt_evolutions
