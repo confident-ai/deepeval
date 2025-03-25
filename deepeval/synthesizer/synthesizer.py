@@ -12,7 +12,7 @@ import tqdm
 import csv
 import os
 
-from deepeval.models import GPTModel, AzureOpenAIModel
+from deepeval.models import GPTModel, AzureOpenAIModel, OllamaModel
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
@@ -901,7 +901,7 @@ class Synthesizer:
         schema: BaseModel,
         model: DeepEvalBaseLLM,
     ) -> BaseModel:
-        if isinstance(model, GPTModel):
+        if isinstance(model, GPTModel) or isinstance(model, OllamaModel):
             res, cost = model.generate(prompt)
             if self.synthesis_cost is not None:
                 self.synthesis_cost += cost
@@ -935,7 +935,7 @@ class Synthesizer:
         schema: BaseModel,
         model: DeepEvalBaseLLM,
     ) -> BaseModel:
-        if isinstance(model, GPTModel):
+        if isinstance(model, GPTModel) or isinstance(model, OllamaModel):
             res, cost = await model.a_generate(prompt)
             if self.synthesis_cost is not None:
                 self.synthesis_cost += cost
