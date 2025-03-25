@@ -4,11 +4,18 @@ from typing import List
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseEmbeddingModel
 
+
 class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(self, *args, **kwargs):
-        self.base_url = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_EMBEDDING_BASE_URL)
-        model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_EMBEDDING_MODEL_NAME)
-        self.api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_EMBEDDING_API_KEY)
+        self.base_url = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_EMBEDDING_BASE_URL
+        )
+        model_name = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_EMBEDDING_MODEL_NAME
+        )
+        self.api_key = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_EMBEDDING_API_KEY
+        )
         self.args = args
         self.kwargs = kwargs
         super().__init__(model_name)

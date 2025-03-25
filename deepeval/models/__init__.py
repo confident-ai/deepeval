@@ -6,17 +6,17 @@ from deepeval.models.base_model import (
 )
 from deepeval.models.llms import (
     GPTModel,
-    MultimodalGPTModel,
     AzureOpenAIModel,
     LocalModel,
     OllamaModel,
 )
+from deepeval.models.mlllms import MultimodalOpenAIModel, MultimodalOllamaModel
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
     AzureOpenAIEmbeddingModel,
     LocalEmbeddingModel,
-    OllamaEmbeddingModel
-) 
+    OllamaEmbeddingModel,
+)
 
 # TODO: uncomment out once fixed
 # from deepeval.models.summac_model import SummaCModels

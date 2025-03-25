@@ -21,7 +21,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         model_name = None
         if isinstance(model, str):
             model_name = model
-            if (model_name not in valid_openai_embedding_models):
+            if model_name not in valid_openai_embedding_models:
                 raise ValueError(
                     f"Invalid model. Available OpenAI Embedding models: {', '.join(model for model in valid_openai_embedding_models)}"
                 )
@@ -32,7 +32,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         super().__init__(model_name)
 
     def load_model(self):
-       return OpenAIEmbeddings(model=self.model_name, **self.kwargs)
+        return OpenAIEmbeddings(model=self.model_name, **self.kwargs)
 
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()

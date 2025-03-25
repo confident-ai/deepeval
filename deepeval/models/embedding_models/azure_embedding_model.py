@@ -4,18 +4,26 @@ from typing import List
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseEmbeddingModel
 
+
 class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(self, *args, **kwargs):
-        self.azure_openai_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_OPENAI_API_KEY)
-        self.openai_api_version = KEY_FILE_HANDLER.fetch_data(KeyValues.OPENAI_API_VERSION)
-        self.azure_embedding_deployment = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME)
-        self.azure_endpoint = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_OPENAI_ENDPOINT)
+        self.azure_openai_api_key = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AZURE_OPENAI_API_KEY
+        )
+        self.openai_api_version = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.OPENAI_API_VERSION
+        )
+        self.azure_embedding_deployment = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
+        )
+        self.azure_endpoint = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AZURE_OPENAI_ENDPOINT
+        )
         self.args = args
         self.kwargs = kwargs
         super().__init__(self.azure_embedding_deployment)
-        
 
-    def load_model(self):            
+    def load_model(self):
         return AzureOpenAIEmbeddings(
             openai_api_version=self.openai_api_version,
             azure_deployment=self.azure_embedding_deployment,

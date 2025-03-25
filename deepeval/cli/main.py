@@ -232,7 +232,9 @@ def unset_ollama_model_env():
 
 @app.command(name="set-ollama-embeddings")
 def set_ollama_embeddings_env(
-    model_name: str = typer.Argument(..., help="Name of the Ollama embedding model"),
+    model_name: str = typer.Argument(
+        ..., help="Name of the Ollama embedding model"
+    ),
     base_url: str = typer.Option(
         "http://localhost:11434/v1/",
         "-b",

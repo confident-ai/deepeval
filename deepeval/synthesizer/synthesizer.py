@@ -12,7 +12,6 @@ import tqdm
 import csv
 import os
 
-from deepeval.models import GPTModel, AzureOpenAIModel
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
