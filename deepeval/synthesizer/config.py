@@ -55,5 +55,4 @@ class ContextConstructionConfig:
 
     def __post_init__(self):
         self.critic_model, _ = initialize_model(self.critic_model)
-        if self.embedder is None:
-            self.embedder = initialize_embedding_model()
+        self.embedder = initialize_embedding_model(self.embedder)

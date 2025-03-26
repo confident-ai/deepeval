@@ -1,10 +1,5 @@
 import asyncio
-from pydantic import BaseModel
-
-import logging
 import openai
-from openai import OpenAI, AsyncOpenAI
-from pydantic import BaseModel
 
 from typing import Optional, Tuple
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
@@ -12,9 +7,8 @@ from langchain_community.callbacks import get_openai_callback
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.models import GPTModel
-from deepeval.models.gpt_model_schematic import *
+from deepeval.models import DeepEvalBaseLLM, GPTModel
+from deepeval.models.llms.openai_model import *
 
 #########################################################
 ##### custom model with no pydantic_model argument

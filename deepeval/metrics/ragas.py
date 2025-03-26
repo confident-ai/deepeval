@@ -1,9 +1,8 @@
 """An implementation of the Ragas metric"""
 
-from typing import Optional, Union, Any, List
+from typing import Optional, Union, List
 from langchain_core.language_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
-from enum import Enum
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
