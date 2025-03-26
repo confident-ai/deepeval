@@ -4,14 +4,19 @@ from deepeval.models.base_model import (
     DeepEvalBaseMLLM,
     DeepEvalBaseEmbeddingModel,
 )
-from deepeval.models.providers import (
+from deepeval.models.llms import (
     GPTModel,
-    MultimodalGPTModel,
     AzureOpenAIModel,
     LocalModel,
     OllamaModel,
 )
-from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
+from deepeval.models.mlllms import MultimodalOpenAIModel, MultimodalOllamaModel
+from deepeval.models.embedding_models import (
+    OpenAIEmbeddingModel,
+    AzureOpenAIEmbeddingModel,
+    LocalEmbeddingModel,
+    OllamaEmbeddingModel,
+)
 
 # TODO: uncomment out once fixed
 # from deepeval.models.summac_model import SummaCModels

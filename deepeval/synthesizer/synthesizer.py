@@ -12,11 +12,10 @@ import tqdm
 import csv
 import os
 
-from deepeval.models import GPTModel, AzureOpenAIModel
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
-    is_gpt_model,
+    is_native_model,
     trimAndLoadJson,
     initialize_model,
 )
@@ -87,8 +86,6 @@ class Synthesizer:
         cost_tracking: bool = False,
     ):
         self.model, self.using_native_model = initialize_model(model)
-        self.using_gpt_model = is_gpt_model(model)
-
         self.async_mode = async_mode
         self.max_concurrent = max_concurrent
         self.synthetic_goldens: List[Golden] = []
@@ -697,6 +694,8 @@ class Synthesizer:
     ) -> Dict[PromptEvolution, float]:
         prompt_evolutions: Dict[PromptEvolution, float] = {}
         for evo, weight in evolutions.items():
+            if evo == Evolution.MULTICONTEXT:
+                continue
             prompt_evolution = self.map_evolution_to_prompt_evolution(evo)
             prompt_evolutions[prompt_evolution] = weight
         return prompt_evolutions
@@ -901,28 +900,20 @@ class Synthesizer:
         schema: BaseModel,
         model: DeepEvalBaseLLM,
     ) -> BaseModel:
-        if isinstance(model, GPTModel):
-            res, cost = model.generate(prompt)
+        if is_native_model(model):
+            res, cost = model.generate(prompt, schema)
             if self.synthesis_cost is not None:
                 self.synthesis_cost += cost
-            data = trimAndLoadJson(res, self)
-            if schema == SyntheticDataList:
-                data_list = [SyntheticData(**item) for item in data["data"]]
-                return SyntheticDataList(data=data_list)
-            else:
-                return schema(**data)
+            return res
         else:
             try:
                 res = model.generate(prompt, schema=schema)
-                if isinstance(model, AzureOpenAIModel):
-                    response, cost = res
-                    if self.synthesis_cost is not None:
-                        self.synthesis_cost += cost
-                    return response
                 return res
             except TypeError:
                 res = model.generate(prompt)
                 data = trimAndLoadJson(res, self)
+                # `SyntheticDataList` is nested, so must be manually processed
+                # if custom model doesn't support schema
                 if schema == SyntheticDataList:
                     data_list = [SyntheticData(**item) for item in data["data"]]
                     return SyntheticDataList(data=data_list)
@@ -935,16 +926,11 @@ class Synthesizer:
         schema: BaseModel,
         model: DeepEvalBaseLLM,
     ) -> BaseModel:
-        if isinstance(model, GPTModel):
-            res, cost = await model.a_generate(prompt)
+        if is_native_model(model):
+            res, cost = await model.a_generate(prompt, schema)
             if self.synthesis_cost is not None:
                 self.synthesis_cost += cost
-            data = trimAndLoadJson(res, self)
-            if schema == SyntheticDataList:
-                data_list = [SyntheticData(**item) for item in data["data"]]
-                return SyntheticDataList(data=data_list)
-            else:
-                return schema(**data)
+            return res
         else:
             try:
                 res = await model.a_generate(prompt, schema=schema)
@@ -952,6 +938,8 @@ class Synthesizer:
             except TypeError:
                 res = await model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
+                # `SyntheticDataList` is nested, so must be manually processed
+                # if custom model doesn't support schema
                 if schema == SyntheticDataList:
                     data_list = [SyntheticData(**item) for item in data["data"]]
                     return SyntheticDataList(data=data_list)
@@ -960,14 +948,10 @@ class Synthesizer:
 
     def _generate(self, prompt: str) -> str:
         if self.using_native_model:
-            if self.using_gpt_model:
-                res, cost = self.model.generate(prompt, schema=Response)
+            res, cost = self.model.generate(prompt)
+            if self.synthesis_cost is not None:
                 self.synthesis_cost += cost
-                return res.response
-            else:
-                res, cost = self.model.generate(prompt)
-                self.synthesis_cost += cost
-                return res
+            return res
         else:
             try:
                 res: Response = self.model.generate(prompt, schema=Response)
@@ -978,14 +962,10 @@ class Synthesizer:
 
     async def _a_generate(self, prompt: str) -> str:
         if self.using_native_model:
-            if self.using_gpt_model:
-                res, cost = await self.model.a_generate(prompt, schema=Response)
+            res, cost = await self.model.a_generate(prompt)
+            if self.synthesis_cost is not None:
                 self.synthesis_cost += cost
-                return res.response
-            else:
-                res, cost = await self.model.a_generate(prompt)
-                self.synthesis_cost += cost
-                return res
+            return res
         else:
             try:
                 res: Response = await self.model.a_generate(
