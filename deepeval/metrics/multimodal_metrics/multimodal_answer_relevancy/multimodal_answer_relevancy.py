@@ -240,7 +240,7 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
             self.evaluation_cost += cost
             statements: List[str] = res.statements + [
                 ele for ele in actual_output if isinstance(ele, MLLMImage)
-            ]   
+            ]
             return statements
         else:
             try:

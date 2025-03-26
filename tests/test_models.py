@@ -46,4 +46,3 @@ def test_generate_with_schema_returns_city_object(model_class):
     ), f"{model_class.__name__} should return a City object when schema is provided"
     assert isinstance(output.city, str)
     assert isinstance(output.country, str)
-

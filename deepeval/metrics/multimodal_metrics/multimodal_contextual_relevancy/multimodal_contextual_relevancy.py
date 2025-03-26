@@ -202,7 +202,9 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
             input=input, context=context
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ContextualRelevancyVerdicts)
+            res, cost = await self.model.a_generate(
+                prompt, schema=ContextualRelevancyVerdicts
+            )
             self.evaluation_cost += cost
             return res
         else:
@@ -225,7 +227,9 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
             input=input, context=context
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ContextualRelevancyVerdicts)
+            res, cost = self.model.generate(
+                prompt, schema=ContextualRelevancyVerdicts
+            )
             self.evaluation_cost += cost
             return res
         else:

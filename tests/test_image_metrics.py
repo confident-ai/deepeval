@@ -105,15 +105,16 @@ def test_text_to_image(text_to_image_case):
         test_cases=[text_to_image_case],
         metrics=[TextToImageMetric()],
         verbose_mode=True,
-        run_async=False
+        run_async=False,
     )
+
 
 def test_image_editing(image_editing_case):
     evaluate(
         test_cases=[image_editing_case],
         metrics=[ImageEditingMetric()],
         verbose_mode=True,
-        run_async=False
+        run_async=False,
     )
 
 
@@ -128,5 +129,5 @@ def test_multimodal_rag_case(multimodal_rag_case):
             MultimodalFaithfulnessMetric(),
         ],
         verbose_mode=True,
-        run_async=False
+        run_async=False,
     )

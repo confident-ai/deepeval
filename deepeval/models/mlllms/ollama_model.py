@@ -21,7 +21,9 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
         super().__init__(model_name)
 
     def generate(
-        self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None
+        self,
+        multimodal_input: List[Union[str, MLLMImage]],
+        schema: Optional[BaseModel] = None,
     ) -> Tuple[Union[str, Dict], float]:
         chat_model = self.load_model()
         messages = self.generate_messages(multimodal_input)
@@ -40,7 +42,9 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
         )
 
     async def a_generate(
-        self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None
+        self,
+        multimodal_input: List[Union[str, MLLMImage]],
+        schema: Optional[BaseModel] = None,
     ) -> Tuple[str, float]:
         chat_model = self.load_model(async_mode=True)
         messages = self.generate_messages(multimodal_input)

@@ -106,7 +106,9 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         after=log_retry_error,
     )
     def generate(
-        self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None
+        self,
+        multimodal_input: List[Union[str, MLLMImage]],
+        schema: Optional[BaseModel] = None,
     ) -> Tuple[str, float]:
         client = OpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
@@ -129,7 +131,9 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         after=log_retry_error,
     )
     async def a_generate(
-        self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None
+        self,
+        multimodal_input: List[Union[str, MLLMImage]],
+        schema: Optional[BaseModel] = None,
     ) -> Tuple[str, float]:
         client = AsyncOpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
