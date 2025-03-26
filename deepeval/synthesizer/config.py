@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Optional, Union, Dict
 
-from deepeval.metrics.utils import initialize_model
+from deepeval.metrics.utils import initialize_model, initialize_embedding_model
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
@@ -55,6 +55,7 @@ class ContextConstructionConfig:
     max_retries: int = 3
 
     def __post_init__(self):
-        self.critic_model, _ = initialize_model(self.critic_model)
-        if self.embedder is None:
-            self.embedder = OpenAIEmbeddingModel()
+        if self.critic_model is not None:
+            self.critic_model, _ = initialize_model(self.critic_model)
+        if self.embedder is not None:
+            self.embedder = initialize_embedding_model(self.embedder)

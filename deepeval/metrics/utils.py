@@ -25,6 +25,8 @@ from deepeval.metrics import (
     BaseConversationalMetric,
     BaseMultimodalMetric,
 )
+from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
@@ -324,6 +326,17 @@ def initialize_model(
         f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, GPTModel, AzureOpenAIModel, OllamaModel, LocalModel."
     )
 
+def initialize_embedding_model(
+    model: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
+) -> DeepEvalBaseEmbeddingModel:
+    if isinstance(model, DeepEvalBaseEmbeddingModel):
+        return model
+    if isinstance(model, str) or model is None:
+        return OpenAIEmbeddingModel(model=model)
+    if isinstance(model, DeepEvalBaseEmbeddingModel):
+        return model
+    
+    raise TypeError(f"Unsupported type for embedding model: {type(model)}. Expected None, str, DeepEvalBaseEmbeddingModel.")
 
 def is_gpt_model(
     model: Optional[Union[str, DeepEvalBaseLLM, GPTModel]] = None,
