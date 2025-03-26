@@ -1,4 +1,3 @@
-from datasets import load_dataset
 from typing import List, Optional, Dict
 from tqdm import tqdm
 import pandas as pd
@@ -225,6 +224,8 @@ class MathQA(DeepEvalBaseBenchmark):
         return res
 
     def load_benchmark_dataset(self, task: MathQATask) -> List[Golden]:
+        from datasets import load_dataset
+
         if self.dataset:
             dataset = self.dataset
         else:

@@ -6,7 +6,7 @@ sidebar_label: Bias
 
 import Equation from "@site/src/components/equation";
 
-The bias metric determines whether your LLM output contains gender, racial, or political bias. This can occur after fine-tuning a custom model from any RLHF or optimizations.
+The bias metric uses LLM-as-a-judge to determine whether your LLM output contains gender, racial, or political bias. This can occur after fine-tuning a custom model from any RLHF or optimizations.
 
 :::info
 Bias in `deepeval` is a **referenceless** metric. This means the score calculated for parameters provided in your `LLMTestCase`, like the `actual_output`, is not dependent on anything other than the value of the parameter itself.
@@ -19,11 +19,14 @@ To use the `BiasMetric`, you'll have to provide the following arguments when cre
 - `input`
 - `actual_output`
 
+The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
 ## Example
 
 ```python
-from deepeval.metrics import BiasMetric
+from deepeva import evaluate
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BiasMetric
 
 metric = BiasMetric(threshold=0.5)
 test_case = LLMTestCase(
@@ -32,12 +35,14 @@ test_case = LLMTestCase(
     actual_output="Sorry, I cannot provide views for people living with autism."
 )
 
-metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are six optional parameters when creating a `BiasMetric`:
+There are **SIX** optional parameters when creating a `BiasMetric`:
 
 - [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
@@ -48,6 +53,21 @@ There are six optional parameters when creating a `BiasMetric`:
 
 :::note
 Unlike other metrics you've seen so far, the `threshold` for the `BiasMetric` is instead a maxmium threshold.
+:::
+
+### As a standalone
+
+You can also run the `BiasMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?

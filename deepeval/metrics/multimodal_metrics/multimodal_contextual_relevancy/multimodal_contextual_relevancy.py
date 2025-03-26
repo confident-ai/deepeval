@@ -134,10 +134,9 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(prompt, schema=Reason)
@@ -167,10 +166,9 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt, schema=Reason)
@@ -204,10 +202,11 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
             input=input, context=context
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(
+                prompt, schema=ContextualRelevancyVerdicts
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return ContextualRelevancyVerdicts(**data)
+            return res
         else:
             try:
                 res = await self.model.a_generate(
@@ -228,10 +227,11 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
             input=input, context=context
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(
+                prompt, schema=ContextualRelevancyVerdicts
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return ContextualRelevancyVerdicts(**data)
+            return res
         else:
             try:
                 res = self.model.generate(

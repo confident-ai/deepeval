@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field
 from typing import Optional, Union, Dict
 
-from deepeval.metrics.utils import initialize_model
+from deepeval.metrics.utils import initialize_embedding_model, initialize_model
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
-from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
 from deepeval.synthesizer.types import Evolution
 
 
@@ -56,5 +55,4 @@ class ContextConstructionConfig:
 
     def __post_init__(self):
         self.critic_model, _ = initialize_model(self.critic_model)
-        if self.embedder is None:
-            self.embedder = OpenAIEmbeddingModel()
+        self.embedder = initialize_embedding_model(self.embedder)

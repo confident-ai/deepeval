@@ -98,7 +98,7 @@ async def async_without_stream(user_message: str):
 
     # Run monitor() asynchronously in the background
     asyncio.create_task(
-        deepeval.a_monitor(input=user_message, output=full_output, model=model, event_name="RAG chatbot")
+        deepeval.a_monitor(input=user_message, response=output, model=model, event_name="RAG chatbot")
     )
     return output
 
@@ -121,8 +121,8 @@ import deepeval
 def sync_without_stream(user_message: str):
     model = "gpt-4-turbo"
     response = openai.ChatCompletion.create(
-    model=model,
-    messages=[{"role": "user", "content": user_message}]
+        model=model,
+        messages=[{"role": "user", "content": user_message}]
     )
     output = response["choices"][0]["message"]["content"]
 
@@ -171,7 +171,7 @@ sync_with_stream("Tell me a joke.")
 The examples above uses `OpenAI` but realistically it will be whatever implementation your LLM application is using to generate the _observable_ outputs based on some input it receives.
 :::
 
-There are four mandatory and ten optional parameters when using the `monitor()` function to monitor responses in production:
+There are **FOUR** mandatory and **TEN** optional parameters when using the `monitor()` function to monitor responses in production:
 
 - `input`: type `str`, the input to your LLM application.
 - `response`: type `str`, the final output of your LLM application.

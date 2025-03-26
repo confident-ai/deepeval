@@ -29,8 +29,11 @@ valid_bedrock_models = [
 ]
 
 default_bedrock_model = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
-default_multimodal_bedrock_model = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
+default_multimodal_bedrock_model = (
+    "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
+)
 default_system_message = "You are a helpful AI assistant. Always generate your response as a valid json. No explanation or extra information is needed just the json."
+
 
 class BedrockModel(DeepEvalBaseLLM):
     """A class that integrates with AWS Bedrock for model inference and text generation.
@@ -55,11 +58,12 @@ class BedrockModel(DeepEvalBaseLLM):
             model_id="your-bedrock-model-id",
             system_prompt="You are a helpful AI assistant. Always generate your response as a valid json. No explanation is needed just the json."
         )
-        
+
         # Generate text with a prompt
         response = model.generate("What is the capital of France?", schema)
         ```
     """
+
     def __init__(
         self,
         model_id: Optional[str] = None,
@@ -71,30 +75,43 @@ class BedrockModel(DeepEvalBaseLLM):
     ):
         """Initializes the BedrockModel with model_id, system_prompt, and optional AWS credentials."""
         self.model_id = model_id or default_bedrock_model
-        
+
         if self.model_id not in valid_bedrock_models:
             raise ValueError(
                 f"Invalid model: {self.model_id}. Available Bedrock models: {', '.join(model for model in valid_bedrock_models)}"
             )
 
         self.system_prompt = system_prompt or default_system_message
-        self.access_key_id = access_key_id or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_ACCESS_KEY_ID)
-        self.secret_access_key = secret_access_key or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SECRET_ACCESS_KEY)
-        self.session_token = session_token or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SESSION_TOKEN)
-        self.region = region or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_REGION)
+        self.access_key_id = access_key_id or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AWS_ACCESS_KEY_ID
+        )
+        self.secret_access_key = (
+            secret_access_key
+            or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SECRET_ACCESS_KEY)
+        )
+        self.session_token = session_token or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AWS_SESSION_TOKEN
+        )
+        self.region = region or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AWS_REGION
+        )
 
         if not (self.access_key_id and self.secret_access_key):
             try:
                 boto3.setup_default_session(region_name=self.region)
             except (NoCredentialsError, PartialCredentialsError):
-                raise ValueError("AWS credentials are not found. Please provide valid access keys or ensure your AWS credentials file is configured.")
+                raise ValueError(
+                    "AWS credentials are not found. Please provide valid access keys or ensure your AWS credentials file is configured."
+                )
 
         self.client = boto3.client(
-            "bedrock-runtime", 
+            "bedrock-runtime",
             region_name=self.region,
             aws_access_key_id=self.access_key_id,
             aws_secret_access_key=self.secret_access_key,
-            aws_session_token=self.session_token if self.session_token else None
+            aws_session_token=(
+                self.session_token if self.session_token else None
+            ),
         )
         print("DEBUG: boto3.client called")
 
@@ -110,35 +127,40 @@ class BedrockModel(DeepEvalBaseLLM):
             logger.error("Error decoding JSON")
             return {}
 
-    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict]:
+    def generate(
+        self, prompt: str, schema: Optional[BaseModel] = None
+    ) -> Union[BaseModel, dict]:
         """Generates text using the Bedrock model and returns the response as a Pydantic model."""
         messages = [{"role": "user", "content": prompt}]
-        
+
         if schema:
-            self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
-        
+            self.system_prompt += (
+                f"\nOutput JSON schema: {schema.model_json_schema()}"
+            )
+
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
             "messages": messages,
-            "system": self.system_prompt
+            "system": self.system_prompt,
         }
-        
+
         try:
             response = self.client.invoke_model(
-                modelId=self.model_id,
-                body=json.dumps(payload)
+                modelId=self.model_id, body=json.dumps(payload)
             )
 
             response_body = json.loads(response["body"].read().decode("utf-8"))
 
             content = response_body.get("content", [])
             if content and isinstance(content, list):
-                generated_text = content[0].get('text', '')
+                generated_text = content[0].get("text", "")
             else:
-                logger.error("Invalid response structure: 'content' not found or malformed")
+                logger.error(
+                    "Invalid response structure: 'content' not found or malformed"
+                )
                 generated_text = ""
-            
+
             if schema:
                 try:
                     extracted_result = self.extract_json(generated_text)
@@ -147,24 +169,26 @@ class BedrockModel(DeepEvalBaseLLM):
                     logger.error(f"Validation error: {e}")
                     return None
             return generated_text
-        
+
         except Exception as e:
             logger.error(f"An error occurred while generating the result: {e}")
             return {} if schema is None else None
-    
-    async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict]:
+
+    async def a_generate(
+        self, prompt: str, schema: Optional[BaseModel] = None
+    ) -> Union[BaseModel, dict]:
         return self.generate(prompt, schema)
 
     def get_model_name(self):
         """Returns the model ID being used."""
         return self.model_id
-    
+
 
 class MultimodalBedrockModel(DeepEvalBaseMLLM):
     """
     A class to interact with AWS Bedrock models for multimodal (text + image) evaluation.
 
-    This class integrates AWS Bedrock, allowing both text and image inputs for generating multimodal outputs. It supports 
+    This class integrates AWS Bedrock, allowing both text and image inputs for generating multimodal outputs. It supports
     both local and remote image inputs, converting images to base64 encoding for Bedrock requests.
 
     Attributes:
@@ -174,11 +198,11 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         session_token (str): AWS Session Token.
         region (str): The AWS region for the Bedrock service.
         client (boto3.client): The Bedrock client instance used for model interaction.
-    
+
     Example:
         ```python
         from deepeval.models import MultimodalBedrockModel
-        
+
         # Initialize the model
         model = MultimodalBedrockModel(
             model_id="your-bedrock-model-id",
@@ -186,7 +210,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
             secret_access_key="your-aws-secret-key",
             region="us-west-2"
         )
-        
+
         # Generate a response based on text and image input
         response = model.generate([
             "Describe what you see in this image:",
@@ -203,6 +227,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         a_generate: Asynchronous wrapper for the `generate` method.
         get_model_name: Returns the Bedrock model ID in use.
     """
+
     def __init__(
         self,
         model_id: Optional[str] = None,
@@ -212,7 +237,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         session_token: Optional[str] = None,
         region: Optional[str] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         self.model_id = model_id or default_multimodal_bedrock_model
         if self.model_id not in valid_bedrock_models:
@@ -221,23 +246,36 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
             )
 
         self.system_prompt = system_prompt or default_system_message
-        self.access_key_id = access_key_id or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_ACCESS_KEY_ID)
-        self.secret_access_key = secret_access_key or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SECRET_ACCESS_KEY)
-        self.session_token = session_token or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SESSION_TOKEN)
-        self.region = region or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_REGION)
+        self.access_key_id = access_key_id or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AWS_ACCESS_KEY_ID
+        )
+        self.secret_access_key = (
+            secret_access_key
+            or KEY_FILE_HANDLER.fetch_data(KeyValues.AWS_SECRET_ACCESS_KEY)
+        )
+        self.session_token = session_token or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AWS_SESSION_TOKEN
+        )
+        self.region = region or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AWS_REGION
+        )
 
         if not (self.access_key_id and self.secret_access_key):
             try:
                 boto3.setup_default_session(region_name=self.region)
             except (NoCredentialsError, PartialCredentialsError):
-                raise ValueError("AWS credentials are not found. Please provide valid access keys or ensure your AWS credentials file is configured.")
+                raise ValueError(
+                    "AWS credentials are not found. Please provide valid access keys or ensure your AWS credentials file is configured."
+                )
 
         self.client = boto3.client(
-            "bedrock-runtime", 
+            "bedrock-runtime",
             region_name=self.region,
             aws_access_key_id=self.access_key_id,
             aws_secret_access_key=self.secret_access_key,
-            aws_session_token=self.session_token if self.session_token else None
+            aws_session_token=(
+                self.session_token if self.session_token else None
+            ),
         )
 
         super().__init__(model_id, *args, **kwargs)
@@ -245,12 +283,12 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
 
     def load_model(self, *args, **kwargs):
         """Loads and initializes the Bedrock model.
-        
+
         Returns:
             A Bedrock model instance ready for evaluation.
         """
         return self.client
-    
+
     def extract_json(self, text: str) -> dict:
         """Attempts to parse the given text into a valid JSON dictionary."""
         try:
@@ -267,7 +305,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         image_bytes = image_buffer.getvalue()
         mime_type = f"image/{format}"
         return base64.b64encode(image_bytes).decode("utf-8"), mime_type
-    
+
     def download_image(self, url: str) -> PILImage:
         """Downloads an image from a URL and returns it as a PIL image."""
         headers = {
@@ -278,87 +316,109 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
             response.raise_for_status()
             return PILImage.open(BytesIO(response.content))
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Failed to download image from URL {url}: {str(e)}")
+            raise ValueError(
+                f"Failed to download image from URL {url}: {str(e)}"
+            )
 
-
-    def generate_prompt(self, multimodal_input: List[Union[str, MLLMImage]]) -> List[dict]:
+    def generate_prompt(
+        self, multimodal_input: List[Union[str, MLLMImage]]
+    ) -> List[dict]:
         """Constructs the message payload with both text and image inputs for Anthropic (base64 only)."""
         prompt = []
-        
+
         for item in multimodal_input:
             message = {"role": "user", "content": []}
-            
+
             if isinstance(item, str):
                 if item.strip():  # Ensure text is not empty or whitespace-only
                     message["content"].append({"type": "text", "text": item})
-            
+
             elif isinstance(item, MLLMImage):
                 if not hasattr(item, "local") or not hasattr(item, "url"):
-                    raise ValueError("Invalid MLLMImage object: Missing 'local' or 'url' attributes.")
-                
+                    raise ValueError(
+                        "Invalid MLLMImage object: Missing 'local' or 'url' attributes."
+                    )
+
                 if item.local:
                     try:
                         image = PILImage.open(item.url)
                         image_data, mime_type = self.encode_pil_image(image)
-                        message["content"].append({
+                        message["content"].append(
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": mime_type,
+                                    "data": image_data,
+                                },
+                            }
+                        )
+                    except FileNotFoundError:
+                        raise ValueError(
+                            f"Local image file not found: {item.url}"
+                        )
+                else:
+                    # Remote image handling
+                    if not isinstance(item.url, str) or not item.url.startswith(
+                        "http"
+                    ):
+                        raise ValueError("Invalid remote image URL.")
+                    image = self.download_image(item.url)
+                    image_data, mime_type = self.encode_pil_image(image)
+                    message["content"].append(
+                        {
                             "type": "image",
                             "source": {
                                 "type": "base64",
                                 "media_type": mime_type,
-                                "data": image_data
-                            }
-                        })
-                    except FileNotFoundError:
-                        raise ValueError(f"Local image file not found: {item.url}")
-                else:
-                    # Remote image handling
-                    if not isinstance(item.url, str) or not item.url.startswith("http"):
-                        raise ValueError("Invalid remote image URL.")
-                    image = self.download_image(item.url)
-                    image_data, mime_type = self.encode_pil_image(image)
-                    message["content"].append({
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": mime_type,
-                            "data": image_data
+                                "data": image_data,
+                            },
                         }
-                    })
+                    )
             else:
-                raise ValueError(f"Invalid input type: Expected str or MLLMImage, got {type(item).__name__}")
+                raise ValueError(
+                    f"Invalid input type: Expected str or MLLMImage, got {type(item).__name__}"
+                )
 
             if message["content"]:
                 prompt.append(message)
 
         return prompt
 
-    def generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Tuple[str, Optional[float]]:
+    def generate(
+        self,
+        multimodal_input: List[Union[str, MLLMImage]],
+        schema: Optional[BaseModel] = None,
+    ) -> Tuple[str, Optional[float]]:
         """Sends a synchronous request to Bedrock for text & image-based generation."""
-        
+
         messages_list = self.generate_prompt(multimodal_input)
 
         if schema:
-            self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
+            self.system_prompt += (
+                f"\nOutput JSON schema: {schema.model_json_schema()}"
+            )
 
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
             "messages": messages_list,
-            "system": self.system_prompt
+            "system": self.system_prompt,
         }
 
         try:
             response = self.client.invoke_model(
-                modelId=self.model_id,
-                body=json.dumps(payload)
+                modelId=self.model_id, body=json.dumps(payload)
             )
             response_body = json.loads(response["body"].read().decode("utf-8"))
-        
+
             content = response_body.get("content", [])
             if content and isinstance(content, list):
-                generated_text = content[0].get('text', '')
+                generated_text = content[0].get("text", "")
             else:
-                logger.error("Invalid response structure: 'content' not found or malformed")
+                logger.error(
+                    "Invalid response structure: 'content' not found or malformed"
+                )
                 generated_text = ""
 
             if schema:
@@ -374,7 +434,11 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
             logger.error(f"Error during Bedrock model inference: {e}")
             raise
 
-    async def a_generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Tuple[str, Optional[float]]:
+    async def a_generate(
+        self,
+        multimodal_input: List[Union[str, MLLMImage]],
+        schema: Optional[BaseModel] = None,
+    ) -> Tuple[str, Optional[float]]:
         """Async wrapper for the generate function."""
         return self.generate(multimodal_input, schema)
 

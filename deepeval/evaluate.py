@@ -181,11 +181,11 @@ def create_api_test_case(
         api_test_case.instance_id = id(api_test_case)
         api_test_case.turns = [
             create_api_test_case(
-                turn,
-                index,
-                api_test_case.instance_id,
-                test_case.additional_metadata,
-                test_case.comments,
+                test_case=turn,
+                index=index,
+                conversational_instance_id=api_test_case.instance_id,
+                additional_metadata=turn.additional_metadata,
+                comments=turn.comments,
             )
             for index, turn in enumerate(test_case.turns)
         ]

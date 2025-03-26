@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Literal
 from dataclasses import dataclass, field
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -781,16 +781,33 @@ class EvaluationDataset:
             )
         )
 
-    # TODO: add save test cases as well
-    def save_as(self, file_type: str, directory: str) -> str:
+    def save_as(
+        self,
+        file_type: Literal["json", "csv"],
+        directory: str,
+        include_test_cases: bool = False,
+    ) -> str:
         if file_type not in valid_file_types:
             raise ValueError(
                 f"Invalid file type. Available file types to save as: {', '.join(type for type in valid_file_types)}"
             )
 
-        if len(self.goldens) == 0:
+        goldens = [
+            Golden(
+                input=golden.input,
+                actual_output=golden.actual_output,
+                retrieval_context=golden.retrieval_context,
+                context=golden.context,
+                source_file=golden.source_file,
+            )
+            for golden in self.goldens
+        ]
+        if include_test_cases:
+            goldens.extend(convert_test_cases_to_goldens(self.test_cases))
+
+        if len(goldens) == 0:
             raise ValueError(
-                f"No synthetic goldens found. Please generate goldens before attempting to save data as {file_type}"
+                f"No goldens found. Please generate goldens before attempting to save data as {file_type}"
             )
 
         new_filename = (
@@ -809,10 +826,11 @@ class EvaluationDataset:
                         "input": golden.input,
                         "actual_output": golden.actual_output,
                         "expected_output": golden.expected_output,
+                        "retrieval_context": golden.retrieval_context,
                         "context": golden.context,
                         "source_file": golden.source_file,
                     }
-                    for golden in self.goldens
+                    for golden in goldens
                 ]
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
 
@@ -826,17 +844,29 @@ class EvaluationDataset:
                         "input",
                         "actual_output",
                         "expected_output",
+                        "retrieval_context",
                         "context",
                         "source_file",
                     ]
                 )
-                for golden in self.goldens:
+                for golden in goldens:
+                    retrieval_context = (
+                        "|".join(golden.retrieval_context)
+                        if golden.retrieval_context is not None
+                        else None
+                    )
+                    context = (
+                        "|".join(golden.context)
+                        if golden.context is not None
+                        else None
+                    )
                     writer.writerow(
                         [
                             golden.input,
                             golden.actual_output,
                             golden.expected_output,
-                            "|".join(golden.context),
+                            retrieval_context,
+                            context,
                             golden.source_file,
                         ]
                     )

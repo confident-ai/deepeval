@@ -222,7 +222,6 @@ html[data-theme="dark"] #rag-evaluation {
   }
 }
 
-
 @media (max-width: 600px) {
   #confident-workflow {
     width: 100% !important;
@@ -239,7 +238,8 @@ html[data-theme="dark"] #rag-evaluation {
   padding: 0 !important;
 }
 
-img, video {
+img,
+video {
   border-radius: 6px;
 }
 

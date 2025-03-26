@@ -70,9 +70,9 @@ This endpoint is 100% functional but no data validation is done when you use `cu
 :::
 
 ```bash
-curl -X POST "https://app.confident-ai.com/evaluate" \
+curl -X POST "https://deepeval.confident-ai.com/evaluate" \
      -H "Content-Type: application/json" \
-     -H "Authorization: Bearer CONFIDENT_AI_API_KEY" \
+     -H "CONFIDENT_API_KEY: your-project-api-key-goes-here" \
      -d '{
            "metricCollection": "your-metric-collection-name",
            "testCases": [
@@ -86,7 +86,7 @@ curl -X POST "https://app.confident-ai.com/evaluate" \
                "expected_tools": []
              }
            ]
-         }
+         }`
 ```
 
 Not all parameters in `"testCases"` are required. You should figure out what is the set of parameters required for your metric collection by reading what's required for each metric on the metrics **Glossary** page.

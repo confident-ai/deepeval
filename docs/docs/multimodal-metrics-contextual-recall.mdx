@@ -21,6 +21,8 @@ To use the `MultimodalContextualRecallMetric`, you'll have to provide the follow
 - `expected_output`
 - `retrieval_context`
 
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
 ## Example
 
 ```python
@@ -55,7 +57,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are six optional parameters when creating a `MultimodalContextualRecallMetric`:
+There are **SIX** optional parameters when creating a `MultimodalContextualRecallMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's Multimodal GPT models to use, **OR** any custom MLLM model of type `DeepEvalBaseMLLM`. Defaulted to 'gpt-4o'.

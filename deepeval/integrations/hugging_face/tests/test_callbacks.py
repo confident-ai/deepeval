@@ -8,7 +8,6 @@ from transformers import (
     DataCollatorForSeq2Seq,
 )
 
-from datasets import load_dataset
 
 from deepeval.integrations.hugging_face import DeepEvalHuggingFaceCallback
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
@@ -32,6 +31,8 @@ def create_prompt(row):
 
 
 def prepare_dataset(tokenizer, tokenizer_args):
+    from datasets import load_dataset
+
     dataset = load_dataset("pubmed_qa", "pqa_labeled")
     merged_dataset = dataset.map(
         create_prompt,

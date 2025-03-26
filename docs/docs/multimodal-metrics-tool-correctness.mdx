@@ -21,6 +21,8 @@ To use the `MultimodalToolCorrectnessMetric`, you'll have to provide the followi
 - `tools_called`
 - `expected_tools`
 
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
 ## Example
 
 ```python
@@ -41,7 +43,7 @@ print(metric.score)
 print(metric.reason)
 ```
 
-There are seven optional parameters when creating a `MultimodalToolCorrectnessMetric`:
+There are **SEVEN** optional parameters when creating a `MultimodalToolCorrectnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `evaluation_params`: A list of `ToolCallParams` indicating the strictness of the correctness criteria, available options are `ToolCallParams.INPUT_PARAMETERS` and `ToolCallParams.OUTPUT`. For example, supplying a list containing `ToolCallParams.INPUT_PARAMETERS` but excluding `ToolCallParams.OUTPUT`, will deem a tool correct if the tool name and input parameters match, even if the output does not. Defaults to an empty list.

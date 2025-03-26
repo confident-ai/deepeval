@@ -6,7 +6,7 @@ sidebar_label: Prompt Alignment
 
 import Equation from "@site/src/components/equation";
 
-The prompt alignment metric measures whether your LLM application is able to generate `actual_output`s that aligns with any **instructions** specified in your prompt template. `deepeval`'s prompt alignment metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The prompt alignment metric uses LLM-as-a-judge to measure whether your LLM application is able to generate `actual_output`s that aligns with any **instructions** specified in your prompt template. `deepeval`'s prompt alignment metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::tip
 Not sure if this metric is for you? Run the follow command to find out:
@@ -24,12 +24,14 @@ To use the `PromptAlignmentMetric`, you'll have to provide the following argumen
 - `input`
 - `actual_output`
 
+The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
 ## Example
 
 ```python
 from deepeval import evaluate
-from deepeval.metrics import PromptAlignmentMetric
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import PromptAlignmentMetric
 
 metric = PromptAlignmentMetric(
     prompt_instructions=["Reply in all uppercase"],
@@ -42,11 +44,14 @@ test_case = LLMTestCase(
     actual_output="We offer a 30-day full refund at no extra cost."
 )
 
-# Evaluate your test_case
-evaluate([test_case], [metric])
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are one mandatory and six optional parameters when creating an `PromptAlignmentMetric`:
+There are **ONE** mandatory and **SIX** optional parameters when creating an `PromptAlignmentMetric`:
 
 - `prompt_instructions`: a list of strings specifying the instructions you want followed in your prompt template.
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
@@ -56,15 +61,19 @@ There are one mandatory and six optional parameters when creating an `PromptAlig
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
-:::info
-Alternatively, you can call each metric's `measure` method directly.
+### As a standalone
+
+You can also run the `PromptAlignmentMetric` on a single test case as a standalone, one-off execution.
 
 ```python
+...
+
 metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+print(metric.score, metric.reason)
 ```
 
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?

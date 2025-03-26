@@ -6,14 +6,18 @@ from deepeval import assert_test
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     MultimodalContextualPrecisionMetric,
-    MultimodalAnswerRelevancyMetric
+    MultimodalAnswerRelevancyMetric,
 )
 
-SKIP_LIVE_TESTS = not (os.getenv("AWS_ACCESS_KEY_ID") and os.getenv("AWS_SECRET_ACCESS_KEY") and os.getenv("AWS_REGION"))
+SKIP_LIVE_TESTS = not (
+    os.getenv("AWS_ACCESS_KEY_ID")
+    and os.getenv("AWS_SECRET_ACCESS_KEY")
+    and os.getenv("AWS_REGION")
+)
 
 simple_test_case = LLMTestCase(
     input="What is the capital of France?",
-    actual_output="The capital of France is Paris."
+    actual_output="The capital of France is Paris.",
 )
 
 multimodal_test_case = MLLMTestCase(
@@ -62,6 +66,7 @@ multimodal_test_case = MLLMTestCase(
     ],
 )
 
+
 @pytest.mark.skipif(SKIP_LIVE_TESTS, reason="AWS credentials not set")
 class TestBedrockModelLive:
     """Live API tests for BedrockModel."""
@@ -80,12 +85,11 @@ class TestBedrockModelLive:
             access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
             secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
             session_token=os.getenv("AWS_SESSION_TOKEN"),
-            region=os.getenv("AWS_REGION")
+            region=os.getenv("AWS_REGION"),
         )
 
         response = model.generate(
-            "Give me information about Paris, France",
-            schema=CityInfo
+            "Give me information about Paris, France", schema=CityInfo
         )
 
         print(f"response: {response}")
@@ -93,7 +97,7 @@ class TestBedrockModelLive:
         assert isinstance(response, CityInfo)
         assert response.city == "Paris"
         assert response.country == "France"
-        assert response.population > 1000000  
+        assert response.population > 1000000
 
     def test_simple_evaluation(self):
         """Test simple evaluation with AnswerRelevancyMetric."""
@@ -102,7 +106,7 @@ class TestBedrockModelLive:
             access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
             secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
             session_token=os.getenv("AWS_SESSION_TOKEN"),
-            region=os.getenv("AWS_REGION")
+            region=os.getenv("AWS_REGION"),
         )
 
         metric = AnswerRelevancyMetric(model=model, threshold=0.8)
@@ -120,7 +124,7 @@ class TestMultimodalBedrockModelLive:
             access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
             secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
             session_token=os.getenv("AWS_SESSION_TOKEN"),
-            region=os.getenv("AWS_REGION")
+            region=os.getenv("AWS_REGION"),
         )
 
     def test_multimodal_evaluation(self):
@@ -128,7 +132,7 @@ class TestMultimodalBedrockModelLive:
 
         metrics = [
             MultimodalContextualPrecisionMetric(model=self.model),
-            MultimodalAnswerRelevancyMetric(model=self.model)
+            MultimodalAnswerRelevancyMetric(model=self.model),
         ]
 
         assert_test(

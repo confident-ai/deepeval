@@ -1,10 +1,5 @@
 import asyncio
-from pydantic import BaseModel
-
-import logging
 import openai
-from openai import OpenAI, AsyncOpenAI
-from pydantic import BaseModel
 
 from typing import Optional, Tuple
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
@@ -12,8 +7,8 @@ from langchain_community.callbacks import get_openai_callback
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.models.gpt_model_schematic import *
+from deepeval.models import DeepEvalBaseLLM, GPTModel
+from deepeval.models.llms.openai_model import *
 
 #########################################################
 ##### custom model with no pydantic_model argument
@@ -165,7 +160,7 @@ answer_relevancy_non_confine = AnswerRelevancyMetric(
 answer_relevancy_confine = AnswerRelevancyMetric(
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 bias = BiasMetric(verbose_mode=True, threshold=0.5, model="gpt-3.5-turbo-0125")
@@ -175,7 +170,7 @@ bias_non_confine = BiasMetric(
 bias_confine = BiasMetric(
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 contextual_precision = ContextualPrecisionMetric(
@@ -187,7 +182,7 @@ contextual_precision_non_confine = ContextualPrecisionMetric(
 contextual_precision_confine = ContextualPrecisionMetric(
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 contextual_recall = ContextualRecallMetric(
@@ -199,7 +194,7 @@ contextual_recall_non_confine = ContextualRecallMetric(
 contextual_recall_confine = ContextualRecallMetric(
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 contextual_relevancy = ContextualRelevancyMetric(
@@ -211,7 +206,7 @@ contextual_relevancy_non_confine = ContextualRelevancyMetric(
 contextual_relevancy_confine = ContextualRelevancyMetric(
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 faithfulness = FaithfulnessMetric(
@@ -223,7 +218,7 @@ faithfulness_non_confine = FaithfulnessMetric(
 faithfulness_confine = FaithfulnessMetric(
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 hallucination = HallucinationMetric(
@@ -235,7 +230,7 @@ hallucination_non_confine = HallucinationMetric(
 hallucination_confine = HallucinationMetric(
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 summarization = SummarizationMetric(
@@ -247,7 +242,7 @@ summarization_non_confine = SummarizationMetric(
 summarization_confine = SummarizationMetric(
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 toxicity = ToxicityMetric(
@@ -259,7 +254,7 @@ toxicity_non_confine = ToxicityMetric(
 toxicity_confine = ToxicityMetric(
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 g_eval = GEval(
@@ -293,7 +288,7 @@ g_eval_confine = GEval(
     ],
     verbose_mode=True,
     threshold=0.5,
-    model=SchematicGPTModel("gpt-3.5-turbo-0125"),
+    model=GPTModel("gpt-3.5-turbo-0125"),
 )
 
 #########################################################

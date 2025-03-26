@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict
-from datasets import load_dataset
 import pandas as pd
 from tqdm import tqdm
 
@@ -106,6 +105,8 @@ class BoolQ(DeepEvalBaseBenchmark):
         return {"prediction": prediction, "score": score}
 
     def load_benchmark_dataset(self) -> List[Golden]:
+        from datasets import load_dataset
+
         # Load dataset
         if self.dataset:
             dataset = self.dataset

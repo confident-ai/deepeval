@@ -4,10 +4,9 @@
 ###############################################
 
 import nltk
-import numpy as np
-import torch
 import os
 import json
+import torch
 from deepeval import utils as utils_misc
 
 
@@ -178,6 +177,8 @@ class _SummaCImager:
             return self.split_sentences(text) + self.split_paragraphs(text)
 
     def build_image(self, original, generated):
+        import numpy as np
+
         cache_key = (original, generated)
         if self.use_cache and cache_key in self.cache:
             cached_image = self.cache[cache_key]
@@ -277,6 +278,8 @@ class _SummaCImager:
             json.dump(cache_cp, f)
 
     def load_cache(self):
+        import numpy as np
+
         cache_file = self.get_cache_file()
         if os.path.isfile(cache_file):
             with open(cache_file, "r") as f:
@@ -301,6 +304,8 @@ class _SummaCConv(torch.nn.Module):
         norm_histo=False,
         **kwargs
     ):
+        import numpy as np
+
         # `bins` should be `even%d` or `percentiles`
         assert nli_labels in [
             "e",
@@ -380,6 +385,8 @@ class _SummaCConv(torch.nn.Module):
             print(self.load_state_dict(torch.load(start_file)))
 
     def build_image(self, original, generated):
+        import numpy as np
+
         images = [
             imager.build_image(original, generated) for imager in self.imagers
         ]
@@ -387,6 +394,8 @@ class _SummaCConv(torch.nn.Module):
         return image
 
     def compute_histogram(self, original=None, generated=None, image=None):
+        import numpy as np
+
         # Takes the two texts, and generates a (n_rows, 2*n_bins)
 
         if image is None:
@@ -547,6 +556,8 @@ class _SummaCZS:
         self.imager.save_cache()
 
     def score_one(self, original, generated):
+        import numpy as np
+
         image = self.imager.build_image(original, generated)
 
         ent_scores = np.max(image[0], axis=0)

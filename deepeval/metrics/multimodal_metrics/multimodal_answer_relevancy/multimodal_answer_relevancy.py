@@ -128,10 +128,9 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(
@@ -162,10 +161,9 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt=prompt, schema=Reason)
@@ -187,10 +185,9 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
             actual_output=self.statements,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+            return [item for item in res.verdicts]
         else:
             try:
                 res: Verdicts = await self.model.a_generate(
@@ -215,10 +212,9 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
             actual_output=self.statements,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return [AnswerRelvancyVerdict(**item) for item in data["verdicts"]]
+            return [item for item in res.verdicts]
         else:
             try:
                 res: Verdicts = self.model.generate(prompt, schema=Verdicts)
@@ -240,10 +236,9 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
             ],
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Statements)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            statements = data["statements"] + [
+            statements: List[str] = res.statements + [
                 ele for ele in actual_output if isinstance(ele, MLLMImage)
             ]
             return statements
@@ -274,10 +269,9 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
             ],
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Statements)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            statements = data["statements"] + [
+            statements = res.statements + [
                 ele for ele in actual_output if isinstance(ele, MLLMImage)
             ]
             return statements

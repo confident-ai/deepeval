@@ -1,7 +1,6 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Optional, List, Tuple, Union, Dict
-from pydantic import BaseModel
 from langchain.schema import AIMessage
 import math
 from deepeval.metrics import BaseMetric
@@ -11,6 +10,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     ToolCall,
 )
+
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -19,7 +19,8 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, GPTModel
+from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
 
@@ -32,6 +33,19 @@ G_EVAL_PARAMS = {
     LLMTestCaseParams.EXPECTED_TOOLS: "Expected Tools",
     LLMTestCaseParams.TOOLS_CALLED: "Tools Called",
 }
+
+
+def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
+
+    if isinstance(model, str) and model in unsupported_log_probs_gpt_models:
+        return True
+    elif (
+        isinstance(model, GPTModel)
+        and model.model_name in unsupported_log_probs_gpt_models
+    ):
+        return True
+
+    return False
 
 
 def construct_g_eval_params_string(
@@ -133,7 +147,7 @@ class GEval(BaseMetric):
                     ],
                 )
 
-                return self.score
+            return self.score
 
     async def a_measure(
         self,
@@ -155,11 +169,8 @@ class GEval(BaseMetric):
             )
             g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
-            self.score = float(g_score) / 10
             self.score = (
-                0
-                if self.strict_mode and self.score < self.threshold
-                else self.score
+                float(g_score) / 10 if not self.strict_mode else int(g_score)
             )
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
@@ -233,13 +244,25 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = GEvalTemplate.generate_evaluation_results(
-            evaluation_steps=self.number_evaluation_steps(),
-            text=text,
-            parameters=g_eval_params_str,
-        )
+
+        if not self.strict_mode:
+            prompt = GEvalTemplate.generate_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                text=text,
+                parameters=g_eval_params_str,
+            )
+        else:
+            prompt = GEvalTemplate.generate_strict_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                text=text,
+                parameters=g_eval_params_str,
+            )
 
         try:
+            # don't use log probabilities for unsupported gpt models
+            if no_log_prob_support(self.model):
+                raise AttributeError("log_probs unsupported.")
+
             # Don't have to check for using native model
             # since generate raw response only exist for deepeval's native model
             res, cost = await self.model.a_generate_raw_response(
@@ -291,13 +314,24 @@ class GEval(BaseMetric):
             self.evaluation_params
         )
 
-        prompt = GEvalTemplate.generate_evaluation_results(
-            evaluation_steps=self.number_evaluation_steps(),
-            text=text,
-            parameters=g_eval_params_str,
-        )
+        if not self.strict_mode:
+            prompt = GEvalTemplate.generate_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                text=text,
+                parameters=g_eval_params_str,
+            )
+        else:
+            prompt = GEvalTemplate.generate_strict_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                text=text,
+                parameters=g_eval_params_str,
+            )
 
         try:
+            # don't use log probabilities for unsupported gpt models
+            if no_log_prob_support(self.model):
+                raise AttributeError("log_probs unsupported.")
+
             res, cost = self.model.generate_raw_response(
                 prompt, logprobs=True, top_logprobs=self.top_logprobs
             )

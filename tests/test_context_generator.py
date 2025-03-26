@@ -1,5 +1,7 @@
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
-from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
+from deepeval.models.embedding_models.openai_embedding_model import (
+    OpenAIEmbeddingModel,
+)
 from itertools import chain
 
 context_generator = ContextGenerator(

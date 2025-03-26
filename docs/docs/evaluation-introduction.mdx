@@ -145,7 +145,7 @@ And run the test file in the CLI:
 deepeval test run test_example.py
 ```
 
-There are two mandatory and one optional parameter when calling the `assert_test()` function:
+There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function:
 
 - `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics of type `BaseMetric`
@@ -263,7 +263,7 @@ answer_relevancy_metric = AnswerRelevancyMetric()
 evaluate(dataset, [answer_relevancy_metric])
 ```
 
-There are two mandatory and thirteen optional arguments when calling the `evaluate()` function:
+There are **TWO** mandatory and **THIRTEEN** optional arguments when calling the `evaluate()` function:
 
 - `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
 - `metrics`: a list of metrics of type `BaseMetric`.

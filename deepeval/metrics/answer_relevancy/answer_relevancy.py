@@ -81,7 +81,7 @@ class AnswerRelevancyMetric(BaseMetric):
                     ],
                 )
 
-                return self.score
+            return self.score
 
     async def a_measure(
         self,
@@ -93,6 +93,7 @@ class AnswerRelevancyMetric(BaseMetric):
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
+
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):

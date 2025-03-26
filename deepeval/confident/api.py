@@ -1,12 +1,28 @@
+import logging
 from typing import Optional
 import aiohttp
 import requests
 from enum import Enum
 
+from tenacity import (
+    retry,
+    wait_exponential_jitter,
+    retry_if_exception_type,
+    RetryCallState,
+)
+
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
 API_BASE_URL = "https://api.confident-ai.com"
+retryable_exceptions = requests.exceptions.SSLError
+
+
+def log_retry_error(retry_state: RetryCallState):
+    exception = retry_state.outcome.exception()
+    logging.error(
+        f"Confident AI Error: {exception}. Retrying: {retry_state.attempt_number} time(s)..."
+    )
 
 
 class HttpMethods(Enum):
@@ -47,6 +63,11 @@ class Api:
         self.base_api_url = base_url or API_BASE_URL
 
     @staticmethod
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(retryable_exceptions),
+        after=log_retry_error,
+    )
     def _http_request(
         method: str, url: str, headers=None, json=None, params=None
     ):
