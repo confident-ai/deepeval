@@ -13,9 +13,11 @@ import csv
 import os
 
 from deepeval.models import GPTModel, AzureOpenAIModel
+from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
+    initialize_embedding_model,
     is_gpt_model,
     trimAndLoadJson,
     initialize_model,
@@ -79,6 +81,7 @@ class Synthesizer:
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
         async_mode: bool = True,
         max_concurrent: int = 100,
         filtration_config: Optional[FiltrationConfig] = None,
@@ -89,6 +92,9 @@ class Synthesizer:
         self.model, self.using_native_model = initialize_model(model)
         self.using_gpt_model = is_gpt_model(model)
 
+        # embedder is optional (only used for context generation)
+        if embedder is not None:
+            self.embedder = initialize_embedding_model(embedder)
         self.async_mode = async_mode
         self.max_concurrent = max_concurrent
         self.synthetic_goldens: List[Golden] = []
@@ -123,8 +129,15 @@ class Synthesizer:
         self.synthesis_cost = 0 if self.using_native_model else None
         if context_construction_config is None:
             context_construction_config = ContextConstructionConfig(
-                critic_model=self.model
+                critic_model=self.model,
+                embedder=self.embedder,
             )
+        
+        if context_construction_config.embedder is None:
+            context_construction_config.embedder = self.embedder
+
+        if context_construction_config.critic_model is None:
+            context_construction_config.critic_model = self.model
 
         if self.async_mode:
             loop = get_or_create_event_loop()
@@ -197,8 +210,15 @@ class Synthesizer:
     ):
         if context_construction_config is None:
             context_construction_config = ContextConstructionConfig(
-                critic_model=self.model
+                critic_model=self.model,
+                embedder=self.embedder
             )
+        if context_construction_config.embedder is None:
+            context_construction_config.embedder = self.embedder
+        
+        if context_construction_config.critic_model is None:
+            context_construction_config.critic_model = self.model
+
         if _reset_cost:
             self.synthesis_cost = 0 if self.using_native_model else None
 
