@@ -6,24 +6,28 @@ class MovieKGFaithfulnessTemplate:
     def generate_claims(actual_output: str) -> str:
         return f"""Based on the given response, extract factual claims made about movies, actors, and directors. These should be concrete statements involving relationships such as 'acted in', 'directed', or 'released in'.
 
-IMPORTANT:
-- Only include claims that are explicitly stated in the actual output.
-- Do NOT add any prior knowledge.
-- Return ONLY JSON with key 'claims' and a list of strings.
-
 Example:
 Actual Output: ```
-In the 1995 movie \"Heat\", Robert De Niro not only starred as a criminal mastermind but also directed the film alongside Al Pacino, who played the lead detective.
+In the 1992 movie \"Unforgiven\", Clint Eastwood portrayed a retired gunslinger named William Munny. The film was directed by Eastwood and also starred Gene Hackman as Little Bill Daggett.
 ```
 
 Example JSON:
 {{
   "claims": [
-    "Robert De Niro starred in the movie 'Heat' (1995).",
-    "Robert De Niro directed the movie 'Heat' (1995).",
-    "Al Pacino played the lead detective in 'Heat' (1995)."
+    "There is a movie titled 'Unforgiven'.",
+    "'Unforgiven' was released in 1992.",
+    "Clint Eastwood portrayed William Munny in the movie 'Unforgiven'.",
+    "Clint Eastwood directed the movie 'Unforgiven'.",
+    "Gene Hackman played Little Bill Daggett in 'Unforgiven'."
   ]
 }}
+===== END OF EXAMPLE ======
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "claims" key as a list of strings. No words or explanation is needed.
+Only include claims that are factual, BUT IT DOESN'T MATTER IF THEY ARE FACTUALLY CORRECT. The claims you extract should include the full context it was presented in, NOT cherry picked facts.
+You should NOT include any prior knowledge, and take the text at face value when extracting claims.
+**
 
 Text:
 {actual_output}
@@ -49,18 +53,18 @@ Example Text:
     "Movie: Unforgiven",
     "Year: 1992",
     "Director: Clint Eastwood",
-    "Actors: Clint Eastwood, Gene Hackman"
+    "Actors: Clint Eastwood as William Munny, Gene Hackman as Little Bill Daggett"
 ]
 
-Example JSON:
+Example JSON: 
 {{
     "truths": [
         "There is a movie titled 'Unforgiven'.",
         "'Unforgiven' was released in 1992.",
         "Clint Eastwood directed 'Unforgiven'.",
-        "Clint Eastwood acted in 'Unforgiven'.",
-        "Gene Hackman acted in 'Unforgiven'."
-    ]
+        "Clint Eastwood portrayed William Munny in 'Unforgiven'.",
+        "Gene Hackman played Little Bill Daggett in 'Unforgiven'."
+    ]  
 }}
 ===== END OF EXAMPLE ======
 **
