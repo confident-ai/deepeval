@@ -32,7 +32,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
             model=self.model_name,
             input=text,
         )
-        return response['embeddings']
+        return response['embeddings'][0]
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
@@ -48,7 +48,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
             model=self.model_name,
             input=text,
         )
-        return response['embeddings']
+        return response['embeddings'][0]
 
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model(async_mode=True)
