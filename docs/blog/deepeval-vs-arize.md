@@ -135,13 +135,12 @@ That means teams can evaluate their LLM apps—no matter what stack they’re us
 
 <FeatureComparisonTable type="arize::integrations" competitor="Arize" />
 
-DeepEval also integrates directly with LLM providers to power its metrics—since LLM metrics are inherently diagnostic. We support everything from closed-source providers like OpenAI and Azure to open-source models like Ollama, vLLM, and more.
-
+DeepEval also integrates directly with LLM providers to power its metrics—since DeepEval metrics are LLM agnostic.
 
 ### Platform
 
 
-Both DeepEval and Arize has their own platforms. DeepEval's platform is called Confident AI, and Arize's platform is also called Phoenix.
+Both DeepEval and Arize has their own platforms. DeepEval's platform is called Confident AI, and Arize's platform is called Phoenix.
 
 Confident AI is built for powerful, customizable evaluation and benchmarking. Phoenix, on the other hand, is more focused on observability.
 
