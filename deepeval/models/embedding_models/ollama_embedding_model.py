@@ -1,4 +1,4 @@
-from openai import OpenAI
+from ollama import Client, AsyncClient
 from typing import List
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
@@ -20,40 +20,43 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
         self.kwargs = kwargs
         super().__init__(model_name)
 
-    def load_model(self):
-        return OpenAI(base_url=self.base_url, api_key=self.api_key)
+    def load_model(self, async_mode: bool = False):
+        if not async_mode:
+            return Client(host=self.base_url)
+        else:
+            return AsyncClient(host=self.base_url)
 
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
-        response = embedding_model.embeddings.create(
+        response = embedding_model.embed(
             model=self.model_name,
-            input=[text],
+            input=text,
         )
-        return response.data[0].embedding
+        return response['embeddings']
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
-        response = embedding_model.embeddings.create(
+        response = embedding_model.embed(
             model=self.model_name,
             input=texts,
         )
-        return [data.embedding for data in response.data]
+        return response['embeddings']
 
     async def a_embed_text(self, text: str) -> List[float]:
-        embedding_model = self.load_model()
-        response = embedding_model.embeddings.create(
+        embedding_model = self.load_model(async_mode=True)
+        response = await embedding_model.embed(
             model=self.model_name,
-            input=[text],
+            input=text,
         )
-        return response.data[0].embedding
+        return response['embeddings']
 
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
-        embedding_model = self.load_model()
-        response = embedding_model.embeddings.create(
+        embedding_model = self.load_model(async_mode=True)
+        response = await embedding_model.embed(
             model=self.model_name,
             input=texts,
         )
-        return [data.embedding for data in response.data]
+        return response['embeddings']
 
     def get_model_name(self):
         return self.model_name
