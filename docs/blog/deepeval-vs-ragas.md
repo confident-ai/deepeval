@@ -25,7 +25,7 @@ This means:
 - **Extensive customizations** with no vendor-locking into any LLM or framework
 - **Abstracted into clear, extendable** classess and methods for better reusability
 - **Clean, readable code** that is essential if you ever need to customize DeepEval for yourself
-- **Exhuastive ecosystem**, meaning you can easily build on top of DeepEval whiel taking advantage of DeepEval's features
+- **Exhuastive ecosystem**, meaning you can easily build on top of DeepEval while taking advantage of DeepEval's features
 
 ### 2. We care about your experience, a lot
 
