@@ -105,6 +105,8 @@ class LLMTestCase:
     tools_called: Optional[List[ToolCall]] = None
     expected_tools: Optional[List[ToolCall]] = None
     reasoning: Optional[str] = None
+    token_cost: Optional[float] = None
+    completion_time: Optional[float] = None
     name: Optional[str] = field(default=None)
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
