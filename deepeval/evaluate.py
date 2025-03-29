@@ -69,6 +69,7 @@ class TestResult:
     expected_output: Optional[str] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
+    additional_metadata: Optional[Dict] = None
 
 
 class EvaluationResult(BaseModel):
@@ -116,6 +117,7 @@ def create_test_result(
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
+            additional_metadata=api_test_case.additional_metadata
         )
     else:
         multimodal = (
@@ -131,6 +133,7 @@ def create_test_result(
                 actual_output=api_test_case.multimodal_input_actual_output,
                 conversational=False,
                 multimodal=True,
+                additional_metadata=api_test_case.additional_metadata
             )
         else:
             return TestResult(
@@ -144,6 +147,7 @@ def create_test_result(
                 retrieval_context=api_test_case.retrieval_context,
                 conversational=False,
                 multimodal=False,
+                additional_metadata=api_test_case.additional_metadata
             )
 
 
