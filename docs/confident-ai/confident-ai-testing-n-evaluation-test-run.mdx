@@ -38,28 +38,36 @@ deepeval login
 ```
 
 ```python title="experiment_llm.py"
-import hypothetical_chatbot
-from deepeval.dataset import EvaluationDataset
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
-from deepeval import evaluate
+import pytest
+import hypothetical_llm_app
 
-# Use dataset from last section
+from deepeval.prompt import Prompt
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval import assert_test
+
+# Use dataset from previous sections
 dataset = EvaluationDataset()
 dataset.pull(alias="QA Dataset")
 
+# Use prompt from the cloud
+prompt = Prompt(alias="...")
+prompt.pull()
+
+
 # Create a list of LLMTestCase
-test_cases = []
 for golden in dataset.goldens:
-  input = golden.input
-  # Replace with your own LLM application
-  actual_output, retrieval_context = hypothetical_chatbot(input)
-  test_case = LLMTestCase(
-    input=input,
-    actual_output=actual_output,
-    retrieval_context=retrieval_context
-  )
-  test_cases.append(test_case)
+    prompt_to_llm = prompt.interpolate(input=golden.input)
+    # Replace with your own LLM application
+    actual_output, retrieval_context = hypothetical_llm_app(prompt_to_llm)
+    test_case = LLMTestCase(
+        input=prompt_to_llm,
+        actual_output=actual_output,
+        retrieval_context=retrieval_context,
+    )
+    dataset.test_cases.append(test_case)
+
 
 # Define metrics
 answer_relevancy = AnswerRelevancyMetric(threshold=0.5)
@@ -99,35 +107,43 @@ signs of infection like redness or swelling. Ensure your tetanus shot is up to d
 Go ahead and replace the second `actual_output` with the latest one above, and run evaluations again:
 
 ```python title="experiment_llm.py"
-import hypothetical_chatbot
-from deepeval import evaluate
-from deepeval.dataset import EvaluationDataset
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+import pytest
+import hypothetical_llm_app
 
-# Use dataset from last section
+from deepeval.prompt import Prompt
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval import assert_test
+
+# Use dataset from previous sections
 dataset = EvaluationDataset()
 dataset.pull(alias="QA Dataset")
 
+# Use prompt from the cloud
+prompt = Prompt(alias="...")
+prompt.pull()
+
+
 # Create a list of LLMTestCase
-test_cases = []
 for golden in dataset.goldens:
-  input = golden.input
-  # Don't forget to hardcode the second actual_output!
-  actual_output, retrieval_context = hypothetical_chatbot(input)
-  test_case = LLMTestCase(
-    input=input,
-    actual_output=actual_output,
-    retrieval_context=retrieval_context
-  )
-  test_cases.append(test_case)
+    prompt_to_llm = prompt.interpolate(input=golden.input)
+    # Don't forget to hardcode the second actual output!
+    actual_output, retrieval_context = hypothetical_llm_app(prompt_to_llm)
+    test_case = LLMTestCase(
+        input=prompt_to_llm,
+        actual_output=actual_output,
+        retrieval_context=retrieval_context,
+    )
+    dataset.test_cases.append(test_case)
+
 
 # Define metrics
 answer_relevancy = AnswerRelevancyMetric(threshold=0.5)
 faithfulness = FaithfulnessMetric(threshold=0.5)
 
 # Run evaluation
-evaluate(test_cases=test_cases, metrics=[answer_relevancy, faithfulness], identifier="Second Run")
+evaluate(test_cases=test_cases, metrics=[answer_relevancy, faithfulness], identifier="First Run")
 ```
 
 Don't forget to update your `identifier` and congratulations 🎉! All your test cases are now passing with flying colors.
@@ -201,7 +217,7 @@ Continuing from the previous example, if for example `llm_app` uses `gpt-4o` as 
 evaluate(
     test_cases=test_cases,
     metrics=[metric],
-    hyperparameters={"model": "gpt4o", "prompt template": "your-prompt-template-goes-here"}
+    hyperparameters={"model": "gpt-4o", "prompt": prompt}
 )
 ```
 

@@ -8,6 +8,7 @@ from deepeval.utils import is_confident
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 
+
 class Prompt:
     _prompt_version_id: Optional[str] = None
 

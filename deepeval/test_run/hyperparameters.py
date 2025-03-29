@@ -27,6 +27,7 @@ def process_hyperparameters(
                 f"Hyperparameter value for key '{key}' must be a string, integer, float, or Prompt"
             )
 
+
         if isinstance(value, Prompt):
             if value._prompt_version_id is not None:
                 processed_hyperparameters[key] = PromptApi(
