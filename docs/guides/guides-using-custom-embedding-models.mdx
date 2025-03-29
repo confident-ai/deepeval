@@ -14,10 +14,12 @@ You can use Azure's OpenAI embedding models by running the following commands in
 
 ```console
 deepeval set-azure-openai --openai-endpoint=<endpoint> \
+    --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
     --openai-api-key=<api_key> \
-    --deployment-name=<deployment_name> \
-    --openai-api-version=<openai_api_version> \
-    --model-version=<model_version>
+    --openai-model-name=<model_name> \ # e.g. gpt-4o
+    --deployment-name=<deployment_name> \  # e.g. Test Deployment
+    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    --model-version=<model_version> # e.g. 2024-11-20
 ```
 
 Then, run this to set the Azure OpenAI embedder:
