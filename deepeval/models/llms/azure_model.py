@@ -26,9 +26,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         # fetch Azure deployment parameters
-        model_name = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.AZURE_MODEL_NAME
-        )
+        model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_MODEL_NAME)
         self.deploynment_name = KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_DEPLOYMENT_NAME
         )

@@ -132,9 +132,7 @@ def set_azure_openai_env(
     KEY_FILE_HANDLER.write_key(
         KeyValues.AZURE_OPENAI_API_KEY, azure_openai_api_key
     )
-    KEY_FILE_HANDLER.write_key(
-        KeyValues.AZURE_MODEL_NAME, openai_model_name
-    )
+    KEY_FILE_HANDLER.write_key(KeyValues.AZURE_MODEL_NAME, openai_model_name)
     KEY_FILE_HANDLER.write_key(
         KeyValues.AZURE_OPENAI_ENDPOINT, azure_openai_endpoint
     )
