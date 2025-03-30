@@ -184,6 +184,7 @@ class AnswerRelevancyMetric(BaseMetric):
             input=input,
             statements=self.statements,
         )
+
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost

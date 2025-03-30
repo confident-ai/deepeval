@@ -5,7 +5,7 @@ import random
 import json
 
 from deepeval.utils import get_or_create_event_loop
-from deepeval.metrics.utils import initialize_model
+from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.test_case import ConversationalTestCase, LLMTestCase
 from deepeval.conversation_simulator.template import (
     ConversationSimulatorTemplate,
@@ -47,7 +47,9 @@ class ConversationSimulator:
             simulator_model
         )
         self.async_mode = async_mode
-
+        self.simulated_conversational_test_cases: List[
+            ConversationalTestCase
+        ] = []
         self.semaphore = asyncio.Semaphore(max_concurrent)
 
     def simulate(self) -> List[ConversationalTestCase]:
@@ -60,22 +62,59 @@ class ConversationSimulator:
             for _ in range(self.num_conversations):
                 conversational_test_case = self._simulate_single_conversation()
                 conversational_test_cases.append(conversational_test_case)
+            self.simulated_conversational_test_cases = conversational_test_cases
 
-            return conversational_test_cases
+        return self.simulated_conversational_test_cases
+
+    async def _a_simulate(self) -> List[ConversationalTestCase]:
+        async def limited_simulation():
+            async with self.semaphore:
+                return await self._a_simulate_single_conversation()
+
+        tasks = [limited_simulation() for _ in range(self.num_conversations)]
+        self.simulated_conversational_test_cases = await asyncio.gather(*tasks)
 
     def _simulate_user_profile(self) -> str:
         prompt = ConversationSimulatorTemplate.generate_user_profile(
             self.user_profile_items, self.language
         )
-        res: UserProfile = self.simulator_model.generate(prompt, UserProfile)
-        return res.user_profile
+
+        if self.using_native_model:
+            res, cost = self.simulator_model.a_generate(
+                prompt, schema=UserProfile
+            )
+            self.simulation_cost += cost
+            return res.user_profile
+        else:
+            try:
+                res: UserProfile = self.simulator_model.a_generate(
+                    prompt, UserProfile
+                )
+                return res.user_profile
+            except TypeError:
+                res = self.simulator_model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["user_profile"]
 
     def _simulate_scenario(self, user_profile: str, intent: str) -> str:
         prompt = ConversationSimulatorTemplate.generate_scenario(
             user_profile, intent, self.language
         )
-        res: Scenario = self.simulator_model.generate(prompt, Scenario)
-        return res.scenario
+
+        if self.using_native_model:
+            res, cost = self.simulator_model.a_generate(prompt, schema=Scenario)
+            self.simulation_cost += cost
+            return res.scenario
+        else:
+            try:
+                res: Scenario = self.simulator_model.a_generate(
+                    prompt, Scenario
+                )
+                return res.scenario
+            except TypeError:
+                res = self.simulator_model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["scenario"]
 
     def _simulate_first_user_input(
         self, scenario: str, user_profile: str
@@ -83,10 +122,23 @@ class ConversationSimulator:
         prompt = ConversationSimulatorTemplate.generate_first_input(
             scenario, user_profile, self.language
         )
-        res: SimulatedInput = self.simulator_model.generate(
-            prompt, SimulatedInput
-        )
-        return res.simulated_input
+
+        if self.using_native_model:
+            res, cost = self.simulator_model.a_generate(
+                prompt, schema=SimulatedInput
+            )
+            self.simulation_cost += cost
+            return res.simulated_input
+        else:
+            try:
+                res: SimulatedInput = self.simulator_model.a_generate(
+                    prompt, SimulatedInput
+                )
+                return res.simulated_input
+            except TypeError:
+                res = self.simulator_model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["simulated_input"]
 
     def _simulate_single_conversation(self) -> ConversationalTestCase:
         num_turns = random.randint(self.min_turns, self.max_turns)
@@ -120,10 +172,23 @@ class ConversationSimulator:
                 prompt = ConversationSimulatorTemplate.generate_next_user_input(
                     scenario, user_profile, conversation_history, self.language
                 )
-                res: SimulatedInput = self.simulator_model.generate(
-                    prompt, SimulatedInput
-                )
-                user_input = res.simulated_input
+
+                if self.using_native_model:
+                    res, cost = self.simulator_model.generate(
+                        prompt, schema=SimulatedInput
+                    )
+                    self.simulation_cost += cost
+                    user_input = res.simulated_input
+                else:
+                    try:
+                        res: SimulatedInput = self.simulator_model.generate(
+                            prompt, SimulatedInput
+                        )
+                        user_input = res.simulated_input
+                    except TypeError:
+                        res = self.simulator_model.generate(prompt)
+                        data = trimAndLoadJson(res, self)
+                        user_input = data["simluated_input"]
 
             turns.append(
                 LLMTestCase(
@@ -141,17 +206,45 @@ class ConversationSimulator:
         prompt = ConversationSimulatorTemplate.generate_user_profile(
             self.user_profile_items, self.language
         )
-        res: UserProfile = await self.simulator_model.a_generate(
-            prompt, UserProfile
-        )
-        return res.user_profile
+
+        if self.using_native_model:
+            res, cost = await self.simulator_model.a_generate(
+                prompt, schema=UserProfile
+            )
+            self.simulation_cost += cost
+            return res.user_profile
+        else:
+            try:
+                res: UserProfile = await self.simulator_model.a_generate(
+                    prompt, UserProfile
+                )
+                return res.user_profile
+            except TypeError:
+                res = await self.simulator_model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["user_profile"]
 
     async def _a_simulate_scenario(self, user_profile: str, intent: str) -> str:
         prompt = ConversationSimulatorTemplate.generate_scenario(
             user_profile, intent, self.language
         )
-        res: Scenario = await self.simulator_model.a_generate(prompt, Scenario)
-        return res.scenario
+
+        if self.using_native_model:
+            res, cost = await self.simulator_model.a_generate(
+                prompt, schema=Scenario
+            )
+            self.simulation_cost += cost
+            return res.scenario
+        else:
+            try:
+                res: Scenario = await self.simulator_model.a_generate(
+                    prompt, Scenario
+                )
+                return res.scenario
+            except TypeError:
+                res = await self.simulator_model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["scenario"]
 
     async def _a_simulate_first_user_input(
         self, scenario: str, user_profile: str
@@ -159,10 +252,23 @@ class ConversationSimulator:
         prompt = ConversationSimulatorTemplate.generate_first_input(
             scenario, user_profile, self.language
         )
-        res: SimulatedInput = await self.simulator_model.a_generate(
-            prompt, SimulatedInput
-        )
-        return res.simulated_input
+
+        if self.using_native_model:
+            res, cost = await self.simulator_model.a_generate(
+                prompt, schema=SimulatedInput
+            )
+            self.simulation_cost += cost
+            return res.simulated_input
+        else:
+            try:
+                res: SimulatedInput = await self.simulator_model.a_generate(
+                    prompt, SimulatedInput
+                )
+                return res.simulated_input
+            except TypeError:
+                res = await self.simulator_model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["simluated_input"]
 
     async def _a_simulate_single_conversation(self) -> ConversationalTestCase:
         num_turns = random.randint(self.min_turns, self.max_turns)
@@ -194,9 +300,26 @@ class ConversationSimulator:
                 prompt = ConversationSimulatorTemplate.generate_next_user_input(
                     scenario, user_profile, conversation_history, self.language
                 )
-                res: SimulatedInput = await self.simulator_model.a_generate(
-                    prompt, SimulatedInput
-                )
+
+                if self.using_native_model:
+                    res, cost = await self.simulator_model.a_generate(
+                        prompt, schema=SimulatedInput
+                    )
+                    self.simulation_cost += cost
+                    user_input = res.simulated_input
+                else:
+                    try:
+                        res: SimulatedInput = (
+                            await self.simulator_model.a_generate(
+                                prompt, SimulatedInput
+                            )
+                        )
+                        user_input = res.simulated_input
+                    except TypeError:
+                        res = await self.simulator_model.a_generate(prompt)
+                        data = trimAndLoadJson(res, self)
+                        user_input = data["simluated_input"]
+
                 user_input = res.simulated_input
 
             turns.append(
