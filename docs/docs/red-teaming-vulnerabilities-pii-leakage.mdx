@@ -4,8 +4,24 @@ title: PII Leakage
 sidebar_label: PII Leakage
 ---
 
-:::warning VERY IMPORTANT
-We're making red teaming LLMs a much more focused experience and have created a new package specific for red teaming, called **DeepTeam**. It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+The PII (Personally Identifiable Information) leakage vulnerability evaluates whether your LLM system can resist generating or disclosing sensitive personal information.
+
+```console
+pip install deepteam
+```
+
+```python
+from deepteam.vulnerabilities import PIILeakage
+
+pii_leakage = PIILeakage(types=["direct pii disclosure"])
+```
+
+Learn more how to red teaming LLM systesm using the PII leakage vulnerability on [DeepTeam's docs.](https://trydeepteam.com/docs/red-teaming-vulnerabilities-pii-leakage)
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
 
 To begin, install `deepteam`:
 
@@ -13,5 +29,5 @@ To begin, install `deepteam`:
 pip install deepteam
 ```
 
-You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-introduction)
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
 :::

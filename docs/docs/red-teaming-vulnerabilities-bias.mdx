@@ -4,8 +4,24 @@ title: Bias
 sidebar_label: Bias
 ---
 
-:::warning VERY IMPORTANT
-We're making red teaming LLMs a much more focused experience and have created a new package specific for red teaming, called **DeepTeam**. It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+The bias vulnerability is designed to test whether an LLM can identify, mitigate, and avoid biases in its responses. To use it, first install DeepTeam - `deepeval` for red teaming:
+
+```console
+pip install deepteam
+```
+
+```python
+from deepteam.vulnerabilities import Bias
+
+bias = Bias(types=["race"])
+```
+
+Learn more how to red teaming LLM systesm using the bias vulnerability on [DeepTeam's docs.](https://trydeepteam.com/docs/red-teaming-vulnerabilities-bias)
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
 
 To begin, install `deepteam`:
 
@@ -13,5 +29,5 @@ To begin, install `deepteam`:
 pip install deepteam
 ```
 
-You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-introduction)
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
 :::

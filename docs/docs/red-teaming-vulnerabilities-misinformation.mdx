@@ -4,8 +4,24 @@ title: Misinformation
 sidebar_label: Misinformation
 ---
 
-:::warning VERY IMPORTANT
-We're making red teaming LLMs a much more focused experience and have created a new package specific for red teaming, called **DeepTeam**. It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+The misinformation vulnerability is designed to test whether an LLM can accurately provide information, verify claims, and avoid generating or amplifying false or misleading content.
+
+```console
+pip install deepteam
+```
+
+```python
+from deepteam.vulnerabilities import Misinformation
+
+misinformation = Misinformation(types=["factual error"])
+```
+
+Learn more how to red teaming LLM systesm using the misinformation vulnerability on [DeepTeam's docs.](https://trydeepteam.com/docs/red-teaming-vulnerabilities-misinformation)
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
 
 To begin, install `deepteam`:
 
@@ -13,5 +29,5 @@ To begin, install `deepteam`:
 pip install deepteam
 ```
 
-You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-introduction)
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
 :::
