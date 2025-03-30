@@ -2,34 +2,31 @@ import textwrap
 
 
 class ConversationSimulatorTemplate:
-
     @staticmethod
-    def generate_user_profile(
-        user_profile_requirements: str, language: str
-    ) -> str:
+    def generate_user_profile(user_profile_items: str, language: str) -> str:
         prompt = textwrap.dedent(
             f"""You are a User Profile Generator. Your task is to create a concise, natural-language user profile summary in {language}
-            based on the given profile fields.
+            based on the given profile items.
 
             Guidelines:
-            1. Use the provided fields to generate a coherent, human-readable profile.
+            1. Use the provided items to generate a coherent, human-readable profile.
             2. Ensure the profile is concise and includes all the information described in the input requirements, seamlessly integrated into a natural format.
-            3. Avoid rigidly listing the fields; instead, craft the profile as if writing a short and concise bio.
+            3. Avoid rigidly listing the items; instead, craft the profile as if writing a short and concise bio.
 
             IMPORTANT: The output must be formatted as a JSON object with a single key `user_profile`, where the value 
             is the generated user profile in {language}.
 
             Example Language: english
-            Example Input:
-            "name (first and last), phone number, availabilities (between Monday and Friday)"
+            Example User Profile Items:
+            ["name (first and last)", "phone number", "availabilities (between Monday and Friday)"]
             Example JSON Output:
             {{
                 "user_profile": "Jeff Seid is available on Monday and Thursday afternoons, and his phone number is 0010281839."
             }}
 
             Language: {language}
-            Input:
-            "{user_profile_requirements}"
+            User Profile Items:
+            "{user_profile_items}"
             JSON Output:
         """
         )
@@ -80,14 +77,14 @@ class ConversationSimulatorTemplate:
             3. Avoid providing excessive details upfront; the goal is to initiate the conversation and build rapport, not to solve it in the first message.
             4. The message should be concise, ideally no more than 1-3 sentences.
 
-            IMPORTANT: The output must be formatted as a JSON object with a single key `first_input`, where the value is the generated opening message in {language}.
+            IMPORTANT: The output must be formatted as a JSON object with a single key `simulated_input`, where the value is the generated opening message in {language}.
 
             Example Language: english
             Example User Profile: "Jeff Seid, is available Monday and Thursday afternoons, and their phone number is 0010281839. He suffers from chronic migraines."
             Example Scenario: "A sick person trying to get a diagnosis for persistent headaches and fever."
             Example JSON Output:
             {{
-                "first_input": "Hi, I haven’t been feeling well lately. I’ve had these headaches and a fever that just won’t go away. Could you help me figure out what’s going on?"
+                "simulated_input": "Hi, I haven’t been feeling well lately. I’ve had these headaches and a fever that just won’t go away. Could you help me figure out what’s going on?"
             }}
 
             Language: {language}
@@ -116,7 +113,7 @@ class ConversationSimulatorTemplate:
             3. Keep the tone consistent with the previous user inputs.
             4. The generated user input should be concise, ideally no more than 1-2 sentences.
 
-            IMPORTANT: The output must be formatted as a JSON object with a single key `next_user_input`, 
+            IMPORTANT: The output must be formatted as a JSON object with a single key `simulated_input`, 
             where the value is the generated user input in {language}.
 
             Example Language: english
@@ -129,7 +126,7 @@ class ConversationSimulatorTemplate:
             ]
             Example JSON Output:
             {{
-                "next_user_input": "Sure, we are a SaaS startup focusing on productivity tools for small businesses."
+                "simulated_input": "Sure, we are a SaaS startup focusing on productivity tools for small businesses."
             }}
 
             Language: {language}
