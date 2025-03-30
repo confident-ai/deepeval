@@ -109,7 +109,6 @@ module.exports = {
       label: "Red-Teaming",
       items: [
         "red-teaming-introduction",
-        "red-teaming-owasp",
         "red-teaming-attack-enhancements",
         {
           type: "category",
