@@ -27,6 +27,11 @@
     --ifm-alert-background-color: #f8fafc !important;
     --ifm-alert-border-color: black !important;
   }
+
+  .alert--danger {
+    --ifm-alert-background-color: #ffeff5 !important;
+    --ifm-alert-border-color: #f30065 !important;
+  }
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
