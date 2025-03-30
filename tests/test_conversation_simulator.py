@@ -3,7 +3,11 @@ import random
 
 from deepeval.conversation_simulator import ConversationSimulator
 
-user_profile_requirements_1 = "name (first and last), phone number, availabilities (between monday and friday)"
+user_profile_requirements_1 = [
+    "name (first and last)",
+    "phone number",
+    "availabilities (between monday and friday)",
+]
 user_intentions_1 = [
     "Ordering new products",
     "Repair for existing products",
@@ -22,7 +26,7 @@ user_intentions_2 = [
 
 
 async def test_user_profile(conversation_simulator: ConversationSimulator):
-    tasks = [conversation_simulator.a_generate_user_profile() for _ in range(5)]
+    tasks = [conversation_simulator._simulate_user_profile() for _ in range(5)]
     results = await asyncio.gather(*tasks)
     for i, result in enumerate(results, start=1):
         print(f"Task {i}: {result}")
@@ -35,7 +39,7 @@ async def test_scenario(
     user_intention: str,
 ):
     for _ in range(5):
-        scenario = await conversation_simulator.a_generate_scenario(
+        scenario = await conversation_simulator._a_simulate_scenario(
             user_profile, user_intention
         )
         print(scenario)
@@ -45,11 +49,9 @@ async def test_scenario(
 async def test_generate_conversations(
     conversation_simulator: ConversationSimulator,
 ):
-    conversational_test_cases = (
-        await conversation_simulator.a_simulate_conversations()
-    )
+    conversational_test_cases = await conversation_simulator._a_simulate()
     for tc in conversational_test_cases:
-        conversation_str = conversation_simulator.format_conversational_turns(
+        conversation_str = conversation_simulator._format_conversational_turns(
             tc.turns
         )
         print(("================================"))
@@ -64,8 +66,6 @@ async def main():
         min_turns=3,
         max_turns=5,
         num_conversations=2,
-        language=Language.THAI,
-        llm_connection="asdf",
         opening_message="Hi, I'm your personal medical chatbot.",
     )
 
