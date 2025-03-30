@@ -1,0 +1,17 @@
+repos:
+-   repo: https://github.com/psf/black
+    rev: 24.2.0  # Latest stable version of Black
+    hooks:
+    -   id: black
+        language_version: python3
+        args: [--line-length=88]  # Default Black line length
+        stages: [pre-commit]
+-   repo: local
+    hooks:
+    -   id: git-add
+        name: git-add
+        entry: git add
+        language: system
+        stages: [pre-commit]
+        always_run: true
+        pass_filenames: false 
