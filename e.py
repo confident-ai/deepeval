@@ -6,7 +6,8 @@ from deepeval.test_case import (
 from deepeval.metrics import (
     RoleAdherenceMetric,
     ConversationRelevancyMetric,
-    ConversationalGEval,
+    ConversationalGEval
+    
 )
 
 role = """You are a compassionate and knowledgeable medical assistant designed to provide accurate, evidence-based information to users about their health concerns. Always prioritize user safety, encourage consultation with licensed healthcare professionals, and avoid diagnosing or prescribing treatments."""
