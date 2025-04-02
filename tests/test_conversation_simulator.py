@@ -67,13 +67,14 @@ async def main():
     conversational_synthesizer = ConversationSimulator(
         user_profile_items=user_profile_requirements,
         user_intentions=user_intentions,
+        opening_message="Hi, I'm your personal medical chatbot.",
+    )
+    a = conversational_synthesizer.simulate(
         min_turns=3,
         max_turns=5,
         num_conversations=1,
-        opening_message="Hi, I'm your personal medical chatbot.",
         model_callback=callback,
     )
-    a = conversational_synthesizer.simulate()
     print(a)
 
     # user_profiles = await test_user_profile(conversational_synthesizer)

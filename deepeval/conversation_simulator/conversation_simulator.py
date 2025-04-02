@@ -1,8 +1,8 @@
 from typing import Optional, List, Union, Callable
-from tqdm import tqdm
 import asyncio
 import random
 import json
+import tqdm
 
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import initialize_model, trimAndLoadJson
@@ -16,6 +16,7 @@ from deepeval.conversation_simulator.schema import (
     Scenario,
     UserProfile,
 )
+from deepeval.progress_context import conversation_simulator_progress_context
 
 
 class ConversationSimulator:
@@ -23,58 +24,89 @@ class ConversationSimulator:
         self,
         user_profile_items: List[str],
         user_intentions: List[str],
-        model_callback: Callable[[str], str],
-        min_turns: int,
-        max_turns: int,
-        num_conversations: int,
         simulator_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         opening_message: Optional[str] = None,
         max_concurrent: int = 5,
         async_mode: bool = True,
     ):
-        if min_turns > max_turns:
-            raise ValueError("`min_turns` cannot be greater than `max_turns`.")
-
         self.user_profile_items = user_profile_items
         self.user_intentions = user_intentions
-        self.min_turns = min_turns
-        self.max_turns = max_turns
-        self.num_conversations = num_conversations
         self.opening_message = opening_message
         self.language = "English"
-        self.model_callback = model_callback
         self.simulator_model, self.using_native_model = initialize_model(
             simulator_model
         )
         self.async_mode = async_mode
-        self.simulated_conversational_test_cases: List[
-            ConversationalTestCase
-        ] = []
+        self.simulated_conversations: List[ConversationalTestCase] = []
         self.semaphore = asyncio.Semaphore(max_concurrent)
 
-    def simulate(self) -> List[ConversationalTestCase]:
+    def simulate(
+        self,
+        model_callback: Callable[[str], str],
+        min_turns: int,
+        max_turns: int,
+        num_conversations: int,
+    ) -> List[ConversationalTestCase]:
+        if min_turns > max_turns:
+            raise ValueError("`min_turns` cannot be greater than `max_turns`.")
+
         self.simulation_cost = 0 if self.using_native_model else None
-        if self.async_mode:
-            loop = get_or_create_event_loop()
-            loop.run_until_complete(self._a_simulate())
-        else:
-            conversational_test_cases: List[ConversationalTestCase] = []
-            for _ in range(self.num_conversations):
-                conversational_test_case = self._simulate_single_conversation()
-                conversational_test_cases.append(conversational_test_case)
-            self.simulated_conversational_test_cases = conversational_test_cases
+        with conversation_simulator_progress_context(
+            simulator_model=self.simulator_model.get_model_name(),
+            num_conversations=num_conversations,
+            async_mode=self.async_mode,
+        ) as progress_bar:
+            if self.async_mode:
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self._a_simulate(
+                        model_callback=model_callback,
+                        min_turns=min_turns,
+                        max_turns=max_turns,
+                        num_conversations=num_conversations,
+                        _progress_bar=progress_bar,
+                    )
+                )
+            else:
+                conversational_test_cases: List[ConversationalTestCase] = []
+                for _ in range(num_conversations):
+                    conversational_test_case = (
+                        self._simulate_single_conversation(
+                            model_callback=model_callback,
+                            min_turns=min_turns,
+                            max_turns=max_turns,
+                        )
+                    )
+                    conversational_test_cases.append(conversational_test_case)
+                    progress_bar.update(1)
 
-        return self.simulated_conversational_test_cases
+                self.simulated_conversations = (
+                    conversational_test_cases
+                )
 
-    async def _a_simulate(self) -> List[ConversationalTestCase]:
+        return self.simulated_conversations
+
+    async def _a_simulate(
+        self,
+        model_callback: Callable[[str], str],
+        min_turns: int,
+        max_turns: int,
+        num_conversations: int,
+        _progress_bar: Optional[tqdm.std.tqdm] = None,
+    ) -> List[ConversationalTestCase]:
         self.simulation_cost = 0 if self.using_native_model else None
 
         async def limited_simulation():
             async with self.semaphore:
-                return await self._a_simulate_single_conversation()
+                return await self._a_simulate_single_conversation(
+                    model_callback=model_callback,
+                    min_turns=min_turns,
+                    max_turns=max_turns,
+                    _progress_bar=_progress_bar,
+                )
 
-        tasks = [limited_simulation() for _ in range(self.num_conversations)]
-        self.simulated_conversational_test_cases = await asyncio.gather(*tasks)
+        tasks = [limited_simulation() for _ in range(num_conversations)]
+        self.simulated_conversations = await asyncio.gather(*tasks)
 
     def _simulate_user_profile(self) -> str:
         prompt = ConversationSimulatorTemplate.generate_user_profile(
@@ -142,8 +174,10 @@ class ConversationSimulator:
                 data = trimAndLoadJson(res, self)
                 return data["simulated_input"]
 
-    def _simulate_single_conversation(self) -> ConversationalTestCase:
-        num_turns = random.randint(self.min_turns, self.max_turns)
+    def _simulate_single_conversation(
+        self, model_callback: Callable, min_turns: int, max_turns: int
+    ) -> ConversationalTestCase:
+        num_turns = random.randint(min_turns, max_turns)
         intent = random.choice(self.user_intentions)
         user_profile = self._a_simulate_user_profile()
         scenario = self._a_simulate_scenario(user_profile, intent)
@@ -154,9 +188,7 @@ class ConversationSimulator:
 
         turns = []
         user_input = None
-        for turn_index in tqdm(
-            range(num_turns), desc="Generating conversation turns"
-        ):
+        for turn_index in range(num_turns):
             if turn_index == 0 and self.opening_message:
                 # Add optional opening message from chatbot
                 turns.append(
@@ -195,7 +227,9 @@ class ConversationSimulator:
             turns.append(
                 LLMTestCase(
                     input=user_input,
-                    actual_output=self._generate_chatbot_response(user_input),
+                    actual_output=self._generate_chatbot_response(
+                        user_input, model_callback=model_callback
+                    ),
                     additional_metadata=additional_metadata,
                 )
             )
@@ -272,8 +306,14 @@ class ConversationSimulator:
                 data = trimAndLoadJson(res, self)
                 return data["simluated_input"]
 
-    async def _a_simulate_single_conversation(self) -> ConversationalTestCase:
-        num_turns = random.randint(self.min_turns, self.max_turns)
+    async def _a_simulate_single_conversation(
+        self,
+        model_callback: Callable,
+        min_turns: int,
+        max_turns: int,
+        _progress_bar: Optional[tqdm.std.tqdm] = None,
+    ) -> ConversationalTestCase:
+        num_turns = random.randint(min_turns, max_turns)
         intent = random.choice(self.user_intentions)
         user_profile = await self._a_simulate_user_profile()
         scenario = await self._a_simulate_scenario(user_profile, intent)
@@ -284,9 +324,7 @@ class ConversationSimulator:
 
         turns = []
         user_input = None
-        for turn_index in tqdm(
-            range(num_turns), desc="Generating conversation turns"
-        ):
+        for turn_index in range(num_turns):
             if turn_index == 0 and self.opening_message:
                 turns.append(
                     LLMTestCase(input="", actual_output=self.opening_message)
@@ -328,11 +366,14 @@ class ConversationSimulator:
                 LLMTestCase(
                     input=user_input,
                     actual_output=await self._a_generate_chatbot_response(
-                        user_input
+                        user_input, model_callback=model_callback
                     ),
                     additional_metadata=additional_metadata,
                 )
             )
+
+        if _progress_bar:
+            _progress_bar.update(1)
 
         return ConversationalTestCase(
             turns=turns, additional_metadata=additional_metadata
@@ -342,12 +383,14 @@ class ConversationSimulator:
     ### Helper Methods #########################
     ############################################
 
-    def _generate_chatbot_response(self, input: str):
-        res = self.model_callback(input)
+    def _generate_chatbot_response(self, input: str, model_callback: Callable):
+        res = model_callback(input)
         return res
 
-    async def _a_generate_chatbot_response(self, input: str):
-        res = await self.model_callback(input)
+    async def _a_generate_chatbot_response(
+        self, input: str, model_callback: Callable
+    ):
+        res = await model_callback(input)
         return res
 
     def _format_conversational_turns(self, turns: List[LLMTestCase]) -> str:

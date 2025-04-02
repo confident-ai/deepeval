@@ -68,9 +68,10 @@ def conversation_simulator_progress_context(
     simulator_model: str,
     num_conversations: int,
     async_mode: bool = False,
+    progress_bar: Optional[tqdm.std.tqdm] = None,
 ) -> Generator[Optional[tqdm.std.tqdm], None, None]:
     with capture_conversation_simulatior_run(num_conversations):
-        description = f"✨ Simulating {num_conversations} conversational test cases using DeepEval (using {simulator_model})"
+        description = f"🪄 Simulating {num_conversations} conversational test case(s) using DeepEval (using {simulator_model})"
 
         if not progress_bar:
             if async_mode:
