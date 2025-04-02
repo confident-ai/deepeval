@@ -17,6 +17,7 @@ class Feature(Enum):
     EVALUATION = "evaluation"
     GUARDRAIL = "guardrail"
     BENCHMARK = "benchmark"
+    CONVERSATION_SIMULATOR = "conversation_simulator"
     UNKNOWN = "unknown"
 
 
@@ -200,6 +201,29 @@ def capture_synthesizer_run(
             for evol, value in evolutions.items():
                 span.set_attribute(f"evolution.{evol.value}", 1)
             set_last_feature(Feature.SYNTHESIZER)
+            yield span
+    else:
+        yield
+
+
+@contextmanager
+def capture_conversation_simulatior_run(num_conversations: int):
+    if not telemetry_opt_out():
+        with tracer.start_as_current_span(
+            f"Invoked conversation simulator"
+        ) as span:
+            if anonymous_public_ip:
+                span.set_attribute("user.public_ip", anonymous_public_ip)
+            span.set_attribute("logged_in_with", get_logged_in_with())
+            span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
+            span.set_attribute("user.status", get_status())
+            span.set_attribute("user.unique_id", get_unique_id())
+            span.set_attribute(
+                "feature_status.conversation_simulator",
+                get_feature_status(Feature.CONVERSATION_SIMULATOR),
+            )
+            span.set_attribute("num_conversations", num_conversations)
+            set_last_feature(Feature.CONVERSATION_SIMULATOR)
             yield span
     else:
         yield
