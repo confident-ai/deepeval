@@ -230,7 +230,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_model_name(self):
-        return "Azure OpenAI"
+        return f"Azure OpenAI ({self.model_name})"
 
     def load_model(self, async_mode: bool = False):
         if async_mode == False:
