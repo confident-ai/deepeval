@@ -241,7 +241,7 @@ def set_ollama_embeddings_env(
         ..., help="Name of the Ollama embedding model"
     ),
     base_url: str = typer.Option(
-        "http://localhost:11434/v1/",
+        "http://localhost:11434",
         "-b",
         "--base-url",
         help="Base URL for the Ollama embedding model API",
