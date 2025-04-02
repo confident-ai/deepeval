@@ -23,7 +23,7 @@ module.exports = {
             "synthesizer-generate-from-scratch",
           ],
         },
-        "conversation-simulator",
+        "evaluation-conversation-simulator",
         {
           type: "category",
           label: "Metrics",
