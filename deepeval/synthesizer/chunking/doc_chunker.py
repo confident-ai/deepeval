@@ -1,4 +1,3 @@
-from humanfriendly.terminal import auto_encode
 from langchain_core.documents import Document as LCDocument
 from langchain_community.document_loaders import (
     PyPDFLoader,
