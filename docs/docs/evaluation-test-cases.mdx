@@ -12,7 +12,7 @@ A test case is a blueprint provided by `deepeval` to unit test LLM outputs. Ther
 Throughout this documentation, you should assume the term 'test case' refers to an `LLMTestCase` instead of a `ConversationalTestCase`.
 :::
 
-While a `ConversationalTestCase` is a list of turns represented by `LLMTestCase`s, an `LLMTestCase` is the most prominent type of test case in `deepeval` and is based on seven parameters:
+While a `ConversationalTestCase` is a list of turns represented by `LLMTestCase`s, an `LLMTestCase` is the most prominent type of test case in `deepeval` and is based on **NINE** parameters:
 
 - `input`
 - `actual_output`
@@ -21,6 +21,8 @@ While a `ConversationalTestCase` is a list of turns represented by `LLMTestCase`
 - [Optional] `retrieval_context`
 - [Optional] `tools_called`
 - [Optional] `expected_tools`
+- [Optional] `token_cost`
+- [Optional] `completion_time`
 
 Here's an example implementation of a test case:
 
@@ -301,6 +303,32 @@ test_case = LLMTestCase(
         )
     ]
 )
+```
+
+### Token cost
+
+The `token_cost` is an **optional** parameter and is of type float that allows you to log the cost of a particular LLM interaction for a particular `LLMTestCase`. No metrics use this parameter by default, and it is most useful for either:
+
+1. Building custom metrics that relies on `token_cost`
+2. Logging `token_cost` on Confident AI
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(token_cost=1.32, ...)
+```
+
+### Completion Time
+
+The `completion_time` is an **optional** parameter and is similar to the `token_cost` is of type float that allows you to log the time in **SECONDS** it took for a LLM interaction for a particular `LLMTestCase` to complete. No metrics use this parameter by default, and it is most useful for either:
+
+1. Building custom metrics that relies on `completion_time`
+2. Logging `completion_time` on Confident AI
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(completion_time=7.53, ...)
 ```
 
 ## Conversational Test Case
