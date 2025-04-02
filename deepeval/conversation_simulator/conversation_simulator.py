@@ -23,10 +23,10 @@ class ConversationSimulator:
         self,
         user_profile_items: List[str],
         user_intentions: List[str],
+        model_callback: Callable[[str], str],
         min_turns: int,
         max_turns: int,
         num_conversations: int,
-        model_callback: Callable[[str], str],
         simulator_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         opening_message: Optional[str] = None,
         max_concurrent: int = 5,
@@ -67,6 +67,8 @@ class ConversationSimulator:
         return self.simulated_conversational_test_cases
 
     async def _a_simulate(self) -> List[ConversationalTestCase]:
+        self.simulation_cost = 0 if self.using_native_model else None
+
         async def limited_simulation():
             async with self.semaphore:
                 return await self._a_simulate_single_conversation()
@@ -80,19 +82,19 @@ class ConversationSimulator:
         )
 
         if self.using_native_model:
-            res, cost = self.simulator_model.a_generate(
+            res, cost = self.simulator_model.generate(
                 prompt, schema=UserProfile
             )
             self.simulation_cost += cost
             return res.user_profile
         else:
             try:
-                res: UserProfile = self.simulator_model.a_generate(
+                res: UserProfile = self.simulator_model.generate(
                     prompt, UserProfile
                 )
                 return res.user_profile
             except TypeError:
-                res = self.simulator_model.a_generate(prompt)
+                res = self.simulator_model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["user_profile"]
 

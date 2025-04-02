@@ -57,25 +57,32 @@ async def test_generate_conversations(
         print(("================================"))
 
 
+async def callback(prompt: str):
+    return f"OMG haha {prompt}"
+
+
 async def main():
     user_profile_requirements = user_profile_requirements_2
     user_intentions = user_intentions_2
     conversational_synthesizer = ConversationSimulator(
-        user_profile_requirements=user_profile_requirements,
+        user_profile_items=user_profile_requirements,
         user_intentions=user_intentions,
         min_turns=3,
         max_turns=5,
-        num_conversations=2,
+        num_conversations=1,
         opening_message="Hi, I'm your personal medical chatbot.",
+        model_callback=callback,
     )
+    a = conversational_synthesizer.simulate()
+    print(a)
 
-    user_profiles = await test_user_profile(conversational_synthesizer)
-    await test_scenario(
-        conversational_synthesizer,
-        random.choice(user_profiles),
-        random.choice(user_intentions),
-    )
-    await test_generate_conversations(conversational_synthesizer)
+    # user_profiles = await test_user_profile(conversational_synthesizer)
+    # await test_scenario(
+    #     conversational_synthesizer,
+    #     random.choice(user_profiles),
+    #     random.choice(user_intentions),
+    # )
+    # await test_generate_conversations(conversational_synthesizer)
 
 
 # Run the main async function
