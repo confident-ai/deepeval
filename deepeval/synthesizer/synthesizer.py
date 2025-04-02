@@ -180,6 +180,7 @@ class Synthesizer:
 
         if self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
+
         if _send_data == True:
             pass
         return goldens
