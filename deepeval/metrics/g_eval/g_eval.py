@@ -19,7 +19,7 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
 )
-from deepeval.models import DeepEvalBaseLLM, GPTModel
+from deepeval.models import DeepEvalBaseLLM, GPTModel, AzureOpenAIModel
 from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
@@ -41,6 +41,11 @@ def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
         return True
     elif (
         isinstance(model, GPTModel)
+        and model.model_name in unsupported_log_probs_gpt_models
+    ):
+        return True
+    elif (
+        isinstance(model, AzureOpenAIModel)
         and model.model_name in unsupported_log_probs_gpt_models
     ):
         return True
