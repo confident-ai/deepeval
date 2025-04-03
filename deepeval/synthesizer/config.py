@@ -50,8 +50,8 @@ class ContextConstructionConfig:
     max_context_length: int = 3
     chunk_size: int = 1024
     chunk_overlap: int = 0
-    context_quality_threshold: int = 0.5
-    context_similarity_threshold: int = 0.0
+    context_quality_threshold: float = 0.5
+    context_similarity_threshold: float = 0.0
     max_retries: int = 3
 
     def __post_init__(self):
