@@ -9,6 +9,7 @@ from enum import Enum
 from typing import List, Dict
 import requests
 from deepeval.constants import LOGIN_PROMPT
+from posthog import Posthog
 
 
 class Feature(Enum):
@@ -22,6 +23,7 @@ class Feature(Enum):
 
 
 TELEMETRY_DATA_FILE = ".deepeval_telemetry.txt"
+
 
 #########################################################
 ### Telemetry Config ####################################
@@ -91,6 +93,12 @@ if not telemetry_opt_out():
     # Create a tracer for your application
     tracer = trace.get_tracer(__name__)
 
+    # Initialize PostHog
+    posthog = Posthog(
+        project_api_key="phc_IXvGRcscJJoIb049PtjIZ65JnXQguOUZ5B5MncunFdB",
+        host="https://us.i.posthog.com",
+    )
+
 
 if (
     os.getenv("ERROR_REPORTING") == "YES"
@@ -130,6 +138,8 @@ IS_RUNNING_IN_JUPYTER = (
 def capture_evaluation_run(type: str):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Ran {type}") as span:
+            if type in ["evaluate()", "deepeval test run"]:
+                posthog.capture(get_unique_id(), f"Ran {type}")
             span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
@@ -185,6 +195,7 @@ def capture_synthesizer_run(
 ):
     if not telemetry_opt_out() and max_generations is not None:
         with tracer.start_as_current_span(f"Invoked synthesizer") as span:
+            posthog.capture(get_unique_id(), "Invoked synthesizer")
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("logged_in_with", get_logged_in_with())
