@@ -23,7 +23,10 @@ Your test file must start with `test_`, that's just how things are with Pytest.
 :::
 
 ```python title="test_llm_app.py"
-import hypothetical_chatbot
+import pytest
+import hypothetical_llm_app
+
+from deepeval.prompt import Prompt
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
@@ -33,21 +36,23 @@ from deepeval import assert_test
 dataset = EvaluationDataset()
 dataset.pull(alias="QA Dataset")
 
-# Create a list of LLMTestCase
-test_cases = []
-for golden in dataset.goldens:
-  input = golden.input
-  # Replace with your own LLM application
-  actual_output, retrieval_context = hypothetical_chatbot(input)
-  test_case = LLMTestCase(
-    input=input,
-    actual_output=actual_output,
-    retrieval_context=retrieval_context
-  )
-  test_cases.append(test_case)
+# Use prompt from the cloud
+prompt = Prompt(alias="...")
+prompt.pull()
 
-# Make dataset ready for evaluation
-dataset.test_cases = test_cases
+
+# Create a list of LLMTestCase
+for golden in dataset.goldens:
+    prompt_to_llm = prompt.interpolate(input=golden.input)
+    # Replace with your own LLM application
+    actual_output, retrieval_context = hypothetical_llm_app(prompt_to_llm)
+    test_case = LLMTestCase(
+        input=prompt_to_llm,
+        actual_output=actual_output,
+        retrieval_context=retrieval_context,
+    )
+    dataset.test_cases.append(test_case)
+
 
 @pytest.mark.parametrize("test_case", dataset)
 def test_llm_app(test_case: LLMTestCase):
@@ -79,7 +84,7 @@ You should see the same test run being created on Confident AI.
 
 To execute your test file in CI/CD pipelines, simply create a `YAML` file that runs `deepeval test run` on push and pull requests.
 
-```yaml title=".github/workflows/uni-testing.yml"
+```yaml title=".github/workflows/unit-testing.yml"
 name: LLM Unit/Regression Testing
 
 on:
@@ -100,7 +105,7 @@ jobs:
 
       - name: Install Poetry
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          curl -SSL https://install.python-poetry.org | python3 -
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install Dependencies
@@ -125,7 +130,7 @@ Don't forget to supply your Confident AI API Key as you'll not get access to you
 
 ## Integrating With GitHub Actions
 
-If you don't already have one, create a `.github/workflows` directory in your repository and place your `uni-testing.yml` YAML file there. Now, whenever you make a commit and push this change, GitHub Actions will automatically execute it based on the specified on triggers.
+If you don't already have one, create a `.github/workflows` directory in your repository and place your `unit-testing.yml` YAML file there. Now, whenever you make a commit and push this change, GitHub Actions will automatically execute it based on the specified on triggers.
 
 ## What About Logging Models, Prompts, And Others?
 
@@ -135,14 +140,11 @@ In the previous section, we also saw how we can log hyperparameters such as mode
 ...
 
 # You should aim to make these values dynamic
-@deepeval.log_hyperparameters(model="gpt-4o", prompt_template="...")
+@deepeval.log_hyperparameters(model="gpt-4o", prompt=prompt)
 def hyperparameters():
     # Return a dict to log additional hyperparameters.
     # You can also return an empty dict {} if there's no additional parameters to log
-    return {
-        "temperature": 1,
-        "chunk size": 500
-    }
+    return {"temperature": 1, "chunk size": 500}
 ```
 
 This allows `deepeval` to associate evaluation results to these particular hyperparameters. Lastly, try `deepeval test run` to check that it shows up on Confident AI:

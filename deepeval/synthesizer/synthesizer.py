@@ -138,6 +138,7 @@ class Synthesizer:
             # Generate contexts from provided docs
             context_generator = ContextGenerator(
                 document_paths=document_paths,
+                encoding=context_construction_config.encoding,
                 embedder=context_construction_config.embedder,
                 chunk_size=context_construction_config.chunk_size,
                 chunk_overlap=context_construction_config.chunk_overlap,
@@ -177,9 +178,10 @@ class Synthesizer:
                     _send_data=False,
                     _reset_cost=False,
                 )
+
         if self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
-        # Wrap-up Synthesis
+
         if _send_data == True:
             pass
         return goldens
@@ -202,6 +204,7 @@ class Synthesizer:
         # Generate contexts from provided docs
         context_generator = ContextGenerator(
             document_paths=document_paths,
+            encoding=context_construction_config.encoding,
             embedder=context_construction_config.embedder,
             chunk_size=context_construction_config.chunk_size,
             chunk_overlap=context_construction_config.chunk_overlap,

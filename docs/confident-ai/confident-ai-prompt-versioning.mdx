@@ -17,7 +17,37 @@ Without prompt versioning, you would be keeping prompts in code, GitHub repos, o
   />
 </video>
 
-## How Does Prompt Versioning Work?
+## Why Keep Prompts on Confident AI?
+
+Manging your prompts manually is a messy process and introduces a lot of ad-hoc interation that are often times counter-productive. Iterating without versioning your prompt is arguebly just as bad a deploying to production without first running evaluations.
+
+:::info IMPORTANT
+If your workflow involves editing a prompt, manually prompting your LLM app once or twice, and repeating it all over again just because this one LLM output _feels_ a bit worse, you're doing it wrong.
+
+Furthermore, if you are currently keeping your prompts in your codebase, in `.txt` files on GitHub, in Notion, or even in Google sheets, please consider changing your approach.
+:::
+
+What you should really do, is:
+
+1. Edit your prompts on Confident AI.
+2. Run evaluations on your LLM app based on the outputs to this prompt version.
+3. Repeat until you're satisfied.
+
+Following this approach, we can now help you:
+
+1. Associate different prompts with evaluation results.
+2. Show you how your prompts, and the associated evals, have changed over time.
+3. Figure out which prompt works best for a particular model used in your LLM app.
+
+When your prompts are not on Confident AI, it is not possible to help you with all of the above, and the best we could do is to show you some evaluation results, without letting you know which prompts works best.
+
+:::caution
+Since using prompts on Confident AI helps unlock all the important bits in your LLM iteration cycle, we're committed to make the prompt versioning capability as comprehensive as possible. If you find that somehow the prompt editing on Confident AI does not fit 100% what you need, email support@confident-ai.com and we'll get it supported in < 3 days.
+:::
+
+For those that have multiple prompts in your LLM application, it is also not a problem since you can associate as many prompts you wish to a particular set of evaluation results.
+
+## How It Works
 
 Here's the typical prompt versioning workflow you'll adopt when using Confident AI:
 
@@ -95,7 +125,7 @@ Once you're created your first prompt, create a new version for it. For those wo
 Each time you create a new version, Confident AI will automatically create a version number that would allow you to define which version to pull from Confident AI in your LLM application.
 :::
 
-## Pull Your Prompt From Confident AI
+## Pull Your First Prompt
 
 :::caution
 You should pull your prompt at application start to avoid unnecessary latencies.

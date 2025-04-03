@@ -119,6 +119,9 @@ def set_azure_openai_env(
     openai_api_version: str = typer.Option(
         ..., "--openai-api-version", help="OpenAI API version"
     ),
+    openai_model_name: str = typer.Option(
+        ..., "--openai-model-name", help="OpenAI model name"
+    ),
     azure_deployment_name: str = typer.Option(
         ..., "--deployment-name", help="Azure deployment name"
     ),
@@ -129,6 +132,7 @@ def set_azure_openai_env(
     KEY_FILE_HANDLER.write_key(
         KeyValues.AZURE_OPENAI_API_KEY, azure_openai_api_key
     )
+    KEY_FILE_HANDLER.write_key(KeyValues.AZURE_MODEL_NAME, openai_model_name)
     KEY_FILE_HANDLER.write_key(
         KeyValues.AZURE_OPENAI_ENDPOINT, azure_openai_endpoint
     )
@@ -175,6 +179,7 @@ def unset_azure_openai_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_OPENAI_ENDPOINT)
     KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_API_VERSION)
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_DEPLOYMENT_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME)
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_MODEL_VERSION)
     KEY_FILE_HANDLER.remove_key(KeyValues.USE_AZURE_OPENAI)
@@ -236,7 +241,7 @@ def set_ollama_embeddings_env(
         ..., help="Name of the Ollama embedding model"
     ),
     base_url: str = typer.Option(
-        "http://localhost:11434/v1/",
+        "http://localhost:11434",
         "-b",
         "--base-url",
         help="Base URL for the Ollama embedding model API",

@@ -8,7 +8,10 @@ from typing import Dict
 import tqdm
 import sys
 
-from deepeval.telemetry import capture_synthesizer_run
+from deepeval.telemetry import (
+    capture_synthesizer_run,
+    capture_conversation_simulatior_run,
+)
 
 
 @contextmanager
@@ -44,7 +47,7 @@ def synthesizer_progress_context(
             description = f"✨ Generating up to {max_generations} goldens using DeepEval (using {evaluation_model}, method={method})"
         else:
             description = f"✨ Generating up to {max_generations} goldens using DeepEval (using {evaluation_model} and {embedder}, method={method})"
-        # Direct output to stderr, using TQDM progress bar for visual feedback
+
         if not progress_bar:
             if async_mode:
                 with async_tqdm_bar(
@@ -54,6 +57,31 @@ def synthesizer_progress_context(
             else:
                 with tqdm_bar(
                     total=max_generations, desc=description, file=sys.stderr
+                ) as progress_bar:
+                    yield progress_bar
+        else:
+            yield progress_bar
+
+
+@contextmanager
+def conversation_simulator_progress_context(
+    simulator_model: str,
+    num_conversations: int,
+    async_mode: bool = False,
+    progress_bar: Optional[tqdm.std.tqdm] = None,
+) -> Generator[Optional[tqdm.std.tqdm], None, None]:
+    with capture_conversation_simulatior_run(num_conversations):
+        description = f"🪄 Simulating {num_conversations} conversational test case(s) using DeepEval (using {simulator_model})"
+
+        if not progress_bar:
+            if async_mode:
+                with async_tqdm_bar(
+                    total=num_conversations, desc=description, file=sys.stderr
+                ) as progress_bar:
+                    yield progress_bar
+            else:
+                with tqdm_bar(
+                    total=num_conversations, desc=description, file=sys.stderr
                 ) as progress_bar:
                     yield progress_bar
         else:

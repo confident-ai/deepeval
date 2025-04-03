@@ -26,7 +26,8 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         # fetch Azure deployment parameters
-        model_name = KEY_FILE_HANDLER.fetch_data(
+        model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_MODEL_NAME)
+        self.deploynment_name = KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_DEPLOYMENT_NAME
         )
         self.azure_openai_api_key = KEY_FILE_HANDLER.fetch_data(
@@ -201,12 +202,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 api_key=self.azure_openai_api_key,
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
-                azure_deployment=self.model_name,
+                azure_deployment=self.deploynment_name,
             )
         else:
             return AsyncAzureOpenAI(
                 api_key=self.azure_openai_api_key,
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
-                azure_deployment=self.model_name,
+                azure_deployment=self.deploynment_name,
             )

@@ -23,6 +23,7 @@ module.exports = {
             "synthesizer-generate-from-scratch",
           ],
         },
+        "evaluation-conversation-simulator",
         {
           type: "category",
           label: "Metrics",
@@ -109,7 +110,6 @@ module.exports = {
       label: "Red-Teaming",
       items: [
         "red-teaming-introduction",
-        "red-teaming-owasp",
         "red-teaming-attack-enhancements",
         {
           type: "category",

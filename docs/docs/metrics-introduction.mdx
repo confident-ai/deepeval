@@ -138,7 +138,7 @@ export OPENAI_API_KEY=<your-openai-api-key>
 Alternatively, if you're working in a notebook enviornment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
 
 ```console
- %env OPENAI_API_KEY=<your-openai-api-key>
+%env OPENAI_API_KEY=<your-openai-api-key>
 ```
 
 :::note
@@ -153,7 +153,8 @@ Please **do not include** quotation marks when setting your `OPENAI_API_KEY` if 
 deepeval set-azure-openai \
     --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
     --openai-api-key=<api_key> \
-    --deployment-name=<deployment_name> \ # e.g. gpt-4o
+    --openai-model-name=<model_name> \ # e.g. gpt-4o
+    --deployment-name=<deployment_name> \  # e.g. Test Deployment
     --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
     --model-version=<model_version> # e.g. 2024-11-20
 ```
