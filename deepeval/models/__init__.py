@@ -9,8 +9,13 @@ from deepeval.models.llms import (
     AzureOpenAIModel,
     LocalModel,
     OllamaModel,
+    GeminiModel,
 )
-from deepeval.models.mlllms import MultimodalOpenAIModel, MultimodalOllamaModel
+from deepeval.models.mlllms import (
+    MultimodalOpenAIModel,
+    MultimodalOllamaModel,
+    MultimodalGeminiModel,
+)
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
     AzureOpenAIEmbeddingModel,
