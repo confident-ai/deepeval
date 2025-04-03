@@ -31,6 +31,7 @@ class ContextGenerator:
         self,
         embedder: DeepEvalBaseEmbeddingModel,
         document_paths: Optional[List[str]] = None,
+        encoding: Optional[str] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         chunk_size: int = 1024,
         chunk_overlap: int = 0,
@@ -54,6 +55,7 @@ class ContextGenerator:
         self.chunk_overlap = chunk_overlap
         self.total_chunks = 0
         self.document_paths: List[str] = document_paths
+        self.encoding = encoding
         self._nodes = _nodes
 
         # Model parameters
@@ -671,7 +673,7 @@ class ContextGenerator:
         doc_to_chunker_map = {}
         for path in tqdm_bar(self.document_paths, "✨ 🚀 ✨ Loading Documents"):
             doc_chunker = DocumentChunker(self.embedder)
-            doc_chunker.load_doc(path)
+            doc_chunker.load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
         return doc_to_chunker_map
 
@@ -680,7 +682,7 @@ class ContextGenerator:
 
         async def a_process_document(path):
             doc_chunker = DocumentChunker(self.embedder)
-            await doc_chunker.a_load_doc(path)
+            await doc_chunker.a_load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
 
         tasks = [a_process_document(path) for path in self.document_paths]
