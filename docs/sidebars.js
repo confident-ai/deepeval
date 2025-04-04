@@ -137,22 +137,6 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Integrations",
-      items: [
-        "integrations-introduction",
-        "integrations-llamaindex",
-        "integrations-huggingface",
-        "integrations-cognee",
-        "integrations-elastic",
-        "integrations-chroma",
-        "integrations-weaviate",
-        "integrations-qdrant",
-        "integrations-pgvector",
-      ],
-      collapsed: true,
-    },
-    {
-      type: "category",
       label: "Others",
       items: ["data-privacy", "miscellaneous"],
       collapsed: false,

@@ -80,9 +80,7 @@ class ConversationSimulator:
                     conversational_test_cases.append(conversational_test_case)
                     progress_bar.update(1)
 
-                self.simulated_conversations = (
-                    conversational_test_cases
-                )
+                self.simulated_conversations = conversational_test_cases
 
         return self.simulated_conversations
 

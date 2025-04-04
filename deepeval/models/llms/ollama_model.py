@@ -9,9 +9,11 @@ from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 class OllamaModel(DeepEvalBaseLLM):
     def __init__(
         self,
+        model: Optional[str] = None,
+        base_url: Optional[str] = None,
     ):
-        model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
+        model_name = model or KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
+        self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
             KeyValues.LOCAL_MODEL_BASE_URL
         )
         super().__init__(model_name)
