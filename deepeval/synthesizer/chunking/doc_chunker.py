@@ -7,7 +7,7 @@ from langchain_community.document_loaders import (
 from langchain_community.document_loaders.base import BaseLoader
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
-from typing import Optional, List, Dict, Union
+from typing import Optional, List, Dict, Union, Type
 
 from llama_index.core.schema import TextNode
 import os
@@ -29,7 +29,7 @@ class DocumentChunker:
         self.mean_embedding: Optional[float] = None
 
         # Mapping of file extensions to their respective loader classes
-        self.loader_mapping: Dict[str, BaseLoader] = {
+        self.loader_mapping: Dict[str, Type[BaseLoader]] = {
             ".pdf": PyPDFLoader,
             ".txt": TextLoader,
             ".docx": Docx2txtLoader,
@@ -220,8 +220,8 @@ class DocumentChunker:
     ### Loading Docs ########################################
     #########################################################
 
-    async def a_load_doc(self, path: str) -> List[LCDocument]:
-        # Find appropiate doc loader
+    def get_loader(self, path: str, encoding: Optional[str]) -> BaseLoader:
+        # Find appropriate doc loader
         _, extension = os.path.splitext(path)
         extension = extension.lower()
         loader: Optional[BaseLoader] = self.loader_mapping.get(extension)
@@ -229,21 +229,18 @@ class DocumentChunker:
             raise ValueError(f"Unsupported file format: {extension}")
 
         # Load doc into sections and calculate total character count
-        loader = loader(path)
+        if loader == TextLoader:
+            return loader(path, encoding=encoding, autodetect_encoding=True)
+        return loader(path)
+
+    async def a_load_doc(self, path: str, encoding: Optional[str]):
+        loader = self.get_loader(path, encoding)
         self.sections = await loader.aload()
         self.text_token_count = self.count_tokens(self.sections)
         self.source_file = path
 
-    def load_doc(self, path: str):
-        # Find appropiate doc loader
-        _, extension = os.path.splitext(path)
-        extension = extension.lower()
-        loader: Optional[BaseLoader] = self.loader_mapping.get(extension)
-        if loader is None:
-            raise ValueError(f"Unsupported file format: {extension}")
-
-        # Load doc into sections and calculate total character count
-        loader = loader(path)
+    def load_doc(self, path: str, encoding: Optional[str]):
+        loader = self.get_loader(path, encoding)
         self.sections = loader.load()
         self.text_token_count = self.count_tokens(self.sections)
         self.source_file = path

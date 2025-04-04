@@ -9,6 +9,7 @@ from deepeval.models.llms import (
     AzureOpenAIModel,
     LocalModel,
     OllamaModel,
+    AnthropicModel,
     GeminiModel,
 )
 from deepeval.models.mlllms import (

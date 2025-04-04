@@ -51,6 +51,18 @@ module.exports = {
         showLastUpdateTime: true,
       },
     ],
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "integrations",
+        path: "integrations",
+        routeBasePath: "integrations",
+        sidebarPath: require.resolve("./sidebarIntegrations.js"),
+        editUrl: "https://github.com/confident-ai/deepeval/edit/main/docs/",
+        showLastUpdateAuthor: true,
+        showLastUpdateTime: true,
+      },
+    ],
   ],
 
   title: "DeepEval - The Open-Source LLM Evaluation Framework",
@@ -154,6 +166,12 @@ module.exports = {
             position: "left",
             label: "Guides",
             activeBasePath: "guides",
+          },
+          {
+            to: "integrations/model-openai",
+            position: "left",
+            label: "Integrations",
+            activeBasePath: "integrations",
           },
           // {to: 'blog', label: 'Blog', position: 'left'},
           {
