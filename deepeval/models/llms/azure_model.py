@@ -22,21 +22,30 @@ from deepeval.models.llms.openai_model import (
 class AzureOpenAIModel(DeepEvalBaseLLM):
     def __init__(
         self,
+        model_name: Optional[str] = None,
+        deploynment_name: Optional[str] = None,
+        azure_openai_api_key: Optional[str] = None,
+        openai_api_version: Optional[str] = None,
+        azure_endpoint: Optional[str] = None,
         *args,
         **kwargs,
     ):
         # fetch Azure deployment parameters
-        model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_MODEL_NAME)
-        self.deploynment_name = KEY_FILE_HANDLER.fetch_data(
+        model_name = model_name or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AZURE_MODEL_NAME
+        )
+        self.deploynment_name = deploynment_name or KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_DEPLOYMENT_NAME
         )
-        self.azure_openai_api_key = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.AZURE_OPENAI_API_KEY
+        self.azure_openai_api_key = (
+            azure_openai_api_key
+            or KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_OPENAI_API_KEY)
         )
-        self.openai_api_version = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.OPENAI_API_VERSION
+        self.openai_api_version = (
+            openai_api_version
+            or KEY_FILE_HANDLER.fetch_data(KeyValues.OPENAI_API_VERSION)
         )
-        self.azure_endpoint = KEY_FILE_HANDLER.fetch_data(
+        self.azure_endpoint = azure_endpoint or KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_OPENAI_ENDPOINT
         )
         # args and kwargs will be passed to the underlying model, in load_model function

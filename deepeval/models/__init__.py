@@ -9,6 +9,7 @@ from deepeval.models.llms import (
     AzureOpenAIModel,
     LocalModel,
     OllamaModel,
+    AnthropicModel
 )
 from deepeval.models.mlllms import MultimodalOpenAIModel, MultimodalOllamaModel
 from deepeval.models.embedding_models import (
