@@ -8,7 +8,7 @@ class MetricData(BaseModel):
     name: str
     threshold: float
     success: bool
-    score: Optional[float] = None
+    score: Optional[Union[float, str]] = None
     reason: Optional[str] = None
     strict_mode: Optional[bool] = Field(False, alias="strictMode")
     evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
