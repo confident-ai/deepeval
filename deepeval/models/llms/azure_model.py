@@ -1,6 +1,9 @@
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
+from langchain_community.callbacks import get_openai_callback
 from openai import AzureOpenAI, AsyncAzureOpenAI
 from typing import Optional, Tuple, Union, Dict
+from langchain_core.messages import AIMessage
+from langchain_openai import AzureChatOpenAI
 from pydantic import BaseModel
 import openai
 import json
@@ -9,15 +12,18 @@ import re
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.openai_model import (
-    valid_gpt_models,
-    structured_outputs_models,
     structured_outputs_models,
     json_mode_models,
-    default_gpt_model,
     model_pricing,
     log_retry_error,
 )
 
+retryable_exceptions = (
+    openai.RateLimitError,
+    openai.APIConnectionError,
+    openai.APITimeoutError,
+    openai.LengthFinishReasonError,
+)
 
 class AzureOpenAIModel(DeepEvalBaseLLM):
     def __init__(
@@ -170,6 +176,36 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             return output, cost
 
     ###############################################
+    # Other generate functions
+    ###############################################
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(retryable_exceptions),
+        after=log_retry_error,
+    )
+    def generate_raw_response(
+        self, prompt: str, **kwargs
+    ) -> Tuple[AIMessage, float]:
+        chat_model = self.load_langchain_model().bind(**kwargs)
+        with get_openai_callback() as cb:
+            res = chat_model.invoke(prompt)
+            return res, cb.total_cost
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(retryable_exceptions),
+        after=log_retry_error,
+    )
+    async def a_generate_raw_response(
+        self, prompt: str, **kwargs
+    ) -> Tuple[AIMessage, float]:
+        chat_model = self.load_langchain_model().bind(**kwargs)
+        with get_openai_callback() as cb:
+            res = await chat_model.ainvoke(prompt)
+        return res, cb.total_cost
+
+    ###############################################
     # Utilities
     ###############################################
 
@@ -203,7 +239,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_model_name(self):
-        return "Azure OpenAI"
+        return f"Azure OpenAI ({self.model_name})"
 
     def load_model(self, async_mode: bool = False):
         if async_mode == False:
@@ -220,3 +256,13 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 azure_endpoint=self.azure_endpoint,
                 azure_deployment=self.deploynment_name,
             )
+
+    def load_langchain_model(self):
+        return AzureChatOpenAI(
+            azure_deployment=self.deploynment_name,
+            azure_endpoint=self.azure_endpoint,
+            api_key=self.azure_openai_api_key,
+            api_version=self.openai_api_version,
+            *self.args,
+            **self.kwargs,
+        )
