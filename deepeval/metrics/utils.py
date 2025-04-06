@@ -6,12 +6,8 @@ from typing import Any, Dict, Optional, List, Union, Tuple
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import (
-    GPTModel,
     DeepEvalBaseLLM,
-    MultimodalOpenAIModel,
     DeepEvalBaseMLLM,
-)
-from deepeval.models import (
     GPTModel,
     AzureOpenAIModel,
     OllamaModel,
@@ -20,6 +16,10 @@ from deepeval.models import (
     AzureOpenAIEmbeddingModel,
     OllamaEmbeddingModel,
     LocalEmbeddingModel,
+    GeminiModel,
+    MultimodalOpenAIModel,
+    MultimodalGeminiModel,
+    MultimodalOllamaModel
 )
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
@@ -30,7 +30,6 @@ from deepeval.metrics import (
     BaseMultimodalMetric,
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
-from deepeval.models.mlllms.ollama_model import MultimodalOllamaModel
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
@@ -301,6 +300,11 @@ def should_use_ollama_model():
     return base_url == "ollama"
 
 
+def should_use_gemini_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GEMINI_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 def initialize_model(
     model: Optional[Union[str, DeepEvalBaseLLM]] = None,
 ) -> Tuple[DeepEvalBaseLLM, bool]:
@@ -310,9 +314,11 @@ def initialize_model(
     # If model is natively supported, it should be deemed as using native model
     if is_native_model(model):
         return model, True
-    # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
+    # If model is a DeepEvalBaseLLM but not a native model, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
+    if should_use_gemini_model():
+        return GeminiModel(), True
     if should_use_ollama_model():
         return OllamaModel(), True
     elif should_use_local_model():
@@ -336,6 +342,7 @@ def is_native_model(
         or isinstance(model, AzureOpenAIModel)
         or isinstance(model, OllamaModel)
         or isinstance(model, LocalModel)
+        or isinstance(model, GeminiModel)
     ):
         return True
     else:
@@ -357,6 +364,8 @@ def initialize_multimodal_model(
         return model, True
     if isinstance(model, DeepEvalBaseMLLM):
         return model, False
+    if should_use_gemini_model():
+        return MultimodalGeminiModel(), True
     if should_use_ollama_model():
         return MultimodalOllamaModel(), True
     elif isinstance(model, str) or model is None:
@@ -369,8 +378,10 @@ def initialize_multimodal_model(
 def is_native_mllm(
     model: Optional[Union[str, DeepEvalBaseLLM]] = None,
 ) -> bool:
-    if isinstance(model, MultimodalOpenAIModel) or isinstance(
-        model, MultimodalOllamaModel
+    if (
+        isinstance(model, MultimodalOpenAIModel) 
+        or isinstance(model, MultimodalOllamaModel)  
+        or isinstance( model, MultimodalGeminiModel)
     ):
         return True
     else:

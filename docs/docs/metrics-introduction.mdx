@@ -169,6 +169,43 @@ Note that the `model-version` is **optional**. If you ever wish to stop using Az
 deepeval unset-azure-openai
 ```
 
+## Using Gemini
+
+To use Gemini models with DeepEval, run the following command in your CLI.
+
+```bash
+deepeval set-gemini \
+    --model-name=<model_name> \ # e.g. "gemini-2.0-flash-001"
+    --google-api-key=<api_key>
+```
+
+### Vertex AI
+
+
+You can also use Google Cloud's Vertex AI models, including Gemini or your own fine-tuned models, with DeepEval. 
+
+:::info
+To use Vertex AI, you must have the following:
+
+1. A Google Cloud project with the Vertex AI API enabled
+2. Application Default Credentials set up:
+
+```bash
+gcloud auth application-default login
+```
+::: 
+
+To get started, set up your Google Cloud credentials using the following command:
+
+
+```bash
+deepeval set-gemini \
+    --model-name=<model_name> \ # e.g. "gemini-2.0-flash-001"
+    --project-id=<project_id> \
+    --location=<location> # e.g. "us-central1"
+```
+
+
 ## Using Ollama
 
 :::note
