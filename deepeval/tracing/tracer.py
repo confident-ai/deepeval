@@ -7,14 +7,11 @@ from pydantic import BaseModel, Field
 import inspect
 
 from deepeval.utils import dataclass_to_dict
-from deepeval.monitor import monitor
-
-########################################################
-### Trace Types ########################################
-########################################################
+from deepeval.prompt import Prompt
+from deepeval.test_case import ToolCall
 
 
-class TraceProvider(Enum):
+class Provider(Enum):
     LANGCHAIN = "LANGCHAIN"
     LLAMA_INDEX = "LLAMA_INDEX"
     DEFAULT = "DEFAULT"
@@ -22,174 +19,62 @@ class TraceProvider(Enum):
     HYBRID = "HYBRID"
 
 
-class TraceType(Enum):
+class SpanType(Enum):
     AGENT = "Agent"
-    CHAIN = "Chain"
-    CHUNKING = "Chunking"
-    EMBEDDING = "Embedding"
     LLM = "LLM"
-    NODE_PARSING = "Node Parsing"
-    QUERY = "Query"
-    RERANKING = "Reranking"
     RETRIEVER = "Retriever"
-    SYNTHESIZE = "Synthesize"
     TOOL = "Tool"
 
 
-class LlamaIndexTraceType(Enum):
-    AGENT = "Agent"
-    CHAIN = "Chain"
-    CHUNKING = "Chunking"
-    EMBEDDING = "Embedding"
-    LLM = "LLM"
-    NODE_PARSING = "Node Parsing"
-    QUERY = "Query"
-    RERANKING = "Reranking"
-    RETRIEVER = "Retriever"
-    SYNTHESIZE = "Synthesize"
-    TOOL = "Tool"
-
-
-class LangChainTraceType(Enum):
-    AGENT = "Agent"
-    CHAIN = "Chain"
-    CHUNKING = "Chunking"
-    EMBEDDING = "Embedding"
-    LLM = "LLM"
-    NODE_PARSING = "Node Parsing"
-    QUERY = "Query"
-    RERANKING = "Reranking"
-    RETRIEVER = "Retriever"
-    SYNTHESIZE = "Synthesize"
-    TOOL = "Tool"
-
-
-class TraceStatus(Enum):
+class TraceSpanStatus(Enum):
     SUCCESS = "Success"
     ERROR = "Error"
 
 
-class RetrievalNode(BaseModel):
-    content: str
-    # Optional variables
-    id: Optional[str] = None
-    score: Optional[float] = None
-    source_file: Optional[str] = Field(None, serialization_alias="sourceFile")
-
-
-########################################################
-### Attributes Types ###################################
-########################################################
-
-
 class AgentAttributes(BaseModel):
+    # input
     input: str
+    # output
     output: str
-    name: str
-    description: str
-
-
-class ChainAttributes(BaseModel):
-    input: str
-    output: str
-    # Optional variables
-    prompt_template: Optional[str] = Field(
-        None, serialization_alias="promptTemplate"
-    )
-
-
-class ChunkAttributes(BaseModel):
-    input: str
-    output_chunks: List[str] = Field([], serialization_alias="outputChunks")
-
-
-class EmbeddingAttributes(BaseModel):
-    embedding_text: str = Field("", serialization_alias="embeddingText")
-    # Optional variables
-    model: Optional[str] = None
-    embedding_length: Optional[int] = Field(
-        None, serialization_alias="embeddingLength"
-    )
 
 
 class LlmAttributes(BaseModel):
-    input_str: str = Field("", serialization_alias="inputStr")
-    output_str: str = Field("", serialization_alias="outputStr")
-    # Optional variables
-    model: Optional[str] = None
-    total_token_count: Optional[int] = Field(
-        None, serialization_alias="totalTokenCount"
-    )
-    prompt_token_count: Optional[int] = Field(
-        None, serialization_alias="promptTokenCount"
-    )
-    completion_token_count: Optional[int] = Field(
-        None, serialization_alias="completionTokenCount"
-    )
-    prompt_template: Optional[str] = Field(
-        None, serialization_alias="promptTemplate"
-    )
-    prompt_template_variables: Optional[Dict[str, str]] = Field(
-        None, serialization_alias="promptTemplateVariables"
-    )
-
-
-class NodeParsingAttributes(BaseModel):
-    output_nodes: List[RetrievalNode] = Field(
-        [], serialization_alias="outputNodes"
-    )
-
-
-class QueryAttributes(BaseModel):
+    # input
     input: str
+    # output 
     output: str
+    prompt: Optional[Prompt] = None
+
+    # Optional variables
+    input_token_count: Optional[int] = Field(
+        None, serialization_alias="inputTokenCount"
+    )
+    output_token_count: Optional[int] = Field(
+        None, serialization_alias="outputTokenCount"
+    )
+
 
 
 class RetrieverAttributes(BaseModel):
-    query_str: str = Field("", serialization_alias="queryStr")
-    nodes: List[RetrievalNode]
+    # input
+    embedding_text: str = Field(serialization_alias="embeddingText")
+    # output
+    retrieval_context : List[str]
+
     # Optional variables
     top_k: Optional[int] = Field(None, serialization_alias="topK")
-    average_chunk_size: Optional[int] = Field(
-        None, serialization_alias="averageChunkSize"
-    )
-    top_score: Optional[float] = Field(None, serialization_alias="topScore")
-    similarity_scorer: Optional[str] = Field(
-        None, serialization_alias="similarityScorer"
-    )
+    chunk_size: Optional[int] = Field(None, serialization_alias="chunkSize")
 
 
-class RerankingAttributes(BaseModel):
-    input_nodes: List[RetrievalNode] = Field(
-        [], serialization_alias="inputNodes"
-    )
-    output_nodes: List[RetrievalNode] = Field(
-        [], serialization_alias="outputNodes"
-    )
-    # Optional variables
-    model: Optional[str] = None
-    top_n: Optional[int] = Field(None, serialization_alias="topN")
-    batch_size: Optional[int] = Field(None, serialization_alias="batchSize")
-    query_str: Optional[str] = Field(None, serialization_alias="queryStr")
-
-
-class SynthesizeAttributes(BaseModel):
-    user_query: str = Field("", serialization_alias="userQuery")
-    response: str
-    # Optional variables
-    retrieved_context: Optional[str] = Field(
-        None, serialization_alias="retrievedContext"
-    )
-
-
+# Don't have to call this manually
 class ToolAttributes(BaseModel):
-    name: str
-    description: str
+    # input
+    input_parameters: Optional[Dict[str, Any]] = Field(
+        None, serialization_alias="inputParameters"
+    )
+    # output
+    output: Optional[Any] = None
 
-
-class GenericAttributes(BaseModel):
-    input: Optional[str] = None
-    output: Optional[str] = None
 
 
 ########################################################
@@ -198,131 +83,83 @@ class GenericAttributes(BaseModel):
 
 
 @dataclass
-class BaseTrace:
-    type: Union[TraceType, str]
-    executionTime: float
+class BaseSpan:
+    uuid: str
+    trace_uuid: str = Field(serialization_alias="traceUuid")
+    parent_uuid: Optional[str] = Field(None, serialization_alias="parentUuid")
+    start_time : float = Field(serialization_alias="startTime")
+    end_time : Union[float, None] = Field(None, serialization_alias="endTime")
+    status: TraceSpanStatus
+    provider: Provider
+    children: List["BaseSpan"]
+    name: Optional[str] = None
+    metadata: Optional[Dict] = None
+
+    # Late populate
+    input: Union[str, Dict, list, None]
+    output: Union[str, Dict, list, None]
+
+
+@dataclass
+class AgentSpan(BaseSpan):
     name: str
-    status: TraceStatus
-    traceProvider: TraceProvider
-    traces: List["TraceData"]
-    inputPayload: Optional[Dict]
-    outputPayload: Optional[Dict]
-    # Parent IDs
-    parentId: Optional[str]
-    rootParentId: Optional[str]
+    available_tools: List[str]
+    attributes: AgentAttributes
 
 
 @dataclass
-class AgentTrace(BaseTrace):
-    agentAttributes: AgentAttributes
-    type: TraceType
+class LlmSpan(BaseSpan):
+    model: str
+    cost_per_input_token: Optional[float] = Field(None, serialization_alias="costPerInputToken")
+    cost_per_output_token: Optional[float] = Field(None, serialization_alias="costPerOutputToken")
+    attributes: LlmAttributes
 
 
 @dataclass
-class ChainTrace(BaseTrace):
-    chainAttributes: ChainAttributes
-    type: TraceType
+class RetrieverSpan(BaseSpan):
+    embedder: str
+    attributes: RetrieverAttributes
 
 
 @dataclass
-class ChunkTrace(BaseTrace):
-    chunkAttributes: ChunkAttributes
-    type: TraceType
-
-
-@dataclass
-class EmbeddingTrace(BaseTrace):
-    embeddingAttributes: EmbeddingAttributes
-    type: TraceType
-
-
-@dataclass
-class LlmTrace(BaseTrace):
-    llmAttributes: LlmAttributes
-    type: TraceType
-
-
-@dataclass
-class NodeParsingTrace(BaseTrace):
-    nodeParsingAttributes: NodeParsingAttributes
-    type: TraceType
-
-
-@dataclass
-class QueryTrace(BaseTrace):
-    queryAttributes: QueryAttributes
-    type: TraceType
-
-
-@dataclass
-class RetrieverTrace(BaseTrace):
-    retrieverAttributes: RetrieverAttributes
-    type: TraceType
-
-
-@dataclass
-class RerankingTrace(BaseTrace):
-    rerankingAttributes: RerankingAttributes
-    type: TraceType
-
-
-@dataclass
-class SynthesizeTrace(BaseTrace):
-    synthesizeAttributes: SynthesizeAttributes
-    type: TraceType
-
-
-@dataclass
-class ToolTrace(BaseTrace):
-    toolAttributes: ToolAttributes
-    type: TraceType
-
-
-@dataclass
-class GenericTrace(BaseTrace):
-    genericAttributes: Optional[GenericAttributes] = None
-    type: str
+class ToolSpan(BaseSpan):
+    name: str
+    description: Optional[str] = None
+    attributes: ToolAttributes
 
 
 Attributes = Union[
     AgentAttributes,
-    ChainAttributes,
-    EmbeddingAttributes,
     LlmAttributes,
-    QueryAttributes,
-    RerankingAttributes,
     RetrieverAttributes,
-    SynthesizeAttributes,
-    ToolAttributes,
-    GenericAttributes,
+    ToolAttributes
 ]
-TraceData = Union[
-    AgentTrace,
-    ChainTrace,
-    EmbeddingTrace,
-    LlmTrace,
-    QueryTrace,
-    RerankingTrace,
-    RetrieverTrace,
-    SynthesizeTrace,
-    ToolTrace,
-    GenericTrace,
+
+SpanType = Union[
+    BaseSpan,
+    AgentSpan,
+    LlmSpan,
+    RetrieverSpan,
+    ToolSpan,
 ]
-TraceStack = List[TraceData]
+
+class Trace:
+    spans: List[BaseSpan]
+    status: TraceSpanStatus
+    start_time : float = Field(serialization_alias="startTime")
+    end_time : Union[float, None] = Field(None, serialization_alias="endTime")
+    metadata: Optional[Dict] = None
+    name: Optional[str] = None
 
 # Context variable to maintain an isolated stack for each async task
-trace_stack_var: ContextVar[TraceStack] = ContextVar("trace_stack", default=[])
+trace_stack_var: ContextVar[Trace] = ContextVar("trace_stack", default=[])
 track_params_var: ContextVar[Dict] = ContextVar("track_params", default={})
 dict_trace_stack_var: ContextVar[Dict] = ContextVar(
     "dict_trace_stack", default={}
 )
-outter_provider_var: ContextVar[Optional[TraceProvider]] = ContextVar(
+outter_provider_var: ContextVar[Optional[Provider]] = ContextVar(
     "outter_provider", default=None
 )
-
-########################################################
-### ContextVar Managers ################################
-########################################################
 
 
 class TraceManager:
@@ -378,7 +215,6 @@ trace_manager = TraceManager()
 
 
 class Tracer:
-    # IMPORTANT: framework callback integrations does NOT use this Tracer
     def __init__(self, trace_type: Union[TraceType, str]):
         self.trace_type: TraceType | str = trace_type
         if isinstance(self.trace_type, TraceType):
@@ -391,8 +227,6 @@ class Tracer:
         self.status: TraceStatus
         self.error: Optional[Dict[str:Any]] = None
         self.attributes: Optional[Attributes] = None
-        self.monitor_params: Optional[Dict] = None
-        self.is_monitoring: bool = False
 
     def __enter__(self):
         # start timer
@@ -448,33 +282,12 @@ class Tracer:
             dict_representation = dataclass_to_dict(current_trace_stack[0])
             trace_manager.set_dict_trace_stack(dict_representation)
             trace_manager.clear_trace_stack()
-
-            if self.is_monitoring:
-                monitor(
-                    event_name=self.monitor_params["event_name"]
-                    or self.trace_type,
-                    model=self.monitor_params["model"],
-                    input=self.monitor_params["input"],
-                    response=self.monitor_params["response"],
-                    retrieval_context=self.monitor_params["retrieval_context"],
-                    completion_time=self.monitor_params["completion_time"]
-                    or self.execution_time,
-                    token_usage=self.monitor_params["token_usage"],
-                    token_cost=self.monitor_params["token_cost"],
-                    distinct_id=self.monitor_params["distinct_id"],
-                    conversation_id=self.monitor_params["conversation_id"],
-                    additional_data=self.monitor_params["additional_data"],
-                    hyperparameters=self.monitor_params["hyperparameters"],
-                    fail_silently=self.monitor_params["fail_silently"],
-                    trace_stack=dict_representation,
-                )
         else:
             trace_manager.pop_trace_stack()
 
-    def create_trace_instance(
+    def create_span_instance(
         self,
-        trace_type: Union[TraceType, str],
-        trace_provider: TraceProvider,
+        provider: Provider,
         attributes: Optional[Attributes] = None,
     ):
         trace_kwargs = {
@@ -482,7 +295,7 @@ class Tracer:
             "type": trace_type,
             "executionTime": 0,
             "name": self.name,
-            "status": TraceStatus.SUCCESS,
+            "status": SpanStatus.SUCCESS,
             "traces": [],
             "inputPayload": None,
             "outputPayload": None,
@@ -519,7 +332,7 @@ class Tracer:
             trace_kwargs["genericAttributes"] = attributes
             return GenericTrace(**trace_kwargs)
 
-    def update_trace_instance(self):
+    def update_span_instance(self):
         # Get the latest trace instance from the stack
         current_stack = trace_manager.get_trace_stack_copy()
         current_trace = current_stack[-1]
@@ -529,21 +342,13 @@ class Tracer:
         current_trace.status = self.status
 
         # Assert that the attributes is of the correct type and assign it to the current trace
-        trace_mapping = {
-            TraceType.AGENT: (AgentAttributes, "agentAttributes"),
-            TraceType.CHAIN: (ChainAttributes, "chainAttributes"),
-            TraceType.EMBEDDING: (EmbeddingAttributes, "embeddingAttributes"),
-            TraceType.LLM: (LlmAttributes, "llmAttributes"),
-            TraceType.QUERY: (QueryAttributes, "queryAttributes"),
-            TraceType.RETRIEVER: (RetrieverAttributes, "retrieverAttributes"),
-            TraceType.RERANKING: (RerankingAttributes, "rerankingAttributes"),
-            TraceType.SYNTHESIZE: (
-                SynthesizeAttributes,
-                "synthesizeAttributes",
-            ),
-            TraceType.TOOL: (ToolAttributes, "toolAttributes"),
+        span_mapping = {
+            SpanType.AGENT: (AgentAttributes, "agentAttributes"),
+            SpanType.LLM: (LlmAttributes, "llmAttributes"),
+            SpanType.RETRIEVER: (RetrieverAttributes, "retrieverAttributes"),
+            SpanType.TOOL: (ToolAttributes, "toolAttributes"),
         }
-        attribute_class, attribute_name = trace_mapping.get(
+        attribute_class, attribute_name = span_mapping.get(
             self.trace_type, (None, None)
         )
         if attribute_class and attribute_name:
@@ -566,38 +371,3 @@ class Tracer:
 
         # append trace instance to stack
         self.attributes = attributes
-
-    def monitor(
-        self,
-        event_name: str = None,
-        model: str = None,
-        input: str = None,
-        response: str = None,
-        retrieval_context: Optional[List[str]] = None,
-        completion_time: Optional[float] = None,
-        token_usage: Optional[float] = None,
-        token_cost: Optional[float] = None,
-        distinct_id: Optional[str] = None,
-        conversation_id: Optional[str] = None,
-        additional_data: Optional[Dict[str, str]] = None,
-        hyperparameters: Optional[Dict[str, str]] = {},
-        fail_silently: Optional[bool] = False,
-        raise_exception: Optional[bool] = True,
-    ):
-        self.is_monitoring = True
-        self.monitor_params = {
-            "event_name": event_name,
-            "model": model,
-            "input": input,
-            "response": response,
-            "retrieval_context": retrieval_context,
-            "completion_time": completion_time,
-            "token_usage": token_usage,
-            "token_cost": token_cost,
-            "distinct_id": distinct_id,
-            "conversation_id": conversation_id,
-            "additional_data": additional_data,
-            "hyperparameters": hyperparameters,
-            "fail_silently": fail_silently,
-            "raise_exception": raise_exception,
-        }
