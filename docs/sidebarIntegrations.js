@@ -2,7 +2,7 @@ module.exports = {
   integrations: [
     {
       type: "category",
-      label: "Model Provider",
+      label: "Model Providers",
       items: [
         "model-openai",
         "model-azure-openai",
@@ -17,11 +17,11 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Framework",
+      label: "Frameworks",
       items: [
         "framework-llamaindex",
       ],
-      collapsed: true,
+      collapsed: false,
     },
     {
       type: "category",
@@ -34,7 +34,7 @@ module.exports = {
         "vectordb-qdrant",
         "vectordb-pgvector",
       ],
-      collapsed: true,
+      collapsed: false,
     },
   ],
 };
