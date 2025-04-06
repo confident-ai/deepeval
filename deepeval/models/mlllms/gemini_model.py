@@ -197,8 +197,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                     image_data = response.content
 
                 image_part = types.Part.from_bytes(
-                    data=image_data,
-                    mime_type="image/jpeg"
+                    data=image_data, mime_type="image/jpeg"
                 )
                 prompt.append(image_part)
             else:

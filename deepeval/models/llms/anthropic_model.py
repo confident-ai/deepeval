@@ -17,6 +17,7 @@ model_pricing = {
     "claude-instant-1.2": {"input": 0.80 / 1e6, "output": 2.40 / 1e6},
 }
 
+
 class AnthropicModel(DeepEvalBaseLLM):
     def __init__(
         self,
@@ -52,9 +53,8 @@ class AnthropicModel(DeepEvalBaseLLM):
             return message.content[0].text, cost
         else:
             json_output = self.trim_and_load_json(message.content[0].text)
-            
-            return schema.model_validate(json_output), cost
 
+            return schema.model_validate(json_output), cost
 
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
@@ -77,7 +77,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             return message.content[0].text, cost
         else:
             json_output = self.trim_and_load_json(message.content[0].text)
-            
+
             return schema.model_validate(json_output), cost
 
     ###############################################

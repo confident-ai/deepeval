@@ -19,7 +19,7 @@ from deepeval.models import (
     GeminiModel,
     MultimodalOpenAIModel,
     MultimodalGeminiModel,
-    MultimodalOllamaModel
+    MultimodalOllamaModel,
 )
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
@@ -379,9 +379,9 @@ def is_native_mllm(
     model: Optional[Union[str, DeepEvalBaseLLM]] = None,
 ) -> bool:
     if (
-        isinstance(model, MultimodalOpenAIModel) 
-        or isinstance(model, MultimodalOllamaModel)  
-        or isinstance( model, MultimodalGeminiModel)
+        isinstance(model, MultimodalOpenAIModel)
+        or isinstance(model, MultimodalOllamaModel)
+        or isinstance(model, MultimodalGeminiModel)
     ):
         return True
     else:

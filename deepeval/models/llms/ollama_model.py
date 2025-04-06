@@ -12,7 +12,9 @@ class OllamaModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         base_url: Optional[str] = None,
     ):
-        model_name = model or KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
+        model_name = model or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_MODEL_NAME
+        )
         self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
             KeyValues.LOCAL_MODEL_BASE_URL
         )

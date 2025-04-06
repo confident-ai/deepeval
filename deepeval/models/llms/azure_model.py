@@ -25,6 +25,7 @@ retryable_exceptions = (
     openai.LengthFinishReasonError,
 )
 
+
 class AzureOpenAIModel(DeepEvalBaseLLM):
     def __init__(
         self,
