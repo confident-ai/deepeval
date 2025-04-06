@@ -15,7 +15,10 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
+from deepeval.metrics.faithfulness.template import (
+    FaithfulnessTemplateProtocol,
+    FaithfulnessTemplate
+)
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.faithfulness.schema import (
     FaithfulnessVerdict,
@@ -42,7 +45,7 @@ class FaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
-        evaluation_template: Type[FaithfulnessTemplate] = FaithfulnessTemplate,
+        evaluation_template: Type[FaithfulnessTemplateProtocol] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
