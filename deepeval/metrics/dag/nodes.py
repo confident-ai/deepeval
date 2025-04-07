@@ -17,7 +17,7 @@ from deepeval.metrics.dag.templates import (
 )
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.g_eval.g_eval import G_EVAL_PARAMS, GEval
-from deepeval.metrics.utils import trimAndLoadJson
+from deepeval.metrics.utils import copy_metrics, trimAndLoadJson
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
 from deepeval.utils import prettify_list
 
@@ -59,7 +59,7 @@ def decrement_indegree(node: BaseNode):
 class VerdictNode(BaseNode):
     verdict: Union[str, bool]
     score: Optional[int] = None
-    child: Optional[Union[BaseNode, GEval]] = None
+    child: Optional[Union[BaseNode, GEval, BaseMetric]] = None
     _parent: Optional[BaseNode] = None
 
     def __hash__(self):
@@ -118,6 +118,17 @@ class VerdictNode(BaseNode):
                 metric.score = copied_g_eval.score
                 if metric.include_reason:
                     metric.reason = copied_g_eval.reason
+            elif isinstance(self.child, BaseMetric):
+                copied_metric: BaseMetric = copy_metrics([self.child])[0]
+                copied_metric.measure(
+                    test_case=test_case, _show_indicator=False
+                )
+                metric._verbose_steps.append(
+                    construct_node_verbose_log(self, depth, copied_metric)
+                )
+                metric.score = copied_metric.score
+                if metric.include_reason:
+                    metric.reason = copied_metric.reason
             else:
                 self.child._execute(
                     metric=metric, test_case=test_case, depth=depth
@@ -168,6 +179,18 @@ class VerdictNode(BaseNode):
                 metric.score = copied_g_eval.score
                 if metric.include_reason:
                     metric.reason = copied_g_eval.reason
+
+            elif isinstance(self.child, BaseMetric):
+                copied_metric: BaseMetric = copy_metrics([self.child])[0]
+                await copied_metric.a_measure(
+                    test_case=test_case, _show_indicator=False
+                )
+                metric._verbose_steps.append(
+                    construct_node_verbose_log(self, depth, copied_metric)
+                )
+                metric.score = copied_metric.score
+                if metric.include_reason:
+                    metric.reason = copied_metric.reason
             else:
                 await self.child._a_execute(
                     metric=metric, test_case=test_case, depth=depth
@@ -698,8 +721,15 @@ def construct_node_verbose_log(
             f"{node.output_label}:\n{node._output}\n"
         )
     elif isinstance(node, VerdictNode):
-        is_g_eval = node.child is not None
-        type = "GEval" if is_g_eval else "Deterministic"
+        type = None
+        if node.child:
+            if isinstance(node.child, GEval) or isinstance(
+                node.child, BaseMetric
+            ):
+                type = node.child.__name__
+        else:
+            type = "Deterministic"
+
         verbose_log = (
             "________________________\n"
             f"| VerdictNode | Level == {depth} |\n"
@@ -707,10 +737,12 @@ def construct_node_verbose_log(
             f"Verdict: {node.verdict}\n"
             f"Type: {type}"
         )
-        if is_g_eval:
+        if isinstance(node.child, GEval):
             verbose_log += f"\n\nCriteria:\n{g_eval.criteria}\n"
             verbose_log += (
                 f"Evaluation Steps:\n{prettify_list(g_eval.evaluation_steps)}"
             )
+        elif isinstance(node.child, BaseMetric):
+            verbose_log += f"\n\n{node.child.verbose_logs}"
 
         return verbose_log
