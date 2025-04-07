@@ -16,7 +16,7 @@ class Prompt:
         self,
         alias: Optional[str] = None,
         template: Optional[str] = None,
-        messages: Optional[List[PromptMessage]] = None,
+        message_templates: Optional[List[PromptMessage]] = None,
     ):
         if alias is None and template is None:
             raise TypeError(
@@ -25,7 +25,7 @@ class Prompt:
 
         self.alias = alias
         self.template = template
-        self.messages = messages
+        self.message_templates = message_templates
         self.version = None
 
     def interpolate(self, **kwargs):
@@ -40,13 +40,13 @@ class Prompt:
             )
             return formatted_template.format(**kwargs)
         elif self._type == PromptType.LIST:
-            if self.messages is None:
+            if self.message_templates is None:
                 raise TypeError(
                     "Unable to interpolate empty prompt template messages. Please pull a prompt from Confident AI or set template manually to continue."
                 )
 
             interpolated_messages = []
-            for message in self.messages:
+            for message in self.message_templates:
                 formatted_content = re.sub(
                     r"\{\{ (\w+) \}\}", r"{\1}", message.content
                 )
@@ -89,7 +89,7 @@ class Prompt:
                 )
                 self.version = version
                 self.template = response.template
-                self.messages = response.messages
+                self.message_templates = response.messages
                 self._prompt_version_id = response.promptVersionId
                 self._type = response.type
 
