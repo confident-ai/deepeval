@@ -102,7 +102,6 @@ class BedrockModel(DeepEvalBaseLLM):
             aws_session_token=self.session_token,
             aws_region=self.region
         )
-        print("DEBUG: boto3.client called")
 
     def load_model(self):
         """Loads the Bedrock client."""
@@ -116,28 +115,26 @@ class BedrockModel(DeepEvalBaseLLM):
             logger.error("Error decoding JSON")
             return {}
 
-    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict]:
-        """Generates text using the Bedrock model and returns the response as a Pydantic model."""
+
+    def _generate(self, prompt: str, schema: Optional[BaseModel] = None, is_async=False) -> Union[BaseModel, dict]:
+        """Helper method to handle both sync and async generation."""
+        client = self.a_client if is_async else self.client
         messages = [{"role": "user", "content": prompt}]
-        
+
         if schema:
             self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
-        
+
         try:
-            response = self.client.messages.create(
+            response = client.messages.create(
                 model=self.model_id,
-                messages=[{"role": "user", "content": prompt}],
+                messages=messages,
                 system=self.system_prompt,
                 max_tokens=1000
             )
 
             content = response.content
-            if content and isinstance(content, list):
-                generated_text = content[0].text
-            else:
-                logger.error("Invalid response structure: 'content' not found or malformed")
-                generated_text = ""
-            
+            generated_text = content[0].text if content else ""
+
             if schema:
                 try:
                     extracted_result = self.extract_json(generated_text)
@@ -146,43 +143,18 @@ class BedrockModel(DeepEvalBaseLLM):
                     logger.error(f"Validation error: {e}")
                     return None
             return generated_text
-        
+
         except Exception as e:
             logger.error(f"An error occurred while generating the result: {e}")
             return {} if schema is None else None
-    
+
+    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict]:
+        """Generates text using the Bedrock model and returns the response as a Pydantic model."""
+        return self._generate(prompt, schema, is_async=False)
+
     async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict]:
-        if schema:
-            self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
-
-        try:
-            response = await self.a_client.messages.create(
-                model=self.model_id,
-                messages=[{"role": "user", "content": prompt}],
-                system=self.system_prompt,
-                max_tokens=1000
-            )
-
-            content = response.content
-            if content and isinstance(content, list):
-                generated_text = content[0].text
-            else:
-                logger.error("Invalid response structure: 'content' not found or malformed")
-                generated_text = ""
-
-            if schema:
-                try:
-                    extracted_result = self.extract_json(generated_text)
-                    return schema(**extracted_result)
-                except ValidationError as e:
-                    logger.error(f"Validation error: {e}")
-                    return None
-
-            return generated_text
-
-        except Exception as e:
-            logger.error(f"An error occurred during async generation: {e}")
-            return {} if schema is None else None
+        """Generates text asynchronously using the Bedrock model."""
+        return await self._generate(prompt, schema, is_async=True)
 
     def get_model_name(self):
         """Returns the model ID being used."""
@@ -261,12 +233,17 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
             except (NoCredentialsError, PartialCredentialsError):
                 raise ValueError("AWS credentials are not found. Please provide valid access keys or ensure your AWS credentials file is configured.")
 
-        self.client = boto3.client(
-            "bedrock-runtime", 
-            region_name=self.region,
-            aws_access_key_id=self.access_key_id,
-            aws_secret_access_key=self.secret_access_key,
-            aws_session_token=self.session_token if self.session_token else None
+        self.client = AnthropicBedrock(
+            aws_access_key=self.access_key_id,
+            aws_secret_key=self.secret_access_key,
+            aws_session_token=self.session_token,
+            aws_region=self.region
+        )
+        self.a_client = AsyncAnthropicBedrock(
+            aws_access_key=self.access_key_id,
+            aws_secret_key=self.secret_access_key,
+            aws_session_token=self.session_token,
+            aws_region=self.region
         )
 
         super().__init__(model_id, *args, **kwargs)
@@ -290,6 +267,11 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
 
     def encode_pil_image(self, pil_image: PILImage) -> str:
         """Convert a PIL image to a base64-encoded string."""
+
+        SUPPORTED_FORMATS = {'jpeg', 'png', 'bmp', 'gif'}
+
+        if pil_image.format.lower() not in SUPPORTED_FORMATS:
+            raise ValueError(f"Unsupported image format: {pil_image.format}. Supported formats are {', '.join(SUPPORTED_FORMATS)}.")
         image_buffer = BytesIO()
         format = pil_image.format.lower()
         pil_image.save(image_buffer, format=format)
@@ -361,34 +343,23 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
 
         return prompt
 
-    def generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Tuple[str, Optional[float]]:
-        """Sends a synchronous request to Bedrock for text & image-based generation."""
-        
+    def _generate(self, multimodal_input, schema, is_async=False):
+        client = self.a_client if is_async else self.client
         messages_list = self.generate_prompt(multimodal_input)
 
         if schema:
             self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
 
-        payload = {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 1000,
-            "messages": messages_list,
-            "system": self.system_prompt
-        }
-
         try:
-            response = self.client.invoke_model(
-                modelId=self.model_id,
-                body=json.dumps(payload)
+            response = client.messages.create(
+                model=self.model_id,
+                messages=messages_list,
+                max_tokens=1000,
+                system=self.system_prompt
             )
-            response_body = json.loads(response["body"].read().decode("utf-8"))
-        
-            content = response_body.get("content", [])
-            if content and isinstance(content, list):
-                generated_text = content[0].get('text', '')
-            else:
-                logger.error("Invalid response structure: 'content' not found or malformed")
-                generated_text = ""
+
+            content = response.content
+            generated_text = content[0].text if content else ""
 
             if schema:
                 try:
@@ -403,9 +374,12 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
             logger.error(f"Error during Bedrock model inference: {e}")
             raise
 
-    async def a_generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Tuple[str, Optional[float]]:
-        """Async wrapper for the generate function."""
-        return self.generate(multimodal_input, schema)
+    def generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None):
+        return self._generate(multimodal_input, schema, is_async=False)
+
+    async def a_generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None):
+        return await self._generate(multimodal_input, schema, is_async=True)
+
 
     def get_model_name(self) -> str:
         return self.model_id

@@ -18,11 +18,13 @@ TEST_IMAGE_URL = "https://www.shutterstock.com/image-photo/funny-large-longhair-
 TEST_LOCAL_IMAGE = "tests/data/test.jpg"
 
 @pytest.fixture
-def mock_boto3_client():
-    with patch('boto3.client') as mock:
-        client = MagicMock()
-        client.invoke_model.return_value = {"body": MagicMock(spec=StreamingBody, read=MagicMock(return_value=TEST_RESPONSE_JSON.encode("utf-8")))}
-        mock.return_value = client
+def mock_anthropic_client():
+    with patch('anthropic.AnthropicBedrock') as mock:
+        client_instance = MagicMock()
+        client_instance.messages.create.return_value = MagicMock(
+            content=[{"type": "text", "text": "This is a test response"}]
+        )
+        mock.return_value = client_instance
         yield mock
 
 @pytest.fixture
@@ -60,7 +62,7 @@ class TestBedrockModel:
         with pytest.raises(ValueError, match="Invalid model"):
             BedrockModel(model_id="invalid-model")
 
-    def test_generate(self, mock_boto3_client, mock_key_handler):
+    def test_generate(self, mock_anthropic_client, mock_key_handler):
         """Test text generation"""
         model = BedrockModel()
         test_prompt = "Test prompt"
@@ -68,20 +70,24 @@ class TestBedrockModel:
 
         assert response == TEST_RESPONSE
 
-        mock_instance = mock_boto3_client.return_value
+        mock_instance = mock_anthropic_client.return_value
         mock_instance.invoke_model.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_a_generate(self, mock_boto3_client, mock_key_handler):
-        """Test async text generation"""
+    @patch("anthropic.AsyncAnthropicBedrock")
+    async def test_a_generate(self, mock_async_client, mock_key_handler):
+        mock_instance = MagicMock()
+        mock_instance.messages.create.return_value = MagicMock(
+            content=[{"type": "text", "text": "This is a test response"}]
+        )
+        mock_async_client.return_value = mock_instance
+
         model = BedrockModel()
         test_prompt = "Test prompt"
         response = await model.a_generate(test_prompt)
-        
-        assert response == TEST_RESPONSE
 
-        mock_instance = mock_boto3_client.return_value
-        mock_instance.invoke_model.assert_called_once()
+        assert response == TEST_RESPONSE
+        mock_instance.messages.create.assert_called_once()
 
 
 class TestBedrockMultimodalModel:
