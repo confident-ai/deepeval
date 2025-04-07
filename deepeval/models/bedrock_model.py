@@ -91,16 +91,16 @@ class BedrockModel(DeepEvalBaseLLM):
                 raise ValueError("AWS credentials are not found. Please provide valid access keys or ensure your AWS credentials file is configured.")
 
         self.client = AnthropicBedrock(
-            aws_access_key_id=self.access_key_id,
-            aws_secret_access_key=self.secret_access_key,
+            aws_access_key=self.access_key_id,
+            aws_secret_key=self.secret_access_key,
             aws_session_token=self.session_token,
-            region_name=self.region
+            aws_region=self.region
         )
         self.a_client = AsyncAnthropicBedrock(
-            aws_access_key_id=self.access_key_id,
-            aws_secret_access_key=self.secret_access_key,
+            aws_access_key=self.access_key_id,
+            aws_secret_key=self.secret_access_key,
             aws_session_token=self.session_token,
-            region_name=self.region
+            aws_region=self.region
         )
         print("DEBUG: boto3.client called")
 
