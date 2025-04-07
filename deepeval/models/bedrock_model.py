@@ -9,6 +9,7 @@ from io import BytesIO
 import mimetypes
 import requests
 from PIL import Image as PILImage
+from anthropic import AnthropicBedrock, AsyncAnthropicBedrock
 
 from deepeval.models.base_model import DeepEvalBaseLLM, DeepEvalBaseMLLM
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
@@ -89,12 +90,17 @@ class BedrockModel(DeepEvalBaseLLM):
             except (NoCredentialsError, PartialCredentialsError):
                 raise ValueError("AWS credentials are not found. Please provide valid access keys or ensure your AWS credentials file is configured.")
 
-        self.client = boto3.client(
-            "bedrock-runtime", 
-            region_name=self.region,
+        self.client = AnthropicBedrock(
             aws_access_key_id=self.access_key_id,
             aws_secret_access_key=self.secret_access_key,
-            aws_session_token=self.session_token if self.session_token else None
+            aws_session_token=self.session_token,
+            region_name=self.region
+        )
+        self.a_client = AsyncAnthropicBedrock(
+            aws_access_key_id=self.access_key_id,
+            aws_secret_access_key=self.secret_access_key,
+            aws_session_token=self.session_token,
+            region_name=self.region
         )
         print("DEBUG: boto3.client called")
 
@@ -117,24 +123,17 @@ class BedrockModel(DeepEvalBaseLLM):
         if schema:
             self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
         
-        payload = {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 1000,
-            "messages": messages,
-            "system": self.system_prompt
-        }
-        
         try:
-            response = self.client.invoke_model(
-                modelId=self.model_id,
-                body=json.dumps(payload)
+            response = self.client.messages.create(
+                model=self.model_id,
+                messages=[{"role": "user", "content": prompt}],
+                system=self.system_prompt,
+                max_tokens=1000
             )
 
-            response_body = json.loads(response["body"].read().decode("utf-8"))
-
-            content = response_body.get("content", [])
+            content = response.content
             if content and isinstance(content, list):
-                generated_text = content[0].get('text', '')
+                generated_text = content[0].text
             else:
                 logger.error("Invalid response structure: 'content' not found or malformed")
                 generated_text = ""
@@ -153,7 +152,37 @@ class BedrockModel(DeepEvalBaseLLM):
             return {} if schema is None else None
     
     async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict]:
-        return self.generate(prompt, schema)
+        if schema:
+            self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
+
+        try:
+            response = await self.a_client.messages.create(
+                model=self.model_id,
+                messages=[{"role": "user", "content": prompt}],
+                system=self.system_prompt,
+                max_tokens=1000
+            )
+
+            content = response.content
+            if content and isinstance(content, list):
+                generated_text = content[0].text
+            else:
+                logger.error("Invalid response structure: 'content' not found or malformed")
+                generated_text = ""
+
+            if schema:
+                try:
+                    extracted_result = self.extract_json(generated_text)
+                    return schema(**extracted_result)
+                except ValidationError as e:
+                    logger.error(f"Validation error: {e}")
+                    return None
+
+            return generated_text
+
+        except Exception as e:
+            logger.error(f"An error occurred during async generation: {e}")
+            return {} if schema is None else None
 
     def get_model_name(self):
         """Returns the model ID being used."""
