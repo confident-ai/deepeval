@@ -52,9 +52,7 @@ class Prompt:
                 )
                 interpolated_content = formatted_content.format(**kwargs)
                 interpolated_messages.append(
-                    PromptMessage(
-                        role=message.role, content=interpolated_content
-                    )
+                    {"role": message.role, "content": interpolated_content}
                 )
             return interpolated_messages
         else:
@@ -91,6 +89,7 @@ class Prompt:
                 )
                 self.version = version
                 self.template = response.template
+                self.messages = response.messages
                 self._prompt_version_id = response.promptVersionId
                 self._type = response.type
 
