@@ -71,7 +71,7 @@ class TestBedrockModel:
         assert response == TEST_RESPONSE
 
         mock_instance = mock_anthropic_client.return_value
-        mock_instance.invoke_model.assert_called_once()
+        mock_instance.messages.create.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("anthropic.AsyncAnthropicBedrock")
