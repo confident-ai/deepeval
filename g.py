@@ -31,11 +31,23 @@ from deepeval.metrics.dag import (
     VerdictNode,
 )
 from deepeval.test_case import LLMTestCaseParams
+from deepeval.metrics import GEval, AnswerRelevancyMetric
+
+g_eval = GEval(
+    name="Summarization",
+    criteria="Determine whether the actual output is a good summary of the input.",
+    evaluation_params=[
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ],
+)
+
+relevancy_metric = AnswerRelevancyMetric(verbose_mode=True)
 
 correct_order_node = NonBinaryJudgementNode(
     criteria="Are the summary headings in the correct order: 'intro' => 'body' => 'conclusion'?",
     children=[
-        VerdictNode(verdict="Yes", score=10),
+        VerdictNode(verdict="Yes", child=relevancy_metric),
         VerdictNode(verdict="Two are out of order", score=4),
         VerdictNode(verdict="All out of order", score=2),
     ],
@@ -76,4 +88,4 @@ format_correctness = DAGMetric(
 # format_correctness.measure(test_case)
 # print(format_correctness.score, format_correctness.reason)
 
-evaluate([test_case, test_case], [format_correctness])
+evaluate([test_case], [format_correctness])

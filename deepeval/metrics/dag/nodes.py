@@ -120,6 +120,8 @@ class VerdictNode(BaseNode):
                     metric.reason = copied_g_eval.reason
             elif isinstance(self.child, BaseMetric):
                 copied_metric: BaseMetric = copy_metrics([self.child])[0]
+                copied_metric.verbose_mode = False
+
                 copied_metric.measure(
                     test_case=test_case, _show_indicator=False
                 )
@@ -182,6 +184,8 @@ class VerdictNode(BaseNode):
 
             elif isinstance(self.child, BaseMetric):
                 copied_metric: BaseMetric = copy_metrics([self.child])[0]
+                copied_metric.verbose_mode = False
+
                 await copied_metric.a_measure(
                     test_case=test_case, _show_indicator=False
                 )
@@ -680,7 +684,9 @@ class NonBinaryJudgementNode(BaseNode):
 
 
 def construct_node_verbose_log(
-    node: BaseNode, depth: int, g_eval: Optional[GEval] = None
+    node: BaseNode,
+    depth: int,
+    node_metric: Optional[Union[GEval, BaseMetric]] = None,
 ) -> str:
     if (
         isinstance(node, BinaryJudgementNode)
@@ -722,11 +728,11 @@ def construct_node_verbose_log(
         )
     elif isinstance(node, VerdictNode):
         type = None
-        if node.child:
-            if isinstance(node.child, GEval) or isinstance(
-                node.child, BaseMetric
+        if node_metric:
+            if isinstance(node_metric, GEval) or isinstance(
+                node_metric, BaseMetric
             ):
-                type = node.child.__name__
+                type = f"{node_metric.__name__} Metric"
         else:
             type = "Deterministic"
 
@@ -737,12 +743,10 @@ def construct_node_verbose_log(
             f"Verdict: {node.verdict}\n"
             f"Type: {type}"
         )
-        if isinstance(node.child, GEval):
-            verbose_log += f"\n\nCriteria:\n{g_eval.criteria}\n"
-            verbose_log += (
-                f"Evaluation Steps:\n{prettify_list(g_eval.evaluation_steps)}"
-            )
-        elif isinstance(node.child, BaseMetric):
-            verbose_log += f"\n\n{node.child.verbose_logs}"
+        if isinstance(node_metric, GEval):
+            verbose_log += f"\n\nCriteria:\n{node_metric.criteria}\n"
+            verbose_log += f"Evaluation Steps:\n{prettify_list(node_metric.evaluation_steps)}"
+        elif isinstance(node_metric, BaseMetric):
+            verbose_log += f"\n\n{node_metric.verbose_logs}"
 
         return verbose_log

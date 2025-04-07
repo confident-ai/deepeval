@@ -93,7 +93,6 @@ class AnswerRelevancyMetric(BaseMetric):
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
-
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
@@ -289,12 +288,6 @@ class AnswerRelevancyMetric(BaseMetric):
             except:
                 self.success = False
         return self.success
-
-    # def audit(self, test_case: LLMTestCase, repeat: int = 5):
-    #     for _ in repeat:
-    #         metric: BaseMetric = copy_metrics(metrics=[self])[0]
-    #         metric.measure(test_case, _show_indicator=False)
-    #         print(metric.score)
 
     @property
     def __name__(self):

@@ -9,7 +9,7 @@ import Equation from "@site/src/components/equation";
 The deep acyclic graph (DAG) metric in `deepeval` is currently the most versatile custom metric for you to easily build deterministic decision trees for evaluation with the help of using LLM-as-a-judge.
 
 :::info
-The `DAGMetric` is a **custom metric based on a LLM-powered decision tree, and gives you more deterministic control** over [`GEval`.](/docs/metrics-llm-evals) You can however also use `GEval` within your `DAGMetric`.
+The `DAGMetric` is a **custom metric based on a LLM-powered decision tree, and gives you more deterministic control** over [`GEval`.](/docs/metrics-llm-evals) You can however also use `GEval`, or any other default metric in `deepeval`, within your `DAGMetric`.
 
 ![ok](https://confident-docs.s3.amazonaws.com/dag-formatting-metric.svg)
 
@@ -311,7 +311,7 @@ There are **ONE** mandatory **TWO** optional parameters when creating a `Verdict
 
 - `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is a `NonBinaryJudgementNode`, else boolean if the parent is a `BinaryJudgementNode`.
 - [Optional] `score`: a integar between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value. You must provide a score if `g_eval` is `None`.
-- [Optional] `child`: a `BaseNode` **OR** [`GEval`](/docs/metrics-llm-evals) metric instance. If the `score` is not provided, the `DAGMetric` will use this provided `child` to run the provided `GEval` metric instance to calculate a score, **OR** propagate the DAG execution to the `BaseNode` `child`.
+- [Optional] `child`: a `BaseNode` **OR** any [`BaseMetric`](/docs/metrics-introduction), including [`GEval`](/docs/metrics-llm-evals) metric instance. If the `score` is not provided, the `DAGMetric` will use this provided `child` to run the provided `BaseMetric` instance to calculate a score, **OR** propagate the DAG execution to the `BaseNode` `child`.
 
 :::caution
 You must provide `score` or `child`, but not both.
