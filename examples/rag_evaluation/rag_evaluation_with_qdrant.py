@@ -1,6 +1,6 @@
 # To run this example, you need to install the following dependencies:
 #
-# pip install datasets langchain langchain-text-splitters openai qdrant-client deepeval
+# pip install datasets langchain langchain-text-splitters openai qdrant-client deepeval fastembed
 #
 
 # Set connection credentials for OpenAI, Confident AI, and Qdrant below
@@ -107,11 +107,14 @@ def query_with_context(query, limit):
 
     prompt_end = f"\n\nQuestion: {query}\nAnswer:"
 
-    prompt = prompt_start + "\n\n---\n\n".join(contexts) + prompt_end
+    full_prompt = prompt_start + "\n\n---\n\n".join(contexts) + prompt_end
 
-    res = openai_client.completions.create(
-        model="gpt-3.5-turbo-instruct",
-        prompt=prompt,
+    res = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": full_prompt},
+            {"role": "user", "content": query}
+        ],
         temperature=0,
         max_tokens=636,
         top_p=1,
@@ -120,7 +123,7 @@ def query_with_context(query, limit):
         stop=None,
     )
 
-    return (contexts, res.choices[0].text)
+    return (contexts, res.choices[0].message.content)
 
 
 qdrant_qna_dataset = load_dataset("atitaarora/qdrant_doc_qna", split="train")
