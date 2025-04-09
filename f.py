@@ -17,5 +17,5 @@ evaluate(
         )
     ],
     metrics=[AnswerRelevancyMetric()],
-    hyperparameters={"model": "...", "prompt template": prompt},
+    # hyperparameters={"model": "...", "prompt template": prompt},
 )
