@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
+from deepeval.prompt import Prompt
 from deepeval.test_case.utils import check_valid_test_cases_type
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.test_run.test_run import TestRunResultDisplay
@@ -1025,7 +1026,7 @@ def evaluate(
         List[Union[LLMTestCase, MLLMTestCase]], List[ConversationalTestCase]
     ],
     metrics: List[BaseMetric],
-    hyperparameters: Optional[Dict[str, Union[str, int, float]]] = None,
+    hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     run_async: bool = True,
     show_indicator: bool = True,
     print_results: bool = True,

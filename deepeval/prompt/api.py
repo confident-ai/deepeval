@@ -21,5 +21,5 @@ class PromptHttpResponse(BaseModel):
 
 
 class PromptApi(BaseModel):
-    promptVersionId: str
-    template: str = Field(serialization_alias="value")
+    id: str
+    type: PromptType

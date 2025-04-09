@@ -6,7 +6,7 @@ from deepeval.prompt import Prompt, PromptApi
 
 def process_hyperparameters(
     hyperparameters,
-) -> Union[Dict[str, Union[str, PromptApi]], None]:
+) -> Union[Dict[str, Union[str, int, float, PromptApi]], None]:
     if hyperparameters is None:
         return None
 
@@ -28,13 +28,15 @@ def process_hyperparameters(
             )
 
         if isinstance(value, Prompt):
-            if value._prompt_version_id is not None:
+            if value._prompt_version_id is not None and value._type is not None:
                 processed_hyperparameters[key] = PromptApi(
-                    promptVersionId=value._prompt_version_id,
-                    template=value.template,
+                    id=value._prompt_version_id,
+                    type=value._type,
                 )
             else:
-                processed_hyperparameters[key] = str(value.template)
+                raise ValueError(
+                    f"Cannot log Prompt where template was not pulled from Confident AI. Pleaes import your prompt on Confident AI to continue."
+                )
         else:
             processed_hyperparameters[key] = str(value)
 
