@@ -9,23 +9,6 @@ from deepeval.models.base_model import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
 
 
-valid_multimodal_gemini_models = [
-    "gemini-2.0-pro-exp-02-05",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-001",
-    "gemini-2.0-flash-002",
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash-lite-001",
-    "gemini-1.5-pro",
-    "gemini-1.5-pro-001",
-    "gemini-1.5-pro-002",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-001",
-    "gemini-1.5-flash-002",
-    "gemini-1.0-pro-vision",
-    "gemini-1.0-pro-vision-001",
-]
-
 default_multimodal_gemini_model = "gemini-1.5-pro"
 
 
@@ -75,10 +58,6 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             or KEY_FILE_HANDLER.fetch_data(KeyValues.GEMINI_MODEL_NAME)
             or default_multimodal_gemini_model
         )
-        if model_name not in valid_multimodal_gemini_models:
-            raise ValueError(
-                f"Invalid model. Available Multimodal Gemini models: {', '.join(model for model in valid_multimodal_gemini_models)}"
-            )
 
         # Get API key from key handler if not provided
         self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
