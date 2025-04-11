@@ -9,6 +9,7 @@ from deepeval.models import (
     DeepEvalBaseLLM,
     DeepEvalBaseMLLM,
     GPTModel,
+    AnthropicModel,
     AzureOpenAIModel,
     OllamaModel,
     LocalModel,
@@ -281,7 +282,7 @@ def trimAndLoadJson(
 
 
 ###############################################
-# LLM
+# Default Model Providers
 ###############################################
 
 
@@ -303,6 +304,11 @@ def should_use_ollama_model():
 def should_use_gemini_model():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GEMINI_MODEL)
     return value.lower() == "yes" if value is not None else False
+
+
+###############################################
+# LLM
+###############################################
 
 
 def initialize_model(
@@ -339,6 +345,7 @@ def is_native_model(
 ) -> bool:
     if (
         isinstance(model, GPTModel)
+        or isinstance(model, AnthropicModel)
         or isinstance(model, AzureOpenAIModel)
         or isinstance(model, OllamaModel)
         or isinstance(model, LocalModel)

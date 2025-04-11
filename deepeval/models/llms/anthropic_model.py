@@ -59,7 +59,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
-        chat_model = self.load_model()
+        chat_model = self.load_model(async_mode=True)
         message = await chat_model.messages.create(
             max_tokens=1024,
             messages=[
