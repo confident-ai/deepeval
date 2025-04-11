@@ -21,6 +21,8 @@ module.exports = {
             "synthesizer-generate-from-docs",
             "synthesizer-generate-from-contexts",
             "synthesizer-generate-from-scratch",
+            "synthesizer-generate-from-goldens",
+
           ],
         },
         "evaluation-conversation-simulator",
