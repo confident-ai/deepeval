@@ -70,7 +70,7 @@ module.exports = {
   favicon: "img/fav.ico",
 
   // Set the production url of your site here
-  url: "https://docs.confident-ai.com",
+  url: "https://deepeval.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
@@ -117,7 +117,7 @@ module.exports = {
     {
       src: "https://plausible.io/js/script.tagged-events.js",
       defer: true,
-      "data-domain": "confident-ai.com",
+      "data-domain": "deepeval.com",
     },
   ],
   stylesheets: [
