@@ -35,6 +35,7 @@ class HttpMethods(Enum):
 class Endpoints(Enum):
     DATASET_ENDPOINT = "/v1/dataset"
     TEST_RUN_ENDPOINT = "/v1/test-run"
+    TRACING_ENDPOINT = "/v1/tracing"
     EVENT_ENDPOINT = "/v1/event"
     FEEDBACK_ENDPOINT = "/v1/feedback"
     PROMPT_ENDPOINT = "/v1/prompt"
@@ -85,6 +86,7 @@ class Api:
         self, method: HttpMethods, endpoint: Endpoints, body=None, params=None
     ):
         url = f"{self.base_api_url}{endpoint.value}"
+        print(url)
         res = self._http_request(
             method=method.value,
             url=url,
@@ -93,6 +95,7 @@ class Api:
             params=params,
         )
 
+        print("!!!!!", res.status_code, "!!!!!")
         if res.status_code == 200:
             try:
                 return res.json()
@@ -121,6 +124,7 @@ class Api:
                 print("Aborted.")
                 return None
         else:
+            print(res.json())
             raise Exception(res.json().get("error", res.text))
 
     async def a_send_request(
