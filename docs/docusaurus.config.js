@@ -168,7 +168,7 @@ module.exports = {
             activeBasePath: "guides",
           },
           {
-            to: "integrations/model-openai",
+            to: "integrations/models/openai",
             position: "left",
             label: "Integrations",
             activeBasePath: "integrations",

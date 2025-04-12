@@ -4,6 +4,10 @@ title: Introduction
 sidebar_label: Introduction
 ---
 
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/metrics-introduction" />
+</head>
+
 ## Quick Summary
 
 In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, a test case represents the thing you're trying to measure. `deepeval` offers a range of default metrics for you to quickly get started with, such as:
@@ -181,8 +185,7 @@ deepeval set-gemini \
 
 ### Vertex AI
 
-
-You can also use Google Cloud's Vertex AI models, including Gemini or your own fine-tuned models, with DeepEval. 
+You can also use Google Cloud's Vertex AI models, including Gemini or your own fine-tuned models, with DeepEval.
 
 :::info
 To use Vertex AI, you must have the following:
@@ -193,10 +196,10 @@ To use Vertex AI, you must have the following:
 ```bash
 gcloud auth application-default login
 ```
-::: 
+
+:::
 
 To get started, set up your Google Cloud credentials using the following command:
-
 
 ```bash
 deepeval set-gemini \
@@ -204,7 +207,6 @@ deepeval set-gemini \
     --project-id=<project_id> \
     --location=<location> # e.g. "us-central1"
 ```
-
 
 ## Using Ollama
 

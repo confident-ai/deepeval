@@ -4,6 +4,10 @@ title: Using the RAG Triad for RAG evaluation
 sidebar_label: RAG Triad
 ---
 
+<head>
+  <link rel="canonical" href="https://deepeval.com/guides/guides-rag-triad" />
+</head>
+
 Retrieval-Augmented Generation (RAG) is a powerful way for LLMs to generate responses based on context beyond the scope of its training data by supplying it with external data as additional context. These supporting context comes in the form of text chunks, which are usually parsed, vectorized, and indexed in vector databases for fast retrieval at inference time, hence the name retrieval, augmented, generation.
 
 In a previous [guide](/guides/guides-rag-evaluation), we explored how the **generator** in a RAG pipeline can hallucinate despite being supplied additional context, while the **retriever** can often fail to retrieve the correct and relevant context to generate the optimal answer. This is why evaluating RAG pipelines are important and where the RAG triad comes into play.

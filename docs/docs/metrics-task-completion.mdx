@@ -4,6 +4,13 @@ title: Task Completion
 sidebar_label: Task Completion
 ---
 
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-task-completion"
+  />
+</head>
+
 import Equation from "@site/src/components/equation";
 
 The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task** as outlined in the `input`, based on `tools_called` and the `actual_output` of the agent. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.

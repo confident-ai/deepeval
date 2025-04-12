@@ -4,6 +4,13 @@ title: Using Custom Embedding Models
 sidebar_label: Using Custom Embedding Models
 ---
 
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/guides/guides-using-custom-embedding-models"
+  />
+</head>
+
 Throughout `deepeval`, only the `generate_goldens_from_docs()` method in the `Synthesizer` for synthetic data generation uses an embedding model. This is because in order to generate goldens from documents, the `Synthesizer` uses cosine similarity to generate the relevant context needed for data synthesization.
 
 This guide will teach you how to use literally **ANY** embedding model to extract context from documents that are required for synthetic data generation.

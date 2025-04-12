@@ -1,5 +1,5 @@
 ---
-# id: integrations-model-ollama
+# id: ollama
 title: Ollama
 sidebar_label: Ollama
 ---
@@ -7,14 +7,13 @@ sidebar_label: Ollama
 DeepEval allows you to use any model from Ollama to run evals, either through the CLI or directly in python.
 
 :::note
-Before getting started, make sure your Ollama model is installed and running. See the full list of available models [here](](https://ollama.com/search)).
+Before getting started, make sure your Ollama model is installed and running. See the full list of available models [here](<](https://ollama.com/search)>).
 
 ```bash
 ollama run deepseek-r1:1.5b
 ```
 
 :::
-
 
 ### Command Line
 
@@ -37,6 +36,7 @@ The CLI command above sets Ollama as the default provider for all metrics, unles
 ```bash
 deepeval unset-ollama
 ```
+
 :::
 
 ### Python
@@ -68,4 +68,3 @@ Below is a list of commonly used Ollama models:
 - `phi3`
 - `tinyllama`
 - `starcoder2`
-

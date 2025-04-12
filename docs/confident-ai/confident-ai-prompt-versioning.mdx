@@ -4,7 +4,14 @@ title: Prompt Versioning
 sidebar_label: Prompt Versioning
 ---
 
-Prompt versioning refers to the process of curating and developing differnt prompt templates in a managed and versionable way, and enables you to better test, compare, and evaluate the performance of different prompts.
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/confident-ai/confident-ai-prompt-versioning"
+  />
+</head>
+
+Prompt versioning refers to the process of curating and developing different prompt templates in a managed and versionable way, and enables you to better test, compare, and evaluate the performance of different prompts.
 
 :::info
 Without prompt versioning, you would be keeping prompts in code, GitHub repos, or in CSV files where tracking changes and performance of each prompt quickly becomes unmanageable as the number of prompts increases.
@@ -19,7 +26,7 @@ Without prompt versioning, you would be keeping prompts in code, GitHub repos, o
 
 ## Why Keep Prompts on Confident AI?
 
-Manging your prompts manually is a messy process and introduces a lot of ad-hoc interation that are often times counter-productive. Iterating without versioning your prompt is arguebly just as bad a deploying to production without first running evaluations.
+Managing your prompts manually is a messy process and introduces a lot of ad-hoc iteration that is often times counter-productive. Iterating without versioning your prompt is arguably just as bad as deploying to production without first running evaluations.
 
 :::info IMPORTANT
 If your workflow involves editing a prompt, manually prompting your LLM app once or twice, and repeating it all over again just because this one LLM output _feels_ a bit worse, you're doing it wrong.
@@ -75,7 +82,7 @@ prompt = Prompt(alias="My First Prompt")
 prompt.pull()
 ```
 
-Finally, when it comes time to use your prompt template, simply interploate it with the variables you've defined in double curly brackets (`{{ variable_name }}`):
+Finally, when it comes time to use your prompt template, simply interpolate it with the variables you've defined in double curly brackets (`{{ variable_name }}`):
 
 ```python
 ...

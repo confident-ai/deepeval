@@ -1,5 +1,5 @@
 ---
-# id: model-openai
+# id: openai
 title: OpenAI
 sidebar_label: OpenAI
 ---
@@ -9,7 +9,6 @@ By default, DeepEval uses `gpt-4o` to power all of its evaluation metrics. To en
 ### Setting Up Your API Key
 
 To use OpenAI for `deepeval`'s LLM-Evals (metrics evaluated using an LLM), supply your `OPENAI_API_KEY` in the CLI:
-
 
 ```bash
 export OPENAI_API_KEY=<your-openai-api-key>
@@ -26,9 +25,8 @@ Alternatively, if you're working in a notebook enviornment (Jupyter or Colab), s
 You may use OpenAI models other than `gpt-4o`, which can be configured directly in python code through DeepEval's `OpenAIModel`.
 
 :::info
-You may want to use stronger reasoning models like `gpt-4o` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness. 
+You may want to use stronger reasoning models like `gpt-4o` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
 :::
-
 
 ```python
 from deepeval.models import OpenAIModel
