@@ -126,9 +126,9 @@ class Index extends React.Component {
         </div>
         <div className={styles.featuresContainer}>
           <FeatureCard
-            title="Regression Testing for LLMs"
+            title="Unit-Testing for LLMs"
             link="/docs/evaluation-test-cases"
-            description="LLM evaluation metrics to unit test LLM outputs in Python"
+            description="LLM evaluation metrics to regression test LLM outputs in Python"
           />
           <FeatureCard
             title="Prompt and Model Discovery"
