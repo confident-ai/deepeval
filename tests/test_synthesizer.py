@@ -265,8 +265,9 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
         document_paths=document_paths,
         context_construction_config=ContextConstructionConfig(
             max_contexts_per_document=2,
-            chunk_size=100,
-            max_context_length=2,
+            chunk_size=1024,
+            max_context_length=3,
+            min_context_length=1,
         ),
         _send_data=False,
     )
@@ -285,7 +286,7 @@ model = CustomModel()
 synthesizer_sync = Synthesizer(async_mode=False)
 synthesizer_async = Synthesizer(async_mode=True, max_concurrent=3)
 
-# test_generate_goldens_from_docs(synthesizer_sync)
+test_generate_goldens_from_docs(synthesizer_sync)
 test_generate_goldens_from_docs(synthesizer_async)
 
 #########################################################

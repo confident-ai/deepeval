@@ -89,7 +89,9 @@ There are **SEVEN** optional parameters when creating a `ContextConstructionConf
 - [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4o` when initialized as a standalone instance.
 - [Optional] `encoding`: the encoding to use to decode .txt files. Defaulted to auto detecting the encoding.
 - [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
+- [Optional] `min_contexts_per_document`: the minimum number of contexts to be generated per document. Defaulted to 1.
 - [Optional] `max_context_length`: specifies the number of of text chunks to be generated per context (context length). Defaulted to 3.
+- [Optional] `min_context_length`: specifies the minimum number of text chunks to be generated per context (context length). Defaulted to 1.
 - [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered during [document parsing](#synthesizer-generate-from-docs#document-parsing). Defaulted to 1024.
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during [document parsing](#synthesizer-generate-from-docs#document-parsing). Defaulted to 0.
 - [Optional] `context_quality_threshold`: a float representing the minimum quality threshold for [context selection](synthesizer-generate-from-docs#context-selection). If the context quality is below threshold, the context will be rejected. Defaulted to `0.5`.

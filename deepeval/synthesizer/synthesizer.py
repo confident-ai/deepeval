@@ -149,8 +149,10 @@ class Synthesizer:
             )
             contexts, source_files, context_scores = (
                 context_generator.generate_contexts(
-                    num_context_per_source_file=context_construction_config.max_contexts_per_document,
+                    max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
+                    min_contexts_per_source_file=context_construction_config.min_contexts_per_document,
                     max_context_size=context_construction_config.max_context_length,
+                    min_context_size=context_construction_config.min_context_length,
                 )
             )
             if self.synthesis_cost:
@@ -215,8 +217,10 @@ class Synthesizer:
         )
         contexts, source_files, context_scores = (
             await context_generator.a_generate_contexts(
-                num_context_per_source_file=context_construction_config.max_contexts_per_document,
+                max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
+                min_contexts_per_source_file=context_construction_config.min_contexts_per_document,
                 max_context_size=context_construction_config.max_context_length,
+                min_context_size=context_construction_config.min_context_length,
             )
         )
         if self.synthesis_cost:
