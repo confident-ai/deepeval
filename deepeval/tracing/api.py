@@ -23,22 +23,21 @@ class BaseApiSpan(BaseModel):
     type: SpanApiType
     trace_uuid: str = Field(alias="traceUuid")
     parent_uuid: Optional[str] = Field(None, alias="parentUuid")
-    start_time: float = Field(alias="startTime")
-    end_time: Union[float, None] = Field(None, alias="endTime")
-    inputText: Optional[str] = None
-    input: Optional[Union[Dict, list]] = None
-    outputText: Optional[str] = None
-    output: Optional[Union[Dict, list]] = None
+    start_time: str = Field(alias="startTime")
+    end_time: str = Field(alias="endTime")
+    input: Optional[Union[Dict, list, str]] = None
+    output: Optional[Union[Dict, list, str]] = None
     error: Optional[str] = None
 
     # agents
     available_tools: Optional[List[str]] = Field(None, alias="availableTools")
-    handoff_agents: Optional[List[str]] = Field(None, alias="handoffAgents")
+    agent_handoffs: Optional[List[str]] = Field(None, alias="agentHandoffs")
 
     # tools
     description: Optional[str] = None
 
     # retriever
+    embedder: Optional[str] = None
     top_k: Optional[int] = Field(None, alias="topK")
     chunk_size: Optional[int] = Field(None, alias="chunkSize")
 
@@ -64,5 +63,5 @@ class TraceApi(BaseModel):
     llm_spans: List[BaseApiSpan] = Field(alias="llmSpans")
     retriever_spans: List[BaseApiSpan] = Field(alias="retrieverSpans")
     tool_spans: List[BaseApiSpan] = Field(alias="toolSpans")
-    start_time: float = Field(alias="startTime")
-    end_time: Union[float, None] = Field(None, alias="endTime")
+    start_time: str = Field(alias="startTime")
+    end_time: str = Field(alias="endTime")

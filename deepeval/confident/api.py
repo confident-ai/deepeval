@@ -86,7 +86,6 @@ class Api:
         self, method: HttpMethods, endpoint: Endpoints, body=None, params=None
     ):
         url = f"{self.base_api_url}{endpoint.value}"
-        print(url)
         res = self._http_request(
             method=method.value,
             url=url,
@@ -95,7 +94,6 @@ class Api:
             params=params,
         )
 
-        print("!!!!!", res.status_code, "!!!!!")
         if res.status_code == 200:
             try:
                 return res.json()

@@ -1,16 +1,47 @@
 from contextvars import ContextVar
+from datetime import datetime, time, timezone
 from enum import Enum
 from typing import Any, List, Union, Optional, Dict, Literal
-from time import perf_counter
+from time import perf_counter, sleep
 from pydantic import BaseModel, Field
 import inspect
 import uuid
 from rich.console import Console
+import random
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.prompt import Prompt
 from deepeval.tracing.api import TraceApi, BaseApiSpan, SpanApiType
+
+
+def to_zod_compatible_iso(dt: datetime) -> str:
+    print(dt)
+    return (
+        dt.astimezone(timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
+
+
+def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
+    """
+    Convert a perf_counter value to a datetime object.
+
+    Args:
+        perf_counter_value: A float value from perf_counter()
+
+    Returns:
+        A datetime object representing the current time
+    """
+    # Get the current time
+    current_time = datetime.now(timezone.utc)
+    # Calculate the time difference in seconds
+    time_diff = current_time.timestamp() - perf_counter()
+    # Convert perf_counter value to a real timestamp
+    timestamp = time_diff + perf_counter_value
+    # Return as a datetime object
+    return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
 
 class SpanType(Enum):
@@ -35,7 +66,7 @@ class AgentAttributes(BaseModel):
 
 class LlmAttributes(BaseModel):
     # input
-    input: Union[str, List[Dict[str, Any]]]
+    input: str
     # output
     output: str
     prompt: Optional[Prompt] = None
@@ -95,8 +126,8 @@ class BaseSpan(BaseModel):
 
 class AgentSpan(BaseSpan):
     name: str
-    available_tools: List[str]
-    agent_handoffs: List[str]
+    available_tools: List[str] = []
+    agent_handoffs: List[str] = []
     attributes: Optional[AgentAttributes] = None
 
     def set_attributes(self, attributes: AgentAttributes):
@@ -131,7 +162,6 @@ class ToolSpan(BaseSpan):
     description: Optional[str] = None
 
     def set_attributes(self, attributes: ToolAttributes):
-        print(" gher8iudaufh lsifuhsal uhd ufashlduf hosau")
         self.attributes = attributes
 
 
@@ -278,6 +308,8 @@ class TraceManager:
                     # Pydantic version below 2.0
                     body = trace_api.dict(by_alias=True, exclude_none=True)
 
+                print(body)
+                print("!!!!!!")
                 api = Api()
                 result = api.send_request(
                     method=HttpMethods.POST,
@@ -333,6 +365,18 @@ class TraceManager:
         # Start processing from root spans
         process_spans(trace.root_spans)
 
+        # Convert perf_counter values to ISO 8601 strings
+        start_time = (
+            to_zod_compatible_iso(perf_counter_to_datetime(trace.start_time))
+            if trace.start_time
+            else None
+        )
+        end_time = (
+            to_zod_compatible_iso(perf_counter_to_datetime(trace.end_time))
+            if trace.end_time
+            else None
+        )
+
         # Create and return the TraceApi object
         return TraceApi(
             uuid=trace.uuid,
@@ -341,8 +385,8 @@ class TraceManager:
             llmSpans=llm_spans,
             retrieverSpans=retriever_spans,
             toolSpans=tool_spans,
-            startTime=trace.start_time,
-            endTime=trace.end_time,
+            startTime=start_time,
+            endTime=end_time,
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -368,60 +412,47 @@ class TraceManager:
             span_type = SpanApiType.BASE
 
         # Initialize input and output fields
-        input_text = None
         input_data = None
-        output_text = None
         output_data = None
+
         if isinstance(span, RetrieverSpan):
-            # For RetrieverSpan, inputText is embeddingInput, output is retrievalContext
+            # For RetrieverSpan, input is embeddingInput, output is retrievalContext
             if span.attributes:
-                input_text = span.attributes.embedding_input
+                input_data = span.attributes.embedding_input
                 output_data = span.attributes.retrieval_context
             else:
                 # Fallback to standard logic if attributes are not set
-                if isinstance(span.input, str):
-                    input_text = span.input
-                else:
-                    input_data = span.input
-
-                if isinstance(span.output, str):
-                    output_text = span.output
-                else:
-                    output_data = span.output
-
-        elif isinstance(span, LlmSpan):
-            # For LlmSpan, input depends on attributes.input type, output is attributes.output
-            if span.attributes:
-                if isinstance(span.attributes.input, str):
-                    input_text = span.attributes.input
-                else:
-                    input_data = span.attributes.input
-
-                output_text = span.attributes.output
-            else:
-                # Fallback to standard logic if attributes are not set
-                if isinstance(span.input, str):
-                    input_text = span.input
-                else:
-                    input_data = span.input
-
-                if isinstance(span.output, str):
-                    output_text = span.output
-                else:
-                    output_data = span.output
-        else:
-            # For BaseSpan, Agent, or Tool types, use the standard logic
-            if isinstance(span.input, str):
-                input_text = span.input
-            else:
                 input_data = span.input
-
-            if isinstance(span.output, str):
-                output_text = span.output
-            else:
                 output_data = span.output
 
-        print(span_type, "aksjdfnaskjfndaksjfdksn")
+        elif isinstance(span, LlmSpan):
+            # For LlmSpan, input is attributes.input, output is attributes.output
+            if span.attributes:
+                input_data = span.attributes.input
+                output_data = span.attributes.output
+            else:
+                # Fallback to standard logic if attributes are not set
+                input_data = span.input
+                output_data = span.output
+            print(span.attributes, "@@@@@@@@@@")
+            print(input_data, output_data, "@@@@@@@@@@")
+        else:
+            # For BaseSpan, Agent, or Tool types, use the standard logic
+            input_data = span.input
+            output_data = span.output
+
+        # Convert perf_counter values to ISO 8601 strings
+        start_time = (
+            to_zod_compatible_iso(perf_counter_to_datetime(span.start_time))
+            if span.start_time
+            else None
+        )
+        end_time = (
+            to_zod_compatible_iso(perf_counter_to_datetime(span.end_time))
+            if span.end_time
+            else None
+        )
+
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
@@ -430,11 +461,9 @@ class TraceManager:
             type=span_type,
             traceUuid=span.trace_uuid,
             parentUuid=span.parent_uuid,
-            startTime=span.start_time,
-            endTime=span.end_time,
-            inputText=input_text,
+            startTime=start_time,
+            endTime=end_time,
             input=input_data,
-            outputText=output_text,
             output=output_data,
             error=span.error,
         )
@@ -442,10 +471,12 @@ class TraceManager:
         # Add type-specific attributes
         if isinstance(span, AgentSpan):
             api_span.available_tools = span.available_tools
-            api_span.handoff_agents = span.agent_handoffs
+            api_span.agent_handoffs = span.agent_handoffs
+            print(api_span.available_tools, api_span.agent_handoffs)
         elif isinstance(span, ToolSpan):
             api_span.description = span.description
         elif isinstance(span, RetrieverSpan) and span.attributes:
+            api_span.embedder = span.embedder
             api_span.top_k = span.attributes.top_k
             api_span.chunk_size = span.attributes.chunk_size
         elif isinstance(span, LlmSpan):
@@ -717,9 +748,8 @@ def observe(
     return decorator
 
 
-def set_current_span_attributes(attributes: Attributes):
+def update_current_span_attributes(attributes: Attributes):
     current_span = current_span_context.get()
-    print("current_span", current_span, current_span.__class__)
     if current_span:
         current_span.set_attributes(attributes)
 
@@ -733,19 +763,25 @@ def set_current_span_attributes(attributes: Attributes):
 @observe(type="llm", model="gpt-4o")
 def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
+    print(prompt, "@@@*********@@@@@@@")
     attributes = LlmAttributes(
         input=prompt,
         output=generated_text,
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    set_current_span_attributes(attributes)
+    print(attributes, "@@@*********@@@@@@@")
+    update_current_span_attributes(attributes)
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
     return generated_text
 
 
 @observe
 def embed_query(text: str):
     embedding = [0.1, 0.2, 0.3]
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
     return embedding
 
 
@@ -758,12 +794,14 @@ def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    set_current_span_attributes(
+    update_current_span_attributes(
         RetrieverAttributes(
             embedding_input=query,
             retrieval_context=documents,
         )
     )
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
     return documents
 
 
@@ -780,7 +818,10 @@ def get_weather(city: str):
     )
 
     # Set attributes using the helper function
-    set_current_span_attributes(attributes)
+    update_current_span_attributes(attributes)
+
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
 
     # The function returns just the weather result
     return weather
@@ -789,6 +830,8 @@ def get_weather(city: str):
 # First get the location
 @observe(type="tool")
 def get_location(query: str):
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
     return "San Francisco"  # Simulated location lookup
 
 
@@ -806,6 +849,8 @@ def random_research_agent(user_query: str, testing: bool = False):
     #         output=analysis,
     #     )
     # )
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
     return analysis
 
 
@@ -820,12 +865,14 @@ def weather_research_agent(user_query: str):
     weather = get_weather(location)
     documents = retrieve_documents(f"{weather} in {location}", top_k=2)
     response = f"In {location}, it's currently {weather}. Additional context: {documents[0]}"
-    set_current_span_attributes(
+    update_current_span_attributes(
         AgentAttributes(
             input=user_query,
             output=response,
         )
     )
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
     return response
 
 
@@ -837,12 +884,15 @@ def supervisor_agent(user_query: str):
     research = random_research_agent(user_query)
     weather_research = weather_research_agent(user_query)
 
-    set_current_span_attributes(
+    update_current_span_attributes(
         AgentAttributes(
             input=user_query,
             output=research + weather_research,
         )
     )
+
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
 
     return research + weather_research
 
@@ -865,6 +915,8 @@ def supervisor_agent(user_query: str):
 @observe("CustomEmbedder")
 def custom_embed(text: str, model: str = "custom-model"):
     embedding = [0.1, 0.2, 0.3]
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
     return embedding
 
 
@@ -875,34 +927,64 @@ def custom_retrieve(query: str, embedding_model: str = "custom-model"):
         f"Custom doc 1 about {query}",
         f"Custom doc 2 about {query}",
     ]
-    return documents
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
+    # return documents
 
 
 @observe("CustomLLM")
 def custom_generate(prompt: str, model: str = "custom-model"):
     response = f"Custom response for: {prompt}"
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
     return response
 
 
 @observe(type="agent", available_tools=["custom_retrieve", "custom_generate"])
 def custom_research_agent(query: str):
-    docs = custom_retrieve(query)
-    analysis = custom_generate(str(docs))
-    return analysis
+    if random.random() < 0.5:
+        docs = custom_retrieve(query)
+        analysis = custom_generate(str(docs))
+        # Add sleep of 1-3 seconds
+        sleep(random.uniform(1, 3))
+        return analysis
+    else:
+        # Add sleep of 1-3 seconds
+        sleep(random.uniform(1, 3))
+        return "Research information unavailable"
 
 
 @observe(type="agent", available_tools=["get_weather", "get_location"])
 def weather_agent(query: str):
-    location = get_location(query)
-    weather = get_weather(location)
-    return f"Weather in {location}: {weather}"
+    if random.random() < 0.5:
+        location = get_location(query)
+        if random.random() < 0.5:
+            weather = get_weather(location)
+            # Add sleep of 1-3 seconds
+            sleep(random.uniform(1, 3))
+            return f"Weather in {location}: {weather}"
+        else:
+            # Add sleep of 1-3 seconds
+            sleep(random.uniform(1, 3))
+            return f"Weather in {location}"
+    else:
+        # Add sleep of 1-3 seconds
+        sleep(random.uniform(1, 3))
+        return "Weather information unavailable"
 
 
 @observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
 def research_agent(query: str):
-    docs = retrieve_documents(query)
-    analysis = generate_text(str(docs))
-    return analysis
+    if random.random() < 0.5:
+        docs = retrieve_documents(query)
+        analysis = generate_text(str(docs))
+        # Add sleep of 1-3 seconds
+        sleep(random.uniform(1, 3))
+        return analysis
+    else:
+        # Add sleep of 1-3 seconds
+        sleep(random.uniform(1, 3))
+        return "Research information unavailable"
 
 
 @observe(
@@ -910,9 +992,21 @@ def research_agent(query: str):
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
 )
 def meta_agent(query: str):
-    weather_info = weather_agent(query)
-    research_info = research_agent(query)
-    custom_info = custom_research_agent(query)
+    # 50% probability of executing the function
+    if random.random() < 0.5:
+        weather_info = weather_agent(query)
+    else:
+        weather_info = "Weather information unavailable"
+
+    if random.random() < 0.5:
+        research_info = research_agent(query)
+    else:
+        research_info = "Research information unavailable"
+
+    if random.random() < 0.5:
+        custom_info = custom_research_agent(query)
+    else:
+        custom_info = "Custom research information unavailable"
 
     final_response = f"""
     Weather: {weather_info}
@@ -923,10 +1017,29 @@ def meta_agent(query: str):
     return final_response
 
 
+@observe(type="retriever", embedder="custom-model")
+def meta_agent_2(query: str):
+    update_current_span_attributes(
+        RetrieverAttributes(
+            embedding_input=query,
+            retrieval_context=[
+                "Custom doc 1 about {query}",
+                "Custom doc 2 about {query}",
+            ],
+        )
+    )
+    return
+
+
+@observe(type="agent", agent_handoffs=["meta_agent_2"])
+def meta_agent_3():
+    return meta_agent_2("What's the weather like in San Francisco?")
+
+
 if __name__ == "__main__":
-    result = meta_agent("What's the weather like in San Francisco?")
-    print(f"Final result: {result}")
+    result = meta_agent_3()
+    # print(f"Final result: {result}")
     traces = trace_manager.get_all_traces_dict()
-    print(f"Traces: {traces}")
+    # print(f"Traces: {traces}")
     trace_api = trace_manager.post_trace(traces[0])
     print(f"Trace API: {trace_api}")
