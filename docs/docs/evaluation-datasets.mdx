@@ -108,13 +108,14 @@ dataset = EvaluationDataset()
 dataset.generate_goldens_from_docs(document_paths=['example.txt', 'example.docx', 'example.pdf'])
 ```
 
-In this example, we've used the `generate_goldens_from_docs` method, which one one of the three generation methods offered by `deepeval`'s `Synthesizer`. The three methods include:
+In this example, we've used the `generate_goldens_from_docs` method, which one one of the four generation methods offered by `deepeval`'s `Synthesizer`. The four methods include:
 
-- [`generate_goldens_from_docs()`](synthesizer-generate-from-docs): useful for generating goldens to evaluate your LLM application based on contexts extracted from your knowledge base in the form of documents.
-- [`generate_goldens_from_contexts()`](synthesizer-generate-from-contexts): useful for generating goldens to evaluate your LLM application based on a list of prepared context.
-- [`generate_goldens_from_scratch()`](synthesizer-generate-from-scratch): useful for generating goldens to evaluate your LLM application without relying on contexts from a knowledge base.
+- [`generate_goldens_from_docs()`](/docs/synthesizer-generate-from-docs): useful for generating goldens to evaluate your LLM application based on contexts extracted from your knowledge base in the form of documents.
+- [`generate_goldens_from_contexts()`](/docs/synthesizer-generate-from-contexts): useful for generating goldens to evaluate your LLM application based on a list of prepared context.
+- [`generate_goldens_from_scratch()`](/docs/synthesizer-generate-from-scratch): useful for generating goldens to evaluate your LLM application without relying on contexts from a knowledge base.
+- [`generate_goldens_from_goldens()`](/docs/synthesizer-generate-from-goldens): useful for generating goldens by augmenting a known set of goldens.
 
-Under the hood, these 3 methods calls the corresponding methods in `deepeval`'s `Synthesizer` with the exact same parameters, with an addition of a `synthesizer` parameter for you to customize your generation pipeline.
+Under the hood, these 4 methods calls the corresponding methods in `deepeval`'s `Synthesizer` with the exact same parameters, with an addition of a `synthesizer` parameter for you to customize your generation pipeline.
 
 ```python
 from deepeval.dataset import EvaluationDataset
