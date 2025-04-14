@@ -1,9 +1,7 @@
 class ExtractionTemplate:
 
     @staticmethod
-    def extract_prompt_structure_from_inputs(
-        inputs: list[str]
-    ):
+    def extract_prompt_structure_from_inputs(inputs: list[str]):
         return f"""
             You are a prompt engineer tasked with reverse-engineering the original prompt that may have produced the following inputs. 
             Each input is a message that a user might submit to an AI system.
@@ -46,5 +44,3 @@ class ExtractionTemplate:
 
             {inputs}
      """
-
-        

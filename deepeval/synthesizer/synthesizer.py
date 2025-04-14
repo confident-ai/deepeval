@@ -742,18 +742,28 @@ class Synthesizer:
             contexts = []
             source_files = []
             for golden in goldens:
-                if golden.context is None: 
+                if golden.context is None:
                     continue
                 contexts.append(golden.context)
                 source_files.append(golden.source_file)
 
             # Extract styles from goldens if not already set
             if self.set_styling_config == False:
-                example_inputs = random.sample([golden.input for golden in goldens], 10)  
-                styling_prompt = ExtractionTemplate.extract_prompt_structure_from_inputs(example_inputs)
-                styles = self._generate_schema(styling_prompt, PromptStyling, self.model)
+                example_inputs = random.sample(
+                    [golden.input for golden in goldens], 10
+                )
+                styling_prompt = (
+                    ExtractionTemplate.extract_prompt_structure_from_inputs(
+                        example_inputs
+                    )
+                )
+                styles = self._generate_schema(
+                    styling_prompt, PromptStyling, self.model
+                )
                 styles_json = json.loads(styles.model_dump_json())
-                styling_config = StylingConfig(**styles_json, expected_output_format=None)
+                styling_config = StylingConfig(
+                    **styles_json, expected_output_format=None
+                )
                 self.styling_config = styling_config
 
             # Generate goldens from scratch or from contexts if available
@@ -766,9 +776,8 @@ class Synthesizer:
                     contexts=contexts,
                     include_expected_output=include_expected_output,
                     max_goldens_per_context=max_goldens_per_golden,
-                    source_files=source_files,  
+                    source_files=source_files,
                 )
-
 
     async def a_generate_goldens_from_goldens(
         self,
@@ -780,18 +789,28 @@ class Synthesizer:
         contexts = []
         source_files = []
         for golden in goldens:
-            if golden.context is None: 
+            if golden.context is None:
                 continue
             contexts.append(golden.context)
             source_files.append(golden.source_file)
 
         # Extract styles from goldens if not already set
         if self.set_styling_config == False:
-            example_inputs = random.sample([golden.input for golden in goldens], 10)  
-            styling_prompt = ExtractionTemplate.extract_prompt_structure_from_inputs(example_inputs)
-            styles = await self._a_generate_schema(styling_prompt, PromptStyling, self.model)
+            example_inputs = random.sample(
+                [golden.input for golden in goldens], 10
+            )
+            styling_prompt = (
+                ExtractionTemplate.extract_prompt_structure_from_inputs(
+                    example_inputs
+                )
+            )
+            styles = await self._a_generate_schema(
+                styling_prompt, PromptStyling, self.model
+            )
             styles_json = json.loads(styles.model_dump_json())
-            styling_config = StylingConfig(**styles_json, expected_output_format=None)
+            styling_config = StylingConfig(
+                **styles_json, expected_output_format=None
+            )
             self.styling_config = styling_config
 
         # Generate goldens from scratch or from contexts if available
@@ -804,10 +823,8 @@ class Synthesizer:
                 contexts=contexts,
                 include_expected_output=include_expected_output,
                 max_goldens_per_context=max_goldens_per_golden,
-                source_files=source_files,  
+                source_files=source_files,
             )
-
-
 
     #############################################################
     # Helper Methods for Input Generation

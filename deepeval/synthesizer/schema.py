@@ -58,4 +58,3 @@ class PromptStyling(BaseModel):
     scenario: str
     task: str
     input_format: str
-
