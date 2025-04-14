@@ -52,3 +52,10 @@ class TreeScore(BaseModel):
 
 class NonRefusal(BaseModel):
     classification: Literal["Non-refusal", "Refusal"]
+
+
+class PromptStyling(BaseModel):
+    scenario: str
+    task: str
+    input_format: str
+

@@ -9,6 +9,7 @@ import random
 import json
 from rich import print
 import tqdm
+import math
 import csv
 import os
 
@@ -24,14 +25,13 @@ from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.dataset.golden import Golden
 from deepeval.synthesizer.types import *
-from deepeval.synthesizer.templates.template import (
+from deepeval.synthesizer.templates import (
     EvolutionTemplate,
     SynthesizerTemplate,
     FilterTemplate,
-)
-from deepeval.synthesizer.templates.template_prompt import (
     PromptEvolutionTemplate,
     PromptSynthesizerTemplate,
+    ExtractionTemplate,
 )
 from deepeval.synthesizer.schema import (
     SyntheticData,
@@ -40,6 +40,7 @@ from deepeval.synthesizer.schema import (
     Response,
     InputFeedback,
     RewrittenInput,
+    PromptStyling,
 )
 from deepeval.synthesizer.config import (
     FiltrationConfig,
@@ -51,6 +52,8 @@ from deepeval.dataset.api import (
     APIDataset,
     CreateDatasetHttpResponse,
 )
+from deepeval.dataset.utils import convert_test_cases_to_goldens
+from deepeval.dataset import EvaluationDataset
 
 valid_file_types = ["csv", "json"]
 
@@ -102,6 +105,7 @@ class Synthesizer:
         self.styling_config = (
             styling_config if styling_config is not None else StylingConfig()
         )
+        self.set_styling_config = True if styling_config is not None else False
         self.cost_tracking = cost_tracking
         self.synthesis_cost = 0 if self.using_native_model else None
 
@@ -712,6 +716,98 @@ class Synthesizer:
             raise KeyError(
                 f"Evolution '{evolution.name}' not available for this method."
             )
+
+    #############################################################
+    # Generate from goldens
+    #############################################################
+
+    def generate_goldens_from_goldens(
+        self,
+        goldens: List[Golden],
+        max_goldens_per_golden: int = 2,
+        include_expected_output: bool = True,
+    ) -> List[Golden]:
+
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            return loop.run_until_complete(
+                self.a_generate_goldens_from_goldens(
+                    goldens=goldens,
+                    max_goldens_per_golden=max_goldens_per_golden,
+                    include_expected_output=include_expected_output,
+                )
+            )
+        else:
+            # Extract contexts and source files from goldens
+            contexts = []
+            source_files = []
+            for golden in goldens:
+                if golden.context is None: 
+                    continue
+                contexts.append(golden.context)
+                source_files.append(golden.source_file)
+
+            # Extract styles from goldens if not already set
+            if self.set_styling_config == False:
+                example_inputs = random.sample([golden.input for golden in goldens], 10)  
+                styling_prompt = ExtractionTemplate.extract_prompt_structure_from_inputs(example_inputs)
+                styles = self._generate_schema(styling_prompt, PromptStyling, self.model)
+                styles_json = json.loads(styles.model_dump_json())
+                styling_config = StylingConfig(**styles_json, expected_output_format=None)
+                self.styling_config = styling_config
+
+            # Generate goldens from scratch or from contexts if available
+            if len(contexts) == 0:
+                return self.generate_goldens_from_scratch(
+                    num_goldens=len(goldens) * max_goldens_per_golden,
+                )
+            else:
+                return self.generate_goldens_from_contexts(
+                    contexts=contexts,
+                    include_expected_output=include_expected_output,
+                    max_goldens_per_context=max_goldens_per_golden,
+                    source_files=source_files,  
+                )
+
+
+    async def a_generate_goldens_from_goldens(
+        self,
+        goldens: List[Golden],
+        max_goldens_per_golden: int = 2,
+        include_expected_output: bool = True,
+    ) -> List[Golden]:
+        # Extract contexts and source files from goldens
+        contexts = []
+        source_files = []
+        for golden in goldens:
+            if golden.context is None: 
+                continue
+            contexts.append(golden.context)
+            source_files.append(golden.source_file)
+
+        # Extract styles from goldens if not already set
+        if self.set_styling_config == False:
+            example_inputs = random.sample([golden.input for golden in goldens], 10)  
+            styling_prompt = ExtractionTemplate.extract_prompt_structure_from_inputs(example_inputs)
+            styles = await self._a_generate_schema(styling_prompt, PromptStyling, self.model)
+            styles_json = json.loads(styles.model_dump_json())
+            styling_config = StylingConfig(**styles_json, expected_output_format=None)
+            self.styling_config = styling_config
+
+        # Generate goldens from scratch or from contexts if available
+        if len(contexts) == 0:
+            return await self.a_generate_goldens_from_scratch(
+                num_goldens=len(goldens) * max_goldens_per_golden,
+            )
+        else:
+            return await self.a_generate_goldens_from_contexts(
+                contexts=contexts,
+                include_expected_output=include_expected_output,
+                max_goldens_per_context=max_goldens_per_golden,
+                source_files=source_files,  
+            )
+
+
 
     #############################################################
     # Helper Methods for Input Generation
