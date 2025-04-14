@@ -267,7 +267,7 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
             max_contexts_per_document=2,
             chunk_size=1024,
             max_context_length=3,
-            min_context_length=1,
+            min_context_length=2,
         ),
         _send_data=False,
     )
