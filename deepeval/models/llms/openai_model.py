@@ -1,10 +1,8 @@
 from typing import Optional, Tuple, List, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
-from io import BytesIO
 import logging
 import openai
-import base64
 import json
 import re
 
@@ -19,8 +17,8 @@ from langchain_core.messages import AIMessage
 from langchain.schema import HumanMessage
 from langchain_openai import ChatOpenAI
 
-from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseMLLM
-from deepeval.test_case import MLLMImage
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.utils import trim_and_load_json
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -197,7 +195,7 @@ class GPTModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                 )
-                json_output = self.trim_and_load_json(
+                json_output = trim_and_load_json(
                     completion.choices[0].message.content
                 )
                 cost = self.calculate_cost(
@@ -205,10 +203,14 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
-        else:
-            chat_model = self.load_model()
-            with get_openai_callback() as cb:
-                res = chat_model.invoke(prompt)
+
+        chat_model = self.load_model()
+        with get_openai_callback() as cb:
+            res = chat_model.invoke(prompt)
+            if schema:
+                json_output = trim_and_load_json(res.content)
+                return schema.model_validate(json_output), cb.total_cost
+            else:
                 return res.content, cb.total_cost
 
     @retry(
@@ -218,7 +220,7 @@ class GPTModel(DeepEvalBaseLLM):
     )
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[str, float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         if schema:
             client = AsyncOpenAI(api_key=self._openai_api_key)
             if self.model_name in structured_outputs_models:
@@ -245,7 +247,7 @@ class GPTModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                 )
-                json_output = self.trim_and_load_json(
+                json_output = trim_and_load_json(
                     completion.choices[0].message.content
                 )
                 cost = self.calculate_cost(
@@ -253,10 +255,14 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
-        else:
-            chat_model = self.load_model()
-            with get_openai_callback() as cb:
-                res = await chat_model.ainvoke(prompt)
+
+        chat_model = self.load_model()
+        with get_openai_callback() as cb:
+            res = await chat_model.ainvoke(prompt)
+            if schema:
+                json_output = trim_and_load_json(res.content)
+                return schema.model_validate(json_output), cb.total_cost
+            else:
                 return res.content, cb.total_cost
 
     ###############################################
@@ -316,25 +322,6 @@ class GPTModel(DeepEvalBaseLLM):
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
-
-    def trim_and_load_json(
-        self,
-        input_string: str,
-    ) -> Dict:
-        start = input_string.find("{")
-        end = input_string.rfind("}") + 1
-        if end == 0 and start != -1:
-            input_string = input_string + "}"
-            end = len(input_string)
-        jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
-        jsonStr = re.sub(r",\s*([\]}])", r"\1", jsonStr)
-        try:
-            return json.loads(jsonStr)
-        except json.JSONDecodeError:
-            error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-            raise ValueError(error_str)
-        except Exception as e:
-            raise Exception(f"An unexpected error occurred: {str(e)}")
 
     ###############################################
     # Model

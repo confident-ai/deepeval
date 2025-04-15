@@ -1,11 +1,10 @@
 from typing import Optional, Tuple, Union, Dict
 from anthropic import Anthropic, AsyncAnthropic
 from pydantic import BaseModel
-import json
 import os
-import re
 
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.utils import trim_and_load_json
 
 model_pricing = {
     "claude-3-7-sonnet-latest": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
@@ -52,8 +51,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         if schema == None:
             return message.content[0].text, cost
         else:
-            json_output = self.trim_and_load_json(message.content[0].text)
-
+            json_output = trim_and_load_json(message.content[0].text)
             return schema.model_validate(json_output), cost
 
     async def a_generate(
@@ -76,7 +74,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         if schema == None:
             return message.content[0].text, cost
         else:
-            json_output = self.trim_and_load_json(message.content[0].text)
+            json_output = trim_and_load_json(message.content[0].text)
 
             return schema.model_validate(json_output), cost
 
@@ -89,25 +87,6 @@ class AnthropicModel(DeepEvalBaseLLM):
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
-
-    def trim_and_load_json(
-        self,
-        input_string: str,
-    ) -> Dict:
-        start = input_string.find("{")
-        end = input_string.rfind("}") + 1
-        if end == 0 and start != -1:
-            input_string = input_string + "}"
-            end = len(input_string)
-        jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
-        jsonStr = re.sub(r",\s*([\]}])", r"\1", jsonStr)
-        try:
-            return json.loads(jsonStr)
-        except json.JSONDecodeError:
-            error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-            raise ValueError(error_str)
-        except Exception as e:
-            raise Exception(f"An unexpected error occurred: {str(e)}")
 
     ###############################################
     # Model
