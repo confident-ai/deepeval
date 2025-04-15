@@ -1,22 +1,25 @@
 from contextvars import ContextVar
 from datetime import datetime, time, timezone
 from enum import Enum
-from typing import Any, List, Union, Optional, Dict, Literal
+from typing import Any, List, Set, Union, Optional, Dict, Literal
 from time import perf_counter, sleep
 from pydantic import BaseModel, Field
 import inspect
 import uuid
 from rich.console import Console
 import random
+import threading
+import queue
+import asyncio
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.test_case import LLMTestCase
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.prompt import Prompt
 from deepeval.tracing.api import TraceApi, BaseApiSpan, SpanApiType
 
 
 def to_zod_compatible_iso(dt: datetime) -> str:
-    print(dt)
     return (
         dt.astimezone(timezone.utc)
         .isoformat(timespec="milliseconds")
@@ -123,6 +126,9 @@ class BaseSpan(BaseModel):
     output: Optional[Union[str, Dict, list]] = None
     error: Optional[str] = None
 
+    llm_test_case: Optional[LLMTestCase] = None
+    metrics: Optional[List[str]] = None
+
 
 class AgentSpan(BaseSpan):
     name: str
@@ -199,6 +205,13 @@ class TraceManager:
             {}
         )  # Map of span_uuid to BaseSpan
 
+        # Initialize queue and worker thread for trace posting
+        self._trace_queue = queue.Queue()
+        self._worker_thread = None
+        self._min_interval = 0.2  # Minimum time between API calls (seconds)
+        self._last_post_time = 0
+        self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
+
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
         trace_uuid = str(uuid.uuid4())
@@ -225,6 +238,9 @@ class TraceManager:
             # Users can manually set the status to ERROR if needed
             if trace.status == TraceSpanStatus.IN_PROGRESS:
                 trace.status = TraceSpanStatus.SUCCESS
+
+            # Post the trace to the server before removing it
+            self.post_trace(trace)
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
@@ -294,45 +310,163 @@ class TraceManager:
         return [self.get_trace_dict(trace) for trace in self.traces]
 
     def post_trace(self, trace: Trace) -> Optional[str]:
-        """Post a trace to the server."""
-        console = Console()
-        if is_confident():
-            try:
-                trace_api = self.create_trace_api(trace)
-
-                try:
-                    body = trace_api.model_dump(
-                        by_alias=True, exclude_none=True
-                    )
-                except AttributeError:
-                    # Pydantic version below 2.0
-                    body = trace_api.dict(by_alias=True, exclude_none=True)
-
-                print(body)
-                print("!!!!!!")
-                api = Api()
-                result = api.send_request(
-                    method=HttpMethods.POST,
-                    endpoint=Endpoints.TRACING_ENDPOINT,
-                    body=body,
-                )
-                return "ok"
-            except Exception as e:
-                console.print(f"[red]Error posting trace: {str(e)}[/red]")
-                return None
-        else:
+        if not is_confident():
             return None
 
+        # Add the trace to the queue
+        self._trace_queue.put(trace)
+
+        # Start the worker thread if it's not already running
+        if self._worker_thread is None or not self._worker_thread.is_alive():
+            self._worker_thread = threading.Thread(
+                target=self._process_trace_queue,
+                daemon=True,  # Make it a daemon so it won't block program exit
+            )
+            self._worker_thread.start()
+
+        return "ok"
+
+    def _process_trace_queue(self):
+        """Worker thread function that processes the trace queue with throttling."""
+        try:
+            # Create a new event loop for this thread
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            # Define the async worker function
+            async def async_worker():
+                while True:
+                    try:
+                        # Clean up completed tasks
+                        self._clean_finished_tasks()
+
+                        # Get a trace from the queue
+                        trace = self._trace_queue.get(block=True, timeout=1.0)
+
+                        # Apply rate limiting
+                        now = perf_counter()
+                        time_since_last = now - self._last_post_time
+                        if time_since_last < self._min_interval:
+                            await asyncio.sleep(
+                                self._min_interval - time_since_last
+                            )
+
+                        print("SENDING")
+
+                        # Update the last post time BEFORE making the API call
+                        self._last_post_time = perf_counter()
+
+                        # Create the API request but don't await it
+                        async def _a_send_trace(trace_obj):
+                            try:
+                                trace_api = self.create_trace_api(trace_obj)
+
+                                try:
+                                    body = trace_api.model_dump(
+                                        by_alias=True, exclude_none=True
+                                    )
+                                except AttributeError:
+                                    # Pydantic version below 2.0
+                                    body = trace_api.dict(
+                                        by_alias=True, exclude_none=True
+                                    )
+
+                                # Send the request without blocking the worker
+                                api = Api()
+                                result = await api.a_send_request(
+                                    method=HttpMethods.POST,
+                                    endpoint=Endpoints.TRACING_ENDPOINT,
+                                    body=body,
+                                )
+                                print("async post complete", result)
+                            except Exception as e:
+                                console = Console()
+                                console.print(
+                                    f"[dim][Tracing][/dim] Error posting trace: {str(e)}"
+                                )
+
+                        # Create a task for this trace and add to tracking set
+                        task = asyncio.create_task(_a_send_trace(trace))
+                        self._in_flight_tasks.add(task)
+                        self._trace_queue.task_done()
+
+                    except queue.Empty:
+                        await asyncio.sleep(0.1)
+                    except Exception as e:
+                        console = Console()
+                        console.print(
+                            f"[dim][Tracing][/dim] Error in worker: {str(e)}"
+                        )
+                        await asyncio.sleep(1.0)  # Wait a bit before continuing
+
+            loop.run_until_complete(async_worker())
+
+        except Exception as e:
+            console = Console()
+            console.print(
+                f"[dim][Tracing][/dim] Async setup failed, using sync: {str(e)}"
+            )
+
+            while True:
+                try:
+                    trace = self._trace_queue.get(block=True, timeout=1.0)
+
+                    now = perf_counter()
+                    time_since_last = now - self._last_post_time
+                    if time_since_last < self._min_interval:
+                        sleep(self._min_interval - time_since_last)
+
+                    # Update the last post time BEFORE making the API call
+                    self._last_post_time = perf_counter()
+
+                    try:
+                        trace_api = self.create_trace_api(trace)
+
+                        try:
+                            body = trace_api.model_dump(
+                                by_alias=True, exclude_none=True
+                            )
+                        except AttributeError:
+                            # Pydantic version below 2.0
+                            body = trace_api.dict(
+                                by_alias=True, exclude_none=True
+                            )
+
+                        # Send the request
+                        api = Api()
+                        result = api.send_request(
+                            method=HttpMethods.POST,
+                            endpoint=Endpoints.TRACING_ENDPOINT,
+                            body=body,
+                        )
+                        print("sync post", result)
+                    except Exception as e:
+                        console = Console()
+                        console.print(
+                            f"[dim][Tracing][/dim] Error posting trace: {str(e)}"
+                        )
+
+                    self._trace_queue.task_done()
+
+                except queue.Empty:
+                    sleep(0.1)
+                except Exception as e:
+                    console = Console()
+                    console.print(
+                        f"[dim][Tracing][/dim] Error in worker: {str(e)}"
+                    )
+                    sleep(1.0)  # Wait a bit before continuing
+
+    def _clean_finished_tasks(self) -> None:
+        done_tasks = {task for task in self._in_flight_tasks if task.done()}
+        self._in_flight_tasks -= done_tasks
+        for task in done_tasks:
+            try:
+                task.exception()
+            except (asyncio.CancelledError, asyncio.InvalidStateError):
+                pass
+
     def create_trace_api(self, trace: Trace) -> TraceApi:
-        """
-        Create a TraceApi object from a Trace.
-
-        Args:
-            trace: The Trace object to convert
-
-        Returns:
-            A TraceApi object representing the trace
-        """
         # Initialize empty lists for each span type
         base_spans = []
         agent_spans = []
@@ -390,15 +524,6 @@ class TraceManager:
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
-        """
-        Convert a BaseSpan to a BaseApiSpan.
-
-        Args:
-            span: The BaseSpan to convert
-
-        Returns:
-            A BaseApiSpan representing the span
-        """
         # Determine span type
         if isinstance(span, AgentSpan):
             span_type = SpanApiType.AGENT
@@ -434,8 +559,6 @@ class TraceManager:
                 # Fallback to standard logic if attributes are not set
                 input_data = span.input
                 output_data = span.output
-            print(span.attributes, "@@@@@@@@@@")
-            print(input_data, output_data, "@@@@@@@@@@")
         else:
             # For BaseSpan, Agent, or Tool types, use the standard logic
             input_data = span.input
@@ -466,13 +589,24 @@ class TraceManager:
             input=input_data,
             output=output_data,
             error=span.error,
+            testCaseInput=(
+                span.llm_test_case.input if span.llm_test_case else None
+            ),
+            testCaseActualOutput=(
+                span.llm_test_case.actual_output if span.llm_test_case else None
+            ),
+            testCaseRetrievalContext=(
+                span.llm_test_case.retrieval_context
+                if span.llm_test_case
+                else None
+            ),
+            metrics=span.metrics,
         )
 
         # Add type-specific attributes
         if isinstance(span, AgentSpan):
             api_span.available_tools = span.available_tools
             api_span.agent_handoffs = span.agent_handoffs
-            print(api_span.available_tools, api_span.agent_handoffs)
         elif isinstance(span, ToolSpan):
             api_span.description = span.description
         elif isinstance(span, RetrieverSpan) and span.attributes:
@@ -505,6 +639,7 @@ class Tracer:
             Literal["agent", "llm", "retriever", "tool"], str, None
         ],
         func_name: str,
+        metrics: Optional[List[str]] = None,
         **kwargs,
     ):
         self.start_time: float
@@ -523,6 +658,7 @@ class Tracer:
         self.result = None
 
         self.name: str = self.observe_kwargs.get("name", func_name)
+        self.metrics = metrics
         self.span_type: SpanType | str = (
             self.name if span_type is None else span_type
         )
@@ -618,6 +754,7 @@ class Tracer:
             # "metadata": None,
             "input": None,
             "output": None,
+            "metrics": self.metrics,
         }
 
         if self.span_type == SpanType.AGENT.value:
@@ -702,6 +839,7 @@ class Tracer:
 
 def observe(
     type: Union[Literal["agent", "llm", "retriever", "tool"], str, None],
+    metrics: Optional[List[str]] = None,
     **observe_kwargs,
 ):
     """
@@ -733,7 +871,9 @@ def observe(
                 "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
             }
 
-            with Tracer(type, **tracer_kwargs, func_name=func_name) as tracer:
+            with Tracer(
+                type, metrics=metrics, func_name=func_name, **tracer_kwargs
+            ) as tracer:
 
                 # Call the original function
                 result = func(*args, **func_kwargs)
@@ -754,292 +894,314 @@ def update_current_span_attributes(attributes: Attributes):
         current_span.set_attributes(attributes)
 
 
+def update_current_span_test_case_parameters(
+    input: str,
+    actual_output: str,
+    retrieval_context: Optional[List[str]] = None,
+):
+    current_span = current_span_context.get()
+    if current_span:
+        current_span.llm_test_case = LLMTestCase(
+            input=input,
+            actual_output=actual_output,
+            retrieval_context=retrieval_context,
+        )
+
+
 ########################################################
 ### Example ############################################
 ########################################################
 
 
-# Example with explicit attribute setting
-@observe(type="llm", model="gpt-4o")
-def generate_text(prompt: str):
-    generated_text = f"Generated text for: {prompt}"
-    print(prompt, "@@@*********@@@@@@@")
-    attributes = LlmAttributes(
-        input=prompt,
-        output=generated_text,
-        input_token_count=len(prompt.split()),
-        output_token_count=len(generated_text.split()),
-    )
-    print(attributes, "@@@*********@@@@@@@")
-    update_current_span_attributes(attributes)
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
-    return generated_text
+# # Example with explicit attribute setting
+# @observe(type="llm", model="gpt-4o")
+# def generate_text(prompt: str):
+#     generated_text = f"Generated text for: {prompt}"
+#     attributes = LlmAttributes(
+#         input=prompt,
+#         output=generated_text,
+#         input_token_count=len(prompt.split()),
+#         output_token_count=len(generated_text.split()),
+#     )
+#     update_current_span_attributes(attributes)
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+#     return generated_text
 
 
-@observe
-def embed_query(text: str):
-    embedding = [0.1, 0.2, 0.3]
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
-    return embedding
+# @observe
+# def embed_query(text: str):
+#     embedding = [0.1, 0.2, 0.3]
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+#     return embedding
 
 
-# Example of a retrieval node with embedded embedder
-@observe(type="retriever", embedder="text-embedding-ada-002")
-def retrieve_documents(query: str, top_k: int = 3):
-    embedding = embed_query(query)
-    documents = [
-        f"Document 1 about {query}",
-        f"Document 2 about {query}",
-        f"Document 3 about {query}",
-    ]
-    update_current_span_attributes(
-        RetrieverAttributes(
-            embedding_input=query,
-            retrieval_context=documents,
-        )
-    )
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
-    return documents
+# # Example of a retrieval node with embedded embedder
+# @observe(type="retriever", embedder="text-embedding-ada-002")
+# def retrieve_documents(query: str, top_k: int = 3):
+#     embedding = embed_query(query)
+#     documents = [
+#         f"Document 1 about {query}",
+#         f"Document 2 about {query}",
+#         f"Document 3 about {query}",
+#     ]
+#     update_current_span_attributes(
+#         RetrieverAttributes(
+#             embedding_input=query,
+#             retrieval_context=documents,
+#         )
+#     )
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+#     return documents
 
 
-# Simple example of using the observe decorator
-@observe(type="tool")
-def get_weather(city: str):
-    """Get the weather for a city."""
-    # Simulate API call
-    weather = f"Sunny in {city}"
+# # Simple example of using the observe decorator
+# @observe(type="tool")
+# def get_weather(city: str):
+#     """Get the weather for a city."""
+#     # Simulate API call
+#     weather = f"Sunny in {city}"
 
-    # Create attributes
-    attributes = ToolAttributes(
-        input_parameters={"asdfsaf": city}, output=weather
-    )
+#     # Create attributes
+#     attributes = ToolAttributes(
+#         input_parameters={"asdfsaf": city}, output=weather
+#     )
 
-    # Set attributes using the helper function
-    update_current_span_attributes(attributes)
+#     # Set attributes using the helper function
+#     update_current_span_attributes(attributes)
 
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
 
-    # The function returns just the weather result
-    return weather
-
-
-# First get the location
-@observe(type="tool")
-def get_location(query: str):
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
-    return "San Francisco"  # Simulated location lookup
+#     # The function returns just the weather result
+#     return weather
 
 
-# Example of an agent that uses both retrieval and LLM
-@observe(
-    type="agent",
-    available_tools=["get_weather", "get_location"],
-)
-def random_research_agent(user_query: str, testing: bool = False):
-    documents = retrieve_documents(user_query, top_k=3)
-    analysis = generate_text(user_query)
-    # set_current_span_attributes(
-    #     AgentAttributes(
-    #         input=user_query,
-    #         output=analysis,
-    #     )
-    # )
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
-    return analysis
+# # First get the location
+# @observe(type="tool")
+# def get_location(query: str):
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+#     return "San Francisco"  # Simulated location lookup
 
 
-# Example of a complex agent with multiple tool uses
-@observe(
-    type="agent",
-    available_tools=["get_weather", "get_location"],
-    name="weather_research_agent",
-)
-def weather_research_agent(user_query: str):
-    location = get_location(user_query)
-    weather = get_weather(location)
-    documents = retrieve_documents(f"{weather} in {location}", top_k=2)
-    response = f"In {location}, it's currently {weather}. Additional context: {documents[0]}"
-    update_current_span_attributes(
-        AgentAttributes(
-            input=user_query,
-            output=response,
-        )
-    )
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
-    return response
+# # Example of an agent that uses both retrieval and LLM
+# @observe(
+#     type="agent",
+#     available_tools=["get_weather", "get_location"],
+# )
+# def random_research_agent(user_query: str, testing: bool = False):
+#     documents = retrieve_documents(user_query, top_k=3)
+#     analysis = generate_text(user_query)
+#     # set_current_span_attributes(
+#     #     AgentAttributes(
+#     #         input=user_query,
+#     #         output=analysis,
+#     #     )
+#     # )
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+#     return analysis
 
 
-@observe(
-    type="agent",
-    agent_handoffs=["random_research_agent", "weather_research_agent"],
-)
-def supervisor_agent(user_query: str):
-    research = random_research_agent(user_query)
-    weather_research = weather_research_agent(user_query)
+# # Example of a complex agent with multiple tool uses
+# @observe(
+#     type="agent",
+#     available_tools=["get_weather", "get_location"],
+#     name="weather_research_agent",
+# )
+# def weather_research_agent(user_query: str):
+#     location = get_location(user_query)
+#     weather = get_weather(location)
+#     documents = retrieve_documents(f"{weather} in {location}", top_k=2)
+#     response = f"In {location}, it's currently {weather}. Additional context: {documents[0]}"
+#     update_current_span_attributes(
+#         AgentAttributes(
+#             input=user_query,
+#             output=response,
+#         )
+#     )
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+#     return response
 
-    update_current_span_attributes(
-        AgentAttributes(
-            input=user_query,
-            output=research + weather_research,
-        )
-    )
 
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
+# @observe(
+#     type="agent",
+#     agent_handoffs=["random_research_agent", "weather_research_agent"],
+# )
+# def supervisor_agent(user_query: str):
+#     research = random_research_agent(user_query)
+#     weather_research = weather_research_agent(user_query)
 
-    return research + weather_research
+#     update_current_span_attributes(
+#         AgentAttributes(
+#             input=user_query,
+#             output=research + weather_research,
+#         )
+#     )
+
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+
+#     return research + weather_research
 
 
-# # Example usage
+# # # Example usage
+# # if __name__ == "__main__":
+# #     # Call the research agent
+# #     research = supervisor_agent("What's the weather like in San Francisco?")
+# #     print(f"Research result: {research}")
+
+# #     # # Call the complex weather research agent
+# #     # weather_research = weather_research_agent("What's the weather like?")
+# #     # print(f"Weather research: {weather_research}")
+
+# #     # Get all traces
+# #     traces = trace_manager.get_all_traces_dict()
+# #     print(f"Traces: {traces}")
+
+
+# @observe("CustomEmbedder")
+# def custom_embed(text: str, model: str = "custom-model"):
+#     embedding = [0.1, 0.2, 0.3]
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+#     return embedding
+
+
+# @observe("CustomRetriever", name="custom retriever")
+# def custom_retrieve(query: str, embedding_model: str = "custom-model"):
+#     embedding = custom_embed(query, embedding_model)
+#     documents = [
+#         f"Custom doc 1 about {query}",
+#         f"Custom doc 2 about {query}",
+#     ]
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+#     # return documents
+
+
+# @observe("CustomLLM")
+# def custom_generate(prompt: str, model: str = "custom-model"):
+#     response = f"Custom response for: {prompt}"
+#     # Add sleep of 1-3 seconds
+#     sleep(random.uniform(1, 3))
+#     return response
+
+
+# @observe(type="agent", available_tools=["custom_retrieve", "custom_generate"])
+# def custom_research_agent(query: str):
+#     if random.random() < 0.5:
+#         docs = custom_retrieve(query)
+#         analysis = custom_generate(str(docs))
+#         # Add sleep of 1-3 seconds
+#         sleep(random.uniform(1, 3))
+#         return analysis
+#     else:
+#         # Add sleep of 1-3 seconds
+#         sleep(random.uniform(1, 3))
+#         return "Research information unavailable"
+
+
+# @observe(type="agent", available_tools=["get_weather", "get_location"])
+# def weather_agent(query: str):
+#     if random.random() < 0.5:
+#         location = get_location(query)
+#         if random.random() < 0.5:
+#             weather = get_weather(location)
+#             # Add sleep of 1-3 seconds
+#             sleep(random.uniform(1, 3))
+#             return f"Weather in {location}: {weather}"
+#         else:
+#             # Add sleep of 1-3 seconds
+#             sleep(random.uniform(1, 3))
+#             return f"Weather in {location}"
+#     else:
+#         # Add sleep of 1-3 seconds
+#         sleep(random.uniform(1, 3))
+#         return "Weather information unavailable"
+
+
+# @observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
+# def research_agent(query: str):
+#     if random.random() < 0.5:
+#         docs = retrieve_documents(query)
+#         analysis = generate_text(str(docs))
+#         # Add sleep of 1-3 seconds
+#         sleep(random.uniform(1, 3))
+#         return analysis
+#     else:
+#         # Add sleep of 1-3 seconds
+#         sleep(random.uniform(1, 3))
+#         return "Research information unavailable"
+
+
+# @observe(
+#     type="agent",
+#     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
+# )
+# def meta_agent(query: str):
+#     # 50% probability of executing the function
+#     if random.random() < 0.5:
+#         weather_info = weather_agent(query)
+#     else:
+#         weather_info = "Weather information unavailable"
+
+#     if random.random() < 0.5:
+#         research_info = research_agent(query)
+#     else:
+#         research_info = "Research information unavailable"
+
+#     if random.random() < 0.5:
+#         custom_info = custom_research_agent(query)
+#     else:
+#         custom_info = "Custom research information unavailable"
+
+#     final_response = f"""
+#     Weather: {weather_info}
+#     Research: {research_info}
+#     Custom Analysis: {custom_info}
+#     """
+
+#     return final_response
+
+
+# @observe(type="retriever", embedder="custom-model")
+# def meta_agent_2(query: str):
+#     update_current_span_attributes(
+#         RetrieverAttributes(
+#             embedding_input=query,
+#             retrieval_context=[
+#                 "Custom doc 1 about {query}",
+#                 "Custom doc 2 about {query}",
+#             ],
+#         )
+#     )
+#     return
+
+
+# @observe(
+#     type="agent", agent_handoffs=["meta_agent_2"], metrics=["Answer Relevancy"]
+# )
+# def meta_agent_3():
+#     update_current_span_test_case_parameters(
+#         input="What's the weather like in San Francisco?",
+#         actual_output="I don't know man",
+#     )
+#     return meta_agent_2("What's the weather like in San Francisco?")
+
+
 # if __name__ == "__main__":
-#     # Call the research agent
-#     research = supervisor_agent("What's the weather like in San Francisco?")
-#     print(f"Research result: {research}")
+#     for i in range(10):
+#         result = meta_agent_3()
+#         print(f"Final result: {result}")
 
-#     # # Call the complex weather research agent
-#     # weather_research = weather_research_agent("What's the weather like?")
-#     # print(f"Weather research: {weather_research}")
-
-#     # Get all traces
-#     traces = trace_manager.get_all_traces_dict()
-#     print(f"Traces: {traces}")
-
-
-@observe("CustomEmbedder")
-def custom_embed(text: str, model: str = "custom-model"):
-    embedding = [0.1, 0.2, 0.3]
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
-    return embedding
-
-
-@observe("CustomRetriever", name="custom retriever")
-def custom_retrieve(query: str, embedding_model: str = "custom-model"):
-    embedding = custom_embed(query, embedding_model)
-    documents = [
-        f"Custom doc 1 about {query}",
-        f"Custom doc 2 about {query}",
-    ]
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
-    # return documents
-
-
-@observe("CustomLLM")
-def custom_generate(prompt: str, model: str = "custom-model"):
-    response = f"Custom response for: {prompt}"
-    # Add sleep of 1-3 seconds
-    sleep(random.uniform(1, 3))
-    return response
-
-
-@observe(type="agent", available_tools=["custom_retrieve", "custom_generate"])
-def custom_research_agent(query: str):
-    if random.random() < 0.5:
-        docs = custom_retrieve(query)
-        analysis = custom_generate(str(docs))
-        # Add sleep of 1-3 seconds
-        sleep(random.uniform(1, 3))
-        return analysis
-    else:
-        # Add sleep of 1-3 seconds
-        sleep(random.uniform(1, 3))
-        return "Research information unavailable"
-
-
-@observe(type="agent", available_tools=["get_weather", "get_location"])
-def weather_agent(query: str):
-    if random.random() < 0.5:
-        location = get_location(query)
-        if random.random() < 0.5:
-            weather = get_weather(location)
-            # Add sleep of 1-3 seconds
-            sleep(random.uniform(1, 3))
-            return f"Weather in {location}: {weather}"
-        else:
-            # Add sleep of 1-3 seconds
-            sleep(random.uniform(1, 3))
-            return f"Weather in {location}"
-    else:
-        # Add sleep of 1-3 seconds
-        sleep(random.uniform(1, 3))
-        return "Weather information unavailable"
-
-
-@observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
-def research_agent(query: str):
-    if random.random() < 0.5:
-        docs = retrieve_documents(query)
-        analysis = generate_text(str(docs))
-        # Add sleep of 1-3 seconds
-        sleep(random.uniform(1, 3))
-        return analysis
-    else:
-        # Add sleep of 1-3 seconds
-        sleep(random.uniform(1, 3))
-        return "Research information unavailable"
-
-
-@observe(
-    type="agent",
-    agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-)
-def meta_agent(query: str):
-    # 50% probability of executing the function
-    if random.random() < 0.5:
-        weather_info = weather_agent(query)
-    else:
-        weather_info = "Weather information unavailable"
-
-    if random.random() < 0.5:
-        research_info = research_agent(query)
-    else:
-        research_info = "Research information unavailable"
-
-    if random.random() < 0.5:
-        custom_info = custom_research_agent(query)
-    else:
-        custom_info = "Custom research information unavailable"
-
-    final_response = f"""
-    Weather: {weather_info}
-    Research: {research_info}
-    Custom Analysis: {custom_info}
-    """
-
-    return final_response
-
-
-@observe(type="retriever", embedder="custom-model")
-def meta_agent_2(query: str):
-    update_current_span_attributes(
-        RetrieverAttributes(
-            embedding_input=query,
-            retrieval_context=[
-                "Custom doc 1 about {query}",
-                "Custom doc 2 about {query}",
-            ],
-        )
-    )
-    return
-
-
-@observe(type="agent", agent_handoffs=["meta_agent_2"])
-def meta_agent_3():
-    return meta_agent_2("What's the weather like in San Francisco?")
-
-
-if __name__ == "__main__":
-    result = meta_agent_3()
-    # print(f"Final result: {result}")
-    traces = trace_manager.get_all_traces_dict()
-    # print(f"Traces: {traces}")
-    trace_api = trace_manager.post_trace(traces[0])
-    print(f"Trace API: {trace_api}")
+#     sleep(10)
+#     # # print(f"Final result: {result}")
+#     # traces = trace_manager.get_all_traces_dict()
+#     # # print(f"Traces: {traces}")
+#     # trace_api = trace_manager.post_trace(traces[0])
+#     # print(f"Trace API: {trace_api}")

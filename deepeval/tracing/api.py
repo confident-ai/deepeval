@@ -52,6 +52,16 @@ class BaseApiSpan(BaseModel):
         None, alias="costPerOutputToken"
     )
 
+    ## evals
+    test_case_input: Optional[str] = Field(None, alias="testCaseInput")
+    test_case_actual_output: Optional[str] = Field(
+        None, alias="testCaseActualOutput"
+    )
+    test_case_retrieval_context: Optional[List[str]] = Field(
+        None, alias="testCaseRetrievalContext"
+    )
+    metrics: Optional[List[str]] = Field(None, alias="metrics")
+
     class Config:
         use_enum_values = True
 
