@@ -91,11 +91,11 @@ class Mistral7B(DeepEvalBaseLLM):
         return self.generate(prompt)
 
     # This is optional.
-    def batch_generate(self, promtps: List[str]) -> List[str]:
+    def batch_generate(self, prompts: List[str]) -> List[str]:
         model = self.load_model()
         device = "cuda" # the device to load the model onto
 
-        model_inputs = self.tokenizer(promtps, return_tensors="pt").to(device)
+        model_inputs = self.tokenizer(prompts, return_tensors="pt").to(device)
         model.to(device)
 
         generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
