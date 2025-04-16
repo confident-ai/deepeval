@@ -51,7 +51,7 @@ Since `deepeval` is an LLM evaluation framework, the ** `input` and `actual_outp
 
 <video width="100%" autoPlay loop muted playsInlines>
   <source
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/test-case-tools-called.mp4"
+    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/test-case-tools-called.mp4"
     type="video/mp4"
   />
 </video>
@@ -68,7 +68,7 @@ deepeval login
 
 An `LLMTestCase` in `deepeval` can be used to unit test LLM application (which can just be an LLM itself) outputs, which includes use cases such as RAG and LLM agents. It contains the necessary information (`tools_called` for agents, `retrieval_context` for RAG, etc.) to evaluate your LLM application for a given `input`.
 
-![ok](https://confident-docs.s3.amazonaws.com/llm-test-case.svg)
+![ok](https://deepeval-docs.s3.amazonaws.com/llm-test-case.svg)
 
 **Different metrics will require a different combination of `LLMTestCase` parameters, but they all require an `input` and `actual_output`** - regardless of whether they are used for evaluation for not. For example, you won't need `expected_output`, `context`, `tools_called`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
 

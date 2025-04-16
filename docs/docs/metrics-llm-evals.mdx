@@ -103,7 +103,7 @@ G-Eval is a framework originally from the [paper](https://arxiv.org/abs/2303.166
 
 The G-Eval algorithm first generates a series of evaluation steps for chain of thoughts (CoTs) prompting before using the generated steps to determine the final score via a "form-filling paradigm" (which is just a fancy way of saying G-Eval requires different `LLMTestCase` parameters for evaluation depending on the generated steps).
 
-![ok](https://confident-docs.s3.amazonaws.com/metrics-g-eval-algorithm.png)
+![ok](https://deepeval-docs.s3.amazonaws.com/metrics-g-eval-algorithm.png)
 
 After generating a series of evaluation steps, G-Eval will:
 
@@ -117,7 +117,7 @@ We highly recommend everyone to read [this article](https://confident-ai.com/blo
 
 Here are the results from the paper, which shows how G-Eval outperforms all traditional, non-LLM evals that were mentioned earlier in this article:
 
-![ok](https://confident-docs.s3.amazonaws.com/metrics-g-eval-results.png)
+![ok](https://deepeval-docs.s3.amazonaws.com/metrics-g-eval-results.png)
 
 :::note
 Although `GEval` is great it many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric`](/docs/metrics-dag) instead.

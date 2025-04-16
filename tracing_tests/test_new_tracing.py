@@ -48,6 +48,8 @@ def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
+    print("RetrieverSpan!!!!!!")
+    print(documents)
     update_current_span_attributes(
         RetrieverAttributes(
             embedding_input=query,

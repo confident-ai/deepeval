@@ -688,7 +688,8 @@ class Tracer:
 
         # Set this span as the current span in the context
         current_span_context.set(span_instance)
-
+        # print("Enter span instance: ", span_instance)
+        # print("\n" * 10)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -696,6 +697,9 @@ class Tracer:
         end_time = perf_counter()
         # Get the current span from the context instead of looking it up by UUID
         current_span = current_span_context.get()
+        # print(self.uuid)
+        # print("Exit span: ", current_span)
+        # print("\n" * 10)
         if not current_span or current_span.uuid != self.uuid:
             print(
                 f"Error: Current span in context does not match the span being exited. Expected UUID: {self.uuid}, Got: {current_span.uuid if current_span else 'None'}"
@@ -710,9 +714,7 @@ class Tracer:
             current_span.status = TraceSpanStatus.SUCCESS
 
         self.update_span_attributes(current_span)
-
         trace_manager.remove_span(self.uuid)
-
         if current_span.parent_uuid:
             parent_span = trace_manager.get_span_by_uuid(
                 current_span.parent_uuid

@@ -15,7 +15,7 @@ The deep acyclic graph (DAG) metric in `deepeval` is currently the most versatil
 :::info
 The `DAGMetric` is a **custom metric based on a LLM-powered decision tree, and gives you more deterministic control** over [`GEval`.](/docs/metrics-llm-evals) You can however also use `GEval`, or any other default metric in `deepeval`, within your `DAGMetric`.
 
-![ok](https://confident-docs.s3.amazonaws.com/dag-formatting-metric.svg)
+![ok](https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg)
 
 :::
 
@@ -104,7 +104,7 @@ You can still use `GEval` in the `DAGMetric`, but the `DAGMetric` will give you 
 
 The `DAGMetric` requires you to first construct a decision tree that **has direct edges and acyclic in nature.** Let's take this decision tree for example:
 
-![ok](https://confident-docs.s3.amazonaws.com/dag-formatting-metric.svg)
+![ok](https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg)
 
 We can see that the `actual_output` of an `LLMTestCase` is first processed to extract all headings, before deciding whether they are in the correct ordering. If they are not correct, we give it a score of 0, heavily penalizing it, whereas if it is correct, we check the degree of which they are in the correct ordering. Based on this "degree of correct ordering", we can then decide what score to assign it.
 
