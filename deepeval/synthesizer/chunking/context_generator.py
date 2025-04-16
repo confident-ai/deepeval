@@ -126,14 +126,8 @@ class ContextGenerator:
 
             # Generate contexts for each source file
             for path, collection in source_files_to_chunk_collections_map.items():
-                collection_size = collection.count()
-                if collection_size < min_context_size:
-                    error_message = [
-                        f"{path} has {collection_size} chunks, which is less than the minimum context size of {min_context_size}",
-                        f"Adjust the `max_context_size` to no more than {collection_size}."
-                    ]
-                    raise ValueError("\n".join(error_message))
-                max_context_size = min(max_context_size, collection_size)
+                self.validate_context_size(min_context_size, path, collection)
+                max_context_size = min(max_context_size, collection.count())
                 contexts_per_source_file, scores_per_source_file = (
                     self._generate_contexts_per_source_file(
                         path=path,
@@ -219,18 +213,12 @@ class ContextGenerator:
             # Generate contexts for each source file
             tasks = []
             for path, collection in source_files_to_chunk_collections_map.items():
-                collection_size = collection.count()
-                if collection_size < min_context_size:
-                    error_message = [
-                        f"{path} has {collection_size} chunks, which is less than the minimum context size of {min_context_size}",
-                        f"Adjust the `max_context_size` to no more than {collection_size}."
-                    ]
-                    raise ValueError("\n".join(error_message))
-                max_context_size = min(max_context_size, collection_size)
+                self.validate_context_size(min_context_size, path, collection)
+                max_context_size = min(max_context_size, collection.count())
                 tasks.append(
                     self._a_process_document_async(
                         path,
-                        min(max_contexts_per_source_file, collection_size),
+                        min(max_contexts_per_source_file, collection.count()),
                         max_context_size,
                         generation_p_bar,
                         source_files_to_chunk_collections_map,
@@ -591,6 +579,20 @@ class ContextGenerator:
     ### Validation ##########################################
     #########################################################
 
+    def validate_context_size(
+        self,
+        min_context_size: int,
+        path: str,
+        collection,
+    ):
+        collection_size = collection.count()
+        if collection_size < min_context_size:
+            error_message = [
+                f"{path} has {collection_size} chunks, which is less than the minimum context size of {min_context_size}",
+                f"Adjust the `min_context_length` to no more than {collection_size}."
+            ]
+            raise ValueError("\n".join(error_message))
+
     def validate_chunk_size(
         self,
         min_contexts_per_source_file: int,
@@ -616,7 +618,7 @@ class ContextGenerator:
             # 1. Suggest adjusting the number of contexts if applicable.
             if document_num_chunks > 0:
                 error_lines.append(
-                    f"{suggestion_num}. Adjust the `min_contexts_per_source_file` to no more than {document_num_chunks}."
+                    f"{suggestion_num}. Adjust the `min_contexts_per_document` to no more than {document_num_chunks}."
                 )
                 suggestion_num += 1
 
