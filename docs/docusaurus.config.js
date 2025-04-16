@@ -150,22 +150,16 @@ module.exports = {
             activeBasePath: "docs",
           },
           {
-            to: "confident-ai/confident-ai-introduction",
+            to: "guides/guides-rag-evaluation",
             position: "left",
-            label: "Confident AI",
-            activeBasePath: "confident-ai",
+            label: "Guides",
+            activeBasePath: "guides",
           },
           {
             to: "tutorials/tutorial-introduction",
             position: "left",
             label: "Tutorials",
             activeBasePath: "tutorials",
-          },
-          {
-            to: "guides/guides-rag-evaluation",
-            position: "left",
-            label: "Guides",
-            activeBasePath: "guides",
           },
           {
             to: "integrations/models/openai",
@@ -175,9 +169,9 @@ module.exports = {
           },
           // {to: 'blog', label: 'Blog', position: 'left'},
           {
-            href: "https://confident-ai.com/blog",
+            href: "https://documentation.confident-ai.com",
             position: "left",
-            label: "Blogs",
+            label: "Confident AI Docs",
           },
           {
             href: "https://confident-ai.com",
