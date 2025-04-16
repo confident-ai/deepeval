@@ -30,18 +30,6 @@ module.exports = {
     [
       "@docusaurus/plugin-content-docs",
       {
-        id: "confident-ai",
-        path: "confident-ai",
-        routeBasePath: "confident-ai",
-        sidebarPath: require.resolve("./sidebarConfidentAI.js"),
-        editUrl: "https://github.com/confident-ai/deepeval/edit/main/docs/",
-        showLastUpdateAuthor: true,
-        showLastUpdateTime: true,
-      },
-    ],
-    [
-      "@docusaurus/plugin-content-docs",
-      {
         id: "guides",
         path: "guides",
         routeBasePath: "guides",
@@ -221,7 +209,7 @@ module.exports = {
               },
               {
                 label: "Confident AI",
-                to: "/confident-ai/confident-ai-introduction",
+                to: "https://documentation.confident-ai.com",
               },
               {
                 label: "Tutorials",

@@ -25,7 +25,7 @@ Additionally, DeepEval has a cloud platform [Confident AI](https://app.confident
 <Envelope />
 
 :::tip DID YOU KNOW?
-If you use **Confident AI**, you can manage your entire LLM evaluation lifecycle (datasets, testing reports, monitoring, etc.) in one centralized place, and makes sure you do LLM evaluations the right way. Documentation for [Confident AI here.](/confident-ai/confident-ai-introduction)
+If you use **Confident AI**, you can manage your entire LLM evaluation lifecycle (datasets, testing reports, monitoring, etc.) in one centralized place, and makes sure you do LLM evaluations the right way. Documentation for [Confident AI here.](https://documentation.confident-ai.com)
 
 <video width="100%" controls muted playsInline>
   <source
@@ -54,7 +54,7 @@ In your newly created virtual environment, run:
 pip install -U deepeval
 ```
 
-`deepeval` runs evaluations locally on your enviornment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](/confident-ai/confident-ai-introduction), the leading evaluation platform for DeepEval:
+`deepeval` runs evaluations locally on your enviornment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com), the leading evaluation platform for DeepEval:
 
 ```console
 deepeval login
@@ -530,12 +530,12 @@ And once your LLM application is live in **production**, you should:
 While there are many LLMOps platform that exist, Confident AI is laser focused on evaluations, although we also offer advanced observability, and native to `deepeval`, meaning users of `deepeval` requires no additional code to use Confident AI.
 
 :::caution
-This section is just an overview of Confident AI. If Confident AI sounds interesting, [**click here**](/confident-ai/confident-ai-introduction) for the full Confident AI quickstart guide instead.
+This section is just an overview of Confident AI. If Confident AI sounds interesting, [**click here**](https://documentation.confident-ai.com) for the full Confident AI quickstart guide instead.
 :::
 
 ### Login
 
-Confident AI integrates 100% with `deepeval`. All you need to do is [create an account here](https://confident-ai.com), or run the following command to login:
+Confident AI integrates 100% with `deepeval`. All you need to do is [create an account here](https://app.confident-ai.com), or run the following command to login:
 
 ```console
 deepeval login
@@ -574,11 +574,11 @@ dataset.pull(alias="My first dataset")
 print(dataset)
 ```
 
-You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden`s, which might not always be ready for evaluation (ie. missing an `actual_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](/confident-ai/confident-ai-evaluation-dataset-evaluation)
+You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden`s, which might not always be ready for evaluation (ie. missing an `actual_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](https://documentation.confident-ai.com)
 
 ### Running Evaluations
 
-You can either run evaluations [locally using `deepeval`](/confident-ai/confident-ai-testing-n-evaluation-test-run), or on the cloud on a [collection of metrics](/confident-ai/confident-ai-testing-n-evaluation-metric-collections) (which is also powered by `deepeval`). Most of the time, running evaluations locally is preferred because it allows for greater flexibility in metric customization. Using the previously pulled daataset, we can run an evaluation:
+You can either run evaluations [locally using `deepeval`](https://documentation.confident-ai.com), or on the cloud on a [collection of metrics](https://documentation.confident-ai.com) (which is also powered by `deepeval`). Most of the time, running evaluations locally is preferred because it allows for greater flexibility in metric customization. Using the previously pulled daataset, we can run an evaluation:
 
 ```python
 from deepeval import evaluate
@@ -617,7 +617,7 @@ Feel free to execute this in a nested for loop to figure out which combination g
 
 ### Monitoring LLM Outputs
 
-Confident AI allows anyone to [monitor, trace, and evaluate LLM outputs in real-time.](/confident-ai/confident-ai-llm-monitoring) A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
+Confident AI allows anyone to [monitor, trace, and evaluate LLM outputs in real-time.](https://documentation.confident-ai.com) A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
 
 ```python
 import openai
@@ -664,7 +664,7 @@ deepeval.send_feedback(
 Confident AI allows you to keep track of either `"user"` feedback (ie. feedback provided by end users interacting with your LLM application), or `"reviewer"` feedback (ie. feedback provided by reviewers manually checking the quality of LLM responses in production).
 
 :::note
-To learn more, visit the [human feedback section page.](/confident-ai/confident-ai-human-feedback)
+To learn more, visit the [human feedback section page.](https://documentation.confident-ai.com)
 :::
 
 ## Full Example
