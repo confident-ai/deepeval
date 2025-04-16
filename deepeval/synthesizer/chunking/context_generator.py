@@ -1,4 +1,3 @@
-from ipaddress import collapse_addresses
 import shutil
 from typing import List, Tuple, Dict, Optional, Union
 from langchain_core.documents import Document
@@ -592,12 +591,10 @@ class ContextGenerator:
     ### Validation ##########################################
     #########################################################
 
-    from chromadb.api.models.Collection import Collection
-
     def validate_chunk_size(
         self,
         min_contexts_per_source_file: int,
-        collection: Collection,
+        collection,
     ):
         # Calculate the number of chunks the smallest document can produce.
         document_token_count = collection.count()
