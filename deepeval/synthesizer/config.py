@@ -47,7 +47,9 @@ class ContextConstructionConfig:
     critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None
     encoding: Optional[str] = None
     max_contexts_per_document: int = 3
+    min_contexts_per_document: int = 1
     max_context_length: int = 3
+    min_context_length: int = 1
     chunk_size: int = 1024
     chunk_overlap: int = 0
     context_quality_threshold: float = 0.5
