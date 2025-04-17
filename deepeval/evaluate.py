@@ -160,15 +160,14 @@ def create_api_test_case(
     comments: Optional[str] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
     if isinstance(test_case, ConversationalTestCase):
+        order = (
+            test_case._dataset_rank
+            if test_case._dataset_rank is not None
+            else index
+        )
         if test_case.name:
             name = test_case.name
         else:
-            order = (
-                test_case._dataset_rank
-                if test_case._dataset_rank is not None
-                else index
-            )
-
             name = os.getenv(
                 PYTEST_RUN_TEST_NAME, f"conversational_test_case_{order}"
             )
