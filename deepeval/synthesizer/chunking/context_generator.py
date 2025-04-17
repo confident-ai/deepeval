@@ -76,11 +76,11 @@ class ContextGenerator:
     #########################################################
 
     def generate_contexts(
-        self, 
-        max_contexts_per_source_file: int, 
-        min_contexts_per_source_file: int, 
-        max_context_size: int = 3, 
-        min_context_size: int = 1
+        self,
+        max_contexts_per_source_file: int,
+        min_contexts_per_source_file: int,
+        max_context_size: int = 3,
+        min_context_size: int = 1,
     ) -> Tuple[List[List[str]], List[str], List[float]]:
         from chromadb.api.models.Collection import Collection
 
@@ -105,8 +105,12 @@ class ContextGenerator:
                 source_file_to_chunker_map.items(),
                 "✨ 📚 ✨ Chunking Documents",
             ):
-                collection = chunker.chunk_doc(self.chunk_size, self.chunk_overlap)
-                self.validate_chunk_size(min_contexts_per_source_file, collection)
+                collection = chunker.chunk_doc(
+                    self.chunk_size, self.chunk_overlap
+                )
+                self.validate_chunk_size(
+                    min_contexts_per_source_file, collection
+                )
                 source_files_to_chunk_collections_map[key] = collection
 
             # Intialize progress bar for context generation
@@ -125,13 +129,18 @@ class ContextGenerator:
             )
 
             # Generate contexts for each source file
-            for path, collection in source_files_to_chunk_collections_map.items():
+            for (
+                path,
+                collection,
+            ) in source_files_to_chunk_collections_map.items():
                 self.validate_context_size(min_context_size, path, collection)
                 max_context_size = min(max_context_size, collection.count())
                 contexts_per_source_file, scores_per_source_file = (
                     self._generate_contexts_per_source_file(
                         path=path,
-                        n_contexts_per_source_file=min(max_contexts_per_source_file, collection.count()),
+                        n_contexts_per_source_file=min(
+                            max_contexts_per_source_file, collection.count()
+                        ),
                         context_size=max_context_size,
                         similarity_threshold=self.similarity_threshold,
                         generation_p_bar=generation_p_bar,
@@ -156,11 +165,11 @@ class ContextGenerator:
                 shutil.rmtree(vector_db_path)
 
     async def a_generate_contexts(
-        self, 
+        self,
         max_contexts_per_source_file: int,
         min_contexts_per_source_file: int,
-        max_context_size: int = 3, 
-        min_context_size: int = 1
+        max_context_size: int = 3,
+        min_context_size: int = 1,
     ) -> Tuple[List[List[str]], List[str], List[float]]:
         from chromadb.api.models.Collection import Collection
 
@@ -183,8 +192,12 @@ class ContextGenerator:
             source_files_to_chunk_collections_map: Dict[str, Collection] = {}
 
             async def a_chunk_and_store(key, chunker: DocumentChunker):
-                collection = await chunker.a_chunk_doc(self.chunk_size, self.chunk_overlap)
-                self.validate_chunk_size(min_contexts_per_source_file, collection)
+                collection = await chunker.a_chunk_doc(
+                    self.chunk_size, self.chunk_overlap
+                )
+                self.validate_chunk_size(
+                    min_contexts_per_source_file, collection
+                )
                 source_files_to_chunk_collections_map[key] = collection
 
             tasks = [
@@ -212,7 +225,10 @@ class ContextGenerator:
 
             # Generate contexts for each source file
             tasks = []
-            for path, collection in source_files_to_chunk_collections_map.items():
+            for (
+                path,
+                collection,
+            ) in source_files_to_chunk_collections_map.items():
                 self.validate_context_size(min_context_size, path, collection)
                 max_context_size = min(max_context_size, collection.count())
                 tasks.append(
@@ -224,7 +240,7 @@ class ContextGenerator:
                         source_files_to_chunk_collections_map,
                     )
                 )
-                
+
             results = await asyncio.gather(*tasks)
             for path, contexts_per_doc, scores_per_doc in results:
                 contexts.extend(contexts_per_doc)
@@ -589,7 +605,7 @@ class ContextGenerator:
         if collection_size < min_context_size:
             error_message = [
                 f"{path} has {collection_size} chunks, which is less than the minimum context size of {min_context_size}",
-                f"Adjust the `min_context_length` to no more than {collection_size}."
+                f"Adjust the `min_context_length` to no more than {collection_size}.",
             ]
             raise ValueError("\n".join(error_message))
 
@@ -647,7 +663,8 @@ class ContextGenerator:
                     // (min_contexts_per_source_file - 1)
                 ) + 1
                 adjust_overlap = (
-                    suggested_overlap > 0 and self.chunk_size > suggested_overlap
+                    suggested_overlap > 0
+                    and self.chunk_size > suggested_overlap
                 )
                 if adjust_overlap:
                     error_lines.append(
@@ -662,8 +679,6 @@ class ContextGenerator:
                 )
             error_message = "\n".join(error_lines)
             raise ValueError(error_message)
-
-
 
     #########################################################
     ### Loading documents and chunkers ######################
