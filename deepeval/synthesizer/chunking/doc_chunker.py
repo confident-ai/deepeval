@@ -1,27 +1,34 @@
-from langchain_core.documents import Document as LCDocument
+import os
+from typing import Dict, List, Optional, Type, Union
+
 from langchain_community.document_loaders import (
+    Docx2txtLoader,
     PyPDFLoader,
     TextLoader,
-    Docx2txtLoader,
 )
 from langchain_community.document_loaders.base import BaseLoader
+from langchain_core.documents import Document as LCDocument
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
-from typing import Optional, List, Dict, Union, Type
-
 from llama_index.core.schema import TextNode
-import os
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.synthesizer.chunking.file_handler import (
+    FileHandler,
+    FileHandlerLoaderAdapter,
+)
 
 
 class DocumentChunker:
+    _custom_handlers: Dict[str, FileHandler] = {}
+
     def __init__(
         self,
         embedder: DeepEvalBaseEmbeddingModel,
     ):
         from chromadb.api.models.Collection import Collection
 
+        self.text_token_count: Optional[int] = None
         self.source_file: Optional[str] = None
         self.chunks: Optional[Collection] = None
         self.sections: Optional[List[LCDocument]] = None
@@ -46,9 +53,13 @@ class DocumentChunker:
             chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
         # Raise error if chunk_doc is called before load_doc
-        if self.sections == None:
+        if self.sections is None:
             raise ValueError(
                 "Document Chunker has yet to properly load documents"
+            )
+        if self.source_file is None:
+            raise ValueError(
+                "Document Chunker has yet to properly load source file"
             )
 
         import chromadb
@@ -61,7 +72,7 @@ class DocumentChunker:
         collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
-        except Exception as e:
+        except Exception:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -93,9 +104,13 @@ class DocumentChunker:
             chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
         # Raise error if chunk_doc is called before load_doc
-        if self.sections == None:
+        if self.sections is None:
             raise ValueError(
                 "Document Chunker has yet to properly load documents"
+            )
+        if self.source_file is None:
+            raise ValueError(
+                "Document Chunker has yet to properly load source file"
             )
 
         import chromadb
@@ -108,7 +123,7 @@ class DocumentChunker:
         collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
-        except Exception as e:
+        except Exception:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -147,7 +162,7 @@ class DocumentChunker:
         collection_name = "processed_chunks"
         try:
             collection = client.get_collection(name=collection_name)
-        except Exception as e:
+        except Exception:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -159,9 +174,10 @@ class DocumentChunker:
                     source_files.append(
                         {"source_file": node.metadata.get("", "None")}
                     )
-                elif isinstance(node, LCDocument):
-                    contents.append(node.page_content)
-                    source_files.append({"source_file": "None"})
+                    continue
+                # node is always an LCDocument at this point
+                contents.append(node.page_content)
+                source_files.append({"source_file": "None"})
 
             embeddings = await self.embedder.a_embed_texts(contents)
             ids = [str(i) for i in range(len(contents))]
@@ -190,10 +206,12 @@ class DocumentChunker:
         collection_name = "processed_chunks"
         try:
             collection = client.get_collection(name=collection_name)
-        except Exception as e:
+        except Exception:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
-            contents = [node.text for node in nodes]
+            contents = [
+                node.text for node in nodes if isinstance(node, TextNode)
+            ]
             source_files = [
                 {"source_file": node.metadata.get("", "None")} for node in nodes
             ]
@@ -217,16 +235,56 @@ class DocumentChunker:
         return collection
 
     #########################################################
+    ### Custom Handlers #####################################
+    #########################################################
+
+    @classmethod
+    def register_handler(cls, extension: str, handler: FileHandler) -> None:
+        """Register a custom file handler for a specific extension."""
+        if not extension.startswith("."):
+            print(f"Modifying extension from {extension} to .{extension}")
+            extension = f".{extension}"
+        cls._custom_handlers[extension.lower()] = handler
+
+    @classmethod
+    def unregister_handler(cls, extension: str) -> None:
+        """Unregister a custom file handler."""
+        if not extension.startswith("."):
+            extension = f".{extension}"
+        if extension.lower() in cls._custom_handlers:
+            del cls._custom_handlers[extension.lower()]
+        else:
+            raise ValueError(
+                f"No handler registered for extension: {extension}"
+            )
+
+    #########################################################
     ### Loading Docs ########################################
     #########################################################
 
     def get_loader(self, path: str, encoding: Optional[str]) -> BaseLoader:
-        # Find appropriate doc loader
+        """Get the appropriate loader for the file."""
         _, extension = os.path.splitext(path)
         extension = extension.lower()
-        loader: Optional[BaseLoader] = self.loader_mapping.get(extension)
+
+        # Check custom handlers first
+        custom_handler = self._custom_handlers.get(extension)
+        if custom_handler:
+            return FileHandlerLoaderAdapter(custom_handler, path, encoding)
+
+        # Fall back to default handlers
+        loader = self.loader_mapping.get(extension)
         if loader is None:
-            raise ValueError(f"Unsupported file format: {extension}")
+            supported_formats = list(self.loader_mapping.keys())
+            custom_formats = list(self._custom_handlers.keys())
+            all_formats = sorted(supported_formats + custom_formats)
+
+            raise ValueError(
+                f"Unsupported file format: '{extension}'\n"
+                f"Currently supported formats: {', '.join(all_formats)}\n"
+                f"To add support for '{extension}', use DocumentChunker.register_handler('{extension}', handler)\n"
+                f"where 'handler' is a FileHandler implementation for the '{extension}' format."
+            )
 
         # Load doc into sections and calculate total character count
         if loader == TextLoader:
@@ -245,6 +303,6 @@ class DocumentChunker:
         self.text_token_count = self.count_tokens(self.sections)
         self.source_file = path
 
-    def count_tokens(self, chunks: LCDocument):
+    def count_tokens(self, chunks: List[LCDocument]):
         counter = TokenTextSplitter(chunk_size=1, chunk_overlap=0)
         return len(counter.split_documents(chunks))
