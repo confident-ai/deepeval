@@ -26,6 +26,7 @@ module.exports = {
       items: [
         "guides-optimizing-hyperparameters",
         "guides-regression-testing-in-cicd",
+        "guides-top-g-eval-examples",
         "guides-llm-observability",
         "guides-red-teaming",
         "guides-answer-correctness-metric",
