@@ -45,6 +45,10 @@ valid_gpt_models = [
     "gpt-4o-mini-2024-07-18",
     "gpt-4-32k",
     "gpt-4-32k-0613",
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-4.1-nano",
+    "gpt-4.5-preview",
     "o1",
     "o1-preview",
     "o1-2024-12-17",
@@ -53,6 +57,7 @@ valid_gpt_models = [
     "o1-mini-2024-09-12",
     "o3-mini",
     "o3-mini-2025-01-31",
+    "o4-mini",
     "gpt-4.5-preview-2025-02-27",
 ]
 
@@ -115,7 +120,20 @@ model_pricing = {
     "o1-2024-12-17": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
     "o3-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
     "o3-mini-2025-01-31": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
-    "gpt-4.5-preview-2025-02-27": {
+    "o4-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
+    "gpt-4.1": {
+        "input": 2.00 / 1e6,
+        "output": 8.00 / 1e6,
+    },
+    "gpt-4.1-mini": {
+        "input": 0.4 / 1e6,
+        "output": 1.60 / 1e6,
+    },
+    "gpt-4.1-nano": {
+        "input": 0.1 / 1e6,
+        "output": 0.4 / 1e6,
+    },
+    "gpt-4.5-preview": {
         "input": 75.00 / 1e6,
         "output": 150.00 / 1e6,
     },

@@ -152,5 +152,5 @@ class DeepEvalBaseEmbeddingModel(ABC):
         pass
 
     @abstractmethod
-    async def get_model_name(self, *args, **kwargs) -> str:
+    def get_model_name(self, *args, **kwargs) -> str:
         pass
