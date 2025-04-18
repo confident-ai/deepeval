@@ -1,23 +1,13 @@
 ---
-id: guides-top-g-eval-examples
-title: Top G-Eval Examples for LLM Evaluation
-sidebar_label: Top G-Eval Examples
+title: Top G-Eval Examples
+description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
+slug: Top G-Eval Examples
+authors: [kritinv]
+tags: [comparisons]
+hide_table_of_contents: false
 ---
 
-<head>
-  <link
-    rel="canonical"
-    href="https://deepeval.com/guides/guides-top-g-eval-examples"
-  />
-</head>
-
-As AI Agents and LLM applications become more complex and capable, they require increasingly [custom metrics](/docs/metrics-llm-evals) for domain-specific evaluation. DeepEval's `G-Eval` metrics allows you to easily create any custom metric for your domain-specific LLM use case by simply providing an evaluation criteria. 
-
-:::info
-DeepEval was the first open-source framework to adopt `G-Eval` after its 2023 publication. It’s now the most used metric on DeepEval, with over **200,000 daily runs**.
-:::
-
-Although it's possible to create ANY metric using `G-Eval`, here are 5 of the most popular custom metrics on DeepEval:
+[G-Eval](/docs/metrics-llm-evals) allows you to easily create any custom metric by providing an evaluation criteria. Although it's possible to create ANY metric using `GEval`, here are 5 of the most popular custom metrics on DeepEval:
 
 1. **Answer Correctness** – Measures how well the answer matches the expected output.
 2. **Coherence** – Measures how logical and linguistically well-structured the response is.
@@ -27,15 +17,36 @@ Although it's possible to create ANY metric using `G-Eval`, here are 5 of the mo
 
 In this guide, we will explore these metrics, its variants, and how to implement them, and consider best practices for **metric selection and implementation**.
 
+## What is G-Eval?
+
+G-Eval is a **research-backed custom metric framework** that allows you to create custom metrics by providing a custom criteria. It employs a chain-of-thoughts (CoTs) approach to generate evaluation steps, which are then used to score an LLM  Test Case. This method allows for flexible, task-specific metrics that can adapt to various use cases.
+
+Here's a simple example of using G-Eval:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCaseParams
+
+# Define a custom G-Eval metric
+custom_metric = GEval(
+    name="Custom Metric",
+    criteria="Evaluate the output based on specific criteria.",
+    # NOTE: you can only provide either criteria or evaluation_steps, and not both
+    evaluation_steps=[
+        "Step 1: Analyze the structure of the output.",
+        "Step 2: Check for factual accuracy.",
+        "Step 3: Assess the tone and style."
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
+)
+```
+
+This example demonstrates how to set up a G-Eval metric with defined criteria and evaluation steps, providing a flexible framework for assessing LLM outputs.
+
 ## Answer Correctness
 
-[**Answer Correctness**](/guides/guides-answer-correctness-metric) is by far the most common metric used in LLM evaluation. You may also see it referred to as correctness, accuracy, response or semantic similarity (to ground truth), or factuality. 
+[**Answer Correctness**](/guides/guides-answer-correctness-metric) measures how well your LLM's *actual output* aligns with the *expected output*. Answer Correctness is a **reference-based metric**, which means it requires the ground truth (expected output) to be provided. It's typically used in development evaluation pipelines, not production.
 
-Answer Correctness measures how well the *actual output* matches the *expected output*, and is a **reference-based metric**, which means you'll need to provide the ideal ground truth (expected output). As a result, it's typically used in evaluation pipelines in development, not production pipelines. 
-
-:::tip
- If you have **domain experts** labeling your eval set, you're likely to be using this metric.
-:::
 
 Here's a basic example of how to create a custom Correctness metric:
 
@@ -56,7 +67,7 @@ correctness_metric = GEval(
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
 )
 ```
-
+If you have **domain experts** labeling your eval set, you'll likely need this metric to quality assure your LLM's responses. 
 ### Considerations for Answer Correctness
 
 When defining evaluation criteria or evaluation steps for **Answer Correctness**, consider the following:
@@ -68,24 +79,22 @@ When defining evaluation criteria or evaluation steps for **Answer Correctness**
 
 ## Coherence
 
-**Coherence** evaluates how *linguistically and logically well-structured* a response is. It ensures that the output maintains a clear and logical flow, making it easy for readers to follow and understand. Unlike Answer Correctness, Coherence does not require an expected output, making it suitable for both production and development evaluation pipelines.
+**Coherence** evaluates how *linguistically and logically well-structured* a response is. It ensures that the output maintains a clear and logical flow, making it easy for readers to follow and understand.
 
-:::tip
-Coherence is crucial in applications where **clarity and readability** are paramount, such as in document generation, educational content, or technical documentation.
-:::
+Unlike Answer Correctness, Coherence doesn't require an expected output, making it suitable for both production and development evaluation pipelines. Coherence is crucial in applications where **clarity and readability** are paramount, such as in document generation, educational content, or technical documentation.
 
 ### Coherence Metrics
+
 Coherence can be evaluated from various angles, and you can choose to be specific or broad in your assessment. Here are some possible metrics related to coherence:
 
 
-| Metric            |<div style={{width: "650px"}}>Description</div>           |
+| Metric            |<div style={{width: "550px"}}>Description</div>           |
 |-------------------|---------------------------------------------------------|
 | **Fluency**       | Measures how smoothly the text reads, focusing on grammar and syntax. |
 | **Consistency**   | Ensures the text maintains a uniform style and tone throughout. |
 | **Clarity**       | Evaluates how easily the text can be understood by the reader. |
 | **Conciseness**   | Assesses whether the text is free of unnecessary words or details. |
 | **Repetitiveness**| Checks for redundancy or repeated information in the text. |
-
 
 Here's a clarity-focused example of how to create a custom **Coherence** metric:
 
@@ -104,8 +113,9 @@ clarity_metric = GEval(
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
-
 ```
+
+### Considerations for Coherence
 
 When defining evaluation criteria or evaluation steps for **Coherence**, consider the following for specificity:
 
@@ -116,19 +126,15 @@ When defining evaluation criteria or evaluation steps for **Coherence**, conside
 
 ## Tonality
 
-**Tonality** evaluates whether the output aligns with the intended communication style. Like the **Coherence** metric, the evaluation is based solely on the output itself. 
-
-:::info
-Iterating on the **LLM model** becomes important in tonality metrics, since different models often have vastly different criteria for tonal quality. 
-:::
+**Tonality** evaluates whether the output aligns with the intended communication style. Like the **Coherence** metric, the evaluation is based solely on the output itself. Iterating on the **LLM model** becomes important in tonality metrics, since different models often have vastly different criteria for tonal quality.
 
 ### Tonality Metrics
 
-Different use cases require different tonality metrics, depending on the intended communication style. For instance, a medical application might prioritize professionalism, whereas a therapy chatbot might emphasize empathy. 
- 
- Here are some common **tonality-based metrics**:
+Different use cases require different tonality metrics, depending on the intended communication style. For instance, a medical application might prioritize professionalism, whereas a therapy chatbot might emphasize empathy.
 
-| Metric             | <div style={{width: "650px"}}>Description</div>                                                                                                      |
+Here are some common **tonality-based metrics**:
+
+| Metric            |<div style={{width: "550px"}}>Description</div>           |
 |-------------------|:-------------------------------------------------------------------------------------------------------------|
 | **Professionalism**| Assesses the level of professionalism and expertise conveyed.                                               |
 | **Empathy**       | Measures the level of understanding and compassion in the response.                                          |
@@ -164,7 +170,6 @@ When defining Tonality metrics, focus on these key considerations to ensure cons
 - **Avoid overlap with other metrics**: Make sure Tonality doesn’t conflate with metrics like Coherence (flow/logical structure) or Correctness (factual accuracy). It should strictly assess the *style* and *delivery* of the output.
 - **Design for model variation**: Different models may express tone differently. Use examples or detailed guidelines to ensure evaluations account for this variability without being overly permissive.
 
-
 ## Safety
 
 Safety evaluates whether a model's output adheres to ethical, secure, and socially responsible standards. This includes avoiding harmful content, protecting user privacy, and preventing the spread of bias or discrimination.
@@ -173,7 +178,7 @@ Safety evaluates whether a model's output adheres to ethical, secure, and social
 Safety can encompass several metrics depending on the type of risk being measured:
 
 
-| Metric            |<div style={{width: "650px"}}>Description</div>           |
+| Metric            |<div style={{width: "550px"}}>Description</div>           |
 |-------------------|---------------------------------------------------------|
 | **PII Leakage**   | Detects personally identifiable information like names, emails, or phone numbers. |
 | **Bias**          | Measures harmful stereotypes or unfair treatment based on identity attributes. |
@@ -181,6 +186,7 @@ Safety can encompass several metrics depending on the type of risk being measure
 | **Ethical Alignment** | Assesses if the response refuses unethical or harmful requests and maintains moral responsibility. |
 
 Example: Custom Safety Metric (PII Leakage)
+
 ```python
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
@@ -203,9 +209,7 @@ pii_leakage_metric = GEval(
 - **Ensure prompt diversity**: Test across sensitive axes like gender, race, and religion to uncover hidden biases.
 - **Use in production monitoring**: Safety metrics are ideal for real-time auditing where no ground truth is available.
 
-:::tip
 If you're looking for a robust method to red-team your LLM application, check out [DeepTeam](/https://www.trydeepteam.com/).
-:::
 
 ## Custom RAG Metrics
 
@@ -217,28 +221,25 @@ DeepEval offers robust out-of-the-box metrics for evaluating [RAG systems](/guid
 
 These metrics cover the majority of RAG use cases. However, many teams still choose to define custom RAG metrics—especially when working in complex domains or building non-standard retrieval pipelines.
 
-:::note **Why define custom RAG metrics?**
+In **regulated domains** like healthcare, finance, or law, the accuracy of information is paramount. These fields demand *stricter evaluation criteria* to ensure that responses are not only correct but also appropriately sourced and traceable. For instance, in healthcare, providing incorrect medical advice due to hallucinations can lead to severe consequences, including harm to patients. 
 
+Therefore, it is essential to implement metrics that heavily penalize any hallucinations to maintain trust and reliability. This involves not only identifying hallucinations but also understanding their impact on decision-making processes and ensuring that the output is consistently aligned with verified information.
 
-In **regulated domains** like healthcare, finance, or law, accuracy alone isn't sufficient. These fields demand *stricter evaluation criteria* to ensure that responses are not only correct but also appropriately sourced and traceable. For example, in healthcare, standard RAG metrics may not adequately penalize hallucinations, especially when critical information like medical advice is involved.
-:::
-
-### Example: Custom Faithfulness Metric
-
-Below is an example of a custom Faithfulness metric, designed to evaluate the factual alignment of the actual output with the retrieved contextual information.
+Below is an example of a custom Faithfulness metric for a medical diagnosis use case, designed to evaluate the factual alignment of the actual output with the retrieved contextual information.
 
 ```python
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
 custom_faithfulness_metric = GEval(
-    name="Faithfulness",
-    criteria="Evaluate the factual alignment of the actual output with the retrieved contextual information.",
+    name="Medical Diagnosis Faithfulness",
+    criteria="Evaluate the factual alignment of the actual output with the retrieved contextual information in a medical context.",
     evaluation_steps=[
-        "Extract claims from the actual output.",
-        "Verify each claim against the retrieved contextual information.",
-        "Identify any contradictions or unsupported claims.",
-        "Provide reasons for the faithfulness score."],
+        "Extract medical claims or diagnoses from the actual output.",
+        "Verify each medical claim against the retrieved contextual information, such as clinical guidelines or medical literature.",
+        "Identify any contradictions or unsupported medical claims that could lead to misdiagnosis.",
+        "Heavily penalize hallucinations, especially those that could result in incorrect medical advice.",
+        "Provide reasons for the faithfulness score, emphasizing the importance of clinical accuracy and patient safety."],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.RETRIEVAL_CONTEXT],
 )
 ```
