@@ -1,11 +1,9 @@
 .videoContainer {
   position: relative;
+}
 
-  &:hover {
-    .overlay {
-      opacity: 1;
-    }
-  }
+.videoContainer:hover .overlay {
+  opacity: 1;
 }
 
 .overlay {
@@ -32,10 +30,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
 
-  &:hover {
-    text-decoration: underline;
-    cursor: pointer;
-  }
+.playButton:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
