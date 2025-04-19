@@ -14,22 +14,22 @@ import Envelope from "@site/src/components/envelope";
 and iterate on LLM (applications) and was built with the following principles in mind:
 
 - Easily "unit test" LLM outputs in a similar way to Pytest.
-- Plug-and-use 14+ LLM-evaluated metrics, most with research backing.
+- Plug-and-use 30+ LLM-evaluated metrics, most with research backing.
+- Evaluation for RAG, agents, chatbots, and virtually any use case.
 - Synthetic dataset generation with state-of-the-art evolution techniques.
 - Metrics are simple to customize and covers all use cases.
 - Red team, safety scan LLM applications for security vulnerabilities.
-- Real-time evaluations in production.
 
 Additionally, DeepEval has a cloud platform [Confident AI](https://app.confident-ai.com), which allow teams to use DeepEval to **evaluate, regression test, red team, and monitor** LLM applications on the cloud.
 
 <Envelope />
 
 :::tip DID YOU KNOW?
-If you use **Confident AI**, you can manage your entire LLM evaluation lifecycle (datasets, testing reports, monitoring, etc.) in one centralized place, and makes sure you do LLM evaluations the right way. Documentation for [Confident AI here.](https://documentation.confident-ai.com)
+You can use DeepEval alongside Confident AI to can manage your entire LLM evaluation lifecycle (datasets, prompt management, LLM testing reports, monitoring, etc.) in one centralized place, and makes sure you do LLM evaluations the right way. Documentation for [Confident AI here.](https://documentation.confident-ai.com)
 
 <video width="100%" controls muted playsInline>
   <source
-    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/confident-full-test-run.mp4"
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:overview.mp4"
     type="video/mp4"
   />
 </video>
@@ -54,7 +54,7 @@ In your newly created virtual environment, run:
 pip install -U deepeval
 ```
 
-`deepeval` runs evaluations locally on your enviornment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com), the leading evaluation platform for DeepEval:
+`deepeval` runs evaluations locally on your enviornment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com), the native evaluation platform for DeepEval:
 
 ```console
 deepeval login
@@ -122,16 +122,12 @@ deepeval login
 
 After you've pasted in your API key, Confident AI will generate testing reports for you whenever you run a test run to evaluate your LLM application inside any environment, at any scale, anywhere.
 
-<img
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/test-cases-page.png"
-  alt="Confident AI"
-  style={{
-    marginTop: "20px",
-    marginBottom: "40px",
-    height: "auto",
-    maxHeight: "500px",
-  }}
-/>
+<video width="100%" controls muted playsInline>
+  <source
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:testing-reports.mp4"
+    type="video/mp4"
+  />
+</video>
 
 :::tip
 You should save your test run as a dataset on Confident AI, which allows you to reuse the set of `input`s and any `expected_output`, `context`, etc. for subsequent evaluations.
@@ -184,30 +180,22 @@ deepeval test run test_example.py
 In this example, we've delibrately showed a "worse" `actual_output` that is extremely irrelevant when compared to the previous test case. In reality, you'll not be hardcoding the `actual_output`s but rather be generating them at evaluation time.
 :::
 
-After running the new `test run` , you should see the `GEval` correctness metric failing, and it is because the `actual_output` is incorrect according to the `expected_output`. This is actually known as a "regression", and you can catch these by including `deepeval` in CI/CD pipeliens, or just in a python script.
+After running the new `test run` , you should see the `GEval` correctness metric failing, and it is because the `actual_output` is incorrect according to the `expected_output`. This is actually known as a "regression", and you can catch these by including `deepeval` in CI/CD pipeliens, or just in a python script. Based on these two results, you can decide which iterate is better, and whether the latest change you've made to your LLM application is safe to deploy.
 
-Based on these two results, you can decide which iterate is better, and whether the latest change you've made to your LLM application is safe to deploy.
+If you're logged into Confident AI, here's how you can catch regressions in your LLM app:
 
-### Comparing Iterations
+<video width="100%" controls muted playsInline>
+  <source
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:ab-regression-testing.mp4"
+    type="video/mp4"
+  />
+</video>
 
-Although you can go through hundreds of test cases in your terminal, here's what catching regressions/identifying improvements by comparing test runs looks like on [Confident AI (sign up here)](https://app.confident-ai.com):
-
-<img
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/comparison-page.png"
-  alt="Confident AI"
-  style={{
-    height: "auto",
-    maxHeight: "500px",
-  }}
-/>
+Green rows indicate that your LLM has shown improvement on specific test cases, whereas red rows highlight areas of regression. For detailed documentation on regression testing with Confident AI, visit [this link](https://documentation.confident-ai.com/llm-evaluation/ab-regression-testing).
 
 :::note
 We didn't use the same test case data as shown above to demonstrate a more realistic example of what comparing two test runs looks like.
 :::
-
-If you look closely, you can see that for the same `LLMTestCase` (matched by [`name`](/docs/evaluation-test-cases#labeling-test-cases-for-confident-ai) or `input`), the difference in its `actual_output` led to a better `Correctness (GEval)` metric score.
-
-Green rows mean your LLM improved on this particular test case, while red means it regressed. You'll want to look at the entire test run to see if your results are better or worse!
 
 ## Create Your First Metric
 
@@ -224,15 +212,21 @@ deepeval recommend metrics
 
 ### Default Metrics
 
-`deepeval` offers 14+ research backed default metrics covering a wide range of use-cases. Here are a few metrics for RAG pipelines and agents:
+`deepeval` offers 30+ research backed default metrics covering a wide range of use-cases. Here are a few popular metrics:
 
-- Answer Relevancy
-- Faithfulness
-- Contextual Relevancy
-- Contextual Recall
-- Contextual Precision
-- Tool Correctness
-- Task Completion
+- RAG:
+  - Answer Relevancy
+  - Faithfulness
+  - Contextual Relevancy
+  - Contextual Recall
+  - Contextual Precision
+- Agents:
+  - Tool Correctness
+  - Task Completion
+- Chatbots:
+  - Conversation Completeness
+  - Conversation Relevancy
+  - Role Adherence
 
 To create a metric, simply import from the `deepeval.metrics` module:
 
@@ -326,7 +320,7 @@ metric = DAGMetric(name="Summarization", dag=dag)
 
 </details>
 
-![ok](https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg)
+![ok](https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg){ width="10%" }
 
 For more information, visit the [`DAGMetric` documentation.](/docs/metrics-dag)
 
@@ -391,7 +385,6 @@ def test_customer_chatbot(test_case: LLMTestCase):
     assert_test(test_case, [answer_relevancy_metric])
 ```
 
-:::tip
 You can also evaluate entire datasets without going through the CLI (if you're in a notebook environment):
 
 ```python
@@ -401,23 +394,22 @@ from deepeval import evaluate
 evaluate(dataset, [answer_relevancy_metric])
 ```
 
-:::
-
 Additionally you can run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 
 ```
 deepeval test run test_dataset.py -n 2
 ```
 
+:::tip
+
 Visit the [evaluation introduction section](/docs/evaluation-introduction#evaluating-with-pytest) to learn about the different types of flags you can use with the `deepeval test run` command.
+:::
 
-### Editing Datasets
-
-Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhere as one source of truth. Your team can annotate datasets directly on [Confident AI (signup here)](https://app.confident-ai.com):
+Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhere as one source of truth. Your team can annotate datasets directly on [Confident AI](https://documentation.confident-ai.com/dataset-editor/annotate-datasets), which is also 100% integrated with `deepeval`:
 
 <video width="100%" controls muted playsInline>
   <source
-    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/confident-create-dataset.mp4"
+    src="https://confident-docs.s3.us-east-1.amazonaws.com/dataset-editor:dataset-annotation.mp4"
     type="video/mp4"
   />
 </video>

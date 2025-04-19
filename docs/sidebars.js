@@ -8,7 +8,7 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Evaluation",
+      label: "LLM Evaluation",
       items: [
         "evaluation-introduction",
         "evaluation-test-cases",
