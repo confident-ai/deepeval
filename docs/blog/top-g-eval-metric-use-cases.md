@@ -6,7 +6,7 @@ authors: [kritinv]
 hide_table_of_contents: false
 ---
 
-[G-Eval](/docs/metrics-llm-evals) allows you to easily create custom LLM-judge metrics, simply by providing an evaluation criteria. It's possible to create any custom metric for any use-case using `GEval`, and here are **5 of the most popular custom G-Eval metrics** among DeepEval users:
+[G-Eval](/docs/metrics-llm-evals) allows you to easily create custom LLM-as-a-judge metrics by providing an evaluation criteria in everyday language. It's possible to create any custom metric for any use-case using `GEval`, and here are **5 of the most popular custom G-Eval metrics** among DeepEval users:
 
 <div
   style={{
@@ -29,14 +29,13 @@ hide_table_of_contents: false
 4. **Safety** – Measures how safe and ethical the response is.
 5. **Custom RAG** – Measures the quality of the RAG system.
 
-In this guide, we will explore these metrics, how how to implement them, and considerations you need to make.
+In this story, we will explore these metrics, how to implement them, and best practices we've learnt from our users.
 
 ## What is G-Eval?
 
 G-Eval is a **research-backed custom metric framework** that allows you to create custom **LLM-Judge** metrics by providing a custom criteria. It employs a chain-of-thoughts (CoTs) approach to generate evaluation steps, which are then used to score an LLM Test Case. This method allows for flexible, task-specific metrics that can adapt to various use cases.
 
 ![ok](https://deepeval-docs.s3.amazonaws.com/metrics-g-eval-algorithm.png)
-
 
 Research has shown that G-Eval significantly outperforms all traditional non-LLM evaluations across a range of criteria, including coherence, consistency, fluency, and relevancy.
 
@@ -51,19 +50,28 @@ from deepeval.test_case import LLMTestCaseParams
 # Define a custom G-Eval metric
 custom_metric = GEval(
     name="Relevancy",
-    evaluation_steps=[
-        "Check if the actual output directly addresses the input.",
-        "Penalize the output if it is off-topic, vague, or unrelated to the input."
-    ],
+    criteria="Check if the actual output directly addresses the input.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.INPUT]
 )
 ```
 
-You can define either a `criteria` or `evaluation_steps`. If evaluation steps aren’t provided, DeepEval will auto-generate them from the criteria. Directly defining the evaluation steps gives you more control and ensures consistent, explainable judgments.
+As described in the original G-Eval paper, DeepEval uses the provided `criteria` to generate a sequence of evaluation steps that guide the scoring process. Alternatively, you can supply your own list of `evaluation_steps` to reduce variability in how the criteria are interpreted. If no steps are provided, DeepEval will automatically generate them from the criteria. Defining the steps explicitly gives you greater control and can help ensure evaluations are consistent and explainable.
+
+## Why DeepEval for G-Eval?
+
+Users use DeepEval for their G-Eval implementation is because it automatically handles the normalization of the final G-Eval score by calculating a weighted summation of the probabilities of the LLM judge's output tokens, as stated in the original G-Eval paper.
+
+Another benefit is that since G-Eval relies on LLM-as-a-judge, DeepEval allows users to run G-Eval with any LLM judge they prefer, without additional setup.
+
+In short, DeepEval abstracts away much of the boilerplate and complexity involved in building an evaluation framework from scratch. Let’s move on to the top G-Eval use cases.
 
 ## Answer Correctness
 
 [Answer Correctness](/guides/guides-answer-correctness-metric) is the most widely used G-Eval metric. It measures how closely the LLM’s _actual output_ aligns with the _expected output_. As a **reference-based metric**, it requires a ground truth (expected output) to be provided and is most commonly used during development where labeled answers are available, rather than in production.
+
+:::note
+You'll see that answer correctness is not a predefined metric in DeepEval because correctness is subjective - hence also why G-Eval is perfect for it.
+:::
 
 Here's an example answer correctness metric defined using G-Eval:
 
@@ -102,7 +110,7 @@ When defining evaluation criteria or evaluation steps for **Answer Correctness**
 
 Unlike answer correctness, coherence doesn’t rely on an expected output, making it useful for both development and production evaluation pipelines. It’s especially important in use cases where **clarity and readability** matter—like document generation, educational content, or technical writing.
 
-### Critera
+### Criteria
 
 Coherence can be assessed from multiple angles, depending on how specific you want to be. Here are some possible coherence-related criteria:
 
@@ -240,13 +248,13 @@ DeepEval provides robust out-of-the-box metrics for evaluating [RAG systems](/gu
 
 There are 5 core criteria for evaluating RAG systems, which make up DeepEval’s RAG metrics:
 
-|<div style={{width: "200px"}}>Criteria</div>                       |<div style={{width: "450px"}}>Description</div>                                                              |
-|----------------------------------|--------------------------------------------------------------------------------------|
-| **Answer Relevancy**             | Does the answer directly address the question?                                       |
-| **Answer Faithfulness**          | Is the answer fully grounded in the retrieved documents?                             |
-| **Contextual Precision**         | Do the retrieved documents contain the right information?                            |
-| **Contextual Recall**            | Are the retrieved documents complete?                                                |
-| **Contextual Relevancy**         | Are the retrieved documents relevant?                                                |
+| <div style={{width: "200px"}}>Criteria</div> | <div style={{width: "450px"}}>Description</div>           |
+| -------------------------------------------- | --------------------------------------------------------- |
+| **Answer Relevancy**                         | Does the answer directly address the question?            |
+| **Answer Faithfulness**                      | Is the answer fully grounded in the retrieved documents?  |
+| **Contextual Precision**                     | Do the retrieved documents contain the right information? |
+| **Contextual Recall**                        | Are the retrieved documents complete?                     |
+| **Contextual Relevancy**                     | Are the retrieved documents relevant?                     |
 
 ### Best practices
 
@@ -279,20 +287,15 @@ custom_faithfulness_metric = GEval(
 
 ## Advanced Usage
 
-
-G-Eval makes it easy to define custom metrics for any LLM use case by simply providing evaluation criteria or step-by-step instructions. It’s research-backed, flexible, and simple to get started with. However, it's not without its problems.
-
-### Limitations
-
 Because G-Eval relies on LLM-generated scores, it's inherently **probabilistic**, which introduces several limitations:
 
 - **Inconsistent on Complex Rubrics**: When evaluation steps involve many conditions—such as accuracy, tone, formatting, and completeness—G-Eval may apply them unevenly. The LLM might prioritize some aspects while ignoring others, especially when prompts grow long or ambiguous.
 - **Poor at Counting & Structural Checks**: G-Eval struggles with tasks that require numerical precision or rigid structure. It often fails to verify things like “exactly three bullet points,” proper step order, or presence of all required sections in code or JSON.
 - **Subjective by Design**: G-Eval is well-suited for open-ended evaluations—such as tone, helpfulness, or creativity—but less effective for rule-based tasks that require deterministic outputs and exact matching. Even in subjective tasks, results can vary significantly unless the evaluation criteria are clearly defined and unambiguous.
 
-Fortunately, many of G-Eval’s limitations—such as subjectivity and its struggles with complex rubrics—stem from its reliance on a **single LLM judgment**. This means we can address these issues by introducing more fine-grained control. *Enter DAG.*
+Fortunately, many of G-Eval’s limitations—such as subjectivity and its struggles with complex rubrics—stem from its reliance on a **single LLM judgment**. This means we can address these issues by introducing more fine-grained control. _Enter DAG._
 
-### DAG
+### Using G-Eval in DAG
 
 DeepEval’s [DAG metric](https://www.deepeval.com/docs/metrics-introduction) (Directed Acyclic Graphs) provides a more **deterministic and modular alternative** to G-Eval. It enables you to build precise, rule-based evaluation logic by defining deterministic branching workflows.
 ![ok](https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg)
@@ -304,7 +307,7 @@ DAG-based metrics are composed of nodes that form an evaluation directed acyclic
 - **Non-Binary Judgement Node** – Allows more nuanced scoring (e.g. 0–1 scale or class labels) for criteria that aren't binary. Useful for partially correct outputs or relevance scoring.
 - **Verdic Node** – A required leaf node that consolidates all upstream logic and determines the final metric score based on the path taken through the graph.
 
-Unlike G-Eval, DAG evaluates each condition **explicitly and independently**, offering fine-grained control over scoring. It’s ideal for complex tasks like *code generation* or *document formatting*.
+Unlike G-Eval, DAG evaluates each condition explicitly and independently, offering fine-grained control over scoring. It’s ideal for complex tasks like _code generation_ or _document formatting_.
 
 ### Example
 
