@@ -7,6 +7,8 @@ tags: [comparisons]
 hide_table_of_contents: false
 ---
 
+import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
+
 **TL;DR:** TruLens offers useful tooling for basic LLM app monitoring and runtime feedback, but it’s still early-stage and lacks many core evaluation features — including agentic and conversational metrics, granular test control, and safety testing. DeepEval takes a more complete approach to LLM evaluation, supporting structured testing, CI/CD workflows, custom metrics, and integration with Confident AI for collaborative analysis, sharing, and decision-making across teams.
 
 ## What Makes DeepEval Stand Out?
@@ -71,8 +73,6 @@ And so, you'll find DeepEval provides a lot more well-rounded features and suppo
 ### Metrics
 
 DeepEval does RAG evaluation very well, but it doesn't end there.
-
-import FeatureComparisonTable from "@site/src/components/feature-comparison-table";
 
 <FeatureComparisonTable type="trulens::metrics" competitor="Trulens" />
 

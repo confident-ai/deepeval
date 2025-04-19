@@ -16,6 +16,8 @@
   --ifm-color-primary-lighter: #8349df;
   --ifm-color-primary-lightest: #996ae5;
   --ifm-code-font-size: 95%;
+  --ifm-font-weight-bold: 600 !important;
+  --ifm-menu-color: #87878e !important;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
   .alert--success {
@@ -60,6 +62,10 @@ html[data-theme="dark"] {
 
 .navbar {
   background-color: #1d232e;
+}
+
+.navbar__link {
+  font-weight: 400 !important;
 }
 
 html[data-theme="light"] .navbar {
@@ -263,3 +269,4 @@ video {
     filter: drop-shadow(0 0 25px #6d28d9);
   }
 }
+

@@ -1,5 +1,5 @@
 ---
-title: DeepEval vs Arize 
+title: DeepEval vs Arize
 description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
 slug: deepeval-vs-arize
 authors: [kritinv]
@@ -7,7 +7,7 @@ tags: [comparisons]
 hide_table_of_contents: false
 ---
 
-import FeatureComparisonTable from "@site/src/components/feature-comparison-table";
+import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
 
 **TL;DR:** Arize is great for tracing LLM apps, especially for monitoring and debugging, but lacks key evaluation features like conversational metrics, test control, and safety checks. DeepEval offers a full evaluation stack—built for production, CI/CD, custom metrics, and Confident AI integration for collaboration and reporting. The right fit depends on whether you're focused solely on observability or also care about building scalable LLM testing into your LLM stack.
 
@@ -18,14 +18,14 @@ import FeatureComparisonTable from "@site/src/components/feature-comparison-tabl
 While Arize AI offers evaluations through spans and traces for one-off debugging during LLM observability, DeepEval focuses on custom benchmarking for LLM applications. We place a strong emphasis on high-quality metrics and robust evaluation features.
 
 This means:
-- **More accurate evaluation results**, powered by research-backed metrics
-- **Highly controllable, customizable metrics** to fit any evaluation use case  
-- **Robust A/B testing tools** to find the best-performing LLM iterations
-- **Powerful statistical analyzers** to uncover deep insights from your test runs  
-- **Comprehensive dataset editing** to help you curate and scale evaluations  
-- **Scalable LLM safety testing** to help you safeguard your LLM—not just optimize it  
-- **Organization-wide collaboration** between engineers, domain experts, and stakeholders
 
+- **More accurate evaluation results**, powered by research-backed metrics
+- **Highly controllable, customizable metrics** to fit any evaluation use case
+- **Robust A/B testing tools** to find the best-performing LLM iterations
+- **Powerful statistical analyzers** to uncover deep insights from your test runs
+- **Comprehensive dataset editing** to help you curate and scale evaluations
+- **Scalable LLM safety testing** to help you safeguard your LLM—not just optimize it
+- **Organization-wide collaboration** between engineers, domain experts, and stakeholders
 
 ### 2. We obsess over your team's experience
 
@@ -33,8 +33,7 @@ We obsess over a great developer experience. From better error handling to spinn
 
 But DeepEval isn’t just optimized for DX. It's also built for teams—engineers, domain experts, and stakeholders. That’s why the platform is baked-in with collaborative features like shared dataset editing and publicly sharable test report links.
 
- LLM evaluation isn’t a solo task—it’s a team effort.
-
+LLM evaluation isn’t a solo task—it’s a team effort.
 
 ### 3. We ship at lightning speed
 
@@ -42,8 +41,7 @@ We’re always active on [**DeepEval's Discord**](https://discord.gg/a3K9c8GRGt)
 
 But we don’t just react—we obsess over how to make DeepEval better. The LLM space moves fast, and we stay ahead so you don’t have to. If something clearly improves the product, we don’t wait. We build.
 
-Take the [DAG metric](/docs/metrics-dag), for example, which took less than a week from idea to docs. Prior to DAG, there was no way to define custom metrics with full control *and* ease of use—but our users needed it, so we made one.
-
+Take the [DAG metric](/docs/metrics-dag), for example, which took less than a week from idea to docs. Prior to DAG, there was no way to define custom metrics with full control _and_ ease of use—but our users needed it, so we made one.
 
 ### 4. We're always here for you... literally
 
@@ -58,7 +56,6 @@ We built DeepEval as engineers from Google and AI researchers from Princeton—s
 Every feature we ship is deliberate. No fluff, no bloat—just what’s necessary to make your evals better. We’ll break them down in the next sections with clear comparison tables.
 
 Because we ship more and fix faster (most bugs are resolved in under 3 days), you’ll have a smoother dev experience—and ship your own features at lightning speed.
-
 
 ### 6. We scale with your evaluation needs
 
@@ -77,17 +74,17 @@ This means 0 extra lines of code to:
 Apart from Confident AI, DeepEval also offers DeepTeam, a new package specific for red teaming, which is for safety testing LLM systems. When you use DeepEval, you won't run into a point where you have to leave its ecosystem because we don't support what you're looking for.
 
 ## Comparing DeepEval and Arize
+
 Arize AI’s main product, Phoenix, is a tool for debugging LLM applications and running evaluations. Originally built for traditional ML workflows (which it still supports), the company pivoted in 2023 to focus primarily on LLM observability.
 
 While Phoenix’s strong emphasis on tracing makes it a solid choice for observability, its evaluation capabilities are limited in several key areas:
 
-- Metrics are only available as prompt templates  
-- No support for A/B regression testing  
-- No statistical analysis of metric scores  
-- No ability to experiment with prompts or models  
+- Metrics are only available as prompt templates
+- No support for A/B regression testing
+- No statistical analysis of metric scores
+- No ability to experiment with prompts or models
 
 Prompt template-based metrics means they aren’t research-backed, offer little control, and rely on one-off LLM generations. That might be fine for early-stage debugging, but it quickly becomes a bottleneck when you need to run structured experiments, compare prompts and models, or communicate performance clearly to stakeholders.
-
 
 ### Metrics
 
@@ -99,7 +96,7 @@ This also means you can only create custom metrics using prompt templates. DeepE
 
 ### Dataset Generation
 
-Arize offers a simplistic dataset generation interface, which requires supplying an entire prompt template to generate synthetic queries from your knowledge base contexts. 
+Arize offers a simplistic dataset generation interface, which requires supplying an entire prompt template to generate synthetic queries from your knowledge base contexts.
 
 In DeepEval, you can create your dataset from research-backed data generation with just your documents.
 
@@ -139,7 +136,6 @@ DeepEval also integrates directly with LLM providers to power its metrics—sinc
 
 ### Platform
 
-
 Both DeepEval and Arize has their own platforms. DeepEval's platform is called Confident AI, and Arize's platform is called Phoenix.
 
 Confident AI is built for powerful, customizable evaluation and benchmarking. Phoenix, on the other hand, is more focused on observability.
@@ -147,7 +143,6 @@ Confident AI is built for powerful, customizable evaluation and benchmarking. Ph
 <FeatureComparisonTable type="arize::platform" competitor="Arize" />
 
 Confident AI is also self-served, meaning you don't have to talk to us to try it out. Sign up here.
-
 
 ## Conclusion
 

@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./index.module.css";
+import styles from "./Envelope.module.css";
 
 function Envelope(props) {
   return (
@@ -21,7 +21,7 @@ function Envelope(props) {
                 style={{ width: "30px", height: "30px" }}
               />
               <div className={styles.letterContext}>
-                <span class="lexend-deca" style={{ fontSize: "16px" }}>
+                <span className="lexend-deca" style={{ fontSize: "16px" }}>
                   Confident AI
                 </span>
               </div>
@@ -40,4 +40,4 @@ function Envelope(props) {
   );
 }
 
-export default Envelope;
+export default Envelope; 

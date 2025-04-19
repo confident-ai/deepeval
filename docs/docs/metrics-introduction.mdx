@@ -8,6 +8,8 @@ sidebar_label: Introduction
   <link rel="canonical" href="https://deepeval.com/docs/metrics-introduction" />
 </head>
 
+import VideoDisplayer from "@site/src/components/VideoDisplayer";
+
 ## Quick Summary
 
 In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, a test case represents the thing you're trying to measure. `deepeval` offers a range of default metrics for you to quickly get started with, such as:
@@ -57,22 +59,15 @@ You should also login to the `deepeval` cloud platform, [Confident AI](https://c
 deepeval login
 ```
 
-When you run an evaluation using the `evaluate()` function or `deepeval test run`, you get testing reports on Confident AI, which allows you to:
+When you run an evaluation using the `evaluate()` function or `deepeval test run`, you get testing reports on Confident AI.
 
-- Analyze metric score distributions, averages, and median scores.
-- Inspect metric results including reasoning, errors (if any), and verbose logs (for debugging your evaluation model's chain of thought).
-- Download test data as CSV or JSON (if you're running a conversational test run).
-- Create datasets from the test cases in a test run.
-- Create a public link to share with external stakeholders that might be interested in your LLM evaluation process.
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:testing-reports.mp4"
+  confidentUrl="/llm-evaluation/testing-reports"
+  label="Run Evaluations on Confident AI"
+/>
 
-<video width="100%" controls muted playsInline>
-  <source
-    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/confident-full-test-run.mp4"
-    type="video/mp4"
-  />
-</video>
-
-More information can be found on the [Confident AI quickstart.](https://documentation.confident-ai.com)
+More information on everything can be found on the [Confident AI evaluation docs.](https://documentation.confident-ai.com/llm-evaluation/overview)
 
 :::
 

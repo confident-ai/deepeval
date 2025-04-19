@@ -8,7 +8,8 @@ sidebar_label: Quick Introduction
   <link rel="canonical" href="https://deepeval.com/docs/getting-started" />
 </head>
 
-import Envelope from "@site/src/components/envelope";
+import Envelope from "@site/src/components/Envelope";
+import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
 **DeepEval** is an open-source evaluation framework for LLMs. DeepEval makes it extremely easy to build
 and iterate on LLM (applications) and was built with the following principles in mind:
@@ -27,12 +28,11 @@ Additionally, DeepEval has a cloud platform [Confident AI](https://app.confident
 :::tip DID YOU KNOW?
 You can use DeepEval alongside Confident AI to can manage your entire LLM evaluation lifecycle (datasets, prompt management, LLM testing reports, monitoring, etc.) in one centralized place, and makes sure you do LLM evaluations the right way. Documentation for [Confident AI here.](https://documentation.confident-ai.com)
 
-<video width="100%" controls muted playsInline>
-  <source
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:overview.mp4"
-    type="video/mp4"
-  />
-</video>
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:overview.mp4"
+  confidentUrl="/getting-started/create-account"
+  label="Watch Quickstart Video on Confident AI"
+/>
 
 It takes no additional code to setup, is automatically integrated with all code you run using `deepeval`, and you can [click here to sign up for free](https://app.confident-ai.com/auth/signup).
 :::
@@ -122,12 +122,11 @@ deepeval login
 
 After you've pasted in your API key, Confident AI will generate testing reports for you whenever you run a test run to evaluate your LLM application inside any environment, at any scale, anywhere.
 
-<video width="100%" controls muted playsInline>
-  <source
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:testing-reports.mp4"
-    type="video/mp4"
-  />
-</video>
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:testing-reports.mp4"
+  confidentUrl="/llm-evaluation/testing-reports"
+  label="Learn LLM Testing Reports on Confident AI"
+/>
 
 :::tip
 You should save your test run as a dataset on Confident AI, which allows you to reuse the set of `input`s and any `expected_output`, `context`, etc. for subsequent evaluations.
@@ -184,12 +183,11 @@ After running the new `test run` , you should see the `GEval` correctness metric
 
 If you're logged into Confident AI, here's how you can catch regressions in your LLM app:
 
-<video width="100%" controls muted playsInline>
-  <source
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:ab-regression-testing.mp4"
-    type="video/mp4"
-  />
-</video>
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:ab-regression-testing.mp4"
+  confidentUrl="/llm-evaluation/ab-regression-testing"
+  label="Watch LLM Regresion Testing on Confident AI"
+/>
 
 Green rows indicate that your LLM has shown improvement on specific test cases, whereas red rows highlight areas of regression. For detailed documentation on regression testing with Confident AI, visit [this link](https://documentation.confident-ai.com/llm-evaluation/ab-regression-testing).
 
@@ -407,12 +405,11 @@ Visit the [evaluation introduction section](/docs/evaluation-introduction#evalua
 
 Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhere as one source of truth. Your team can annotate datasets directly on [Confident AI](https://documentation.confident-ai.com/dataset-editor/annotate-datasets), which is also 100% integrated with `deepeval`:
 
-<video width="100%" controls muted playsInline>
-  <source
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/dataset-editor:dataset-annotation.mp4"
-    type="video/mp4"
-  />
-</video>
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/dataset-editor:dataset-annotation.mp4"
+  confidentUrl="/dataset-editor/annotate-datasets"
+  label="Learn Dataset Annotation on Confident AI"
+/>
 
 You can then pull the dataset from the cloud to evaluate locally like how you would pull a Github repo.
 

@@ -1,5 +1,5 @@
 ---
-title: DeepEval vs Langfuse 
+title: DeepEval vs Langfuse
 description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
 slug: deepeval-vs-langfuse
 authors: [kritinv]
@@ -7,7 +7,7 @@ tags: [comparisons]
 hide_table_of_contents: false
 ---
 
-import FeatureComparisonTable from "@site/src/components/feature-comparison-table";
+import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
 
 **TL;DR:** Langfuse has strong tracing capabilities, which is useful for debugging and monitoring in production, and easy to adopt thanks to solid integrations. It supports evaluations at a basic level, but lacks advanced features for heavier experimentation like A/B testing, custom metrics, granular test control. Langfuse takes a prompt-template-based approach to metrics (similar to Arize) which can be simplistic, but lacks the accuracy of research-backed metrics. The right tool depends on whether you’re focused solely on observability, or also investing in scalable, research-backed evaluation.
 
@@ -18,14 +18,14 @@ import FeatureComparisonTable from "@site/src/components/feature-comparison-tabl
 Langfuse's tracing-first approach means evaluations are built into that workflow, which works well for lightweight checks. DeepEval, by contrast, is purpose-built for LLM benchmarking—with a robust evaluation feature set that includes custom metrics, granular test control, and scalable evaluation pipelines tailored for deeper experimentation.
 
 This means:
-- **Research-backed metrics** for accurate, trustworthy evaluation results  
-- **Fully customizable metrics** to fit your exact use case
-- **Built-in A/B testing** to compare model versions and identify top performers  
-- **Advanced analytics**, including per-metric breakdowns across datasets, models, and time  
-- **Collaborative dataset editing** to curate, iterate, and scale fast  
-- **End-to-end safety testing** to ensure your LLM is not just accurate, but secure  
-- **Team-wide collaboration** that brings engineers, researchers, and stakeholders into one loop  
 
+- **Research-backed metrics** for accurate, trustworthy evaluation results
+- **Fully customizable metrics** to fit your exact use case
+- **Built-in A/B testing** to compare model versions and identify top performers
+- **Advanced analytics**, including per-metric breakdowns across datasets, models, and time
+- **Collaborative dataset editing** to curate, iterate, and scale fast
+- **End-to-end safety testing** to ensure your LLM is not just accurate, but secure
+- **Team-wide collaboration** that brings engineers, researchers, and stakeholders into one loop
 
 ### 2. Team-wide collaboration
 
@@ -62,12 +62,13 @@ When you use DeepEval, everything is automatically integrated with Confident AI,
 Moreover, at some point, you’ll need to test for safety, not just performance. DeepEval includes DeepTeam, a built-in package for red teaming and safety testing LLMs. No need to switch tools or leave the ecosystem as your evaluation needs grow.
 
 ## Comparing DeepEval and Langfuse
+
 Langfuse has strong tracing capabilities and is easy to adopt due to solid integrations, making it a solid choice for debugging LLM applications. However, its evaluation capabilities are limited in several key areas:
 
-- Metrics are only available as prompt templates  
-- No support for A/B regression testing  
-- No statistical analysis of metric scores  
-- Limited ability to experiment with prompts, models, and other LLM parameters 
+- Metrics are only available as prompt templates
+- No support for A/B regression testing
+- No statistical analysis of metric scores
+- Limited ability to experiment with prompts, models, and other LLM parameters
 
 Prompt template-based metrics aren’t research-backed, offer limited control, and depend on single LLM outputs. They’re fine for early debugging or lightweight production checks, but they break down fast when you need structured experiments, side-by-side comparisons, or clear reporting for stakeholders.
 
@@ -85,7 +86,7 @@ Langfuse offers a dataset management UI, but doesn't have dataset generation cap
 
 ### Red teaming
 
-We created DeepTeam, our second open-source package, to make LLM red-teaming seamless (without the need to switch tool ecosystems) and scalable—when the need for LLM safety and security testing arises. 
+We created DeepTeam, our second open-source package, to make LLM red-teaming seamless (without the need to switch tool ecosystems) and scalable—when the need for LLM safety and security testing arises.
 
 Langfuse doesn't offer red-teaming.
 
@@ -121,14 +122,6 @@ Both DeepEval and Langfuse has their own platforms. DeepEval's platform is calle
 
 Confident AI is also self-served, meaning you don't have to talk to us to try it out. Sign up here.
 
-
 ## Conclusion
 
 If there’s one takeaway: Langfuse is built for debugging, Confident AI is built for evaluation. They overlap in places, but the difference comes down to focus — observability vs. benchmarking. If you care about both, go with Confident AI, since it gives you far more depth and flexibility when it comes to evaluation.
-
-
-
-
-
-
-
