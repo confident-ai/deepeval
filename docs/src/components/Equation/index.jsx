@@ -1,17 +1,18 @@
 import React from "react";
 import katex from "katex";
+import styles from "./Equation.module.css";
 
-function Equation(props) {
+const Equation = (props) => {
   const html = katex.renderToString(props.formula, {
     throwOnError: false,
     displayMode: true,
   });
 
   return (
-    <div style={{ margin: "60px 0" }}>
+    <div className={styles.equationContainer}>
       <span dangerouslySetInnerHTML={{ __html: html }} />
     </div>
   );
-}
+};
 
-export default Equation;
+export default Equation; 

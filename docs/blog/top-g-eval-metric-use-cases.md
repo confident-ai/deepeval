@@ -1,7 +1,7 @@
 ---
-title: Top 5 G-Eval Metric Examples for LLM Evaluation
+title: Top 5 G-Eval Metric Use Cases in DeepEval
 description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
-slug: top-5-geval-examples
+slug: top-5-geval-use-cases
 authors: [kritinv]
 hide_table_of_contents: false
 ---
