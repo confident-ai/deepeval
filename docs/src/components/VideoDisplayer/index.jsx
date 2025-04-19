@@ -1,12 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import styles from "./VideoDisplayer.module.css";
 
 const VideoDisplayer = ({ src, confidentUrl, label }) => {
-  // Add debugging to see if styles are being applied
-  useEffect(() => {
-    console.log('VideoDisplayer styles loaded:', styles);
-  }, []);
-
   return (
     <div className={styles.videoContainer}>
       <video width="100%" muted controls playsInline controlsList="nodownload">
@@ -15,14 +10,10 @@ const VideoDisplayer = ({ src, confidentUrl, label }) => {
           type="video/mp4"
         />
       </video>
-      <div 
-        className={styles.overlay} 
-        onClick={() => window.open("https://documentation.confident-ai.com" + confidentUrl, '_blank')}
-      >
-        <div className={styles.playButton}>
-          {label || "Watch Video Summary on Confident AI"}
+      <div className={styles.overlay}>
+        <div className={styles.playButton} onClick={() => window.open("https://documentation.confident-ai.com" + confidentUrl, '_blank')}>
+          {label}
           <svg 
-            className={styles.newTabIcon}
             xmlns="http://www.w3.org/2000/svg" 
             width="16" 
             height="16" 
