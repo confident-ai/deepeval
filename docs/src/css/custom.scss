@@ -17,7 +17,7 @@
   --ifm-color-primary-lightest: #996ae5;
   --ifm-code-font-size: 95%;
   --ifm-font-weight-bold: 600 !important;
-  --ifm-menu-color: #87878e !important;
+  --ifm-menu-color: #747480 !important;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
   .alert--success {
@@ -64,6 +64,14 @@ html[data-theme="dark"] {
   background-color: #1d232e;
 }
 
+.menu {
+  font-weight: 400;
+}
+
+.menu__link--active {
+  font-weight: 500 !important;
+}
+
 .navbar__link {
   font-weight: 400 !important;
 }
@@ -81,11 +89,11 @@ html[data-theme="light"] .navbar__logo {
 }
 
 div[class^="announcementBar_"] {
-  font-weight: bold;
+  font-weight: 600;
 }
 
 html[data-theme="light"] div[class^="announcementBar_"] {
-  background-color: #7c3aed !important;
+  background-color: #710bee !important;
   color: white !important;
 }
 
