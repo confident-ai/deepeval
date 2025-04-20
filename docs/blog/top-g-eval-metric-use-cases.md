@@ -9,7 +9,7 @@ image: https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-case
 
 import BlogImageDisplayer from "@site/src/components/BlogImageDisplayer";
 
-<BlogImageDisplayer cover={true} alt="Top G-Eval Use Cases" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases-cover.jpg"/>
+<BlogImageDisplayer cover={true} alt="Top G-Eval Use Cases" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases:cover.jpg"/>
 
 [G-Eval](/docs/metrics-llm-evals) allows you to easily create custom LLM-as-a-judge metrics by providing an evaluation criteria in everyday language. It's possible to create any custom metric for any use-case using `GEval`, and here are **5 of the most popular custom G-Eval metrics** among DeepEval users:
 
@@ -21,7 +21,7 @@ import BlogImageDisplayer from "@site/src/components/BlogImageDisplayer";
 
 In this story, we will explore these metrics, how to implement them, and best practices we've learnt from our users.
 
-<BlogImageDisplayer alt="G-Eval Usage Statistics" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-usage.svg" caption="Top G-Eval Use Cases in DeepEval"/>
+<BlogImageDisplayer alt="G-Eval Usage Statistics" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases:usage.svg" caption="Top G-Eval Use Cases in DeepEval"/>
 
 ## What is G-Eval?
 

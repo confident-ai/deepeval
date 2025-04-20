@@ -25,6 +25,12 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
 - Agents:
   - Tool Correctness
   - Task Completion
+- Chatbots (for conversational agents):
+  - Conversational G-Eval
+  - Knowledge Retention
+  - Role Adherence
+  - Conversation Completeness
+  - Conversation Relevancy
 - Others:
   - Json Correctness
   - Ragas
@@ -33,15 +39,9 @@ In `deepeval`, a metric serves as a standard of measurement for evaluating the p
   - Bias
   - Summarization
 
-`deepeval` also offers conversational metrics, which are metrics used to evaluate conversations instead of individual, granular LLM interactions. These include:
+All predefined metrics on `deepeval` uses LLM-as-a-judge, with various techniques such as QAG (question-answer-generation), DAG (deep acyclic graphs), and G-Eval to score [test cases](/docs/evaluation-test-cases), which represents atomic interactions with your LLM app.
 
-- Conversational G-Eval
-- Knowledge Retention
-- Role Adherence
-- Conversation Completeness
-- Conversation Relevancy
-
-You can also easily develop your own custom evaluation metrics in `deepeval`. All metrics are measured on a test case. Visit the [test cases section](/docs/evaluation-test-cases) to learn how to apply any metric on test cases for evaluation.
+If you prefer to write your own metric algorithm, or use more traditional NLP scorers such as ROUGE, BLEU, or BLEURT, you can easily develop your own custom evaluation metrics in `deepeval`. All custom metrics you create are also automatically 100% integrated with `deepeval`'s ecosystem.
 
 :::note
 Your LLM application can be benchmarked by providing a list of metrics and [test cases](/docs/evaluation-test-cases):
@@ -71,22 +71,57 @@ More information on everything can be found on the [Confident AI evaluation docs
 
 :::
 
+## Why DeepEval Metrics?
+
+`deepeval`'s metrics are a step up to other implementations because they:
+
+- Make deterministic metric scores possible (when using `DAGMetric`).
+- Can be scored using any LLM judge.
+- Are "routable" - meaning you can apply different metrics based on different scenarios.
+- Easily customizable (`GEval` and `DAGMetric`).
+- Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores.
+- Provide a comprehensive reason for the scores computed.
+- Can be customized by [overriding evaluation prompts.](/docs/metrics-introduction#customizing-metric-prompts)
+- Integrated 100% with Confident AI.
+
+All of `deepeval`'s metrics output a score between 0-1. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
+
 ## Types of Metrics
 
-`deepeval` offers a wide range of **_custom_** and **_default_** metrics and all of them uses LLM-as-a-judge. There are two types of custom metrics, with varying degree of deterministicity:
+`deepeval` offers a wide range of **custom** and **generic** metrics and all of them uses LLM-as-a-judge. This choice is deliberate because our experience tells us LLM-as-a-judge better align with human expectations when compared to traditional model based approaches.
+
+:::info
+In the early versions of `deepeval` back in late 2023, our initial implementation relied on non-LLM-as-judge approaches, but we found these methods significantly underperformed compared to LLM-based evaluation techniques in terms of alignment with human judgment.
+:::
+
+### Custom Metrics
+
+Custom metrics are **use case specific** (i.e. system agnostic). They work across different implementation approaches, allowing you to use the same evaluation criteria whether your application uses RAG, agents, or a hybrid architecture. A use case refers to the specific application context—such as a medical chatbot, meeting summarizer, or travel planner agent.
+
+There are two types of custom metrics, with varying degree of deterministicity:
 
 - [G-Eval](/docs/metrics-llm-evals)
 - [DAG](/docs/metrics-dag)
 
 The DAG metric is a decision-tree based LLM-evaluated metric, and is currently the most versitile metric `deepeval` has to offer. However, G-Eval is also extremely competent and takes no effort at all to setup so we recommend everyone to start with G-Eval and move to DAG if there's a need for it.
 
-:::note
+:::tip
 
-You can also inhert a `BaseMetric` class to create your own custom metric. They are extremely easy to create and almost 10% of all metrics ran using `deepeval` are self-built metrics.
+If your evaluation criteria is more subjective (e.g. answer "correctness", coherence, and tonality), go for G-Eval. If your evaluation criteria involves objective requirements (e.g. format correctness), choose DAG. If it is a mixture of both (e.g. ensure the format of an LLM output is correct before assessing its tonality), you can use G-Eval within the DAG metric.
 
 :::
 
-`deepeval` also offers **_default_** metrics, which are pre-built for different LLM systems/use cases. For example, `deepeval` offers the famous RAG metrics out-of-the-box:
+You can also inhert a `BaseMetric` class to create your own custom metric. They are extremely easy to create and almost 10% of all metrics ran using `deepeval` are self-built metrics.
+
+### Generic Metrics
+
+`deepeval` also offers **generic metrics** that are **system specific** (i.e. use case agnostic). These metrics target particular LLM architectures regardless of domain:
+
+- **RAG metrics** evaluate retrieval and generation quality
+- **Agent metrics** assess tool usage, task completion
+- **Conversational metrics** measure overall conversation quality
+
+Here are the most popular RAG metrics `deepeval` offers out-of-the-box:
 
 - [Answer Relevancy](/docs/metrics-answer-relevancy)
 - [Faithfulness](/docs/metrics-faithfulness)
@@ -94,41 +129,82 @@ You can also inhert a `BaseMetric` class to create your own custom metric. They 
 - [Contextual Precision](/docs/metrics-contextual-precision)
 - [Contextual Recall](/docs/metrics-contextual-recall)
 
-:::info
-`deepeval` deliberately uses LLM-as-a-judge for all metrics because our experience tells us that they better align with human expectations when compared to traditional model based approaches.
+For complex LLM applications combining multiple architectures (like RAG systems with agentic capabilities or multi-step reasoning workflows), use a combination of targeted metrics to evaluate each component effectively. This modular approach ensures comprehensive evaluation across your entire application pipeline.
+
+### Referenceless Metrics
+
+Metrics in `deepeval` are categorized by whether they require ground truth for evaluation:
+
+- **Reference-based metrics** require ground truth data through specific test case parameters. Examples include contextual recall/precision (needs `expected_output`), tool correctness (needs `expected_tools`), and hallucination detection (needs original `context`).
+
+- **Referenceless metrics** evaluate outputs without ground truth comparisons. Most generic metrics in `deepeval` are referenceless, allowing evaluation without labeled datasets.
+
+For custom metrics (G-Eval and DAG), reference requirements depend on your evaluation criteria. For instance, users define answer correctness in G-Eval typically compares `actual_output` with `expected_output`. Check each metric's "Required Parameters" section in its documentation to see whether it is a referenceless metric or not.
+
+:::note
+By definition, [online metrics used in production](https://documentation.confident-ai.com/llm-observability/online-metrics) **cannot** be reference-based.
 :::
 
-`deepeval`'s metrics are a step up to other implementations because they:
+## Choosing Your Metrics
 
-- Make deterministic metric scores possible (when using `DAGMetric`).
-- Easily customizable (`GEval` and `DAGMetric`).
-- Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores.
-- Provide a comprehensive reason for the scores computed.
-- Can be computed using any LLM.
-- Can be customized by [overriding evaluation prompts.](/docs/metrics-introduction#customizing-metric-prompts)
-- Integrated 100% with Confident AI.
+When deciding which metrics to use, it is very tempting to evaluate everything (I mean, who doesn't like to evaluate bias in their RAG QA app?). But using too many metrics means evaluating nothing at all. Limit yourself to **no more than 5 metrics**, with this breakdown:
 
-All of `deepeval`'s metrics output a score between 0-1. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
+- **2-3** generic, system-specific metrics (e.g. contextual precision for RAG, tool correctness for agents)
+- **1-2** custom, use case-specific metrics (e.g. helpfulness for a medical chatbot, format correctness for summarization)
 
-If you're not sure which metric to use, [join our discord](https://discord.com/invite/a3K9c8GRGt) community or run the follow command to find out:
+If you feel extreme pain and struggle when trying to cut down on your metric selection, especially for generic ones, you're on the right track. The goal is to force yourself to prioritize and clearly define your evaluation criteria. This will not only help you use `deepeval`, but also help you understand what you care most about in your LLM application.
+
+:::note
+In some cases, where your LLM model is doing most of the heavy lifting (e.g. drafting documents, summarizers), it is not uncommon for there to be more use case targetted metric than system targetted ones.
+:::
+
+<div style={{textAlign: 'center', margin: "1rem 0"}}>
+
+```mermaid
+graph TD
+    A{Choose Metrics}
+    A --> B[Generic Metrics]
+    A --> C[Custom Metrics]
+    B --> D[Max 3 Metrics for System]
+    C --> E[Max 2 Metrics for Use Case]
+    D --> F[Validate & Iterate]
+    E --> F
+    F --> G[Constantly reassess if still relevant for use case]
+```
+
+</div>
+
+Here are some additional ideas if you're not sure:
+
+- **RAG**: Focus on the `AnswerRelevancyMetric` (evaluates `actual_output` alignment with the `input`) and `FaithfulnessMetric` (checks for hallucinations against `retrieved_context`)
+- **Agents**: Use the `ToolCorrectnessMetric` to verify proper tool selection and usage
+- **Chatbots**: Implement a `ConversationCompletenessMetric` to assess overall conversation quality
+- **Custom Requirements**: When standard metrics don't fit your needs, create custom evaluations with `G-Eval` or `DAG` frameworks
+
+If you're not sure which metric to use, [join our discord](https://discord.com/invite/a3K9c8GRGt) community or run the follow command to get some suggestions:
 
 ```bash
 deepeval recommend metrics
 ```
 
-:::tip
-All LLMs from OpenAI are available for LLM-Evals (metrics that use LLMs for evaluation). You can switch between models by providing a string corresponding to OpenAI's model names via the optional `model` argument when instantiating an LLM-Eval.
-:::
+## LLM Judges
 
-### What About Non LLM-Evals?
+You can use **ANY** LLM judge in `deepeval`, including:
 
-If you're looking to use something like **ROUGE**, **BLEU**, or **BLURT**, etc. you can create a custom metric and use the `scorer` module available in `deepeval` for scoring by following [this guide](/guides/guides-building-custom-metrics#building-a-custom-non-llm-eval).
+- [OpenAI](/integrations/models/openai)
+- [Azure OpenAI](/integrations/models/azure-openai)
+- [Ollama](/integrations/models/ollama)
+- [Anthropic](/integrations/models/anthropic) 
+- [Gemini](/integrations/models/gemini) 
+- [Vertex AI](/integrations/models/vertex-ai) 
+- [vLLM](/integrations/models/vllm) 
+- [LMStudio](/integrations/models/lmstudio) 
 
-The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeval/scorer/scorer.py) is available but not documented because our experience tells us these scorers are not useful as LLM metrics where outputs require a high level of reasoning to evaluate.
+You can also wrap your own LLM API in `deepeval`'s `DeepEvalBaseLLM` class to use ANY model of your choice. [Click here](/guides/guides-using-custom-llms) for full guide.
 
-## Using OpenAI
+### OpenAI
 
-To use OpenAI for `deepeval`'s LLM-Evals (metrics evaluated using an LLM), supply your `OPENAI_API_KEY` in the CLI:
+To use OpenAI for `deepeval`'s LLM metrics, supply your `OPENAI_API_KEY` in the CLI:
 
 ```console
 export OPENAI_API_KEY=<your-openai-api-key>
@@ -168,42 +244,7 @@ Note that the `model-version` is **optional**. If you ever wish to stop using Az
 deepeval unset-azure-openai
 ```
 
-## Using Gemini
-
-To use Gemini models with DeepEval, run the following command in your CLI.
-
-```bash
-deepeval set-gemini \
-    --model-name=<model_name> \ # e.g. "gemini-2.0-flash-001"
-    --google-api-key=<api_key>
-```
-
-### Vertex AI
-
-You can also use Google Cloud's Vertex AI models, including Gemini or your own fine-tuned models, with DeepEval.
-
-:::info
-To use Vertex AI, you must have the following:
-
-1. A Google Cloud project with the Vertex AI API enabled
-2. Application Default Credentials set up:
-
-```bash
-gcloud auth application-default login
-```
-
-:::
-
-To get started, set up your Google Cloud credentials using the following command:
-
-```bash
-deepeval set-gemini \
-    --model-name=<model_name> \ # e.g. "gemini-2.0-flash-001"
-    --project-id=<project_id> \
-    --location=<location> # e.g. "us-central1"
-```
-
-## Using Ollama
+### Ollama
 
 :::note
 Before getting started, make sure your [Ollama model](https://ollama.com/search) is installed and running. You can also see the full list of available models by clicking on the previous link.
@@ -237,34 +278,17 @@ deepeval unset-ollama
 The `deepeval set-ollama` command is used exclusively to configure LLM models. If you intend to use a custom embedding model from Ollama with the synthesizer, please [refer to this section of the guide](/guides/guides-using-custom-embedding-models).
 :::
 
-### Other Local Providers
+### Gemini
 
-In additional to Ollama, `deepeval` also supports local LLM providers that offer an OpenAI API compatible endpoint like LM Studio. To use them with `deepeval` you need to configure them using the CLI. This will make `deepeval` use the local LLM model for **all** LLM-based metrics.
-
-To configure any of those providers, you need to supply the **base URL** where the service is running. These are some of the most popular alternatives for base URLs:
-
-- LM Studio: `http://localhost:1234/v1/`
-- vLLM: `http://localhost:8000/v1/`
-
-So, to configure a model using LM studio, use the following command:
+To use Gemini models with DeepEval, run the following command in your CLI.
 
 ```bash
-deepeval set-local-model --model-name=<model_name> \
-    --base-url="http://localhost:1234/v1/" \
-    --api-key=<api-key>
+deepeval set-gemini \
+    --model-name=<model_name> \ # e.g. "gemini-2.0-flash-001"
+    --google-api-key=<api_key>
 ```
 
-:::note
-For additional instructions about model availability and base URLs, consult **each provider's documentation**.
-:::
-
-If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
-
-```bash
-deepeval unset-local-model
-```
-
-## Using Any Custom LLM
+### Using Any Custom LLM
 
 `deepeval` allows you to use **ANY** custom LLM for evaluation. This includes LLMs from langchain's `chat_model` module, Hugging Face's `transformers` library, or even LLMs in GGML format.
 
@@ -388,7 +412,7 @@ You can also execute each metric individually. All metrics in `deepeval`, includ
 - has a `strict_mode` property, which when turned on enforces `metric.score` to a binary one
 - has a `verbose_mode` property, which when turned on prints metric logs whenever a metric is executed
 
-In additional, all metrics in `deepeval` execute asynchronously by default. This behavior is something you can configure via the `async_mode` parameter when instantiating a metric.
+In addition, all metrics in `deepeval` execute asynchronously by default. You can configure this behavior using the `async_mode` parameter when instantiating a metric.
 
 :::tip
 Visit an individual metric page to learn how they are calculated, and what is required when creating an `LLMTestCase` in order to execute it.
@@ -415,7 +439,7 @@ test_case = LLMTestCase(
 metric = AnswerRelevancyMetric(threshold=0.5)
 ```
 
-Using this metric, you can either execute it directly as a standalone to get its score and reason:
+Using this metric, you can execute it directly as a standalone to get its score and reason:
 
 ```python
 ...
@@ -425,7 +449,7 @@ print(metric.score)
 print(metric.reason)
 ```
 
-Or you can either assert a test case using [`assert_test()` via `deepeval test run`](/docs/evaluation-test-cases#assert-a-test-case):
+Or you can assert a test case using [`assert_test()` via `deepeval test run`](/docs/evaluation-test-cases#assert-a-test-case):
 
 ```python title="test_file.py"
 from deepeval import assert_test
@@ -450,7 +474,7 @@ evaluate([test_case], [metric])
 
 ## Measuring Metrics in Async
 
-When a metric's `async_mode=True` (which is the default value for all metrics), invocations of `metric.measure()` will execute its internal algorithms concurrently. However, it's important to note that while operations **INSIDE** `measure()` executes concurrently, the `metric.measure()` call itself still blocks the main thread.
+When a metric's `async_mode=True` (which is the default for all metrics), invocations of `metric.measure()` will execute internal algorithms concurrently. However, it's important to note that while operations **INSIDE** `measure()` execute concurrently, the `metric.measure()` call itself still blocks the main thread.
 
 :::info
 Let's take the [`FaithfulnessMetric` algorithm](/docs/metrics-faithfulness#how-is-it-calculated) for example:
@@ -468,7 +492,7 @@ metric.measure(test_case)
 print("Metric finished!")
 ```
 
-When `async_mode=True`, steps 1 and 2 executes concurrently (ie. at the same time) since they are independent of each other, while `async_mode=False` will cause steps 1 and 2 to execute sequentially instead (ie. one after the other).
+When `async_mode=True`, steps 1 and 2 execute concurrently (i.e., at the same time) since they are independent of each other, while `async_mode=False` causes steps 1 and 2 to execute sequentially instead (i.e., one after the other).
 
 In both cases, "Metric finished!" will wait for `metric.measure()` to finish running before printing, but setting `async_mode` to `True` would make the print statement appear earlier, as `async_mode=True` allows `metric.measure()` to run faster.
 
@@ -511,13 +535,13 @@ Turning `verbose_mode` on will print the inner workings of a metric whenever `me
 
 ## Customizing Metric Prompts
 
-All of `deepeval`'s metrics uses LLM-as-a-judge which comes with a set of default prompt templates unique to each metric that are used for evaluation. While `deepeval` has a laid out algorithm to each metric, you can still customize these prompt templates to improve the accuracy and stability of your evaluation scores. This can be done by providing a custom template class as the `evaluation_template` to your metric of choice (example below).
+All of `deepeval`'s metrics use LLM-as-a-judge evaluation with unique default prompt templates for each metric. While `deepeval` has well-designed algorithms for each metric, you can customize these prompt templates to improve evaluation accuracy and stability. Simply provide a custom template class as the `evaluation_template` parameter to your metric of choice (example below).
 
 :::info
 For example, in the `AnswerRelevancyMetric`, you might disagree with what we consider something to be "relevant", but with this capability you can now override any opinions `deepeval` has in its default evaluation prompts.
 :::
 
-You're most likely to find this valuable if you're [using a custom LLM](/guides/guides-using-custom-llms), because `deepeval`'s metrics are mostly adopted for OpenAI's models, which are in general more powerful than your choice of custom LLM.
+You'll find this particularly valuable when [using a custom LLM](/guides/guides-using-custom-llms), as `deepeval`'s default metrics are optimized for OpenAI's models, which are generally more powerful than most custom LLMs.
 
 :::note
 This means you can better handle invalid JSON outputs (along with [JSON confinement](/guides/guides-using-custom-llms#json-confinement-for-custom-llms)) which comes with weaker models, and provide better examples for in-context learning for your custom LLM judges for better metric accuracy.
@@ -559,3 +583,9 @@ metric.measure(...)
 :::tip
 You can find examples of how this can be done in more detail on the **Customize Your Template** section of each individual metric page, which shows code examples, and a link to `deepeval`'s GitHub showing the default templates currently used.
 :::
+
+## What About Non-LLM-as-a-judge Metrics?
+
+If you're looking to use something like **ROUGE**, **BLEU**, or **BLEURT**, etc. you can create a custom metric and use the `scorer` module available in `deepeval` for scoring by following [this guide](/guides/guides-building-custom-metrics#building-a-custom-non-llm-eval).
+
+The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeval/scorer/scorer.py) is available but not documented because our experience tells us these scorers are not useful as LLM metrics where outputs require a high level of reasoning to evaluate.

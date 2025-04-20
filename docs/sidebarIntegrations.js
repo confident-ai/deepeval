@@ -6,10 +6,10 @@ module.exports = {
       items: [
         "models/openai",
         "models/azure-openai",
+        "models/ollama",
         "models/anthropic",
         "models/gemini",
         "models/vertex-ai",
-        "models/ollama",
         "models/vllm",
         "models/lmstudio",
       ],

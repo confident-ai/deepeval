@@ -5,9 +5,13 @@ slug: deepeval-alternatives-compared
 authors: [penguine]
 tags: [comparisons]
 hide_table_of_contents: false
+image: https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:deepeval-vs-everyone:cover.jpg
 ---
 
 import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
+import BlogImageDisplayer from "@site/src/components/BlogImageDisplayer";
+
+<BlogImageDisplayer cover={true} alt="DeepEval vs Alternatives" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:deepeval-vs-everyone:cover.jpg"/>
 
 As an open-source all-in-one LLM evaluation framework, DeepEval replaces _a lot_ of LLMOps tools. It is great if you:
 

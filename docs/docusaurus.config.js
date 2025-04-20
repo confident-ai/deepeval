@@ -102,6 +102,10 @@ module.exports = {
       },
     ],
   ],
+  themes: ["@docusaurus/theme-mermaid"],
+  markdown: {
+    mermaid: true,
+  },
   scripts: [
     {
       src: "https://plausible.io/js/script.tagged-events.js",
