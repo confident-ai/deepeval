@@ -4,12 +4,12 @@ description: As the open-source LLM evaluation framework, DeepEval offers everyt
 slug: top-5-geval-use-cases
 authors: [kritinv]
 hide_table_of_contents: false
-image: https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases-cover.png
+image: https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases-cover.jpg
 ---
 
 import BlogImageDisplayer from "@site/src/components/BlogImageDisplayer";
 
-<BlogImageDisplayer cover={true} alt="Top G-Eval Use Cases" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases-cover.png"/>
+<BlogImageDisplayer cover={true} alt="Top G-Eval Use Cases" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases-cover.jpg"/>
 
 [G-Eval](/docs/metrics-llm-evals) allows you to easily create custom LLM-as-a-judge metrics by providing an evaluation criteria in everyday language. It's possible to create any custom metric for any use-case using `GEval`, and here are **5 of the most popular custom G-Eval metrics** among DeepEval users:
 
