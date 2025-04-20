@@ -1,6 +1,6 @@
 ---
-title: All DeepEval alternatives, compared
-description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
+title: All DeepEval Alternatives, Compared
+description: As the open-source LLM evaluation framework, DeepEval replaces a lot of alternatives that users might be considering.
 slug: deepeval-alternatives-compared
 authors: [penguine]
 tags: [comparisons]

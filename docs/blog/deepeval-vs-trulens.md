@@ -1,6 +1,6 @@
 ---
 title: DeepEval vs Trulens
-description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
+description: As the open-source LLM evaluation framework, DeepEval contains everything Trulens have, but also a lot more on top of it.
 slug: deepeval-vs-trulens
 authors: [penguine]
 tags: [comparisons]

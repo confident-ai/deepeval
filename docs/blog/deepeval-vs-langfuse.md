@@ -1,6 +1,6 @@
 ---
 title: DeepEval vs Langfuse
-description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
+description: DeepEval and Langfuse solves different problems. While Langfuse is an entire platform for LLM observability, DeepEval focuses on modularized evaluation like Pytest.
 slug: deepeval-vs-langfuse
 authors: [kritinv]
 tags: [comparisons]

@@ -1,6 +1,6 @@
 ---
 title: DeepEval vs Arize
-description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
+description: DeepEval and Arize AI is similar in many ways, but DeepEval specializes in evaluation while Arize AI is mainly for observability.
 slug: deepeval-vs-arize
 authors: [kritinv]
 tags: [comparisons]
