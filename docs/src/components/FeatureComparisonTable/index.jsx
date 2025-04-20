@@ -51,7 +51,7 @@ const datasets = {
           feature: "Open-source",
           description: "Open with nothing to hide",
           deepeval: true,
-          competitor: false,
+          competitor: true,
         },
         {
           feature: "LLM evaluation platform",
@@ -2223,7 +2223,7 @@ const datasets = {
           description:
             "Metrics for LLM safety and security like bias, PII leakage",
           deepeval: true,
-          competitor: false,
+          competitor: true,
         },
         {
           feature: "Multi-modal LLM evaluation",
