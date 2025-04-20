@@ -297,7 +297,7 @@ Fortunately, many of G-Eval’s limitations—such as subjectivity and its strug
 
 ### Using G-Eval in DAG
 
-DeepEval’s [DAG metric](https://www.deepeval.com/docs/metrics-introduction) (Directed Acyclic Graphs) provides a more **deterministic and modular alternative** to G-Eval. It enables you to build precise, rule-based evaluation logic by defining deterministic branching workflows.
+DeepEval’s [DAG metric](/docs/metrics-introduction) (Directed Acyclic Graphs) provides a more **deterministic and modular alternative** to G-Eval. It enables you to build precise, rule-based evaluation logic by defining deterministic branching workflows.
 ![ok](https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg)
 
 DAG-based metrics are composed of nodes that form an evaluation directed acyclic graph. Each node plays a distinct role in breaking down and controlling how evaluation is performed:
