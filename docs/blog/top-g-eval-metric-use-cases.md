@@ -311,7 +311,7 @@ from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
 answer_correctness_geval = GEval(
-    name="Answer Correctness)",
+    name="Answer Correctness",
     criteria=(
         "Evaluate whether the actual output matches the expected answer. "
         "If it includes any claims that are not in the expected output, assign a score of 0. "
@@ -346,10 +346,10 @@ coverage_node = NonBinaryJudgementNode(
         LLMTestCaseParams.ACTUAL_OUTPUT
     ],
     children=[
-        VerdictNode(verdict="All present", score=1.0, label="Fully correct"),
-        VerdictNode(verdict="Most present", score=0.7, label="Minor omissions"),
-        VerdictNode(verdict="Some present", score=0.3, label="Mostly incorrect"),
-        VerdictNode(verdict="Few or none", score=0.0, label="Insufficient coverage"),
+        VerdictNode(verdict="All present", score=1.0),
+        VerdictNode(verdict="Most present", score=0.7),
+        VerdictNode(verdict="Some present", score=0.3),
+        VerdictNode(verdict="Few or none", score=0.0),
     ],
     label="Evaluate coverage",
 )
@@ -362,8 +362,8 @@ hallucination_node = BinaryJudgementNode(
         LLMTestCaseParams.ACTUAL_OUTPUT
     ],
     children=[
-        VerdictNode(verdict=True, score=0.0, label="Hallucination detected"),
-        VerdictNode(verdict=False, score=None)  # Will connect to coverage next
+        VerdictNode(verdict=True, score=0.0), # Hallucination detected
+        VerdictNode(verdict=False, child=coverage_node)  # Will connect to coverage next
     ],
     label="Check for hallucinations",
 )
@@ -383,4 +383,4 @@ G-Eval provides an intuitive and flexible way to create custom LLM evaluation me
 
 However, for evaluations that demand deterministic logic, precise scoring, step-by-step transparency, and most importantly **objectivity**, DeepEval's DAG-based metrics offer a robust alternative. With DAG, you can break down complex evaluations into explicit steps, ensuring consistent and traceable judgments.
 
-Choosing between G-Eval and DAG ultimately depends on your evaluation goals: use G-Eval for flexibility in subjective assessments, or adopt DAG when accuracy, objectivity, and detailed evaluation logic are paramount.
+Choosing between G-Eval and DAG shouldn't be a hard choice, especially when **you can use G-Eval as a node in DAG** as well. It ultimately depends on your evaluation goals: use G-Eval for flexibility in subjective assessments, or adopt DAG when accuracy, objectivity, and detailed evaluation logic are paramount.
