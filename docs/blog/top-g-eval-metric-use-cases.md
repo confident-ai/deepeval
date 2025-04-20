@@ -51,11 +51,9 @@ As described in the original G-Eval paper, DeepEval uses the provided `criteria`
 
 ## Why DeepEval for G-Eval?
 
-Users use DeepEval for their G-Eval implementation is because it automatically handles the normalization of the final G-Eval score by calculating a weighted summation of the probabilities of the LLM judge's output tokens, as stated in the original G-Eval paper.
+Users use DeepEval for their G-Eval implementation is because it abstracts away much of the boilerplate and complexity involved in building an evaluation framework from scratch. For example, DeepEval automatically handles the normalization of the final G-Eval score by calculating a weighted summation of the probabilities of the LLM judge's output tokens, as stated in the original G-Eval paper.
 
-Another benefit is that since G-Eval relies on LLM-as-a-judge, DeepEval allows users to run G-Eval with any LLM judge they prefer, without additional setup.
-
-In short, DeepEval abstracts away much of the boilerplate and complexity involved in building an evaluation framework from scratch. Let’s move on to the top G-Eval use cases.
+Another benefit is that since G-Eval relies on LLM-as-a-judge, DeepEval allows users to run G-Eval with any LLM judge they prefer, without additional setup, is optimized for speed through concurrent execution of metrics, offers results caching, erroring handling, integration with CI/CD pipelines through Pytest, is integrated with platforms like Confident AI, and has other metrics such as DAG (more on this later) that users can incorperate G-Eval in.
 
 ## Answer Correctness
 
