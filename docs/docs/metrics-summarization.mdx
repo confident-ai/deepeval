@@ -12,6 +12,9 @@ sidebar_label: Summarization
 </head>
 
 import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer referenceless={true} />
 
 The summarization metric uses LLM-as-a-judge to determine whether your LLM (application) is generating factually correct summaries while including the neccessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `actual_output`.
 

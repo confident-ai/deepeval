@@ -8,13 +8,17 @@ sidebar_label: G-Eval
   <link rel="canonical" href="https://deepeval.com/docs/metrics-llm-evals" />
 </head>
 
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer custom={true} />
+
 G-Eval is a framework that uses LLM-as-a-judge with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most versatile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
 
+Usually, a `GEval` metric will be used alongside one of the other metrics that are more system specific (such as `ContextualRelevancyMetric` for RAG, and `TaskCompletionMetric` for agents). This is because `G-Eval` is a custom metric best for subjective, use case specific evaluation.
+
 :::tip
-
-Usually, a `GEval` metric will be used alongside one of the other metrics that are more system specific (such as `ContextualRelevancyMetric` for RAG, and `TaskCompletionMetric` for agents).
-
 If you want custom but extremely deterministic metric scores, you can checkout `deepeval`'s [`DAGMetric`](/docs/metrics-dag) instead. It is also a custom metric, but allows you to run evaluations by constructing a LLM-powered decision trees.
+
 :::
 
 ## Required Arguments
