@@ -81,6 +81,7 @@ module.exports = {
         blog: {
           blogTitle: 'DeepEval Blog',
           blogDescription: 'The official LLM evaluation blog',
+          blogSidebarCount: 'ALL',
         },
         docs: {
           path: "docs",

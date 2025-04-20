@@ -4,24 +4,14 @@ description: As the open-source LLM evaluation framework, DeepEval offers everyt
 slug: top-5-geval-use-cases
 authors: [kritinv]
 hide_table_of_contents: false
+image: https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases-cover.png
 ---
 
-[G-Eval](/docs/metrics-llm-evals) allows you to easily create custom LLM-as-a-judge metrics by providing an evaluation criteria in everyday language. It's possible to create any custom metric for any use-case using `GEval`, and here are **5 of the most popular custom G-Eval metrics** among DeepEval users:
+import BlogImageDisplayer from "@site/src/components/BlogImageDisplayer";
 
-<div
-  style={{
-    width: "550px",
-    marginTop: "30px",
-    marginBottom: "30px",
-    marginLeft: "-100px"
-  }}
->
-  <img
-    id="rag-evaluation"
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/top-g-eval-usage.svg"
-    style={{ width: "100%", height: "auto" }}
-  />
-</div>
+<BlogImageDisplayer cover={true} alt="Top G-Eval Use Cases" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases-cover.png"/>
+
+[G-Eval](/docs/metrics-llm-evals) allows you to easily create custom LLM-as-a-judge metrics by providing an evaluation criteria in everyday language. It's possible to create any custom metric for any use-case using `GEval`, and here are **5 of the most popular custom G-Eval metrics** among DeepEval users:
 
 1. **Answer Correctness** – Measures alignment with the expected output.
 2. **Coherence** – Measures logical and linguistic structure of the response.
@@ -31,15 +21,17 @@ hide_table_of_contents: false
 
 In this story, we will explore these metrics, how to implement them, and best practices we've learnt from our users.
 
+<BlogImageDisplayer alt="G-Eval Usage Statistics" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-usage.svg" caption="Top G-Eval Use Cases in DeepEval"/>
+
 ## What is G-Eval?
 
 G-Eval is a **research-backed custom metric framework** that allows you to create custom **LLM-Judge** metrics by providing a custom criteria. It employs a chain-of-thoughts (CoTs) approach to generate evaluation steps, which are then used to score an LLM Test Case. This method allows for flexible, task-specific metrics that can adapt to various use cases.
 
-![ok](https://deepeval-docs.s3.amazonaws.com/metrics-g-eval-algorithm.png)
+<BlogImageDisplayer alt="G-Eval Algorithm" src="https://deepeval-docs.s3.amazonaws.com/metrics-g-eval-algorithm.png"/>
 
 Research has shown that G-Eval significantly outperforms all traditional non-LLM evaluations across a range of criteria, including coherence, consistency, fluency, and relevancy.
 
-![ok](https://deepeval-docs.s3.amazonaws.com/metrics-g-eval-results.png)
+<BlogImageDisplayer alt="G-Eval Results" src="https://deepeval-docs.s3.amazonaws.com/metrics-g-eval-results.png"/>
 
 Here's how to define a G-Eval metric in DeepEval with just a few lines of code:
 
@@ -297,8 +289,9 @@ Fortunately, many of G-Eval’s limitations—such as subjectivity and its strug
 
 ### Using G-Eval in DAG
 
-DeepEval’s [DAG metric](/docs/metrics-introduction) (Directed Acyclic Graphs) provides a more **deterministic and modular alternative** to G-Eval. It enables you to build precise, rule-based evaluation logic by defining deterministic branching workflows.
-![ok](https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg)
+DeepEval’s [DAG metric]/docs/metrics-introduction) (Directed Acyclic Graphs) provides a more **deterministic and modular alternative** to G-Eval. It enables you to build precise, rule-based evaluation logic by defining deterministic branching workflows.
+
+<BlogImageDisplayer alt="DAG Metric Architecture" src="https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg" caption="An example DAG metric architecture"/>
 
 DAG-based metrics are composed of nodes that form an evaluation directed acyclic graph. Each node plays a distinct role in breaking down and controlling how evaluation is performed:
 
