@@ -346,10 +346,10 @@ coverage_node = NonBinaryJudgementNode(
         LLMTestCaseParams.ACTUAL_OUTPUT
     ],
     children=[
-        VerdictNode(verdict="All present", score=1.0),
-        VerdictNode(verdict="Most present", score=0.7),
-        VerdictNode(verdict="Some present", score=0.3),
-        VerdictNode(verdict="Few or none", score=0.0),
+        VerdictNode(verdict="All present", score=10),
+        VerdictNode(verdict="Most present", score=7),
+        VerdictNode(verdict="Some present", score=3),
+        VerdictNode(verdict="Few or none", score=0),
     ],
     label="Evaluate coverage",
 )
@@ -362,7 +362,7 @@ hallucination_node = BinaryJudgementNode(
         LLMTestCaseParams.ACTUAL_OUTPUT
     ],
     children=[
-        VerdictNode(verdict=True, score=0.0), # Hallucination detected
+        VerdictNode(verdict=True, score=0), # Hallucination detected
         VerdictNode(verdict=False, child=coverage_node)  # Will connect to coverage next
     ],
     label="Check for hallucinations",
