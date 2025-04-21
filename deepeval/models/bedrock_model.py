@@ -282,7 +282,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
     def encode_pil_image(self, pil_image: PILImage) -> str:
         """Convert a PIL image to a base64-encoded string."""
 
-        SUPPORTED_FORMATS = {'jpeg', 'png', 'bmp', 'gif'}
+        SUPPORTED_FORMATS = {'jpeg', 'png', 'webp', 'gif'}
 
         if pil_image.format.lower() not in SUPPORTED_FORMATS:
             raise ValueError(f"Unsupported image format: {pil_image.format}. Supported formats are {', '.join(SUPPORTED_FORMATS)}.")
