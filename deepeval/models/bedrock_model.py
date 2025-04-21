@@ -336,7 +336,6 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
                     except FileNotFoundError:
                         raise ValueError(f"Local image file not found: {item.url}")
                 else:
-                    # Remote image handling
                     if not isinstance(item.url, str) or not item.url.startswith("http"):
                         raise ValueError("Invalid remote image URL.")
                     image = self.download_image(item.url)
@@ -369,6 +368,8 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
                 max_tokens=1000,
             )
 
+            logger.info(f"Async response: {response}")
+
             generated_text = response.content[0].text if response.content else ""
 
             return self._parse_response(generated_text, schema)
@@ -388,6 +389,8 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
                 max_tokens=1000,
                 system=full_prompt
             )
+
+            logger.info(f"Sync response: {response}")
 
             generated_text = response.content[0].text if response.content else ""
 
