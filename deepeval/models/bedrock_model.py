@@ -372,6 +372,8 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
 
             generated_text = response.content[0].text if response.content else ""
 
+            logger.info(f"Async generated_text: {generated_text}")
+
             return self._parse_response(generated_text, schema)
 
         except Exception as e:
@@ -413,6 +415,9 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
             except ValidationError as e:
                 logger.error(f"Validation error: {e}")
                 return None
+            
+        logger.info(f"_parse_response: {_parse_response}")
+
         return generated_text
 
     def get_model_name(self) -> str:
