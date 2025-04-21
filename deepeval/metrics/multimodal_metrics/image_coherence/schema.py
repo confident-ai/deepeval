@@ -4,4 +4,4 @@ from pydantic import BaseModel
 
 class ReasonScore(BaseModel):
     reasoning: str
-    score: float
+    score: List[float]
