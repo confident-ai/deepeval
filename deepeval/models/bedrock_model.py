@@ -359,7 +359,8 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
     async def a_generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Union[BaseModel, dict, None]:
         messages_list = self.generate_prompt(multimodal_input)
         system_prompt = self._build_prompt(schema)
-
+        
+        logger.info(f"Async messages_list: {messages_list}")
         logger.info(f"Async system prompt: {system_prompt}")
 
         try:
