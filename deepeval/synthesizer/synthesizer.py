@@ -150,6 +150,7 @@ class Synthesizer:
                 filter_threshold=context_construction_config.context_quality_threshold,
                 similarity_threshold=context_construction_config.context_similarity_threshold,
                 max_retries=context_construction_config.max_retries,
+                additional_loaders=context_construction_config.file_loaders
             )
             contexts, source_files, context_scores = (
                 context_generator.generate_contexts(
@@ -218,6 +219,7 @@ class Synthesizer:
             filter_threshold=context_construction_config.context_quality_threshold,
             similarity_threshold=context_construction_config.context_similarity_threshold,
             max_retries=context_construction_config.max_retries,
+            additional_loaders=context_construction_config.file_loaders
         )
         contexts, source_files, context_scores = (
             await context_generator.a_generate_contexts(

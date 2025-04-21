@@ -4,6 +4,7 @@ from typing import Optional, Union, Dict
 from deepeval.metrics.utils import initialize_embedding_model, initialize_model
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.synthesizer.file_handler import FileHandler
 from deepeval.synthesizer.types import Evolution
 
 
@@ -55,6 +56,13 @@ class ContextConstructionConfig:
     context_quality_threshold: float = 0.5
     context_similarity_threshold: float = 0.0
     max_retries: int = 3
+    file_loaders: Optional[Dict[str, FileHandler]] = None
+    """
+    A dictionary mapping file extensions to custom FileHandler instances.
+    This allows for overriding default document loaders or adding support for additional file types.
+    The keys should be file extensions (e.g., ".pdf", ".docx") and values should be FileHandler instances.
+    Default loaders will be used for file types not specified in this dictionary.
+    """
 
     def __post_init__(self):
         self.critic_model, _ = initialize_model(self.critic_model)

@@ -16,6 +16,7 @@ from deepeval.models.base_model import (
 )
 from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
+from deepeval.synthesizer.file_handler import FileHandler
 from deepeval.synthesizer.templates.template import FilterTemplate
 
 
@@ -38,12 +39,12 @@ class ContextGenerator:
         max_retries: int = 3,
         filter_threshold: float = 0.5,
         similarity_threshold: float = 0.5,
-        _nodes: Optional[List[Union[TextNode, Document]]] = None,
+        additional_loaders: Optional[Dict[str, FileHandler]] = None,
     ):
         from chromadb.api.models.Collection import Collection
 
-        # Ensure either document_paths or _nodes is provided
-        if not document_paths and not _nodes:
+        # Ensure document_paths is provided
+        if not document_paths:
             raise ValueError("`document_path` is empty or missing.")
         if chunk_overlap > chunk_size - 1:
             raise ValueError(
@@ -56,7 +57,7 @@ class ContextGenerator:
         self.total_chunks = 0
         self.document_paths: List[str] = document_paths
         self.encoding = encoding
-        self._nodes = _nodes
+        self.additional_loaders = additional_loaders
 
         # Model parameters
         self.model, self.using_native_model = initialize_model(model)
@@ -468,7 +469,7 @@ class ContextGenerator:
         evaluated_chunks = []
         scores = []
         retry_count = 0
-        for i, chunk in enumerate(chunks):
+        for chunk in chunks:
             score = self.evaluate_chunk(chunk)
             if score > self.filter_threshold:
                 p_bar.update(self.max_retries - retry_count)
@@ -687,7 +688,10 @@ class ContextGenerator:
     def _load_docs(self):
         doc_to_chunker_map = {}
         for path in tqdm_bar(self.document_paths, "✨ 🚀 ✨ Loading Documents"):
-            doc_chunker = DocumentChunker(self.embedder)
+            doc_chunker = DocumentChunker(
+                embedder=self.embedder,
+                additional_loaders=self.additional_loaders,
+            )
             doc_chunker.load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
         return doc_to_chunker_map
@@ -696,7 +700,10 @@ class ContextGenerator:
         doc_to_chunker_map = {}
 
         async def a_process_document(path):
-            doc_chunker = DocumentChunker(self.embedder)
+            doc_chunker = DocumentChunker(
+                embedder=self.embedder,
+                additional_loaders=self.additional_loaders,
+            )
             await doc_chunker.a_load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
 

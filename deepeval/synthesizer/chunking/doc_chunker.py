@@ -13,18 +13,17 @@ from langchain_text_splitters.base import TextSplitter
 from llama_index.core.schema import TextNode
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
-from deepeval.synthesizer.chunking.file_handler import (
+from deepeval.synthesizer.file_handler import (
     FileHandler,
     FileHandlerLoaderAdapter,
 )
 
 
 class DocumentChunker:
-    _custom_handlers: Dict[str, FileHandler] = {}
-
     def __init__(
         self,
         embedder: DeepEvalBaseEmbeddingModel,
+        additional_loaders: Optional[dict[str, FileHandler]],
     ):
         from chromadb.api.models.Collection import Collection
 
@@ -36,6 +35,7 @@ class DocumentChunker:
         self.mean_embedding: Optional[float] = None
 
         # Mapping of file extensions to their respective loader classes
+        self.additional_loaders = additional_loaders or {}
         self.loader_mapping: Dict[str, Type[BaseLoader]] = {
             ".pdf": PyPDFLoader,
             ".txt": TextLoader,
@@ -235,30 +235,6 @@ class DocumentChunker:
         return collection
 
     #########################################################
-    ### Custom Handlers #####################################
-    #########################################################
-
-    @classmethod
-    def register_handler(cls, extension: str, handler: FileHandler) -> None:
-        """Register a custom file handler for a specific extension."""
-        if not extension.startswith("."):
-            print(f"Modifying extension from {extension} to .{extension}")
-            extension = f".{extension}"
-        cls._custom_handlers[extension.lower()] = handler
-
-    @classmethod
-    def unregister_handler(cls, extension: str) -> None:
-        """Unregister a custom file handler."""
-        if not extension.startswith("."):
-            extension = f".{extension}"
-        if extension.lower() in cls._custom_handlers:
-            del cls._custom_handlers[extension.lower()]
-        else:
-            raise ValueError(
-                f"No handler registered for extension: {extension}"
-            )
-
-    #########################################################
     ### Loading Docs ########################################
     #########################################################
 
@@ -268,7 +244,7 @@ class DocumentChunker:
         extension = extension.lower()
 
         # Check custom handlers first
-        custom_handler = self._custom_handlers.get(extension)
+        custom_handler = self.additional_loaders.get(extension)
         if custom_handler:
             return FileHandlerLoaderAdapter(custom_handler, path, encoding)
 
@@ -276,7 +252,7 @@ class DocumentChunker:
         loader = self.loader_mapping.get(extension)
         if loader is None:
             supported_formats = list(self.loader_mapping.keys())
-            custom_formats = list(self._custom_handlers.keys())
+            custom_formats = list(self.additional_loaders.keys())
             all_formats = sorted(supported_formats + custom_formats)
 
             raise ValueError(
