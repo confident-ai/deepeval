@@ -24,7 +24,11 @@ from deepeval.models.embedding_models import (
     OllamaEmbeddingModel,
 )
 
-from deepeval.models.bedrock_model import BedrockModel, MultimodalBedrockModel
+from deepeval.models.bedrock_model import (
+    BedrockModel, 
+    MultimodalBedrockModel
+)
+
 
 # TODO: uncomment out once fixed
 # from deepeval.models.summac_model import SummaCModels
