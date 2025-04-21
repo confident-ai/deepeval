@@ -8,7 +8,10 @@ sidebar_label: Bias
   <link rel="canonical" href="https://deepeval.com/docs/metrics-bias" />
 </head>
 
-import Equation from "@site/src/components/equation";
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer referenceless={true} safety={true} />
 
 The bias metric uses LLM-as-a-judge to determine whether your LLM output contains gender, racial, or political bias. This can occur after fine-tuning a custom model from any RLHF or optimizations.
 
@@ -28,7 +31,7 @@ The `input` and `actual_output` are required to create an `LLMTestCase` (and hen
 ## Example
 
 ```python
-from deepeva import evaluate
+from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BiasMetric
 

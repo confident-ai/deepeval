@@ -96,7 +96,7 @@ test_case = LLMTestCase(
 
 :::tip
 
-You should **NOT** include prompt templates as part of a test case because hyperparameters such as **prompt templates are independent variables that you try to optimize for** based on the metric scores you get from evaluation.
+Not all `input`s should include your prompt template, as this is determined by the metric you're using. Furthermore, the `input` should **NEVER** be a json version of the list of messages you are passing into your LLM.
 
 If you're logged into Confident AI, you can associate hyperparameters such as prompt templates with each test run to easily figure out which prompt template gives the best `actual_output`s for a given `input`:
 
@@ -498,6 +498,8 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - `test_case`: an `LLMTestCase`
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
+
+You can include the `deepeval test run` command as a step in a `.yaml` file in your CI/CD workflows to run pre-deployment checks on your LLM application.
 
 :::info
 The `run_async` parameter overrides the `async_mode` property of all metrics being evaluated. The `async_mode` property, as you'll learn later in the [metrics section](/docs/metrics-introduction), determines whether each metric can execute asynchronously.

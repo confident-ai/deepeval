@@ -1,13 +1,17 @@
 ---
-title: All DeepEval alternatives, compared
-description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
+title: All DeepEval Alternatives, Compared
+description: As the open-source LLM evaluation framework, DeepEval replaces a lot of alternatives that users might be considering.
 slug: deepeval-alternatives-compared
 authors: [penguine]
 tags: [comparisons]
 hide_table_of_contents: false
+image: https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:deepeval-vs-everyone:cover.jpg
 ---
 
-import FeatureComparisonTable from "@site/src/components/feature-comparison-table";
+import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
+import BlogImageDisplayer from "@site/src/components/BlogImageDisplayer";
+
+<BlogImageDisplayer cover={true} alt="DeepEval vs Alternatives" src="https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:deepeval-vs-everyone:cover.jpg"/>
 
 As an open-source all-in-one LLM evaluation framework, DeepEval replaces _a lot_ of LLMOps tools. It is great if you:
 
@@ -68,7 +72,7 @@ Arize AI's Phoenix product is most known for LLM monitoring and tracing, where t
 ### Key differences
 
 1. **LLM evaluation focus**: DeepEval is purpose-built for LLM evaluation with native support for RAG, chatbot, agentic experimentation, with synthetic data generation capabilities, whereas Arize AI is a broader LLM observability platform that is better for one-off debugging via tracing.
-2. **Evalution metrics**: DeepEval provides reliable, customizable, and deterministic evaluation metrics built specifically for LLMs, whereas Arize’s metrics is more for surface-level insight; helpful to glance at, but can't rely on 100%.
+2. **Evalution metrics**: DeepEval provides reliable, customizable, and deterministic evaluation metrics built specifically for LLMs, whereas Arize's metrics is more for surface-level insight; helpful to glance at, but can't rely on 100%.
 3. **Scales to safety testing**: DeepEval scales seamlessly into safety-critical use cases like red teaming through attack simulations, while Arize lacks the depth needed to support structured safety workflows out of the box.
 
 ### What people like about Arize
@@ -131,7 +135,7 @@ Langfuse has a great developer experience with clear documentation, helpful trac
 
 ### What people dislike about Langfuse
 
-While useful for one-off tracing, Langfuse isn’t well-suited for systematic evaluation like A/B testing or regression tracking; its playground is disconnected from your actual app, and it lacks deeper support for ongoing evaluation workflows like red teaming or test versioning.
+While useful for one-off tracing, Langfuse isn't well-suited for systematic evaluation like A/B testing or regression tracking; its playground is disconnected from your actual app, and it lacks deeper support for ongoing evaluation workflows like red teaming or test versioning.
 
 ## Braintrust
 

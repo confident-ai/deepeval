@@ -81,6 +81,7 @@ module.exports = {
         blog: {
           blogTitle: 'DeepEval Blog',
           blogDescription: 'The official LLM evaluation blog',
+          blogSidebarCount: 'ALL',
         },
         docs: {
           path: "docs",
@@ -101,6 +102,10 @@ module.exports = {
       },
     ],
   ],
+  themes: ["@docusaurus/theme-mermaid"],
+  markdown: {
+    mermaid: true,
+  },
   scripts: [
     {
       src: "https://plausible.io/js/script.tagged-events.js",

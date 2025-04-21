@@ -11,11 +11,14 @@ sidebar_label: Tool Correctness
   />
 </head>
 
-import Equation from "@site/src/components/equation";
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer usesLLMs={false} agent={true} referenceless={true} />
 
 The tool correctness metric is an agentic LLM metric that assesses your LLM agent's function/tool calling ability. It is calculated by comparing whether every tool that is expected to be used was indeed called.
 
-:::info
+:::note
 The `ToolCorrectnessMetric` allows you to define the **strictness** of correctness. By default, it considers matching tool names to be correct, but you can also require input parameters and output to match.
 :::
 

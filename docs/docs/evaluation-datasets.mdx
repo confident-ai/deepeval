@@ -4,6 +4,8 @@ title: Datasets
 sidebar_label: Datasets
 ---
 
+import VideoDisplayer from "@site/src/components/VideoDisplayer";
+
 <head>
   <link rel="canonical" href="https://deepeval.com/docs/evaluation-datasets" />
 </head>
@@ -30,16 +32,16 @@ You should also aim to group test cases of a certain category together in an `Ev
 
 :::info
 
-If you don't already have an `EvaluationDataset`, a great starting point is to simply write down the prompts you're currently using to manually eyeball your LLM outputs. You can also do this on [Confident AI](https://confident-ai.com) which integrates 100% with `deepeval`:
+If you don't already have an `EvaluationDataset`, a great starting point is to simply write down the prompts you're currently using to manually eyeball your LLM outputs. You can also do this on Confident AI, which integrates 100% with `deepeval`:
 
-<video width="100%" controls muted playsInline>
-  <source
-    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/confident-create-dataset.mp4"
-    type="video/mp4"
-  />
-</video>
-Full documentation for datasets on Confident AI
-[here.](https://documentation.confident-ai.com/dataset-editor/overview)
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/dataset-editor:dataset-annotation.mp4"
+  confidentUrl="/dataset-editor/annotate-datasets"
+  label="Learn Dataset Annotation on Confident AI"
+/>
+
+Full documentation for datasets on [Confident AI
+here.](https://documentation.confident-ai.com/dataset-editor/overview)
 
 :::
 
@@ -47,7 +49,7 @@ Full documentation for datasets on Confident AI
 
 An `EvaluationDataset` in `deepeval` is simply a collection of `LLMTestCase`s and/or `Golden`s.
 
-:::info
+:::note
 A `Golden` is extremely very similar to an `LLMTestCase`, but they are more flexible as they do not require an `actual_output` at initialization. On the flip side, whilst test cases are always ready for evaluation, a golden isn't.
 :::
 
