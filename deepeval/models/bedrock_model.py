@@ -358,13 +358,15 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
     
     async def a_generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Union[BaseModel, dict, None]:
         messages_list = self.generate_prompt(multimodal_input)
-        full_prompt = self._build_prompt(schema)
+        system_prompt = self._build_prompt(schema)
+
+        logger.info(f"Async system prompt: {system_prompt}")
 
         try:
             response = await self.a_client.messages.create(
                 model=self.model_id,
                 messages=messages_list,
-                system=full_prompt,
+                system=system_prompt,
                 max_tokens=1000,
             )
 
@@ -382,14 +384,14 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         
     def generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Union[BaseModel, dict, None]:
         messages_list = self.generate_prompt(multimodal_input)
-        full_prompt = self._build_prompt(schema)
+        system_prompt = self._build_prompt(schema)
 
         try:
             response = self.client.messages.create(
                 model=self.model_id,
                 messages=messages_list,
                 max_tokens=1000,
-                system=full_prompt
+                system=system_prompt
             )
 
             logger.info(f"Sync response: {response}")
