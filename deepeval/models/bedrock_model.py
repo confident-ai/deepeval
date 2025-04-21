@@ -406,7 +406,7 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         
     def _build_prompt(self, schema: Optional[BaseModel]) -> str:
         if schema:
-            return f"{self.system_prompt}\nOutput JSON schema: {schema.model_json_schema()}"
+            return f"{self.system_prompt}\nOutput JSON pydantic schema: {schema.model_json_schema()}"
         return self.system_prompt
     
     def _parse_response(self, generated_text: str, schema: Optional[BaseModel]) -> Union[BaseModel, dict, None]:
