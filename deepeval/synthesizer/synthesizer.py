@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple, Dict
+from typing import List, Optional, Union, Tuple, Dict, Literal
 from rich.console import Console
 from pydantic import BaseModel
 from itertools import chain
@@ -7,29 +7,31 @@ import datetime
 import asyncio
 import random
 import json
-from rich.console import Console
 from rich import print
 import tqdm
+import math
 import csv
 import os
 
-from deepeval.models.gpt_model import GPTModel
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
-from deepeval.metrics.utils import trimAndLoadJson, initialize_model
+from deepeval.metrics.utils import (
+    is_native_model,
+    trimAndLoadJson,
+    initialize_model,
+)
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.dataset.golden import Golden
 from deepeval.synthesizer.types import *
-from deepeval.synthesizer.templates.template import (
+from deepeval.synthesizer.templates import (
     EvolutionTemplate,
     SynthesizerTemplate,
     FilterTemplate,
-)
-from deepeval.synthesizer.templates.template_prompt import (
     PromptEvolutionTemplate,
     PromptSynthesizerTemplate,
+    ExtractionTemplate,
 )
 from deepeval.synthesizer.schema import (
     SyntheticData,
@@ -38,6 +40,7 @@ from deepeval.synthesizer.schema import (
     Response,
     InputFeedback,
     RewrittenInput,
+    PromptStyling,
 )
 from deepeval.synthesizer.config import (
     FiltrationConfig,
@@ -49,6 +52,8 @@ from deepeval.dataset.api import (
     APIDataset,
     CreateDatasetHttpResponse,
 )
+from deepeval.dataset.utils import convert_test_cases_to_goldens
+from deepeval.dataset import EvaluationDataset
 
 valid_file_types = ["csv", "json"]
 
@@ -81,12 +86,12 @@ class Synthesizer:
         filtration_config: Optional[FiltrationConfig] = None,
         evolution_config: Optional[EvolutionConfig] = None,
         styling_config: Optional[StylingConfig] = None,
+        cost_tracking: bool = False,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.async_mode = async_mode
         self.max_concurrent = max_concurrent
         self.synthetic_goldens: List[Golden] = []
-        self.context_generator = None
         self.filtration_config = (
             filtration_config
             if filtration_config is not None
@@ -100,6 +105,9 @@ class Synthesizer:
         self.styling_config = (
             styling_config if styling_config is not None else StylingConfig()
         )
+        self.set_styling_config = True if styling_config is not None else False
+        self.cost_tracking = cost_tracking
+        self.synthesis_cost = 0 if self.using_native_model else None
 
     #############################################################
     # Generate Goldens from Docs
@@ -127,30 +135,34 @@ class Synthesizer:
                     include_expected_output=include_expected_output,
                     max_goldens_per_context=max_goldens_per_context,
                     context_construction_config=context_construction_config,
+                    _reset_cost=False,
                 )
             )
         else:
             # Generate contexts from provided docs
-            if self.context_generator is None:
-                self.context_generator = ContextGenerator(
-                    document_paths=document_paths,
-                    embedder=context_construction_config.embedder,
-                    chunk_size=context_construction_config.chunk_size,
-                    chunk_overlap=context_construction_config.chunk_overlap,
-                    model=context_construction_config.critic_model,
-                    filter_threshold=context_construction_config.context_quality_threshold,
-                    similarity_threshold=context_construction_config.context_similarity_threshold,
-                    max_retries=context_construction_config.max_retries,
-                )
-            self.context_generator._load_docs()
+            context_generator = ContextGenerator(
+                document_paths=document_paths,
+                encoding=context_construction_config.encoding,
+                embedder=context_construction_config.embedder,
+                chunk_size=context_construction_config.chunk_size,
+                chunk_overlap=context_construction_config.chunk_overlap,
+                model=context_construction_config.critic_model,
+                filter_threshold=context_construction_config.context_quality_threshold,
+                similarity_threshold=context_construction_config.context_similarity_threshold,
+                max_retries=context_construction_config.max_retries,
+            )
             contexts, source_files, context_scores = (
-                self.context_generator.generate_contexts(
-                    num_context_per_document=context_construction_config.max_contexts_per_document,
+                context_generator.generate_contexts(
+                    max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
+                    min_contexts_per_source_file=context_construction_config.min_contexts_per_document,
                     max_context_size=context_construction_config.max_context_length,
+                    min_context_size=context_construction_config.min_context_length,
                 )
             )
+            if self.synthesis_cost:
+                self.synthesis_cost += context_generator.total_cost
             print(
-                f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
+                f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks."
             )
 
             # Generate goldens from generated contexts
@@ -170,9 +182,12 @@ class Synthesizer:
                     _context_scores=context_scores,
                     _progress_bar=progress_bar,
                     _send_data=False,
+                    _reset_cost=False,
                 )
 
-        # Wrap-up Synthesis
+        if self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
+
         if _send_data == True:
             pass
         return goldens
@@ -183,35 +198,39 @@ class Synthesizer:
         include_expected_output: bool = True,
         max_goldens_per_context: int = 2,
         context_construction_config: Optional[ContextConstructionConfig] = None,
+        _reset_cost=True,
     ):
         if context_construction_config is None:
             context_construction_config = ContextConstructionConfig(
                 critic_model=self.model
             )
-        self.synthesis_cost = 0 if self.using_native_model else None
+        if _reset_cost:
+            self.synthesis_cost = 0 if self.using_native_model else None
 
         # Generate contexts from provided docs
-        if self.context_generator is None:
-            self.context_generator = ContextGenerator(
-                document_paths=document_paths,
-                embedder=context_construction_config.embedder,
-                chunk_size=context_construction_config.chunk_size,
-                chunk_overlap=context_construction_config.chunk_overlap,
-                model=context_construction_config.critic_model,
-                filter_threshold=context_construction_config.context_quality_threshold,
-                similarity_threshold=context_construction_config.context_similarity_threshold,
-                max_retries=context_construction_config.max_retries,
-            )
-        await self.context_generator._a_load_docs()
-
+        context_generator = ContextGenerator(
+            document_paths=document_paths,
+            encoding=context_construction_config.encoding,
+            embedder=context_construction_config.embedder,
+            chunk_size=context_construction_config.chunk_size,
+            chunk_overlap=context_construction_config.chunk_overlap,
+            model=context_construction_config.critic_model,
+            filter_threshold=context_construction_config.context_quality_threshold,
+            similarity_threshold=context_construction_config.context_similarity_threshold,
+            max_retries=context_construction_config.max_retries,
+        )
         contexts, source_files, context_scores = (
-            await self.context_generator.a_generate_contexts(
-                num_context_per_document=context_construction_config.max_contexts_per_document,
+            await context_generator.a_generate_contexts(
+                max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
+                min_contexts_per_source_file=context_construction_config.min_contexts_per_document,
                 max_context_size=context_construction_config.max_context_length,
+                min_context_size=context_construction_config.min_context_length,
             )
         )
+        if self.synthesis_cost:
+            self.synthesis_cost += context_generator.total_cost
         print(
-            f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {self.context_generator.total_chunks} chunks."
+            f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks."
         )
 
         # Generate goldens from generated contexts
@@ -230,8 +249,11 @@ class Synthesizer:
                 source_files=source_files,
                 _context_scores=context_scores,
                 _progress_bar=progress_bar,
+                _reset_cost=False,
             )
         self.synthetic_goldens.extend(goldens)
+        if _reset_cost and self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
 
     #############################################################
@@ -247,8 +269,10 @@ class Synthesizer:
         _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
         _send_data: bool = True,
+        _reset_cost: bool = True,
     ) -> List[Golden]:
-        self.synthesis_cost = 0 if self.using_native_model else None
+        if _reset_cost:
+            self.synthesis_cost = 0 if self.using_native_model else None
         # Intialize Goldens as an empty list
         goldens: List[Golden] = []
 
@@ -358,6 +382,8 @@ class Synthesizer:
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
             pass
+        if _reset_cost and self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
 
     async def a_generate_goldens_from_contexts(
@@ -368,8 +394,10 @@ class Synthesizer:
         source_files: Optional[List[str]] = None,
         _context_scores: Optional[List[float]] = None,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
+        _reset_cost: bool = True,
     ) -> List[Golden]:
-        self.synthesis_cost = 0 if self.using_native_model else None
+        if _reset_cost:
+            self.synthesis_cost = 0 if self.using_native_model else None
         semaphore = asyncio.Semaphore(self.max_concurrent)
         goldens: List[Golden] = []
         with synthesizer_progress_context(
@@ -399,6 +427,8 @@ class Synthesizer:
             ]
             await asyncio.gather(*tasks)
 
+        if _reset_cost and self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
 
     async def _a_generate_from_context(
@@ -675,6 +705,8 @@ class Synthesizer:
     ) -> Dict[PromptEvolution, float]:
         prompt_evolutions: Dict[PromptEvolution, float] = {}
         for evo, weight in evolutions.items():
+            if evo == Evolution.MULTICONTEXT:
+                continue
             prompt_evolution = self.map_evolution_to_prompt_evolution(evo)
             prompt_evolutions[prompt_evolution] = weight
         return prompt_evolutions
@@ -687,6 +719,115 @@ class Synthesizer:
         except KeyError:
             raise KeyError(
                 f"Evolution '{evolution.name}' not available for this method."
+            )
+
+    #############################################################
+    # Generate from goldens
+    #############################################################
+
+    def generate_goldens_from_goldens(
+        self,
+        goldens: List[Golden],
+        max_goldens_per_golden: int = 2,
+        include_expected_output: bool = True,
+    ) -> List[Golden]:
+
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            return loop.run_until_complete(
+                self.a_generate_goldens_from_goldens(
+                    goldens=goldens,
+                    max_goldens_per_golden=max_goldens_per_golden,
+                    include_expected_output=include_expected_output,
+                )
+            )
+        else:
+            # Extract contexts and source files from goldens
+            contexts = []
+            source_files = []
+            for golden in goldens:
+                if golden.context is None:
+                    continue
+                contexts.append(golden.context)
+                source_files.append(golden.source_file)
+
+            # Extract styles from goldens if not already set
+            if self.set_styling_config == False:
+                example_inputs = random.sample(
+                    [golden.input for golden in goldens], 10
+                )
+                styling_prompt = (
+                    ExtractionTemplate.extract_prompt_structure_from_inputs(
+                        example_inputs
+                    )
+                )
+                styles = self._generate_schema(
+                    styling_prompt, PromptStyling, self.model
+                )
+                styles_json = json.loads(styles.model_dump_json())
+                styling_config = StylingConfig(
+                    **styles_json, expected_output_format=None
+                )
+                self.styling_config = styling_config
+
+            # Generate goldens from scratch or from contexts if available
+            if len(contexts) == 0:
+                return self.generate_goldens_from_scratch(
+                    num_goldens=len(goldens) * max_goldens_per_golden,
+                )
+            else:
+                return self.generate_goldens_from_contexts(
+                    contexts=contexts,
+                    include_expected_output=include_expected_output,
+                    max_goldens_per_context=max_goldens_per_golden,
+                    source_files=source_files,
+                )
+
+    async def a_generate_goldens_from_goldens(
+        self,
+        goldens: List[Golden],
+        max_goldens_per_golden: int = 2,
+        include_expected_output: bool = True,
+    ) -> List[Golden]:
+        # Extract contexts and source files from goldens
+        contexts = []
+        source_files = []
+        for golden in goldens:
+            if golden.context is None:
+                continue
+            contexts.append(golden.context)
+            source_files.append(golden.source_file)
+
+        # Extract styles from goldens if not already set
+        if self.set_styling_config == False:
+            example_inputs = random.sample(
+                [golden.input for golden in goldens], 10
+            )
+            styling_prompt = (
+                ExtractionTemplate.extract_prompt_structure_from_inputs(
+                    example_inputs
+                )
+            )
+            styles = await self._a_generate_schema(
+                styling_prompt, PromptStyling, self.model
+            )
+            styles_json = json.loads(styles.model_dump_json())
+            styling_config = StylingConfig(
+                **styles_json, expected_output_format=None
+            )
+            self.styling_config = styling_config
+
+        # Generate goldens from scratch or from contexts if available
+        if len(contexts) == 0:
+            return await self.a_generate_goldens_from_scratch(
+                num_goldens=len(goldens) * max_goldens_per_golden,
+            )
+        else:
+            return await self.a_generate_goldens_from_contexts(
+                contexts=contexts,
+                include_expected_output=include_expected_output,
+                max_goldens_per_context=max_goldens_per_golden,
+                source_files=source_files,
             )
 
     #############################################################
@@ -879,16 +1020,11 @@ class Synthesizer:
         schema: BaseModel,
         model: DeepEvalBaseLLM,
     ) -> BaseModel:
-        if isinstance(model, GPTModel):
-            res, cost = model.generate(prompt)
+        if is_native_model(model):
+            res, cost = model.generate(prompt, schema)
             if self.synthesis_cost is not None:
                 self.synthesis_cost += cost
-            data = trimAndLoadJson(res, self)
-            if schema == SyntheticDataList:
-                data_list = [SyntheticData(**item) for item in data["data"]]
-                return SyntheticDataList(data=data_list)
-            else:
-                return schema(**data)
+            return res
         else:
             try:
                 res = model.generate(prompt, schema=schema)
@@ -896,6 +1032,8 @@ class Synthesizer:
             except TypeError:
                 res = model.generate(prompt)
                 data = trimAndLoadJson(res, self)
+                # `SyntheticDataList` is nested, so must be manually processed
+                # if custom model doesn't support schema
                 if schema == SyntheticDataList:
                     data_list = [SyntheticData(**item) for item in data["data"]]
                     return SyntheticDataList(data=data_list)
@@ -908,16 +1046,11 @@ class Synthesizer:
         schema: BaseModel,
         model: DeepEvalBaseLLM,
     ) -> BaseModel:
-        if isinstance(model, GPTModel):
-            res, cost = await model.a_generate(prompt)
+        if is_native_model(model):
+            res, cost = await model.a_generate(prompt, schema)
             if self.synthesis_cost is not None:
                 self.synthesis_cost += cost
-            data = trimAndLoadJson(res, self)
-            if schema == SyntheticDataList:
-                data_list = [SyntheticData(**item) for item in data["data"]]
-                return SyntheticDataList(data=data_list)
-            else:
-                return schema(**data)
+            return res
         else:
             try:
                 res = await model.a_generate(prompt, schema=schema)
@@ -925,6 +1058,8 @@ class Synthesizer:
             except TypeError:
                 res = await model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
+                # `SyntheticDataList` is nested, so must be manually processed
+                # if custom model doesn't support schema
                 if schema == SyntheticDataList:
                     data_list = [SyntheticData(**item) for item in data["data"]]
                     return SyntheticDataList(data=data_list)
@@ -933,9 +1068,10 @@ class Synthesizer:
 
     def _generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Response)
-            self.synthesis_cost += cost
-            return res.response
+            res, cost = self.model.generate(prompt)
+            if self.synthesis_cost is not None:
+                self.synthesis_cost += cost
+            return res
         else:
             try:
                 res: Response = self.model.generate(prompt, schema=Response)
@@ -946,9 +1082,10 @@ class Synthesizer:
 
     async def _a_generate(self, prompt: str) -> str:
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Response)
-            self.synthesis_cost += cost
-            return res.response
+            res, cost = await self.model.a_generate(prompt)
+            if self.synthesis_cost is not None:
+                self.synthesis_cost += cost
+            return res
         else:
             try:
                 res: Response = await self.model.a_generate(
@@ -1080,20 +1217,55 @@ class Synthesizer:
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Generation finished 🎉! You can also run 'deepeval login' to generate and save goldens directly on Confident AI."
             )
 
-    def save_as(self, file_type: str, directory: str) -> str:
-        if file_type not in valid_file_types:
+    def save_as(
+        self,
+        file_type: Literal["json", "csv"],
+        directory: str,
+        file_name: Optional[str] = None,
+        quiet: bool = False,
+    ) -> str:
+        """Save synthetic goldens to a file.
+
+        Args:
+            file_type: Type of file to save as ('json' or 'csv').
+            directory: Directory path where the file will be saved.
+            file_name: Optional custom filename without extension. If provided,
+                       the file will be saved as "{file_name}.{file_type}".
+                       Must not contain file extension or periods.
+            quiet: Optional boolean to suppress output messages about the save location.
+
+        Returns:
+            Full path to the saved file.
+
+        Raises:
+            ValueError: If file_type is invalid, no synthetic goldens exist,
+            or file_name contains periods.
+        """
+        if str(file_type).lower() not in valid_file_types:
             raise ValueError(
-                f"Invalid file type. Available file types to save as: {', '.join(type for type in valid_file_types)}"
+                "Invalid file type. Available file types to save as: "
+                ", ".join(type for type in valid_file_types)
             )
+
+        if file_name and "." in file_name:
+            raise ValueError(
+                "file_name should not contain periods or file extensions. "
+                "The file extension will be added based on the file_type "
+                "parameter."
+            )
+
         if len(self.synthetic_goldens) == 0:
             raise ValueError(
-                f"No synthetic goldens found. Please generate goldens before attempting to save data as {file_type}"
+                "No synthetic goldens found. Please generate goldens before saving goldens."
             )
-        new_filename = (
-            datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f".{file_type}"
+
+        base_name = file_name or datetime.datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
         )
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        new_filename = f"{base_name}.{file_type}"
+
+        os.makedirs(directory, exist_ok=True)
+
         full_file_path = os.path.join(directory, new_filename)
         if file_type == "json":
             with open(full_file_path, "w", encoding="utf-8") as file:
@@ -1132,5 +1304,7 @@ class Synthesizer:
                             golden.source_file,
                         ]
                     )
-        print(f"Synthetic goldens saved at {full_file_path}!")
+        if not quiet:
+            print(f"Synthetic goldens saved at {full_file_path}!")
+
         return full_file_path

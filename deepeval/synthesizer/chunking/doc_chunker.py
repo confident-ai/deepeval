@@ -7,7 +7,7 @@ from langchain_community.document_loaders import (
 from langchain_community.document_loaders.base import BaseLoader
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
-from typing import Optional, List, Dict, Union
+from typing import Optional, List, Dict, Union, Type
 
 from llama_index.core.schema import TextNode
 import os
@@ -29,7 +29,7 @@ class DocumentChunker:
         self.mean_embedding: Optional[float] = None
 
         # Mapping of file extensions to their respective loader classes
-        self.loader_mapping: Dict[str, BaseLoader] = {
+        self.loader_mapping: Dict[str, Type[BaseLoader]] = {
             ".pdf": PyPDFLoader,
             ".txt": TextLoader,
             ".docx": Docx2txtLoader,
@@ -52,7 +52,6 @@ class DocumentChunker:
             )
 
         import chromadb
-        from chromadb.errors import InvalidCollectionException
 
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
@@ -62,7 +61,7 @@ class DocumentChunker:
         collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
-        except InvalidCollectionException:
+        except Exception as e:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -100,24 +99,16 @@ class DocumentChunker:
             )
 
         import chromadb
-        from chromadb.errors import InvalidCollectionException
 
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
         document_name = os.path.basename(full_document_path)
         client = chromadb.PersistentClient(path=f".vector_db/{document_name}")
 
-        try:
-            collection = client.get_collection(
-                name=f"processed_chunks_{chunk_size}_{chunk_overlap}"
-            )
-            return collection
-
-        except InvalidCollectionException:
-            collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
+        collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
-        except InvalidCollectionException:
+        except Exception as e:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -151,13 +142,12 @@ class DocumentChunker:
     async def a_from_nodes(self, nodes: List[Union[TextNode, LCDocument]]):
         # Create ChromaDB client
         import chromadb
-        from chromadb.errors import InvalidCollectionException
 
         client = chromadb.PersistentClient(path=f".vector_db/{nodes[0].id_}")
         collection_name = "processed_chunks"
         try:
             collection = client.get_collection(name=collection_name)
-        except InvalidCollectionException:
+        except Exception as e:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -195,13 +185,12 @@ class DocumentChunker:
     def from_nodes(self, nodes: List[Union[TextNode, LCDocument]]):
         # Create ChromaDB client
         import chromadb
-        from chromadb.errors import InvalidCollectionException
 
         client = chromadb.PersistentClient(path=f".vector_db/{nodes[0].id_}")
         collection_name = "processed_chunks"
         try:
             collection = client.get_collection(name=collection_name)
-        except InvalidCollectionException:
+        except Exception as e:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
             contents = [node.text for node in nodes]
@@ -231,8 +220,8 @@ class DocumentChunker:
     ### Loading Docs ########################################
     #########################################################
 
-    async def a_load_doc(self, path: str) -> List[LCDocument]:
-        # Find appropiate doc loader
+    def get_loader(self, path: str, encoding: Optional[str]) -> BaseLoader:
+        # Find appropriate doc loader
         _, extension = os.path.splitext(path)
         extension = extension.lower()
         loader: Optional[BaseLoader] = self.loader_mapping.get(extension)
@@ -240,21 +229,18 @@ class DocumentChunker:
             raise ValueError(f"Unsupported file format: {extension}")
 
         # Load doc into sections and calculate total character count
-        loader = loader(path)
+        if loader == TextLoader:
+            return loader(path, encoding=encoding, autodetect_encoding=True)
+        return loader(path)
+
+    async def a_load_doc(self, path: str, encoding: Optional[str]):
+        loader = self.get_loader(path, encoding)
         self.sections = await loader.aload()
         self.text_token_count = self.count_tokens(self.sections)
         self.source_file = path
 
-    def load_doc(self, path: str):
-        # Find appropiate doc loader
-        _, extension = os.path.splitext(path)
-        extension = extension.lower()
-        loader: Optional[BaseLoader] = self.loader_mapping.get(extension)
-        if loader is None:
-            raise ValueError(f"Unsupported file format: {extension}")
-
-        # Load doc into sections and calculate total character count
-        loader = loader(path)
+    def load_doc(self, path: str, encoding: Optional[str]):
+        loader = self.get_loader(path, encoding)
         self.sections = loader.load()
         self.text_token_count = self.count_tokens(self.sections)
         self.source_file = path

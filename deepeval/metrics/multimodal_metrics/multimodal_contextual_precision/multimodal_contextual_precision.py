@@ -131,10 +131,9 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = await self.model.a_generate(prompt, schema=Reason)
@@ -159,10 +158,9 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Reason)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
+            return res.reason
         else:
             try:
                 res: Reason = self.model.generate(prompt, schema=Reason)
@@ -181,12 +179,9 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
             retrieval_context=retrieval_context,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                ContextualPrecisionVerdict(**item) for item in data["verdicts"]
-            ]
+            verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
@@ -213,12 +208,9 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
             retrieval_context=retrieval_context,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            verdicts = [
-                ContextualPrecisionVerdict(**item) for item in data["verdicts"]
-            ]
+            verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:

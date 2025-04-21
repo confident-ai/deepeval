@@ -4,7 +4,17 @@ title: Json Correctness
 sidebar_label: Json Correctness
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-json-correctness"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer usesLLMs={false} referenceless={true} />
 
 The json correctness metric measures whether your LLM application is able to generate `actual_output`s with the correct **json schema**.
 
@@ -20,6 +30,8 @@ To use the `JsonCorrectnessMetric`, you'll have to provide the following argumen
 
 - `input`
 - `actual_output`
+
+The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Example
 
@@ -66,12 +78,14 @@ test_case = LLMTestCase(
     actual_output="{'name': null}"
 )
 
-metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are one mandatory and six optional parameters when creating an `PromptAlignmentMetric`:
+There are **ONE** mandatory and **SIX** optional parameters when creating an `PromptAlignmentMetric`:
 
 - `expected_schema`: a `pydantic` `BaseModel` specifying the schema of the Json that is expected from your LLM.
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
@@ -83,6 +97,21 @@ There are one mandatory and six optional parameters when creating an `PromptAlig
 
 :::info
 Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the `actual_output` has the wrong schema, **AND** if `include_reason` is set to `True`.
+:::
+
+### As a standalone
+
+You can also run the `JsonCorrectnessMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?

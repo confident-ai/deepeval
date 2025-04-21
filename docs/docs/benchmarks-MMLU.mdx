@@ -4,7 +4,11 @@ title: MMLU
 sidebar_label: MMLU
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/benchmarks-mmlu" />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 **MMLU (Massive Multitask Language Understanding)** is a benchmark for evaluating LLMs through multiple-choice questions. These questions cover 57 subjects such as math, history, law, and ethics. For more information, [visit the MMLU GitHub page](https://github.com/hendrycks/test).
 
@@ -14,7 +18,7 @@ import Equation from "@site/src/components/equation";
 
 ## Arguments
 
-There are two optional arguments when using the `MMLU` benchmark:
+There are **TWO** optional arguments when using the `MMLU` benchmark:
 
 - [Optional] `tasks`: a list of tasks (`MMLUTask` enums), specifying which of the **57 subject** areas to evaluate in the language model. By default, this is set to all tasks. Detailed descriptions of the `MMLUTask` enum can be found [here](#mmlu-tasks).
 - [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This is set to **5 by default** and cannot exceed this number.

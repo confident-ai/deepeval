@@ -9,7 +9,6 @@ from collections.abc import Iterable
 import tqdm
 import re
 import string
-import numpy as np
 from dataclasses import asdict, is_dataclass
 import re
 import asyncio
@@ -86,7 +85,9 @@ def prettify_list(lst: List[Any]):
                 jsonObj = item.dict()
 
             formatted_elements.append(
-                json.dumps(jsonObj, indent=4).replace("\n", "\n    ")
+                json.dumps(jsonObj, indent=4, ensure_ascii=True).replace(
+                    "\n", "\n    "
+                )
             )
         else:
             formatted_elements.append(repr(item))  # Fallback for other types
@@ -125,9 +126,6 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
-            print(
-                "Event loop is already running. Applying nest_asyncio patch to allow async execution..."
-            )
             nest_asyncio.apply()
 
         if loop.is_closed():
@@ -205,6 +203,11 @@ def set_should_use_cache(yes: bool):
 
 
 def login_with_confident_api_key(api_key: string):
+    if not api_key or not isinstance(api_key, str):
+        raise ValueError("Oh no! Please provide an api key string to login.")
+    elif len(api_key) == 0:
+        raise ValueError("Unable to login, please provide a non-empty api key.")
+
     from rich import print
 
     KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
@@ -365,11 +368,15 @@ def delete_file_if_exists(file_path):
 
 
 def softmax(x):
+    import numpy as np
+
     e_x = np.exp(x - np.max(x, axis=1, keepdims=True))
     return e_x / e_x.sum(axis=1, keepdims=True)
 
 
 def cosine_similarity(vector_a, vector_b):
+    import numpy as np
+
     dot_product = np.dot(vector_a, vector_b)
     norm_a = np.linalg.norm(vector_a)
     norm_b = np.linalg.norm(vector_b)

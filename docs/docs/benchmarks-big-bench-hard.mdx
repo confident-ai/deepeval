@@ -4,11 +4,18 @@ title: BIG-Bench Hard
 sidebar_label: BIG-Bench Hard
 ---
 
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/benchmarks-big-bench-hard"
+  />
+</head>
+
 The **BIG-Bench Hard (BBH)** benchmark comprises 23 challenging BIG-Bench tasks where prior language model evaluations have not outperformed the average human rater. BBH evaluates models using both few-shot and chain-of-thought (CoT) prompting techniques. For more details, you can [visit the BIG-Bench Hard GitHub page](https://github.com/suzgunmirac/BIG-Bench-Hard).
 
 ## Arguments
 
-There are three optional arguments when using the `BigBenchHard` benchmark:
+There are **THREE** optional arguments when using the `BigBenchHard` benchmark:
 
 - [Optional] `tasks`: a list of tasks (`BigBenchHardTask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `BigBenchHardTask` enums can be found [here](#big-bench-hard-tasks).
 - [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This number ranges strictly from 0-3, and is **set to 3 by default**.

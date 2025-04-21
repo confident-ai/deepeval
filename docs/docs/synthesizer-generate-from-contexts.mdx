@@ -4,6 +4,13 @@ title: Generate From Contexts
 sidebar_label: Generate from Contexts
 ---
 
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/synthesizer-generate-from-contexts"
+  />
+</head>
+
 If you already have prepared contexts, you can skip document processing. Simply provide these contexts to the Synthesizer, and it will generate the Goldens directly without processing documents.
 
 <div
@@ -14,7 +21,7 @@ If you already have prepared contexts, you can skip document processing. Simply 
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/synthesize-from-contexts.svg"
+    src="https://deepeval-docs.s3.amazonaws.com/synthesize-from-contexts.svg"
     alt="LangChain"
     style={{
       marginTop: "20px",
@@ -46,7 +53,7 @@ synthesizer.generate_goldens_from_contexts(
 )
 ```
 
-There are one mandatory and three optional parameters when using the `generate_goldens_from_contexts` method:
+There are **ONE** mandatory and **THREE** optional parameters when using the `generate_goldens_from_contexts` method:
 
 - `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `True`.

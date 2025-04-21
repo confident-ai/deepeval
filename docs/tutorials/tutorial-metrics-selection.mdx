@@ -7,7 +7,7 @@ sidebar_label: Selecting Your Metrics
 Once you have a clearly defined evaluation criteria, selecting metrics becomes significantly easier. In some cases, you may find **existing metrics** in DeepEval that already match your criteria. In others, you'll need to create **custom metrics** to address your unique evaluation needs.
 
 :::tip
-DeepEval provides [14+ metrics](/docs/metrics-introduction) to help you evaluate your LLM. **Familiarizing yourself with these metrics** can help you choose the ones that best align with your evaluation criteria.
+DeepEval provides [30+ metrics](/docs/metrics-introduction) to help you evaluate your LLM. **Familiarizing yourself with these metrics** can help you choose the ones that best align with your evaluation criteria.
 :::
 
 ## Selecting Metrics Relevant To Your Criteria
@@ -95,7 +95,7 @@ contextual_relevancy_metric = ContextualRelevancyMetric()
 Next, we'll define our custom G-Eval metric for professionalism. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're only assessing the LLM's `actual_output`.
 
 ```python
-from deepeval.test_case_import import LLMTestCaseParams
+from deepeval.test_case import LLMTestCaseParams
 from deepeval.metrics import GEval
 
 # Define criteria for evaluating professionalism

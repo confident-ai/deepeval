@@ -4,31 +4,35 @@ title: Quick Introduction
 sidebar_label: Quick Introduction
 ---
 
-import Envelope from "@site/src/components/envelope";
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/getting-started" />
+</head>
+
+import Envelope from "@site/src/components/Envelope";
+import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
 **DeepEval** is an open-source evaluation framework for LLMs. DeepEval makes it extremely easy to build
 and iterate on LLM (applications) and was built with the following principles in mind:
 
 - Easily "unit test" LLM outputs in a similar way to Pytest.
-- Plug-and-use 14+ LLM-evaluated metrics, most with research backing.
+- Plug-and-use 30+ LLM-evaluated metrics, most with research backing.
+- Evaluation for RAG, agents, chatbots, and virtually any use case.
 - Synthetic dataset generation with state-of-the-art evolution techniques.
 - Metrics are simple to customize and covers all use cases.
 - Red team, safety scan LLM applications for security vulnerabilities.
-- Real-time evaluations in production.
 
 Additionally, DeepEval has a cloud platform [Confident AI](https://app.confident-ai.com), which allow teams to use DeepEval to **evaluate, regression test, red team, and monitor** LLM applications on the cloud.
 
 <Envelope />
 
 :::tip DID YOU KNOW?
-If you use **Confident AI**, you can manage your entire LLM evaluation lifecycle (datasets, testing reports, monitoring, etc.) in one centralized place, and makes sure you do LLM evaluations the right way. Documentation for [Confident AI here.](/confident-ai/confident-ai-introduction)
+You can use DeepEval alongside Confident AI to can manage your entire LLM evaluation lifecycle (datasets, prompt management, LLM testing reports, monitoring, etc.) in one centralized place, and makes sure you do LLM evaluations the right way. Documentation for [Confident AI here.](https://documentation.confident-ai.com)
 
-<video width="100%" controls muted playsInline>
-  <source
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-full-test-run.mp4"
-    type="video/mp4"
-  />
-</video>
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:overview.mp4"
+  confidentUrl="/getting-started/create-account"
+  label="Watch Quickstart Video on Confident AI"
+/>
 
 It takes no additional code to setup, is automatically integrated with all code you run using `deepeval`, and you can [click here to sign up for free](https://app.confident-ai.com/auth/signup).
 :::
@@ -50,7 +54,7 @@ In your newly created virtual environment, run:
 pip install -U deepeval
 ```
 
-`deepeval` runs evaluations locally on your enviornment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](/confident-ai/confident-ai-introduction), the leading evaluation platform for DeepEval:
+`deepeval` runs evaluations locally on your enviornment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com), the native evaluation platform for DeepEval:
 
 ```console
 deepeval login
@@ -64,7 +68,7 @@ Confident AI is free and allows you to keep all evaluation results on the cloud.
 
 Run `touch test_example.py` to create a test file in your root directory. An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in `deepeval` is represents a single unit of LLM app interaction. For a series of LLM interactions (i.e. conversation), visit the conversational test cases [section](/docs/evaluation-test-cases#conversational-test-case) instead.
 
-![ok](https://confident-docs.s3.amazonaws.com/llm-test-case.svg)
+![ok](https://deepeval-docs.s3.amazonaws.com/llm-test-case.svg)
 
 Open `test_example.py` and paste in your first test case:
 
@@ -83,7 +87,7 @@ def test_correctness():
     test_case = LLMTestCase(
         input="I have a persistent cough and fever. Should I be worried?",
         # Replace this with the actual output of your LLM application
-        actual_output="A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don’t improve in a few days.",
+        actual_output="A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don't improve in a few days.",
         expected_output="A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs."
     )
     assert_test(test_case, [correctness_metric])
@@ -118,15 +122,10 @@ deepeval login
 
 After you've pasted in your API key, Confident AI will generate testing reports for you whenever you run a test run to evaluate your LLM application inside any environment, at any scale, anywhere.
 
-<img
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/test-cases-page.png"
-  alt="Confident AI"
-  style={{
-    marginTop: "20px",
-    marginBottom: "40px",
-    height: "auto",
-    maxHeight: "500px",
-  }}
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:testing-reports.mp4"
+  confidentUrl="/llm-evaluation/testing-reports"
+  label="Learn LLM Testing Reports on Confident AI"
 />
 
 :::tip
@@ -166,7 +165,7 @@ def test_correctness():
     test_case = LLMTestCase(
         input="I have a persistent cough and fever. Should I be worried?",
         # Replace this with the actual output of your LLM application
-        actual_output="A persistent cough and fever are usually just signs of a cold or flu, so you probably don’t need to worry unless it lasts more than a few weeks. Just rest and drink plenty of fluids, and it should go away on its own.",
+        actual_output="A persistent cough and fever are usually just signs of a cold or flu, so you probably don't need to worry unless it lasts more than a few weeks. Just rest and drink plenty of fluids, and it should go away on its own.",
         expected_output="A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs."
     )
     assert_test(test_case, [correctness_metric])
@@ -180,30 +179,21 @@ deepeval test run test_example.py
 In this example, we've delibrately showed a "worse" `actual_output` that is extremely irrelevant when compared to the previous test case. In reality, you'll not be hardcoding the `actual_output`s but rather be generating them at evaluation time.
 :::
 
-After running the new `test run` , you should see the `GEval` correctness metric failing, and it is because the `actual_output` is incorrect according to the `expected_output`. This is actually known as a "regression", and you can catch these by including `deepeval` in CI/CD pipeliens, or just in a python script.
+After running the new `test run` , you should see the `GEval` correctness metric failing, and it is because the `actual_output` is incorrect according to the `expected_output`. This is actually known as a "regression", and you can catch these by including `deepeval` in CI/CD pipeliens, or just in a python script. Based on these two results, you can decide which iterate is better, and whether the latest change you've made to your LLM application is safe to deploy.
 
-Based on these two results, you can decide which iterate is better, and whether the latest change you've made to your LLM application is safe to deploy.
+If you're logged into Confident AI, here's how you can catch regressions in your LLM app:
 
-### Comparing Iterations
-
-Although you can go through hundreds of test cases in your terminal, here's what catching regressions/identifying improvements by comparing test runs looks like on [Confident AI (sign up here)](https://app.confident-ai.com):
-
-<img
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/comparison-page.png"
-  alt="Confident AI"
-  style={{
-    height: "auto",
-    maxHeight: "500px",
-  }}
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:ab-regression-testing.mp4"
+  confidentUrl="/llm-evaluation/ab-regression-testing"
+  label="Watch LLM Regresion Testing on Confident AI"
 />
+
+Green rows indicate that your LLM has shown improvement on specific test cases, whereas red rows highlight areas of regression. For detailed documentation on regression testing with Confident AI, visit [this link](https://documentation.confident-ai.com/llm-evaluation/ab-regression-testing).
 
 :::note
 We didn't use the same test case data as shown above to demonstrate a more realistic example of what comparing two test runs looks like.
 :::
-
-If you look closely, you can see that for the same `LLMTestCase` (matched by [`name`](/docs/evaluation-test-cases#labeling-test-cases-for-confident-ai) or `input`), the difference in its `actual_output` led to a better `Correctness (GEval)` metric score.
-
-Green rows mean your LLM improved on this particular test case, while red means it regressed. You'll want to look at the entire test run to see if your results are better or worse!
 
 ## Create Your First Metric
 
@@ -220,15 +210,21 @@ deepeval recommend metrics
 
 ### Default Metrics
 
-`deepeval` offers 14+ research backed default metrics covering a wide range of use-cases. Here are a few metrics for RAG pipelines and agents:
+`deepeval` offers 30+ research backed default metrics covering a wide range of use-cases. Here are a few popular metrics:
 
-- Answer Relevancy
-- Faithfulness
-- Contextual Relevancy
-- Contextual Recall
-- Contextual Precision
-- Tool Correctness
-- Task Completion
+- RAG:
+  - Answer Relevancy
+  - Faithfulness
+  - Contextual Relevancy
+  - Contextual Recall
+  - Contextual Precision
+- Agents:
+  - Tool Correctness
+  - Task Completion
+- Chatbots:
+  - Conversation Completeness
+  - Conversation Relevancy
+  - Role Adherence
 
 To create a metric, simply import from the `deepeval.metrics` module:
 
@@ -322,7 +318,12 @@ metric = DAGMetric(name="Summarization", dag=dag)
 
 </details>
 
-![ok](https://confident-docs.s3.amazonaws.com/dag-formatting-metric.svg)
+<div style={{ display: "flex", justifyContent: "center", margin: "1rem 0" }}>
+  <img
+    style={{ width: "75%" }}
+    src="https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg"
+  />
+</div>
 
 For more information, visit the [`DAGMetric` documentation.](/docs/metrics-dag)
 
@@ -387,7 +388,6 @@ def test_customer_chatbot(test_case: LLMTestCase):
     assert_test(test_case, [answer_relevancy_metric])
 ```
 
-:::tip
 You can also evaluate entire datasets without going through the CLI (if you're in a notebook environment):
 
 ```python
@@ -397,23 +397,23 @@ from deepeval import evaluate
 evaluate(dataset, [answer_relevancy_metric])
 ```
 
-:::
-
 Additionally you can run test cases in parallel by using the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
 
 ```
 deepeval test run test_dataset.py -n 2
 ```
 
+:::tip
+
 Visit the [evaluation introduction section](/docs/evaluation-introduction#evaluating-with-pytest) to learn about the different types of flags you can use with the `deepeval test run` command.
+:::
 
-### Editing Datasets
+Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhere as one source of truth. Your team can annotate datasets directly on [Confident AI](https://documentation.confident-ai.com/dataset-editor/annotate-datasets), which is also 100% integrated with `deepeval`:
 
-Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhere as one source of truth. Your team can annotate datasets directly on [Confident AI (signup here)](https://app.confident-ai.com):
-
-<img
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/dataset-editing-page.png"
-  alt="Confident AI"
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/dataset-editor:dataset-annotation.mp4"
+  confidentUrl="/dataset-editor/annotate-datasets"
+  label="Learn Dataset Annotation on Confident AI"
 />
 
 You can then pull the dataset from the cloud to evaluate locally like how you would pull a Github repo.
@@ -461,53 +461,44 @@ Remember, a `Golden` is basically an `LLMTestCase` but with no `actual_output`.
 
 ## Red Team Your LLM application
 
-LLM red teaming refers to the process of attacking your LLM application to expose any safety risks it may have, including but not limited to vulnerabilities such as bias, racism, encouraging illegal actions, etc. It is an automated way to test for LLM safety by prompting it with adversarial attacks, which will be all taken care of by `deepeval`.
+LLM red teaming refers to the process of attacking your LLM application to expose any safety risks it may have, including but not limited to vulnerabilities such as bias, racism, encouraging illegal actions, etc. It is an automated way to test for LLM safety by prompting it with adversarial attacks.
 
-:::info
+:::danger
+**IMPORTANT:** Since March 16th 2025, to provide a better red teaming experience for everyone, all of `deepeval`'s red teaming functionalities has been migrated to a separate called **DeepTeam** that is dedicated for red teaming. To install, run:
+
+```python
+pip install -U deepteam
+```
+
+DeepTeam is built on top of DeepEval and follows the same design principles, with the same customizations that you would expect in DeepEval's ecosystem. **Use DeepTeam alongside DeepEval** if you wish to do both regular LLM evaluation and LLM safety testing.
+
+Here is [DeepTeam's quickstart.](https://www.trydeepteam.com/docs/getting-started)
+:::
+
 Red teaming is a different form of testing from what you've seen above because while standard LLM evaluation tests your LLM on its **intended functionality**, red teaming is meant to test your LLM application against, intentional, adversarial attacks from malicious users.
-:::
 
-Here's how you can **scan your LLM for vulnerabilities in a few lines of code** using `deepeval`'s `RedTeamer`, an extremely powerful tool to automatically scan for [40+ vulnerabilities](red-teaming-vulnerabilities). First instantiate a `RedTeamer` instance:
-
-```python
-from deepeval.red_teaming import RedTeamer
-
-red_teamer = RedTeamer(
-    # describe purpose of your LLM application
-    target_purpose="Provide financial advice related to personal finance and market trends.",
-    # supply system prompt template
-    target_system_prompt="You are a financial assistant designed to help users with financial planning"
-)
-```
-
-Then, supply the target LLM application you wish to scan:
+Here's how you can **scan your LLM for vulnerabilities in a few lines of code** using [DeepTeam](https://www.trydeepteam.com/docs/getting-started), an extremely powerful package to automatically scan for [50+ vulnerabilities](red-teaming-vulnerabilities):
 
 ```python
-from deepeval.red_teaming import AttackEnhancement, Vulnerability
-...
+from deepteam import red_team
+from deepteam.vulnerabilities import Bias
+from deepteam.attacks.single_turn import PromptInjection
 
-results = red_teamer.scan(
-    # your target LLM of type DeepEvalBaseLLM
-    target_model=TargetLLM(),
-    attacks_per_vulnerability=5,
-    vulnerabilities=[v for v in Vulnerability],
-    attack_enhancements={
-        AttackEnhancement.BASE64: 0.25,
-        AttackEnhancement.GRAY_BOX_ATTACK: 0.25,
-        AttackEnhancement.JAILBREAK_CRESCENDO: 0.25,
-        AttackEnhancement.MULTILINGUAL: 0.25,
-    },
-)
-print("Red Teaming Results: ", results)
+def model_callback(input: str) -> str:
+    # Replace this with your LLM application
+    return f"I'm sorry but I can't answer this: {input}"
+
+bias = Bias(types=["race"])
+prompt_injection = PromptInjection()
+
+red_team(model_callback=model_callback, vulnerabilities=[bias], attacks=[prompt_injection])
 ```
 
-`deepeval`'s `RedTeamer` is highly customizable and offers a range of different advanced red teaming capabilities for anyone to leverage. We highly recommend you read more about the `RedTeamer` at the [red teaming section.](/docs/red-teaming-introduction)
-
-:::tip
-The `TargetLLM()` you see being provided as argument to the `target_model` parameter is of type `DeepEvalBaseLLM`, which is basically a wrapper to wrap your LLM application into `deepeval`'s ecosystem for easy evaluating. You can learn how to create a custom `TargetLLM` in a few lines of code [here.](/guides/guides-using-custom-llms#creating-a-custom-llm)
-:::
+`deepteam` is highly customizable and offers a range of different advanced red teaming capabilities for anyone to leverage. We highly recommend you read more about the `deepteam` in this [documentation.](/docs/red-teaming-introduction)
 
 And that's it! You now know how to not only test your LLM application for its functionality, but also for any underlying risks and vulnerabilities it may expose and make your systems susceptible to malicious attacks.
+
+For more in-depth red teaming, go to [DeepTeam's documentation.](https://www.trydeepteam.com/docs/getting-started)
 
 ## Using Confident AI
 
@@ -533,12 +524,12 @@ And once your LLM application is live in **production**, you should:
 While there are many LLMOps platform that exist, Confident AI is laser focused on evaluations, although we also offer advanced observability, and native to `deepeval`, meaning users of `deepeval` requires no additional code to use Confident AI.
 
 :::caution
-This section is just an overview of Confident AI. If Confident AI sounds interesting, [**click here**](/confident-ai/confident-ai-introduction) for the full Confident AI quickstart guide instead.
+This section is just an overview of Confident AI. If Confident AI sounds interesting, [**click here**](https://documentation.confident-ai.com) for the full Confident AI quickstart guide instead.
 :::
 
 ### Login
 
-Confident AI integrates 100% with `deepeval`. All you need to do is [create an account here](https://confident-ai.com), or run the following command to login:
+Confident AI integrates 100% with `deepeval`. All you need to do is [create an account here](https://app.confident-ai.com), or run the following command to login:
 
 ```console
 deepeval login
@@ -562,7 +553,7 @@ By keeping your datasets on Confident AI, you can ensure that your datasets that
 
 <video width="100%" controls muted playsInline>
   <source
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-create-dataset.mp4"
+    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/confident-create-dataset.mp4"
     type="video/mp4"
   />
 </video>
@@ -577,11 +568,11 @@ dataset.pull(alias="My first dataset")
 print(dataset)
 ```
 
-You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden`s, which might not always be ready for evaluation (ie. missing an `actual_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](/confident-ai/confident-ai-evaluation-dataset-evaluation)
+You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden`s, which might not always be ready for evaluation (ie. missing an `actual_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](https://documentation.confident-ai.com)
 
 ### Running Evaluations
 
-You can either run evaluations [locally using `deepeval`](/confident-ai/confident-ai-testing-n-evaluation-test-run), or on the cloud on a [collection of metrics](/confident-ai/confident-ai-testing-n-evaluation-metric-collections) (which is also powered by `deepeval`). Most of the time, running evaluations locally is preferred because it allows for greater flexibility in metric customization. Using the previously pulled daataset, we can run an evaluation:
+You can either run evaluations [locally using `deepeval`](https://documentation.confident-ai.com), or on the cloud on a [collection of metrics](https://documentation.confident-ai.com) (which is also powered by `deepeval`). Most of the time, running evaluations locally is preferred because it allows for greater flexibility in metric customization. Using the previously pulled daataset, we can run an evaluation:
 
 ```python
 from deepeval import evaluate
@@ -595,7 +586,7 @@ You'll get a sharable testing report generated for you on Confident AI once your
 
 <video width="100%" controls muted playsInline>
   <source
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-full-test-run.mp4"
+    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/confident-full-test-run.mp4"
     type="video/mp4"
   />
 </video>
@@ -610,7 +601,7 @@ from deepeval import evaluate
 evaluate(
     test_cases=[...],
     metrics=[...],
-    hyperparameters={"model": "gpt4o", "prompt template": "..."}
+    hyperparameters={"model": "gpt-4o", "prompt template": "..."}
 )
 ```
 
@@ -620,7 +611,7 @@ Feel free to execute this in a nested for loop to figure out which combination g
 
 ### Monitoring LLM Outputs
 
-Confident AI allows anyone to [monitor, trace, and evaluate LLM outputs in real-time.](/confident-ai/confident-ai-llm-monitoring) A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
+Confident AI allows anyone to [monitor, trace, and evaluate LLM outputs in real-time.](https://documentation.confident-ai.com) A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
 
 ```python
 import openai
@@ -629,8 +620,8 @@ import deepeval
 def sync_without_stream(user_message: str):
     model = "gpt-4-turbo"
     response = openai.ChatCompletion.create(
-    model=model,
-    messages=[{"role": "user", "content": user_message}]
+      model=model,
+      messages=[{"role": "user", "content": user_message}]
     )
     output = response["choices"][0]["message"]["content"]
 
@@ -643,7 +634,7 @@ print(sync_without_stream("Tell me a joke."))
 
 <video width="100%" controls muted playsInline>
   <source
-    src="https://confident-docs.s3.us-east-1.amazonaws.com/confident-simple-monitoring.mp4"
+    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/confident-simple-monitoring.mp4"
     type="video/mp4"
   />
 </video>
@@ -667,7 +658,7 @@ deepeval.send_feedback(
 Confident AI allows you to keep track of either `"user"` feedback (ie. feedback provided by end users interacting with your LLM application), or `"reviewer"` feedback (ie. feedback provided by reviewers manually checking the quality of LLM responses in production).
 
 :::note
-To learn more, visit the [human feedback section page.](/confident-ai/confident-ai-human-feedback)
+To learn more, visit the [human feedback section page.](https://documentation.confident-ai.com)
 :::
 
 ## Full Example

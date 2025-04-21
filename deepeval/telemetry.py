@@ -9,6 +9,7 @@ from enum import Enum
 from typing import List, Dict
 import requests
 from deepeval.constants import LOGIN_PROMPT
+from posthog import Posthog
 
 
 class Feature(Enum):
@@ -17,10 +18,12 @@ class Feature(Enum):
     EVALUATION = "evaluation"
     GUARDRAIL = "guardrail"
     BENCHMARK = "benchmark"
+    CONVERSATION_SIMULATOR = "conversation_simulator"
     UNKNOWN = "unknown"
 
 
 TELEMETRY_DATA_FILE = ".deepeval_telemetry.txt"
+
 
 #########################################################
 ### Telemetry Config ####################################
@@ -90,6 +93,12 @@ if not telemetry_opt_out():
     # Create a tracer for your application
     tracer = trace.get_tracer(__name__)
 
+    # Initialize PostHog
+    posthog = Posthog(
+        project_api_key="phc_IXvGRcscJJoIb049PtjIZ65JnXQguOUZ5B5MncunFdB",
+        host="https://us.i.posthog.com",
+    )
+
 
 if (
     os.getenv("ERROR_REPORTING") == "YES"
@@ -129,6 +138,8 @@ IS_RUNNING_IN_JUPYTER = (
 def capture_evaluation_run(type: str):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(f"Ran {type}") as span:
+            if type in ["evaluate()", "deepeval test run"]:
+                posthog.capture(get_unique_id(), f"Ran {type}")
             span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())
@@ -184,6 +195,7 @@ def capture_synthesizer_run(
 ):
     if not telemetry_opt_out() and max_generations is not None:
         with tracer.start_as_current_span(f"Invoked synthesizer") as span:
+            posthog.capture(get_unique_id(), "Invoked synthesizer")
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("logged_in_with", get_logged_in_with())
@@ -206,13 +218,11 @@ def capture_synthesizer_run(
 
 
 @contextmanager
-def capture_red_teamer_run(
-    attacks_per_vulnerability_type: int,
-    vulnerabilities: List,
-    attack_enhancements: Dict,
-):
+def capture_conversation_simulatior_run(num_conversations: int):
     if not telemetry_opt_out():
-        with tracer.start_as_current_span(f"Invokved redteamer") as span:
+        with tracer.start_as_current_span(
+            f"Invoked conversation simulator"
+        ) as span:
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("logged_in_with", get_logged_in_with())
@@ -220,20 +230,45 @@ def capture_red_teamer_run(
             span.set_attribute("user.status", get_status())
             span.set_attribute("user.unique_id", get_unique_id())
             span.set_attribute(
-                "feature_status.redteaming",
-                get_feature_status(Feature.REDTEAMING),
+                "feature_status.conversation_simulator",
+                get_feature_status(Feature.CONVERSATION_SIMULATOR),
             )
-            span.set_attribute(
-                "attacks_per_vulnerability", attacks_per_vulnerability_type
-            )
-            for vuln in vulnerabilities:
-                for types in vuln.get_types():
-                    span.set_attribute(f"vulnerability.{types.value}", 1)
-            for enhancement, value in attack_enhancements.items():
-                span.set_attribute(
-                    f"attack_enhancement.{enhancement.value}", value
-                )
-            set_last_feature(Feature.REDTEAMING)
+            span.set_attribute("num_conversations", num_conversations)
+            set_last_feature(Feature.CONVERSATION_SIMULATOR)
+            yield span
+    else:
+        yield
+
+
+@contextmanager
+def capture_red_teamer_run(
+    attacks_per_vulnerability_type: int,
+    vulnerabilities: List[str],
+    attack_enhancements: Dict,
+):
+    if not telemetry_opt_out():
+        with tracer.start_as_current_span(f"Invokved redteamer") as span:
+            # if anonymous_public_ip:
+            #     span.set_attribute("user.public_ip", anonymous_public_ip)
+            # span.set_attribute("logged_in_with", get_logged_in_with())
+            # span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
+            # span.set_attribute("user.status", get_status())
+            # span.set_attribute("user.unique_id", get_unique_id())
+            # span.set_attribute(
+            #     "feature_status.redteaming",
+            #     get_feature_status(Feature.REDTEAMING),
+            # )
+            # span.set_attribute(
+            #     "attacks_per_vulnerability", attacks_per_vulnerability_type
+            # )
+            # for vuln in vulnerabilities:
+            #     for types in vuln.get_types():
+            #         span.set_attribute(f"vulnerability.{types.value}", 1)
+            # for enhancement, value in attack_enhancements.items():
+            #     span.set_attribute(
+            #         f"attack_enhancement.{enhancement.value}", value
+            #     )
+            # set_last_feature(Feature.REDTEAMING)
             yield span
     else:
         yield

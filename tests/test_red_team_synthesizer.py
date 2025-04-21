@@ -7,7 +7,6 @@ import openai
 
 from deepeval.red_teaming import RedTeamer, AttackEnhancement
 from deepeval.red_teaming.attack_synthesizer import AttackSynthesizer
-from deepeval.models.gpt_model_schematic import SchematicGPTModel
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM, GPTModel
 from deepeval.test_case import LLMTestCase

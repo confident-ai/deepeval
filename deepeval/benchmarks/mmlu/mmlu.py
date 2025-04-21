@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict
-from datasets import load_dataset
 import pandas as pd
 from tqdm import tqdm
 
@@ -238,6 +237,7 @@ class MMLU(DeepEvalBaseBenchmark):
         return res
 
     def load_benchmark_dataset(self, task: MMLUTask) -> List[Golden]:
+        from datasets import load_dataset
 
         dataset = load_dataset(
             "lukaemon/mmlu", task.value, trust_remote_code=True

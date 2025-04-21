@@ -4,6 +4,10 @@ title: DROP
 sidebar_label: DROP
 ---
 
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/benchmarks-drop" />
+</head>
+
 **DROP (Discrete Reasoning Over Paragraphs)** is a benchmark designed to evaluate language models' advanced reasoning capabilities through complex question answering tasks. It encompasses over 9500 intricate challenges that demand numerical manipulations, multi-step reasoning, and the interpretation of text-based data. For more insights and access to the dataset, you can [read the original DROP paper here](https://arxiv.org/pdf/1903.00161v2.pdf).
 
 :::info
@@ -12,7 +16,7 @@ sidebar_label: DROP
 
 ## Arguments
 
-There are two optional arguments when using the `DROP` benchmark:
+There are **TWO** optional arguments when using the `DROP` benchmark:
 
 - [Optional] `tasks`: a list of tasks (`DROPTask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `DROPTask` enums can be found [here](#drop-tasks).
 - [Optional] `n_shots`: the number of examples for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.

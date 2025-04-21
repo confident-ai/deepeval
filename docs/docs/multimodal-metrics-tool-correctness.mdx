@@ -4,7 +4,14 @@ title: Multimodal Tool Correctness
 sidebar_label: Multimodal Tool Correctness
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/multimodal-metrics-tool-correctness"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 The multimodal tool correctness metric is an agentic LLM metric that assesses your multimodal LLM agent's function/tool calling ability. It is calculated by comparing whether every tool that is expected to be used was indeed called.
 
@@ -20,6 +27,8 @@ To use the `MultimodalToolCorrectnessMetric`, you'll have to provide the followi
 - `actual_output`
 - `tools_called`
 - `expected_tools`
+
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Example
 
@@ -41,7 +50,7 @@ print(metric.score)
 print(metric.reason)
 ```
 
-There are seven optional parameters when creating a `MultimodalToolCorrectnessMetric`:
+There are **SEVEN** optional parameters when creating a `MultimodalToolCorrectnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `evaluation_params`: A list of `ToolCallParams` indicating the strictness of the correctness criteria, available options are `ToolCallParams.INPUT_PARAMETERS` and `ToolCallParams.OUTPUT`. For example, supplying a list containing `ToolCallParams.INPUT_PARAMETERS` but excluding `ToolCallParams.OUTPUT`, will deem a tool correct if the tool name and input parameters match, even if the output does not. Defaults to an empty list.

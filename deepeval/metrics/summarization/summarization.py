@@ -108,7 +108,7 @@ class SummarizationMetric(BaseMetric):
                     ],
                 )
 
-                return self.score
+            return self.score
 
     async def a_measure(
         self,

@@ -4,7 +4,14 @@ title: Multimodal Answer Relevancy
 sidebar_label: Multimodal Answer Relevancy
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/multimodal-metrics-answer-relevancy"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 The multimodal answer relevancy metric measures the quality of your Multimodal RAG pipeline's generator by evaluating how relevant the `actual_output` of your MLLM application is compared to the provided `input`. `deepeval`'s multimodal answer relevancy metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -18,6 +25,8 @@ To use the `MultimodalAnswerRelevancyMetric`, you'll have to provide the followi
 
 - `input`
 - `actual_output`
+
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Example
 
@@ -43,7 +52,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are six optional parameters when creating an `MultimodalAnswerRelevancyMetric`:
+There are **SIX** optional parameters when creating an `MultimodalAnswerRelevancyMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's Multimodal GPT models to use, **OR** any custom MLLM model of type `DeepEvalBaseMLLM`. Defaulted to 'gpt-4o'.

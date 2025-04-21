@@ -4,14 +4,26 @@ title: DAG (Deep Acyclic Graph)
 sidebar_label: DAG
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/metrics-dag" />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer custom={true} />
 
 The deep acyclic graph (DAG) metric in `deepeval` is currently the most versatile custom metric for you to easily build deterministic decision trees for evaluation with the help of using LLM-as-a-judge.
 
 :::info
-The `DAGMetric` is a **custom metric based on a LLM-powered decision tree, and gives you more deterministic control** over [`GEval`.](/docs/metrics-llm-evals) You can however also use `GEval` within your `DAGMetric`.
+The `DAGMetric` is a **custom metric based on a LLM-powered decision tree, and gives you more deterministic control** over [`GEval`.](/docs/metrics-llm-evals) You can however also use `GEval`, or any other default metric in `deepeval`, within your `DAGMetric`.
 
-![ok](https://confident-docs.s3.amazonaws.com/dag-formatting-metric.svg)
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    style={{ width: "75%" }}
+    src="https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg"
+  />
+</div>
 
 :::
 
@@ -43,7 +55,7 @@ Bob: "Core features are done, but we're optimizing performance for large dataset
 Alice: "Charlie, does this timeline work for marketing?"
 Charlie: "We need finalized messaging by Monday."
 Alice: "Bob, can we provide a stable version by then?"
-Bob: "Yes, we’ll share an early build."
+Bob: "Yes, we'll share an early build."
 Charlie: "Great, we'll start preparing assets."
 Alice: "Plan: fixes by Friday, marketing prep Monday, sync next Wednesday. Thanks, everyone!"
 """,
@@ -100,7 +112,7 @@ You can still use `GEval` in the `DAGMetric`, but the `DAGMetric` will give you 
 
 The `DAGMetric` requires you to first construct a decision tree that **has direct edges and acyclic in nature.** Let's take this decision tree for example:
 
-![ok](https://confident-docs.s3.amazonaws.com/dag-formatting-metric.svg)
+![ok](https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg)
 
 We can see that the `actual_output` of an `LLMTestCase` is first processed to extract all headings, before deciding whether they are in the correct ordering. If they are not correct, we give it a score of 0, heavily penalizing it, whereas if it is correct, we check the degree of which they are in the correct ordering. Based on this "degree of correct ordering", we can then decide what score to assign it.
 
@@ -188,7 +200,7 @@ format_correctness.measure(test_case)
 print(format_correctness.score)
 ```
 
-There are one required and six optional parameters when creating a `DAGMetric`:
+There are **TWO** mandatory and **SIX** optional parameters when creating a `DAGMetric`:
 
 - `name`: name of metric.
 - `dag`: a `DeepAcyclicGraph` which represents your evaluation decision tree.
@@ -228,7 +240,7 @@ class TaskNode(BaseNode):
     label: Optional[str] = None
 ```
 
-There are three mandatory and two optional parameter when creating a `TaskNode`:
+There are **THREE** mandatory and **TWO** optional parameter when creating a `TaskNode`:
 
 - `instructions`: a string specifying how to process parameters of an `LLMTestCase`, and/or outputs from a previous parent `TaskNode`.
 - `output_label`: a string representing the final output. The `children` `BaseNode`s will use the `output_label` to reference the output from the current `TaskNode`.
@@ -256,7 +268,7 @@ class BinaryJudgementNode(BaseNode):
     label: Optional[str] = None
 ```
 
-There are two mandatory and two optional parameter when creating a `BinaryJudgementNode`:
+There are **TWO** mandatory and **TWO** optional parameter when creating a `BinaryJudgementNode`:
 
 - `criteria`: a yes/no question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** to output `True` or `False`.
 - `children`: a list of exactly two `VerdictNode`s, one with a `verdict` value of `True`, and the other with a value of `False`.
@@ -285,7 +297,7 @@ class NonBinaryJudgementNode(BaseNode):
     label: Optional[str] = None
 ```
 
-There are two mandatory and two optional parameter when creating a `NonBinaryJudgementNode`:
+There are **TWO** mandatory and **TWO** optional parameter when creating a `NonBinaryJudgementNode`:
 
 - `criteria`: an open-ended question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** what to output.
 - `children`: a list of `VerdictNode`s, where the `verdict` values determine the possible verdict of the current `NonBinaryJudgementNode`.
@@ -307,11 +319,11 @@ class VerdictNode(BaseNode):
     child: Union[GEval, BaseNode]
 ```
 
-There are one mandatory two optional parameters when creating a `VerdictNode`:
+There are **ONE** mandatory **TWO** optional parameters when creating a `VerdictNode`:
 
 - `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is a `NonBinaryJudgementNode`, else boolean if the parent is a `BinaryJudgementNode`.
 - [Optional] `score`: a integar between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value. You must provide a score if `g_eval` is `None`.
-- [Optional] `child`: a `BaseNode` **OR** [`GEval`](/docs/metrics-llm-evals) metric instance. If the `score` is not provided, the `DAGMetric` will use this provided `child` to run the provided `GEval` metric instance to calculate a score, **OR** propagate the DAG execution to the `BaseNode` `child`.
+- [Optional] `child`: a `BaseNode` **OR** any [`BaseMetric`](/docs/metrics-introduction), including [`GEval`](/docs/metrics-llm-evals) metric instances. If the `score` is not provided, the `DAGMetric` will use this provided `child` to run the provided `BaseMetric` instance to calculate a score, **OR** propagate the DAG execution to the `BaseNode` `child`.
 
 :::caution
 You must provide `score` or `child`, but not both.

@@ -4,6 +4,13 @@ title: Generate From Documents
 sidebar_label: Generate From Documents
 ---
 
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/synthesizer-generate-from-docs"
+  />
+</head>
+
 If your application is a Retrieval-Augmented Generation (RAG) system, generating Goldens from documents can be particularly useful, especially if you already have access to the **documents that make up your knowledge base**. By simply providing these documents, the Synthesizer will automatically handle generating the relevant contexts needed for synthesizing test Goldens.
 
 <div
@@ -14,7 +21,7 @@ If your application is a Retrieval-Augmented Generation (RAG) system, generating
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/synthesize-from-docs.svg"
+    src="https://deepeval-docs.s3.amazonaws.com/synthesize-from-docs.svg"
     alt="LangChain"
     style={{
       marginTop: "20px",
@@ -31,10 +38,14 @@ The only difference between the `generate_goldens_from_docs()` and `generate_gol
 
 ## Generate Your Goldens
 
-Before you begin, you must install `chromadb==v0.5.3` as an additional dependency when generating from documents. The use of a vector database allows for faster indexing and retrieval of chunks during context construction.
+:::note
+If you do not have an `OPENAI_API_KEY` and wish to synthesize goldens, you'll need to use [**custom embedding models**](/guides/guides-using-custom-embedding-models) in addition to custom LLMs.
+:::
+
+Before you begin, you must install `chromadb` as an additional dependency when generating from documents. The use of a vector database allows for efficient retrieval of chunks during context construction.
 
 ```python
-pip install chromadb==0.5.3
+pip install chromadb
 ```
 
 Then, to generate synthetic `Golden`s from documents, simply provide a list of document paths:
@@ -48,12 +59,12 @@ synthesizer.generate_goldens_from_docs(
 )
 ```
 
-There are one mandatory and eleven optional parameters when using the `generate_goldens_from_docs` method:
+There are **ONE** mandatory and **THREE** optional parameters when using the `generate_goldens_from_docs` method:
 
 - `document_paths`: a list strings, representing the path to the documents from which contexts will be extracted from. Supported documents types include: `.txt`, `.docx`, and `.pdf`.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `True`.
 - [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
-- [Optional] `context_construction_config`: an instance of type `ContextConstructionConfig` that allows you to [customize the quality of contexts constructed](#customize-context-construction) from your documents. Defaulted to the default `ContextConstructionConfig` values.
+- [Optional] `context_construction_config`: an instance of type `ContextConstructionConfig` that allows you to [customize the quality and attributes of contexts constructed](#customize-context-construction) from your documents. Defaulted to the default `ContextConstructionConfig` values.
 
 :::info
 The final maximum number of goldens to be generated is the `max_goldens_per_context` multiplied by the `max_contexts_per_document` as specified in the `context_construction_config`, and **NOT** simply `max_goldens_per_context`.
@@ -73,11 +84,14 @@ synthesizer.generate_goldens_from_docs(
 )
 ```
 
-There are seven optional parameters when creating a `ContextConstructionConfig`:
+There are **SEVEN** optional parameters when creating a `ContextConstructionConfig`:
 
 - [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4o` when initialized as a standalone instance.
+- [Optional] `encoding`: the encoding to use to decode .txt files. Defaulted to auto detecting the encoding.
 - [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
+- [Optional] `min_contexts_per_document`: the minimum number of contexts to be generated per document. Defaulted to 1.
 - [Optional] `max_context_length`: specifies the number of of text chunks to be generated per context (context length). Defaulted to 3.
+- [Optional] `min_context_length`: specifies the minimum number of text chunks to be generated per context (context length). Defaulted to 1.
 - [Optional] `chunk_size`: specifies the size of text chunks (in characters) to be considered during [document parsing](#synthesizer-generate-from-docs#document-parsing). Defaulted to 1024.
 - [Optional] `chunk_overlap`: an int that determines the overlap size between consecutive text chunks during [document parsing](#synthesizer-generate-from-docs#document-parsing). Defaulted to 0.
 - [Optional] `context_quality_threshold`: a float representing the minimum quality threshold for [context selection](synthesizer-generate-from-docs#context-selection). If the context quality is below threshold, the context will be rejected. Defaulted to `0.5`.
@@ -148,7 +162,7 @@ Similar to the context selection step, if the cosine similarity is still lower t
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/filtering_context.svg"
+    src="https://deepeval-docs.s3.amazonaws.com/filtering_context.svg"
     alt="LangChain"
     style={{
       marginTop: "20px",

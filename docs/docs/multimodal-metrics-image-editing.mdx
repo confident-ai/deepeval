@@ -4,7 +4,14 @@ title: Image Editing
 sidebar_label: Image Editing
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/multimodal-metrics-image-editing"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 The Image Editing metric assesses the performance of **image editing tasks** by evaluating the quality of synthesized images based on semantic consistency and perceptual quality (similar to the `TextToImageMetric`). `deepeval`'s Image Editing metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -18,6 +25,8 @@ To use the `ImageEditingMetric`, you'll have to provide the following arguments 
 :::note
 Both the input and output should each contain exactly **1 image**.
 :::
+
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Example
 
@@ -47,7 +56,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are five optional parameters when creating a `ImageEditingMetric`:
+There are **FIVE** optional parameters when creating a `ImageEditingMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.

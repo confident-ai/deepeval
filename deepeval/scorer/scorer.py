@@ -1,5 +1,4 @@
 from typing import Union, List, Optional, Any
-import numpy as np
 import textwrap
 
 from deepeval.metrics.utils import trimAndLoadJson
@@ -422,6 +421,8 @@ class Scorer:
             return 0  # Return score as 0 in case of any exception
 
     def pass_at_k(self, n, c, k):
+        import numpy as np
+
         """
         :param n: total number of samples
         :param c: number of correct samples

@@ -81,7 +81,7 @@ class AnswerRelevancyMetric(BaseMetric):
                     ],
                 )
 
-                return self.score
+            return self.score
 
     async def a_measure(
         self,
@@ -183,6 +183,7 @@ class AnswerRelevancyMetric(BaseMetric):
             input=input,
             statements=self.statements,
         )
+
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -287,12 +288,6 @@ class AnswerRelevancyMetric(BaseMetric):
             except:
                 self.success = False
         return self.success
-
-    # def audit(self, test_case: LLMTestCase, repeat: int = 5):
-    #     for _ in repeat:
-    #         metric: BaseMetric = copy_metrics(metrics=[self])[0]
-    #         metric.measure(test_case, _show_indicator=False)
-    #         print(metric.score)
 
     @property
     def __name__(self):

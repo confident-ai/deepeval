@@ -1,57 +1,42 @@
 ---
 id: red-teaming-vulnerabilities
-title: LLM Risks & Vulnerabilities
-sidebar_label: Introduction
+title: Vulnerabilities
+sidebar_label: Vulnerabilities
 ---
 
-## Vulnerabilities
+<head>
+  <link
+    rel="canonical"
+    href="https://trydeepteam.com/docs/red-teaming-vulnerabilities"
+  />
+</head>
 
-Vulnerabilities enable you to **specify which aspect of your LLM you wish to red-team**. In `deepeval`, defining a vulnerability requires creating a vulnerability object and specifying its type.
+LLM vulnerabilities such as bias, PII leakage (which can introduced in fine-tuning of during tool calling), misinformation, are all important aspects that require red teaming and detection.
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+
+To begin, install `deepteam`:
+
+```console
+pip install deepteam
+```
+
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
+:::
+
+Here's how you can select different vulnerabilities to red team your LLM system on using **DeepTeam**:
 
 ```python
-from deepeval.vulnerability import Bias
-from deepeval.vulnerability.bias import BiasType
+from deepteam.vulnerabilities import bias, misinformation
+from deepteam import red_team
 
-bias_religion_vulnerability = Bias(type=BiasType.RELIGION)
+bias = Bias()
+misinformation = Misinformation()
+
+risk_assessment = red_team(vulnerabilities=[bias, misinformation], attacks=..., model_callback=...)
 ```
 
-:::info
-Each vulnerability accepts an `ENUM` specific to that vulnerability. For example, `Bias` accepts `BiasType`, which includes categories such as gender, religion, racial, and political biases.
-:::
-
-`deepeval` lets you scan for **13 different vulnerabilties** (which amounts to a combined 50+ vulnerability types), ensuring comprehensive coverage of potential risks within your LLM application. These vulnerabilities include:
-
-- [Bias](red-teaming-vulnerabilities-bias)
-- [Misinformation](red-teaming-vulnerabilities-misinformation)
-- [Toxicity](red-teaming-vulnerabilities-toxicity)
-- [PII Leakage](red-teaming-vulnerabilities-pii-leakage)
-- [Prompt Leakage](red-teaming-vulnerabilities-prompt-leakage)
-- [Unauthorized Access](red-teaming-vulnerabilities-unauthorized-access)
-- [Illegal Activities](red-teaming-vulnerabilities-illegal-activities)
-- [ExcessiveAgency](red-teaming-vulnerabilities-excessive-agency)
-- [Robustnesss](red-teaming-vulnerabilities-robustness)
-- [Competition](red-teaming-vulnerabilities-personal-safety)
-- [Intellectual Property](red-teaming-vulnerabilities-personal-safety)
-- [Graphic Content](red-teaming-vulnerabilities-personal-safety)
-- [Personal Safety](red-teaming-vulnerabilities-personal-safety)
-
-:::note
-DeepEval allows you to locally generate attacks for Bias and Misinformation. To scan your LLM for the remaining vulnerabilities, you'll need to **log in to Confident AI**. Use the following command to log in:
-
-```bash
-deepeval login
-:::
-
-## LLM Risks
-
-LLM vulnerabilities can be categorized into 5 major LLM risk categories. Think of these categories simply as collections of vulnerabilities.
-
-
-| LLM Risk                  | Vulnerabilities                                                                                                                                               | Description                                                                                                                                                   |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Responsible AI Risks      | `Bias`, `Toxicity`                                                                                                                                                | Responsible AI vulnerabilities focus on ensuring that the model behaves ethically and responsibly without generating biased or offensive content.             |
-| Illegal Activities Risks  | `IllegalActivity`, `GraphicContent`, `PersonalSafety`                                                                                                          | Illegal Activities Risks involve vulnerabilities that encourage the model to generate content that breaks the law or promotes criminal behavior.              |
-| Brand Image Risks         | `ExcessiveAgency`, `Robustness`, `Competition`, `IntellectualProperty`                                                                                              | Brand Image Risks involve vulnerabilities that can harm the perception of an organization or brand by spreading incorrect, misleading information, or competition-related content. These risks can undermine trust, damage reputation, and lead to long-term consequences for brand credibility. |
-| Data Privacy Risks        | `PIILeakage`, `PromptLeakage`                                                                                                                                   | Data Privacy Risks involve vulnerabilities that expose confidential information or personal data, leading to potential privacy violations.                    |
-| Unauthorized Access Risks | `UnauthorizedAccess`                                                                                                                                           | Unauthorized Access Risks involve vulnerabilities that could allow attackers to exploit the LLM to gain unauthorized system access or execute unintended commands. |
-```
+You can read how to use vulnerabilities on [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)

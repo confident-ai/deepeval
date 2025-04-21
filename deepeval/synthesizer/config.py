@@ -1,16 +1,15 @@
 from dataclasses import dataclass, field
 from typing import Optional, Union, Dict
 
-from deepeval.metrics.utils import initialize_model
+from deepeval.metrics.utils import initialize_embedding_model, initialize_model
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
-from deepeval.models.openai_embedding_model import OpenAIEmbeddingModel
 from deepeval.synthesizer.types import Evolution
 
 
 @dataclass
 class FiltrationConfig:
-    synthetic_input_quality_threshold: int = 0.5
+    synthetic_input_quality_threshold: float = 0.5
     max_quality_retries: int = 3
     critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None
 
@@ -46,15 +45,17 @@ class StylingConfig:
 class ContextConstructionConfig:
     embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None
     critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None
+    encoding: Optional[str] = None
     max_contexts_per_document: int = 3
+    min_contexts_per_document: int = 1
     max_context_length: int = 3
+    min_context_length: int = 1
     chunk_size: int = 1024
     chunk_overlap: int = 0
-    context_quality_threshold: int = 0.5
-    context_similarity_threshold: int = 0.0
+    context_quality_threshold: float = 0.5
+    context_similarity_threshold: float = 0.0
     max_retries: int = 3
 
     def __post_init__(self):
         self.critic_model, _ = initialize_model(self.critic_model)
-        if self.embedder is None:
-            self.embedder = OpenAIEmbeddingModel()
+        self.embedder = initialize_embedding_model(self.embedder)

@@ -4,7 +4,14 @@ title: Generate Synthetic Test Data for LLM Applications
 sidebar_label: Generating Synthetic Test Data
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/guides/guides-using-synthesizer"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 Manually curating test data can be time-consuming and often causes critical edge cases to be overlooked. With DeepEval's Synthesizer, you can quickly generate thousands of **high-quality synthetic goldens** in just minutes.
 
@@ -47,7 +54,7 @@ The `generate_goldens_from_docs` function follows several key steps to transform
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/synthesizer.png"
+    src="https://deepeval-docs.s3.amazonaws.com/synthesizer.png"
     alt="LangChain"
     style={{
       marginTop: "20px",
@@ -95,7 +102,7 @@ synthesizer.generate_goldens_from_docs(
 )
 ```
 
-It’s crucial to match the `chunk_size` and `chunk_overlap` settings to the characteristics of your knowledge base and the retriever being used. These chunks will form the context for your synthetic goldens, so proper alignment ensures that your generated test cases are reflective of real-world scenarios.
+It's crucial to match the `chunk_size` and `chunk_overlap` settings to the characteristics of your knowledge base and the retriever being used. These chunks will form the context for your synthetic goldens, so proper alignment ensures that your generated test cases are reflective of real-world scenarios.
 
 ### Best Practices for Chunking
 
@@ -117,7 +124,7 @@ To validate your chunking settings, calculate the number of chunks per document 
 The maximum number of goldens generated is determined by multiplying `max_contexts_per_document` by `max_goldens_per_context`.
 
 :::tip
-It’s generally more efficient to increase `max_contexts_per_document` to enhance coverage across different sections of your documents, especially when dealing with large datasets or varied knowledge bases. This provides broader insights into your LLM's performance across a wider range of scenarios, which is crucial for thorough testing, particularly if computational resources are limited.
+It's generally more efficient to increase `max_contexts_per_document` to enhance coverage across different sections of your documents, especially when dealing with large datasets or varied knowledge bases. This provides broader insights into your LLM's performance across a wider range of scenarios, which is crucial for thorough testing, particularly if computational resources are limited.
 :::
 
 ## Evolutions

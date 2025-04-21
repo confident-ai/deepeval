@@ -48,7 +48,13 @@ setup(
         "datasets",
         "ollama",
         "boto3",
-        "pillow"
+        "pillow",
+        "nltk",
+        "nltk-data",
+        "nltk-data-punkt",
+        "nltk-data-stopwords",
+        "nltk-data-punkt-punkt",
+        "nltk-data-stopwords-stopwords",
     ],
     extras_require={
         "dev": ["black"],
@@ -62,3 +68,4 @@ setup(
         ],
     },
 )
+

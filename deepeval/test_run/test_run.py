@@ -288,7 +288,7 @@ class TestRun(BaseModel):
         except AttributeError:
             # Pydantic version below 2.0
             body = self.dict(by_alias=True, exclude_none=True)
-        json.dump(body, f)
+        json.dump(body, f, cls=TestRunEncoder)
         return self
 
     @classmethod
@@ -302,6 +302,13 @@ class TestRun(BaseModel):
                 raise ValueError(
                     "Unable to send multimodal test cases to Confident AI."
                 )
+
+
+class TestRunEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        return super().default(obj)
 
 
 class TestRunManager:

@@ -1,0 +1,45 @@
+---
+# id: anthropic
+title: Anthropic
+sidebar_label: Anthropic
+---
+
+DeepEval supports using any Anthropic model for all evaluation metrics. To get started, you'll need to set up your Anthropic API key.
+
+### Setting Up Your API Key
+
+To use Anthropic for `deepeval`'s LLM-based evaluations (metrics evaluated using an LLM), provide your `ANTHROPIC_API_KEY` in the CLI:
+
+```bash
+export ANTHROPIC_API_KEY=<your-anthropic-api-key>
+```
+
+Alternatively, if you're working in a notebook environment (e.g., Jupyter or Colab), set your `ANTHROPIC_API_KEY` in a cell:
+
+```bash
+%env ANTHROPIC_API_KEY=<your-anthropic-api-key>
+```
+
+### Python
+
+To use Anthropic models for DeepEval metrics, define an `AnthropicModel` and specify the model you want to use. By default, the `model` is set to `claude-3-7-sonnet-latest`.
+
+```python
+from deepeval.models import AnthropicModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = AnthropicModel(model="claude-3-7-sonnet-latest")
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+### Available Anthropic Models
+
+Below is a list of commonly used Anthropic models:
+
+- `claude-3-7-sonnet-latest`
+- `claude-3-5-haiku-latest`
+- `claude-3-5-sonnet-latest`
+- `claude-3-opus-latest`
+- `claude-3-sonnet-20240229`
+- `claude-3-haiku-20240307`
+- `claude-instant-1.2`

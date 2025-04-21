@@ -1,4 +1,3 @@
-from datasets import load_dataset
 from typing import List, Optional, Dict, Union
 from tqdm import tqdm
 import pandas as pd
@@ -120,6 +119,8 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         return {"prediction": prediction, "score": int(flipped_score)}
 
     def load_benchmark_dataset(self, task: EquityMedQATask) -> List[Golden]:
+        from datasets import load_dataset
+
         # Load full dataset
         dataset_mapping = {
             EquityMedQATask.EHAI: EquityMedQATask.EHAI.value + "_dataset",

@@ -8,7 +8,7 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Evaluation",
+      label: "LLM Evaluation",
       items: [
         "evaluation-introduction",
         "evaluation-test-cases",
@@ -21,8 +21,11 @@ module.exports = {
             "synthesizer-generate-from-docs",
             "synthesizer-generate-from-contexts",
             "synthesizer-generate-from-scratch",
+            "synthesizer-generate-from-goldens",
+
           ],
         },
+        "evaluation-conversation-simulator",
         {
           type: "category",
           label: "Metrics",
@@ -30,21 +33,27 @@ module.exports = {
             "metrics-introduction",
             "metrics-llm-evals",
             "metrics-dag",
-            "metrics-answer-relevancy",
-            "metrics-faithfulness",
-            "metrics-contextual-precision",
-            "metrics-contextual-recall",
-            "metrics-contextual-relevancy",
-            "metrics-task-completion",
-            "metrics-tool-correctness",
-            "metrics-bias",
-            "metrics-toxicity",
-            "metrics-summarization",
-            "metrics-prompt-alignment",
-            "metrics-hallucination",
-            "metrics-json-correctness",
-            "metrics-ragas",
-            "metrics-custom",
+            {
+              type: "category",
+              label: "RAG Metrics",
+              items: [
+                "metrics-answer-relevancy",
+                "metrics-faithfulness",
+                "metrics-contextual-precision",
+                "metrics-contextual-recall",
+                "metrics-contextual-relevancy",
+              ],
+              collapsed: false,
+            },
+            {
+              type: "category",
+              label: "Agentic Metrics",
+              items: [
+                "metrics-task-completion",
+                "metrics-tool-correctness",
+              ],
+              collapsed: false,
+            },
             {
               type: "category",
               label: "Conversational Metrics",
@@ -55,7 +64,22 @@ module.exports = {
                 "metrics-conversation-completeness",
                 "metrics-conversation-relevancy",
               ],
-              collapsed: true,
+              collapsed: false,
+            },
+            {
+              type: "category",
+              label: "Others",
+              items: [
+                "metrics-bias",
+                "metrics-toxicity",
+                "metrics-summarization",
+                "metrics-prompt-alignment",
+                "metrics-hallucination",
+                "metrics-json-correctness",
+                "metrics-ragas",
+                "metrics-custom",
+              ],
+              collapsed: false,
             },
             {
               type: "category",
@@ -71,7 +95,7 @@ module.exports = {
                 "multimodal-metrics-contextual-precision",
                 "multimodal-metrics-contextual-recall",
                 "multimodal-metrics-contextual-relevancy",
-                "multimodal-metrics-tool-correctness"
+                "multimodal-metrics-tool-correctness",
               ],
               collapsed: true,
             },
@@ -109,7 +133,6 @@ module.exports = {
       label: "Red-Teaming",
       items: [
         "red-teaming-introduction",
-        "red-teaming-owasp",
         "red-teaming-attack-enhancements",
         {
           type: "category",
@@ -134,22 +157,6 @@ module.exports = {
         },
       ],
       collapsed: false,
-    },
-    {
-      type: "category",
-      label: "Integrations",
-      items: [
-        "integrations-introduction",
-        "integrations-llamaindex",
-        "integrations-huggingface",
-        "integrations-cognee",
-        "integrations-elastic",
-        "integrations-chroma",
-        "integrations-weaviate",
-        "integrations-qdrant",
-        "integrations-pgvector",
-      ],
-      collapsed: true,
     },
     {
       type: "category",

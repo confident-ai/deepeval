@@ -4,7 +4,14 @@ title: Multimodal Faithfulness
 sidebar_label: Multimodal Faithfulness
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/multimodal-metrics-faithfulness"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 The multimodal faithfulness metric measures the quality of your RAG pipeline's generator by evaluating whether the `actual_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s multimodal faithfulness metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -19,6 +26,8 @@ To use the `MultimodalFaithfulnessMetric`, you'll have to provide the following 
 - `input`
 - `actual_output`
 - `retrieval_context`
+
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Example
 
@@ -49,7 +58,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are seven optional parameters when creating a `MultimodalFaithfulnessMetric`:
+There are **SEVEN** optional parameters when creating a `MultimodalFaithfulnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's Multimodal GPT models to use, **OR** any custom MLLM model of type `DeepEvalBaseMLLM`. Defaulted to 'gpt-4o'.
@@ -69,6 +78,6 @@ The `MultimodalFaithfulnessMetric` first uses an MLLM to extract all claims made
 
 **A claim is considered truthful if it does not contradict any facts** presented in the `retrieval_context`.
 
-:::tip
+:::note
 Sometimes, you may want to only consider the most important factual truths in the `retrieval_context`. If this is the case, you can choose to set the `truths_extraction_limit` parameter to limit the maximum number of truths to consider during evaluation.
 :::

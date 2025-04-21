@@ -4,7 +4,11 @@ title: A Tutorial on Red-Teaming Your LLM
 sidebar_label: Red-Teaming your LLM
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link rel="canonical" href="https://deepeval.com/guides/guides-red-teaming" />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 Ensuring the **security of your LLM application** is critical to the safety of your users, brand, and organization. DeepEval makes it easy to red-team your LLM, allowing you to detect critical risks and vulnerabilities within just a few lines of code.
 
@@ -30,7 +34,7 @@ This tutorial will walk you through **how to red-team your LLM from start to fin
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/red_teaming_deepeval.svg"
+    src="https://deepeval-docs.s3.amazonaws.com/red_teaming_deepeval.svg"
     alt="LangChain"
     style={{
       margin: "20px",
@@ -69,12 +73,13 @@ class FinancialAdvisorLLM(DeepEvalBaseLLM):
         client = self.load_model()
         response = client.chat.completions.create(
             model="gpt-4o",
-            "messages": [
+            messages = [
                 {"role": "system", "content": self.get_system_prompt()},
                 {"role": "user", "content": prompt}
             ]
         )
-        return completion.choices[0].message
+
+        return response.choices[0].message.content
 
     # Async version of the generate method
     async def a_generate(self, prompt: str) -> str:
@@ -164,9 +169,9 @@ If you're using openai models as your evaluator or synthesizer, simply provide a
 
 ## 3. Scan your Target LLM
 
-With your `RedTeamer` configured and set up, you can finally run your red-teaming experiment. When scanning your LLM, you’ll need to consider three main factors: **which vulnerabilities to target, which attack enhancements to use, and how many attacks to generate per vulnerability.**
+With your `RedTeamer` configured and set up, you can finally run your red-teaming experiment. When scanning your LLM, you'll need to consider three main factors: **which vulnerabilities to target, which attack enhancements to use, and how many attacks to generate per vulnerability.**
 
-Here’s an example of setting up and running a scan:
+Here's an example of setting up and running a scan:
 
 ```python
 from deepeval.red_teaming import AttackEnhancement, Vulnerability
@@ -198,10 +203,10 @@ While it might be tempting to conduct an exhaustive scan, targeting the **highes
 
 ### Tips for Effective Red-Teaming Scans
 
-1. **Prioritize High-Risk Vulnerabilities**: Focus on vulnerabilities with the highest impact on your application’s security and functionality. For instance, if your model handles sensitive data, emphasize Data Privacy risks, and if reputation is key, focus on Brand Image Risks.
+1. **Prioritize High-Risk Vulnerabilities**: Focus on vulnerabilities with the highest impact on your application's security and functionality. For instance, if your model handles sensitive data, emphasize Data Privacy risks, and if reputation is key, focus on Brand Image Risks.
 2. **Combine Diverse Enhancements for Comprehensive Coverage**: Use a mix of encoding-based, one-shot, and dialogue-based enhancements to test different bypass techniques.
 3. **Tune Attack Enhancements to Match Model Strength**: Adjust enhancement distributions for optimal effectiveness. Encoding-based enhancements may work well on simpler models, while advanced models with strong filters benefit from more dialogue-based enhancements.
-4. **Optimize Attack Volume Per Vulnerability**: Start with a reasonable number of attacks (e.g., 5 per vulnerability). For critical vulnerabilities, increase the number of attacks to probe deeper, focusing on the most effective enhancement types for your model’s risk profile.
+4. **Optimize Attack Volume Per Vulnerability**: Start with a reasonable number of attacks (e.g., 5 per vulnerability). For critical vulnerabilities, increase the number of attacks to probe deeper, focusing on the most effective enhancement types for your model's risk profile.
 
 In our `FinancialAdvisorLLM` example, we start with an attack volume of 5 attacks per vulnerability, which is a moderate starting point suited for initial testing. Given that `FinancialAdvisorLLM` is powered by GPT-4o, which has strong filtering capabilities, we include Jailbreak Crescendo right away. Additionally, we use a balanced mix of encoding and one-shot enhancements to explore a range of bypass strategies and assess how well the model protects user privacy (we've defined multiple user privacy vulnerabilties) in response to these types of enhancements.
 
@@ -239,7 +244,7 @@ In our `FinancialAdvisorLLM` example, the score for **Excessive Agency** is nota
 
 ### Detailed Vulnerability Breakdown
 
-If a particular vulnerability, such as **Excessive Agency**, shows poor performance, you can drill down into specific instances where the model’s responses may need adjustment. Use the `vulnerability_scores_breakdown` attribute to retrieve detailed information.
+If a particular vulnerability, such as **Excessive Agency**, shows poor performance, you can drill down into specific instances where the model's responses may need adjustment. Use the `vulnerability_scores_breakdown` attribute to retrieve detailed information.
 
 ```python
 # Filter the breakdown table for only the "Excessive Agency" vulnerability
@@ -281,7 +286,7 @@ The final step is to refine your LLM based on the scan results and make improvem
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/red_teaming_iteration.svg"
+    src="https://deepeval-docs.s3.amazonaws.com/red_teaming_iteration.svg"
     alt="LangChain"
     style={{
       margin: "20px",
@@ -293,5 +298,5 @@ The final step is to refine your LLM based on the scan results and make improvem
 </div>
 
 :::tip
-Confident AI offers powerful [**observability**](/confident-ai/confident-ai-llm-monitoring) features, which include automated evaluations, human feedback integrations, and more, as well as blazing-fast **guardrails** to protect your LLM application.
+Confident AI offers powerful [**observability**](https://documentation.confident-ai.com) features, which include automated evaluations, human feedback integrations, and more, as well as blazing-fast **guardrails** to protect your LLM application.
 :::

@@ -4,6 +4,10 @@ title: ARC
 sidebar_label: ARC
 ---
 
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/benchmarks-arc" />
+</head>
+
 **ARC or AI2 Reasoning Challenge** is a dataset used to benchmark language models' reasoning abilities. The benchmark consists of 8,000 multiple-choice questions from science exams for grades 3 to 9. The dataset includes two modes: _easy_ and _challenge_, with the latter featuring more difficult questions that require advanced reasoning.
 
 :::tip
@@ -12,7 +16,7 @@ To learn more about the dataset and its construction, you can [read the original
 
 ## Arguments
 
-There are three optional arguments when using the `ARC` benchmark:
+There are **THREE** optional arguments when using the `ARC` benchmark:
 
 - [Optional] `n_problems`: the number of problems for model evaluation. By default, this is set all problems available in each benchmark mode.
 - [Optional] `n_shots`: the number of examples for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.

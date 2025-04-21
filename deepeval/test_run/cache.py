@@ -7,7 +7,6 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 from deepeval.test_case import LLMTestCaseParams, LLMTestCase, ToolCallParams
-from deepeval.types import Languages
 from deepeval.test_run.api import MetricData
 from deepeval.utils import (
     delete_file_if_exists,
@@ -31,7 +30,6 @@ class MetricConfiguration(BaseModel):
     ##### Optional fields #####
     evaluation_steps: Optional[List[str]] = None
     assessment_questions: Optional[List[str]] = None
-    language: Optional[Languages] = None
     embeddings: Optional[str] = None
     evaluation_params: Optional[
         Union[List[LLMTestCaseParams], List[ToolCallParams]]

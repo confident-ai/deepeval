@@ -16,16 +16,23 @@
   --ifm-color-primary-lighter: #8349df;
   --ifm-color-primary-lightest: #996ae5;
   --ifm-code-font-size: 95%;
+  --ifm-font-weight-bold: 600 !important;
+  --ifm-menu-color: #747480 !important;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
   .alert--success {
-    --ifm-alert-background-color: #def8f2 !important;
-    --ifm-alert-border-color: #30d2b9 !important;
+    --ifm-alert-background-color: #f1fffc !important;
+    --ifm-alert-border-color: #65ffe8 !important;
   }
 
   .alert--secondary {
     --ifm-alert-background-color: #f8fafc !important;
     --ifm-alert-border-color: black !important;
+  }
+
+  .alert--danger {
+    --ifm-alert-background-color: #ffeff5 !important;
+    --ifm-alert-border-color: #f30065 !important;
   }
 }
 
@@ -57,6 +64,22 @@ html[data-theme="dark"] {
   background-color: #1d232e;
 }
 
+.menu {
+  font-weight: 400;
+}
+
+.menu__link--active {
+  font-weight: 500 !important;
+}
+
+.avatar__name > a {
+  color: black !important;
+}
+
+.navbar__link {
+  font-weight: 400 !important;
+}
+
 html[data-theme="light"] .navbar {
   background-color: white;
 }
@@ -70,11 +93,11 @@ html[data-theme="light"] .navbar__logo {
 }
 
 div[class^="announcementBar_"] {
-  font-weight: bold;
+  font-weight: 600;
 }
 
 html[data-theme="light"] div[class^="announcementBar_"] {
-  background-color: #7c3aed !important;
+  background-color: #710bee !important;
   color: white !important;
 }
 
@@ -222,7 +245,6 @@ html[data-theme="dark"] #rag-evaluation {
   }
 }
 
-
 @media (max-width: 600px) {
   #confident-workflow {
     width: 100% !important;
@@ -239,7 +261,8 @@ html[data-theme="dark"] #rag-evaluation {
   padding: 0 !important;
 }
 
-img, video {
+img,
+video {
   border-radius: 6px;
 }
 
@@ -258,3 +281,4 @@ img, video {
     filter: drop-shadow(0 0 25px #6d28d9);
   }
 }
+

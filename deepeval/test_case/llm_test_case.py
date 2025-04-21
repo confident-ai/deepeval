@@ -42,11 +42,12 @@ class ToolCall(BaseModel):
         input_params = (
             self.input_parameters if self.input_parameters is not None else {}
         )
-        output_hashable = (
-            frozenset(self.output.items())
-            if isinstance(self.output, dict)
-            else self.output
-        )
+        output_hashable = self.output
+        if isinstance(self.output, dict):
+            output_hashable = frozenset(self.output.items())
+        elif isinstance(self.output, list):
+            output_hashable = frozenset(self.output)
+
         return hash(
             (self.name, frozenset(input_params.items()), output_hashable)
         )
@@ -105,6 +106,8 @@ class LLMTestCase:
     tools_called: Optional[List[ToolCall]] = None
     expected_tools: Optional[List[ToolCall]] = None
     reasoning: Optional[str] = None
+    token_cost: Optional[float] = None
+    completion_time: Optional[float] = None
     name: Optional[str] = field(default=None)
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)

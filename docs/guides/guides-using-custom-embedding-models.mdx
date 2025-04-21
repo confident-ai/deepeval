@@ -4,6 +4,13 @@ title: Using Custom Embedding Models
 sidebar_label: Using Custom Embedding Models
 ---
 
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/guides/guides-using-custom-embedding-models"
+  />
+</head>
+
 Throughout `deepeval`, only the `generate_goldens_from_docs()` method in the `Synthesizer` for synthetic data generation uses an embedding model. This is because in order to generate goldens from documents, the `Synthesizer` uses cosine similarity to generate the relevant context needed for data synthesization.
 
 This guide will teach you how to use literally **ANY** embedding model to extract context from documents that are required for synthetic data generation.
@@ -14,51 +21,71 @@ You can use Azure's OpenAI embedding models by running the following commands in
 
 ```console
 deepeval set-azure-openai --openai-endpoint=<endpoint> \
+    --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
     --openai-api-key=<api_key> \
-    --deployment-name=<deployment_name> \
-    --openai-api-version=<openai_api_version> \
-    --model-version=<model_version>
+    --openai-model-name=<model_name> \ # e.g. gpt-4o
+    --deployment-name=<deployment_name> \  # e.g. Test Deployment
+    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    --model-version=<model_version> # e.g. 2024-11-20
 ```
 
 Then, run this to set the Azure OpenAI embedder:
 
 ```console
-deepeval set-azure-openai-embedding --embedding_deployment-name=<embedding_deployment_name>
+deepeval set-azure-openai-embedding --embedding-deployment-name=<embedding_deployment_name>
 ```
 
 :::tip Did You Know?
 The first command configures `deepeval` to use Azure OpenAI LLM globally, while the second command configures `deepeval` to use Azure OpenAI's embedding models globally.
 :::
 
+### Using Ollama models
+
+To use a local model served by Ollama, use the following command:
+
+```console
+deepeval set-ollama <model_name>
+```
+
+Where model_name is one of the LLM that appears when executing `ollama list`. If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
+
+```console
+deepeval unset-ollama
+```
+
+Then, run this to set the local Embeddings model:
+
+```console
+deepeval set-ollama-embeddings <embedding_model_name>
+```
+
+To revert back to the default OpenAI embeddings run:
+
+```console
+deepeval unset-ollama-embeddings
+```
+
 ### Using local LLM models
 
-There are several local LLM providers that offer an OpenAI API compatible endpoint, like Ollama or LM Studio. You can use them with `deepeval` by setting several parameters from the CLI. To configure any of those providers, you need to supply the base URL where the service is running. These are some of the most popular alternatives for base URLs:
+There are several local LLM providers that offer OpenAI API compatible endpoints, like vLLM or LM Studio. You can use them with `deepeval` by setting several parameters from the CLI. To configure any of those providers, you need to supply the base URL where the service is running. These are some of the most popular alternatives for base URLs:
 
-- Ollama: http://localhost:11434/v1/
-- LM Studio: http://localhost:1234/v1/
+- LM Studio: `http://localhost:1234/v1/`
+- vLLM: `http://localhost:8000/v1/`
 
-For example to use a local model served by Ollama, use the following command:
+For example to use a local model from LM Studio, use the following command:
 
 ```console
 deepeval set-local-model --model-name=<model_name> \
-    --base-url="http://localhost:11434/v1/" \
-    --api-key="ollama"
-```
-
-Where model_name is one of the LLM that appears when executing `ollama list`.
-
-If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
-
-```console
-deepeval unset-local-model
+    --base-url="http://localhost:1234/v1/" \
+    --api-key=<api-key>
 ```
 
 Then, run this to set the local Embeddings model:
 
 ```console
 deepeval set-local-embeddings --model-name=<embedding_model_name> \
-    --base-url="http://localhost:11434/v1/" \
-    --api-key="ollama"
+    --base-url="http://localhost:1234/v1/" \
+    --api-key=<api-key>
 ```
 
 To revert back to the default OpenAI embeddings run:

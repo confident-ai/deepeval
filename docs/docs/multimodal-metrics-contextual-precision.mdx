@@ -4,7 +4,14 @@ title: Multimodal Contextual Precision
 sidebar_label: Multimodal Contextual Precision
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/multimodal-metrics-contextual-precision"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 The multimodal contextual precision metric measures your RAG pipeline's retriever by evaluating whether nodes in your `retrieval_context` that are relevant to the given `input` are ranked higher than irrelevant ones. `deepeval`'s multimodal contextual precision metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -20,6 +27,8 @@ To use the `MultimodalContextualPrecisionMetric`, you'll have to provide the fol
 - `actual_output`
 - `expected_output`
 - `retrieval_context`
+
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Example
 
@@ -54,7 +63,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are six optional parameters when creating a `MultimodalContextualPrecisionMetric`:
+There are **SIX** optional parameters when creating a `MultimodalContextualPrecisionMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's Multimodal GPT models to use, **OR** any custom MLLM model of type `DeepEvalBaseMLLM`. Defaulted to 'gpt-4o'.

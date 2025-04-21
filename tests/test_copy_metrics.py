@@ -3,7 +3,7 @@ import pytest
 from deepeval.metrics import GEval
 from deepeval.metrics.utils import copy_metrics
 from deepeval.test_case import LLMTestCaseParams
-from deepeval.models.gpt_model import GPTModel
+from deepeval.models import GPTModel
 
 
 class DummyMetric(GEval):

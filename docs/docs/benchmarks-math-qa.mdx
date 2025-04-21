@@ -4,6 +4,10 @@ title: MathQA
 sidebar_label: MathQA
 ---
 
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/benchmarks-math-qa" />
+</head>
+
 **MathQA** is a large-scale benchmark consisting of 37K English multiple-choice math word problems across diverse domains such as probability and geometry. It is designed to assess an LLM's capability for multi-step mathematical reasoning. To learn more about the dataset and its construction, you can [read the original MathQA paper here](https://arxiv.org/pdf/1905.13319.pdf).
 
 :::info
@@ -12,7 +16,7 @@ sidebar_label: MathQA
 
 ## Arguments
 
-There are two optional arguments when using the `MathQA` benchmark:
+There are **TWO** optional arguments when using the `MathQA` benchmark:
 
 - [Optional] `tasks`: a list of tasks (`MathQATask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `MathQATask` enums can be found [here](#mathqa-tasks).
 - [Optional] `n_shots`: the number of examples for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.

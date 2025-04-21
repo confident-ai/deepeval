@@ -8,11 +8,10 @@ sidebar_label: Monitoring LLMs in Production
 
 While we've thoroughly tested our medical chatbot, it's absolutely necessary to **continue monitoring and evaluating your LLM applications post-production**. This is crucial for improving your LLM application and identifying bugs as well as areas of improvement. Confident AI offers a complete suite of features to help you and your team easily monitor your LLMs in production, including:
 
-- [Response Monitoring](/confident-ai/confident-ai-llm-monitoring)
-- [Online Evaluations](/confident-ai/confident-ai-llm-monitoring-evaluations)
-- [LLM Tracing](/confident-ai/confident-ai-tracing)
-- [Integrating Human Feedback](/confident-ai/confident-ai-human-feedback)
-- [Placing Guardrails](/confident-ai/confident-ai-guardrails)
+- Online Evaluations
+- LLM Tracing
+- Integrating Human Feedback
+- Placing Guardrails
 
 In this section, we'll be focusing on setting up our medical chatbot application for response monitoring and tracing.
 
@@ -49,7 +48,7 @@ class MedicalAppointmentSystem():
 DeepEval's `monitor` function enables tracking of key information, including additional hyperparameters or custom data. This information is logged to **Confident AI's Observatory**, which features advanced filtering capabilities, making custom data logging especially impactful when applicable.
 
 :::info
-[Visit this section](/confident-ai/confident-ai-llm-monitoring) to learn more about leveraging the full capabilities of `deepeval.monitor`.
+[Visit this section](https://documentation.confident-ai.com) to learn more about leveraging the full capabilities of `deepeval.monitor`.
 :::
 
 Let's see how we can use this `monitor` function in our `interactive_session` method:
@@ -119,7 +118,7 @@ deepeval.trace_llama_index()
 Now, when you deploy your LLM application, you’ll gain full visibility into the steps it takes to generate each response, making it easier to debug and identify bottlenecks.
 
 :::tip  
-No matter how you built your application—whether using another framework or from scratch—you can create **custom (and even hybrid) traces** in DeepEval. Explore this [complete guide to LLM Tracing](/confident-ai/confident-ai-tracing) to learn how to set it up.  
+No matter how you built your application—whether using another framework or from scratch—you can create **custom (and even hybrid) traces** in DeepEval. Explore this [complete guide to LLM Tracing](https://documentation.confident-ai.com/observabilit/llm-tracing) to learn how to set it up.  
 :::
 
 ## Tracing and Monitor
@@ -179,7 +178,7 @@ Before diving into the platform, let’s first examine a _mock conversation_ bet
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_convo_1.png"
+    src="https://deepeval-docs.s3.amazonaws.com/tutorial_convo_1.png"
     alt="Langchain"
     style={{
       marginTop: "0px",
@@ -200,7 +199,7 @@ Before diving into the platform, let’s first examine a _mock conversation_ bet
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_convo_2.png"
+    src="https://deepeval-docs.s3.amazonaws.com/tutorial_convo_2.png"
     alt="Langchain"
     style={{
       marginBottom: "20px",
@@ -229,7 +228,7 @@ In this section we'll be exploring how to leverage the Confident AI platform for
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_monitoring_01.png"
+    src="https://deepeval-docs.s3.amazonaws.com/tutorial_monitoring_01.png"
     alt="Langchain"
     style={{
       marginTop: "20px",
@@ -252,7 +251,7 @@ Let's start by filtering for all the responses from the conversation and model w
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_monitoring_02.svg"
+    src="https://deepeval-docs.s3.amazonaws.com/tutorial_monitoring_02.svg"
     alt="Langchain"
     style={{
       marginTop: "20px",
@@ -279,7 +278,7 @@ To inspect each monitored response in more detail, simply click on the correspon
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_monitoring_03.svg"
+    src="https://deepeval-docs.s3.amazonaws.com/tutorial_monitoring_03.svg"
     alt="Inspecting Responses in Confident AI"
     style={{
       marginTop: "20px",
@@ -312,7 +311,7 @@ For now, let’s click on **View Trace** to see the full trace of the path our L
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_monitoring_04.svg"
+    src="https://deepeval-docs.s3.amazonaws.com/tutorial_monitoring_04.svg"
     alt="Detailed Inspection in Confident AI"
     style={{
       marginTop: "20px",
@@ -335,7 +334,7 @@ We’ll examine the trace of this specific interaction between Jacob and our med
   }}
 >
   <img
-    src="https://confident-bucket.s3.amazonaws.com/tutorial_convo_2.png"
+    src="https://deepeval-docs.s3.amazonaws.com/tutorial_convo_2.png"
     alt="Detailed Inspection in Confident AI"
     style={{
       paddingBottom: "20px",
@@ -360,7 +359,7 @@ As shown below, this response prompted the chatbot to call the RAG tool, initiat
   }}
 >
   <source
-    src="https://confident-bucket.s3.us-east-1.amazonaws.com/tutorial_monitoring_05.mp4"
+    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorial_monitoring_05.mp4"
     type="video/mp4"
   />
 </video>

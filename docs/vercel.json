@@ -1,10 +1,99 @@
 {
-    "redirects": [
-      {
-        "source": "/docs/guides-rag-evaluation",
-        "destination": "/guides/guides-rag-evaluation",
-        "statusCode": 301
-      }
-    ]
+  "redirects": [
+    {
+      "source": "/docs/guides-rag-evaluation",
+      "destination": "/guides/guides-rag-evaluation",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-introduction",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-introduction",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-owasp",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-owasp-top-10-for-llms",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-attack-enhancements",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-adversarial-attacks",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-bias",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-bias",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-misinformation",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-misinformation",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-toxicity",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-toxicity",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-illegal-activity",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-illegal-activity",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-personal-safety",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-personal-safety",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-pii-leakage",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-pii-leakage",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-prompt-leakage",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-prompt-leakage",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-unauthorized-access",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-unauthorized-access",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-intellectual-property",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-intellectual-property",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-excessive-agency",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-excessive-agency",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-robustness",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-robustness",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/red-teaming-vulnerabilities-graphic-content",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-graphic-content",
+      "statusCode": 301
+    },
+    {
+      "source": "/confident-ai/:path*",
+      "destination": "https://documentation.confident-ai.com",
+      "statusCode": 301
+    },    
+    {
+      "source": "/docs/red-teaming-vulnerabilities-competition",
+      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-competition",
+      "statusCode": 301
+    }
+  ]
 }
-  

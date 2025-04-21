@@ -29,7 +29,7 @@ By default, `auto_convert_goldens_to_test_cases` is set to `True`, but we'll set
 :::
 
 ```python
-from deepeval import EvaluationDataset
+from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
 dataset.pull("MadeUpCompany QA Dataset", auto_convert_goldens_to_test_cases=False)

@@ -1,21 +1,36 @@
 import inspect
 import json
 import re
+import sys
 from typing import Any, Dict, Optional, List, Union, Tuple
 from deepeval.errors import MissingTestCaseParamsError
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import (
-    GPTModel,
     DeepEvalBaseLLM,
-    MultimodalGPTModel,
     DeepEvalBaseMLLM,
+    GPTModel,
+    AnthropicModel,
+    AzureOpenAIModel,
+    OllamaModel,
+    LocalModel,
+    OpenAIEmbeddingModel,
+    AzureOpenAIEmbeddingModel,
+    OllamaEmbeddingModel,
+    LocalEmbeddingModel,
+    GeminiModel,
+    MultimodalOpenAIModel,
+    MultimodalGeminiModel,
+    MultimodalOllamaModel,
 )
-from deepeval.models.gpt_model_schematic import SchematicGPTModel
+from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+
 
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
     BaseMultimodalMetric,
 )
+from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
@@ -89,13 +104,14 @@ def get_turns_in_sliding_window(turns: List[LLMTestCase], window_size: int):
 
 
 def print_verbose_logs(metric: str, logs: str):
-    print("*" * 50)
-    print(f"{metric} Verbose Logs")
-    print("*" * 50)
-    print("")
-    print(logs)
-    print("")
-    print("=" * 70)
+    sys.stdout.write("*" * 50 + "\n")
+    sys.stdout.write(f"{metric} Verbose Logs\n")
+    sys.stdout.write("*" * 50 + "\n")
+    sys.stdout.write("\n")
+    sys.stdout.write(logs + "\n")
+    sys.stdout.write("\n")
+    sys.stdout.write("=" * 70 + "\n")
+    sys.stdout.flush()
 
 
 def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
@@ -265,56 +281,155 @@ def trimAndLoadJson(
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
+###############################################
+# Default Model Providers
+###############################################
+
+
+def should_use_azure_openai():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_local_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LOCAL_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_ollama_model():
+    base_url = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_API_KEY)
+    return base_url == "ollama"
+
+
+def should_use_gemini_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GEMINI_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
+###############################################
+# LLM
+###############################################
+
+
 def initialize_model(
-    model: Optional[Union[str, DeepEvalBaseLLM, GPTModel]] = None,
+    model: Optional[Union[str, DeepEvalBaseLLM]] = None,
 ) -> Tuple[DeepEvalBaseLLM, bool]:
     """
     Returns a tuple of (initialized DeepEvalBaseLLM, using_native_model boolean)
     """
-    # If model is a GPTModel, it should be deemed as using native model
-    if isinstance(model, GPTModel):
+    # If model is natively supported, it should be deemed as using native model
+    if is_native_model(model):
         return model, True
-    # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
+    # If model is a DeepEvalBaseLLM but not a native model, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
-
-    # If the model is a string, we initialize a GPTModel and use as a native model
-    if isinstance(model, str) or model is None:
+    if should_use_gemini_model():
+        return GeminiModel(), True
+    if should_use_ollama_model():
+        return OllamaModel(), True
+    elif should_use_local_model():
+        return LocalModel(), True
+    elif should_use_azure_openai():
+        return AzureOpenAIModel(model=model), True
+    elif isinstance(model, str) or model is None:
         return GPTModel(model=model), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, or GPTModel."
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, GPTModel, AzureOpenAIModel, OllamaModel, LocalModel."
     )
 
 
+def is_native_model(
+    model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+) -> bool:
+    if (
+        isinstance(model, GPTModel)
+        or isinstance(model, AnthropicModel)
+        or isinstance(model, AzureOpenAIModel)
+        or isinstance(model, OllamaModel)
+        or isinstance(model, LocalModel)
+        or isinstance(model, GeminiModel)
+    ):
+        return True
+    else:
+        return False
+
+
+###############################################
+# Multimodal Model
+###############################################
+
+
 def initialize_multimodal_model(
-    model: Optional[Union[str, DeepEvalBaseMLLM, MultimodalGPTModel]] = None,
+    model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
 ) -> Tuple[DeepEvalBaseLLM, bool]:
     """
     Returns a tuple of (initialized DeepEvalBaseMLLM, using_native_model boolean)
     """
-    # If model is a MultimodalGPTModel, it should be deemed as using native model
-    if isinstance(model, MultimodalGPTModel):
+    if is_native_mllm(model):
         return model, True
-    # If model is a DeepEvalBaseMLLM but not a MultimodalGPTModel, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseMLLM):
         return model, False
-    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
-    return MultimodalGPTModel(model=model), True
+    if should_use_gemini_model():
+        return MultimodalGeminiModel(), True
+    if should_use_ollama_model():
+        return MultimodalOllamaModel(), True
+    elif isinstance(model, str) or model is None:
+        return MultimodalOpenAIModel(model=model), True
+    raise TypeError(
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseMLLM, MultimodalOpenAIModel, MultimodalOllamaModel."
+    )
 
 
-def initialize_schematic_model(
-    model: Optional[Union[str, DeepEvalBaseLLM, SchematicGPTModel]] = None,
-) -> Tuple[DeepEvalBaseLLM, bool]:
-    """
-    Returns a tuple of (initialized DeepEvalBaseLLM, using_native_model boolean)
-    """
-    # If model is a GPTModel, it should be deemed as using native model
-    if isinstance(model, SchematicGPTModel):
-        return model, True
-    # If model is a DeepEvalBaseLLM but not a GPTModel, we can not assume it is a native model
-    if isinstance(model, DeepEvalBaseLLM):
-        return model, False
-    # Otherwise (the model is a string or None), we initialize a GPTModel and use as a native model
-    return SchematicGPTModel(model=model), True
+def is_native_mllm(
+    model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+) -> bool:
+    if (
+        isinstance(model, MultimodalOpenAIModel)
+        or isinstance(model, MultimodalOllamaModel)
+        or isinstance(model, MultimodalGeminiModel)
+    ):
+        return True
+    else:
+        return False
+
+
+###############################################
+# Embedding Model
+###############################################
+
+
+def should_use_azure_openai_embedding():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI_EMBEDDING)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_local_embedding():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LOCAL_EMBEDDINGS)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_ollama_embedding():
+    api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_EMBEDDING_API_KEY)
+    return api_key == "ollama"
+
+
+def initialize_embedding_model(
+    model: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None,
+) -> DeepEvalBaseEmbeddingModel:
+    if isinstance(model, DeepEvalBaseEmbeddingModel):
+        return model
+    if should_use_ollama_embedding():
+        return OllamaEmbeddingModel()
+    elif should_use_local_embedding():
+        return LocalEmbeddingModel()
+    elif should_use_azure_openai_embedding():
+        return AzureOpenAIEmbeddingModel()
+    elif isinstance(model, str) or model is None:
+        return OpenAIEmbeddingModel(model=model)
+
+    # Otherwise (the model is a wrong type), we raise an error
+    raise TypeError(
+        f"Unsupported type for embedding model: {type(model)}. Expected None, str, DeepEvalBaseEmbeddingModel, OpenAIEmbeddingModel, AzureOpenAIEmbeddingModel, OllamaEmbeddingModel, LocalEmbeddingModel."
+    )

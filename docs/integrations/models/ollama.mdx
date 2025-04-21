@@ -1,0 +1,70 @@
+---
+# id: ollama
+title: Ollama
+sidebar_label: Ollama
+---
+
+DeepEval allows you to use any model from Ollama to run evals, either through the CLI or directly in python.
+
+:::note
+Before getting started, make sure your Ollama model is installed and running. See the full list of available models [here](<](https://ollama.com/search)>).
+
+```bash
+ollama run deepseek-r1:1.5b
+```
+
+:::
+
+### Command Line
+
+To configure your Ollama model through the CLI, run the following command. Replace `deepseek-r1:1.5b` with any Ollama-supported model of your choice.
+
+```bash
+deepeval set-ollama deepseek-r1:1.5b
+```
+
+You may also specify the **base URL** of your local Ollama model instance if you've defined a custom port. By default, the base URL is set to `http://localhost:11434`.
+
+```bash
+deepeval set-ollama deepseek-r1:1.5b \
+    --base-url="http://localhost:11434"
+```
+
+:::info
+The CLI command above sets Ollama as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Ollama:
+
+```bash
+deepeval unset-ollama
+```
+
+:::
+
+### Python
+
+Alternatively, you can specify your model directly in code using `OllamaModel` from DeepEval's model collection.
+
+```python
+from deepeval.models import OllamaModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = OllamaModel(
+    model_name="deepseek-r1:1.5b",
+    base_url="http://localhost:11434"
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+### Available Ollama Models
+
+Below is a list of commonly used Ollama models:
+
+- `deepseek-r1`
+- `llama3.1`
+- `gemma`
+- `qwen`
+- `mistral`
+- `codellama`
+- `phi3`
+- `tinyllama`
+- `starcoder2`

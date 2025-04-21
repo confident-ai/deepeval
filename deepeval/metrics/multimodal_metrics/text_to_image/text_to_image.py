@@ -160,10 +160,11 @@ class TextToImageMetric(BaseMultimodalMetric):
             )
         ]
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt + images)
+            res, cost = await self.model.a_generate(
+                prompt + images, ReasonScore
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reasoning"]
+            return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
@@ -190,10 +191,9 @@ class TextToImageMetric(BaseMultimodalMetric):
             )
         ]
         if self.using_native_model:
-            res, cost = self.model.generate(prompt + images)
+            res, cost = self.model.generate(prompt + images, ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reasoning"]
+            return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = self.model.generate(
@@ -213,10 +213,11 @@ class TextToImageMetric(BaseMultimodalMetric):
             TextToImageTemplate.generate_perceptual_quality_evaluation_results()
         ]
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt + images)
+            res, cost = await self.model.a_generate(
+                prompt + images, ReasonScore
+            )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reasoning"]
+            return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
@@ -236,10 +237,9 @@ class TextToImageMetric(BaseMultimodalMetric):
             TextToImageTemplate.generate_perceptual_quality_evaluation_results()
         ]
         if self.using_native_model:
-            res, cost = self.model.generate(prompt + images)
+            res, cost = self.model.generate(prompt + images, ReasonScore)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["score"], data["reasoning"]
+            return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = self.model.generate(

@@ -81,7 +81,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                return self.score
+            return self.score
 
     async def a_measure(
         self,

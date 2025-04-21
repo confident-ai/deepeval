@@ -4,6 +4,10 @@ title: HellaSwag
 sidebar_label: HellaSwag
 ---
 
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/benchmarks-hellaswag" />
+</head>
+
 **HellaSwag** is a benchmark designed to evaluate language models' commonsense reasoning through sentence completion tasks. It provides 10,000 challenges spanning various subject areas. For more details, you can [visit the Hellaswag GitHub page](https://github.com/rowanz/hellaswag).
 
 :::info
@@ -12,7 +16,7 @@ sidebar_label: HellaSwag
 
 ## Arguments
 
-There are two optional arguments when using the `HellaSwag` benchmark:
+There are **TWO** optional arguments when using the `HellaSwag` benchmark:
 
 - [Optional] `tasks`: a list of tasks (`HellaSwagTask` enums), which specifies the subject areas for sentence completion evaluation. By default, this is set to all tasks. The list of `HellaSwagTask` enums can be found [here](#hellaswag-tasks).
 - [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This is **set to 10** by default and **cannot exceed 15**.

@@ -4,7 +4,17 @@ title: Conversational G-Eval
 sidebar_label: Conversational G-Eval
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-conversational-g-eval"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer custom={true} chatbot={true} />
 
 The conversationl G-Eval is an adopted version of `deepeval`'s popular [`GEval` metric](/docs/metrics-llm-evals) but for evaluating entire conversations instead. It is currently the best way to define custom critera to evaluate multi-turn conversations in `deepeval`. By defining a custom `ConversationalGEval`, you can easily determine whether your LLM chatbot is able to consistently generate responses that are up to standard with your custom criteria **throughout a conversation**.
 
@@ -26,6 +36,7 @@ You'll also need to supply any additional arguments such as `expected_output` an
 To create a custom metric that evaluates entire LLM conversations, simply instantiate a `ConversationalGEval` class and define an evaluation criteria in everyday language:
 
 ```python
+from deepeval import evaluate
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ConversationalTestCase
 from deepeval.metrics import ConversationalGEval
 
@@ -46,12 +57,14 @@ professionalism_metric = ConversationalGEval(
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
-metric.measure(convo_test_case)
-print(metric.score)
-print(metric.reason)
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There are three mandatory and six optional parameters required when instantiating an `ConversationalGEval` class:
+There are **THREE** mandatory and **SIX** optional parameters required when instantiating an `ConversationalGEval` class:
 
 - `name`: name of metric. This will **not** affect the evaluation.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
@@ -65,6 +78,21 @@ There are three mandatory and six optional parameters required when instantiatin
 
 :::danger
 For accurate and valid results, only test case parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
+:::
+
+### As a standalone
+
+You can also run the `ConversationalGEval` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?

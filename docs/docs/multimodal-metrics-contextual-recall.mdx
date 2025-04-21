@@ -4,7 +4,14 @@ title: Multimodal Contextual Recall
 sidebar_label: Multimodal Contextual Recall
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/multimodal-metrics-contextual-recall"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 The multimodal contextual recall metric measures the quality of your RAG pipeline's retriever by evaluating the extent of which the `retrieval_context` aligns with the `expected_output`. `deepeval`'s contextual recall metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -20,6 +27,8 @@ To use the `MultimodalContextualRecallMetric`, you'll have to provide the follow
 - `actual_output`
 - `expected_output`
 - `retrieval_context`
+
+The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Example
 
@@ -55,7 +64,7 @@ print(metric.reason)
 evaluate([test_case], [metric])
 ```
 
-There are six optional parameters when creating a `MultimodalContextualRecallMetric`:
+There are **SIX** optional parameters when creating a `MultimodalContextualRecallMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's Multimodal GPT models to use, **OR** any custom MLLM model of type `DeepEvalBaseMLLM`. Defaulted to 'gpt-4o'.

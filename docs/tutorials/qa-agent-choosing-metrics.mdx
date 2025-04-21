@@ -25,7 +25,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 `AnswerRelevancy` and `Faithfulness` are RAG metrics specifically designed for evaluating RAG systems. If you're not familiar with RAG metrics, this [comprehensive guide](/guides/guides-rag-evaluation) is a must-read—especially if you're building QA agents.
 :::
 
-To ensure that our answers are non-speculative, we'll need to ensure that the QA agent only include information from our knowledge base. Fortunately, `Faithfulness` measures weather the generated output factually aligns with the information in the retrieved context, which also prevents our LLMs from producing speculative information.
+To ensure that our answers are non-speculative, we'll need to ensure that the QA agent only include information from our knowledge base. Fortunately, `Faithfulness` measures whether the generated output factually aligns with the information in the retrieved context, which also prevents our LLMs from producing speculative information.
 
 ```python
 from deepeval.metrics import FaithfulnessMetric
@@ -44,8 +44,8 @@ In deepeval defining metric is as easy as importing them and initializing them:
 ```python
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
 
-answer_relevancy_metric = AnswerRelevancy()
-faithfulness_metric = Faithfulness()
+answer_relevancy_metric = AnswerRelevancyMetric()
+faithfulness_metric = FaithfulnessMetric()
 ```
 
 :::tip

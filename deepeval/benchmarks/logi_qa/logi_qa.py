@@ -1,4 +1,3 @@
-from datasets import load_dataset, Dataset
 from typing import List, Optional, Dict
 from tqdm import tqdm
 import pandas as pd
@@ -247,6 +246,8 @@ class LogiQA(DeepEvalBaseBenchmark):
         return goldens
 
     def download_and_load_hf_dataset(self, url):
+        from datasets import Dataset
+
         try:
             response = requests.get(url)
             response.raise_for_status()
