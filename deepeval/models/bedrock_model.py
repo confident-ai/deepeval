@@ -31,7 +31,7 @@ valid_bedrock_models = [
 
 default_bedrock_model = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
 default_multimodal_bedrock_model = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
-default_system_message = "You are a helpful AI assistant. Always generate your response as a valid json. No explanation or extra information is needed just the json."
+default_system_message = "You are a helpful AI assistant. Always generate your response as a valid json object without '```json'. No explanation or extra information is needed just the json."
 
 class BedrockModel(DeepEvalBaseLLM):
     """A class that integrates with AWS Bedrock for model inference and text generation.
@@ -115,50 +115,64 @@ class BedrockModel(DeepEvalBaseLLM):
             logger.error("Error decoding JSON")
             return {}
 
-
-    def _generate(self, prompt: str, schema: Optional[BaseModel] = None, is_async=False) -> Union[BaseModel, dict]:
-        """Helper method to handle both sync and async generation."""
-        client = self.a_client if is_async else self.client
+    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict, None]:
         messages = [{"role": "user", "content": prompt}]
-
-        if schema:
-            self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
+        full_prompt = self._build_prompt(schema)
 
         try:
-            response = client.messages.create(
+            response = self.client.messages.create(
                 model=self.model_id,
                 messages=messages,
-                system=self.system_prompt,
-                max_tokens=1000
+                system=full_prompt,
+                max_tokens=1000,
             )
 
-            content = response.content
-            generated_text = content[0].text if content else ""
+            generated_text = response.content[0].text if response.content else ""
 
-            if schema:
-                try:
-                    extracted_result = self.extract_json(generated_text)
-                    return schema(**extracted_result)
-                except ValidationError as e:
-                    logger.error(f"Validation error: {e}")
-                    return None
-            return generated_text
+            return self._parse_response(generated_text, schema)
 
         except Exception as e:
-            logger.error(f"An error occurred while generating the result: {e}")
+            logger.error(f"Error during sync generation: {e}")
             return {} if schema is None else None
 
-    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict]:
-        """Generates text using the Bedrock model and returns the response as a Pydantic model."""
-        return self._generate(prompt, schema, is_async=False)
+    async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict, None]:
+        messages = [{"role": "user", "content": prompt}]
+        full_prompt = self._build_prompt(schema)
 
-    async def a_generate(self, prompt: str, schema: Optional[BaseModel] = None) -> Union[BaseModel, dict]:
-        """Generates text asynchronously using the Bedrock model."""
-        return await self._generate(prompt, schema, is_async=True)
+        try:
+            response = await self.a_client.messages.create(
+                model=self.model_id,
+                messages=messages,
+                system=full_prompt,
+                max_tokens=1000,
+            )
+
+            generated_text = response.content[0].text if response.content else ""
+
+            return self._parse_response(generated_text, schema)
+
+        except Exception as e:
+            logger.error(f"Error during async generation: {e}")
+            return {} if schema is None else None
 
     def get_model_name(self):
         """Returns the model ID being used."""
         return self.model_id
+    
+    def _build_prompt(self, schema: Optional[BaseModel]) -> str:
+        if schema:
+            return f"{self.system_prompt}\nOutput JSON schema: {schema.model_json_schema()}"
+        return self.system_prompt
+
+    def _parse_response(self, generated_text: str, schema: Optional[BaseModel]) -> Union[BaseModel, dict, None]:
+        if schema:
+            try:
+                extracted = self.extract_json(generated_text)
+                return schema(**extracted)
+            except ValidationError as e:
+                logger.error(f"Validation error: {e}")
+                return None
+        return generated_text
     
 
 class MultimodalBedrockModel(DeepEvalBaseMLLM):
@@ -342,44 +356,61 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
                 prompt.append(message)
 
         return prompt
-
-    def _generate(self, multimodal_input, schema, is_async=False):
-        client = self.a_client if is_async else self.client
+    
+    async def a_generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Union[BaseModel, dict, None]:
         messages_list = self.generate_prompt(multimodal_input)
-
-        if schema:
-            self.system_prompt += f"\nOutput JSON schema: {schema.model_json_schema()}"
+        full_prompt = self._build_prompt(schema)
 
         try:
-            response = client.messages.create(
+            response = await self.a_client.messages.create(
+                model=self.model_id,
+                messages=messages_list,
+                system=full_prompt,
+                max_tokens=1000,
+            )
+
+            generated_text = response.content[0].text if response.content else ""
+
+            return self._parse_response(generated_text, schema)
+
+        except Exception as e:
+            logger.error(f"Error during async generation: {e}")
+            return {} if schema is None else None
+        
+    def generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None) -> Union[BaseModel, dict, None]:
+        messages_list = self.generate_prompt(multimodal_input)
+        full_prompt = self._build_prompt(schema)
+
+        try:
+            response = self.client.messages.create(
                 model=self.model_id,
                 messages=messages_list,
                 max_tokens=1000,
-                system=self.system_prompt
+                system=full_prompt
             )
 
-            content = response.content
-            generated_text = content[0].text if content else ""
+            generated_text = response.content[0].text if response.content else ""
 
-            if schema:
-                try:
-                    extracted_result = self.extract_json(generated_text)
-                    return schema(**extracted_result)
-                except ValidationError as e:
-                    logger.error(f"Validation error: {e}")
-                    return None
-            return generated_text
+            return self._parse_response(generated_text, schema)
 
         except Exception as e:
-            logger.error(f"Error during Bedrock model inference: {e}")
-            raise
-
-    def generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None):
-        return self._generate(multimodal_input, schema, is_async=False)
-
-    async def a_generate(self, multimodal_input: List[Union[str, MLLMImage]], schema: Optional[BaseModel] = None):
-        return await self._generate(multimodal_input, schema, is_async=True)
-
+            logger.error(f"Error during generation: {e}")
+            return {} if schema is None else None
+        
+    def _build_prompt(self, schema: Optional[BaseModel]) -> str:
+        if schema:
+            return f"{self.system_prompt}\nOutput JSON schema: {schema.model_json_schema()}"
+        return self.system_prompt
+    
+    def _parse_response(self, generated_text: str, schema: Optional[BaseModel]) -> Union[BaseModel, dict, None]:
+        if schema:
+            try:
+                extracted = self.extract_json(generated_text)
+                return schema(**extracted)
+            except ValidationError as e:
+                logger.error(f"Validation error: {e}")
+                return None
+        return generated_text
 
     def get_model_name(self) -> str:
         return self.model_id
