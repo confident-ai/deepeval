@@ -10,7 +10,7 @@ from deepeval.synthesizer.types import Evolution
 
 @dataclass
 class FiltrationConfig:
-    synthetic_input_quality_threshold: int = 0.5
+    synthetic_input_quality_threshold: float = 0.5
     max_quality_retries: int = 3
     critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None
 
