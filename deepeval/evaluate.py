@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
+from deepeval.prompt import Prompt
 from deepeval.test_case.utils import check_valid_test_cases_type
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.test_run.test_run import TestRunResultDisplay
@@ -69,6 +70,7 @@ class TestResult:
     expected_output: Optional[str] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
+    additional_metadata: Optional[Dict] = None
 
 
 class EvaluationResult(BaseModel):
@@ -116,6 +118,7 @@ def create_test_result(
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
+            additional_metadata=api_test_case.additional_metadata,
         )
     else:
         multimodal = (
@@ -131,6 +134,7 @@ def create_test_result(
                 actual_output=api_test_case.multimodal_input_actual_output,
                 conversational=False,
                 multimodal=True,
+                additional_metadata=api_test_case.additional_metadata,
             )
         else:
             return TestResult(
@@ -144,6 +148,7 @@ def create_test_result(
                 retrieval_context=api_test_case.retrieval_context,
                 conversational=False,
                 multimodal=False,
+                additional_metadata=api_test_case.additional_metadata,
             )
 
 
@@ -155,15 +160,14 @@ def create_api_test_case(
     comments: Optional[str] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
     if isinstance(test_case, ConversationalTestCase):
+        order = (
+            test_case._dataset_rank
+            if test_case._dataset_rank is not None
+            else index
+        )
         if test_case.name:
             name = test_case.name
         else:
-            order = (
-                test_case._dataset_rank
-                if test_case._dataset_rank is not None
-                else index
-            )
-
             name = os.getenv(
                 PYTEST_RUN_TEST_NAME, f"conversational_test_case_{order}"
             )
@@ -226,6 +230,8 @@ def create_api_test_case(
                 retrievalContext=test_case.retrieval_context,
                 toolsCalled=test_case.tools_called,
                 expectedTools=test_case.expected_tools,
+                tokenCost=test_case.token_cost,
+                completionTime=test_case.completion_time,
                 success=success,
                 metricsData=metrics_data,
                 runDuration=None,
@@ -242,6 +248,8 @@ def create_api_test_case(
                 multimodalActualOutput=test_case.actual_output,
                 toolsCalled=test_case.tools_called,
                 expectedTools=test_case.expected_tools,
+                tokenCost=test_case.token_cost,
+                completionTime=test_case.completion_time,
                 success=success,
                 metricsData=metrics_data,
                 runDuration=None,
@@ -1017,7 +1025,7 @@ def evaluate(
         List[Union[LLMTestCase, MLLMTestCase]], List[ConversationalTestCase]
     ],
     metrics: List[BaseMetric],
-    hyperparameters: Optional[Dict[str, Union[str, int, float]]] = None,
+    hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     run_async: bool = True,
     show_indicator: bool = True,
     print_results: bool = True,

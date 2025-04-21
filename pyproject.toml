@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "deepeval"
-version = "2.6.5"
+version = "2.7.5"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/confident-ai/deepeval"
-documentation = "https://docs.confident-ai.com"
+documentation = "https://deepeval.com"
 exclude = ["tests/*"]
 
 [tool.poetry.scripts]
@@ -46,6 +46,9 @@ opentelemetry-api = "^1.24.0"
 opentelemetry-sdk = "^1.24.0" 
 opentelemetry-exporter-otlp-proto-grpc = "^1.24.0" 
 grpcio = "^1.67.1"
+anthropic = "^0.49.0"
+google-genai = "^1.9.0"
+posthog = "^3.23.0"
 boto3 = "^1.34.0"
 pillow = "^10.2.0"
 

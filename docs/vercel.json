@@ -86,6 +86,11 @@
       "statusCode": 301
     },
     {
+      "source": "/confident-ai/:path*",
+      "destination": "https://documentation.confident-ai.com",
+      "statusCode": 301
+    },    
+    {
       "source": "/docs/red-teaming-vulnerabilities-competition",
       "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-competition",
       "statusCode": 301

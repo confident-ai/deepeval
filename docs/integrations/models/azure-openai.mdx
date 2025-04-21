@@ -1,0 +1,69 @@
+---
+# id: azure-openai
+title: Azure OpenAI
+sidebar_label: Azure OpenAI
+---
+
+DeepEval allows you to directly integrate Azure OpenAI models into all available LLM-based metrics. You can easily configure the model through the command line or directly within your python code.
+
+### Command Line
+
+Run the following command in your terminal to configure your deepeval environment to use Azure OpenAI for all metrics.
+
+```bash
+deepeval set-azure-openai \
+    --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
+    --openai-api-key=<api_key> \
+    --openai-model-name=<model_name> \ # e.g. gpt-4o
+    --deployment-name=<deployment_name> \  # e.g. Test Deployment
+    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+```
+
+:::info
+The CLI command above sets Azure OpenAI as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Azure OpenAI:
+
+```bash
+deepeval unset-azure-open-ai
+```
+
+:::
+
+### Python
+
+Alternatively, you can specify your model directly in code using `AzureOpenAIModel` from DeepEval's model collection.
+
+:::tip
+This approach is ideal when you need to use separate models for specific metrics.
+:::
+
+```python
+from deepeval.models import AzureOpenAIModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = AzureOpenAIModel(
+    model_name="gpt-4o",
+    deploynment_name="Test Deployment"
+    azure_openai_api_key="Your Azure OpenAI API Key"
+    openai_api_version="2025-01-01-preview"
+    azure_endpoint="https://example-resource.azure.openai.com/"
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+### Available Azure OpenAI Models
+
+Below is a list of commonly used Azure OpenAI models:
+
+- `gpt-4.5-preview`
+- `gpt-4o`
+- `gpt-4o-mini`
+- `gpt-4`
+- `gpt-4-32k`
+- `gpt-35-turbo`
+- `gpt-35-turbo-16k`
+- `gpt-35-turbo-instruct`
+- `o1`
+- `o1-mini`
+- `o1-preview`
+- `o3-mini`

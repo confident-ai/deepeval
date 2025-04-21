@@ -35,6 +35,7 @@ class HttpMethods(Enum):
 class Endpoints(Enum):
     DATASET_ENDPOINT = "/v1/dataset"
     TEST_RUN_ENDPOINT = "/v1/test-run"
+    TRACING_ENDPOINT = "/v1/tracing"
     EVENT_ENDPOINT = "/v1/event"
     FEEDBACK_ENDPOINT = "/v1/feedback"
     PROMPT_ENDPOINT = "/v1/prompt"
@@ -121,6 +122,7 @@ class Api:
                 print("Aborted.")
                 return None
         else:
+            print(res.json())
             raise Exception(res.json().get("error", res.text))
 
     async def a_send_request(

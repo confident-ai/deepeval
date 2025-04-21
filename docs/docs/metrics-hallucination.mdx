@@ -4,7 +4,17 @@ title: Hallucination
 sidebar_label: Hallucination
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-hallucination"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer referenceBased={true} />
 
 The hallucination metric uses LLM-as-a-judge to determine whether your LLM generates factually correct information by comparing the `actual_output` to the provided `context`.
 

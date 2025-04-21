@@ -30,10 +30,10 @@ module.exports = {
     [
       "@docusaurus/plugin-content-docs",
       {
-        id: "confident-ai",
-        path: "confident-ai",
-        routeBasePath: "confident-ai",
-        sidebarPath: require.resolve("./sidebarConfidentAI.js"),
+        id: "guides",
+        path: "guides",
+        routeBasePath: "guides",
+        sidebarPath: require.resolve("./sidebarGuides.js"),
         editUrl: "https://github.com/confident-ai/deepeval/edit/main/docs/",
         showLastUpdateAuthor: true,
         showLastUpdateTime: true,
@@ -42,10 +42,10 @@ module.exports = {
     [
       "@docusaurus/plugin-content-docs",
       {
-        id: "guides",
-        path: "guides",
-        routeBasePath: "guides",
-        sidebarPath: require.resolve("./sidebarGuides.js"),
+        id: "integrations",
+        path: "integrations",
+        routeBasePath: "integrations",
+        sidebarPath: require.resolve("./sidebarIntegrations.js"),
         editUrl: "https://github.com/confident-ai/deepeval/edit/main/docs/",
         showLastUpdateAuthor: true,
         showLastUpdateTime: true,
@@ -58,7 +58,7 @@ module.exports = {
   favicon: "img/fav.ico",
 
   // Set the production url of your site here
-  url: "https://docs.confident-ai.com",
+  url: "https://deepeval.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
@@ -81,6 +81,7 @@ module.exports = {
         blog: {
           blogTitle: 'DeepEval Blog',
           blogDescription: 'The official LLM evaluation blog',
+          blogSidebarCount: 'ALL',
         },
         docs: {
           path: "docs",
@@ -101,11 +102,15 @@ module.exports = {
       },
     ],
   ],
+  themes: ["@docusaurus/theme-mermaid"],
+  markdown: {
+    mermaid: true,
+  },
   scripts: [
     {
       src: "https://plausible.io/js/script.tagged-events.js",
       defer: true,
-      "data-domain": "confident-ai.com",
+      "data-domain": "deepeval.com",
     },
   ],
   stylesheets: [
@@ -138,10 +143,10 @@ module.exports = {
             activeBasePath: "docs",
           },
           {
-            to: "confident-ai/confident-ai-introduction",
+            to: "guides/guides-rag-evaluation",
             position: "left",
-            label: "Confident AI",
-            activeBasePath: "confident-ai",
+            label: "Guides",
+            activeBasePath: "guides",
           },
           {
             to: "tutorials/tutorial-introduction",
@@ -150,16 +155,16 @@ module.exports = {
             activeBasePath: "tutorials",
           },
           {
-            to: "guides/guides-rag-evaluation",
+            to: "integrations/models/openai",
             position: "left",
-            label: "Guides",
-            activeBasePath: "guides",
+            label: "Integrations",
+            activeBasePath: "integrations",
           },
           // {to: 'blog', label: 'Blog', position: 'left'},
           {
-            href: "https://confident-ai.com/blog",
+            href: "https://documentation.confident-ai.com",
             position: "left",
-            label: "Blogs",
+            label: "Confident AI Docs",
           },
           {
             href: "https://confident-ai.com",
@@ -209,7 +214,7 @@ module.exports = {
               },
               {
                 label: "Confident AI",
-                to: "/confident-ai/confident-ai-introduction",
+                to: "https://documentation.confident-ai.com",
               },
               {
                 label: "Tutorials",

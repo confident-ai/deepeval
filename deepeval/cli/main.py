@@ -119,6 +119,9 @@ def set_azure_openai_env(
     openai_api_version: str = typer.Option(
         ..., "--openai-api-version", help="OpenAI API version"
     ),
+    openai_model_name: str = typer.Option(
+        ..., "--openai-model-name", help="OpenAI model name"
+    ),
     azure_deployment_name: str = typer.Option(
         ..., "--deployment-name", help="Azure deployment name"
     ),
@@ -129,6 +132,7 @@ def set_azure_openai_env(
     KEY_FILE_HANDLER.write_key(
         KeyValues.AZURE_OPENAI_API_KEY, azure_openai_api_key
     )
+    KEY_FILE_HANDLER.write_key(KeyValues.AZURE_MODEL_NAME, openai_model_name)
     KEY_FILE_HANDLER.write_key(
         KeyValues.AZURE_OPENAI_ENDPOINT, azure_openai_endpoint
     )
@@ -175,6 +179,7 @@ def unset_azure_openai_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_OPENAI_ENDPOINT)
     KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_API_VERSION)
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_DEPLOYMENT_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME)
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_MODEL_VERSION)
     KEY_FILE_HANDLER.remove_key(KeyValues.USE_AZURE_OPENAI)
@@ -236,7 +241,7 @@ def set_ollama_embeddings_env(
         ..., help="Name of the Ollama embedding model"
     ),
     base_url: str = typer.Option(
-        "http://localhost:11434/v1/",
+        "http://localhost:11434",
         "-b",
         "--base-url",
         help="Base URL for the Ollama embedding model API",
@@ -352,6 +357,69 @@ def unset_local_embeddings_env():
 
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
+    )
+
+
+#############################################
+# Ollama Integration ########################
+#############################################
+
+
+@app.command(name="set-gemini")
+def set_gemini_model_env(
+    model_name: Optional[str] = typer.Option(
+        None, "--model-name", help="Gemini Model name"
+    ),
+    google_api_key: Optional[str] = typer.Option(
+        None, "--google-api-key", help="Google API Key for Gemini"
+    ),
+    google_cloud_project: Optional[str] = typer.Option(
+        None, "--project-id", help="Google Cloud project ID"
+    ),
+    google_cloud_location: Optional[str] = typer.Option(
+        None, "--location", help="Google Cloud location"
+    ),
+):
+    if not google_api_key and not (
+        google_cloud_project and google_cloud_location
+    ):
+        typer.echo(
+            "You must provide either --google-api-key or both --project-id and --location.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_GEMINI_MODEL, "YES")
+    if model_name is not None:
+        KEY_FILE_HANDLER.write_key(KeyValues.GEMINI_MODEL_NAME, model_name)
+    if google_api_key is not None:
+        KEY_FILE_HANDLER.write_key(KeyValues.GOOGLE_API_KEY, google_api_key)
+    else:
+        KEY_FILE_HANDLER.write_key(KeyValues.GOOGLE_GENAI_USE_VERTEXAI, "YES")
+
+    if google_cloud_project is not None:
+        KEY_FILE_HANDLER.write_key(
+            KeyValues.GOOGLE_CLOUD_PROJECT, google_cloud_project
+        )
+    if google_cloud_location is not None:
+        KEY_FILE_HANDLER.write_key(
+            KeyValues.GOOGLE_CLOUD_LOCATION, google_cloud_location
+        )
+    print(
+        ":raising_hands: Congratulations! You're now using a Gemini model for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-gemini")
+def unset_gemini_model_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_GEMINI_MODEL)
+    KEY_FILE_HANDLER.remove_key(KeyValues.GEMINI_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.GOOGLE_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.GOOGLE_CLOUD_PROJECT)
+    KEY_FILE_HANDLER.remove_key(KeyValues.GOOGLE_CLOUD_LOCATION)
+    KEY_FILE_HANDLER.remove_key(KeyValues.GOOGLE_GENAI_USE_VERTEXAI)
+
+    print(
+        ":raised_hands: Gemini model has been unset. You're now using regular OpenAI for all evals that require an LLM."
     )
 
 

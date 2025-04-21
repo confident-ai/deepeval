@@ -1,13 +1,13 @@
 ---
 title: DeepEval vs Ragas
-description: As the open-source LLM evaluation framework, DeepEval offers everything from evaluating LLM agents to generating synthetic datasets required for evaluation.
+description: As the open-source LLM evaluation framework, DeepEval offers everything Ragas offers but more including agentic and chatbot evaluations.
 slug: deepeval-vs-ragas
 authors: [penguine]
 tags: [comparisons]
 hide_table_of_contents: false
 ---
 
-import FeatureComparisonTable from "@site/src/components/feature-comparison-table";
+import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
 
 **TL;DR:** Ragas is well-suited for lightweight experimentation — much like using pandas for quick data analysis. DeepEval takes a broader approach, offering a full evaluation ecosystem designed for production workflows, CI/CD integration, custom metrics, and integration with Confident AI for team collaboration, reporting, and analysis. The right tool depends on whether you're running ad hoc evaluations or building scalable LLM testing into your LLM stack.
 
@@ -25,7 +25,7 @@ This means:
 - **Extensive customizations** with no vendor-locking into any LLM or framework
 - **Abstracted into clear, extendable** classess and methods for better reusability
 - **Clean, readable code** that is essential if you ever need to customize DeepEval for yourself
-- **Exhuastive ecosystem**, meaning you can easily build on top of DeepEval whiel taking advantage of DeepEval's features
+- **Exhuastive ecosystem**, meaning you can easily build on top of DeepEval while taking advantage of DeepEval's features
 
 ### 2. We care about your experience, a lot
 

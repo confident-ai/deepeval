@@ -634,7 +634,9 @@ class EvaluationDataset:
                 "To push dataset to Confident AI, run `deepeval login`"
             )
 
-    def pull(self, alias: str, auto_convert_goldens_to_test_cases: bool = True):
+    def pull(
+        self, alias: str, auto_convert_goldens_to_test_cases: bool = False
+    ):
         with capture_pull_dataset():
             if is_confident() or self._confident_api_key is not None:
                 api = Api(api_key=self._confident_api_key)

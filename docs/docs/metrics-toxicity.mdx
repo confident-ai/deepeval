@@ -4,12 +4,19 @@ title: Toxicity
 sidebar_label: Toxicity
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/metrics-toxicity" />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer referenceless={true} safety={true} />
 
 The toxicity metric is another **referenceless** metric that uses uses LLM-as-a-judge to evaluate toxicness in your LLM outputs. This is particularly useful for a fine-tuning use case.
 
 :::tip Did Your Know?
-You can run evaluations **DURING** fine-tuning using `deepeval`'s [Hugging Face integration](integrations-huggingface)?
+You can run evaluations **DURING** fine-tuning using `deepeval`'s [Hugging Face integration](integrations/frameworks/huggingface)?
 :::
 
 ## Required Arguments

@@ -1,0 +1,64 @@
+---
+# id: gemini
+title: Gemini
+sidebar_label: Gemini
+---
+
+DeepEval allows you to directly integrate Gemini models into all available LLM-based metrics, either through the command line or directly within your python code.
+
+### Command Line
+
+Run the following command in your terminal to configure your deepeval environment to use Gemini models for all metrics.
+
+```bash
+deepeval set-gemini \
+    --model-name=<model_name> \ # e.g. "gemini-2.0-flash-001"
+    --google-api-key=<api_key>
+```
+
+:::info
+The CLI command above sets Gemini as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Gemini:
+
+```bash
+deepeval unset-gemini
+```
+
+:::
+
+### Python
+
+Alternatively, you can specify your model directly in code using `GeminiModel` from DeepEval's model collection. By default, `model_name` is set to `gemini-1.5-pro`.
+
+```python
+from deepeval.models import GeminiModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = GeminiModel(
+    model_name="gemini-1.5-pro",
+    api_key="Your Gemini API Key"
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+### Available Gemini Models
+
+Below is a list of commonly used Gemini models:
+
+`gemini-2.0-pro-exp-02-05`  
+`gemini-2.0-flash`  
+`gemini-2.0-flash-001`  
+`gemini-2.0-flash-002`  
+`gemini-2.0-flash-lite`  
+`gemini-2.0-flash-lite-001`  
+`gemini-1.5-pro`  
+`gemini-1.5-pro-001`  
+`gemini-1.5-pro-002`  
+`gemini-1.5-flash`  
+`gemini-1.5-flash-001`  
+`gemini-1.5-flash-002`  
+`gemini-1.0-pro`  
+`gemini-1.0-pro-001`  
+`gemini-1.0-pro-002`  
+`gemini-1.0-pro-vision`  
+`gemini-1.0-pro-vision-001`

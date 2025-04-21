@@ -1,0 +1,57 @@
+---
+# id: openai
+title: OpenAI
+sidebar_label: OpenAI
+---
+
+By default, DeepEval uses `gpt-4o` to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in Python.
+
+### Setting Up Your API Key
+
+To use OpenAI for `deepeval`'s LLM-Evals (metrics evaluated using an LLM), supply your `OPENAI_API_KEY` in the CLI:
+
+```bash
+export OPENAI_API_KEY=<your-openai-api-key>
+```
+
+Alternatively, if you're working in a notebook enviornment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
+
+```bash
+%env OPENAI_API_KEY=<your-openai-api-key>
+```
+
+### Python
+
+You may use OpenAI models other than `gpt-4o`, which can be configured directly in python code through DeepEval's `OpenAIModel`.
+
+:::info
+You may want to use stronger reasoning models like `gpt-4o` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
+:::
+
+```python
+from deepeval.models import OpenAIModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = OpenAIModel(model="o1")
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+### Available OpenAI Models
+
+Below is a list of commonly used OpenAI models:
+
+- `gpt-4.5-preview`
+- `gpt-4o`
+- `gpt-4o-mini`
+- `o1`
+- `o1-pro`
+- `o1-mini`
+- `o3-mini`
+- `gpt-4-turbo`
+- `gpt-4`
+- `gpt-4-32k`
+- `gpt-3.5-turbo`
+- `gpt-3.5-turbo-instruct`
+- `gpt-3.5-turbo-16k-0613`
+- `davinci-002`
+- `babbage-002`

@@ -1,0 +1,36 @@
+---
+# id: lmstudio
+title: LM Studio
+sidebar_label: LM Studio
+---
+
+`deepeval` supports running evaluations using local LLMs that expose OpenAI-compatible APIs. One such provider is **LM Studio**, a user-friendly desktop app for running models locally.
+
+### Command Line
+
+To start using LM Studio with `deepeval`, follow these steps:
+
+1. Make sure LM Studio is running. The typical base URL for LM Studio is: `http://localhost:1234/v1/`.
+2. Run the following command in your terminal to connect `deepeval` to LM Studio:
+
+```bash
+deepeval set-local-model --model-name=<model_name> \
+    --base-url="http://localhost:1234/v1/" \
+    --api-key=<api-key>
+```
+
+:::tip
+Use any placeholder string for `--api-key` if your local endpoint doesn't require authentication.
+:::
+
+### Reverting to OpenAI
+
+To switch back to using OpenAI’s hosted models, run:
+
+```bash
+deepeval unset-local-model
+```
+
+:::info
+For more help on enabling LM Studio’s server or configuring models, check out the [LM Studio docs](https://lmstudio.ai/).
+:::

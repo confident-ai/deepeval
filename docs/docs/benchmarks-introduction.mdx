@@ -4,6 +4,13 @@ title: Introduction
 sidebar_label: Introduction
 ---
 
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/benchmarks-introduction"
+  />
+</head>
+
 ## Quick Summary
 
 LLM benchmarking provides a standardized way to quantify LLM performances across a range of different tasks. `deepeval` offers several state-of-the-art, research-backed benchmarks for you to quickly evaluate **ANY** custom LLM of your choice. These benchmarks include:
@@ -84,11 +91,11 @@ class Mistral7B(DeepEvalBaseLLM):
         return self.generate(prompt)
 
     # This is optional.
-    def batch_generate(self, promtps: List[str]) -> List[str]:
+    def batch_generate(self, prompts: List[str]) -> List[str]:
         model = self.load_model()
         device = "cuda" # the device to load the model onto
 
-        model_inputs = self.tokenizer(promtps, return_tensors="pt").to(device)
+        model_inputs = self.tokenizer(prompts, return_tensors="pt").to(device)
         model.to(device)
 
         generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True)
@@ -185,7 +192,7 @@ The benchmark.predictions attribute also yields a pandas DataFrame containing de
 
 ## Configurating LLM Benchmarks
 
-All benchmarks are configurable in one way or another, and `deepeval` offers an easy inferface to do so.
+All benchmarks are configurable in one way or another, and `deepeval` offers an easy interface to do so.
 
 :::note
 You'll notice although tasks and prompting techniques are configurable, scorers are not. This is because the type of scorer is an universal standard within any LLM benchmark.

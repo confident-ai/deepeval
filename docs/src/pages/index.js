@@ -12,13 +12,13 @@ class HomeNav extends React.Component {
           <Link to={"/docs/getting-started"}>Docs</Link>
         </div>
         <div>
-          <Link to="/confident-ai/confident-ai-introduction">Confident AI</Link>
-        </div>
-        <div>
-          <Link to="/tutorials/tutorial-introduction">Tutorial</Link>
+          <Link to="https://documentation.confident-ai.com">Confident AI</Link>
         </div>
         <div>
           <Link to="/guides/guides-rag-evaluation">Guides</Link>
+        </div>
+        <div>
+          <Link to="/tutorials/tutorial-introduction">Tutorials</Link>
         </div>
         <div className={styles.canHide}>
           <div>
@@ -126,9 +126,9 @@ class Index extends React.Component {
         </div>
         <div className={styles.featuresContainer}>
           <FeatureCard
-            title="Regression Testing for LLMs"
+            title="Unit-Testing for LLMs"
             link="/docs/evaluation-test-cases"
-            description="LLM evaluation metrics to unit test LLM outputs in Python"
+            description="LLM evaluation metrics to regression test LLM outputs in Python"
           />
           <FeatureCard
             title="Prompt and Model Discovery"

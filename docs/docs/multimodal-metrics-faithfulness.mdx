@@ -4,7 +4,14 @@ title: Multimodal Faithfulness
 sidebar_label: Multimodal Faithfulness
 ---
 
-import Equation from "@site/src/components/equation";
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/multimodal-metrics-faithfulness"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
 
 The multimodal faithfulness metric measures the quality of your RAG pipeline's generator by evaluating whether the `actual_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s multimodal faithfulness metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 

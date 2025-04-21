@@ -1,0 +1,61 @@
+.metricTagsDisplayer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.pill {
+  padding: 2px 10px;
+  font-size: 12px;
+  border-radius: 0.5rem;
+}
+
+.usesLLM {
+  background-color: #fefceb;
+  border: 1px solid #eeda83;
+  color: #4a3900;
+}
+
+.rag {
+  background-color: #fff1fe;
+  border: 1px solid #ffb4ff;
+  color: #96107b;
+}
+
+.referenceBased {
+    background-color: white;
+    border: 1px solid rgb(218, 221, 227);
+    color: black;
+}
+
+.referenceless {
+  background-color: white;
+  border: 1px solid rgb(218, 221, 227);
+  color: black;
+}
+
+.agent {
+  background-color: #e9f5fe;
+  border: 1px solid #badbff;
+  color: #002a70;
+}
+
+.chatbot {
+    background-color: #e9fef8;
+    border: 1px solid #94fbde;
+    color: #056a4d;
+}
+
+.custom {
+  background-color: #f8f2ff;
+  border: 1px solid #d597fe;
+  color: #c234ff;
+}
+
+.safety {
+  background-color: black;
+  border: 1px solid white;
+  color: white;
+}
