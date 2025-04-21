@@ -157,7 +157,7 @@ class SynthesizerTemplate:
         {input_format_section}
         {scenario_section}
         {task_section}
-        You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting reptitive.
+        You MUST TRY to generate {max_goldens_per_context} data points, unless the generated `input` is getting repetitive.
         **
 
         Max Goldens Per Context:
@@ -316,7 +316,7 @@ class FilterTemplate:
         - **relevance**: Analyze the importance of the content in relation to the main topic, awarding a score of 1 for contexts that stay focused on the subject without unnecessary diversions, and a score of 0 for those that include unrelated or irrelevant information.
 
         **
-        IMPORTANT: Please make sure to only return in JSON format, with the 'clarity', 'depth', 'structure', abd 'relevance' keys.
+        IMPORTANT: Please make sure to only return in JSON format, with the 'clarity', 'depth', 'structure', and 'relevance' keys.
 
         Example context: "Artificial intelligence is rapidly changing various sectors, from healthcare to finance, by enhancing efficiency and enabling better decision-making."
         Example JSON:
@@ -463,7 +463,7 @@ class EvolutionTemplate:
             Example input:
             What causes seasons to change?
             Example rewritten input: 
-            Given the trapping of solar radiation by atmospheric gases, explain how the enhanced activity impact Earth's climate.
+            Given the trapping of solar radiation by atmospheric gases, explain how the enhanced activity impacts Earth's climate.
 
             --------------------------
 
@@ -472,7 +472,7 @@ class EvolutionTemplate:
             Example input:
             Identify the primary factors that determine the price of goods in a market.
             Example rewritten input:
-            Examine how the interplay of market demand, supply dynamics, and government policy interventions collectively shape the pricing mechanism of goods within a market ecosystem.
+            Examine how the interplay of market demand, supply dynamics, and government policy interventions collectively shapes the pricing mechanism of goods within a market ecosystem.
             **
 
             Context:
@@ -684,7 +684,7 @@ class EvolutionTemplate:
         return (
             EvolutionTemplate.base_instruction
             + f"""
-            1. Rewrite `Input` to create a create a brand new prompt.
+            1. Rewrite `Input` to create a brand new prompt.
             2. `Rewritten Input` should belong to the same domain as the `input` but be even more rare.
             3. `Rewritten Input` should be concise, clear, and understandable by humans.
             4. `Rewritten Input` should not contain phrases like 'based on the provided context' or 'according to the context'.
