@@ -383,7 +383,7 @@ def initialize_multimodal_model(
     if should_use_gemini_model():
         return MultimodalGeminiModel(), True
     if should_use_bedrock_model():
-        return MultimodalBedrockModel(), True
+        return MultimodalBedrockModel(), False
     if should_use_ollama_model():
         return MultimodalOllamaModel(), True
     elif isinstance(model, str) or model is None:
@@ -400,7 +400,6 @@ def is_native_mllm(
         isinstance(model, MultimodalOpenAIModel)
         or isinstance(model, MultimodalOllamaModel)
         or isinstance(model, MultimodalGeminiModel)
-        or isinstance(model, MultimodalBedrockModel)
     ):
         return True
     else:
