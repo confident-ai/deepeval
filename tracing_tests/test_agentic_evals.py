@@ -8,8 +8,11 @@ from deepeval.tracing import (
     AgentAttributes,
     trace_manager,
 )
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+
 import random
 from asyncio import sleep
+
 
 trace_manager.disable_hosted_mode()
 
@@ -210,23 +213,17 @@ async def custom_research_agent(query: str):
         return "Research information unavailable"
 
 
-@observe(type="agent", available_tools=["get_weather", "get_location"])
+@observe(
+    type="agent",
+    available_tools=["get_weather", "get_location"],
+    metrics=[AnswerRelevancyMetric(), BiasMetric()],
+)
 async def weather_agent(query: str):
-    if random.random() < 0.5:
-        location = await get_location(query)
-        if random.random() < 0.5:
-            weather = await get_weather(location)
-            # Add sleep of 1-3 seconds
-            await sleep(random.uniform(1, 3))
-            return f"Weather in {location}: {weather}"
-        else:
-            # Add sleep of 1-3 seconds
-            await sleep(random.uniform(1, 3))
-            return f"Weather in {location}"
-    else:
-        # Add sleep of 1-3 seconds
-        await sleep(random.uniform(1, 3))
-        return "Weather information unavailable"
+    update_current_span_test_case_parameters(
+        query, actual_output="Weather information unavailable"
+    )
+    await sleep(random.uniform(1, 3))
+    return "Weather information unavailable"
 
 
 @observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
@@ -246,40 +243,47 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
+    metrics=[AnswerRelevancyMetric(), BiasMetric()],
 )
-async def meta_agent(query: str):
-    print(query)
+async def meta_agent(input: str):
     # 50% probability of executing the function
-    weather_info = await weather_agent(query)
-    research_info = await research_agent(query)
-    custom_info = await custom_research_agent(query)
+    weather_info = await weather_agent(input)
+    research_info = await research_agent(input)
+    custom_info = await custom_research_agent(input)
     final_response = f"""
     Weather: {weather_info}
     Research: {research_info}
     Custom Analysis: {custom_info}
     """
-    print(final_response)
-
+    update_current_span_test_case_parameters(
+        input=input, actual_output=final_response
+    )
     return final_response
 
 
-###################################
+###################################v
 
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import Golden
+from deepeval import evaluate
 import asyncio
-from deepeval.tracing import get_trace_context
-import contextvars
 
-
-# # Gather multiple traceable tasks
-async def run_parallel_examples():
-    tasks = [
-        meta_agent("What's the weather like in SF?"),
-        meta_agent("Tell me about Elon Musk."),
-    ]
-    await asyncio.gather(*tasks)
-
+# Goldens
+goldens = [
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+]
 
 # Run it
-asyncio.run(run_parallel_examples())
+evaluate(goldens, meta_agent)
 
-trace_manager.shutdown()
+
+# test_case = LLMTestCase(
+#     input="What is this again?",
+#     actual_output="this is a latte",
+#     expected_output="this is a mocha",
+#     retrieval_context=["I love coffee"],
+#     context=["I love coffee"]
+# )
+# metric1 = AnswerRelevancyMetric(threshold=0.5)
+# evaluate(test_cases=[test_case]*10, metrics=[metric1] * 10)

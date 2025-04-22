@@ -6,6 +6,11 @@ from .test_run import (
     ConversationalApiTestCase,
     TestRunManager,
 )
+from .test_run_agentic import (
+    global_agentic_test_run_manager,
+    AgenticTestRunManager
+)
+
 from .hooks import on_test_run_end, invoke_test_run_end_hook
 from .api import MetricData
 from .hyperparameters import log_hyperparameters

@@ -28,6 +28,9 @@ class Golden(BaseModel):
     source_file: Optional[str] = Field(
         default=None, serialization_alias="sourceFile"
     )
+    dataset_rank: Optional[int] = Field(default=None, serialization_alias="datasetRank")
+    dataset_alias: Optional[str] = Field(default=None, serialization_alias="datasetAlias")
+    dataset_id: Optional[str] = Field(default=None, serialization_alias="datasetId")
 
 
 class ConversationalGolden(BaseModel):

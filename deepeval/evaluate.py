@@ -1,14 +1,37 @@
 import asyncio
 from copy import deepcopy
 import os
-from typing import Callable, List, Optional, Union, Dict
+from typing import Callable, List, Optional, Union, Dict, Any, Awaitable
 import time
 from dataclasses import dataclass
 from pydantic import BaseModel
 from rich.console import Console
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm
+from time import perf_counter, sleep
 
+from deepeval.tracing.tracing import (
+    Tracer,
+    current_trace_context,
+    current_span_context,
+    trace_manager,
+    Trace,
+    TraceSpanStatus,
+    BaseSpan,
+    AgentSpan,
+    LlmSpan,
+    RetrieverSpan,
+    ToolSpan,
+    perf_counter_to_datetime,
+    to_zod_compatible_iso
+
+)
+from deepeval.tracing.api import (
+    TraceApi,
+    BaseApiSpan,
+    AgenticApiTestCase
+)
+from deepeval.dataset import Golden
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
 from deepeval.prompt import Prompt
@@ -45,7 +68,9 @@ from deepeval.test_run import (
     ConversationalApiTestCase,
     MetricData,
     TestRunManager,
+    AgenticTestRunManager,
     TestRun,
+    global_agentic_test_run_manager
 )
 from deepeval.utils import get_is_running_deepeval
 from deepeval.test_run.cache import (
@@ -108,7 +133,7 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
 
 
 def create_test_result(
-    api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
+    api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase, AgenticApiTestCase],
 ) -> TestResult:
     name = api_test_case.name
 
@@ -118,6 +143,14 @@ def create_test_result(
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
+            additional_metadata=api_test_case.additional_metadata,
+        )
+    elif isinstance(api_test_case, AgenticApiTestCase):
+        return TestResult(
+            name=name,
+            success=api_test_case.success,
+            metrics_data=api_test_case.metrics_data,
+            conversational=False,
             additional_metadata=api_test_case.additional_metadata,
         )
     else:
@@ -258,10 +291,33 @@ def create_api_test_case(
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
                 conversational_instance_id=conversational_instance_id,
-            )
-
+            )           
         # llm_test_case_lookup_map[instance_id] = api_test_case
         return api_test_case
+
+
+def create_agentic_api_test_case(
+    trace: TraceApi,
+    golden: Golden,
+    index: Optional[int] = None,
+):
+    order = (
+        golden.dataset_rank
+        if golden.dataset_rank is not None
+        else index
+    )
+    name = os.getenv(PYTEST_RUN_TEST_NAME, f"agentic_test_case_{order}")
+    return AgenticApiTestCase(
+        name=name,
+        trace=trace,
+        success=True,
+        metrics_data=[],
+        run_duration=None,
+        evaluation_cost=None,
+        order=order,
+        additional_metadata=golden.additional_metadata,
+        comments=golden.comments
+    )
 
 
 def execute_test_cases(
@@ -1020,11 +1076,232 @@ def assert_test(
         raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
 
 
-def evaluate(
-    test_cases: Union[
-        List[Union[LLMTestCase, MLLMTestCase]], List[ConversationalTestCase]
+async def a_execute_agentic_test_cases(
+    goldens: List[Golden],
+    traceable_callback: Union[
+        Callable[[str], Any],           
+        Callable[[str], Awaitable[Any]]
     ],
-    metrics: List[BaseMetric],
+    verbose_mode: Optional[bool],
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+    show_indicator: bool,
+    throttle_value: int,
+    max_concurrent: int,
+    identifier: Optional[str] = None,
+    _use_bar_indicator: bool = True,
+) -> List[TestResult]:
+    semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def execute_with_semaphore(func: Callable, *args, **kwargs):
+        async with semaphore:
+            return await func(*args, **kwargs)
+
+    test_run_manager = global_agentic_test_run_manager
+    test_run_manager.create_test_run(identifier=identifier)
+    test_results: List[TestResult] = []
+    tasks = []
+    count = 0
+
+    if show_indicator and _use_bar_indicator:
+        with tqdm_asyncio(
+            desc=f"Evaluating {len(goldens)} golden(s) in parallel",
+            unit="golden",
+            total=len(goldens),
+            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
+        ) as pbar:
+            for golden in goldens:
+                with capture_evaluation_run("golden"):
+                    count += 1
+                    task = execute_with_semaphore(
+                        func=a_execute_agentic_test_case,
+                        golden=golden,
+                        traceable_callback=traceable_callback,
+                        test_run_manager=test_run_manager,
+                        test_results=test_results,
+                        count=count,
+                        verbose_mode=verbose_mode,
+                        ignore_errors=ignore_errors,
+                        skip_on_missing_params=skip_on_missing_params,
+                        show_indicator=show_indicator,
+                        _use_bar_indicator=_use_bar_indicator,
+                        pbar=pbar,
+                    )
+                    tasks.append(asyncio.create_task(task))
+                    await asyncio.sleep(throttle_value)
+            await asyncio.gather(*tasks)
+    else:
+        for golden in goldens:
+            with capture_evaluation_run("golden"):
+                count += 1
+                task = execute_with_semaphore(
+                    func=a_execute_agentic_test_case,
+                    golden=golden,
+                    traceable_callback=traceable_callback,
+                    test_run_manager=test_run_manager,
+                    test_results=test_results,
+                    count=count,
+                    verbose_mode=verbose_mode,
+                    ignore_errors=ignore_errors,
+                    skip_on_missing_params=skip_on_missing_params,
+                    show_indicator=show_indicator,
+                    _use_bar_indicator=_use_bar_indicator,
+                    pbar=pbar,
+                )
+                tasks.append(asyncio.create_task(task))
+                await asyncio.sleep(throttle_value)
+        await asyncio.gather(*tasks)
+    return test_results
+
+async def a_execute_agentic_test_case(
+    golden: Golden,
+    traceable_callback: Union[
+        Callable[[str], Any],           
+        Callable[[str], Awaitable[Any]]
+    ],
+    test_run_manager: AgenticTestRunManager,
+    test_results: List[Union[TestResult, MLLMTestCase]],
+    count: int,
+    verbose_mode: Optional[bool],
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+    show_indicator: bool,
+    _use_bar_indicator: bool,
+    pbar: Optional[tqdm_asyncio] = None,
+):
+    # Call callback and extract trace
+    tracer = Tracer("custom", func_name="Test Wrapper")
+    tracer.__enter__()
+    result = await traceable_callback(input=golden.input)
+    tracer.result = result
+    current_span = current_span_context.get()
+    current_trace: Trace = current_trace_context.get()
+    current_trace.root_spans = [current_trace.root_spans[0].children[0]] # Ignore Test Wrapper layer
+    current_trace.end_time = perf_counter()
+    current_trace.status = TraceSpanStatus.SUCCESS
+    trace_manager.remove_span(current_span.uuid)
+    del trace_manager.active_traces[current_trace.uuid]
+    current_trace_context.set(None)
+    current_span_context.set(None)
+
+    # run evals through DFS
+    trace_api = TraceApi(
+        uuid=current_trace.uuid,
+        baseSpans=[],
+        agentSpans=[],
+        llmSpans=[],
+        retrieverSpans=[],
+        toolSpans=[],
+        startTime=(
+            to_zod_compatible_iso(perf_counter_to_datetime(current_trace.start_time))
+            if current_trace.start_time
+            else None
+        ),
+        endTime=(
+            to_zod_compatible_iso(perf_counter_to_datetime(current_trace.start_time))
+            if current_trace.start_time
+            else None
+        ),
+    )
+    api_test_case = create_agentic_api_test_case(trace_api, golden, count)
+    async def dfs(span: BaseSpan):
+        await a_execute_span_test_case(
+            span=span,
+            trace_api=trace_api,
+            agentic_api_test_case=api_test_case,
+            ignore_errors=ignore_errors,
+            skip_on_missing_params=skip_on_missing_params,
+            show_indicator=show_indicator,
+            verbose_mode=verbose_mode,
+            _use_bar_indicator=_use_bar_indicator,
+        )
+        for child in span.children:
+            await dfs(child)
+    await dfs(current_trace.root_spans[0])
+    
+    ### Update Test Run ###
+    test_run_manager.update_test_run(api_test_case, golden)
+    test_results.append(create_test_result(api_test_case))
+    if pbar is not None:
+        pbar.update(1)
+
+
+async def a_execute_span_test_case(
+    span: BaseSpan,
+    trace_api: TraceApi,
+    agentic_api_test_case: AgenticApiTestCase,
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+    show_indicator: bool,
+    verbose_mode: Optional[bool],
+    _use_bar_indicator: bool,
+):  
+    show_metrics_indicator = show_indicator and not _use_bar_indicator
+    metrics: List[BaseMetric] = span.metrics
+    test_case: LLMTestCase = span.llm_test_case
+
+    api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(span)
+    if isinstance(span, AgentSpan):
+        trace_api.agent_spans.append(api_span)
+    elif isinstance(span, LlmSpan):
+        trace_api.llm_spans.append(api_span)
+    elif isinstance(span, RetrieverSpan):
+        trace_api.retriever_spans.append(api_span)
+    elif isinstance(span, ToolSpan):
+        trace_api.tool_spans.append(api_span)
+    else:
+        trace_api.base_spans.append(api_span)
+
+    if span.metrics == None or span.llm_test_case == None:
+        return
+
+    for metric in metrics:
+        metric.skipped = False
+        metric.error = None  # Reset metric error
+        if verbose_mode is not None:
+            metric.verbose_mode = verbose_mode
+
+    api_test_case = create_api_test_case(test_case)
+    test_start_time = time.perf_counter()
+    await measure_metrics_with_indicator(
+        metrics=metrics,
+        test_case=test_case,
+        cached_test_case=None,
+        skip_on_missing_params=skip_on_missing_params,
+        ignore_errors=ignore_errors,
+        show_indicator=show_metrics_indicator,
+    )
+
+    for metric in metrics:
+        if metric.skipped:
+            continue
+
+        metric_data = create_metric_data(metric)
+        api_test_case.update_metric_data(metric_data) # add metric data to llm_api_test_case in trace_api
+        agentic_api_test_case.update_metric_data(metric_data) # add metric data to agentic_api_test_case
+
+    test_end_time = time.perf_counter()
+    run_duration = test_end_time - test_start_time
+    if run_duration < 1:
+        run_duration = 0
+    api_test_case.update_run_duration(run_duration)
+
+    # add llm_api_test_case to api_span in trace_api
+    api_span.llm_api_test_case = api_test_case
+    
+
+def evaluate(
+    # Callback mode
+    goldens: Optional[List[Golden]] = None,
+    traceable_callback: Optional[Union[
+        Callable[[str], Any],           
+        Callable[[str], Awaitable[Any]]
+    ]] = None,
+    # LLMTestCase mode
+    test_cases: Optional[Union[
+        List[Union[LLMTestCase, MLLMTestCase]], List[ConversationalTestCase]
+    ]] = None,
+    metrics: Optional[List[BaseMetric]] = None,
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     run_async: bool = True,
     show_indicator: bool = True,
@@ -1039,39 +1316,18 @@ def evaluate(
     max_concurrent: int = 100,
     display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
 ) -> EvaluationResult:
-    check_valid_test_cases_type(test_cases)
 
-    if hyperparameters is not None:
-        if (
-            hyperparameters.get("model") is None
-            or hyperparameters.get("prompt template") is None
-        ):
-            raise ValueError(
-                "A `model` and `prompt template` key must be provided when logging `hyperparameters`."
-            )
-        hyperparameters = process_hyperparameters(hyperparameters)
-
-    global_test_run_manager.reset()
-    start_time = time.perf_counter()
-
-    if show_indicator:
-        console = Console()
-        for metric in metrics:
-            console.print(
-                format_metric_description(metric, async_mode=run_async)
-            )
-
-    with capture_evaluation_run("evaluate()"):
-        if run_async:
+    if goldens and traceable_callback:
+    
+        if asyncio.iscoroutinefunction(traceable_callback):
+            start_time = time.perf_counter()
             loop = get_or_create_event_loop()
             test_results = loop.run_until_complete(
-                a_execute_test_cases(
-                    test_cases,
-                    metrics,
+                a_execute_agentic_test_cases(
+                    goldens=goldens,
+                    traceable_callback=traceable_callback,
                     ignore_errors=ignore_errors,
-                    use_cache=use_cache,
                     verbose_mode=verbose_mode,
-                    save_to_disk=write_cache,
                     show_indicator=show_indicator,
                     skip_on_missing_params=skip_on_missing_params,
                     throttle_value=throttle_value,
@@ -1079,36 +1335,82 @@ def evaluate(
                     max_concurrent=max_concurrent,
                 )
             )
-        else:
-            test_results = execute_test_cases(
-                test_cases,
-                metrics,
-                ignore_errors=ignore_errors,
-                use_cache=use_cache,
-                verbose_mode=verbose_mode,
-                save_to_disk=write_cache,
-                skip_on_missing_params=skip_on_missing_params,
-                identifier=identifier,
-                show_indicator=show_indicator,
+            end_time = time.perf_counter()
+            run_duration = end_time - start_time
+            global_agentic_test_run_manager.wrap_up_test_run(
+                run_duration, display_table=True
             )
+            
+    elif test_cases and metrics:
+        check_valid_test_cases_type(test_cases)
+        if hyperparameters is not None:
+            if (
+                hyperparameters.get("model") is None
+                or hyperparameters.get("prompt template") is None
+            ):
+                raise ValueError(
+                    "A `model` and `prompt template` key must be provided when logging `hyperparameters`."
+                )
+            hyperparameters = process_hyperparameters(hyperparameters)
 
-    end_time = time.perf_counter()
-    run_duration = end_time - start_time
-    if print_results:
-        for test_result in test_results:
-            print_test_result(test_result, display)
+        global_test_run_manager.reset()
+        start_time = time.perf_counter()
 
-        aggregate_metric_pass_rates(test_results)
+        if show_indicator:
+            console = Console()
+            for metric in metrics:
+                console.print(
+                    format_metric_description(metric, async_mode=run_async)
+                )
 
-    test_run = global_test_run_manager.get_test_run()
-    test_run.hyperparameters = hyperparameters
-    global_test_run_manager.save_test_run()
-    confident_link = global_test_run_manager.wrap_up_test_run(
-        run_duration, display_table=False
-    )
-    return EvaluationResult(
-        test_results=test_results, confident_link=confident_link
-    )
+        with capture_evaluation_run("evaluate()"):
+            if run_async:
+                loop = get_or_create_event_loop()
+                test_results = loop.run_until_complete(
+                    a_execute_test_cases(
+                        test_cases,
+                        metrics,
+                        ignore_errors=ignore_errors,
+                        use_cache=use_cache,
+                        verbose_mode=verbose_mode,
+                        save_to_disk=write_cache,
+                        show_indicator=show_indicator,
+                        skip_on_missing_params=skip_on_missing_params,
+                        throttle_value=throttle_value,
+                        identifier=identifier,
+                        max_concurrent=max_concurrent,
+                    )
+                )
+            else:
+                test_results = execute_test_cases(
+                    test_cases,
+                    metrics,
+                    ignore_errors=ignore_errors,
+                    use_cache=use_cache,
+                    verbose_mode=verbose_mode,
+                    save_to_disk=write_cache,
+                    skip_on_missing_params=skip_on_missing_params,
+                    identifier=identifier,
+                    show_indicator=show_indicator,
+                )
+
+        end_time = time.perf_counter()
+        run_duration = end_time - start_time
+        if print_results:
+            for test_result in test_results:
+                print_test_result(test_result, display)
+
+            aggregate_metric_pass_rates(test_results)
+
+        test_run = global_test_run_manager.get_test_run()
+        test_run.hyperparameters = hyperparameters
+        global_test_run_manager.save_test_run()
+        confident_link = global_test_run_manager.wrap_up_test_run(
+            run_duration, display_table=False
+        )
+        return EvaluationResult(
+            test_results=test_results, confident_link=confident_link
+        )
 
 
 def print_test_result(test_result: TestResult, display: TestRunResultDisplay):

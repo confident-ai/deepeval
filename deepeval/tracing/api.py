@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from enum import Enum
 from typing import Optional, Union, Dict, List
 
+from deepeval.test_run.api import LLMApiTestCase, MetricData
 
 class SpanApiType(Enum):
     BASE = "base"
@@ -61,6 +62,15 @@ class BaseApiSpan(BaseModel):
         None, alias="testCaseRetrievalContext"
     )
     metrics: Optional[List[str]] = Field(None, alias="metrics")
+    llm_api_test_case: Optional[LLMApiTestCase] = Field(None, alias="llmApiTestCase")
+
+    # success: Union[bool, None] = Field(None)
+    # metrics_data: Union[List[MetricData], None] = Field(
+    #     None, alias="metricsData"
+    # )
+    # run_duration: Union[float, None] = Field(None, alias="runDuration")
+    # evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+
 
     class Config:
         use_enum_values = True
@@ -75,3 +85,49 @@ class TraceApi(BaseModel):
     tool_spans: List[BaseApiSpan] = Field(alias="toolSpans")
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
+
+class AgenticApiTestCase(BaseModel):
+    name: str
+    trace: TraceApi
+    # make these optional, not all test cases in a conversation will be evaluated
+    success: Union[bool, None] = Field(None)
+    metrics_data: Union[List[MetricData], None] = Field(
+        None, alias="metricsData"
+    )
+    run_duration: Union[float, None] = Field(None, alias="runDuration")
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+    order: Union[int, None] = Field(None)
+    # These should map 1 to 1 from golden
+    additional_metadata: Optional[Dict] = Field(
+        None, alias="additionalMetadata"
+    )
+    comments: Optional[str] = Field(None)
+
+    class Config:
+        use_enum_values = True
+
+    def update_metric_data(self, metric_data: MetricData):
+        if self.metrics_data is None:
+            self.metrics_data = [metric_data]
+        else:
+            self.metrics_data.append(metric_data)
+
+        if self.success is None:
+            # self.success will be None when it is a message
+            # in that case we will be setting success for the first time
+            self.success = metric_data.success
+        else:
+            if metric_data.success is False:
+                self.success = False
+
+        evaluationCost = metric_data.evaluation_cost
+        if evaluationCost is None:
+            return
+
+        if self.evaluation_cost is None:
+            self.evaluation_cost = evaluationCost
+        else:
+            self.evaluation_cost += evaluationCost
+
+    def update_run_duration(self, run_duration: float):
+        self.run_duration = run_duration
