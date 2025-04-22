@@ -23,13 +23,12 @@ from deepeval.tracing.tracing import (
     RetrieverSpan,
     ToolSpan,
     perf_counter_to_datetime,
-    to_zod_compatible_iso
-
+    to_zod_compatible_iso,
+    TraceManager
 )
 from deepeval.tracing.api import (
     TraceApi,
     BaseApiSpan,
-    AgenticApiTestCase
 )
 from deepeval.dataset import Golden
 from deepeval.errors import MissingTestCaseParamsError
@@ -68,9 +67,7 @@ from deepeval.test_run import (
     ConversationalApiTestCase,
     MetricData,
     TestRunManager,
-    AgenticTestRunManager,
     TestRun,
-    global_agentic_test_run_manager
 )
 from deepeval.utils import get_is_running_deepeval
 from deepeval.test_run.cache import (
@@ -133,7 +130,7 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
 
 
 def create_test_result(
-    api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase, AgenticApiTestCase],
+    api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
 ) -> TestResult:
     name = api_test_case.name
 
@@ -143,14 +140,6 @@ def create_test_result(
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
-            additional_metadata=api_test_case.additional_metadata,
-        )
-    elif isinstance(api_test_case, AgenticApiTestCase):
-        return TestResult(
-            name=name,
-            success=api_test_case.success,
-            metrics_data=api_test_case.metrics_data,
-            conversational=False,
             additional_metadata=api_test_case.additional_metadata,
         )
     else:
@@ -187,6 +176,7 @@ def create_test_result(
 
 def create_api_test_case(
     test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    trace: Optional[TraceApi] = None,
     index: Optional[int] = None,
     conversational_instance_id: Optional[int] = None,
     additional_metadata: Optional[Dict] = None,
@@ -273,6 +263,7 @@ def create_api_test_case(
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
                 conversational_instance_id=conversational_instance_id,
+                trace=trace
             )
         elif isinstance(test_case, MLLMTestCase):
             api_test_case = LLMApiTestCase(
@@ -294,31 +285,6 @@ def create_api_test_case(
             )           
         # llm_test_case_lookup_map[instance_id] = api_test_case
         return api_test_case
-
-
-def create_agentic_api_test_case(
-    trace: TraceApi,
-    golden: Golden,
-    index: Optional[int] = None,
-):
-    order = (
-        golden.dataset_rank
-        if golden.dataset_rank is not None
-        else index
-    )
-    name = os.getenv(PYTEST_RUN_TEST_NAME, f"agentic_test_case_{order}")
-    return AgenticApiTestCase(
-        name=name,
-        trace=trace,
-        success=True,
-        metrics_data=[],
-        run_duration=None,
-        evaluation_cost=None,
-        order=order,
-        additional_metadata=golden.additional_metadata,
-        comments=golden.comments
-    )
-
 
 def execute_test_cases(
     test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
@@ -1097,12 +1063,15 @@ async def a_execute_agentic_test_cases(
         async with semaphore:
             return await func(*args, **kwargs)
 
-    test_run_manager = global_agentic_test_run_manager
+    test_run_manager = global_test_run_manager
+    test_run_manager.save_to_disk = False
     test_run_manager.create_test_run(identifier=identifier)
+    local_trace_manager = trace_manager
     test_results: List[TestResult] = []
     tasks = []
     count = 0
 
+    local_trace_manager.test_run = True
     if show_indicator and _use_bar_indicator:
         with tqdm_asyncio(
             desc=f"Evaluating {len(goldens)} golden(s) in parallel",
@@ -1151,6 +1120,7 @@ async def a_execute_agentic_test_cases(
                 tasks.append(asyncio.create_task(task))
                 await asyncio.sleep(throttle_value)
         await asyncio.gather(*tasks)
+    local_trace_manager.test_run = False
     return test_results
 
 async def a_execute_agentic_test_case(
@@ -1159,7 +1129,7 @@ async def a_execute_agentic_test_case(
         Callable[[str], Any],           
         Callable[[str], Awaitable[Any]]
     ],
-    test_run_manager: AgenticTestRunManager,
+    test_run_manager: TestRunManager,
     test_results: List[Union[TestResult, MLLMTestCase]],
     count: int,
     verbose_mode: Optional[bool],
@@ -1170,20 +1140,10 @@ async def a_execute_agentic_test_case(
     pbar: Optional[tqdm_asyncio] = None,
 ):
     # Call callback and extract trace
-    tracer = Tracer("custom", func_name="Test Wrapper")
-    tracer.__enter__()
-    result = await traceable_callback(input=golden.input)
-    tracer.result = result
-    current_span = current_span_context.get()
-    current_trace: Trace = current_trace_context.get()
-    current_trace.root_spans = [current_trace.root_spans[0].children[0]] # Ignore Test Wrapper layer
-    current_trace.end_time = perf_counter()
-    current_trace.status = TraceSpanStatus.SUCCESS
-    trace_manager.remove_span(current_span.uuid)
-    del trace_manager.active_traces[current_trace.uuid]
-    current_trace_context.set(None)
-    current_span_context.set(None)
-
+    with Tracer("custom", func_name="Test Wrapper"):
+        await traceable_callback(input=golden.input)
+        current_trace: Trace = current_trace_context.get()
+    
     # run evals through DFS
     trace_api = TraceApi(
         uuid=current_trace.uuid,
@@ -1203,12 +1163,25 @@ async def a_execute_agentic_test_case(
             else None
         ),
     )
-    api_test_case = create_agentic_api_test_case(trace_api, golden, count)
+    test_case = LLMTestCase(
+        input=golden.input,
+        actual_output=golden.actual_output,
+        expected_output=golden.expected_output,
+        context=golden.context,
+        retrieval_context=golden.retrieval_context,
+        additional_metadata=golden.additional_metadata,
+        tools_called=golden.tools_called,
+        expected_tools=golden.expected_tools,
+        comments=golden.comments,
+        _dataset_alias=golden._dataset_alias,
+        _dataset_id=golden._dataset_id,
+    )
+    api_test_case = create_api_test_case(test_case=test_case, trace=trace_api, index=count)
     async def dfs(span: BaseSpan):
         await a_execute_span_test_case(
             span=span,
             trace_api=trace_api,
-            agentic_api_test_case=api_test_case,
+            llm_api_test_case=api_test_case,
             ignore_errors=ignore_errors,
             skip_on_missing_params=skip_on_missing_params,
             show_indicator=show_indicator,
@@ -1220,7 +1193,7 @@ async def a_execute_agentic_test_case(
     await dfs(current_trace.root_spans[0])
     
     ### Update Test Run ###
-    test_run_manager.update_test_run(api_test_case, golden)
+    test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
     if pbar is not None:
         pbar.update(1)
@@ -1229,7 +1202,7 @@ async def a_execute_agentic_test_case(
 async def a_execute_span_test_case(
     span: BaseSpan,
     trace_api: TraceApi,
-    agentic_api_test_case: AgenticApiTestCase,
+    llm_api_test_case: LLMApiTestCase,
     ignore_errors: bool,
     skip_on_missing_params: bool,
     show_indicator: bool,
@@ -1272,22 +1245,20 @@ async def a_execute_span_test_case(
         show_indicator=show_metrics_indicator,
     )
 
+    api_span.metrics_data = []
     for metric in metrics:
         if metric.skipped:
             continue
-
         metric_data = create_metric_data(metric)
-        api_test_case.update_metric_data(metric_data) # add metric data to llm_api_test_case in trace_api
-        agentic_api_test_case.update_metric_data(metric_data) # add metric data to agentic_api_test_case
+        api_span.metrics_data.append(metric_data)
+        llm_api_test_case.update_metric_data(metric_data) # add metric data to agentic_api_test_case
 
     test_end_time = time.perf_counter()
     run_duration = test_end_time - test_start_time
     if run_duration < 1:
         run_duration = 0
     api_test_case.update_run_duration(run_duration)
-
-    # add llm_api_test_case to api_span in trace_api
-    api_span.llm_api_test_case = api_test_case
+    
     
 
 def evaluate(
@@ -1337,7 +1308,7 @@ def evaluate(
             )
             end_time = time.perf_counter()
             run_duration = end_time - start_time
-            global_agentic_test_run_manager.wrap_up_test_run(
+            global_test_run_manager.wrap_up_test_run(
                 run_duration, display_table=True
             )
             

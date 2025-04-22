@@ -216,6 +216,7 @@ class TraceManager:
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
         self._daemon = True
+        self.test_run = False
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -234,6 +235,8 @@ class TraceManager:
 
     def end_trace(self, trace_uuid: str):
         """End a specific trace by its UUID."""
+
+        
         if trace_uuid in self.active_traces:
             trace = self.active_traces[trace_uuid]
             trace.end_time = perf_counter()
@@ -245,7 +248,10 @@ class TraceManager:
                 trace.status = TraceSpanStatus.SUCCESS
 
             # Post the trace to the server before removing it
-            self.post_trace(trace)
+            if self.test_run == False:
+                self.post_trace(trace)
+            else:
+                trace.root_spans = [trace.root_spans[0].children[0]]
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
@@ -564,18 +570,7 @@ class TraceManager:
             input=input_data,
             output=output_data,
             error=span.error,
-            testCaseInput=(
-                span.llm_test_case.input if span.llm_test_case else None
-            ),
-            testCaseActualOutput=(
-                span.llm_test_case.actual_output if span.llm_test_case else None
-            ),
-            testCaseRetrievalContext=(
-                span.llm_test_case.retrieval_context
-                if span.llm_test_case
-                else None
-            ),
-            metrics=span.metrics,
+            testCase=span.llm_test_case
         )
 
         # Add type-specific attributes
@@ -619,7 +614,7 @@ class Tracer:
             Literal["agent", "llm", "retriever", "tool"], str, None
         ],
         func_name: str,
-        metrics: Optional[List[str]] = None,
+        metrics: Optional[List[Union[str, BaseMetric]]] = None,
         **kwargs,
     ):
         self.start_time: float
@@ -822,7 +817,7 @@ class Tracer:
 
 def observe(
     type: Union[Literal["agent", "llm", "retriever", "tool"], str, None],
-    metrics: Optional[List[str]] = None,
+    metrics: Optional[List[Union[str, BaseMetric]]] = None,
     **observe_kwargs,
 ):
     """
