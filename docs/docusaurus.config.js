@@ -160,7 +160,7 @@ module.exports = {
             label: "Integrations",
             activeBasePath: "integrations",
           },
-          // {to: 'blog', label: 'Blog', position: 'left'},
+          {to: 'blog', label: 'Blog', position: 'left'},
           {
             href: "https://documentation.confident-ai.com",
             position: "left",

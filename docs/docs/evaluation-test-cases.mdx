@@ -422,9 +422,6 @@ mllm_test_case = MLLMTestCase(
 :::info
 The `input` parameter accepts a list of strings and `MLLMImage`s, which is a class specific `deepeval`. The `MLLMImage` class accepts an image path and automatically sets the `local` attribute to `true` or `false` depending on whether the image is locally stored or hosted online. By default, `local` is set to `false`.
 
-````python
-### Example:
-
 ```python
 from deepeval.test_case import MLLMImage
 
@@ -433,7 +430,7 @@ image_input = MLLMImage(image_path="path/to/image.jpg")
 
 # image_input.local will automatically be set to `true` if the image is local
 # and `false` if the image is hosted online.
-````
+```
 
 :::
 
