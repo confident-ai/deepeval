@@ -263,9 +263,6 @@ class MultimodalBedrockModel(DeepEvalBaseMLLM):
         if schema:
             try:
                 extracted = self.extract_json(generated_text)
-                logger.info(f"extracted: {extracted}")
-                logger.info(f"schema: {schema}")
-                logger.info(f"Loaded as schema: {schema(**extracted)}")
                 return schema(**extracted)
             except ValidationError as e:
                 logger.error(f"Validation error: {e}")
