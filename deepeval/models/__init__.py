@@ -11,22 +11,19 @@ from deepeval.models.llms import (
     OllamaModel,
     AnthropicModel,
     GeminiModel,
+    BedrockModel
 )
 from deepeval.models.mlllms import (
     MultimodalOpenAIModel,
     MultimodalOllamaModel,
     MultimodalGeminiModel,
+    MultimodalBedrockModel
 )
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
     AzureOpenAIEmbeddingModel,
     LocalEmbeddingModel,
     OllamaEmbeddingModel,
-)
-
-from deepeval.models.bedrock_model import (
-    BedrockModel, 
-    MultimodalBedrockModel
 )
 
 
