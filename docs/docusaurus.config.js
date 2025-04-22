@@ -268,6 +268,8 @@ module.exports = {
         copyright: `Copyright © ${new Date().getFullYear()} Confident AI Inc. Built with ❤️ and confidence.`,
       },
       prism: {
+        theme: require("prism-react-renderer/themes/nightOwl"),
+        // theme: require("prism-react-renderer/themes/palenight"),
         additionalLanguages: ["python"],
         magicComments: [
           {

@@ -194,7 +194,7 @@ from deepeval.synthesizer import Synthesizer
 
 # Generate goldens from documents
 goldens = synthesizer.generate_goldens_from_docs(
-  ...
+  document_paths=['example.txt', 'example.docx', 'example.pdf']
 )
 
 # Access evolutions through the DataFrame
@@ -244,7 +244,7 @@ from deepeval.synthesizer import Synthesizer
 
 # Generate goldens from documents
 goldens = synthesizer.generate_goldens_from_docs(
-    ...
+  document_paths=['example.txt', 'example.docx', 'example.pdf']
 )
 
 # Access quality scores through the DataFrame
