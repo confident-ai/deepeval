@@ -307,6 +307,7 @@ def should_use_gemini_model():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GEMINI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
+
 def should_use_bedrock_model():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_BEDROCK_MODEL)
     return value.lower() == "yes" if value is not None else False
@@ -358,7 +359,6 @@ def is_native_model(
         or isinstance(model, OllamaModel)
         or isinstance(model, LocalModel)
         or isinstance(model, GeminiModel)
-        or isinstance(model, BedrockModel)
     ):
         return True
     else:
