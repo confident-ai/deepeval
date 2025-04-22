@@ -21,6 +21,8 @@ from deepeval.models import (
     MultimodalOpenAIModel,
     MultimodalGeminiModel,
     MultimodalOllamaModel,
+    BedrockModel,
+    MultimodalBedrockModel
 )
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
@@ -306,6 +308,11 @@ def should_use_gemini_model():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_bedrock_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_BEDROCK_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 ###############################################
 # LLM
 ###############################################
@@ -325,6 +332,8 @@ def initialize_model(
         return model, False
     if should_use_gemini_model():
         return GeminiModel(), True
+    if should_use_bedrock_model():
+        return BedrockModel(), False
     if should_use_ollama_model():
         return OllamaModel(), True
     elif should_use_local_model():
@@ -336,7 +345,7 @@ def initialize_model(
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, GPTModel, AzureOpenAIModel, OllamaModel, LocalModel."
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, GPTModel, AzureOpenAIModel, OllamaModel, BedrockModel, LocalModel."
     )
 
 
@@ -373,12 +382,14 @@ def initialize_multimodal_model(
         return model, False
     if should_use_gemini_model():
         return MultimodalGeminiModel(), True
+    if should_use_bedrock_model():
+        return MultimodalBedrockModel(), False
     if should_use_ollama_model():
         return MultimodalOllamaModel(), True
     elif isinstance(model, str) or model is None:
         return MultimodalOpenAIModel(model=model), True
     raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseMLLM, MultimodalOpenAIModel, MultimodalOllamaModel."
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseMLLM, MultimodalOpenAIModel, MultimodalBedrockModel, MultimodalOllamaModel."
     )
 
 

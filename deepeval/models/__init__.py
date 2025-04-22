@@ -11,11 +11,13 @@ from deepeval.models.llms import (
     OllamaModel,
     AnthropicModel,
     GeminiModel,
+    BedrockModel
 )
 from deepeval.models.mlllms import (
     MultimodalOpenAIModel,
     MultimodalOllamaModel,
     MultimodalGeminiModel,
+    MultimodalBedrockModel
 )
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
@@ -23,6 +25,7 @@ from deepeval.models.embedding_models import (
     LocalEmbeddingModel,
     OllamaEmbeddingModel,
 )
+
 
 # TODO: uncomment out once fixed
 # from deepeval.models.summac_model import SummaCModels
