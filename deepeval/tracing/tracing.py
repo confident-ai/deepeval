@@ -833,55 +833,51 @@ def observe(
 
     def decorator(func):
 
-        if inspect.iscoroutinefunction(func):
-            async def async_wrapper(*args, **kwargs):
-                tracer = Tracer(
-                    type,
-                    func_name=func.__name__,
-                    metrics=metrics,
-                    observe_kwargs=observe_kwargs,
-                    function_kwargs=kwargs,
-                )
-                tracer.__enter__()
-                try:
-                    result = await func(*args, **kwargs)
+        if asyncio.iscoroutinefunction(func):
+            async def async_wrapper(*args, **func_kwargs):
+                func_name = func.__name__
+                # Get function signature to map args to parameter names
+                sig = inspect.signature(func)
+                bound_args = sig.bind(*args, **func_kwargs)
+                bound_args.apply_defaults()
+                # Construct complete kwargs dictionary
+                complete_kwargs = dict(bound_args.arguments)
+                # Pass all kwargs with consistent naming
+                tracer_kwargs = {
+                    "observe_kwargs": observe_kwargs,
+                    "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
+                }
+                with Tracer(
+                    type, metrics=metrics, func_name=func_name, **tracer_kwargs
+                ) as tracer:
+                    # Call the original function
+                    result = await func(*args, **func_kwargs)
+                    # Capture the result
                     tracer.result = result
-                    tracer.__exit__(None, None, None)
                     return result
-                except Exception as e:
-                    tracer.__exit__(type(e), e, e.__traceback__)
-                    raise
             return async_wrapper
 
         def wrapper(*args, **func_kwargs):
             func_name = func.__name__
-
             # Get function signature to map args to parameter names
             sig = inspect.signature(func)
             bound_args = sig.bind(*args, **func_kwargs)
             bound_args.apply_defaults()
-
             # Construct complete kwargs dictionary
             complete_kwargs = dict(bound_args.arguments)
-
             # Pass all kwargs with consistent naming
             tracer_kwargs = {
                 "observe_kwargs": observe_kwargs,
                 "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
             }
-
             with Tracer(
                 type, metrics=metrics, func_name=func_name, **tracer_kwargs
             ) as tracer:
-
                 # Call the original function
                 result = func(*args, **func_kwargs)
-
                 # Capture the result
                 tracer.result = result
-
                 return result
-
         return wrapper
 
     return decorator
