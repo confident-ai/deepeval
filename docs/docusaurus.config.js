@@ -55,7 +55,7 @@ module.exports = {
 
   title: "DeepEval - The Open-Source LLM Evaluation Framework",
   tagline: "Evaluation Framework for LLMs",
-  favicon: "img/fav.ico",
+  favicon: "img/favicon.ico",
 
   // Set the production url of your site here
   url: "https://deepeval.com",
