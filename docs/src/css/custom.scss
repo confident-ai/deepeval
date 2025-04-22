@@ -85,6 +85,12 @@ html[data-theme="dark"] {
   font-weight: 400 !important;
 }
 
+@media (max-width: 1330px) {
+  .navbar__link {
+    font-size: 14px !important;
+  }
+}
+
 html[data-theme="light"] .navbar {
   background-color: white;
 }
@@ -153,9 +159,9 @@ html[data-theme="dark"] .header-confident-link {
 .header-confident-link {
   display: flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 14px;
   column-gap: 0.1rem;
   border: 1px solid black;
   box-shadow: -4px 4px 0 black;
