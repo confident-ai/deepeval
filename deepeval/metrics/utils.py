@@ -333,7 +333,7 @@ def initialize_model(
     if should_use_gemini_model():
         return GeminiModel(), True
     if should_use_bedrock_model():
-        return BedrockModel(), True
+        return BedrockModel(), False
     if should_use_ollama_model():
         return OllamaModel(), True
     elif should_use_local_model():
