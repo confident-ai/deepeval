@@ -11,6 +11,7 @@ import random
 import threading
 import queue
 import asyncio
+import functools
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_case import LLMTestCase
@@ -127,7 +128,7 @@ class BaseSpan(BaseModel):
     output: Optional[Union[str, Dict, list]] = None
     error: Optional[str] = None
     llm_test_case: Optional[LLMTestCase] = None
-    metrics: Optional[List[Union[str, BaseMetric]]] = None
+    metrics: Optional[Union[List[str], List[BaseMetric]]] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -199,7 +200,7 @@ current_trace_context: ContextVar[Optional[Trace]] = ContextVar(
 )
 
 
-def get_trace_context():
+def get_current_trace():
     return current_trace_context.get()
 
 
@@ -219,7 +220,7 @@ class TraceManager:
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
         self._daemon = True
-        self.test_run = False
+        self.evaluating = False
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -250,7 +251,7 @@ class TraceManager:
                 trace.status = TraceSpanStatus.SUCCESS
 
             # Post the trace to the server before removing it
-            if self.test_run == False:
+            if not self.evaluating:
                 self.post_trace(trace)
             else:
                 trace.root_spans = [trace.root_spans[0].children[0]]
@@ -555,11 +556,9 @@ class TraceManager:
             else None
         )
 
+        is_metric_strings = None
         if span.metrics:
-            span.metrics = [
-                m if isinstance(m, str) else getattr(m, "name", str(m))
-                for m in span.metrics
-            ]
+            is_metric_strings = isinstance(span.metrics[0], str)
 
         # Create the base API span
         api_span = BaseApiSpan(
@@ -575,6 +574,9 @@ class TraceManager:
             output=output_data,
             error=span.error,
             testCase=span.llm_test_case,
+            metrics=(
+                span.metrics if is_metric_strings else None
+            ),  # only need metric name if online evals
         )
 
         # Add type-specific attributes
@@ -598,12 +600,6 @@ class TraceManager:
 
         return api_span
 
-    def disable_hosted_mode(self):
-        self._daemon = False
-
-    def enable_hosted_mode(self):
-        self._daemon = True
-
 
 trace_manager = TraceManager()
 
@@ -619,7 +615,7 @@ class Tracer:
             Literal["agent", "llm", "retriever", "tool"], str, None
         ],
         func_name: str,
-        metrics: Optional[List[Union[str, BaseMetric]]] = None,
+        metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
         **kwargs,
     ):
         self.start_time: float
@@ -655,7 +651,7 @@ class Tracer:
             self.parent_uuid = parent_span.uuid
             self.trace_uuid = parent_span.trace_uuid
         else:
-            current_trace = get_trace_context()
+            current_trace = get_current_trace()
             if current_trace:
                 self.trace_uuid = current_trace.uuid
             else:
@@ -822,7 +818,7 @@ class Tracer:
 
 def observe(
     type: Union[Literal["agent", "llm", "retriever", "tool"], str, None],
-    metrics: Optional[List[Union[str, BaseMetric]]] = None,
+    metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
     **observe_kwargs,
 ):
     """
@@ -837,18 +833,19 @@ def observe(
     """
 
     def decorator(func):
+        func_name = func.__name__  # Get func_name outside wrappers
 
         if asyncio.iscoroutinefunction(func):
 
+            @functools.wraps(func)
             async def async_wrapper(*args, **func_kwargs):
-                func_name = func.__name__
-                # Get function signature to map args to parameter names
+                # func_name = func.__name__ # Removed from here
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()
-                # Construct complete kwargs dictionary
+
+                # Construct complete kwargs dictionary & pass all kwargs with consistent naming
                 complete_kwargs = dict(bound_args.arguments)
-                # Pass all kwargs with consistent naming
                 tracer_kwargs = {
                     "observe_kwargs": observe_kwargs,
                     "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
@@ -862,31 +859,34 @@ def observe(
                     tracer.result = result
                     return result
 
+            # Set the marker attribute on the wrapper
+            setattr(async_wrapper, "_is_deepeval_observed", True)
             return async_wrapper
+        else:
 
-        def wrapper(*args, **func_kwargs):
-            func_name = func.__name__
-            # Get function signature to map args to parameter names
-            sig = inspect.signature(func)
-            bound_args = sig.bind(*args, **func_kwargs)
-            bound_args.apply_defaults()
-            # Construct complete kwargs dictionary
-            complete_kwargs = dict(bound_args.arguments)
-            # Pass all kwargs with consistent naming
-            tracer_kwargs = {
-                "observe_kwargs": observe_kwargs,
-                "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
-            }
-            with Tracer(
-                type, metrics=metrics, func_name=func_name, **tracer_kwargs
-            ) as tracer:
-                # Call the original function
-                result = func(*args, **func_kwargs)
-                # Capture the result
-                tracer.result = result
-                return result
+            @functools.wraps(func)
+            def wrapper(*args, **func_kwargs):
+                # func_name = func.__name__ # Removed from here
+                sig = inspect.signature(func)
+                bound_args = sig.bind(*args, **func_kwargs)
+                bound_args.apply_defaults()
+                complete_kwargs = dict(bound_args.arguments)
+                tracer_kwargs = {
+                    "observe_kwargs": observe_kwargs,
+                    "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
+                }
+                with Tracer(
+                    type, metrics=metrics, func_name=func_name, **tracer_kwargs
+                ) as tracer:
+                    # Call the original function
+                    result = func(*args, **func_kwargs)
+                    # Capture the result
+                    tracer.result = result
+                    return result
 
-        return wrapper
+            # Set the marker attribute on the wrapper
+            setattr(wrapper, "_is_deepeval_observed", True)
+            return wrapper
 
     return decorator
 

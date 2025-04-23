@@ -451,6 +451,10 @@ class TestRunManager:
             fail_count = 0
             test_case_name = test_case.name
 
+            # TODO: recursively iterate through it to calculate pass and fail count
+            if test_case.trace:
+                pass
+
             for metric_data in test_case.metrics_data:
                 if metric_data.success:
                     pass_count += 1
@@ -813,14 +817,8 @@ class TestRunManager:
 
         global_test_run_cache_manager.wrap_up_cached_test_run()
 
-        has_trace = any(
-            [test_case.trace is not None for test_case in test_run.test_cases]
-        )
         if display_table:
-            if not has_trace:
-                self.display_results_table(test_run, display)
-            else:
-                self.display_average_results_table(test_run, display)
+            self.display_results_table(test_run, display)
 
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_name)
@@ -831,122 +829,6 @@ class TestRunManager:
         ):
             test_run.guard_mllm_test_cases()
             return self.post_test_run(test_run)
-
-    def display_average_results_table(
-        self, test_run: TestRun, display: TestRunResultDisplay
-    ):
-        table = Table(title="Test Results")
-        table.add_column("Test case", justify="left")
-        table.add_column("Metric", justify="left")
-        table.add_column("Average Score", justify="left")
-        table.add_column("Status", justify="left")
-        table.add_column("Overall Success Rate", justify="left")
-
-        for index, test_case in enumerate(test_run.test_cases):
-            if test_case.metrics_data is None:
-                continue
-
-            if (
-                display == TestRunResultDisplay.PASSING
-                and test_case.success == False
-            ):
-                continue
-            elif display == TestRunResultDisplay.FAILING and test_case.success:
-                continue
-
-            pass_count = 0
-            fail_count = 0
-            test_case_name = test_case.name
-
-            for metric_data in test_case.metrics_data:
-                if metric_data.success:
-                    pass_count += 1
-                else:
-                    fail_count += 1
-
-            table.add_row(
-                test_case_name,
-                "",
-                "",
-                "",
-                f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
-            )
-
-            grouped: Dict[str, List[MetricData]] = {}
-            for md in test_case.metrics_data:
-                grouped.setdefault(md.name, []).append(md)
-
-            for metric_name, entries in grouped.items():
-                # 1) average score (skip None)
-                scores = [e.score for e in entries if e.score is not None]
-                avg_score = (
-                    round(sum(scores) / len(scores), 2) if scores else None
-                )
-
-                # 2) build per-run details, and track any errored/failed flags
-                details = []
-                any_errored = False
-                any_failed = False
-
-                for e in entries:
-                    # per-run status
-                    if e.error:
-                        status_str = "[red]ERRORED[/red]"
-                        any_errored = True
-                    elif e.success:
-                        status_str = "[green]PASSED[/green]"
-                    else:
-                        status_str = "[red]FAILED[/red]"
-                        any_failed = True
-
-                    eval_model = e.evaluation_model or "n/a"
-                    metric_score = (
-                        round(e.score, 2) if e.score is not None else None
-                    )
-
-                    details.append(
-                        f"(score={metric_score}, threshold={e.threshold}, "
-                        f"evaluation model={eval_model}, reason={e.reason}, "
-                        f"error={e.error}, status={status_str})"
-                    )
-
-                # 3) overall status
-                if any_errored:
-                    overall_status = "[red]ERRORED[/red]"
-                elif any_failed:
-                    overall_status = "[red]FAILED[/red]"
-                else:
-                    overall_status = "[green]PASSED[/green]"
-
-                # 4) add a single row for this metric
-                table.add_row(
-                    "",
-                    str(metric_name),
-                    f"{avg_score} (Average), Breakdown: {details}",
-                    overall_status,
-                    "",
-                )
-
-            if index is not len(self.test_run.test_cases) - 1:
-                table.add_row(
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                )
-
-        table.add_row(
-            "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
-            "",
-            "",
-            "",
-            "",
-        )
-        print(table)
-        print(
-            f"Total estimated evaluation tokens cost: {test_run.evaluation_cost} USD"
-        )
 
 
 global_test_run_manager = TestRunManager()

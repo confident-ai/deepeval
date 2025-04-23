@@ -11,7 +11,7 @@ from deepeval.tracing import (
 import random
 from asyncio import sleep
 
-trace_manager.disable_hosted_mode()
+trace_manager._daemon = False
 
 #######################################################
 ## Example ############################################
@@ -263,10 +263,39 @@ async def meta_agent(query: str):
     return final_response
 
 
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics.dag import (
+    DeepAcyclicGraph,
+    TaskNode,
+    BinaryJudgementNode,
+    NonBinaryJudgementNode,
+    VerdictNode,
+)
+from deepeval.metrics import DAGMetric, GEval
+
+geval_metric = GEval(
+    name="Persuasiveness",
+    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+)
+
+conciseness_node = BinaryJudgementNode(
+    criteria="Does the actual output contain less than or equal to 4 sentences?",
+    children=[
+        VerdictNode(verdict=False, score=0),
+        VerdictNode(verdict=True, child=geval_metric),
+    ],
+)
+
+# create the DAG
+dag = DeepAcyclicGraph(root_nodes=[conciseness_node])
+metric = DAGMetric(dag=dag)
+
+
 ###################################
 
 import asyncio
-from deepeval.tracing import get_trace_context
+from deepeval.tracing import get_current_trace
 import contextvars
 
 

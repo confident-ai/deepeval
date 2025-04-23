@@ -6,6 +6,6 @@ from .tracing import (
     RetrieverAttributes,
     ToolAttributes,
     AgentAttributes,
-    get_trace_context,
+    get_current_trace,
     trace_manager,
 )

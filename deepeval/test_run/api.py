@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict, model_validator
-from typing import Any, Optional, List, Union, Dict
+from typing import Optional, Any, List, Union, Dict
 
 from deepeval.test_case import MLLMImage
 from deepeval.tracing.api import TraceApi, MetricData
@@ -68,6 +68,7 @@ class LLMApiTestCase(BaseModel):
     def update_run_duration(self, run_duration: float):
         self.run_duration = run_duration
 
+    # # TODO: Do a post init check for multi modal and tracing scenario
     # @model_validator(mode="before")
     # def check_input_and_multimodal_input(cls, values: Dict[str, Any]):
     #     input = values.get("input")

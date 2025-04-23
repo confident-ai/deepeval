@@ -1,22 +1,16 @@
 import asyncio
 from copy import deepcopy
-import os
-from typing import Callable, List, Optional, Union, Dict, Any, Awaitable
+from typing import Callable, List, Optional, Union, Any, Awaitable
 import time
-from dataclasses import dataclass
-from pydantic import BaseModel
-from rich.console import Console
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm
-from time import perf_counter, sleep
+
 
 from deepeval.tracing.tracing import (
     Tracer,
-    current_trace_context,
-    current_span_context,
+    get_current_trace,
     trace_manager,
     Trace,
-    TraceSpanStatus,
     BaseSpan,
     AgentSpan,
     LlmSpan,
@@ -24,7 +18,6 @@ from deepeval.tracing.tracing import (
     ToolSpan,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
-    TraceManager,
 )
 from deepeval.tracing.api import (
     TraceApi,
@@ -33,16 +26,8 @@ from deepeval.tracing.api import (
 from deepeval.dataset import Golden
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
-from deepeval.prompt import Prompt
-from deepeval.test_case.utils import check_valid_test_cases_type
-from deepeval.test_run.hyperparameters import process_hyperparameters
-from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.utils import (
     get_or_create_event_loop,
-    should_ignore_errors,
-    should_skip_on_missing_params,
-    should_use_cache,
-    should_verbose_print,
 )
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import (
@@ -51,240 +36,32 @@ from deepeval.metrics import (
     BaseMultimodalMetric,
 )
 from deepeval.metrics.indicator import (
-    format_metric_description,
     measure_metrics_with_indicator,
 )
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     MLLMTestCase,
-    MLLMImage,
 )
-from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import (
     global_test_run_manager,
     LLMApiTestCase,
     ConversationalApiTestCase,
-    MetricData,
     TestRunManager,
     TestRun,
 )
-from deepeval.utils import get_is_running_deepeval
 from deepeval.test_run.cache import (
     global_test_run_cache_manager,
     Cache,
     CachedTestCase,
     CachedMetricData,
 )
-
-
-@dataclass
-class TestResult:
-    """Returned from run_test"""
-
-    name: str
-    success: bool
-    metrics_data: Union[List[MetricData], None]
-    conversational: bool
-    multimodal: Optional[bool] = None
-    input: Union[Optional[str], List[Union[str, MLLMImage]]] = None
-    actual_output: Union[Optional[str], List[Union[str, MLLMImage]]] = None
-    expected_output: Optional[str] = None
-    context: Optional[List[str]] = None
-    retrieval_context: Optional[List[str]] = None
-    additional_metadata: Optional[Dict] = None
-
-
-class EvaluationResult(BaseModel):
-    test_results: List[TestResult]
-    confident_link: Optional[str]
-
-
-def create_metric_data(metric: BaseMetric) -> MetricData:
-    if metric.error is not None:
-        return MetricData(
-            name=metric.__name__,
-            threshold=metric.threshold,
-            score=None,
-            reason=None,
-            success=False,
-            strictMode=metric.strict_mode,
-            evaluationModel=metric.evaluation_model,
-            error=metric.error,
-            evaluationCost=metric.evaluation_cost,
-            verboseLogs=metric.verbose_logs,
-        )
-    else:
-        return MetricData(
-            name=metric.__name__,
-            score=metric.score,
-            threshold=metric.threshold,
-            reason=metric.reason,
-            success=metric.is_successful(),
-            strictMode=metric.strict_mode,
-            evaluationModel=metric.evaluation_model,
-            error=None,
-            evaluationCost=metric.evaluation_cost,
-            verboseLogs=metric.verbose_logs,
-        )
-
-
-def create_test_result(
-    api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
-) -> TestResult:
-    name = api_test_case.name
-
-    if isinstance(api_test_case, ConversationalApiTestCase):
-        return TestResult(
-            name=name,
-            success=api_test_case.success,
-            metrics_data=api_test_case.metrics_data,
-            conversational=True,
-            additional_metadata=api_test_case.additional_metadata,
-        )
-    else:
-        multimodal = (
-            api_test_case.multimodal_input is not None
-            and api_test_case.multimodal_input_actual_output is not None
-        )
-        if multimodal:
-            return TestResult(
-                name=name,
-                success=api_test_case.success,
-                metrics_data=api_test_case.metrics_data,
-                input=api_test_case.multimodal_input,
-                actual_output=api_test_case.multimodal_input_actual_output,
-                conversational=False,
-                multimodal=True,
-                additional_metadata=api_test_case.additional_metadata,
-            )
-        else:
-            return TestResult(
-                name=name,
-                success=api_test_case.success,
-                metrics_data=api_test_case.metrics_data,
-                input=api_test_case.input,
-                actual_output=api_test_case.actual_output,
-                expected_output=api_test_case.expected_output,
-                context=api_test_case.context,
-                retrieval_context=api_test_case.retrieval_context,
-                conversational=False,
-                multimodal=False,
-                additional_metadata=api_test_case.additional_metadata,
-            )
-
-
-def create_api_test_case(
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
-    trace: Optional[TraceApi] = None,
-    index: Optional[int] = None,
-    conversational_instance_id: Optional[int] = None,
-    additional_metadata: Optional[Dict] = None,
-    comments: Optional[str] = None,
-) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
-    if isinstance(test_case, ConversationalTestCase):
-        order = (
-            test_case._dataset_rank
-            if test_case._dataset_rank is not None
-            else index
-        )
-        if test_case.name:
-            name = test_case.name
-        else:
-            name = os.getenv(
-                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{order}"
-            )
-
-        api_test_case = ConversationalApiTestCase(
-            name=name,
-            success=True,
-            metricsData=[],
-            runDuration=0,
-            evaluationCost=None,
-            order=order,
-            testCases=[],
-            additionalMetadata=test_case.additional_metadata,
-        )
-        api_test_case.instance_id = id(api_test_case)
-        api_test_case.turns = [
-            create_api_test_case(
-                test_case=turn,
-                index=index,
-                conversational_instance_id=api_test_case.instance_id,
-                additional_metadata=turn.additional_metadata,
-                comments=turn.comments,
-            )
-            for index, turn in enumerate(test_case.turns)
-        ]
-
-        return api_test_case
-    else:
-        if conversational_instance_id:
-            success = None
-            name = f"turn_{index}"
-            order = index
-
-            # Manually set the metadata and comments on conversational test case
-            # to each individual message (test case)
-            test_case.additional_metadata = additional_metadata
-            test_case.comments = comments
-            metrics_data = None
-        else:
-            order = (
-                test_case._dataset_rank
-                if test_case._dataset_rank is not None
-                else index
-            )
-
-            success = True
-            if test_case.name is not None:
-                name = test_case.name
-            else:
-                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
-            metrics_data = []
-
-        if isinstance(test_case, LLMTestCase):
-            api_test_case = LLMApiTestCase(
-                name=name,
-                input=test_case.input,
-                actualOutput=test_case.actual_output,
-                expectedOutput=test_case.expected_output,
-                context=test_case.context,
-                retrievalContext=test_case.retrieval_context,
-                toolsCalled=test_case.tools_called,
-                expectedTools=test_case.expected_tools,
-                tokenCost=test_case.token_cost,
-                completionTime=test_case.completion_time,
-                success=success,
-                metricsData=metrics_data,
-                runDuration=None,
-                evaluationCost=None,
-                order=order,
-                additionalMetadata=test_case.additional_metadata,
-                comments=test_case.comments,
-                conversational_instance_id=conversational_instance_id,
-                trace=trace,
-            )
-        elif isinstance(test_case, MLLMTestCase):
-            api_test_case = LLMApiTestCase(
-                name=name,
-                multimodalInput=test_case.input,
-                multimodalActualOutput=test_case.actual_output,
-                toolsCalled=test_case.tools_called,
-                expectedTools=test_case.expected_tools,
-                tokenCost=test_case.token_cost,
-                completionTime=test_case.completion_time,
-                success=success,
-                metricsData=metrics_data,
-                runDuration=None,
-                evaluationCost=None,
-                order=order,
-                additionalMetadata=test_case.additional_metadata,
-                comments=test_case.comments,
-                conversational_instance_id=conversational_instance_id,
-            )
-        # llm_test_case_lookup_map[instance_id] = api_test_case
-        return api_test_case
+from deepeval.evaluate.types import TestResult
+from deepeval.evaluate.utils import (
+    create_metric_data,
+    create_test_result,
+    create_api_test_case,
+)
 
 
 def execute_test_cases(
@@ -980,69 +757,6 @@ async def a_execute_conversational_test_cases(
         pbar.update(1)
 
 
-def assert_test(
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
-    metrics: List[
-        Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
-    ],
-    run_async: bool = True,
-):
-    if run_async:
-        loop = get_or_create_event_loop()
-        test_result = loop.run_until_complete(
-            a_execute_test_cases(
-                [test_case],
-                metrics,
-                skip_on_missing_params=should_skip_on_missing_params(),
-                ignore_errors=should_ignore_errors(),
-                use_cache=should_use_cache(),
-                verbose_mode=should_verbose_print(),
-                throttle_value=0,
-                # this doesn't matter for pytest
-                max_concurrent=100,
-                save_to_disk=get_is_running_deepeval(),
-                show_indicator=True,
-                _use_bar_indicator=True,
-            )
-        )[0]
-    else:
-        test_result = execute_test_cases(
-            [test_case],
-            metrics,
-            skip_on_missing_params=should_skip_on_missing_params(),
-            ignore_errors=should_ignore_errors(),
-            use_cache=should_use_cache(),
-            verbose_mode=should_verbose_print(),
-            save_to_disk=get_is_running_deepeval(),
-            show_indicator=True,
-            _use_bar_indicator=False,
-        )[0]
-
-    if not test_result.success:
-        failed_metrics_data: List[MetricData] = []
-        # even for conversations, test_result right now is just the
-        # result for the last message
-        for metric_data in test_result.metrics_data:
-            if metric_data.error is not None:
-                failed_metrics_data.append(metric_data)
-            else:
-                # This try block is for user defined custom metrics,
-                # which might not handle the score == undefined case elegantly
-                try:
-                    if not metric_data.success:
-                        failed_metrics_data.append(metric_data)
-                except:
-                    failed_metrics_data.append(metric_data)
-
-        failed_metrics_str = ", ".join(
-            [
-                f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error})"
-                for metrics_data in failed_metrics_data
-            ]
-        )
-        raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
-
-
 def execute_agentic_test_cases(
     goldens: List[Golden],
     traceable_callback: Union[
@@ -1060,11 +774,11 @@ def execute_agentic_test_cases(
     test_run_manager.save_to_disk = False
     test_run_manager.create_test_run(identifier=identifier)
     local_trace_manager = trace_manager
+    local_trace_manager.evaluating = True
     test_results: List[TestResult] = []
 
     def evaluate_test_cases(pbar: Optional[tqdm] = None):
         count = 0
-        local_trace_manager.test_run = True
         show_metric_indicator = show_indicator and not _use_bar_indicator
 
         for golden in goldens:
@@ -1079,7 +793,7 @@ def execute_agentic_test_cases(
                         )
                     else:
                         traceable_callback(input=golden.input)
-                    current_trace: Trace = current_trace_context.get()
+                    current_trace: Trace = get_current_trace()
 
                 # Create empty trace api for llm api test case
                 trace_api = TraceApi(
@@ -1108,7 +822,7 @@ def execute_agentic_test_cases(
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
                     input=golden.input,
-                    actual_output=golden.actual_output,
+                    actual_output=golden.actual_output or "TODO",
                     expected_output=golden.expected_output,
                     context=golden.context,
                     retrieval_context=golden.retrieval_context,
@@ -1223,6 +937,7 @@ def execute_agentic_test_cases(
     else:
         evaluate_test_cases()
 
+    local_trace_manager.evaluating = False
     return test_results
 
 
@@ -1250,11 +965,11 @@ async def a_execute_agentic_test_cases(
     test_run_manager.save_to_disk = False
     test_run_manager.create_test_run(identifier=identifier)
     local_trace_manager = trace_manager
+    local_trace_manager.evaluating = True
     test_results: List[TestResult] = []
     tasks = []
     count = 0
 
-    local_trace_manager.test_run = True
     if show_indicator and _use_bar_indicator:
         with tqdm_asyncio(
             desc=f"Evaluating {len(goldens)} golden(s) in parallel",
@@ -1303,7 +1018,7 @@ async def a_execute_agentic_test_cases(
                 tasks.append(asyncio.create_task(task))
                 await asyncio.sleep(throttle_value)
         await asyncio.gather(*tasks)
-    local_trace_manager.test_run = False
+    local_trace_manager.evaluating = False
     return test_results
 
 
@@ -1328,7 +1043,7 @@ async def a_execute_agentic_test_case(
             await traceable_callback(input=golden.input)
         else:
             traceable_callback(input=golden.input)
-        current_trace: Trace = current_trace_context.get()
+        current_trace: Trace = get_current_trace()
 
     # run evals through DFS
     trace_api = TraceApi(
@@ -1381,8 +1096,9 @@ async def a_execute_agentic_test_case(
             verbose_mode=verbose_mode,
             _use_bar_indicator=_use_bar_indicator,
         )
-        for child in span.children:
-            await dfs(child)
+        child_tasks = [dfs(child) for child in span.children]
+        if child_tasks:
+            await asyncio.gather(*child_tasks)
 
     test_start_time = time.perf_counter()
     await dfs(current_trace.root_spans[0])
@@ -1407,6 +1123,13 @@ async def a_execute_span_test_case(
     verbose_mode: Optional[bool],
     _use_bar_indicator: bool,
 ):
+    if span.metrics is None:
+        return
+    if span.llm_test_case is None:
+        raise ValueError(
+            "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span_test_case_parameters()`?"
+        )
+
     show_metrics_indicator = show_indicator and not _use_bar_indicator
     metrics: List[BaseMetric] = span.metrics
     test_case: LLMTestCase = span.llm_test_case
@@ -1422,9 +1145,6 @@ async def a_execute_span_test_case(
         trace_api.tool_spans.append(api_span)
     else:
         trace_api.base_spans.append(api_span)
-
-    if span.metrics == None or span.llm_test_case == None:
-        return
 
     for metric in metrics:
         metric.skipped = False
@@ -1450,253 +1170,3 @@ async def a_execute_span_test_case(
         llm_api_test_case.update_metric_data(
             metric_data
         )  # add metric data to agentic_api_test_case
-
-
-def evaluate(
-    goldens: Optional[List[Golden]] = None,
-    traceable_callback: Optional[
-        Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
-    ] = None,
-    test_cases: Optional[
-        Union[
-            List[Union[LLMTestCase, MLLMTestCase]], List[ConversationalTestCase]
-        ]
-    ] = None,
-    metrics: Optional[List[BaseMetric]] = None,
-    hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
-    run_async: bool = True,
-    show_indicator: bool = True,
-    print_results: bool = True,
-    write_cache: bool = True,
-    use_cache: bool = False,
-    ignore_errors: bool = False,
-    skip_on_missing_params: bool = False,
-    verbose_mode: Optional[bool] = None,
-    identifier: Optional[str] = None,
-    throttle_value: int = 0,
-    max_concurrent: int = 100,
-    display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
-) -> EvaluationResult:
-    validate_evaluate_inputs(
-        goldens=goldens,
-        traceable_callback=traceable_callback,
-        test_cases=test_cases,
-        metrics=metrics,
-    )
-    if goldens and traceable_callback:
-
-        start_time = time.perf_counter()
-
-        with capture_evaluation_run("traceable evaluate()"):
-            if run_async:
-                loop = get_or_create_event_loop()
-                test_results = loop.run_until_complete(
-                    a_execute_agentic_test_cases(
-                        goldens=goldens,
-                        traceable_callback=traceable_callback,
-                        ignore_errors=ignore_errors,
-                        verbose_mode=verbose_mode,
-                        show_indicator=show_indicator,
-                        skip_on_missing_params=skip_on_missing_params,
-                        throttle_value=throttle_value,
-                        identifier=identifier,
-                        max_concurrent=max_concurrent,
-                    )
-                )
-            else:
-                test_results = execute_agentic_test_cases(
-                    goldens=goldens,
-                    traceable_callback=traceable_callback,
-                    ignore_errors=ignore_errors,
-                    verbose_mode=verbose_mode,
-                    show_indicator=show_indicator,
-                    skip_on_missing_params=skip_on_missing_params,
-                    identifier=identifier,
-                )
-        end_time = time.perf_counter()
-        run_duration = end_time - start_time
-        global_test_run_manager.wrap_up_test_run(
-            run_duration, display_table=True
-        )
-
-    elif test_cases and metrics:
-        check_valid_test_cases_type(test_cases)
-        if hyperparameters is not None:
-            if (
-                hyperparameters.get("model") is None
-                or hyperparameters.get("prompt template") is None
-            ):
-                raise ValueError(
-                    "A `model` and `prompt template` key must be provided when logging `hyperparameters`."
-                )
-            hyperparameters = process_hyperparameters(hyperparameters)
-
-        global_test_run_manager.reset()
-        start_time = time.perf_counter()
-
-        if show_indicator:
-            console = Console()
-            for metric in metrics:
-                console.print(
-                    format_metric_description(metric, async_mode=run_async)
-                )
-
-        with capture_evaluation_run("evaluate()"):
-            if run_async:
-                loop = get_or_create_event_loop()
-                test_results = loop.run_until_complete(
-                    a_execute_test_cases(
-                        test_cases,
-                        metrics,
-                        ignore_errors=ignore_errors,
-                        use_cache=use_cache,
-                        verbose_mode=verbose_mode,
-                        save_to_disk=write_cache,
-                        show_indicator=show_indicator,
-                        skip_on_missing_params=skip_on_missing_params,
-                        throttle_value=throttle_value,
-                        identifier=identifier,
-                        max_concurrent=max_concurrent,
-                    )
-                )
-            else:
-                test_results = execute_test_cases(
-                    test_cases,
-                    metrics,
-                    ignore_errors=ignore_errors,
-                    use_cache=use_cache,
-                    verbose_mode=verbose_mode,
-                    save_to_disk=write_cache,
-                    skip_on_missing_params=skip_on_missing_params,
-                    identifier=identifier,
-                    show_indicator=show_indicator,
-                )
-
-        end_time = time.perf_counter()
-        run_duration = end_time - start_time
-        if print_results:
-            for test_result in test_results:
-                print_test_result(test_result, display)
-
-            aggregate_metric_pass_rates(test_results)
-
-        test_run = global_test_run_manager.get_test_run()
-        test_run.hyperparameters = hyperparameters
-        global_test_run_manager.save_test_run()
-        confident_link = global_test_run_manager.wrap_up_test_run(
-            run_duration, display_table=False
-        )
-        return EvaluationResult(
-            test_results=test_results, confident_link=confident_link
-        )
-
-
-def validate_evaluate_inputs(
-    goldens: Optional[List] = None,
-    traceable_callback: Optional[Callable] = None,
-    test_cases: Optional[List] = None,
-    metrics: Optional[List] = None,
-):
-    if (goldens and traceable_callback) and (test_cases or metrics):
-        raise ValueError(
-            "You cannot provide both (goldens with traceable_callback) and (test_cases with metrics). Please choose one mode."
-        )
-    if (goldens and not traceable_callback) or (
-        traceable_callback and not goldens
-    ):
-        raise ValueError(
-            "If using goldens, you must also provide a traceable_callback."
-        )
-    if (test_cases and not metrics) or (metrics and not test_cases):
-        raise ValueError("If using test_cases, you must also provide metrics.")
-    if not ((goldens and traceable_callback) or (test_cases and metrics)):
-        raise ValueError(
-            "You must provide either goldens with a traceable_callback, or test_cases with metrics."
-        )
-
-
-def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
-    if test_result.metrics_data is None:
-        return
-
-    if (
-        display == TestRunResultDisplay.PASSING.value
-        and test_result.success is False
-    ):
-        return
-    elif display == TestRunResultDisplay.FAILING.value and test_result.success:
-        return
-
-    print("")
-    print("=" * 70 + "\n")
-    print("Metrics Summary\n")
-
-    for metric_data in test_result.metrics_data:
-        successful = True
-        if metric_data.error is not None:
-            successful = False
-        else:
-            # This try block is for user defined custom metrics,
-            # which might not handle the score == undefined case elegantly
-            try:
-                if not metric_data.success:
-                    successful = False
-            except:
-                successful = False
-
-        if not successful:
-            print(
-                f"  - ❌ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
-            )
-        else:
-            print(
-                f"  - ✅ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
-            )
-
-    print("")
-    if test_result.multimodal:
-        print("For multimodal test case:\n")
-        print(f"  - input: {test_result.input}")
-        print(f"  - actual output: {test_result.actual_output}")
-
-    elif test_result.conversational:
-        print("For conversational test case:\n")
-        print(
-            f"  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full."
-        )
-    else:
-        print("For test case:\n")
-        print(f"  - input: {test_result.input}")
-        print(f"  - actual output: {test_result.actual_output}")
-        print(f"  - expected output: {test_result.expected_output}")
-        print(f"  - context: {test_result.context}")
-        print(f"  - retrieval context: {test_result.retrieval_context}")
-
-
-def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
-    metric_counts = {}
-    metric_successes = {}
-
-    for result in test_results:
-        if result.metrics_data:
-            for metric_data in result.metrics_data:
-                metric_name = metric_data.name
-                if metric_name not in metric_counts:
-                    metric_counts[metric_name] = 0
-                    metric_successes[metric_name] = 0
-                metric_counts[metric_name] += 1
-                if metric_data.success:
-                    metric_successes[metric_name] += 1
-
-    metric_pass_rates = {
-        metric: (metric_successes[metric] / metric_counts[metric])
-        for metric in metric_counts
-    }
-
-    print("\n" + "=" * 70 + "\n")
-    print("Overall Metric Pass Rates\n")
-    for metric, pass_rate in metric_pass_rates.items():
-        print(f"{metric}: {pass_rate:.2%} pass rate")
-    print("\n" + "=" * 70 + "\n")
-
-    return metric_pass_rates

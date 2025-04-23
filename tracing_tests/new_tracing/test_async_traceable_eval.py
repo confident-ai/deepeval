@@ -1,4 +1,8 @@
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.metrics import (
+    AnswerRelevancyMetric,
+    BiasMetric,
+    FaithfulnessMetric,
+)
 from deepeval.tracing import (
     update_current_span_test_case_parameters,
     update_current_span_attributes,
@@ -10,6 +14,35 @@ from deepeval.tracing import (
 from time import perf_counter
 from asyncio import sleep
 import random
+
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics.dag import (
+    DeepAcyclicGraph,
+    TaskNode,
+    BinaryJudgementNode,
+    NonBinaryJudgementNode,
+    VerdictNode,
+)
+from deepeval.metrics import DAGMetric, GEval
+
+geval_metric = GEval(
+    name="Persuasiveness",
+    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+)
+
+conciseness_node = BinaryJudgementNode(
+    criteria="Does the actual output contain less than or equal to 4 sentences?",
+    children=[
+        VerdictNode(verdict=False, score=0),
+        VerdictNode(verdict=True, child=geval_metric),
+    ],
+)
+
+# create the DAG
+dag = DeepAcyclicGraph(root_nodes=[conciseness_node])
+metric = DAGMetric(dag=dag, name="DAG")
+
 
 #######################################################
 ## Example ############################################
@@ -113,7 +146,7 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metrics=[AnswerRelevancyMetric(), BiasMetric()],
+    metrics=[AnswerRelevancyMetric(), BiasMetric(), metric],
 )
 async def meta_agent(input: str):
     # 50% probability of executing the function
@@ -125,6 +158,7 @@ async def meta_agent(input: str):
     Research: {research_info}
     Custom Analysis: {custom_info}
     """
+
     update_current_span_test_case_parameters(
         input=input, actual_output=final_response
     )
