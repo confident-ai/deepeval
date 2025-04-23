@@ -14,6 +14,7 @@ import random
 ## Example ############################################
 #######################################################
 
+
 @observe(type="llm", model="gpt-4o")
 def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
@@ -26,6 +27,7 @@ def generate_text(prompt: str):
     update_current_span_attributes(attributes)
     sleep(random.uniform(1, 3))
     return generated_text
+
 
 # Example of a retrieval node with embedded embedder
 @observe(type="retriever", embedder="text-embedding-ada-002")
@@ -43,12 +45,14 @@ def retrieve_documents(query: str, top_k: int = 3):
     )
     return documents
 
+
 @observe("CustomEmbedder")
 def custom_embed(text: str, model: str = "custom-model"):
     embedding = [0.1, 0.2, 0.3]
     # Add sleep of 1-3 seconds
     sleep(random.uniform(1, 3))
     return embedding
+
 
 @observe("CustomRetriever", name="custom retriever")
 def custom_retrieve(query: str, embedding_model: str = "custom-model"):
@@ -58,6 +62,7 @@ def custom_retrieve(query: str, embedding_model: str = "custom-model"):
         f"Custom doc 2 about {query}",
     ]
     sleep(random.uniform(1, 3))
+
 
 @observe("CustomLLM")
 def custom_generate(prompt: str, model: str = "custom-model"):

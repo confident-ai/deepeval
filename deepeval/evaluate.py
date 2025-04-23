@@ -24,7 +24,7 @@ from deepeval.tracing.tracing import (
     ToolSpan,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
-    TraceManager
+    TraceManager,
 )
 from deepeval.tracing.api import (
     TraceApi,
@@ -263,7 +263,7 @@ def create_api_test_case(
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
                 conversational_instance_id=conversational_instance_id,
-                trace=trace
+                trace=trace,
             )
         elif isinstance(test_case, MLLMTestCase):
             api_test_case = LLMApiTestCase(
@@ -282,9 +282,10 @@ def create_api_test_case(
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
                 conversational_instance_id=conversational_instance_id,
-            )           
+            )
         # llm_test_case_lookup_map[instance_id] = api_test_case
         return api_test_case
+
 
 def execute_test_cases(
     test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
@@ -1041,11 +1042,11 @@ def assert_test(
         )
         raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
 
+
 def execute_agentic_test_cases(
     goldens: List[Golden],
     traceable_callback: Union[
-        Callable[[str], Any],           
-        Callable[[str], Awaitable[Any]]
+        Callable[[str], Any], Callable[[str], Awaitable[Any]]
     ],
     verbose_mode: Optional[bool],
     ignore_errors: bool,
@@ -1059,7 +1060,7 @@ def execute_agentic_test_cases(
     test_run_manager.save_to_disk = False
     test_run_manager.create_test_run(identifier=identifier)
     local_trace_manager = trace_manager
-    test_results: List[TestResult] = []    
+    test_results: List[TestResult] = []
 
     def evaluate_test_cases(pbar: Optional[tqdm] = None):
         count = 0
@@ -1073,11 +1074,13 @@ def execute_agentic_test_cases(
                 with Tracer("custom", func_name="Test Wrapper"):
                     if asyncio.iscoroutinefunction(traceable_callback):
                         loop = get_or_create_event_loop()
-                        loop.run_until_complete(traceable_callback(input=golden.input))
+                        loop.run_until_complete(
+                            traceable_callback(input=golden.input)
+                        )
                     else:
                         traceable_callback(input=golden.input)
                     current_trace: Trace = current_trace_context.get()
-                
+
                 # Create empty trace api for llm api test case
                 trace_api = TraceApi(
                     uuid=current_trace.uuid,
@@ -1087,12 +1090,16 @@ def execute_agentic_test_cases(
                     retrieverSpans=[],
                     toolSpans=[],
                     startTime=(
-                        to_zod_compatible_iso(perf_counter_to_datetime(current_trace.start_time))
+                        to_zod_compatible_iso(
+                            perf_counter_to_datetime(current_trace.start_time)
+                        )
                         if current_trace.start_time
                         else None
                     ),
                     endTime=(
-                        to_zod_compatible_iso(perf_counter_to_datetime(current_trace.start_time))
+                        to_zod_compatible_iso(
+                            perf_counter_to_datetime(current_trace.start_time)
+                        )
                         if current_trace.start_time
                         else None
                     ),
@@ -1112,14 +1119,18 @@ def execute_agentic_test_cases(
                     _dataset_alias=golden._dataset_alias,
                     _dataset_id=golden._dataset_id,
                 )
-                api_test_case = create_api_test_case(test_case=test_case, trace=trace_api, index=count)
+                api_test_case = create_api_test_case(
+                    test_case=test_case, trace=trace_api, index=count
+                )
 
                 # Run DFS to calculate metrics synchronously
                 def dfs(span: BaseSpan):
                     # Create API Span
                     metrics: List[BaseMetric] = span.metrics
                     test_case: LLMTestCase = span.llm_test_case
-                    api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(span)
+                    api_span: BaseApiSpan = (
+                        trace_manager._convert_span_to_api_span(span)
+                    )
                     if isinstance(span, AgentSpan):
                         trace_api.agent_spans.append(api_span)
                     elif isinstance(span, LlmSpan):
@@ -1185,7 +1196,7 @@ def execute_agentic_test_cases(
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
                         api_test_case.update_metric_data(metric_data)
-                                   
+
                     for child in span.children:
                         dfs(child)
 
@@ -1193,7 +1204,7 @@ def execute_agentic_test_cases(
                 dfs(current_trace.root_spans[0])
                 end_time = time.perf_counter()
                 run_duration = end_time - start_time
-                
+
                 # Update test run
                 api_test_case.update_run_duration(run_duration)
                 test_run_manager.update_test_run(api_test_case, test_case)
@@ -1214,12 +1225,11 @@ def execute_agentic_test_cases(
 
     return test_results
 
-    
+
 async def a_execute_agentic_test_cases(
     goldens: List[Golden],
     traceable_callback: Union[
-        Callable[[str], Any],           
-        Callable[[str], Awaitable[Any]]
+        Callable[[str], Any], Callable[[str], Awaitable[Any]]
     ],
     verbose_mode: Optional[bool],
     ignore_errors: bool,
@@ -1296,11 +1306,11 @@ async def a_execute_agentic_test_cases(
     local_trace_manager.test_run = False
     return test_results
 
+
 async def a_execute_agentic_test_case(
     golden: Golden,
     traceable_callback: Union[
-        Callable[[str], Any],           
-        Callable[[str], Awaitable[Any]]
+        Callable[[str], Any], Callable[[str], Awaitable[Any]]
     ],
     test_run_manager: TestRunManager,
     test_results: List[Union[TestResult, MLLMTestCase]],
@@ -1329,12 +1339,16 @@ async def a_execute_agentic_test_case(
         retrieverSpans=[],
         toolSpans=[],
         startTime=(
-            to_zod_compatible_iso(perf_counter_to_datetime(current_trace.start_time))
+            to_zod_compatible_iso(
+                perf_counter_to_datetime(current_trace.start_time)
+            )
             if current_trace.start_time
             else None
         ),
         endTime=(
-            to_zod_compatible_iso(perf_counter_to_datetime(current_trace.start_time))
+            to_zod_compatible_iso(
+                perf_counter_to_datetime(current_trace.start_time)
+            )
             if current_trace.start_time
             else None
         ),
@@ -1352,7 +1366,10 @@ async def a_execute_agentic_test_case(
         _dataset_alias=golden._dataset_alias,
         _dataset_id=golden._dataset_id,
     )
-    api_test_case = create_api_test_case(test_case=test_case, trace=trace_api, index=count)
+    api_test_case = create_api_test_case(
+        test_case=test_case, trace=trace_api, index=count
+    )
+
     async def dfs(span: BaseSpan):
         await a_execute_span_test_case(
             span=span,
@@ -1371,7 +1388,7 @@ async def a_execute_agentic_test_case(
     await dfs(current_trace.root_spans[0])
     test_end_time = time.perf_counter()
     run_duration = test_end_time - test_start_time
-    
+
     ### Update Test Run ###
     api_test_case.update_run_duration(run_duration)
     test_run_manager.update_test_run(api_test_case, test_case)
@@ -1389,7 +1406,7 @@ async def a_execute_span_test_case(
     show_indicator: bool,
     verbose_mode: Optional[bool],
     _use_bar_indicator: bool,
-):  
+):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
     metrics: List[BaseMetric] = span.metrics
     test_case: LLMTestCase = span.llm_test_case
@@ -1430,18 +1447,21 @@ async def a_execute_span_test_case(
             continue
         metric_data = create_metric_data(metric)
         api_span.metrics_data.append(metric_data)
-        llm_api_test_case.update_metric_data(metric_data) # add metric data to agentic_api_test_case
-    
+        llm_api_test_case.update_metric_data(
+            metric_data
+        )  # add metric data to agentic_api_test_case
+
 
 def evaluate(
     goldens: Optional[List[Golden]] = None,
-    traceable_callback: Optional[Union[
-        Callable[[str], Any],           
-        Callable[[str], Awaitable[Any]]
-    ]] = None,
-    test_cases: Optional[Union[
-        List[Union[LLMTestCase, MLLMTestCase]], List[ConversationalTestCase]
-    ]] = None,
+    traceable_callback: Optional[
+        Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
+    ] = None,
+    test_cases: Optional[
+        Union[
+            List[Union[LLMTestCase, MLLMTestCase]], List[ConversationalTestCase]
+        ]
+    ] = None,
     metrics: Optional[List[BaseMetric]] = None,
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     run_async: bool = True,
@@ -1466,7 +1486,7 @@ def evaluate(
     if goldens and traceable_callback:
 
         start_time = time.perf_counter()
-        
+
         with capture_evaluation_run("traceable evaluate()"):
             if run_async:
                 loop = get_or_create_event_loop()
@@ -1498,7 +1518,7 @@ def evaluate(
         global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=True
         )
-            
+
     elif test_cases and metrics:
         check_valid_test_cases_type(test_cases)
         if hyperparameters is not None:
@@ -1570,6 +1590,7 @@ def evaluate(
             test_results=test_results, confident_link=confident_link
         )
 
+
 def validate_evaluate_inputs(
     goldens: Optional[List] = None,
     traceable_callback: Optional[Callable] = None,
@@ -1580,14 +1601,14 @@ def validate_evaluate_inputs(
         raise ValueError(
             "You cannot provide both (goldens with traceable_callback) and (test_cases with metrics). Please choose one mode."
         )
-    if (goldens and not traceable_callback) or (traceable_callback and not goldens):
+    if (goldens and not traceable_callback) or (
+        traceable_callback and not goldens
+    ):
         raise ValueError(
             "If using goldens, you must also provide a traceable_callback."
         )
     if (test_cases and not metrics) or (metrics and not test_cases):
-        raise ValueError(
-            "If using test_cases, you must also provide metrics."
-        )
+        raise ValueError("If using test_cases, you must also provide metrics.")
     if not ((goldens and traceable_callback) or (test_cases and metrics)):
         raise ValueError(
             "You must provide either goldens with a traceable_callback, or test_cases with metrics."

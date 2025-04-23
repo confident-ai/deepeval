@@ -702,7 +702,6 @@ class EvaluationDataset:
                             golden._dataset_alias = alias
                             golden._dataset_id = response.datasetId
 
-
                     end_time = time.perf_counter()
                     time_taken = format(end_time - start_time, ".2f")
                     progress.update(

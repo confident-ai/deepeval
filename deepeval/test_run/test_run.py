@@ -812,8 +812,10 @@ class TestRunManager:
             )
 
         global_test_run_cache_manager.wrap_up_cached_test_run()
-        
-        has_trace = any([test_case.trace is not None for test_case in test_run.test_cases])
+
+        has_trace = any(
+            [test_case.trace is not None for test_case in test_run.test_cases]
+        )
         if display_table:
             if not has_trace:
                 self.display_results_table(test_run, display)
@@ -829,7 +831,6 @@ class TestRunManager:
         ):
             test_run.guard_mllm_test_cases()
             return self.post_test_run(test_run)
-
 
     def display_average_results_table(
         self, test_run: TestRun, display: TestRunResultDisplay
@@ -878,7 +879,9 @@ class TestRunManager:
             for metric_name, entries in grouped.items():
                 # 1) average score (skip None)
                 scores = [e.score for e in entries if e.score is not None]
-                avg_score = round(sum(scores) / len(scores), 2) if scores else None
+                avg_score = (
+                    round(sum(scores) / len(scores), 2) if scores else None
+                )
 
                 # 2) build per-run details, and track any errored/failed flags
                 details = []
@@ -897,7 +900,9 @@ class TestRunManager:
                         any_failed = True
 
                     eval_model = e.evaluation_model or "n/a"
-                    metric_score = round(e.score, 2) if e.score is not None else None
+                    metric_score = (
+                        round(e.score, 2) if e.score is not None else None
+                    )
 
                     details.append(
                         f"(score={metric_score}, threshold={e.threshold}, "

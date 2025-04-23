@@ -7,5 +7,5 @@ from .tracing import (
     ToolAttributes,
     AgentAttributes,
     get_trace_context,
-    trace_manager
+    trace_manager,
 )

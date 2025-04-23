@@ -19,6 +19,7 @@ from deepeval.prompt import Prompt
 from deepeval.tracing.api import TraceApi, BaseApiSpan, SpanApiType
 from deepeval.metrics import BaseMetric
 
+
 def to_zod_compatible_iso(dt: datetime) -> str:
     return (
         dt.astimezone(timezone.utc)
@@ -197,8 +198,10 @@ current_trace_context: ContextVar[Optional[Trace]] = ContextVar(
     "current_trace", default=None
 )
 
+
 def get_trace_context():
     return current_trace_context.get()
+
 
 # Simple stack implementation for traces and spans
 class TraceManager:
@@ -236,7 +239,6 @@ class TraceManager:
     def end_trace(self, trace_uuid: str):
         """End a specific trace by its UUID."""
 
-        
         if trace_uuid in self.active_traces:
             trace = self.active_traces[trace_uuid]
             trace.end_time = perf_counter()
@@ -354,7 +356,7 @@ class TraceManager:
                     trace = self._trace_queue.get(block=True, timeout=1.0)
                     if trace is None:
                         self._trace_queue.task_done()
-                        break 
+                        break
 
                     # Apply rate limiting
                     now = perf_counter()
@@ -416,7 +418,9 @@ class TraceManager:
         finally:
             pending = asyncio.all_tasks(loop=loop)
             if pending:
-                loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                loop.run_until_complete(
+                    asyncio.gather(*pending, return_exceptions=True)
+                )
             loop.close()
 
     def _clean_finished_tasks(self) -> None:
@@ -429,7 +433,7 @@ class TraceManager:
                 pass
 
     def shutdown(self):
-        self._trace_queue.join() 
+        self._trace_queue.join()
         done_tasks = {task for task in self._in_flight_tasks if task.done()}
         self._in_flight_tasks -= done_tasks
         for task in self._in_flight_tasks:
@@ -570,7 +574,7 @@ class TraceManager:
             input=input_data,
             output=output_data,
             error=span.error,
-            testCase=span.llm_test_case
+            testCase=span.llm_test_case,
         )
 
         # Add type-specific attributes
@@ -599,6 +603,7 @@ class TraceManager:
 
     def enable_hosted_mode(self):
         self._daemon = True
+
 
 trace_manager = TraceManager()
 
@@ -834,6 +839,7 @@ def observe(
     def decorator(func):
 
         if asyncio.iscoroutinefunction(func):
+
             async def async_wrapper(*args, **func_kwargs):
                 func_name = func.__name__
                 # Get function signature to map args to parameter names
@@ -855,6 +861,7 @@ def observe(
                     # Capture the result
                     tracer.result = result
                     return result
+
             return async_wrapper
 
         def wrapper(*args, **func_kwargs):
@@ -878,6 +885,7 @@ def observe(
                 # Capture the result
                 tracer.result = result
                 return result
+
         return wrapper
 
     return decorator

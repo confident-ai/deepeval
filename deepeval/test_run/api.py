@@ -38,7 +38,7 @@ class LLMApiTestCase(BaseModel):
     )
     comments: Optional[str] = Field(None)
     conversational_instance_id: Optional[int] = Field(None)
-    trace: Optional[TraceApi]= Field(None)
+    trace: Optional[TraceApi] = Field(None)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 

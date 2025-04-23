@@ -4,6 +4,7 @@ from typing import Optional, Union, Dict, List
 
 from deepeval.test_case import LLMTestCase
 
+
 class SpanApiType(Enum):
     BASE = "base"
     AGENT = "agent"
@@ -69,7 +70,9 @@ class BaseApiSpan(BaseModel):
     ## evals
     test_case: Optional[LLMTestCase] = Field(None, alias="testCase")
     metrics: Optional[List[str]] = Field(None, alias="metrics")
-    metrics_data: Union[List[MetricData], None] = Field(None, alias="metricsData")
+    metrics_data: Union[List[MetricData], None] = Field(
+        None, alias="metricsData"
+    )
 
     class Config:
         use_enum_values = True
