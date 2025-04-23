@@ -1,7 +1,6 @@
 import shutil
 from typing import List, Tuple, Dict, Optional, Union
 from langchain_core.documents import Document
-from llama_index.core.schema import TextNode
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm as tqdm_bar
 from pydantic import BaseModel
@@ -38,7 +37,7 @@ class ContextGenerator:
         max_retries: int = 3,
         filter_threshold: float = 0.5,
         similarity_threshold: float = 0.5,
-        _nodes: Optional[List[Union[TextNode, Document]]] = None,
+        _nodes: Optional[List[Union["TextNode", Document]]] = None,  # type: ignore
     ):
         from chromadb.api.models.Collection import Collection
 

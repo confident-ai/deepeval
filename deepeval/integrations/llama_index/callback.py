@@ -77,10 +77,8 @@
 #     # CBEventType.AGENT_STEP,
 # ]
 
-from llama_index.core.callbacks.base_handler import BaseCallbackHandler
 
-
-class LlamaIndexCallbackHandler(BaseCallbackHandler):
+class LlamaIndexCallbackHandler:
     pass
 
 

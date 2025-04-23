@@ -66,9 +66,9 @@ def check_for_update():
         pass
 
 
-def update_warning_opt_out():
-    return os.getenv("DEEPEVAL_UPDATE_WARNING_OPT_OUT") == "YES"
+def update_warning_opt_in():
+    return os.getenv("DEEPEVAL_UPDATE_WARNING_OPT_IN") == "YES"
 
 
-if not update_warning_opt_out():
+if update_warning_opt_in():
     check_for_update()

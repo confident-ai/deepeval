@@ -1,5 +1,4 @@
 from typing import Optional, Sequence, Any
-from llama_index.core.evaluation.base import BaseEvaluator, EvaluationResult
 import asyncio
 
 from deepeval.test_case import LLMTestCase
@@ -14,7 +13,7 @@ from deepeval.metrics import (
 from deepeval.integrations.llama_index.utils import conform_contexts_type
 
 
-class AnswerRelevancyEvaluator(BaseEvaluator):
+class AnswerRelevancyEvaluator("BaseEvaluator"):
     def __init__(
         self,
         threshold: float = 0.5,
@@ -38,7 +37,9 @@ class AnswerRelevancyEvaluator(BaseEvaluator):
         contexts: Optional[Sequence[str]] = None,
         sleep_time_in_seconds: int = 0,
         **kwargs: Any,
-    ) -> EvaluationResult:
+    ) -> "EvaluationResult":
+        from llama_index.core.evaluation.base import EvaluationResult
+
         del kwargs  # Unused
 
         await asyncio.sleep(sleep_time_in_seconds)
@@ -66,7 +67,7 @@ class AnswerRelevancyEvaluator(BaseEvaluator):
         )
 
 
-class FaithfulnessEvaluator(BaseEvaluator):
+class FaithfulnessEvaluator("BaseEvaluator"):
     def __init__(
         self,
         threshold: float = 0.5,
@@ -90,7 +91,9 @@ class FaithfulnessEvaluator(BaseEvaluator):
         contexts: Optional[Sequence[str]] = None,
         sleep_time_in_seconds: int = 0,
         **kwargs: Any,
-    ) -> EvaluationResult:
+    ) -> "EvaluationResult":
+        from llama_index.core.evaluation.base import EvaluationResult
+
         del kwargs  # Unused
 
         await asyncio.sleep(sleep_time_in_seconds)
@@ -118,7 +121,7 @@ class FaithfulnessEvaluator(BaseEvaluator):
         )
 
 
-class ContextualRelevancyEvaluator(BaseEvaluator):
+class ContextualRelevancyEvaluator("BaseEvaluator"):
     def __init__(
         self,
         threshold: float = 0.5,
@@ -142,7 +145,9 @@ class ContextualRelevancyEvaluator(BaseEvaluator):
         contexts: Optional[Sequence[str]] = None,
         sleep_time_in_seconds: int = 0,
         **kwargs: Any,
-    ) -> EvaluationResult:
+    ) -> "EvaluationResult":
+        from llama_index.core.evaluation.base import EvaluationResult
+
         del kwargs  # Unused
 
         await asyncio.sleep(sleep_time_in_seconds)
@@ -170,7 +175,7 @@ class ContextualRelevancyEvaluator(BaseEvaluator):
         )
 
 
-class SummarizationEvaluator(BaseEvaluator):
+class SummarizationEvaluator("BaseEvaluator"):
     def __init__(
         self,
         threshold: float = 0.5,
@@ -194,7 +199,9 @@ class SummarizationEvaluator(BaseEvaluator):
         contexts: Optional[Sequence[str]] = None,
         sleep_time_in_seconds: int = 0,
         **kwargs: Any,
-    ) -> EvaluationResult:
+    ) -> "EvaluationResult":
+        from llama_index.core.evaluation.base import EvaluationResult
+
         del kwargs  # Unused
         del contexts  # Unused
 
@@ -219,7 +226,7 @@ class SummarizationEvaluator(BaseEvaluator):
         )
 
 
-class BiasEvaluator(BaseEvaluator):
+class BiasEvaluator("BaseEvaluator"):
     def __init__(
         self,
         threshold: float = 0.5,
@@ -243,7 +250,9 @@ class BiasEvaluator(BaseEvaluator):
         contexts: Optional[Sequence[str]] = None,
         sleep_time_in_seconds: int = 0,
         **kwargs: Any,
-    ) -> EvaluationResult:
+    ) -> "EvaluationResult":
+        from llama_index.core.evaluation.base import EvaluationResult
+
         del kwargs  # Unused
         del contexts  # Unused
 
@@ -271,7 +280,7 @@ class BiasEvaluator(BaseEvaluator):
         )
 
 
-class ToxicityEvaluator(BaseEvaluator):
+class ToxicityEvaluator("BaseEvaluator"):
     def __init__(
         self,
         threshold: float = 0.5,
@@ -295,7 +304,9 @@ class ToxicityEvaluator(BaseEvaluator):
         contexts: Optional[Sequence[str]] = None,
         sleep_time_in_seconds: int = 0,
         **kwargs: Any,
-    ) -> EvaluationResult:
+    ) -> "EvaluationResult":
+        from llama_index.core.evaluation.base import EvaluationResult
+
         del kwargs  # Unused
         del contexts  # Unused
 
