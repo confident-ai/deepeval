@@ -1457,7 +1457,12 @@ def evaluate(
     max_concurrent: int = 100,
     display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
 ) -> EvaluationResult:
-
+    validate_evaluate_inputs(
+        goldens=goldens,
+        traceable_callback=traceable_callback,
+        test_cases=test_cases,
+        metrics=metrics,
+    )
     if goldens and traceable_callback:
 
         start_time = time.perf_counter()
@@ -1563,6 +1568,29 @@ def evaluate(
         )
         return EvaluationResult(
             test_results=test_results, confident_link=confident_link
+        )
+
+def validate_evaluate_inputs(
+    goldens: Optional[List] = None,
+    traceable_callback: Optional[Callable] = None,
+    test_cases: Optional[List] = None,
+    metrics: Optional[List] = None,
+):
+    if (goldens and traceable_callback) and (test_cases or metrics):
+        raise ValueError(
+            "You cannot provide both (goldens with traceable_callback) and (test_cases with metrics). Please choose one mode."
+        )
+    if (goldens and not traceable_callback) or (traceable_callback and not goldens):
+        raise ValueError(
+            "If using goldens, you must also provide a traceable_callback."
+        )
+    if (test_cases and not metrics) or (metrics and not test_cases):
+        raise ValueError(
+            "If using test_cases, you must also provide metrics."
+        )
+    if not ((goldens and traceable_callback) or (test_cases and metrics)):
+        raise ValueError(
+            "You must provide either goldens with a traceable_callback, or test_cases with metrics."
         )
 
 
