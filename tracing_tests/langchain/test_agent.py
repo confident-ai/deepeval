@@ -10,10 +10,6 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import tool
 import asyncio
 
-import deepeval
-
-deepeval.trace_langchain()
-
 #############################################################
 ### Setup LLM ###############################################
 #############################################################

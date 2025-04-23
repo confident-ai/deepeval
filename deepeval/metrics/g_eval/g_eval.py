@@ -1,7 +1,7 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Optional, List, Tuple, Union, Dict
-from langchain.schema import AIMessage
+from langchain_core.messages import AIMessage
 import math
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (

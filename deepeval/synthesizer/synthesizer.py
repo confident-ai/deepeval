@@ -9,7 +9,6 @@ import random
 import json
 from rich import print
 import tqdm
-import math
 import csv
 import os
 
@@ -52,8 +51,6 @@ from deepeval.dataset.api import (
     APIDataset,
     CreateDatasetHttpResponse,
 )
-from deepeval.dataset.utils import convert_test_cases_to_goldens
-from deepeval.dataset import EvaluationDataset
 
 valid_file_types = ["csv", "json"]
 

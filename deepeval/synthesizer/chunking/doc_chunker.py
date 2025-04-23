@@ -8,8 +8,6 @@ from langchain_community.document_loaders.base import BaseLoader
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
 from typing import Optional, List, Dict, Union, Type
-
-from llama_index.core.schema import TextNode
 import os
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
@@ -139,9 +137,10 @@ class DocumentChunker:
     ### Create collection from node #########################
     #########################################################
 
-    async def a_from_nodes(self, nodes: List[Union[TextNode, LCDocument]]):
+    async def a_from_nodes(self, nodes: List[Union["TextNode", LCDocument]]):
         # Create ChromaDB client
         import chromadb
+        from llama_index.core.schema import TextNode
 
         client = chromadb.PersistentClient(path=f".vector_db/{nodes[0].id_}")
         collection_name = "processed_chunks"
@@ -182,7 +181,7 @@ class DocumentChunker:
                 )
         return collection
 
-    def from_nodes(self, nodes: List[Union[TextNode, LCDocument]]):
+    def from_nodes(self, nodes: List[Union["TextNode", LCDocument]]):
         # Create ChromaDB client
         import chromadb
 
