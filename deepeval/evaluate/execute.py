@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 from deepeval.tracing.tracing import (
-    Tracer,
+    Observer,
     get_current_trace,
     trace_manager,
     Trace,
@@ -785,7 +785,7 @@ def execute_agentic_test_cases(
             with capture_evaluation_run("golden"):
                 count += 1
                 # Invoke callback and extract trace
-                with Tracer("custom", func_name="Test Wrapper"):
+                with Observer("custom", func_name="Test Wrapper"):
                     if asyncio.iscoroutinefunction(traceable_callback):
                         loop = get_or_create_event_loop()
                         loop.run_until_complete(
@@ -1038,7 +1038,7 @@ async def a_execute_agentic_test_case(
     pbar: Optional[tqdm_asyncio] = None,
 ):
     # Call callback and extract trace
-    with Tracer("custom", func_name="Test Wrapper"):
+    with Observer("custom", func_name="Test Wrapper"):
         if asyncio.iscoroutinefunction(traceable_callback):
             await traceable_callback(input=golden.input)
         else:

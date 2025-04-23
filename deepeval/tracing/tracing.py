@@ -604,11 +604,11 @@ class TraceManager:
 trace_manager = TraceManager()
 
 ########################################################
-### Tracer #############################################
+### Observer #############################################
 ########################################################
 
 
-class Tracer:
+class Observer:
     def __init__(
         self,
         span_type: Union[
@@ -826,10 +826,10 @@ def observe(
 
     Args:
         span_type: The type of span to create (AGENT, LLM, RETRIEVER, TOOL, or custom string)
-        **observe_kwargs: Additional arguments to pass to the Tracer
+        **observe_kwargs: Additional arguments to pass to the Observer
 
     Returns:
-        A decorator function that wraps the original function with a Tracer
+        A decorator function that wraps the original function with a Observer
     """
 
     def decorator(func):
@@ -850,7 +850,7 @@ def observe(
                     "observe_kwargs": observe_kwargs,
                     "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
                 }
-                with Tracer(
+                with Observer(
                     type, metrics=metrics, func_name=func_name, **tracer_kwargs
                 ) as tracer:
                     # Call the original function
@@ -875,7 +875,7 @@ def observe(
                     "observe_kwargs": observe_kwargs,
                     "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
                 }
-                with Tracer(
+                with Observer(
                     type, metrics=metrics, func_name=func_name, **tracer_kwargs
                 ) as tracer:
                     # Call the original function

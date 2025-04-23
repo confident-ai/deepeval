@@ -7,7 +7,7 @@
 # from langchain import hub
 # import bs4
 
-# from deepeval.tracing import Tracer, TraceType, QueryAttributes
+# from deepeval.tracing import Observer, TraceType, QueryAttributes
 # import deepeval
 # import asyncio
 # import time
@@ -67,7 +67,7 @@
 
 # async def chatbot(input: str) -> str:
 #     start_time = time.time()  # Record the start time
-#     with Tracer(trace_type=TraceType.QUERY) as query_trace:
+#     with Observer(trace_type=TraceType.QUERY) as query_trace:
 #         output = await rag_chain.ainvoke(input)
 #         completion_time = time.time() - start_time
 

@@ -112,6 +112,14 @@ module.exports = {
       defer: true,
       "data-domain": "deepeval.com",
     },
+    {
+      src: "https://unpkg.com/lucide@latest",
+      async: true,
+    },
+    {
+      src: "/js/lucide-icons.js",
+      async: true,
+    },
   ],
   stylesheets: [
     {

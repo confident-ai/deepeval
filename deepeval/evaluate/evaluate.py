@@ -123,18 +123,22 @@ def evaluate(
     ] = None,
     metrics: Optional[List[BaseMetric]] = None,
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
+    # Async config
     run_async: bool = True,
-    show_indicator: bool = True,
-    print_results: bool = True,
-    write_cache: bool = True,
-    use_cache: bool = False,
-    ignore_errors: bool = False,
-    skip_on_missing_params: bool = False,
-    verbose_mode: Optional[bool] = None,
-    identifier: Optional[str] = None,
     throttle_value: int = 0,
     max_concurrent: int = 100,
+    # Display config
+    show_indicator: bool = True,
+    print_results: bool = True,
+    verbose_mode: Optional[bool] = None,
     display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
+    # Cache config
+    write_cache: bool = True,
+    use_cache: bool = False,
+    # Error config
+    ignore_errors: bool = False,
+    skip_on_missing_params: bool = False,
+    identifier: Optional[str] = None,
 ) -> EvaluationResult:
     validate_evaluate_inputs(
         goldens=goldens,
@@ -143,9 +147,8 @@ def evaluate(
         metrics=metrics,
     )
     if goldens and traceable_callback:
-
+        global_test_run_manager.reset()
         start_time = time.perf_counter()
-
         with capture_evaluation_run("traceable evaluate()"):
             if run_async:
                 loop = get_or_create_event_loop()
@@ -180,15 +183,6 @@ def evaluate(
 
     elif test_cases and metrics:
         check_valid_test_cases_type(test_cases)
-        if hyperparameters is not None:
-            if (
-                hyperparameters.get("model") is None
-                or hyperparameters.get("prompt template") is None
-            ):
-                raise ValueError(
-                    "A `model` and `prompt template` key must be provided when logging `hyperparameters`."
-                )
-            hyperparameters = process_hyperparameters(hyperparameters)
 
         global_test_run_manager.reset()
         start_time = time.perf_counter()
