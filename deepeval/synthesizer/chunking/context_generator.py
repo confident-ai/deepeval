@@ -39,8 +39,6 @@ class ContextGenerator:
         similarity_threshold: float = 0.5,
         _nodes: Optional[List[Union["TextNode", Document]]] = None,  # type: ignore
     ):
-        from chromadb.api.models.Collection import Collection
-
         # Ensure either document_paths or _nodes is provided
         if not document_paths and not _nodes:
             raise ValueError("`document_path` is empty or missing.")
