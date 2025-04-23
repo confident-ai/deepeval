@@ -17,7 +17,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.prompt import Prompt
 from deepeval.tracing.api import TraceApi, BaseApiSpan, SpanApiType
-
+from deepeval.metrics import BaseMetric
 
 def to_zod_compatible_iso(dt: datetime) -> str:
     return (
@@ -125,9 +125,11 @@ class BaseSpan(BaseModel):
     input: Optional[Union[str, Dict, list]] = None
     output: Optional[Union[str, Dict, list]] = None
     error: Optional[str] = None
-
     llm_test_case: Optional[LLMTestCase] = None
-    metrics: Optional[List[str]] = None
+    metrics: Optional[List[Union[str, BaseMetric]]] = None
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class AgentSpan(BaseSpan):
@@ -195,6 +197,8 @@ current_trace_context: ContextVar[Optional[Trace]] = ContextVar(
     "current_trace", default=None
 )
 
+def get_trace_context():
+    return current_trace_context.get()
 
 # Simple stack implementation for traces and spans
 class TraceManager:
@@ -211,6 +215,8 @@ class TraceManager:
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
+        self._daemon = True
+        self.test_run = False
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -229,6 +235,8 @@ class TraceManager:
 
     def end_trace(self, trace_uuid: str):
         """End a specific trace by its UUID."""
+
+        
         if trace_uuid in self.active_traces:
             trace = self.active_traces[trace_uuid]
             trace.end_time = perf_counter()
@@ -240,7 +248,10 @@ class TraceManager:
                 trace.status = TraceSpanStatus.SUCCESS
 
             # Post the trace to the server before removing it
-            self.post_trace(trace)
+            if self.test_run == False:
+                self.post_trace(trace)
+            else:
+                trace.root_spans = [trace.root_spans[0].children[0]]
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
@@ -320,7 +331,7 @@ class TraceManager:
         if self._worker_thread is None or not self._worker_thread.is_alive():
             self._worker_thread = threading.Thread(
                 target=self._process_trace_queue,
-                daemon=True,  # Make it a daemon so it won't block program exit
+                daemon=self._daemon,
             )
             self._worker_thread.start()
 
@@ -328,130 +339,85 @@ class TraceManager:
 
     def _process_trace_queue(self):
         """Worker thread function that processes the trace queue with throttling."""
-        try:
-            # Create a new event loop for this thread
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        # Create a new event loop for this thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
-            # Define the async worker function
-            async def async_worker():
-                while True:
-                    try:
-                        # Clean up completed tasks
-                        self._clean_finished_tasks()
-
-                        # Get a trace from the queue
-                        trace = self._trace_queue.get(block=True, timeout=1.0)
-
-                        # Apply rate limiting
-                        now = perf_counter()
-                        time_since_last = now - self._last_post_time
-                        if time_since_last < self._min_interval:
-                            await asyncio.sleep(
-                                self._min_interval - time_since_last
-                            )
-
-                        # Update the last post time BEFORE making the API call
-                        self._last_post_time = perf_counter()
-
-                        # Create the API request but don't await it
-                        async def _a_send_trace(trace_obj):
-                            try:
-                                trace_api = self.create_trace_api(trace_obj)
-
-                                try:
-                                    body = trace_api.model_dump(
-                                        by_alias=True, exclude_none=True
-                                    )
-                                except AttributeError:
-                                    # Pydantic version below 2.0
-                                    body = trace_api.dict(
-                                        by_alias=True, exclude_none=True
-                                    )
-
-                                # Send the request without blocking the worker
-                                api = Api()
-                                await api.a_send_request(
-                                    method=HttpMethods.POST,
-                                    endpoint=Endpoints.TRACING_ENDPOINT,
-                                    body=body,
-                                )
-                            except Exception as e:
-                                console = Console()
-                                console.print(
-                                    f"[dim][Tracing][/dim] Error posting trace: {str(e)}"
-                                )
-
-                        # Create a task for this trace and add to tracking set
-                        task = asyncio.create_task(_a_send_trace(trace))
-                        self._in_flight_tasks.add(task)
-                        self._trace_queue.task_done()
-
-                    except queue.Empty:
-                        await asyncio.sleep(0.1)
-                    except Exception as e:
-                        console = Console()
-                        console.print(
-                            f"[dim][Tracing][/dim] Error in worker: {str(e)}"
-                        )
-                        await asyncio.sleep(1.0)  # Wait a bit before continuing
-
-            loop.run_until_complete(async_worker())
-
-        except Exception as e:
-            console = Console()
-            console.print(
-                f"[dim][Tracing][/dim] Async setup failed, using sync: {str(e)}"
-            )
-
+        # Define the async worker function
+        async def async_worker():
             while True:
                 try:
-                    trace = self._trace_queue.get(block=True, timeout=1.0)
+                    # Clean up completed tasks
+                    self._clean_finished_tasks()
 
+                    # Get a trace from the queue
+                    trace = self._trace_queue.get(block=True, timeout=1.0)
+                    if trace is None:
+                        self._trace_queue.task_done()
+                        break 
+
+                    # Apply rate limiting
                     now = perf_counter()
                     time_since_last = now - self._last_post_time
                     if time_since_last < self._min_interval:
-                        sleep(self._min_interval - time_since_last)
+                        await asyncio.sleep(
+                            self._min_interval - time_since_last
+                        )
 
                     # Update the last post time BEFORE making the API call
                     self._last_post_time = perf_counter()
 
-                    try:
-                        trace_api = self.create_trace_api(trace)
-
+                    # Create the API request but don't await it
+                    async def _a_send_trace(trace_obj):
                         try:
-                            body = trace_api.model_dump(
-                                by_alias=True, exclude_none=True
+                            trace_api = self.create_trace_api(trace_obj)
+
+                            try:
+                                body = trace_api.model_dump(
+                                    by_alias=True, exclude_none=True
+                                )
+                            except AttributeError:
+                                # Pydantic version below 2.0
+                                body = trace_api.dict(
+                                    by_alias=True, exclude_none=True
+                                )
+
+                            # Send the request without blocking the worker
+                            api = Api()
+                            await api.a_send_request(
+                                method=HttpMethods.POST,
+                                endpoint=Endpoints.TRACING_ENDPOINT,
+                                body=body,
                             )
-                        except AttributeError:
-                            # Pydantic version below 2.0
-                            body = trace_api.dict(
-                                by_alias=True, exclude_none=True
+                        except Exception as e:
+                            console = Console()
+                            console.print(
+                                f"[dim][Tracing][/dim] Error posting trace: {str(e)}"
                             )
 
-                        # Send the request
-                        api = Api()
-                        api.send_request(
-                            method=HttpMethods.POST,
-                            endpoint=Endpoints.TRACING_ENDPOINT,
-                            body=body,
-                        )
-                    except Exception as e:
-                        console = Console()
-                        console.print(
-                            f"[dim][Tracing][/dim] Error posting trace: {str(e)}"
-                        )
-
+                    # Create a task for this trace and add to tracking set
+                    task = asyncio.create_task(_a_send_trace(trace))
+                    self._in_flight_tasks.add(task)
                     self._trace_queue.task_done()
 
                 except queue.Empty:
-                    sleep(0.1)
+                    await asyncio.sleep(0.1)
                 except Exception as e:
                     console = Console()
                     console.print(
                         f"[dim][Tracing][/dim] Error in worker: {str(e)}"
                     )
-                    sleep(1.0)  # Wait a bit before continuing
+                    await asyncio.sleep(1.0)  # Wait a bit before continuing
+
+        # Run the main async worker and ensure all pending tasks are completed before closing the event loop.
+        # This prevents orphaned tasks and ensures a clean shutdown of the async system.
+        try:
+            loop.run_until_complete(async_worker())
+        finally:
+            pending = asyncio.all_tasks(loop=loop)
+            if pending:
+                loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+            loop.close()
 
     def _clean_finished_tasks(self) -> None:
         done_tasks = {task for task in self._in_flight_tasks if task.done()}
@@ -461,6 +427,19 @@ class TraceManager:
                 task.exception()
             except (asyncio.CancelledError, asyncio.InvalidStateError):
                 pass
+
+    def shutdown(self):
+        self._trace_queue.join() 
+        done_tasks = {task for task in self._in_flight_tasks if task.done()}
+        self._in_flight_tasks -= done_tasks
+        for task in self._in_flight_tasks:
+            try:
+                task.result()
+            except Exception:
+                pass
+        self._trace_queue.put(None)
+        if self._worker_thread:
+            self._worker_thread.join()
 
     def create_trace_api(self, trace: Trace) -> TraceApi:
         # Initialize empty lists for each span type
@@ -572,6 +551,12 @@ class TraceManager:
             else None
         )
 
+        if span.metrics:
+            span.metrics = [
+                m if isinstance(m, str) else getattr(m, "name", str(m))
+                for m in span.metrics
+            ]
+
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
@@ -585,18 +570,7 @@ class TraceManager:
             input=input_data,
             output=output_data,
             error=span.error,
-            testCaseInput=(
-                span.llm_test_case.input if span.llm_test_case else None
-            ),
-            testCaseActualOutput=(
-                span.llm_test_case.actual_output if span.llm_test_case else None
-            ),
-            testCaseRetrievalContext=(
-                span.llm_test_case.retrieval_context
-                if span.llm_test_case
-                else None
-            ),
-            metrics=span.metrics,
+            testCase=span.llm_test_case
         )
 
         # Add type-specific attributes
@@ -620,6 +594,11 @@ class TraceManager:
 
         return api_span
 
+    def disable_hosted_mode(self):
+        self._daemon = False
+
+    def enable_hosted_mode(self):
+        self._daemon = True
 
 trace_manager = TraceManager()
 
@@ -635,7 +614,7 @@ class Tracer:
             Literal["agent", "llm", "retriever", "tool"], str, None
         ],
         func_name: str,
-        metrics: Optional[List[str]] = None,
+        metrics: Optional[List[Union[str, BaseMetric]]] = None,
         **kwargs,
     ):
         self.start_time: float
@@ -671,12 +650,13 @@ class Tracer:
             self.parent_uuid = parent_span.uuid
             self.trace_uuid = parent_span.trace_uuid
         else:
-            current_trace = current_trace_context.get()
+            current_trace = get_trace_context()
             if current_trace:
                 self.trace_uuid = current_trace.uuid
             else:
                 trace = trace_manager.start_new_trace()
                 self.trace_uuid = trace.uuid
+                # print(trace.uuid)
                 current_trace_context.set(trace)
 
         # Now create the span instance with the correct trace_uuid and parent_uuid
@@ -837,7 +817,7 @@ class Tracer:
 
 def observe(
     type: Union[Literal["agent", "llm", "retriever", "tool"], str, None],
-    metrics: Optional[List[str]] = None,
+    metrics: Optional[List[Union[str, BaseMetric]]] = None,
     **observe_kwargs,
 ):
     """
@@ -852,35 +832,52 @@ def observe(
     """
 
     def decorator(func):
+
+        if asyncio.iscoroutinefunction(func):
+            async def async_wrapper(*args, **func_kwargs):
+                func_name = func.__name__
+                # Get function signature to map args to parameter names
+                sig = inspect.signature(func)
+                bound_args = sig.bind(*args, **func_kwargs)
+                bound_args.apply_defaults()
+                # Construct complete kwargs dictionary
+                complete_kwargs = dict(bound_args.arguments)
+                # Pass all kwargs with consistent naming
+                tracer_kwargs = {
+                    "observe_kwargs": observe_kwargs,
+                    "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
+                }
+                with Tracer(
+                    type, metrics=metrics, func_name=func_name, **tracer_kwargs
+                ) as tracer:
+                    # Call the original function
+                    result = await func(*args, **func_kwargs)
+                    # Capture the result
+                    tracer.result = result
+                    return result
+            return async_wrapper
+
         def wrapper(*args, **func_kwargs):
             func_name = func.__name__
-
             # Get function signature to map args to parameter names
             sig = inspect.signature(func)
             bound_args = sig.bind(*args, **func_kwargs)
             bound_args.apply_defaults()
-
             # Construct complete kwargs dictionary
             complete_kwargs = dict(bound_args.arguments)
-
             # Pass all kwargs with consistent naming
             tracer_kwargs = {
                 "observe_kwargs": observe_kwargs,
                 "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
             }
-
             with Tracer(
                 type, metrics=metrics, func_name=func_name, **tracer_kwargs
             ) as tracer:
-
                 # Call the original function
                 result = func(*args, **func_kwargs)
-
                 # Capture the result
                 tracer.result = result
-
                 return result
-
         return wrapper
 
     return decorator
