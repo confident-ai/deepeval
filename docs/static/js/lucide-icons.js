@@ -13,7 +13,7 @@ function addLucideIcons() {
   const intervalId = setInterval(() => {
     // Check if sidebar is loaded
     const sidebarItems = document.querySelectorAll('.menu__list-item-collapsible');
-    
+    console.log(sidebarItems)
     if (sidebarItems.length > 0) {
       clearInterval(intervalId);
       
@@ -57,8 +57,23 @@ function addLucideIcons() {
     const logCurrentPath = () => {
       const newPath = window.location.pathname;
       console.log(newPath, currentPath)
-      still_on_docs = newPath.startsWith('/docs') && currentPath && currentPath.startsWith('/docs');
-      if (!still_on_docs) {
+      if (!currentPath) {
+        setTimeout(() => {
+            logCurrentPath();
+          }, 2000);
+      }
+
+      if (currentPath === undefined) {
+        // First run — wait a bit for sidebar hydration
+        setTimeout(() => {
+          addLucideIcons();
+          currentPath = newPath;
+        }, 100); // 100–200ms is usually enough, can tweak
+        return;
+      }
+  
+      const stillOnDocs = newPath.startsWith('/docs') && currentPath.startsWith('/docs');
+      if (!stillOnDocs) {
         addLucideIcons();
       }
       currentPath = newPath; 
