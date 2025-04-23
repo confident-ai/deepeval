@@ -97,7 +97,7 @@ class TestClass(BaseModel):
 eval_model = "gpt-4o"
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -200,15 +200,15 @@ def test_everything():
     assert_test(
         test_case,
         [
-            # metric1,
-            # metric2,
-            # metric3,
-            # metric4,
-            # metric5,
-            # metric6,
-            # metric7,
-            # metric8,
-            # metric9,
+            metric1,
+            metric2,
+            metric3,
+            metric4,
+            metric5,
+            metric6,
+            metric7,
+            metric8,
+            metric9,
             metric10,
             metric11,
             # metric12,

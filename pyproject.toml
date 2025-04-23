@@ -7,7 +7,7 @@ license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/confident-ai/deepeval"
 documentation = "https://deepeval.com"
-exclude = ["tests/*"]
+exclude = ["tests/*", "tracing_tests/*"]
 
 [tool.poetry.scripts]
 deepeval = 'deepeval.cli.main:app'
@@ -37,6 +37,7 @@ typer = "*"
 ollama="*"
 setuptools = "*"
 wheel = "*"
+nest_asyncio = "*"
 langchain_openai = "*"
 langchain_community = "*"
 tenacity = "<=9.0.0"
