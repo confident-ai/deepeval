@@ -3,6 +3,7 @@ import asyncio
 import random
 import json
 import tqdm
+import inspect
 
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import initialize_model, trimAndLoadJson
@@ -57,6 +58,11 @@ class ConversationSimulator:
             async_mode=self.async_mode,
         ) as progress_bar:
             if self.async_mode:
+                if not inspect.iscoroutinefunction(model_callback):
+                    raise ValueError(
+                        "`model_callback` must be a coroutine function when using 'async_mode' is 'True'."
+                    )
+
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self._a_simulate(
@@ -68,6 +74,10 @@ class ConversationSimulator:
                     )
                 )
             else:
+                if inspect.iscoroutinefunction(model_callback):
+                    raise ValueError(
+                        "`model_callback` must be a synchronous function when using 'async_mode' is 'False'."
+                    )
                 conversational_test_cases: List[ConversationalTestCase] = []
                 for _ in range(num_conversations):
                     conversational_test_case = (

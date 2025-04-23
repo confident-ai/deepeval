@@ -60,6 +60,11 @@ def model_callback(input: str) -> str:
     # Replace this with your LLM application
     return f"I don't know how to answer this: {input}"
 
+# # Or an async function if `async_mode` is `True`
+# async def model_callback(input: str) -> str:
+#     # Replace this with your LLM application
+#     return f"I don't know how to answer this: {input}"
+
 convo_simulator.simulate(model_callback=model_callback)
 ```
 
