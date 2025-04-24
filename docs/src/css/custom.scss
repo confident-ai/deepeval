@@ -378,3 +378,10 @@ html[data-theme='dark'] .sidebar-item-icon-others > a::before {
   filter: invert(60%) sepia(75%) saturate(1000%) hue-rotate(240deg) brightness(95%) contrast(95%);
 }
 
+.theme-code-block-highlighted-line {
+  background-color: #242945 !important;
+}
+
+.theme-code-block-highlighted-line > span {
+  background-color: #242945 !important;
+}
