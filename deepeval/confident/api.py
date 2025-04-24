@@ -169,7 +169,9 @@ class Api:
                 else:
                     try:
                         error_data = await res.json()
-                        error_message = error_data.get("error", await res.text())
+                        error_message = error_data.get(
+                            "error", await res.text()
+                        )
                     except aiohttp.ContentTypeError:
                         error_message = await res.text()
                     raise Exception(error_message)

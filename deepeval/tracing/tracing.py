@@ -836,17 +836,20 @@ def observe(
 
                 # Construct complete kwargs dictionary & pass all kwargs with consistent naming
                 complete_kwargs = dict(bound_args.arguments)
-                tracer_kwargs = {
+                observer_kwargs = {
                     "observe_kwargs": observe_kwargs,
                     "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
                 }
                 with Observer(
-                    type, metrics=metrics, func_name=func_name, **tracer_kwargs
-                ) as tracer:
+                    type,
+                    metrics=metrics,
+                    func_name=func_name,
+                    **observer_kwargs,
+                ) as observer:
                     # Call the original function
                     result = await func(*args, **func_kwargs)
                     # Capture the result
-                    tracer.result = result
+                    observer.result = result
                     return result
 
             # Set the marker attribute on the wrapper
@@ -861,17 +864,20 @@ def observe(
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()
                 complete_kwargs = dict(bound_args.arguments)
-                tracer_kwargs = {
+                observer_kwargs = {
                     "observe_kwargs": observe_kwargs,
                     "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
                 }
                 with Observer(
-                    type, metrics=metrics, func_name=func_name, **tracer_kwargs
-                ) as tracer:
+                    type,
+                    metrics=metrics,
+                    func_name=func_name,
+                    **observer_kwargs,
+                ) as observer:
                     # Call the original function
                     result = func(*args, **func_kwargs)
                     # Capture the result
-                    tracer.result = result
+                    observer.result = result
                     return result
 
             # Set the marker attribute on the wrapper
@@ -887,15 +893,7 @@ def update_current_span_attributes(attributes: Attributes):
         current_span.set_attributes(attributes)
 
 
-def update_current_span_test_case_parameters(
-    input: str,
-    actual_output: str,
-    retrieval_context: Optional[List[str]] = None,
-):
+def update_current_span_test_case(test_case: LLMTestCase):
     current_span = current_span_context.get()
     if current_span:
-        current_span.llm_test_case = LLMTestCase(
-            input=input,
-            actual_output=actual_output,
-            retrieval_context=retrieval_context,
-        )
+        current_span.llm_test_case = test_case

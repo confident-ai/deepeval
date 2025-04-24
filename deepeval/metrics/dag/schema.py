@@ -1,4 +1,4 @@
-from typing import Literal, Any
+from typing import Literal, Dict, Union
 from pydantic import BaseModel
 
 
@@ -7,7 +7,7 @@ class Reason(BaseModel):
 
 
 class TaskNodeOutput(BaseModel):
-    output: str
+    output: Union[str, list, Dict]
 
 
 class BinaryJudgementVerdict(BaseModel):

@@ -640,6 +640,10 @@ class TestRunManager:
         )
 
     def post_test_run(self, test_run: TestRun) -> Optional[str]:
+        # TODO: remove later
+        if any(test_case.trace is not None for test_case in test_run.test_cases):
+            return
+
         console = Console()
         if is_confident() and self.disable_request is False:
             BATCH_SIZE = 60

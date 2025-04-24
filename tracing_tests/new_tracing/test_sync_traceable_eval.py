@@ -1,11 +1,12 @@
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.test_case.llm_test_case import LLMTestCase
 from deepeval.tracing import (
-    update_current_span_test_case_parameters,
+    update_current_span_test_case,
     update_current_span_attributes,
     observe,
     RetrieverAttributes,
     LlmAttributes,
-    trace_manager
+    trace_manager,
 )
 
 from time import sleep, perf_counter
@@ -93,8 +94,10 @@ def custom_research_agent(query: str):
     metrics=[AnswerRelevancyMetric(), BiasMetric()],
 )
 def weather_agent(query: str):
-    update_current_span_test_case_parameters(
-        query, actual_output="Weather information unavailable"
+    update_current_span_test_case(
+        LLMTestCase(
+            input=query, actual_output="Weather information unavailable"
+        )
     )
     sleep(random.uniform(1, 3))
     return "Weather information unavailable"
@@ -124,8 +127,8 @@ def meta_agent(input: str):
     Research: {research_info}
     Custom Analysis: {custom_info}
     """
-    update_current_span_test_case_parameters(
-        input=input, actual_output=final_response
+    update_current_span_test_case(
+        LLMTestCase(input=input, actual_output=final_response)
     )
     return final_response
 
