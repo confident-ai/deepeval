@@ -525,20 +525,12 @@ class TraceManager:
             if span.attributes:
                 input_data = span.attributes.embedding_input
                 output_data = span.attributes.retrieval_context
-            else:
-                # Fallback to standard logic if attributes are not set
-                input_data = span.input
-                output_data = span.output
 
         elif isinstance(span, LlmSpan):
             # For LlmSpan, input is attributes.input, output is attributes.output
             if span.attributes:
                 input_data = span.attributes.input
                 output_data = span.attributes.output
-            else:
-                # Fallback to standard logic if attributes are not set
-                input_data = span.input
-                output_data = span.output
         else:
             # For BaseSpan, Agent, or Tool types, use the standard logic
             input_data = span.input
@@ -585,18 +577,18 @@ class TraceManager:
             api_span.agent_handoffs = span.agent_handoffs
         elif isinstance(span, ToolSpan):
             api_span.description = span.description
-        elif isinstance(span, RetrieverSpan) and span.attributes:
+        elif isinstance(span, RetrieverSpan):
             api_span.embedder = span.embedder
-            api_span.top_k = span.attributes.top_k
-            api_span.chunk_size = span.attributes.chunk_size
-        elif isinstance(span, LlmSpan):
             if span.attributes:
-                api_span.input_token_count = span.attributes.input_token_count
-                api_span.output_token_count = span.attributes.output_token_count
-
+                api_span.top_k = span.attributes.top_k
+                api_span.chunk_size = span.attributes.chunk_size
+        elif isinstance(span, LlmSpan):
             api_span.model = span.model
             api_span.cost_per_input_token = span.cost_per_input_token
             api_span.cost_per_output_token = span.cost_per_output_token
+            if span.attributes:
+                api_span.input_token_count = span.attributes.input_token_count
+                api_span.output_token_count = span.attributes.output_token_count
 
         return api_span
 
@@ -782,20 +774,18 @@ class Observer:
                 current_span.output = self.result
 
         elif isinstance(current_span, LlmSpan):
-            if not current_span.attributes or not isinstance(
+            if current_span and isinstance(
                 current_span.attributes, LlmAttributes
             ):
-                raise ValueError("LlmSpan requires LlmAttributes")
-            current_span.input = current_span.attributes.input
-            current_span.output = current_span.attributes.output
+                current_span.input = current_span.attributes.input
+                current_span.output = current_span.attributes.output
 
         elif isinstance(current_span, RetrieverSpan):
-            if not current_span.attributes or not isinstance(
+            if current_span and isinstance(
                 current_span.attributes, RetrieverAttributes
             ):
-                raise ValueError("RetrieverSpan requires RetrieverAttributes")
-            current_span.input = current_span.attributes.embedding_input
-            current_span.output = current_span.attributes.retrieval_context
+                current_span.input = current_span.attributes.embedding_input
+                current_span.output = current_span.attributes.retrieval_context
 
         elif isinstance(current_span, ToolSpan):
             if current_span and isinstance(

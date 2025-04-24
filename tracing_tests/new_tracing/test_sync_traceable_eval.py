@@ -5,10 +5,13 @@ from deepeval.tracing import (
     observe,
     RetrieverAttributes,
     LlmAttributes,
+    trace_manager
 )
 
 from time import sleep, perf_counter
 import random
+
+trace_manager._daemon = False
 
 #######################################################
 ## Example ############################################
@@ -24,7 +27,7 @@ def generate_text(prompt: str):
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    update_current_span_attributes(attributes)
+    # update_current_span_attributes(attributes)
     sleep(random.uniform(1, 3))
     return generated_text
 
@@ -37,12 +40,13 @@ def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    update_current_span_attributes(
-        RetrieverAttributes(
-            embedding_input=query,
-            retrieval_context=documents,
-        )
-    )
+    print("retrieving")
+    # update_current_span_attributes(
+    #     RetrieverAttributes(
+    #         embedding_input=query,
+    #         retrieval_context=documents,
+    #     )
+    # )
     return documents
 
 
@@ -98,16 +102,11 @@ def weather_agent(query: str):
 
 @observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
 def research_agent(query: str):
-    if random.random() < 0.5:
-        docs = retrieve_documents(query)
-        analysis = generate_text(str(docs))
-        # Add sleep of 1-3 seconds
-        sleep(random.uniform(1, 3))
-        return analysis
-    else:
-        # Add sleep of 1-3 seconds
-        sleep(random.uniform(1, 3))
-        return "Research information unavailable"
+    docs = retrieve_documents(query)
+    analysis = generate_text(str(docs))
+    # Add sleep of 1-3 seconds
+    sleep(random.uniform(1, 3))
+    return analysis
 
 
 @observe(
@@ -141,10 +140,14 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
+meta_agent(goldens[0].input)
+
 # start_time = perf_counter()
 # evaluate(goldens, meta_agent, run_async=True)
 # print(perf_counter() - start_time)
 
-start_time = perf_counter()
-evaluate(goldens, meta_agent, run_async=False)
-print(perf_counter() - start_time)
+# start_time = perf_counter()
+# evaluate(goldens, meta_agent, run_async=False)
+# print(perf_counter() - start_time)
+
+trace_manager.shutdown()
