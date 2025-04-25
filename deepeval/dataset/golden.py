@@ -28,6 +28,7 @@ class Golden(BaseModel):
     source_file: Optional[str] = Field(
         default=None, serialization_alias="sourceFile"
     )
+    name: Optional[str] = Field(default=None)
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)

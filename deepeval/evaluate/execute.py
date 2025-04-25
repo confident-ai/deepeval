@@ -839,6 +839,7 @@ def execute_agentic_test_cases(
                     tools_called=golden.tools_called,
                     expected_tools=golden.expected_tools,
                     comments=golden.comments,
+                    name=golden.name,
                     _dataset_alias=golden._dataset_alias,
                     _dataset_id=golden._dataset_id,
                 )
@@ -1138,6 +1139,7 @@ async def a_execute_agentic_test_case(
         tools_called=golden.tools_called,
         expected_tools=golden.expected_tools,
         comments=golden.comments,
+        name=golden.name,
         _dataset_alias=golden._dataset_alias,
         _dataset_id=golden._dataset_id,
     )

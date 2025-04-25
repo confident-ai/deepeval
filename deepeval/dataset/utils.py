@@ -39,6 +39,7 @@ def convert_goldens_to_test_cases(
             additional_metadata=golden.additional_metadata,
             tools_called=golden.tools_called,
             expected_tools=golden.expected_tools,
+            name=golden.name,
             comments=golden.comments,
             _dataset_alias=_alias,
             _dataset_id=_id,
