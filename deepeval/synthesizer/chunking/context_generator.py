@@ -654,6 +654,7 @@ class ContextGenerator:
                 suggestion_num += 1
 
             # 3. Determine whether to suggest adjustments for chunk_overlap.
+            adjust_overlap = False
             if min_contexts_per_source_file > 1:
                 suggested_overlap = (
                     (
