@@ -140,6 +140,8 @@ def evaluate(
     skip_on_missing_params: bool = False,
     identifier: Optional[str] = None,
 ) -> EvaluationResult:
+    os.environ["GRPC_VERBOSITY"] = "ERROR"
+
     validate_evaluate_inputs(
         goldens=goldens,
         traceable_callback=traceable_callback,
@@ -147,7 +149,6 @@ def evaluate(
         metrics=metrics,
     )
     if goldens and traceable_callback:
-        os.environ["GRPC_VERBOSITY"] = "ERROR"
         global_test_run_manager.reset()
         start_time = time.perf_counter()
         with capture_evaluation_run("traceable evaluate()"):

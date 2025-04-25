@@ -139,12 +139,12 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
-start_time = perf_counter()
-evaluate(goldens, meta_agent, run_async=True)
-print(perf_counter() - start_time)
-
 # start_time = perf_counter()
-# evaluate(goldens, meta_agent, run_async=False)
+# evaluate(goldens, meta_agent, run_async=True)
 # print(perf_counter() - start_time)
+
+start_time = perf_counter()
+evaluate(goldens, meta_agent, run_async=False)
+print(perf_counter() - start_time)
 
 trace_manager.shutdown()
