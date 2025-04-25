@@ -1,7 +1,6 @@
 from typing import Callable, List, Optional, Union, Dict, Any, Awaitable
 import time
 from rich.console import Console
-import os
 
 from deepeval.evaluate.utils import (
     validate_evaluate_inputs,
@@ -140,8 +139,6 @@ def evaluate(
     skip_on_missing_params: bool = False,
     identifier: Optional[str] = None,
 ) -> EvaluationResult:
-    os.environ["GRPC_VERBOSITY"] = "ERROR"
-
     validate_evaluate_inputs(
         goldens=goldens,
         traceable_callback=traceable_callback,
