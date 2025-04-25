@@ -1,3 +1,8 @@
+
+from time import perf_counter
+from asyncio import sleep
+import random
+
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     BiasMetric,
@@ -10,11 +15,6 @@ from deepeval.tracing import (
     RetrieverAttributes,
     LlmAttributes,
 )
-
-from time import perf_counter
-from asyncio import sleep
-import random
-
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
@@ -24,6 +24,7 @@ from deepeval.metrics.dag import (
     VerdictNode,
 )
 from deepeval.metrics import DAGMetric, GEval
+from deepeval import assert_test
 
 geval_metric = GEval(
     name="Persuasiveness",
@@ -175,14 +176,21 @@ from deepeval import evaluate
 goldens = [
     Golden(input="What's the weather like in SF?"),
     Golden(input="Tell me about Elon Musk."),
-]
+] 
 
 
+# # Run Async
+evaluate(goldens, meta_agent, run_async=True, show_indicator=True)
+evaluate(goldens, meta_agent, run_async=True, show_indicator=False)
 
-start_time = perf_counter()
-evaluate(goldens, meta_agent, run_async=True)
-print(perf_counter() - start_time)
+# # Run Sync
+evaluate(goldens, meta_agent, run_async=False, show_indicator=True)
+evaluate(goldens, meta_agent, run_async=False, show_indicator=False)
 
-# start_time = perf_counter()
-# evaluate(goldens, meta_agent, run_async=True)
-# print(perf_counter() - start_time)
+# Assert Test
+def test_meta_agent():
+    golden = Golden(input="What's the weather like in SF?")
+    assert_test(golden, meta_agent, run_async=True)
+def test_meta_agent():
+    golden = Golden(input="What's the weather like in SF?")
+    assert_test(golden, meta_agent, run_async=False)

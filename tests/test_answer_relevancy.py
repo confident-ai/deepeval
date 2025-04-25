@@ -79,7 +79,7 @@ def test_answer_relevancy():
         actual_output="Idk",
         retrieval_context=[one, two, three],
     )
-    assert_test(test_case, [metric])
+    assert_test(test_case=test_case, metrics=[metric], run_async=False)
 
 
 def test_verdict_schema():
@@ -92,3 +92,25 @@ def test_verdict_schema():
         '\n{\n    "verdict": "yes",\n    "reason":null \n}\n]\n}'
     )
     res: Verdicts = judge.generate(answer, schema=schema)
+
+
+#############################################
+#############################################
+#############################################
+
+from deepeval import evaluate
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+
+test_cases=[
+    LLMTestCase(
+        input="What is your name",
+        actual_output="Idk",
+        retrieval_context=[one, two, three],
+    ),
+    LLMTestCase(
+        input="What is your name",
+        actual_output="Idk",
+        retrieval_context=[one, two, three],
+    ),
+]
+metrics = [AnswerRelevancyMetric(), BiasMetric()]

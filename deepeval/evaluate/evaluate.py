@@ -3,6 +3,7 @@ import time
 from rich.console import Console
 
 from deepeval.evaluate.utils import (
+    validate_assert_test_inputs,
     validate_evaluate_inputs,
     print_test_result,
     aggregate_metric_pass_rates,
@@ -48,42 +49,81 @@ from deepeval.evaluate.execute import (
 
 
 def assert_test(
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
-    metrics: List[
+    golden: Optional[Golden] = None,
+    traceable_callback: Optional[
+        Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
+    ] = None,
+    test_case: Optional[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]] = None,
+    metrics:  Optional[List[
         Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
-    ],
+    ]] = None,
     run_async: bool = True,
 ):
-    if run_async:
-        loop = get_or_create_event_loop()
-        test_result = loop.run_until_complete(
-            a_execute_test_cases(
+    validate_assert_test_inputs(
+        golden=golden,
+        traceable_callback=traceable_callback,
+        test_case=test_case,
+        metrics=metrics
+    )
+
+    if golden and traceable_callback:
+        if run_async:
+            loop = get_or_create_event_loop()
+            test_result = loop.run_until_complete(
+                a_execute_agentic_test_cases(
+                    goldens=[golden],
+                    traceable_callback=traceable_callback,
+                    ignore_errors=should_ignore_errors(),
+                    verbose_mode=should_verbose_print(),
+                    show_indicator=True,
+                    skip_on_missing_params=should_skip_on_missing_params(),
+                    throttle_value=0,
+                    max_concurrent=100,
+                    _use_bar_indicator=True,
+                )
+            )[0]
+        else:
+            test_result = execute_agentic_test_cases(
+                goldens=[golden],
+                traceable_callback=traceable_callback,
+                ignore_errors=should_ignore_errors(),
+                verbose_mode=should_verbose_print(),
+                show_indicator=True,
+                skip_on_missing_params=should_skip_on_missing_params(),
+                _use_bar_indicator=False,
+            )[0]
+    
+    elif test_case and metrics:
+        if run_async:
+            loop = get_or_create_event_loop()
+            test_result = loop.run_until_complete(
+                a_execute_test_cases(
+                    [test_case],
+                    metrics,
+                    skip_on_missing_params=should_skip_on_missing_params(),
+                    ignore_errors=should_ignore_errors(),
+                    use_cache=should_use_cache(),
+                    verbose_mode=should_verbose_print(),
+                    throttle_value=0,
+                    # this doesn't matter for pytest
+                    max_concurrent=100,
+                    save_to_disk=get_is_running_deepeval(),
+                    show_indicator=True,
+                    _use_bar_indicator=True,
+                )
+            )[0]
+        else:
+            test_result = execute_test_cases(
                 [test_case],
                 metrics,
                 skip_on_missing_params=should_skip_on_missing_params(),
                 ignore_errors=should_ignore_errors(),
                 use_cache=should_use_cache(),
                 verbose_mode=should_verbose_print(),
-                throttle_value=0,
-                # this doesn't matter for pytest
-                max_concurrent=100,
                 save_to_disk=get_is_running_deepeval(),
                 show_indicator=True,
-                _use_bar_indicator=True,
-            )
-        )[0]
-    else:
-        test_result = execute_test_cases(
-            [test_case],
-            metrics,
-            skip_on_missing_params=should_skip_on_missing_params(),
-            ignore_errors=should_ignore_errors(),
-            use_cache=should_use_cache(),
-            verbose_mode=should_verbose_print(),
-            save_to_disk=get_is_running_deepeval(),
-            show_indicator=True,
-            _use_bar_indicator=False,
-        )[0]
+                _use_bar_indicator=False,
+            )[0]
 
     if not test_result.success:
         failed_metrics_data: List[MetricData] = []

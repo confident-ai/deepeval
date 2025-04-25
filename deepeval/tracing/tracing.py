@@ -1,17 +1,17 @@
-from contextvars import ContextVar
-from datetime import datetime, time, timezone
-from enum import Enum
 from typing import Any, List, Set, Union, Optional, Dict, Literal
-from time import perf_counter, sleep
+from datetime import datetime, time, timezone
 from pydantic import BaseModel, Field
-import inspect
-import uuid
+from time import perf_counter, sleep
+from contextvars import ContextVar
 from rich.console import Console
-import random
-import threading
-import queue
-import asyncio
+from enum import Enum
 import functools
+import threading
+import asyncio
+import inspect
+import random
+import uuid
+import queue
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_case import LLMTestCase
@@ -326,7 +326,7 @@ class TraceManager:
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not is_confident():
             return None
-
+            
         # Add the trace to the queue
         self._trace_queue.put(trace)
 
