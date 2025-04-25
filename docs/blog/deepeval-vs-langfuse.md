@@ -3,6 +3,7 @@ title: DeepEval vs Langfuse
 description: DeepEval and Langfuse solves different problems. While Langfuse is an entire platform for LLM observability, DeepEval focuses on modularized evaluation like Pytest.
 slug: deepeval-vs-langfuse
 authors: [kritinv]
+date: 2025-03-31
 tags: [comparisons]
 hide_table_of_contents: false
 ---

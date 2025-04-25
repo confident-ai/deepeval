@@ -3,6 +3,7 @@ title: Top 5 G-Eval Metric Use Cases in DeepEval
 description: DeepEval is one of the top providers of G-Eval and in this article we'll share how to use it in the best possible way.
 slug: top-5-geval-use-cases
 authors: [kritinv]
+date: 2025-04-22
 hide_table_of_contents: false
 image: https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases-cover.jpg
 ---
@@ -25,13 +26,13 @@ In this story, we will explore these metrics, how to implement them, and best pr
 
 ## What is G-Eval?
 
-G-Eval is a **research-backed custom metric framework** that allows you to create custom **LLM-Judge** metrics by providing a custom criteria. It employs a chain-of-thoughts (CoTs) approach to generate evaluation steps, which are then used to score an LLM Test Case. This method allows for flexible, task-specific metrics that can adapt to various use cases.
+G-Eval is a **research-backed custom metric framework** that allows you to create custom **LLM-Judge** metrics by providing a custom criteria. It employs a chain-of-thoughts (CoTs) approach to generate evaluation steps, which are then used to score an LLM test case. This method allows for flexible, task-specific metrics that can adapt to various use cases.
 
-<BlogImageDisplayer alt="G-Eval Algorithm" src="https://deepeval-docs.s3.amazonaws.com/metrics-g-eval-algorithm.png"/>
+<BlogImageDisplayer alt="G-Eval Algorithm" src="https://deepeval-docs.s3.amazonaws.com/metrics:g-eval:algorithm.png"/>
 
 Research has shown that G-Eval significantly outperforms all traditional non-LLM evaluations across a range of criteria, including coherence, consistency, fluency, and relevancy.
 
-<BlogImageDisplayer alt="G-Eval Results" src="https://deepeval-docs.s3.amazonaws.com/metrics-g-eval-results.png"/>
+<BlogImageDisplayer alt="G-Eval Results" src="https://deepeval-docs.s3.amazonaws.com/metrics:g-eval:results.png"/>
 
 Here's how to define a G-Eval metric in DeepEval with just a few lines of code:
 
@@ -246,14 +247,6 @@ There are 5 core criteria for evaluating RAG systems, which make up DeepEval’s
 | **Contextual Recall**                        | Are the retrieved documents complete?                     |
 | **Contextual Relevancy**                     | Are the retrieved documents relevant?                     |
 
-### Best practices
-
-These built-in metrics cover most standard RAG workflows, but many teams define **custom metrics** to address domain-specific needs or non-standard retrieval strategies.
-
-In **regulated domains** like healthcare, finance, or law, factual accuracy is critical. These fields require stricter evaluation criteria to ensure responses are not only correct but also well-sourced and traceable. For instance, in healthcare, even a minor hallucination can lead to misdiagnosis and serious harm.
-
-As a result, faithfulness metrics in these settings should be designed to **heavily penalize hallucinations**, especially those that could affect high-stakes decisions. It's not just about detecting inaccuracies—it’s about understanding their potential consequences and ensuring the output consistently aligns with reliable, verified sources.
-
 Below is an example of a custom **Faithfulness** metric for a medical diagnosis use case. It evaluates whether the actual output is factually aligned with the retrieved context.
 
 ```python
@@ -275,6 +268,14 @@ custom_faithfulness_metric = GEval(
 )
 ```
 
+### Best practices
+
+These built-in metrics cover most standard RAG workflows, but many teams define **custom metrics** to address domain-specific needs or non-standard retrieval strategies.
+
+In **regulated domains** like healthcare, finance, or law, factual accuracy is critical. These fields require stricter evaluation criteria to ensure responses are not only correct but also well-sourced and traceable. For instance, in healthcare, even a minor hallucination can lead to misdiagnosis and serious harm.
+
+As a result, faithfulness metrics in these settings should be designed to **heavily penalize hallucinations**, especially those that could affect high-stakes decisions. It's not just about detecting inaccuracies—it’s about understanding their potential consequences and ensuring the output consistently aligns with reliable, verified sources.
+
 ## Advanced Usage
 
 Because G-Eval relies on LLM-generated scores, it's inherently **probabilistic**, which introduces several limitations:
@@ -283,13 +284,28 @@ Because G-Eval relies on LLM-generated scores, it's inherently **probabilistic**
 - **Poor at Counting & Structural Checks**: G-Eval struggles with tasks that require numerical precision or rigid structure. It often fails to verify things like “exactly three bullet points,” proper step order, or presence of all required sections in code or JSON.
 - **Subjective by Design**: G-Eval is well-suited for open-ended evaluations—such as tone, helpfulness, or creativity—but less effective for rule-based tasks that require deterministic outputs and exact matching. Even in subjective tasks, results can vary significantly unless the evaluation criteria are clearly defined and unambiguous.
 
+This is a naive G-Eval approach to evaluate the persuasiveness of a sales email drafting agent:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCaseParams
+
+geval_metric = GEval(
+    name="Persuasiveness",
+    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+)
+```
+
+A setup like this can be unreliable with G-Eval, since it asks a single LLM prompt to both detect email length and persuasiveness.
+
 Fortunately, many of G-Eval’s limitations—such as subjectivity and its struggles with complex rubrics—stem from its reliance on a **single LLM judgment**. This means we can address these issues by introducing more fine-grained control. _Enter DAG._
 
 ### Using G-Eval in DAG
 
 DeepEval’s [DAG metric](/docs/metrics-introduction) (Deep Acyclic Graph) provides a more **deterministic and modular alternative** to G-Eval. It enables you to build precise, rule-based evaluation logic by defining deterministic branching workflows.
 
-<BlogImageDisplayer alt="DAG Metric Architecture" src="https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg" caption="An example DAG metric architecture"/>
+<BlogImageDisplayer alt="DAG Metric Architecture" src="https://deepeval-docs.s3.amazonaws.com/metrics:dag:sales-email.png" caption="An example G-Eval metric usage within DAG"/>
 
 DAG-based metrics are composed of nodes that form an evaluation directed acyclic graph. Each node plays a distinct role in breaking down and controlling how evaluation is performed:
 
@@ -302,82 +318,61 @@ Unlike G-Eval, DAG evaluates each condition explicitly and independently, offeri
 
 ### Example
 
-Take, for example, this slightly more complex **Answer Correctness** metric. It first checks for "hallucinations"—any information in the actual output that does not appear in the expected output. If hallucinations are detected, the response is immediately flagged as incorrect. Only if it passes this initial check does the metric evaluate how well the actual output covers the individual claims from the expected answer.
+A **DAG** handles the above use case determinisitically by splitting the logic, and only if it passes this initial sentence length check does the `GEval` metric evaluate how well the `actual_output` is as a sales email.
+
+Here is an example of a G-Eval + DAG approach:
 
 ```python
-from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
-
-answer_correctness_geval = GEval(
-    name="Answer Correctness",
-    criteria=(
-        "Evaluate whether the actual output matches the expected answer. "
-        "If it includes any claims that are not in the expected output, assign a score of 0. "
-        "Otherwise, score based on how many expected claims are present in the actual output."
-    ),
-    evaluation_params=[
-        LLMTestCaseParams.EXPECTED_OUTPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT
-    ],
-)
-```
-
-A setup like this can be unreliable with G-Eval, since it asks a single LLM prompt to both detect hallucinations and count expected claims. A **DAG** handles this more reliably by splitting the logic: hallucinations are caught early, and coverage is scored in a separate step to reduce evaluation logic load.
-
-Here is an example of a the answer correctness metric we defined above using **DAG**:
-
-```python
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
+    TaskNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
     VerdictNode,
 )
-from deepeval.metrics import DAGMetric
+from deepeval.metrics import DAGMetric, GEval
 
-# Second Step: Measure coverage of expected content
-coverage_node = NonBinaryJudgementNode(
-    criteria="What percentage of expected claims are present in the actual output?",
-    evaluation_params=[
-        LLMTestCaseParams.EXPECTED_OUTPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT
-    ],
-    children=[
-        VerdictNode(verdict="All present", score=10),
-        VerdictNode(verdict="Most present", score=7),
-        VerdictNode(verdict="Some present", score=3),
-        VerdictNode(verdict="Few or none", score=0),
-    ],
-    label="Evaluate coverage",
+geval_metric = GEval(
+    name="Persuasiveness",
+    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
-# First Step: Check for hallucinated content
-hallucination_node = BinaryJudgementNode(
-    criteria="Does the actual output include any claims not found in the expected output?",
-    evaluation_params=[
-        LLMTestCaseParams.EXPECTED_OUTPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT
-    ],
+conciseness_node = BinaryJudgementNode(
+    criteria="Does the actual output contain less than or equal to 4 sentences?",
     children=[
-        VerdictNode(verdict=True, score=0), # Hallucination detected
-        VerdictNode(verdict=False, child=coverage_node)  # Will connect to coverage next
+        VerdictNode(verdict=False, score=0),
+        VerdictNode(verdict=True, child=geval_metric),
     ],
-    label="Check for hallucinations",
 )
 
-# Build the DAG structure
-dag = DeepAcyclicGraph(root_nodes=[hallucination_node])
-answer_correctness_dag = DAGMetric(name="Answer Correctness", dag=dag)
+# create the DAG
+dag = DeepAcyclicGraph(root_nodes=[conciseness_node])
+metric = DagMetric(dag=dag)
+
+# create test case
+test_case = LLMTestCase(input="...", actual_output="...")
+
+# measure
+metric.measure(test_case)
 ```
 
-**G-Eval** is perfect when you need fast, flexible evaluations—especially for subjective tasks like tone, helpfulness, or creativity. But as your evaluation logic becomes more rule-based or multi-step, G-Eval might not be enough.
+**G-Eval** is perfect for for subjective tasks like tone, helpfulness, or creativity. But as your evaluation logic becomes more rule-based or multi-step, G-Eval might not be enough.
 
 That’s where **DAG** comes in. It lets you structure your evaluation into modular, objective steps—catching hallucinations early, applying precise thresholds, and making every decision traceable. By combining simple LLM judgments into a deterministic graph, DAG gives you control, consistency, transparency, and objectivity in all your evaluation pipelines.
 
 ## Conclusion
 
-G-Eval provides an intuitive and flexible way to create custom LLM evaluation metrics tailored to diverse use cases. Among its most popular applications are measuring Answer Correctness, Coherence, Tonality, Safety, and evaluating Custom RAG systems. Its straightforward implementation makes it ideal for tasks requiring subjective judgment, quick iteration, and adaptability to various criteria.
+G-Eval provides an intuitive and flexible way to create custom LLM evaluation metrics tailored to diverse use cases. Among its most popular applications are measuring:
+
+1. Answer correctness
+2. Coherence
+3. Tonality
+4. Safety
+5. Custom RAG systems
+
+Its straightforward implementation makes it ideal for tasks requiring subjective judgment, quick iteration, and adaptability to various criteria.
 
 However, for evaluations that demand deterministic logic, precise scoring, step-by-step transparency, and most importantly **objectivity**, DeepEval's DAG-based metrics offer a robust alternative. With DAG, you can break down complex evaluations into explicit steps, ensuring consistent and traceable judgments.
 

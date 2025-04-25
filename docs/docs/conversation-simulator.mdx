@@ -1,5 +1,5 @@
 ---
-id: evaluation-conversation-simulator
+id: conversation-simulator
 title: Conversation Simulator
 sidebar_label: Conversation Simulator
 ---
@@ -7,7 +7,7 @@ sidebar_label: Conversation Simulator
 <head>
   <link
     rel="canonical"
-    href="https://deepeval.com/docs/evaluation-conversation-simulator"
+    href="https://deepeval.com/docs/conversation-simulator"
   />
 </head>
 
@@ -56,7 +56,8 @@ To simulate your first conversation, simply define a callback that wraps around 
 ```python
 ...
 
-def model_callback(input: str) -> str:
+# Remove `async` if `async_mode` is `True
+async def model_callback(input: str) -> str:
     # Replace this with your LLM application
     return f"I don't know how to answer this: {input}"
 
@@ -66,9 +67,9 @@ convo_simulator.simulate(model_callback=model_callback)
 There are **ONE** mandatory and **THREE** optional parameters when calling the `simulate` method:
 
 - `model_callback`: a callback of type `Callable[[str], str]` that wraps around the target LLM application you wish to generate output from.
-- [Optional] `min_turns`: an integer that specifies the minimum number of turns to simulate per conversation.
-- [Optional] `max_turns`:an integer that specifies the maximum number of turns to simulate per conversation.
-- [Optional] `num_conversations`: an integer that specifies the total number of `ConversationalGoldens`s to simulate.
+- [Optional] `min_turns`: an integer that specifies the minimum number of turns to simulate per conversation. Defaulted to `5`.
+- [Optional] `max_turns`:an integer that specifies the maximum number of turns to simulate per conversation. Defaulted to `20`.
+- [Optional] `num_conversations`: an integer that specifies the total number of `ConversationalGoldens`s to simulate. Defaulted to `5`.
 
 :::info
 Your `model_callback` most accept **ONE AND ONLY ONE** parameter of type string, and **MUST** only return a string and nothing else.

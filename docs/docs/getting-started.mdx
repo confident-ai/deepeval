@@ -321,7 +321,7 @@ metric = DAGMetric(name="Summarization", dag=dag)
 <div style={{ display: "flex", justifyContent: "center", margin: "1rem 0" }}>
   <img
     style={{ width: "75%" }}
-    src="https://deepeval-docs.s3.amazonaws.com/dag-formatting-metric.svg"
+    src="https://deepeval-docs.s3.amazonaws.com/metrics:dag:summarization.png"
   />
 </div>
 
@@ -446,7 +446,9 @@ from deepeval.synthesizer import Synthesizer
 from deepeval.dataset import EvaluationDataset
 
 synthesizer = Synthesizer()
-goldens = synthesizer.generate_goldens_from_docs(document_paths=['example.txt', 'example.docx', 'example.pdf'])
+goldens = synthesizer.generate_goldens_from_docs(
+  document_paths=['example.txt', 'example.docx', 'example.pdf']
+)
 
 dataset = EvaluationDataset(goldens=goldens)
 ```

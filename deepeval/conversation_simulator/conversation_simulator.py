@@ -1,3 +1,4 @@
+import inspect
 from typing import Optional, List, Union, Callable
 import asyncio
 import random
@@ -43,9 +44,9 @@ class ConversationSimulator:
     def simulate(
         self,
         model_callback: Callable[[str], str],
-        min_turns: int,
-        max_turns: int,
-        num_conversations: int,
+        min_turns: int = 5,
+        max_turns: int = 20,
+        num_conversations: int = 5,
     ) -> List[ConversationalTestCase]:
         if min_turns > max_turns:
             raise ValueError("`min_turns` cannot be greater than `max_turns`.")
@@ -57,6 +58,11 @@ class ConversationSimulator:
             async_mode=self.async_mode,
         ) as progress_bar:
             if self.async_mode:
+                if not inspect.iscoroutinefunction(model_callback):
+                    raise TypeError(
+                        "`model_callback` must be a coroutine function when using 'async_mode' is 'True'."
+                    )
+
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
                     self._a_simulate(
@@ -68,6 +74,11 @@ class ConversationSimulator:
                     )
                 )
             else:
+                if inspect.iscoroutinefunction(model_callback):
+                    raise TypeError(
+                        "`model_callback` must be a synchronous function when using 'async_mode' is 'False'."
+                    )
+
                 conversational_test_cases: List[ConversationalTestCase] = []
                 for _ in range(num_conversations):
                     conversational_test_case = (
@@ -134,17 +145,15 @@ class ConversationSimulator:
         )
 
         if self.using_native_model:
-            res, cost = self.simulator_model.a_generate(prompt, schema=Scenario)
+            res, cost = self.simulator_model.generate(prompt, schema=Scenario)
             self.simulation_cost += cost
             return res.scenario
         else:
             try:
-                res: Scenario = self.simulator_model.a_generate(
-                    prompt, Scenario
-                )
+                res: Scenario = self.simulator_model.generate(prompt, Scenario)
                 return res.scenario
             except TypeError:
-                res = self.simulator_model.a_generate(prompt)
+                res = self.simulator_model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["scenario"]
 
@@ -156,19 +165,19 @@ class ConversationSimulator:
         )
 
         if self.using_native_model:
-            res, cost = self.simulator_model.a_generate(
+            res, cost = self.simulator_model.generate(
                 prompt, schema=SimulatedInput
             )
             self.simulation_cost += cost
             return res.simulated_input
         else:
             try:
-                res: SimulatedInput = self.simulator_model.a_generate(
+                res: SimulatedInput = self.simulator_model.generate(
                     prompt, SimulatedInput
                 )
                 return res.simulated_input
             except TypeError:
-                res = self.simulator_model.a_generate(prompt)
+                res = self.simulator_model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["simulated_input"]
 

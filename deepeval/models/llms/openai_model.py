@@ -1,10 +1,8 @@
-from typing import Optional, Tuple, List, Union, Dict
+from typing import Optional, Tuple, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
 import logging
 import openai
-import json
-import re
 
 from tenacity import (
     retry,
@@ -13,8 +11,7 @@ from tenacity import (
     RetryCallState,
 )
 from langchain_community.callbacks import get_openai_callback
-from langchain_core.messages import AIMessage
-from langchain.schema import HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
 from deepeval.models import DeepEvalBaseLLM

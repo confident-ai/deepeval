@@ -1,20 +1,8 @@
 from pydantic import BaseModel, Field, ConfigDict, model_validator
-from typing import Any, Optional, List, Union, Dict
+from typing import Optional, Any, List, Union, Dict
 
 from deepeval.test_case import MLLMImage
-
-
-class MetricData(BaseModel):
-    name: str
-    threshold: float
-    success: bool
-    score: Optional[float] = None
-    reason: Optional[str] = None
-    strict_mode: Optional[bool] = Field(False, alias="strictMode")
-    evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
-    error: Optional[str] = None
-    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
-    verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
+from deepeval.tracing.api import TraceApi, MetricData
 
 
 class LLMApiTestCase(BaseModel):
@@ -50,6 +38,7 @@ class LLMApiTestCase(BaseModel):
     )
     comments: Optional[str] = Field(None)
     conversational_instance_id: Optional[int] = Field(None)
+    trace: Optional[TraceApi] = Field(None)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -79,22 +68,23 @@ class LLMApiTestCase(BaseModel):
     def update_run_duration(self, run_duration: float):
         self.run_duration = run_duration
 
-    @model_validator(mode="before")
-    def check_input_and_multimodal_input(cls, values: Dict[str, Any]):
-        input = values.get("input")
-        actual_output = values.get("actualOutput")
-        multimodal_input = values.get("multimodalInput")
-        multimodal_actual_output = values.get("multimodalActualOutput")
+    # # TODO: Do a post init check for multi modal and tracing scenario
+    # @model_validator(mode="before")
+    # def check_input_and_multimodal_input(cls, values: Dict[str, Any]):
+    #     input = values.get("input")
+    #     actual_output = values.get("actualOutput")
+    #     multimodal_input = values.get("multimodalInput")
+    #     multimodal_actual_output = values.get("multimodalActualOutput")
 
-        # Ensure that either input/actual_output or multimodal_input/multimodal_actual_output is present
-        if (input is None or actual_output is None) and (
-            multimodal_input is None or multimodal_actual_output is None
-        ):
-            raise ValueError(
-                "Either 'input' and 'actualOutput' or 'multimodalInput' and 'multimodalActualOutput' must be provided."
-            )
+    #     # Ensure that either input/actual_output or multimodal_input/multimodal_actual_output is present
+    #     if (input is None or actual_output is None) and (
+    #         multimodal_input is None or multimodal_actual_output is None
+    #     ):
+    #         raise ValueError(
+    #             "Either 'input' and 'actualOutput' or 'multimodalInput' and 'multimodalActualOutput' must be provided."
+    #         )
 
-        return values
+    #     return values
 
     def is_multimodal(self):
         if (

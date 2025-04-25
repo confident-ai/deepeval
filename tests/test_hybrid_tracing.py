@@ -182,11 +182,11 @@
 # #### Step 7: Tracking responses
 # #############################################################
 # import deepeval
-# from deepeval.tracing import Tracer, TraceType, QueryAttributes
+# from deepeval.tracing import Observer, TraceType, QueryAttributes
 
 
 # def ask_llm(question):
-#     with Tracer(TraceType.QUERY) as tracer:
+#     with Observer(TraceType.QUERY) as tracer:
 #         response = agent_executor.invoke({"input": question})
 #         tracer.set_attributes(
 #             QueryAttributes(input=question, output=response["output"])

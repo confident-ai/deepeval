@@ -1,31 +1,62 @@
-from deepeval import evaluate
-from deepeval.metrics import RoleAdherenceMetric, ConversationRelevancyMetric
-from deepeval.test_case import ConversationalTestCase, LLMTestCase
-
-test_case = ConversationalTestCase(
-    turns=[
-        LLMTestCase(
-            input="My order #12345 hasn't arrived. Where is it?",
-            actual_output="I apologize for the delay. Let me check on that for you. Can you confirm your name and delivery address?",
-        ),
-        LLMTestCase(
-            input="Alex Smith, 123 Main St, Anytown, USA 12345.",
-            actual_output="Thanks, Alex. Your order was shipped Monday but delayed due to weather. It should arrive by end of day today.",
-        ),
-        LLMTestCase(
-            input="I need it for tomorrow. Can you expedite it?",
-            actual_output="I'm sorry, we can't expedite it at this point. I can offer a 10% discount on your next order for the inconvenience.",
-        ),
-        LLMTestCase(
-            input="Fine. Thanks for checking.",
-            actual_output="Have you heard about our new loyalty program? You can earn points on every purchase and redeem them for exclusive rewards.",
-        ),
-    ],
+from typing import List
+from deepeval.test_case import LLMTestCase
+from deepeval.tracing import (
+    observe,
+    update_current_span_test_case,
+    ContextualRelevancyMetric,
 )
-metric = ConversationRelevancyMetric(verbose_mode=True, threshold=1)
 
-result = evaluate(test_cases=[test_case], metrics=[metric])
 
-print(result.confident_link)
+@observe(type="tool")
+def web_search(query: str) -> str:
+    # <--Include implementation to search web here-->
+    return "Latest search results for: " + query
 
-# metric.measure(test_case=test_case)
+
+@observe(type="retriever")
+def retrieve_documents(query: str) -> List[str]:
+    # <--Include implementation to fetch from vector database here-->
+    return ["Document 1: This is relevant information about the query."]
+
+
+@observe(type="llm")
+def generate_response(input: str) -> str:
+    # <--Include format prompts and call your LLM provider here-->
+    return "Generated response based on the prompt: " + input
+
+
+@observe(
+    type="custom", name="RAG Pipeline", metrics=[ContextualRelevancyMetric()]
+)
+def rag_pipeline(query: str) -> str:
+    # Calls retriever and llm
+    docs = retrieve_documents(query)
+    context = "\n".join(docs)
+    response = generate_response(f"Context: {context}\nQuery: {query}")
+
+    update_current_span_test_case(
+        test_case=LLMTestCase(
+            input=query, actual_output=response, retrieval_context=docs
+        )
+    )
+    return response
+
+
+@observe(type="agent", available_tools=["web_search"])
+def research_agent(query: str) -> str:
+    # Calls RAG pipeline
+    initial_response = rag_pipeline(query)
+
+    # Use web search tool on the results
+    search_results = web_search(initial_response)
+
+    # Generate final response incorporating both RAG and search results
+    final_response = generate_response(
+        f"Initial response: {initial_response}\n"
+        f"Additional search results: {search_results}\n"
+        f"Query: {query}"
+    )
+    return final_response
+
+
+research_agent("What is the weather like in San Francisco?")

@@ -122,9 +122,7 @@ Under the hood, these 4 methods calls the corresponding methods in `deepeval`'s 
 ```python
 from deepeval.dataset import EvaluationDataset
 from deepeval.synthesizer import Synthesizer
-...
 
-# Use gpt-3.5-turbo instead
 synthesizer = Synthesizer(model="gpt-3.5-turbo")
 dataset.generate_goldens_from_docs(
     synthesizer=synthesizer,

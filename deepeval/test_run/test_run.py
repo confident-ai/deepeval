@@ -451,6 +451,10 @@ class TestRunManager:
             fail_count = 0
             test_case_name = test_case.name
 
+            # TODO: recursively iterate through it to calculate pass and fail count
+            if test_case.trace:
+                pass
+
             for metric_data in test_case.metrics_data:
                 if metric_data.success:
                     pass_count += 1
@@ -636,6 +640,12 @@ class TestRunManager:
         )
 
     def post_test_run(self, test_run: TestRun) -> Optional[str]:
+        # TODO: remove later
+        if any(
+            test_case.trace is not None for test_case in test_run.test_cases
+        ):
+            return
+
         console = Console()
         if is_confident() and self.disable_request is False:
             BATCH_SIZE = 60

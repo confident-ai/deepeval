@@ -3,6 +3,7 @@ title: All DeepEval Alternatives, Compared
 description: As the open-source LLM evaluation framework, DeepEval replaces a lot of alternatives that users might be considering.
 slug: deepeval-alternatives-compared
 authors: [penguine]
+date: 2025-04-21
 tags: [comparisons]
 hide_table_of_contents: false
 image: https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:deepeval-vs-everyone:cover.jpg

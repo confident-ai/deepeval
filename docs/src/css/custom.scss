@@ -34,6 +34,11 @@
     --ifm-alert-background-color: #ffeff5 !important;
     --ifm-alert-border-color: #f30065 !important;
   }
+
+  .alert--warning {
+    --ifm-alert-background-color: #fffbe7 !important;
+    --ifm-alert-border-color: #ffdc42 !important;
+  }
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -69,7 +74,7 @@ html[data-theme="dark"] {
 }
 
 .menu__link--active {
-  font-weight: 500 !important;
+  font-weight: 400 !important;
 }
 
 .avatar__name > a {
@@ -78,6 +83,12 @@ html[data-theme="dark"] {
 
 .navbar__link {
   font-weight: 400 !important;
+}
+
+@media (max-width: 1330px) {
+  .navbar__link {
+    font-size: 14px !important;
+  }
 }
 
 html[data-theme="light"] .navbar {
@@ -148,9 +159,9 @@ html[data-theme="dark"] .header-confident-link {
 .header-confident-link {
   display: flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 14px;
   column-gap: 0.1rem;
   border: 1px solid black;
   box-shadow: -4px 4px 0 black;
@@ -282,3 +293,95 @@ video {
   }
 }
 
+/* Add border to code blocks */
+.prism-code {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+html[data-theme="dark"] .prism-code {
+  border: 1px solid #334155;
+}
+
+/* Remove all the sidebar item ::before content */
+.sidebar-item-getting-started > .menu__list-item-collapsible > a::before,
+.sidebar-item-icon-llm-eval > .menu__list-item-collapsible > a::before,
+.sidebar-item-icon-synthetic-data > .menu__list-item-collapsible > a::before,
+.sidebar-item-icon-red-teaming > .menu__list-item-collapsible > a::before,
+.sidebar-item-icon-benchmarks > .menu__list-item-collapsible > a::before,
+.sidebar-item-icon-others > .menu__list-item-collapsible > a::before {
+  content: none;
+}
+
+/* Adjust borders for subcategories */
+.sidebar-item-getting-started > ul,
+.sidebar-item-icon-llm-eval > ul,
+.sidebar-item-icon-synthetic-data > ul,
+.sidebar-item-icon-red-teaming > ul,
+.sidebar-item-icon-benchmarks > ul,
+.sidebar-item-icon-others > ul {
+  margin-left: 20px !important;
+  border-left: 1px solid #d6dbe2;
+}
+
+html[data-theme='dark'] .sidebar-item-getting-started > ul,
+html[data-theme='dark'] .sidebar-item-icon-llm-eval > ul,
+html[data-theme='dark'] .sidebar-item-icon-synthetic-data > ul,
+html[data-theme='dark'] .sidebar-item-icon-red-teaming > ul,
+html[data-theme='dark'] .sidebar-item-icon-benchmarks > ul,
+html[data-theme='dark'] .sidebar-item-icon-others > ul {
+  border-left-color: #383f4b;
+}
+
+/* Styling for Lucide icons in sidebar */
+.sidebar-icon {
+  margin-right: 0.5rem;
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+/* Color adjustments for light/dark mode */
+html[data-theme='light'] .sidebar-icon {
+  color: var(--ifm-menu-color);
+}
+
+html[data-theme='dark'] .sidebar-icon {
+  color: var(--ifm-menu-color);
+}
+
+/* Change color when menu item is active */
+.menu__link--active .sidebar-icon,
+.menu__list-item-collapsible--active .sidebar-icon {
+  color: var(--ifm-color-primary) !important;
+}
+
+/* Adjust color for light/dark modes */
+html[data-theme='light'] .sidebar-item-getting-started > a::before,
+html[data-theme='light'] .sidebar-item-icon-llm-eval > a::before,
+html[data-theme='light'] .sidebar-item-icon-synthetic-data > a::before,
+html[data-theme='light'] .sidebar-item-icon-red-teaming > a::before,
+html[data-theme='light'] .sidebar-item-icon-benchmarks > a::before,
+html[data-theme='light'] .sidebar-item-icon-others > a::before {
+  filter: invert(35%) sepia(90%) saturate(1000%) hue-rotate(240deg) brightness(90%) contrast(95%);
+}
+
+html[data-theme='dark'] .sidebar-item-getting-started > a::before,
+html[data-theme='dark'] .sidebar-item-icon-llm-eval > a::before,
+html[data-theme='dark'] .sidebar-item-icon-synthetic-data > a::before,
+html[data-theme='dark'] .sidebar-item-icon-red-teaming > a::before,
+html[data-theme='dark'] .sidebar-item-icon-benchmarks > a::before,
+html[data-theme='dark'] .sidebar-item-icon-others > a::before {
+  filter: invert(60%) sepia(75%) saturate(1000%) hue-rotate(240deg) brightness(95%) contrast(95%);
+}
+
+.theme-code-block-highlighted-line {
+  background-color: #242945 !important;
+}
+
+.theme-code-block-highlighted-line > span {
+  background-color: #242945 !important;
+}

@@ -55,7 +55,7 @@ module.exports = {
 
   title: "DeepEval - The Open-Source LLM Evaluation Framework",
   tagline: "Evaluation Framework for LLMs",
-  favicon: "img/fav.ico",
+  favicon: "img/favicon.ico",
 
   // Set the production url of your site here
   url: "https://deepeval.com",
@@ -112,6 +112,14 @@ module.exports = {
       defer: true,
       "data-domain": "deepeval.com",
     },
+    {
+      src: "https://unpkg.com/lucide@latest",
+      async: true,
+    },
+    {
+      src: "/js/lucide-icons.js",
+      async: true,
+    },
   ],
   stylesheets: [
     {
@@ -160,7 +168,7 @@ module.exports = {
             label: "Integrations",
             activeBasePath: "integrations",
           },
-          // {to: 'blog', label: 'Blog', position: 'left'},
+          {to: 'blog', label: 'Blog', position: 'left'},
           {
             href: "https://documentation.confident-ai.com",
             position: "left",
@@ -268,6 +276,8 @@ module.exports = {
         copyright: `Copyright © ${new Date().getFullYear()} Confident AI Inc. Built with ❤️ and confidence.`,
       },
       prism: {
+        theme: require("prism-react-renderer/themes/nightOwl"),
+        // theme: require("prism-react-renderer/themes/palenight"),
         additionalLanguages: ["python"],
         magicComments: [
           {

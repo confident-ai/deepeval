@@ -3,6 +3,7 @@ title: DeepEval vs Ragas
 description: As the open-source LLM evaluation framework, DeepEval offers everything Ragas offers but more including agentic and chatbot evaluations.
 slug: deepeval-vs-ragas
 authors: [penguine]
+date: 2025-03-19
 tags: [comparisons]
 hide_table_of_contents: false
 ---

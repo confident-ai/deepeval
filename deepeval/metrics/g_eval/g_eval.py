@@ -1,7 +1,7 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Optional, List, Tuple, Union, Dict
-from langchain.schema import AIMessage
+from langchain_core.messages import AIMessage
 import math
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -188,6 +188,15 @@ class GEval(BaseMetric):
             )
             return self.score
 
+    def construct_test_case_string(self, test_case: LLMTestCase) -> str:
+        text = """"""
+        for param in self.evaluation_params:
+            value = getattr(test_case, param.value)
+            if isinstance(value, ToolCall):
+                value = repr(value)
+            text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
+        return text
+
     async def _a_generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
             return self.evaluation_steps
@@ -239,12 +248,7 @@ class GEval(BaseMetric):
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
-        text = """"""
-        for param in self.evaluation_params:
-            value = getattr(test_case, param.value)
-            if isinstance(value, ToolCall):
-                value = repr(value)
-            text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
+        text = self.construct_test_case_string(test_case)
 
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
@@ -308,12 +312,7 @@ class GEval(BaseMetric):
                     return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
-        text = """"""
-        for param in self.evaluation_params:
-            value = getattr(test_case, param.value)
-            if isinstance(value, ToolCall):
-                value = repr(value)
-            text += f"{param.value}: {value} \n\n"
+        text = self._prepare_evaluation_text(test_case)
 
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params

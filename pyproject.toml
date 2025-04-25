@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "deepeval"
-version = "2.7.5"
+version = "2.7.6"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/confident-ai/deepeval"
 documentation = "https://deepeval.com"
-exclude = ["tests/*"]
+exclude = ["tests/*", "tracing_tests/*"]
 
 [tool.poetry.scripts]
 deepeval = 'deepeval.cli.main:app'
@@ -34,13 +34,12 @@ openai = "*"
 twine="5.1.1"
 aiohttp = "*"
 typer = "*"
-instructor = "*"
 ollama="*"
 setuptools = "*"
 wheel = "*"
+nest_asyncio = "*"
 langchain_openai = "*"
 langchain_community = "*"
-llama-index = "*"
 tenacity = "<=9.0.0"
 opentelemetry-api = "^1.24.0"  
 opentelemetry-sdk = "^1.24.0" 

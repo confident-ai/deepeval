@@ -9,7 +9,6 @@ import random
 import json
 from rich import print
 import tqdm
-import math
 import csv
 import os
 
@@ -52,8 +51,6 @@ from deepeval.dataset.api import (
     APIDataset,
     CreateDatasetHttpResponse,
 )
-from deepeval.dataset.utils import convert_test_cases_to_goldens
-from deepeval.dataset import EvaluationDataset
 
 valid_file_types = ["csv", "json"]
 
@@ -150,7 +147,7 @@ class Synthesizer:
                 filter_threshold=context_construction_config.context_quality_threshold,
                 similarity_threshold=context_construction_config.context_similarity_threshold,
                 max_retries=context_construction_config.max_retries,
-                additional_loaders=context_construction_config.file_loaders
+                additional_loaders=context_construction_config.file_loaders,
             )
             contexts, source_files, context_scores = (
                 context_generator.generate_contexts(
@@ -219,7 +216,7 @@ class Synthesizer:
             filter_threshold=context_construction_config.context_quality_threshold,
             similarity_threshold=context_construction_config.context_similarity_threshold,
             max_retries=context_construction_config.max_retries,
-            additional_loaders=context_construction_config.file_loaders
+            additional_loaders=context_construction_config.file_loaders,
         )
         contexts, source_files, context_scores = (
             await context_generator.a_generate_contexts(

@@ -11,7 +11,6 @@ from deepeval.evaluate import evaluate, assert_test
 from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login_with_confident_api_key
 from deepeval.telemetry import *
-from deepeval.integrations import trace_langchain, trace_llama_index
 from deepeval.confident import confident_evaluate
 
 __all__ = [
@@ -25,8 +24,6 @@ __all__ = [
     "evaluate",
     "assert_test",
     "on_test_run_end",
-    "trace_langchain",
-    "trace_llama_index",
     "confident_evaluate",
 ]
 
@@ -66,9 +63,9 @@ def check_for_update():
         pass
 
 
-def update_warning_opt_out():
-    return os.getenv("DEEPEVAL_UPDATE_WARNING_OPT_OUT") == "YES"
+def update_warning_opt_in():
+    return os.getenv("DEEPEVAL_UPDATE_WARNING_OPT_IN") == "YES"
 
 
-if not update_warning_opt_out():
+if update_warning_opt_in():
     check_for_update()

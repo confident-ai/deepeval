@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 from typing import Optional, Dict, List
 from deepeval.test_case import ToolCall
 
@@ -28,6 +28,9 @@ class Golden(BaseModel):
     source_file: Optional[str] = Field(
         default=None, serialization_alias="sourceFile"
     )
+    _dataset_rank: Optional[int] = PrivateAttr(default=None)
+    _dataset_alias: Optional[str] = PrivateAttr(default=None)
+    _dataset_id: Optional[str] = PrivateAttr(default=None)
 
 
 class ConversationalGolden(BaseModel):
