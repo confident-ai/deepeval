@@ -1,12 +1,11 @@
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.test_case.llm_test_case import LLMTestCase
 from deepeval.tracing import (
-    update_current_span_test_case,
+    update_current_span_test_case_parameters,
     update_current_span_attributes,
     observe,
     RetrieverAttributes,
     LlmAttributes,
-    trace_manager,
+    trace_manager
 )
 
 from time import sleep, perf_counter
@@ -41,7 +40,6 @@ def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    print("retrieving")
     # update_current_span_attributes(
     #     RetrieverAttributes(
     #         embedding_input=query,
@@ -94,10 +92,8 @@ def custom_research_agent(query: str):
     metrics=[AnswerRelevancyMetric(), BiasMetric()],
 )
 def weather_agent(query: str):
-    update_current_span_test_case(
-        LLMTestCase(
-            input=query, actual_output="Weather information unavailable"
-        )
+    update_current_span_test_case_parameters(
+        query, actual_output="Weather information unavailable"
     )
     sleep(random.uniform(1, 3))
     return "Weather information unavailable"
@@ -127,8 +123,8 @@ def meta_agent(input: str):
     Research: {research_info}
     Custom Analysis: {custom_info}
     """
-    update_current_span_test_case(
-        LLMTestCase(input=input, actual_output=final_response)
+    update_current_span_test_case_parameters(
+        input=input, actual_output=final_response
     )
     return final_response
 
@@ -143,11 +139,9 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
-meta_agent(goldens[0].input)
-
-# start_time = perf_counter()
-# evaluate(goldens, meta_agent, run_async=True)
-# print(perf_counter() - start_time)
+start_time = perf_counter()
+evaluate(goldens, meta_agent, run_async=True)
+print(perf_counter() - start_time)
 
 # start_time = perf_counter()
 # evaluate(goldens, meta_agent, run_async=False)
