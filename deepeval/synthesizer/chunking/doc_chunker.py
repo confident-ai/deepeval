@@ -27,8 +27,7 @@ except ImportError:
 def _check_chromadb_available():
     if not chroma_db_available:
         raise ImportError(
-            "ChromaDB is required for this functionality. "
-            "Please install it with 'pip install chromadb'."
+            "chromadb is required for this functionality. Install it via your package manager"
         )
 
 
