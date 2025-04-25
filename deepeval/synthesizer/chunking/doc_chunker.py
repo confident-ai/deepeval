@@ -187,6 +187,6 @@ class DocumentChunker:
         self.text_token_count = self.count_tokens(self.sections)
         self.source_file = path
 
-    def count_tokens(self, chunks: list[LCDocument]):
+    def count_tokens(self, chunks: List[LCDocument]):
         counter = TokenTextSplitter(chunk_size=1, chunk_overlap=0)
         return len(counter.split_documents(chunks))
