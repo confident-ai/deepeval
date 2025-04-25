@@ -1,7 +1,7 @@
 from typing import Callable, List, Optional, Union, Dict, Any, Awaitable
 import time
 from rich.console import Console
-
+import os
 
 from deepeval.evaluate.utils import (
     validate_evaluate_inputs,
@@ -147,6 +147,7 @@ def evaluate(
         metrics=metrics,
     )
     if goldens and traceable_callback:
+        os.environ["GRPC_VERBOSITY"] = "ERROR"
         global_test_run_manager.reset()
         start_time = time.perf_counter()
         with capture_evaluation_run("traceable evaluate()"):
