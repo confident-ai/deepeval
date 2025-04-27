@@ -15,7 +15,7 @@ module.exports = {
         "evaluation-introduction",
         "evaluation-test-cases",
         "evaluation-datasets",
-        // "evaluation-running-llm-evals",
+        "evaluation-running-llm-evals",
         {
           type: "category",
           label: "Metrics",
