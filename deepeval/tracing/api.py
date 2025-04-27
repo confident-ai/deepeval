@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
 from enum import Enum
-from typing import Optional, Union, Dict, List
+from typing import Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field
 
 from deepeval.test_case import LLMTestCase
 
@@ -15,7 +16,7 @@ class SpanApiType(Enum):
 
 class TraceSpanApiStatus(Enum):
     SUCCESS = "SUCCESS"
-    ERROR = "ERROR"
+    ERRORED = "ERRORED"
 
 
 class MetricData(BaseModel):
