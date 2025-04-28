@@ -7,7 +7,9 @@ from .constants import KEY_FILE
 
 
 class KeyValues(Enum):
+    # Confident AI
     API_KEY = "api_key"
+    CONFIDENT_REGION = "confident_region"
     # Azure Open AI
     AZURE_OPENAI_API_KEY = "AZURE_OPENAI_API_KEY"
     AZURE_OPENAI_ENDPOINT = "AZURE_OPENAI_ENDPOINT"

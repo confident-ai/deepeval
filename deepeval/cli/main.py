@@ -6,7 +6,7 @@ import random
 import string
 import socket
 import typer
-
+from enum import Enum
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event, get_logged_in_with
@@ -106,6 +106,23 @@ def login(
             )
         except:
             span.set_attribute("completed", False)
+
+
+class Regions(Enum):
+    US = "US"
+    EU = "EU"
+
+
+@app.command(name="set-confident-region")
+def set_confident_region(
+    region: Regions = typer.Option(
+        ..., "--region", help="Region to use for the Confident AI API"
+    ),
+):
+    KEY_FILE_HANDLER.write_key(KeyValues.CONFIDENT_REGION, region)
+    print(
+        f":raising_hands: Congratulations! You're now using the {region} data region for Confident AI."
+    )
 
 
 @app.command(name="set-azure-openai")
